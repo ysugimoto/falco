@@ -1,0 +1,1217 @@
+accept.charset_lookup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-charset-lookup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+accept.encoding_lookup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-encoding-lookup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+accept.language_filter_basic:
+  reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-filter-basic/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING, STRING]
+  return: STRING
+
+accept.language_lookup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-lookup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+accept.media_lookup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-media-lookup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING, STRING]
+  return: STRING
+
+bin.base64_to_hex:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/bin-base64-to-hex/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+bin.hex_to_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/bin-hex-to-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+crypto.decrypt_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, ID, ID, STRING, STRING, STRING]
+  return: STRING
+
+crypto.decrypt_hex:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-hex/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, ID, ID, STRING, STRING, STRING]
+  return: STRING
+
+crypto.encrypt_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, ID, ID, STRING, STRING, STRING]
+  return: STRING
+
+crypto.encrypt_hex:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, ID, ID, STRING, STRING, STRING]
+  return: STRING
+
+digest.awsv4_hmac:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-awsv4-hmac/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING, STRING, STRING]
+  return: STRING
+
+digest.base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.base64_decode:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64-decode/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.base64url:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.base64url_decode:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-decode/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.base64url_nopad:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.base64url_nopad_decode:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad-decode/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_crc32:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_crc32b:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32b/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_md5:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-md5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha1:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha1_from_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1-from-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha224:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha224/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha256:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha256_from_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256-from-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha384:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha384/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha512:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_sha512_from_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512-from-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hmac_md5:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_md5_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha1:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha1_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha256:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha256_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha512:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.hmac_sha512_base64:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+digest.rsa_verify:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-rsa-verify/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, STRING, STRING, ID]
+    - [ID, STRING, STRING, STRING]
+  return: BOOL
+
+digest.secure_is_equal:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-secure-is-equal/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL
+
+digest.time_hmac_md5:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-md5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+  return: STRING
+
+digest.time_hmac_sha1:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+  return: STRING
+
+digest.time_hmac_sha256:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha256/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+  return: STRING
+
+digest.time_hmac_sha512:
+  reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha512/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+  return: STRING
+
+parse_time_delta:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/parse-time-delta/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: INTEGER
+
+std.integer2time:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-integer2time/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER]
+  return: TIME
+
+std.time:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-time/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, TIME]
+  return: TIME
+
+strftime:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/strftime/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, TIME]
+  return: STRING
+
+time.add:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-add/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TIME, RTIME]
+  return: TIME
+
+time.hex_to_time:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-hex-to-time/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, STRING]
+  return: TIME
+
+time.is_after:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-is-after/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TIME, TIME]
+  return: BOOL
+
+time.runits:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-runits/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, RTIME]
+  return: STRING
+
+time.sub:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-sub/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TIME, RTIME]
+  return: TIME
+
+time.units:
+  reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-units/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, TIME]
+  return: STRING
+
+math.is_finite:
+  reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-finite/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: BOOL
+
+math.is_infinite:
+  reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-infinite/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: BOOL
+
+math.is_nan:
+  reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-nan/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: BOOL
+
+math.is_normal:
+  reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-normal/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: BOOL
+
+math.is_subnormal:
+  reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-subnormal/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: BOOL
+
+math.exp:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-exp/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.exp2:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-exp2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.log:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.log10:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log10/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.log2:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.ceil:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-ceil/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.floor:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-floor/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.round:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-round/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.roundeven:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundeven/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.roundhalfdown:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfdown/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.roundhalfup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.trunc:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-trunc/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.acos:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-acos/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.acosh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-acosh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.asin:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-asin/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.asinh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-asinh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.atan:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atan/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.atan2:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atan2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT, FLOAT]
+  return: FLOAT
+
+math.atanh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atanh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.cos:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cos/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.cosh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cosh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.sin:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sin/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.sinh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sinh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.sqrt:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sqrt/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.tan:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-tan/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+math.tanh:
+  reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-tanh/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [FLOAT]
+  return: FLOAT
+
+addr.extract_bits:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-extract-bits/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [IP, INTEGER, INTEGER]
+  return: INTEGER
+
+addr.is_ipv4:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv4/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [IP]
+  return: BOOL
+
+addr.is_ipv6:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv6/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [IP]
+  return: BOOL
+
+fastly.hash:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER, INTEGER]
+  return: INTEGER
+
+http_status_matches:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/http-status-matches/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, STRING]
+  return: BOOL
+
+resp.tarpit:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/"
+  on: [DELIVER]
+  arguments:
+    - [STRING, STRING]
+    - [STRING]
+
+setcookie.delete_by_name:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-delete-by-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING]
+  return: BOOL
+
+setcookie.get_value_by_name:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-get-value-by-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING]
+  return: STRING
+
+std.collect:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID]
+    - [ID, STRING]
+
+std.count:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID]
+  return: INTEGER
+
+subfield:
+  reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/subfield/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+    - [STRING, STRING]
+  return: STRING
+
+boltsort.sort:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/boltsort-sort/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+querystring.add:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-add/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+querystring.clean:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-clean/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+querystring.filter:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.filter_except:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter-except/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.filtersep:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filtersep/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+querystring.get:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-get/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.globfilter:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.globfilter_except:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter-except/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.regfilter:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.regfilter_except:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter-except/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+querystring.remove:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-remove/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+querystring.set:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-set/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+querystring.sort:
+  reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+randombool:
+  reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randombool/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, INTEGER]
+  return: BOOL
+
+randombool_seeded:
+  reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randombool-seeded/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, INTEGER, INTEGER]
+  return: BOOL
+
+randomint:
+  reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, INTEGER]
+  return: INTEGER
+
+randomint_seeded:
+  reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint-seeded/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, INTEGER, INTEGER]
+  return: INTEGER
+
+randomstr:
+  reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, STRING]
+  return: STRING
+
+cstr_escape:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/cstr-escape/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+json.escape:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/json-escape/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+regsub:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsub/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+regsuball:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsuball/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+std.anystr2ip:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: IP
+
+std.atof:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atof/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: FLOAT
+
+std.atoi:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atoi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: INTEGER
+
+std.basename:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-basename/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+std.dirname:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-dirname/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+std.ip:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: IP
+
+std.ip2str:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip2str/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [IP]
+  return: STRING
+
+std.itoa:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, INTEGER]
+    - [INTEGER]
+  return: STRING
+
+std.itoa_charset:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa-charset/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [INTEGER, STRING]
+  return: STRING
+
+std.prefixof:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-prefixof/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL
+
+std.replace:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+std.replace_prefix:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-prefix/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+std.replace_suffix:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-suffix/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+std.replaceall:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replaceall/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING, STRING]
+  return: STRING
+
+std.str2ip:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-str2ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: IP
+
+std.strlen:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strlen/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: INTEGER
+
+std.strpad:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strpad/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, STRING]
+  return: STRING
+
+std.strrep:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrep/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER]
+  return: STRING
+
+std.strrev:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrev/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+std.strstr:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strstr/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+std.strtof:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtof/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER]
+  return: FLOAT
+
+std.strtol:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtol/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER]
+  return: INTEGER
+
+std.suffixof:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-suffixof/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL
+
+std.tolower:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-tolower/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+std.toupper:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-toupper/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+substr:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/substr/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+    - [STRING, INTEGER]
+  return: STRING
+
+urldecode:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/urldecode/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+urlencode:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/urlencode/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+utf8.codepoint_count:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: INTEGER
+
+utf8.is_valid:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+utf8.strpad:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, STRING]
+  return: STRING
+
+utf8.substr:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, INTEGER, INTEGER]
+    - [STRING, INTEGER]
+  return: STRING
+
+xml_escape:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/xml-escape/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+h2.disable_header_compression:
+  reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-disable-header-compression/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING_LIST]
+
+h2.push:
+  reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+
+table.contains:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-contains/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING]
+  return: BOOL
+  extra: LOOKUP_TABLE
+
+table.lookup:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, STRING]
+    - [TABLE, STRING]
+  return: STRING
+  extra: LOOKUP_TABLE
+
+table.lookup_acl:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, ACL]
+    - [TABLE, STRING]
+  return: ACL
+  extra: LOOKUP_TABLE
+
+table.lookup_backend:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, BACKEND]
+    - [TABLE, STRING]
+  return: BACKEND
+  extra: LOOKUP_TABLE
+
+table.lookup_bool:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, BOOL]
+    - [TABLE, STRING]
+  return: BOOL
+  extra: LOOKUP_TABLE
+
+table.lookup_float:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, FLOAT]
+    - [TABLE, STRING]
+  return: FLOAT
+  extra: LOOKUP_TABLE
+
+table.lookup_integer:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, INTEGER]
+    - [TABLE, STRING]
+  return: INTEGER
+  extra: LOOKUP_TABLE
+
+table.lookup_ip:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, IP]
+    - [TABLE, STRING]
+  return: IP
+  extra: LOOKUP_TABLE
+
+table.lookup_rtime:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, RTIME]
+    - [TABLE, STRING]
+  return: RTIME
+  extra: LOOKUP_TABLE
+
+uuid.dns:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-dns/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+uuid.is_valid:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-valid/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.is_version3:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version3/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.is_version4:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version4/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.is_version5:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.oid:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-oid/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+uuid.url:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-url/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+uuid.version3:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version3/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+uuid.version4:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version4/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+uuid.version5:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING
+
+uuid.x500:
+  reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-x500/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING

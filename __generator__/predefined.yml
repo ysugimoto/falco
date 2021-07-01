@@ -1,0 +1,2048 @@
+# Undocumented APIs
+# Ref: https://www.integralist.co.uk/posts/fastly-varnish/
+fastly_info.is_cluster_edge:
+  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  on: [DELIVER]
+  get: BOOL
+
+fastly_info.is_cluster_shield:
+  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  on: [MISS, FETCH]
+  get: BOOL
+
+req.backend.is_cluster:
+  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  on: [DELIVER]
+  get: BOOL
+
+
+## Following variables are documented.
+backend.conn.is_tls:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/"
+  on: [FETCH]
+  get: BOOL
+
+backend.conn.tls_protocol:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-tls-protocol/"
+  on: [FETCH]
+  get: STRING
+
+backend.socket.congestion_algorithm:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-congestion-algorithm/"
+  on: [FETCH]
+  get: STRING
+
+backend.socket.cwnd:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-cwnd/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_advmss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-advmss/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_bytes_acked:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-acked/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_bytes_received:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-received/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_data_segs_in:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-in/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_data_segs_out:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-out/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_delivery_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delivery-rate/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_delta_retrans:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delta-retrans/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_last_data_sent:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-last-data-sent/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_max_pacing_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-max-pacing-rate/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_min_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-min-rtt/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_notsent_bytes:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-notsent-bytes/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_pacing_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pacing-rate/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_pmtu:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pmtu/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rcv_mss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-mss/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rcv_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-rtt/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rcv_space:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-space/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rcv_ssthresh:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-ssthresh/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_reordering:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-reordering/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rtt/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_rttvar:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rttvar/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_segs_in:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-in/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_segs_out:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-out/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_snd_cwnd:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-cwnd/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_snd_mss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-mss/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_snd_ssthresh:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-ssthresh/"
+  on: [FETCH]
+  get: INTEGER
+
+backend.socket.tcpi_total_retrans:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-total-retrans/"
+  on: [FETCH]
+  get: INTEGER
+
+bereq.between_bytes_timeout:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/"
+  on: [PASS, MISS]
+  get: RTIME
+  set: RTIME
+
+bereq.connect_timeout:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/"
+  on: [PASS, MISS]
+  get: RTIME
+  set: RTIME
+
+bereq.first_byte_timeout:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-first-byte-timeout/"
+  on: [PASS, MISS]
+  get: RTIME
+  set: RTIME
+
+beresp.backend.alternate_ips:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-alternate-ips/"
+  on: [FETCH]
+  get: STRING
+
+beresp.backend.ip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-ip/"
+  on: [FETCH]
+  get: IP
+
+beresp.backend.port:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-port/"
+  on: [FETCH]
+  get: INTEGER
+
+beresp.backend.requests:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-requests/"
+  on: [FETCH]
+  get: INTEGER
+
+beresp.backend.src_ip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-src-ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: IP
+
+beresp.handshake_time_to_origin_ms:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-handshake-time-to-origin-ms/"
+  on: [FETCH]
+  get: INTEGER
+
+beresp.used_alternate_path_to_origin:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-used-alternate-path-to-origin/"
+  on: [FETCH]
+  get: BOOL
+
+req.backend:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BACKEND
+  set: BACKEND
+
+req.backend.healthy:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+req.backend.is_origin:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-origin/"
+  on: [PASS, MISS, FETCH]
+  get: BOOL
+
+req.backend.is_shield:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-shield/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+bereq.body_bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-body-bytes-written/"
+  on: [FETCH, DELIVER, LOG]
+  get: INTEGER
+
+bereq.bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-bytes-written/"
+  on: [FETCH, DELIVER, LOG]
+  get: INTEGER
+
+bereq.header_bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-header-bytes-written/"
+  on: [FETCH, DELIVER, LOG]
+  get: INTEGER
+
+bereq.is_clustering:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-is-clustering/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+bereq.http.%any%:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-http/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+  set: STRING
+  unset: true
+
+bereq.method:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.proto:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.request:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url.basename:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url.dirname:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-dirname/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url.ext:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-ext/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url.path:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-path/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+bereq.url.qs:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-qs/"
+  on: [PASS, MISS, FETCH]
+  get: STRING
+
+beresp.backend.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-backend-name/"
+  on: [FETCH]
+  get: STRING
+
+beresp.brotli:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-brotli/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.cacheable:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-cacheable/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.do_stream:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-do-stream/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.grace:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/"
+  on: [FETCH]
+  get: RTIME
+  set: BOOL
+
+beresp.gzip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-gzip/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.hipaa:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-hipaa/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.http.%any%:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-http/"
+  on: [FETCH]
+  get: STRING
+  set: STRING
+  unset: true
+
+beresp.pci:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-pci/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+beresp.proto:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-proto/"
+  on: [FETCH]
+  get: STRING
+
+beresp.response:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-response/"
+  on: [FETCH]
+  get: STRING
+  set: STRING
+
+beresp.saintmode:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-saintmode/"
+  on: [FETCH]
+  set: RTIME
+
+beresp.stale_if_error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-if-error/"
+  on: [FETCH]
+  get: RTIME
+  set: RTIME
+
+beresp.stale_while_revalidate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-while-revalidate/"
+  on: [FETCH]
+  get: RTIME
+  set: RTIME
+
+beresp.status:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-status/"
+  on: [FETCH]
+  get: INTEGER
+  set: INTEGER
+
+beresp.ttl:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-ttl/"
+  on: [FETCH]
+  get: RTIME
+  set: RTIME
+
+obj.age:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-age/"
+  on: [HIT, DELIVER, ERROR, LOG]
+  get: RTIME
+
+obj.cacheable:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-cacheable/"
+  on: [HIT]
+  get: BOOL
+
+obj.entered:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-entered/"
+  on: [HIT, DELIVER, ERROR, LOG]
+  get: RTIME
+
+obj.grace:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/"
+  on: [HIT, ERROR, LOG]
+  get: RTIME
+
+obj.hits:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/"
+  on: [HIT, DELIVER, LOG]
+  get: INTEGER
+
+obj.http.%any%:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-http/"
+  on: [HIT, ERROR]
+  get: STRING
+  set: STRING
+
+obj.is_pci:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/"
+  on: [HIT, DELIVER, ERROR, LOG]
+  get: BOOL
+
+obj.lastuse:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-lastuse/"
+  on: [HIT, DELIVER, ERROR, LOG]
+  get: RTIME
+
+obj.proto:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-proto/"
+  on: [HIT, ERROR]
+  get: STRING
+
+obj.response:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-response/"
+  on: [HIT, ERROR]
+  get: STRING
+  set: STRING
+
+obj.stale_if_error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-if-error/"
+  on: [HIT, ERROR, LOG]
+  get: RTIME
+
+obj.stale_while_revalidate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-while-revalidate/"
+  on: [HIT, ERROR, LOG]
+  get: RTIME
+
+obj.status:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-status/"
+  on: [HIT, ERROR]
+  get: INTEGER
+  set: INTEGER
+
+obj.ttl:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-ttl/"
+  on: [HIT, ERROR, LOG]
+  get: RTIME
+  set: RTIME
+
+req.digest:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.digest.ratio:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest-ratio/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+req.hash:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-hash/"
+  on: [HASH, ERROR]
+  get: STRING
+  set: STRING
+
+stale.exists:
+  reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/stale-exists/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.as.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.as.number:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-number/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.identity:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-identity/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+client.ip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.port:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-port/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.requests:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.congestion_algorithm:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.socket.cwnd:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/"
+  on: [RECV, ERROR, FETCH, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.nexthop:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-nexthop/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: IP
+
+client.socket.pace:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-pace/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+client.socket.ploss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-ploss/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+client.socket.tcp_info:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcp-info/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.socket.tcpi_advmss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-advmss/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_bytes_acked:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-acked/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_bytes_received:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-received/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_data_segs_in:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-in/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_data_segs_out:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-out/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_delivery_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delivery-rate/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_delta_retrans:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delta-retrans/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_last_data_sent:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-last-data-sent/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_max_pacing_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-max-pacing-rate/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_min_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-min-rtt/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_notsent_bytes:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-notsent-bytes/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_pacing_rate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pacing-rate/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_pmtu:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pmtu/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rcv_mss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-mss/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rcv_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-rtt/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rcv_space:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-space/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rcv_ssthresh:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-ssthresh/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_reordering:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-reordering/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rtt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rtt/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_rttvar:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rttvar/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_segs_in:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-in/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_segs_out:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-out/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_snd_cwnd:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-cwnd/"
+  on: [RECV, ERROR, FETCH, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_snd_mss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-mss/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_snd_ssthresh:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-ssthresh/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.socket.tcpi_total_retrans:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-total-retrans/"
+  on: [RECV, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+fastly_info.edge.is_tls:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-edge-is-tls/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly_info.h2.stream_id:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-h2-stream-id/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+fastly_info.is_h2:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+quic.cc.cwnd:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.cc.ssthresh:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-ssthresh/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_bytes.received:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-received/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_bytes.sent:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-sent/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.ack_received:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-ack-received/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.decryption_failed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-decryption-failed/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.late_acked:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-late-acked/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.lost:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-lost/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.received:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-received/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.num_packets.sent:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-sent/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.rtt.latest:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-latest/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.rtt.minimum:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-minimum/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.rtt.smoothed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-smoothed/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+quic.rtt.variance:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-variance/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+req.is_ipv6:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ipv6/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+req.is_ssl:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ssl/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+req.protocol:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-protocol/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+tls.client.cipher:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-cipher/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.ciphers_list:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.ciphers_list_sha:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-sha/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.ciphers_list_txt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-txt/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.ciphers_sha:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-sha/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.handshake_sent_bytes:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-handshake-sent-bytes/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+tls.client.iana_chosen_cipher_id:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-iana-chosen-cipher-id/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+tls.client.protocol:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-protocol/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.servername:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-servername/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.tlsexts_list:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.tlsexts_list_sha:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-sha/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.tlsexts_list_txt:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-txt/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.tlsexts_sha:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-sha/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+client.bot.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-bot-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.browser.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-browser-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.browser.version:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-browser-version/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.class.bot:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-bot/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.browser:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-browser/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.checker:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.downloader:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.feedreader:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.filter:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.masquerading:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.class.spam:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.display.height:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.display.ppi:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.display.touchscreen:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.display.width:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.identified:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.os.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-os-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.os.version:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-os-version/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.platform.ereader:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.gameconsole:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.hwtype:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-hwtype/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.platform.mediaplayer:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mediaplayer/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.mobile:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mobile/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.smarttv:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-smarttv/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.tablet:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tablet/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+client.platform.tvplayer:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly_info.h2.is_push:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+req.body:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.body.base64:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.body_bytes_read:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-bytes-read/"
+  on: [DELIVER, LOG]
+  get: INTEGER
+
+req.bytes_read:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-bytes-read/"
+  on: [DELIVER, LOG]
+  get: INTEGER
+
+req.enable_range_on_pass:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-range-on-pass/"
+  on: [RECV]
+  get: BOOL
+  set: BOOL
+
+req.enable_segmented_caching:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-segmented-caching/"
+  on: [RECV]
+  get: BOOL
+  set: BOOL
+
+req.hash_always_miss:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-always-miss/"
+  on: [RECV]
+  get: BOOL
+  set: BOOL
+
+req.hash_ignore_busy:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-ignore-busy/"
+  on: [RECV]
+  get: BOOL
+  set: BOOL
+
+req.header_bytes_read:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-header-bytes-read/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+req.http.%any%:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-http/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+  unset: true
+
+req.is_background_fetch:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-background-fetch/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+req.is_purge:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-purge/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+req.method:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-method/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+req.postbody:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-postbody/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.proto:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-proto/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.request:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-request/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+req.url:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+req.url.basename:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-basename/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.url.dirname:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-dirname/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.url.ext:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-ext/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.url.path:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-path/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.url.qs:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-qs/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.xid:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-xid/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.elapsed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+
+time.elapsed.msec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-msec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.elapsed.msec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-msec-frac/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.elapsed.sec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-sec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.elapsed.usec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.elapsed.usec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec-frac/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.end:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end/"
+  on: [DELIVER, LOG]
+  get: TIME
+
+time.end.msec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+time.end.msec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec-frac/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+time.end.sec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-sec/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+time.end.usec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-usec/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+time.end.usec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-usec-frac/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+time.start:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: TIME
+
+time.start.msec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.start.msec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec-frac/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.start.sec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-sec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.start.usec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-usec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+time.start.usec_frac:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-usec-frac/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+resp.body_bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-body-bytes-written/"
+  on: [LOG]
+  get: INTEGER
+
+resp.bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-bytes-written/"
+  on: [LOG]
+  get: INTEGER
+
+resp.completed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-completed/"
+  on: [LOG]
+  get: BOOL
+
+resp.header_bytes_written:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-header-bytes-written/"
+  on: [LOG]
+  get: INTEGER
+
+resp.http.%any%:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-http/"
+  on: [DELIVER, LOG]
+  get: STRING
+  set: STRING
+  unset: true
+
+resp.is_locally_generated:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/"
+  on: [DELIVER, LOG]
+  get: BOOL
+
+resp.proto:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-proto/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+resp.response:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/"
+  on: [DELIVER, LOG]
+  get: STRING
+
+resp.status:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-status/"
+  on: [DELIVER, LOG]
+  get: INTEGER
+
+time.to_first_byte:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-response/time-to-first-byte/"
+  on: [DELIVER, LOG]
+  get: RTIME
+
+now:
+  reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: TIME
+
+now.sec:
+  reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now-sec/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+beresp.do_esi:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/beresp-do-esi/"
+  on: [FETCH]
+  get: BOOL
+  set: BOOL
+
+esi.allow_inside_cdata:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/esi-allow-inside-cdata/"
+  on: [RECV, FETCH, ERROR, DELIVER]
+  get: BOOL
+  set: BOOL
+
+req.esi:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi/"
+  on: [RECV, FETCH, ERROR, DELIVER]
+  get: BOOL
+  set: BOOL
+
+req.esi_level:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi-level/"
+  on: [RECV, DELIVER]
+  get: INTEGER
+
+req.is_esi_subreq:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-is-esi-subreq/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+req.topurl:
+  reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-topurl/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.area_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-area-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.geo.city:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.city.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.city.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.city.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.conn_speed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-speed/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.conn_type:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-type/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.continent_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-continent-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_code3:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code3/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_name.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_name.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.country_name.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.gmt_offset:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-gmt-offset/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.geo.ip_override:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-ip-override/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+client.geo.latitude:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-latitude/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+client.geo.longitude:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-longitude/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+client.geo.metro_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-metro-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+client.geo.postal_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-postal-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.proxy_description:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-description/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.proxy_type:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-type/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.region:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.region.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.region.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.region.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.geo.utc_offset:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-utc-offset/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+geoip.area_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-area-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+geoip.city:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.city.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.city.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.city.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.continent_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-continent-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_code3:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code3/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_name.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_name.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.country_name.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.ip_override:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-ip-override/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+geoip.latitude:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-latitude/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+geoip.longitude:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-longitude/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+geoip.metro_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-metro-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+geoip.postal_code:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-postal-code/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.region:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.region.ascii:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-ascii/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.region.latin1:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-latin1/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.region.utf8:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-utf8/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+geoip.use_x_forwarded_for:
+  reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-use-x-forwarded-for/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+  set: BOOL
+
+math.1_PI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-1-pi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.2PI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2pi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.2_PI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-pi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.2_SQRTPI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-sqrtpi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.E:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-e/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.FLOAT_DIG:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-dig/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_EPSILON:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-epsilon/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.FLOAT_MANT_DIG:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-mant-dig/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_MAX:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.FLOAT_MAX_10_EXP:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-10-exp/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_MAX_EXP:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-exp/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_MIN:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.FLOAT_MIN_10_EXP:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-10-exp/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_MIN_EXP:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-exp/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.FLOAT_RADIX:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-radix/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.INTEGER_BIT:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-bit/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.INTEGER_MAX:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-max/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.INTEGER_MIN:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-min/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+math.LN10:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln10/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.LN2:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.LOG10E:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log10e/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.LOG2E:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log2e/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.NAN:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-nan/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.NEG_HUGE_VAL:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-huge-val/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.NEG_INFINITY:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-infinity/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.PHI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-phi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.PI:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.PI_2:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.PI_4:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-4/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.POS_HUGE_VAL:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-huge-val/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.POS_INFINITY:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-infinity/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.SQRT1_2:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt1-2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.SQRT2:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt2/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+math.TAU:
+  reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-tau/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+fastly.error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+  unset: true
+
+fastly.ff.visits_this_pop_this_service:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop-this-service/"
+  on: [MISS]
+  get: INTEGER
+
+fastly.ff.visits_this_service:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+fastly_info.state:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-info-state/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.backend.ip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-ip/"
+  on: [ERROR, DELIVER, LOG]
+  get: IP
+
+req.backend.name:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-name/"
+  on: [ERROR, DELIVER, LOG]
+  get: STRING
+
+req.backend.port:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-port/"
+  on: [ERROR, DELIVER, LOG]
+  get: INTEGER
+
+req.service_id:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-service-id/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.vcl:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.vcl.generation:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-generation/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+req.vcl.md5:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-md5/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+req.vcl.version:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-version/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+resp.stale:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+  set: BOOL
+
+resp.stale.is_error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-error/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+  set: BOOL
+
+resp.stale.is_revalidating:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-revalidating/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+  set: BOOL
+
+workspace.bytes_free:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-free/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+workspace.bytes_total:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-total/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+workspace.overflowed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-overflowed/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+segmented_caching.autopurged:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-autopurged/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.block_number:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-number/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.block_size:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-size/"
+  on: [RECV, LOG]
+  get: INTEGER
+  set: INTEGER
+
+segmented_caching.cancelled:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-cancelled/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.client_req.is_open_ended:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-open-ended/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.client_req.is_range:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-range/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.client_req.range_high:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-high/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.client_req.range_low:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-low/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.completed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-completed/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-error/"
+  on: [LOG]
+  get: STRING
+
+segmented_caching.failed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-failed/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.is_inner_req:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-inner-req/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.is_outer_req:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-outer-req/"
+  on: [LOG]
+  get: BOOL
+
+segmented_caching.obj.complete_length:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-obj-complete-length/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.rounded_req.range_high:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-high/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.rounded_req.range_low:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-low/"
+  on: [LOG]
+  get: INTEGER
+
+segmented_caching.total_blocks:
+  reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-total-blocks/"
+  on: [LOG]
+  get: INTEGER
+
+req.grace:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/req-grace/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+  set: RTIME
+
+req.is_clustering:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/req-is-clustering/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+req.max_stale_if_error:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-if-error/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+  set: RTIME
+
+req.max_stale_while_revalidate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-while-revalidate/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+  set: RTIME
+
+req.restarts:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/req-restarts/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+server.datacenter:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-datacenter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+server.hostname:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-hostname/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+server.identity:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-identity/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+server.ip:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: IP
+
+server.port:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-port/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+server.region:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-region/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+# Fastly WAF related variables are special, implicitly assigned and only could touch the value in vcl_log.
+# But unfornunately undocumented of its variable types...so, we assume types from variable name.
+# see: https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/
+waf.anomaly_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.xss_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.sql_injection_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.rfi_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.rce_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.php_injection_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.session_fixation_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.lfi_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.http_violation_score:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: FLOAT
+
+waf.severity:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: STRING
+
+waf.rule_id:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: STRING
+
+waf.message:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: STRING
+
+waf.logdata:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: STRING
+
+waf.executed:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: BOOL
+
+waf.blocked:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: BOOL
+
+waf.passed:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: BOOL
+
+waf.logged:
+  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  on: [LOG]
+  get: BOOL
