@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"io"
+	"os"
 
 	"encoding/gob"
 
@@ -61,11 +62,27 @@ type VCL struct {
 	AST  *ast.VCL
 }
 
-type FalcoTransformInput []*VCL
+type Metadata struct {
+	WorkingDirectory string
+}
+
+type FalcoTransformInput struct {
+	Metadata Metadata
+	VCLs     []*VCL
+}
 
 func Encode(vcls []*VCL) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	if err := gob.NewEncoder(buf).Encode(FalcoTransformInput(vcls)); err != nil {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	if err := gob.NewEncoder(buf).Encode(&FalcoTransformInput{
+		Metadata: Metadata{
+			WorkingDirectory: cwd,
+		},
+		VCLs: vcls,
+	}); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
