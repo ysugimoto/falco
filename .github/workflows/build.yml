@@ -21,4 +21,6 @@ jobs:
     - name: Run tests
       run: make test
     - name: Lint programs
-      uses: reviewdog/action-golangci-lint@v1
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.29
