@@ -3,6 +3,10 @@ run:
   concurrency: 4
   timeout: 3m
   tests: false
+  skip-dirs:
+    - dist
+    - docs
+    - .github
 
 linters:
   disable-all: true
