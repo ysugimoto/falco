@@ -1,10 +1,8 @@
-name: test and lint merged codes
+name: test and lint pullrequest changes
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
-    tags-ignore:
-      - 'v*.*.*'
 
 jobs:
   build:
@@ -18,6 +16,4 @@ jobs:
     - name: Run tests
       run: make test
     - name: Lint programs
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: v1.41
+      uses: reviewdog/action-golangci-lint@v1
