@@ -22,5 +22,5 @@ jobs:
             dist/falco-linux-arm64
             dist/falco-darwin-amd64
             dist/falco-darwin-arm64
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
