@@ -51,7 +51,7 @@ func writeln(c *color.Color, format string, args ...interface{}) {
 func printUsage() {
 	usage := `
 =======================================
-  falco: Fastly VCL parser and linter
+  falco: Fastly VCL parser / linter
 =======================================
 Usage:
     falco [main vcl file]
