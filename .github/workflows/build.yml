@@ -20,3 +20,5 @@ jobs:
         go-version: 1.16
     - name: Run tests
       run: make test
+    - name: Lint programs
+      uses: reviewdog/action-golangci-lint@v1
