@@ -56,6 +56,13 @@ func init() {
 	gob.Register(ast.VCL{})
 }
 
+type VCL struct {
+	File string
+	AST  *ast.VCL
+}
+
+type FalcoTransformInput []*VCL
+
 func Encode(vcls []*VCL) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	if err := gob.NewEncoder(buf).Encode(FalcoTransformInput(vcls)); err != nil {
