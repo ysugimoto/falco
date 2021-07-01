@@ -83,9 +83,7 @@ func (c *Context) Restore() *Context {
 	c.prevMode = 0
 
 	// clear local variables
-	if _, ok := c.Variables["var"]; ok {
-		delete(c.Variables, "var")
-	}
+	delete(c.Variables, "var")
 
 	return c
 }

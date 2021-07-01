@@ -1177,7 +1177,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			l.Error(&LintError{
 				Severity: ERROR,
 				Token:    exp.Token,
-				Message:  fmt.Sprintf(`ACL or BACKEND type cannot use in string concatenation`),
+				Message:  "ACL or BACKEND type cannot use in string concatenation",
 			})
 		case types.StringType:
 			break
@@ -1190,7 +1190,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			l.Error(&LintError{
 				Severity: ERROR,
 				Token:    exp.Token,
-				Message:  fmt.Sprintf(`ACL or BACKEND type cannot use in string concatenation`),
+				Message:  "ACL or BACKEND type cannot use in string concatenation",
 			})
 		case types.StringType:
 			break
