@@ -1,0 +1,26 @@
+name: Release with archifact
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build platform binaries
+        run: make all
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files:
+            dist/falco-linux-amd64
+            dist/falco-linux-arm64
+            dist/falco-darwin-amd64
+            dist/falco-darwin-arm64
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
