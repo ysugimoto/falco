@@ -163,133 +163,11 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 	}
 	c.Backends[name] = backend
 
-	// Additionally, some backend name related predefiend variable
-	c.Variables["backend"].Items[name] = &Object{
-		Items: map[string]*Object{
-			"connections_open": &Object{
-				Items: map[string]*Object{},
-				Value: &Accessor{
-					Get:       types.IntegerType,
-					Unset:     false,
-					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-connections-open/",
-				},
-			},
-			"connections_used": &Object{
-				Items: map[string]*Object{},
-				Value: &Accessor{
-					Get:       types.IntegerType,
-					Unset:     false,
-					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-connections-used/",
-				},
-			},
-			"healthy": &Object{
-				Items: map[string]*Object{},
-				Value: &Accessor{
-					Get:       types.BoolType,
-					Unset:     false,
-					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-healthy/",
-				},
-			},
-		},
-	}
+	// Additionally, assign some backend name related predefiend variable
+	c.Variables["backend"].Items[name] = dynamicBackend()
 	c.Variables["ratecounter"] = &Object{
 		Items: map[string]*Object{
-			name: &Object{
-				Items: map[string]*Object{
-					"bucket": &Object{
-						Items: map[string]*Object{
-							"10s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-10s/",
-								},
-							},
-							"20s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-20s/",
-								},
-							},
-							"30s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-30s/",
-								},
-							},
-							"40s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-40s/",
-								},
-							},
-							"50s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-50s/",
-								},
-							},
-							"60s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.IntegerType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-60s/",
-								},
-							},
-						},
-					},
-					"rate": &Object{
-						Items: map[string]*Object{
-							"1s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.FloatType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-1s/",
-								},
-							},
-							"10s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.FloatType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-10s/",
-								},
-							},
-							"60s": &Object{
-								Items: map[string]*Object{},
-								Value: &Accessor{
-									Get:       types.FloatType,
-									Unset:     false,
-									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-60s/",
-								},
-							},
-						},
-					},
-				},
-			},
+			name: dynamicRateCounter(),
 		},
 	}
 
@@ -319,21 +197,10 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 
 	c.Variables["director"] = &Object{
 		Items: map[string]*Object{
-			name: &Object{
-				Items: map[string]*Object{
-					"healthy": &Object{
-						Items: map[string]*Object{},
-						Value: &Accessor{
-							Get:       types.BoolType,
-							Unset:     false,
-							Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-							Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/director-healthy/",
-						},
-					},
-				},
-			},
+			name: dynamicDirector(),
 		},
 	}
+
 	return nil
 }
 

@@ -6,13 +6,16 @@ generate:
 test: generate
 	go list ./... | xargs go test
 
-linux: test
+linux: test lint
 	GOOS=linux GOARCH=amd64 go build -o dist/falco-linux-amd64 cli/*.go
 
-darwin: test
+darwin: test lint
 	GOOS=darwin GOARCH=amd64 go build -o dist/falco-darwin-amd64 cli/*.go
 
-local: test
+lint:
+	golangci-lint run
+
+local: test lint
 	go build -o falco cli/*.go
 
 all: linux darwin

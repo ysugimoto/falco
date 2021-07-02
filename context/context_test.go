@@ -153,3 +153,31 @@ func TestContextGetSet(t *testing.T) {
 		}
 	})
 }
+
+func TestDynamicVariableExist(t *testing.T) {
+	t.Run("dynamic backend", func(t *testing.T) {
+		c := New()
+		if _, err := c.Get("backend.example.healthy"); err == nil {
+			t.Errorf("expected error but got nil")
+		}
+		c.AddBackend("example", &types.Backend{})
+		if v, err := c.Get("backend.example.healthy"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		} else if v != types.BoolType {
+			t.Errorf("type mismatch, expect BOOL, got %s", v.String())
+		}
+	})
+
+	t.Run("dynamic director", func(t *testing.T) {
+		c := New()
+		if _, err := c.Get("director.example.healthy"); err == nil {
+			t.Errorf("expected error but got nil")
+		}
+		c.AddDirector("example", &types.Director{})
+		if v, err := c.Get("director.example.healthy"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		} else if v != types.BoolType {
+			t.Errorf("type mismatch, expect BOOL, got %s", v.String())
+		}
+	})
+}
