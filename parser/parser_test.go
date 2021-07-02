@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -32,6 +31,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		cmpopts.IgnoreFields(ast.SetStatement{}, "Token", "Comments", "NestLevel"),
 		cmpopts.IgnoreFields(ast.InfixExpression{}, "Token"),
 		cmpopts.IgnoreFields(ast.PrefixExpression{}, "Token"),
+		cmpopts.IgnoreFields(ast.GroupedExpression{}, "Token"),
 		cmpopts.IgnoreFields(ast.Operator{}, "Token"),
 		cmpopts.IgnoreFields(ast.IfStatement{}, "Token", "Comments", "NestLevel", "AlternativeComments"),
 		cmpopts.IgnoreFields(ast.Ident{}, "Token"),
@@ -57,7 +57,6 @@ func assert(t *testing.T, actual, expect interface{}) {
 	}
 }
 
-/*
 func TestParseImport(t *testing.T) {
 	input := `import boltsort;`
 	expect := &ast.VCL{
@@ -748,6 +747,20 @@ func TestErrorStatement(t *testing.T) {
 		}
 		assert(t, vcl, expect)
 	})
+
+	t.Run("with ident argument", func(t *testing.T) {
+		input := `error var.IntValue;`
+		expect := &ast.ErrorStatement{
+			Code: &ast.Ident{
+				Value: "var.IntValue",
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).parseErrorStatement()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestLogStatement(t *testing.T) {
@@ -1006,30 +1019,29 @@ sub vcl_recv {
 }
 
 func TestSetStatementWithGroupedExpression(t *testing.T) {
-	input := `set var.Bool = (var.isOk && isNg);`
-	// expect := &ast.SetStatement{
-	// 	Ident: &ast.Ident{
-	// 		Value: "req.http.Host",
-	// 	},
-	// 	Operator: &ast.Operator{
-	// 		Operator: "=",
-	// 	},
-	// 	Value: &ast.String{
-	// 		Value: "example.com",
-	// 	},
-	// }
-	_, err := New(lexer.NewFromString(input)).parseSetStatement()
+	input := `set var.Bool = (var.IsOk && var.IsNg);`
+	expect := &ast.SetStatement{
+		Ident: &ast.Ident{
+			Value: "var.Bool",
+		},
+		Operator: &ast.Operator{
+			Operator: "=",
+		},
+		Value: &ast.GroupedExpression{
+			Right: &ast.InfixExpression{
+				Left: &ast.Ident{
+					Value: "var.IsOk",
+				},
+				Operator: "&&",
+				Right: &ast.Ident{
+					Value: "var.IsNg",
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).parseSetStatement()
 	if err != nil {
 		t.Errorf("%+v", err)
 	}
-	// assert(t, vcl, expect)
-}
-*/
-
-func TestComplexStatement(t *testing.T) {
-	buf, _ := ioutil.ReadFile("/Users/yoshiaki/github/falco/cli/features_auth.vcl")
-	_, err := New(lexer.NewFromString(string(buf))).ParseVCL()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
+	assert(t, vcl, expect)
 }

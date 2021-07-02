@@ -23,52 +23,1164 @@ type BuiltinFunction struct {
 
 func builtinFunctions() Functions {
 	return Functions{
+		"resp": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"tarpit": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+							[]types.Type{types.StringType},
+						},
+						Scopes:    DELIVER,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/",
+					},
+				},
+			},
+		},
+		"substr": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
+					[]types.Type{types.StringType, types.IntegerType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/substr/",
+			},
+		},
+		"http_status_matches": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.BoolType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.IntegerType, types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/http-status-matches/",
+			},
+		},
+		"std": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"strtol": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtol/",
+					},
+				},
+				"ip2str": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IPType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip2str/",
+					},
+				},
+				"tolower": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-tolower/",
+					},
+				},
+				"strrep": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrep/",
+					},
+				},
+				"replace_prefix": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-prefix/",
+					},
+				},
+				"replaceall": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replaceall/",
+					},
+				},
+				"time": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.TimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.TimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-time/",
+					},
+				},
+				"replace": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace/",
+					},
+				},
+				"strlen": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strlen/",
+					},
+				},
+				"itoa_charset": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IntegerType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa-charset/",
+					},
+				},
+				"collect": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType},
+							[]types.Type{types.IDType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/",
+					},
+				},
+				"count": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/",
+					},
+				},
+				"integer2time": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.TimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-integer2time/",
+					},
+				},
+				"toupper": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-toupper/",
+					},
+				},
+				"suffixof": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-suffixof/",
+					},
+				},
+				"ip": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IPType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip/",
+					},
+				},
+				"basename": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-basename/",
+					},
+				},
+				"strpad": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strpad/",
+					},
+				},
+				"dirname": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-dirname/",
+					},
+				},
+				"itoa": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IntegerType, types.IntegerType},
+							[]types.Type{types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa/",
+					},
+				},
+				"strstr": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strstr/",
+					},
+				},
+				"anystr2ip": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IPType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/",
+					},
+				},
+				"atof": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atof/",
+					},
+				},
+				"replace_suffix": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-suffix/",
+					},
+				},
+				"prefixof": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-prefixof/",
+					},
+				},
+				"atoi": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atoi/",
+					},
+				},
+				"str2ip": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IPType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-str2ip/",
+					},
+				},
+				"strtof": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtof/",
+					},
+				},
+				"strrev": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrev/",
+					},
+				},
+			},
+		},
+		"randomint_seeded": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.IntegerType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.IntegerType, types.IntegerType, types.IntegerType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint-seeded/",
+			},
+		},
+		"addr": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"is_ipv6": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IPType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv6/",
+					},
+				},
+				"is_ipv4": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IPType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv4/",
+					},
+				},
+				"extract_bits": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IPType, types.IntegerType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-extract-bits/",
+					},
+				},
+			},
+		},
+		"boltsort": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"sort": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/boltsort-sort/",
+					},
+				},
+			},
+		},
+		"cstr_escape": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/cstr-escape/",
+			},
+		},
+		"randomint": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.IntegerType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.IntegerType, types.IntegerType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint/",
+			},
+		},
+		"regsuball": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType, types.StringType, types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsuball/",
+			},
+		},
+		"regsub": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType, types.StringType, types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsub/",
+			},
+		},
+		"parse_time_delta": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.IntegerType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/parse-time-delta/",
+			},
+		},
+		"xml_escape": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/xml-escape/",
+			},
+		},
+		"querystring": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"filtersep": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return:    types.StringType,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filtersep/",
+					},
+				},
+				"remove": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-remove/",
+					},
+				},
+				"add": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-add/",
+					},
+				},
+				"filter": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter/",
+					},
+				},
+				"globfilter_except": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter-except/",
+					},
+				},
+				"sort": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/",
+					},
+				},
+				"regfilter": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter/",
+					},
+				},
+				"filter_except": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter-except/",
+					},
+				},
+				"regfilter_except": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter-except/",
+					},
+				},
+				"set": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-set/",
+					},
+				},
+				"globfilter": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter/",
+					},
+				},
+				"clean": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-clean/",
+					},
+				},
+				"get": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-get/",
+					},
+				},
+			},
+		},
+		"time": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"hex_to_time": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.TimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IntegerType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-hex-to-time/",
+					},
+				},
+				"units": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.TimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-units/",
+					},
+				},
+				"add": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.TimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TimeType, types.RTimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-add/",
+					},
+				},
+				"runits": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.RTimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-runits/",
+					},
+				},
+				"sub": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.TimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TimeType, types.RTimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-sub/",
+					},
+				},
+				"is_after": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TimeType, types.TimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-is-after/",
+					},
+				},
+			},
+		},
+		"accept": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"language_filter_basic": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-filter-basic/",
+					},
+				},
+				"language_lookup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-lookup/",
+					},
+				},
+				"media_lookup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-media-lookup/",
+					},
+				},
+				"encoding_lookup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-encoding-lookup/",
+					},
+				},
+				"charset_lookup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-charset-lookup/",
+					},
+				},
+			},
+		},
+		"randombool": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.BoolType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.IntegerType, types.IntegerType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randombool/",
+			},
+		},
+		"h2": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"disable_header_compression": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-disable-header-compression/",
+					},
+				},
+				"push": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/",
+					},
+				},
+			},
+		},
+		"digest": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"hash_md5": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-md5/",
+					},
+				},
+				"time_hmac_sha512": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha512/",
+					},
+				},
+				"base64_decode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64-decode/",
+					},
+				},
+				"hash_sha1": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1/",
+					},
+				},
+				"base64url_nopad_decode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad-decode/",
+					},
+				},
+				"awsv4_hmac": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-awsv4-hmac/",
+					},
+				},
+				"hash_crc32b": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32b/",
+					},
+				},
+				"hash_sha224": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha224/",
+					},
+				},
+				"hmac_sha1_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1-base64/",
+					},
+				},
+				"hmac_sha256": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256/",
+					},
+				},
+				"time_hmac_sha1": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha1/",
+					},
+				},
+				"hmac_sha512_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512-base64/",
+					},
+				},
+				"hash_sha256_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256-from-base64/",
+					},
+				},
+				"hash_sha512_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512-from-base64/",
+					},
+				},
+				"hmac_sha512": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512/",
+					},
+				},
+				"hmac_sha1": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1/",
+					},
+				},
+				"base64url_decode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-decode/",
+					},
+				},
+				"base64url_nopad": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad/",
+					},
+				},
+				"hmac_md5": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5/",
+					},
+				},
+				"time_hmac_md5": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-md5/",
+					},
+				},
+				"secure_is_equal": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-secure-is-equal/",
+					},
+				},
+				"hash_sha512": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512/",
+					},
+				},
+				"time_hmac_sha256": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha256/",
+					},
+				},
+				"base64url": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url/",
+					},
+				},
+				"hash_sha256": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256/",
+					},
+				},
+				"rsa_verify": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType, types.IDType},
+							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-rsa-verify/",
+					},
+				},
+				"hmac_md5_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5-base64/",
+					},
+				},
+				"base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64/",
+					},
+				},
+				"hash_sha1_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1-from-base64/",
+					},
+				},
+				"hash_crc32": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32/",
+					},
+				},
+				"hash_sha384": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha384/",
+					},
+				},
+				"hmac_sha256_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/",
+					},
+				},
+			},
+		},
 		"math": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"atan": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atan/",
-					},
-				},
-				"tan": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-tan/",
-					},
-				},
-				"is_infinite": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-infinite/",
-					},
-				},
-				"is_nan": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-nan/",
-					},
-				},
 				"exp": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
@@ -78,50 +1190,6 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-exp/",
-					},
-				},
-				"log2": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log2/",
-					},
-				},
-				"is_finite": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-finite/",
-					},
-				},
-				"atanh": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atanh/",
-					},
-				},
-				"log": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log/",
 					},
 				},
 				"sin": &FunctionSpec{
@@ -157,7 +1225,7 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log10/",
 					},
 				},
-				"ceil": &FunctionSpec{
+				"log2": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.FloatType,
@@ -165,10 +1233,10 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-ceil/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log2/",
 					},
 				},
-				"roundeven": &FunctionSpec{
+				"atanh": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.FloatType,
@@ -176,73 +1244,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundeven/",
-					},
-				},
-				"roundhalfup": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfup/",
-					},
-				},
-				"sinh": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sinh/",
-					},
-				},
-				"trunc": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-trunc/",
-					},
-				},
-				"is_normal": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-normal/",
-					},
-				},
-				"round": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-round/",
-					},
-				},
-				"asin": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-asin/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atanh/",
 					},
 				},
 				"sqrt": &FunctionSpec{
@@ -256,6 +1258,28 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sqrt/",
 					},
 				},
+				"is_infinite": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-infinite/",
+					},
+				},
+				"tan": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-tan/",
+					},
+				},
 				"acosh": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
@@ -267,7 +1291,7 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-acosh/",
 					},
 				},
-				"is_subnormal": &FunctionSpec{
+				"is_normal": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
@@ -275,10 +1299,21 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-subnormal/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-normal/",
 					},
 				},
-				"floor": &FunctionSpec{
+				"is_nan": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-nan/",
+					},
+				},
+				"asin": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.FloatType,
@@ -286,7 +1321,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-floor/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-asin/",
 					},
 				},
 				"exp2": &FunctionSpec{
@@ -300,7 +1335,7 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-exp2/",
 					},
 				},
-				"cos": &FunctionSpec{
+				"log": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.FloatType,
@@ -308,7 +1343,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cos/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-logexp/math-log/",
+					},
+				},
+				"round": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-round/",
 					},
 				},
 				"atan2": &FunctionSpec{
@@ -322,7 +1368,18 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atan2/",
 					},
 				},
-				"cosh": &FunctionSpec{
+				"is_subnormal": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-subnormal/",
+					},
+				},
+				"atan": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.FloatType,
@@ -330,7 +1387,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.FloatType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cosh/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-atan/",
 					},
 				},
 				"acos": &FunctionSpec{
@@ -344,17 +1401,6 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-acos/",
 					},
 				},
-				"roundhalfdown": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.FloatType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfdown/",
-					},
-				},
 				"tanh": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
@@ -366,56 +1412,249 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-tanh/",
 					},
 				},
-			},
-		},
-		"xml_escape": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/xml-escape/",
-			},
-		},
-		"randomint_seeded": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.IntegerType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.IntegerType, types.IntegerType, types.IntegerType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint-seeded/",
-			},
-		},
-		"resp": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"tarpit": &FunctionSpec{
+				"is_finite": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
+						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-							[]types.Type{types.StringType},
+							[]types.Type{types.FloatType},
 						},
-						Scopes:    DELIVER,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/",
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/floating-point-classifications/math-is-finite/",
+					},
+				},
+				"floor": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-floor/",
+					},
+				},
+				"trunc": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-trunc/",
+					},
+				},
+				"roundhalfdown": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfdown/",
+					},
+				},
+				"roundeven": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundeven/",
+					},
+				},
+				"sinh": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-sinh/",
+					},
+				},
+				"cosh": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cosh/",
+					},
+				},
+				"roundhalfup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-roundhalfup/",
+					},
+				},
+				"ceil": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-rounding/math-ceil/",
+					},
+				},
+				"cos": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.FloatType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/math-trig/math-cos/",
+					},
+				},
+			},
+		},
+		"table": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"lookup_float": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.FloatType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.FloatType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/",
+					},
+				},
+				"lookup_ip": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IPType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.IPType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
+					},
+				},
+				"lookup_backend": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BackendType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.BackendType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/",
+					},
+				},
+				"contains": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-contains/",
+					},
+				},
+				"lookup_bool": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.BoolType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/",
+					},
+				},
+				"lookup_acl": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.AclType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.AclType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/",
+					},
+				},
+				"lookup_integer": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.IntegerType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/",
+					},
+				},
+				"lookup_rtime": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.RTimeType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.RTimeType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/",
+					},
+				},
+				"lookup": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.StringType},
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup/",
 					},
 				},
 			},
 		},
 		"utf8": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"is_valid": &FunctionSpec{
+				"codepoint_count": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.BoolType,
+						Return: types.IntegerType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/",
 					},
 				},
 				"substr": &FunctionSpec{
@@ -441,371 +1680,17 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/",
 					},
 				},
-				"codepoint_count": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/",
-					},
-				},
-			},
-		},
-		"setcookie": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"get_value_by_name": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-get-value-by-name/",
-					},
-				},
-				"delete_by_name": &FunctionSpec{
+				"is_valid": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-delete-by-name/",
-					},
-				},
-			},
-		},
-		"time": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"is_after": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TimeType, types.TimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-is-after/",
-					},
-				},
-				"hex_to_time": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.TimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IntegerType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-hex-to-time/",
-					},
-				},
-				"add": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.TimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TimeType, types.RTimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-add/",
-					},
-				},
-				"units": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.TimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-units/",
-					},
-				},
-				"runits": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.RTimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-runits/",
-					},
-				},
-				"sub": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.TimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TimeType, types.RTimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-sub/",
-					},
-				},
-			},
-		},
-		"querystring": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"regfilter": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter/",
-					},
-				},
-				"globfilter": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter/",
-					},
-				},
-				"remove": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-remove/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/",
 					},
 				},
-				"filter_except": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter-except/",
-					},
-				},
-				"get": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-get/",
-					},
-				},
-				"regfilter_except": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter-except/",
-					},
-				},
-				"filtersep": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filtersep/",
-					},
-				},
-				"sort": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/",
-					},
-				},
-				"set": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-set/",
-					},
-				},
-				"filter": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filter/",
-					},
-				},
-				"add": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-add/",
-					},
-				},
-				"clean": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-clean/",
-					},
-				},
-				"globfilter_except": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-globfilter-except/",
-					},
-				},
-			},
-		},
-		"randomint": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.IntegerType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.IntegerType, types.IntegerType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomint/",
-			},
-		},
-		"http_status_matches": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.BoolType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.IntegerType, types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/http-status-matches/",
-			},
-		},
-		"strftime": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType, types.TimeType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/strftime/",
-			},
-		},
-		"randombool": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.BoolType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.IntegerType, types.IntegerType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randombool/",
-			},
-		},
-		"accept": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"language_filter_basic": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-filter-basic/",
-					},
-				},
-				"media_lookup": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-media-lookup/",
-					},
-				},
-				"charset_lookup": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-charset-lookup/",
-					},
-				},
-				"encoding_lookup": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-encoding-lookup/",
-					},
-				},
-				"language_lookup": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-lookup/",
-					},
-				},
-			},
-		},
-		"regsuball": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType, types.StringType, types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsuball/",
 			},
 		},
 		"randombool_seeded": &FunctionSpec{
@@ -819,9 +1704,17 @@ func builtinFunctions() Functions {
 				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randombool-seeded/",
 			},
 		},
-		"digest": &FunctionSpec{
+		"uuid": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"hmac_sha256": &FunctionSpec{
+				"url": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return:    types.StringType,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-url/",
+					},
+				},
+				"version3": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
@@ -829,286 +1722,56 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version3/",
 					},
 				},
-				"hash_sha512_from_base64": &FunctionSpec{
+				"x500": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
+						Return:    types.StringType,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512-from-base64/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-x500/",
 					},
 				},
-				"rsa_verify": &FunctionSpec{
+				"is_version5": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType, types.IDType},
-							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-rsa-verify/",
-					},
-				},
-				"base64_decode": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64-decode/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version5/",
 					},
 				},
-				"base64url_decode": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-decode/",
-					},
-				},
-				"hash_crc32": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32/",
-					},
-				},
-				"hmac_md5_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5-base64/",
-					},
-				},
-				"hmac_sha256_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/",
-					},
-				},
-				"time_hmac_sha256": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha256/",
-					},
-				},
-				"hmac_sha512": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512/",
-					},
-				},
-				"hash_sha224": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha224/",
-					},
-				},
-				"hmac_sha1": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1/",
-					},
-				},
-				"hmac_sha1_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha1-base64/",
-					},
-				},
-				"hash_sha1_from_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1-from-base64/",
-					},
-				},
-				"time_hmac_sha512": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha512/",
-					},
-				},
-				"secure_is_equal": &FunctionSpec{
+				"is_version4": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-secure-is-equal/",
-					},
-				},
-				"base64url": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version4/",
 					},
 				},
-				"hash_sha1": &FunctionSpec{
+				"dns": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
+						Return:    types.StringType,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-dns/",
 					},
 				},
-				"awsv4_hmac": &FunctionSpec{
+				"version4": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType, types.StringType},
-						},
+						Return:    types.StringType,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-awsv4-hmac/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version4/",
 					},
 				},
-				"hash_sha384": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha384/",
-					},
-				},
-				"base64url_nopad": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad/",
-					},
-				},
-				"time_hmac_sha1": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha1/",
-					},
-				},
-				"time_hmac_md5": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-md5/",
-					},
-				},
-				"hash_sha512": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512/",
-					},
-				},
-				"hash_sha256": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256/",
-					},
-				},
-				"hash_md5": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-md5/",
-					},
-				},
-				"hmac_sha512_base64": &FunctionSpec{
+				"version5": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
@@ -1116,135 +1779,54 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha512-base64/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version5/",
 					},
 				},
-				"hmac_md5": &FunctionSpec{
+				"is_version3": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-md5/",
-					},
-				},
-				"hash_crc32b": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
+						Return: types.BoolType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32b/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version3/",
 					},
 				},
-				"base64": &FunctionSpec{
+				"oid": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
+						Return:    types.StringType,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-oid/",
+					},
+				},
+				"is_valid": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64/",
-					},
-				},
-				"hash_sha256_from_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha256-from-base64/",
-					},
-				},
-				"base64url_nopad_decode": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad-decode/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-valid/",
 					},
 				},
 			},
 		},
-		"crypto": &FunctionSpec{
+		"fastly": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"encrypt_base64": &FunctionSpec{
+				"hash": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
+						Return: types.IntegerType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
+							[]types.Type{types.StringType, types.IntegerType, types.IntegerType, types.IntegerType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-base64/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/",
 					},
 				},
-				"decrypt_base64": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-base64/",
-					},
-				},
-				"encrypt_hex": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/",
-					},
-				},
-				"decrypt_hex": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-hex/",
-					},
-				},
-			},
-		},
-		"urldecode": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/urldecode/",
-			},
-		},
-		"subfield": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType, types.StringType, types.StringType},
-					[]types.Type{types.StringType, types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/subfield/",
 			},
 		},
 		"bin": &FunctionSpec{
@@ -1273,17 +1855,6 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
-		"regsub": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType, types.StringType, types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsub/",
-			},
-		},
 		"urlencode": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{
@@ -1295,677 +1866,98 @@ func builtinFunctions() Functions {
 				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/urlencode/",
 			},
 		},
-		"addr": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"extract_bits": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IPType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-extract-bits/",
-					},
+		"urldecode": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType},
 				},
-				"is_ipv6": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IPType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv6/",
-					},
-				},
-				"is_ipv4": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IPType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-is-ipv4/",
-					},
-				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/urldecode/",
 			},
 		},
-		"std": &FunctionSpec{
+		"setcookie": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"prefixof": &FunctionSpec{
+				"delete_by_name": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-prefixof/",
-					},
-				},
-				"toupper": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-toupper/",
-					},
-				},
-				"strrep": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrep/",
-					},
-				},
-				"str2ip": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IPType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-str2ip/",
-					},
-				},
-				"itoa": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IntegerType, types.IntegerType},
-							[]types.Type{types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa/",
-					},
-				},
-				"replace_prefix": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-prefix/",
-					},
-				},
-				"ip": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IPType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip/",
-					},
-				},
-				"strrev": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strrev/",
-					},
-				},
-				"replaceall": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replaceall/",
-					},
-				},
-				"basename": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-basename/",
-					},
-				},
-				"integer2time": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.TimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-integer2time/",
-					},
-				},
-				"ip2str": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IPType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-ip2str/",
-					},
-				},
-				"collect": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType},
 							[]types.Type{types.IDType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-delete-by-name/",
 					},
 				},
-				"dirname": &FunctionSpec{
+				"get_value_by_name": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
+							[]types.Type{types.IDType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-dirname/",
-					},
-				},
-				"strlen": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strlen/",
-					},
-				},
-				"replace_suffix": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace-suffix/",
-					},
-				},
-				"strpad": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strpad/",
-					},
-				},
-				"strtol": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtol/",
-					},
-				},
-				"tolower": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-tolower/",
-					},
-				},
-				"itoa_charset": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IntegerType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-itoa-charset/",
-					},
-				},
-				"suffixof": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-suffixof/",
-					},
-				},
-				"atof": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atof/",
-					},
-				},
-				"time": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.TimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.TimeType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/std-time/",
-					},
-				},
-				"atoi": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-atoi/",
-					},
-				},
-				"anystr2ip": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IPType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/",
-					},
-				},
-				"strtof": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strtof/",
-					},
-				},
-				"replace": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-replace/",
-					},
-				},
-				"count": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.IDType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/",
-					},
-				},
-				"strstr": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-strstr/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-get-value-by-name/",
 					},
 				},
 			},
 		},
-		"substr": &FunctionSpec{
+		"strftime": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{
 				Return: types.StringType,
 				Arguments: [][]types.Type{
-					[]types.Type{types.StringType, types.IntegerType, types.IntegerType},
-					[]types.Type{types.StringType, types.IntegerType},
+					[]types.Type{types.StringType, types.TimeType},
 				},
 				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/substr/",
+				Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/strftime/",
 			},
 		},
-		"h2": &FunctionSpec{
+		"crypto": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
-				"push": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/",
-					},
-				},
-				"disable_header_compression": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Arguments: [][]types.Type{
-							[]types.Type{},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-disable-header-compression/",
-					},
-				},
-			},
-		},
-		"table": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"lookup_backend": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BackendType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.BackendType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/",
-					},
-				},
-				"lookup_acl": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.AclType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.AclType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/",
-					},
-				},
-				"lookup_float": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.FloatType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.FloatType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/",
-					},
-				},
-				"lookup_integer": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.IntegerType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/",
-					},
-				},
-				"lookup": &FunctionSpec{
+				"encrypt_base64": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.StringType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup/",
-					},
-				},
-				"contains": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-contains/",
-					},
-				},
-				"lookup_rtime": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.RTimeType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.RTimeType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/",
-					},
-				},
-				"lookup_bool": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.BoolType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/",
-					},
-				},
-				"lookup_ip": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IPType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.IPType},
-							[]types.Type{types.TableType, types.StringType},
-						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
-					},
-				},
-			},
-		},
-		"uuid": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"x500": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-x500/",
-					},
-				},
-				"is_version4": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
+							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version4/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-base64/",
 					},
 				},
-				"url": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-url/",
-					},
-				},
-				"version3": &FunctionSpec{
+				"decrypt_base64": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
+							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version3/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-base64/",
 					},
 				},
-				"version5": &FunctionSpec{
+				"decrypt_hex": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
+							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version5/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-decrypt-hex/",
 					},
 				},
-				"is_version5": &FunctionSpec{
+				"encrypt_hex": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.BoolType,
+						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
+							[]types.Type{types.IDType, types.IDType, types.IDType, types.StringType, types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version5/",
-					},
-				},
-				"is_valid": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-valid/",
-					},
-				},
-				"is_version3": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.BoolType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version3/",
-					},
-				},
-				"oid": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-oid/",
-					},
-				},
-				"version4": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version4/",
-					},
-				},
-				"dns": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return:    types.StringType,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-dns/",
-					},
-				},
-			},
-		},
-		"parse_time_delta": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.IntegerType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/parse-time-delta/",
-			},
-		},
-		"randomstr": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.IntegerType, types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/",
-			},
-		},
-		"cstr_escape": &FunctionSpec{
-			Items: map[string]*FunctionSpec{},
-			Value: &BuiltinFunction{
-				Return: types.StringType,
-				Arguments: [][]types.Type{
-					[]types.Type{types.StringType},
-				},
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/functions/strings/cstr-escape/",
-			},
-		},
-		"fastly": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"hash": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.IntegerType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IntegerType, types.IntegerType, types.IntegerType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/",
 					},
 				},
 			},
@@ -1985,19 +1977,27 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
-		"boltsort": &FunctionSpec{
-			Items: map[string]*FunctionSpec{
-				"sort": &FunctionSpec{
-					Items: map[string]*FunctionSpec{},
-					Value: &BuiltinFunction{
-						Return: types.StringType,
-						Arguments: [][]types.Type{
-							[]types.Type{types.StringType},
-						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/query-string/boltsort-sort/",
-					},
+		"randomstr": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.IntegerType, types.StringType},
 				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/",
+			},
+		},
+		"subfield": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Return: types.StringType,
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType, types.StringType, types.StringType},
+					[]types.Type{types.StringType, types.StringType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/subfield/",
 			},
 		},
 	}

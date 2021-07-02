@@ -8,7 +8,7 @@ import (
 
 type ErrorStatement struct {
 	Token     token.Token
-	Code      *Integer
+	Code      Expression
 	Argument  Expression
 	NestLevel int
 	Comments  Comments

@@ -12,6 +12,9 @@ linux: test
 darwin: test
 	GOOS=darwin GOARCH=amd64 go build -o dist/falco-darwin-amd64 cli/*.go
 
+local: test
+	go build -o falco cli/*.go
+
 all: linux darwin
 
 clean:

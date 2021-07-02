@@ -1296,18 +1296,20 @@ func (p *Parser) parseErrorStatement(args ...OptionFunc) (*ast.ErrorStatement, e
 		NestLevel: arg.NestLevel,
 	}
 
-	// error statement syntax is: error [INT:code] [(optional)EXPRESSION]
-	if !p.expectPeek(token.INT) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "INT"))
+	// error code token must be ident or integer
+	var err error
+	switch p.peekToken.Type {
+	case token.INT:
+		p.nextToken()
+		stmt.Code, err = p.parseInteger()
+	case token.IDENT:
+		p.nextToken()
+		stmt.Code, err = p.parseIdent()
+	default:
+		err = UnexpectedToken(p.peekToken)
 	}
-	// Attempt to convert string to integer
-	v, err := strconv.ParseInt(p.curToken.Literal, 10, 64)
 	if err != nil {
-		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
-	}
-	stmt.Code = &ast.Integer{
-		Token: p.curToken,
-		Value: v,
+		return nil, errors.WithStack(err)
 	}
 
 	// Optional expression

@@ -952,9 +952,21 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 
 	// Fastly recommends to use error code between 600 and 699.
 	// https://developer.fastly.com/reference/vcl/statements/error/
-	if stmt.Code.Value > 699 {
-		l.Error(ErrorCodeRange(stmt.Token, stmt.Code.Value).Match(ERROR_STATEMENT_CODE))
+	switch t := stmt.Code.(type) {
+	case *ast.Ident:
+		code := l.Lint(t, ctx)
+		if code != types.IntegerType {
+			l.Error(InvalidType(t.GetToken(), t.Value, types.IntegerType, code))
+		}
+	case *ast.Integer:
+		if t.Value > 699 {
+			l.Error(ErrorCodeRange(t.GetToken(), t.Value).Match(ERROR_STATEMENT_CODE))
+		}
+	default:
+		code := l.Lint(t, ctx)
+		l.Error(InvalidType(t.GetToken(), "error code", types.IntegerType, code))
 	}
+
 	return types.NeverType
 }
 
