@@ -162,6 +162,137 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 		return fmt.Errorf(`duplicate deifnition of backend "%s"`, name)
 	}
 	c.Backends[name] = backend
+
+	// Additionally, some backend name related predefiend variable
+	c.Variables["backend"].Items[name] = &Object{
+		Items: map[string]*Object{
+			"connections_open": &Object{
+				Items: map[string]*Object{},
+				Value: &Accessor{
+					Get:       types.IntegerType,
+					Unset:     false,
+					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-connections-open/",
+				},
+			},
+			"connections_used": &Object{
+				Items: map[string]*Object{},
+				Value: &Accessor{
+					Get:       types.IntegerType,
+					Unset:     false,
+					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-connections-used/",
+				},
+			},
+			"healthy": &Object{
+				Items: map[string]*Object{},
+				Value: &Accessor{
+					Get:       types.BoolType,
+					Unset:     false,
+					Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+					Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-healthy/",
+				},
+			},
+		},
+	}
+	c.Variables["ratecounter"] = &Object{
+		Items: map[string]*Object{
+			name: &Object{
+				Items: map[string]*Object{
+					"bucket": &Object{
+						Items: map[string]*Object{
+							"10s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-10s/",
+								},
+							},
+							"20s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-20s/",
+								},
+							},
+							"30s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-30s/",
+								},
+							},
+							"40s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-40s/",
+								},
+							},
+							"50s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-50s/",
+								},
+							},
+							"60s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.IntegerType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-bucket-60s/",
+								},
+							},
+						},
+					},
+					"rate": &Object{
+						Items: map[string]*Object{
+							"1s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.FloatType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-1s/",
+								},
+							},
+							"10s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.FloatType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-10s/",
+								},
+							},
+							"60s": &Object{
+								Items: map[string]*Object{},
+								Value: &Accessor{
+									Get:       types.FloatType,
+									Unset:     false,
+									Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+									Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/ratecounter-rate-60s/",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return nil
 }
 
@@ -182,10 +313,26 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 	c.Directors[name] = director
 
 	// Director also need to add backend due to director can set as backend in VCL.
-	if err := c.AddBackend(name, &types.Backend{
+	c.Backends[name] = &types.Backend{
 		DirectorDecl: director.Decl,
-	}); err != nil {
-		return err
+	}
+
+	c.Variables["director"] = &Object{
+		Items: map[string]*Object{
+			name: &Object{
+				Items: map[string]*Object{
+					"healthy": &Object{
+						Items: map[string]*Object{},
+						Value: &Accessor{
+							Get:       types.BoolType,
+							Unset:     false,
+							Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+							Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/director-healthy/",
+						},
+					},
+				},
+			},
+		},
 	}
 	return nil
 }
@@ -349,7 +496,7 @@ func (c *Context) Declare(name string, valueType types.Type) error {
 		}
 	}
 
-	obj.Value = &accessor{
+	obj.Value = &Accessor{
 		Get:    valueType,
 		Set:    valueType,
 		Unset:  false,

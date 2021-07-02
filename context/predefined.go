@@ -10,10 +10,10 @@ type Variables map[string]*Object
 
 type Object struct {
 	Items map[string]*Object
-	Value *accessor
+	Value *Accessor
 }
 
-type accessor struct {
+type Accessor struct {
 	Get       types.Type
 	Set       types.Type
 	Unset     bool
@@ -29,7 +29,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"is_tls": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -39,7 +39,7 @@ func predefinedVariables() Variables {
 						},
 						"tls_protocol": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -53,7 +53,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"congestion_algorithm": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -63,7 +63,7 @@ func predefinedVariables() Variables {
 						},
 						"cwnd": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -73,7 +73,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_advmss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -83,7 +83,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_bytes_acked": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -93,7 +93,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_bytes_received": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -103,7 +103,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_data_segs_in": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -113,7 +113,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_data_segs_out": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -123,7 +123,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_delivery_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -133,7 +133,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_delta_retrans": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -143,7 +143,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_last_data_sent": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -153,7 +153,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_max_pacing_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -163,7 +163,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_min_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -173,7 +173,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_notsent_bytes": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -183,7 +183,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_pacing_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -193,7 +193,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_pmtu": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -203,7 +203,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_mss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -213,7 +213,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -223,7 +223,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_space": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -233,7 +233,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_ssthresh": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -243,7 +243,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_reordering": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -253,7 +253,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -263,7 +263,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rttvar": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -273,7 +273,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_segs_in": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -283,7 +283,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_segs_out": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -293,7 +293,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_cwnd": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -303,7 +303,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_mss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -313,7 +313,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_ssthresh": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -323,7 +323,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_total_retrans": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -339,7 +339,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"between_bytes_timeout": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -349,7 +349,7 @@ func predefinedVariables() Variables {
 				},
 				"body_bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -359,7 +359,7 @@ func predefinedVariables() Variables {
 				},
 				"bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -369,7 +369,7 @@ func predefinedVariables() Variables {
 				},
 				"connect_timeout": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -379,7 +379,7 @@ func predefinedVariables() Variables {
 				},
 				"first_byte_timeout": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -389,7 +389,7 @@ func predefinedVariables() Variables {
 				},
 				"header_bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -401,7 +401,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"%any%": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     true,
@@ -413,7 +413,7 @@ func predefinedVariables() Variables {
 				},
 				"is_clustering": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -423,7 +423,7 @@ func predefinedVariables() Variables {
 				},
 				"method": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -433,7 +433,7 @@ func predefinedVariables() Variables {
 				},
 				"proto": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -443,7 +443,7 @@ func predefinedVariables() Variables {
 				},
 				"request": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -455,7 +455,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"basename": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -465,7 +465,7 @@ func predefinedVariables() Variables {
 						},
 						"dirname": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -475,7 +475,7 @@ func predefinedVariables() Variables {
 						},
 						"ext": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -485,7 +485,7 @@ func predefinedVariables() Variables {
 						},
 						"path": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -495,7 +495,7 @@ func predefinedVariables() Variables {
 						},
 						"qs": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -504,7 +504,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -520,7 +520,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"alternate_ips": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -530,7 +530,7 @@ func predefinedVariables() Variables {
 						},
 						"ip": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IPType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -540,7 +540,7 @@ func predefinedVariables() Variables {
 						},
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -550,7 +550,7 @@ func predefinedVariables() Variables {
 						},
 						"port": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -560,7 +560,7 @@ func predefinedVariables() Variables {
 						},
 						"requests": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -570,7 +570,7 @@ func predefinedVariables() Variables {
 						},
 						"src_ip": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IPType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -582,7 +582,7 @@ func predefinedVariables() Variables {
 				},
 				"brotli": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -592,7 +592,7 @@ func predefinedVariables() Variables {
 				},
 				"cacheable": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -602,7 +602,7 @@ func predefinedVariables() Variables {
 				},
 				"do_esi": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -612,7 +612,7 @@ func predefinedVariables() Variables {
 				},
 				"do_stream": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -622,7 +622,7 @@ func predefinedVariables() Variables {
 				},
 				"grace": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -632,7 +632,7 @@ func predefinedVariables() Variables {
 				},
 				"gzip": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -642,7 +642,7 @@ func predefinedVariables() Variables {
 				},
 				"handshake_time_to_origin_ms": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -652,7 +652,7 @@ func predefinedVariables() Variables {
 				},
 				"hipaa": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -664,7 +664,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"%any%": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     true,
@@ -676,7 +676,7 @@ func predefinedVariables() Variables {
 				},
 				"pci": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -686,7 +686,7 @@ func predefinedVariables() Variables {
 				},
 				"proto": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -696,7 +696,7 @@ func predefinedVariables() Variables {
 				},
 				"response": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -706,7 +706,7 @@ func predefinedVariables() Variables {
 				},
 				"saintmode": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.NeverType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -716,7 +716,7 @@ func predefinedVariables() Variables {
 				},
 				"stale_if_error": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -726,7 +726,7 @@ func predefinedVariables() Variables {
 				},
 				"stale_while_revalidate": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -736,7 +736,7 @@ func predefinedVariables() Variables {
 				},
 				"status": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.IntegerType,
 						Unset:     false,
@@ -746,7 +746,7 @@ func predefinedVariables() Variables {
 				},
 				"ttl": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -756,7 +756,7 @@ func predefinedVariables() Variables {
 				},
 				"used_alternate_path_to_origin": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -772,7 +772,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -782,7 +782,7 @@ func predefinedVariables() Variables {
 						},
 						"number": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -796,7 +796,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -810,7 +810,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -820,7 +820,7 @@ func predefinedVariables() Variables {
 						},
 						"version": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -834,7 +834,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"bot": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -844,7 +844,7 @@ func predefinedVariables() Variables {
 						},
 						"browser": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -854,7 +854,7 @@ func predefinedVariables() Variables {
 						},
 						"checker": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -864,7 +864,7 @@ func predefinedVariables() Variables {
 						},
 						"downloader": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -874,7 +874,7 @@ func predefinedVariables() Variables {
 						},
 						"feedreader": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -884,7 +884,7 @@ func predefinedVariables() Variables {
 						},
 						"filter": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -894,7 +894,7 @@ func predefinedVariables() Variables {
 						},
 						"masquerading": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -904,7 +904,7 @@ func predefinedVariables() Variables {
 						},
 						"spam": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -918,7 +918,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"height": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -928,7 +928,7 @@ func predefinedVariables() Variables {
 						},
 						"ppi": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -938,7 +938,7 @@ func predefinedVariables() Variables {
 						},
 						"touchscreen": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -948,7 +948,7 @@ func predefinedVariables() Variables {
 						},
 						"width": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -962,7 +962,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"area_code": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -974,7 +974,7 @@ func predefinedVariables() Variables {
 							Items: map[string]*Object{
 								"ascii": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -984,7 +984,7 @@ func predefinedVariables() Variables {
 								},
 								"latin1": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -994,7 +994,7 @@ func predefinedVariables() Variables {
 								},
 								"utf8": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1003,7 +1003,7 @@ func predefinedVariables() Variables {
 									},
 								},
 							},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1013,7 +1013,7 @@ func predefinedVariables() Variables {
 						},
 						"conn_speed": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1023,7 +1023,7 @@ func predefinedVariables() Variables {
 						},
 						"conn_type": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1033,7 +1033,7 @@ func predefinedVariables() Variables {
 						},
 						"continent_code": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1043,7 +1043,7 @@ func predefinedVariables() Variables {
 						},
 						"country_code": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1053,7 +1053,7 @@ func predefinedVariables() Variables {
 						},
 						"country_code3": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1065,7 +1065,7 @@ func predefinedVariables() Variables {
 							Items: map[string]*Object{
 								"ascii": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1075,7 +1075,7 @@ func predefinedVariables() Variables {
 								},
 								"latin1": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1085,7 +1085,7 @@ func predefinedVariables() Variables {
 								},
 								"utf8": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1094,7 +1094,7 @@ func predefinedVariables() Variables {
 									},
 								},
 							},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1104,7 +1104,7 @@ func predefinedVariables() Variables {
 						},
 						"gmt_offset": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1114,7 +1114,7 @@ func predefinedVariables() Variables {
 						},
 						"ip_override": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     false,
@@ -1124,7 +1124,7 @@ func predefinedVariables() Variables {
 						},
 						"latitude": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.FloatType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1134,7 +1134,7 @@ func predefinedVariables() Variables {
 						},
 						"longitude": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.FloatType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1144,7 +1144,7 @@ func predefinedVariables() Variables {
 						},
 						"metro_code": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1154,7 +1154,7 @@ func predefinedVariables() Variables {
 						},
 						"postal_code": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1164,7 +1164,7 @@ func predefinedVariables() Variables {
 						},
 						"proxy_description": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1174,7 +1174,7 @@ func predefinedVariables() Variables {
 						},
 						"proxy_type": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1186,7 +1186,7 @@ func predefinedVariables() Variables {
 							Items: map[string]*Object{
 								"ascii": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1196,7 +1196,7 @@ func predefinedVariables() Variables {
 								},
 								"latin1": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1206,7 +1206,7 @@ func predefinedVariables() Variables {
 								},
 								"utf8": &Object{
 									Items: map[string]*Object{},
-									Value: &accessor{
+									Value: &Accessor{
 										Get:       types.StringType,
 										Set:       types.NeverType,
 										Unset:     false,
@@ -1215,7 +1215,7 @@ func predefinedVariables() Variables {
 									},
 								},
 							},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1225,7 +1225,7 @@ func predefinedVariables() Variables {
 						},
 						"utc_offset": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1237,7 +1237,7 @@ func predefinedVariables() Variables {
 				},
 				"identified": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1247,7 +1247,7 @@ func predefinedVariables() Variables {
 				},
 				"identity": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -1257,7 +1257,7 @@ func predefinedVariables() Variables {
 				},
 				"ip": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1269,7 +1269,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1279,7 +1279,7 @@ func predefinedVariables() Variables {
 						},
 						"version": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1293,7 +1293,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ereader": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1303,7 +1303,7 @@ func predefinedVariables() Variables {
 						},
 						"gameconsole": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1313,7 +1313,7 @@ func predefinedVariables() Variables {
 						},
 						"hwtype": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1323,7 +1323,7 @@ func predefinedVariables() Variables {
 						},
 						"mediaplayer": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1333,7 +1333,7 @@ func predefinedVariables() Variables {
 						},
 						"mobile": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1343,7 +1343,7 @@ func predefinedVariables() Variables {
 						},
 						"smarttv": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1353,7 +1353,7 @@ func predefinedVariables() Variables {
 						},
 						"tablet": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1363,7 +1363,7 @@ func predefinedVariables() Variables {
 						},
 						"tvplayer": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1375,7 +1375,7 @@ func predefinedVariables() Variables {
 				},
 				"port": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1385,7 +1385,7 @@ func predefinedVariables() Variables {
 				},
 				"requests": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1397,7 +1397,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"congestion_algorithm": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1407,7 +1407,7 @@ func predefinedVariables() Variables {
 						},
 						"cwnd": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1417,7 +1417,7 @@ func predefinedVariables() Variables {
 						},
 						"nexthop": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IPType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1427,7 +1427,7 @@ func predefinedVariables() Variables {
 						},
 						"pace": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.IntegerType,
 								Unset:     false,
@@ -1437,7 +1437,7 @@ func predefinedVariables() Variables {
 						},
 						"ploss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.FloatType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1447,7 +1447,7 @@ func predefinedVariables() Variables {
 						},
 						"tcp_info": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1457,7 +1457,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_advmss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1467,7 +1467,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_bytes_acked": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1477,7 +1477,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_bytes_received": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1487,7 +1487,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_data_segs_in": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1497,7 +1497,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_data_segs_out": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1507,7 +1507,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_delivery_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1517,7 +1517,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_delta_retrans": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1527,7 +1527,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_last_data_sent": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1537,7 +1537,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_max_pacing_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1547,7 +1547,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_min_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1557,7 +1557,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_notsent_bytes": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1567,7 +1567,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_pacing_rate": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1577,7 +1577,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_pmtu": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1587,7 +1587,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_mss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1597,7 +1597,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1607,7 +1607,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_space": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1617,7 +1617,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rcv_ssthresh": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1627,7 +1627,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_reordering": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1637,7 +1637,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rtt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1647,7 +1647,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_rttvar": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1657,7 +1657,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_segs_in": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1667,7 +1667,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_segs_out": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1677,7 +1677,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_cwnd": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1687,7 +1687,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_mss": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1697,7 +1697,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_snd_ssthresh": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1707,7 +1707,7 @@ func predefinedVariables() Variables {
 						},
 						"tcpi_total_retrans": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1723,7 +1723,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"allow_inside_cdata": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -1737,7 +1737,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"error": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     true,
@@ -1749,7 +1749,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"visits_this_pop_this_service": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1759,7 +1759,7 @@ func predefinedVariables() Variables {
 						},
 						"visits_this_service": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1777,7 +1777,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"is_tls": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1791,7 +1791,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"is_push": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1801,7 +1801,7 @@ func predefinedVariables() Variables {
 						},
 						"stream_id": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1813,7 +1813,7 @@ func predefinedVariables() Variables {
 				},
 				"is_cluster_edge": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1823,7 +1823,7 @@ func predefinedVariables() Variables {
 				},
 				"is_cluster_shield": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1833,7 +1833,7 @@ func predefinedVariables() Variables {
 				},
 				"is_h2": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1843,7 +1843,7 @@ func predefinedVariables() Variables {
 				},
 				"state": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1857,7 +1857,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"area_code": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1869,7 +1869,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ascii": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1879,7 +1879,7 @@ func predefinedVariables() Variables {
 						},
 						"latin1": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1889,7 +1889,7 @@ func predefinedVariables() Variables {
 						},
 						"utf8": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1898,7 +1898,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1908,7 +1908,7 @@ func predefinedVariables() Variables {
 				},
 				"continent_code": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1918,7 +1918,7 @@ func predefinedVariables() Variables {
 				},
 				"country_code": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1928,7 +1928,7 @@ func predefinedVariables() Variables {
 				},
 				"country_code3": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1940,7 +1940,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ascii": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1950,7 +1950,7 @@ func predefinedVariables() Variables {
 						},
 						"latin1": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1960,7 +1960,7 @@ func predefinedVariables() Variables {
 						},
 						"utf8": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -1969,7 +1969,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1979,7 +1979,7 @@ func predefinedVariables() Variables {
 				},
 				"ip_override": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -1989,7 +1989,7 @@ func predefinedVariables() Variables {
 				},
 				"latitude": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -1999,7 +1999,7 @@ func predefinedVariables() Variables {
 				},
 				"longitude": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2009,7 +2009,7 @@ func predefinedVariables() Variables {
 				},
 				"metro_code": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2019,7 +2019,7 @@ func predefinedVariables() Variables {
 				},
 				"postal_code": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2031,7 +2031,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ascii": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2041,7 +2041,7 @@ func predefinedVariables() Variables {
 						},
 						"latin1": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2051,7 +2051,7 @@ func predefinedVariables() Variables {
 						},
 						"utf8": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2060,7 +2060,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2070,7 +2070,7 @@ func predefinedVariables() Variables {
 				},
 				"use_x_forwarded_for": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2084,7 +2084,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"1_PI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2094,7 +2094,7 @@ func predefinedVariables() Variables {
 				},
 				"2PI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2104,7 +2104,7 @@ func predefinedVariables() Variables {
 				},
 				"2_PI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2114,7 +2114,7 @@ func predefinedVariables() Variables {
 				},
 				"2_SQRTPI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2124,7 +2124,7 @@ func predefinedVariables() Variables {
 				},
 				"E": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2134,7 +2134,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_DIG": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2144,7 +2144,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_EPSILON": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2154,7 +2154,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MANT_DIG": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2164,7 +2164,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MAX": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2174,7 +2174,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MAX_10_EXP": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2184,7 +2184,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MAX_EXP": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2194,7 +2194,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MIN": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2204,7 +2204,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MIN_10_EXP": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2214,7 +2214,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_MIN_EXP": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2224,7 +2224,7 @@ func predefinedVariables() Variables {
 				},
 				"FLOAT_RADIX": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2234,7 +2234,7 @@ func predefinedVariables() Variables {
 				},
 				"INTEGER_BIT": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2244,7 +2244,7 @@ func predefinedVariables() Variables {
 				},
 				"INTEGER_MAX": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2254,7 +2254,7 @@ func predefinedVariables() Variables {
 				},
 				"INTEGER_MIN": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2264,7 +2264,7 @@ func predefinedVariables() Variables {
 				},
 				"LN10": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2274,7 +2274,7 @@ func predefinedVariables() Variables {
 				},
 				"LN2": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2284,7 +2284,7 @@ func predefinedVariables() Variables {
 				},
 				"LOG10E": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2294,7 +2294,7 @@ func predefinedVariables() Variables {
 				},
 				"LOG2E": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2304,7 +2304,7 @@ func predefinedVariables() Variables {
 				},
 				"NAN": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2314,7 +2314,7 @@ func predefinedVariables() Variables {
 				},
 				"NEG_HUGE_VAL": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2324,7 +2324,7 @@ func predefinedVariables() Variables {
 				},
 				"NEG_INFINITY": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2334,7 +2334,7 @@ func predefinedVariables() Variables {
 				},
 				"PHI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2344,7 +2344,7 @@ func predefinedVariables() Variables {
 				},
 				"PI": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2354,7 +2354,7 @@ func predefinedVariables() Variables {
 				},
 				"PI_2": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2364,7 +2364,7 @@ func predefinedVariables() Variables {
 				},
 				"PI_4": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2374,7 +2374,7 @@ func predefinedVariables() Variables {
 				},
 				"POS_HUGE_VAL": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2384,7 +2384,7 @@ func predefinedVariables() Variables {
 				},
 				"POS_INFINITY": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2394,7 +2394,7 @@ func predefinedVariables() Variables {
 				},
 				"SQRT1_2": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2404,7 +2404,7 @@ func predefinedVariables() Variables {
 				},
 				"SQRT2": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2414,7 +2414,7 @@ func predefinedVariables() Variables {
 				},
 				"TAU": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2428,7 +2428,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"sec": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2437,7 +2437,7 @@ func predefinedVariables() Variables {
 					},
 				},
 			},
-			Value: &accessor{
+			Value: &Accessor{
 				Get:       types.TimeType,
 				Set:       types.NeverType,
 				Unset:     false,
@@ -2449,7 +2449,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"age": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2459,7 +2459,7 @@ func predefinedVariables() Variables {
 				},
 				"cacheable": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2469,7 +2469,7 @@ func predefinedVariables() Variables {
 				},
 				"entered": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2479,7 +2479,7 @@ func predefinedVariables() Variables {
 				},
 				"grace": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2489,7 +2489,7 @@ func predefinedVariables() Variables {
 				},
 				"hits": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2501,7 +2501,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"%any%": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     false,
@@ -2513,7 +2513,7 @@ func predefinedVariables() Variables {
 				},
 				"is_pci": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2523,7 +2523,7 @@ func predefinedVariables() Variables {
 				},
 				"lastuse": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2533,7 +2533,7 @@ func predefinedVariables() Variables {
 				},
 				"proto": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2543,7 +2543,7 @@ func predefinedVariables() Variables {
 				},
 				"response": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -2553,7 +2553,7 @@ func predefinedVariables() Variables {
 				},
 				"stale_if_error": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2563,7 +2563,7 @@ func predefinedVariables() Variables {
 				},
 				"stale_while_revalidate": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2573,7 +2573,7 @@ func predefinedVariables() Variables {
 				},
 				"status": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.IntegerType,
 						Unset:     false,
@@ -2583,7 +2583,7 @@ func predefinedVariables() Variables {
 				},
 				"ttl": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -2599,7 +2599,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"cwnd": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2609,7 +2609,7 @@ func predefinedVariables() Variables {
 						},
 						"ssthresh": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2623,7 +2623,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"received": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2633,7 +2633,7 @@ func predefinedVariables() Variables {
 						},
 						"sent": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2647,7 +2647,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ack_received": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2657,7 +2657,7 @@ func predefinedVariables() Variables {
 						},
 						"decryption_failed": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2667,7 +2667,7 @@ func predefinedVariables() Variables {
 						},
 						"late_acked": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2677,7 +2677,7 @@ func predefinedVariables() Variables {
 						},
 						"lost": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2687,7 +2687,7 @@ func predefinedVariables() Variables {
 						},
 						"received": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2697,7 +2697,7 @@ func predefinedVariables() Variables {
 						},
 						"sent": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2711,7 +2711,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"latest": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2721,7 +2721,7 @@ func predefinedVariables() Variables {
 						},
 						"minimum": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2731,7 +2731,7 @@ func predefinedVariables() Variables {
 						},
 						"smoothed": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2741,7 +2741,7 @@ func predefinedVariables() Variables {
 						},
 						"variance": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2759,7 +2759,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"healthy": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2769,7 +2769,7 @@ func predefinedVariables() Variables {
 						},
 						"ip": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IPType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2779,7 +2779,7 @@ func predefinedVariables() Variables {
 						},
 						"is_cluster": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2789,7 +2789,7 @@ func predefinedVariables() Variables {
 						},
 						"is_origin": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2799,7 +2799,7 @@ func predefinedVariables() Variables {
 						},
 						"is_shield": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2809,7 +2809,7 @@ func predefinedVariables() Variables {
 						},
 						"name": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2819,7 +2819,7 @@ func predefinedVariables() Variables {
 						},
 						"port": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2828,7 +2828,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BackendType,
 						Set:       types.BackendType,
 						Unset:     false,
@@ -2840,7 +2840,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"base64": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2849,7 +2849,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2859,7 +2859,7 @@ func predefinedVariables() Variables {
 				},
 				"body_bytes_read": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2869,7 +2869,7 @@ func predefinedVariables() Variables {
 				},
 				"bytes_read": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2881,7 +2881,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"ratio": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.FloatType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -2890,7 +2890,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2900,7 +2900,7 @@ func predefinedVariables() Variables {
 				},
 				"enable_range_on_pass": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2910,7 +2910,7 @@ func predefinedVariables() Variables {
 				},
 				"enable_segmented_caching": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2920,7 +2920,7 @@ func predefinedVariables() Variables {
 				},
 				"esi": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2930,7 +2930,7 @@ func predefinedVariables() Variables {
 				},
 				"esi_level": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2940,7 +2940,7 @@ func predefinedVariables() Variables {
 				},
 				"grace": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -2950,7 +2950,7 @@ func predefinedVariables() Variables {
 				},
 				"hash": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -2960,7 +2960,7 @@ func predefinedVariables() Variables {
 				},
 				"hash_always_miss": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2970,7 +2970,7 @@ func predefinedVariables() Variables {
 				},
 				"hash_ignore_busy": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -2980,7 +2980,7 @@ func predefinedVariables() Variables {
 				},
 				"header_bytes_read": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -2992,7 +2992,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"%any%": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     true,
@@ -3004,7 +3004,7 @@ func predefinedVariables() Variables {
 				},
 				"is_background_fetch": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3014,7 +3014,7 @@ func predefinedVariables() Variables {
 				},
 				"is_clustering": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3024,7 +3024,7 @@ func predefinedVariables() Variables {
 				},
 				"is_esi_subreq": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3034,7 +3034,7 @@ func predefinedVariables() Variables {
 				},
 				"is_ipv6": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3044,7 +3044,7 @@ func predefinedVariables() Variables {
 				},
 				"is_purge": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3054,7 +3054,7 @@ func predefinedVariables() Variables {
 				},
 				"is_ssl": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3064,7 +3064,7 @@ func predefinedVariables() Variables {
 				},
 				"max_stale_if_error": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -3074,7 +3074,7 @@ func predefinedVariables() Variables {
 				},
 				"max_stale_while_revalidate": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.RTimeType,
 						Unset:     false,
@@ -3084,7 +3084,7 @@ func predefinedVariables() Variables {
 				},
 				"method": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -3094,7 +3094,7 @@ func predefinedVariables() Variables {
 				},
 				"postbody": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3104,7 +3104,7 @@ func predefinedVariables() Variables {
 				},
 				"proto": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3114,7 +3114,7 @@ func predefinedVariables() Variables {
 				},
 				"protocol": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3124,7 +3124,7 @@ func predefinedVariables() Variables {
 				},
 				"request": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -3134,7 +3134,7 @@ func predefinedVariables() Variables {
 				},
 				"restarts": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3144,7 +3144,7 @@ func predefinedVariables() Variables {
 				},
 				"service_id": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3154,7 +3154,7 @@ func predefinedVariables() Variables {
 				},
 				"topurl": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3166,7 +3166,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"basename": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3176,7 +3176,7 @@ func predefinedVariables() Variables {
 						},
 						"dirname": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3186,7 +3186,7 @@ func predefinedVariables() Variables {
 						},
 						"ext": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3196,7 +3196,7 @@ func predefinedVariables() Variables {
 						},
 						"path": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3206,7 +3206,7 @@ func predefinedVariables() Variables {
 						},
 						"qs": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3215,7 +3215,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.StringType,
 						Unset:     false,
@@ -3227,7 +3227,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"generation": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3237,7 +3237,7 @@ func predefinedVariables() Variables {
 						},
 						"md5": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3247,7 +3247,7 @@ func predefinedVariables() Variables {
 						},
 						"version": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3256,7 +3256,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3266,7 +3266,7 @@ func predefinedVariables() Variables {
 				},
 				"xid": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3280,7 +3280,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"body_bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3290,7 +3290,7 @@ func predefinedVariables() Variables {
 				},
 				"bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3300,7 +3300,7 @@ func predefinedVariables() Variables {
 				},
 				"completed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3310,7 +3310,7 @@ func predefinedVariables() Variables {
 				},
 				"header_bytes_written": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3322,7 +3322,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"%any%": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     true,
@@ -3334,7 +3334,7 @@ func predefinedVariables() Variables {
 				},
 				"is_locally_generated": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3344,7 +3344,7 @@ func predefinedVariables() Variables {
 				},
 				"proto": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3354,7 +3354,7 @@ func predefinedVariables() Variables {
 				},
 				"response": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3366,7 +3366,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"is_error": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.BoolType,
 								Unset:     false,
@@ -3376,7 +3376,7 @@ func predefinedVariables() Variables {
 						},
 						"is_revalidating": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.BoolType,
 								Unset:     false,
@@ -3385,7 +3385,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.BoolType,
 						Unset:     false,
@@ -3395,7 +3395,7 @@ func predefinedVariables() Variables {
 				},
 				"status": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3409,7 +3409,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"autopurged": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3419,7 +3419,7 @@ func predefinedVariables() Variables {
 				},
 				"block_number": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3429,7 +3429,7 @@ func predefinedVariables() Variables {
 				},
 				"block_size": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.IntegerType,
 						Unset:     false,
@@ -3439,7 +3439,7 @@ func predefinedVariables() Variables {
 				},
 				"cancelled": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3451,7 +3451,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"is_open_ended": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3461,7 +3461,7 @@ func predefinedVariables() Variables {
 						},
 						"is_range": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3471,7 +3471,7 @@ func predefinedVariables() Variables {
 						},
 						"range_high": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3481,7 +3481,7 @@ func predefinedVariables() Variables {
 						},
 						"range_low": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3493,7 +3493,7 @@ func predefinedVariables() Variables {
 				},
 				"completed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3503,7 +3503,7 @@ func predefinedVariables() Variables {
 				},
 				"error": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3513,7 +3513,7 @@ func predefinedVariables() Variables {
 				},
 				"failed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3523,7 +3523,7 @@ func predefinedVariables() Variables {
 				},
 				"is_inner_req": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3533,7 +3533,7 @@ func predefinedVariables() Variables {
 				},
 				"is_outer_req": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3545,7 +3545,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"complete_length": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3559,7 +3559,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"range_high": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3569,7 +3569,7 @@ func predefinedVariables() Variables {
 						},
 						"range_low": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3581,7 +3581,7 @@ func predefinedVariables() Variables {
 				},
 				"total_blocks": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3595,7 +3595,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"datacenter": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3605,7 +3605,7 @@ func predefinedVariables() Variables {
 				},
 				"hostname": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3615,7 +3615,7 @@ func predefinedVariables() Variables {
 				},
 				"identity": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3625,7 +3625,7 @@ func predefinedVariables() Variables {
 				},
 				"ip": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IPType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3635,7 +3635,7 @@ func predefinedVariables() Variables {
 				},
 				"port": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3645,7 +3645,7 @@ func predefinedVariables() Variables {
 				},
 				"region": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3659,7 +3659,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"exists": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3675,7 +3675,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"msec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3685,7 +3685,7 @@ func predefinedVariables() Variables {
 						},
 						"msec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3695,7 +3695,7 @@ func predefinedVariables() Variables {
 						},
 						"sec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3705,7 +3705,7 @@ func predefinedVariables() Variables {
 						},
 						"usec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3715,7 +3715,7 @@ func predefinedVariables() Variables {
 						},
 						"usec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3724,7 +3724,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3736,7 +3736,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"msec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3746,7 +3746,7 @@ func predefinedVariables() Variables {
 						},
 						"msec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3756,7 +3756,7 @@ func predefinedVariables() Variables {
 						},
 						"sec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3766,7 +3766,7 @@ func predefinedVariables() Variables {
 						},
 						"usec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3776,7 +3776,7 @@ func predefinedVariables() Variables {
 						},
 						"usec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3785,7 +3785,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.TimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3797,7 +3797,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"msec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3807,7 +3807,7 @@ func predefinedVariables() Variables {
 						},
 						"msec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3817,7 +3817,7 @@ func predefinedVariables() Variables {
 						},
 						"sec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3827,7 +3827,7 @@ func predefinedVariables() Variables {
 						},
 						"usec": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3837,7 +3837,7 @@ func predefinedVariables() Variables {
 						},
 						"usec_frac": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3846,7 +3846,7 @@ func predefinedVariables() Variables {
 							},
 						},
 					},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.TimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3856,7 +3856,7 @@ func predefinedVariables() Variables {
 				},
 				"to_first_byte": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -3872,7 +3872,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{
 						"cipher": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3882,7 +3882,7 @@ func predefinedVariables() Variables {
 						},
 						"ciphers_list": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3892,7 +3892,7 @@ func predefinedVariables() Variables {
 						},
 						"ciphers_list_sha": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3902,7 +3902,7 @@ func predefinedVariables() Variables {
 						},
 						"ciphers_list_txt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3912,7 +3912,7 @@ func predefinedVariables() Variables {
 						},
 						"ciphers_sha": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3922,7 +3922,7 @@ func predefinedVariables() Variables {
 						},
 						"handshake_sent_bytes": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3932,7 +3932,7 @@ func predefinedVariables() Variables {
 						},
 						"iana_chosen_cipher_id": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3942,7 +3942,7 @@ func predefinedVariables() Variables {
 						},
 						"protocol": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3952,7 +3952,7 @@ func predefinedVariables() Variables {
 						},
 						"servername": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3962,7 +3962,7 @@ func predefinedVariables() Variables {
 						},
 						"tlsexts_list": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3972,7 +3972,7 @@ func predefinedVariables() Variables {
 						},
 						"tlsexts_list_sha": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3982,7 +3982,7 @@ func predefinedVariables() Variables {
 						},
 						"tlsexts_list_txt": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -3992,7 +3992,7 @@ func predefinedVariables() Variables {
 						},
 						"tlsexts_sha": &Object{
 							Items: map[string]*Object{},
-							Value: &accessor{
+							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
@@ -4008,7 +4008,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"anomaly_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4018,7 +4018,7 @@ func predefinedVariables() Variables {
 				},
 				"blocked": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4028,7 +4028,7 @@ func predefinedVariables() Variables {
 				},
 				"executed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4038,7 +4038,7 @@ func predefinedVariables() Variables {
 				},
 				"http_violation_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4048,7 +4048,7 @@ func predefinedVariables() Variables {
 				},
 				"lfi_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4058,7 +4058,7 @@ func predefinedVariables() Variables {
 				},
 				"logdata": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4068,7 +4068,7 @@ func predefinedVariables() Variables {
 				},
 				"logged": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4078,7 +4078,7 @@ func predefinedVariables() Variables {
 				},
 				"message": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4088,7 +4088,7 @@ func predefinedVariables() Variables {
 				},
 				"passed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4098,7 +4098,7 @@ func predefinedVariables() Variables {
 				},
 				"php_injection_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4108,7 +4108,7 @@ func predefinedVariables() Variables {
 				},
 				"rce_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4118,7 +4118,7 @@ func predefinedVariables() Variables {
 				},
 				"rfi_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4128,7 +4128,7 @@ func predefinedVariables() Variables {
 				},
 				"rule_id": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4138,7 +4138,7 @@ func predefinedVariables() Variables {
 				},
 				"session_fixation_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4148,7 +4148,7 @@ func predefinedVariables() Variables {
 				},
 				"severity": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4158,7 +4158,7 @@ func predefinedVariables() Variables {
 				},
 				"sql_injection_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4168,7 +4168,7 @@ func predefinedVariables() Variables {
 				},
 				"xss_score": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4182,7 +4182,7 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"bytes_free": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4192,7 +4192,7 @@ func predefinedVariables() Variables {
 				},
 				"bytes_total": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
@@ -4202,7 +4202,7 @@ func predefinedVariables() Variables {
 				},
 				"overflowed": &Object{
 					Items: map[string]*Object{},
-					Value: &accessor{
+					Value: &Accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,

@@ -24,7 +24,7 @@ type Definition struct {
 func (d *Definition) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString("&accessor{\n")
+	buf.WriteString("&Accessor{\n")
 	if d.Get != "" {
 		buf.WriteString(fmt.Sprintf("Get: %s,\n", typeToType[d.Get]))
 	} else {

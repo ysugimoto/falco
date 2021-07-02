@@ -13,10 +13,10 @@ type Variables map[string]*Object
 
 type Object struct {
 	Items map[string]*Object
-	Value *accessor
+	Value *Accessor
 }
 
-type accessor struct {
+type Accessor struct {
 	Get       types.Type
 	Set       types.Type
 	Unset     bool
