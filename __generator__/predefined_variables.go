@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"go/format"
@@ -91,10 +92,11 @@ func (g *PredefinedGenerator) generate() error {
 	}
 
 	g.buf.WriteString("Variables{\n")
-	for k, v := range vars {
+	for _, k := range g.keySort(vars) {
+		v := vars[k]
 		g.buf.WriteString(quote(k) + ": &Object{\n")
 		g.buf.WriteString("Items: map[string]*Object{\n")
-		g.generateObject(*v)
+		g.generateObject(v)
 		g.buf.WriteString("},\n")
 		if v.Value != nil {
 			g.buf.WriteString("Value: ")
@@ -149,11 +151,12 @@ func (g *PredefinedGenerator) addOrSet(v *Object, key string) *Object {
 	return o
 }
 
-func (g *PredefinedGenerator) generateObject(value Object) {
-	for k, v := range value.Items {
+func (g *PredefinedGenerator) generateObject(value *Object) {
+	for _, k := range g.keySort(value.Items) {
+		v := value.Items[k]
 		g.buf.WriteString(quote(k) + ": &Object{\n")
 		g.buf.WriteString("Items: map[string]*Object{\n")
-		g.generateObject(*v)
+		g.generateObject(v)
 		g.buf.WriteString("},\n")
 		if v.Value != nil {
 			g.buf.WriteString("Value: ")
@@ -161,4 +164,14 @@ func (g *PredefinedGenerator) generateObject(value Object) {
 		}
 		g.buf.WriteString("},\n")
 	}
+}
+
+func (g *PredefinedGenerator) keySort(m map[string]*Object) []string {
+	keys := make([]string, 0, len(m))
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	return keys
 }

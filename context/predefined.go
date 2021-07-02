@@ -25,106 +25,40 @@ func predefinedVariables() Variables {
 	return Variables{
 		"backend": &Object{
 			Items: map[string]*Object{
+				"conn": &Object{
+					Items: map[string]*Object{
+						"is_tls": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/",
+							},
+						},
+						"tls_protocol": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-tls-protocol/",
+							},
+						},
+					},
+				},
 				"socket": &Object{
 					Items: map[string]*Object{
-						"tcpi_last_data_sent": &Object{
+						"congestion_algorithm": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.IntegerType,
+								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-last-data-sent/",
-							},
-						},
-						"tcpi_snd_cwnd": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-cwnd/",
-							},
-						},
-						"tcpi_segs_out": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-out/",
-							},
-						},
-						"tcpi_data_segs_out": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-out/",
-							},
-						},
-						"tcpi_delta_retrans": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delta-retrans/",
-							},
-						},
-						"tcpi_rcv_space": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-space/",
-							},
-						},
-						"tcpi_notsent_bytes": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-notsent-bytes/",
-							},
-						},
-						"tcpi_max_pacing_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-max-pacing-rate/",
-							},
-						},
-						"tcpi_rcv_mss": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-mss/",
-							},
-						},
-						"tcpi_pmtu": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pmtu/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-congestion-algorithm/",
 							},
 						},
 						"cwnd": &Object{
@@ -137,36 +71,6 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-cwnd/",
 							},
 						},
-						"tcpi_delivery_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delivery-rate/",
-							},
-						},
-						"tcpi_rcv_ssthresh": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-ssthresh/",
-							},
-						},
-						"tcpi_segs_in": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-in/",
-							},
-						},
 						"tcpi_advmss": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -175,66 +79,6 @@ func predefinedVariables() Variables {
 								Unset:     false,
 								Scopes:    FETCH,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-advmss/",
-							},
-						},
-						"tcpi_reordering": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-reordering/",
-							},
-						},
-						"tcpi_rcv_rtt": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-rtt/",
-							},
-						},
-						"tcpi_rtt": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rtt/",
-							},
-						},
-						"tcpi_snd_ssthresh": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-ssthresh/",
-							},
-						},
-						"congestion_algorithm": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-congestion-algorithm/",
-							},
-						},
-						"tcpi_pacing_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pacing-rate/",
 							},
 						},
 						"tcpi_bytes_acked": &Object{
@@ -247,36 +91,6 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-acked/",
 							},
 						},
-						"tcpi_data_segs_in": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-in/",
-							},
-						},
-						"tcpi_total_retrans": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-total-retrans/",
-							},
-						},
-						"tcpi_rttvar": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rttvar/",
-							},
-						},
 						"tcpi_bytes_received": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -287,14 +101,64 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-received/",
 							},
 						},
-						"tcpi_snd_mss": &Object{
+						"tcpi_data_segs_in": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-mss/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-in/",
+							},
+						},
+						"tcpi_data_segs_out": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-out/",
+							},
+						},
+						"tcpi_delivery_rate": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delivery-rate/",
+							},
+						},
+						"tcpi_delta_retrans": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delta-retrans/",
+							},
+						},
+						"tcpi_last_data_sent": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-last-data-sent/",
+							},
+						},
+						"tcpi_max_pacing_rate": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-max-pacing-rate/",
 							},
 						},
 						"tcpi_min_rtt": &Object{
@@ -307,44 +171,180 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-min-rtt/",
 							},
 						},
-					},
-				},
-				"conn": &Object{
-					Items: map[string]*Object{
-						"tls_protocol": &Object{
+						"tcpi_notsent_bytes": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.StringType,
+								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-tls-protocol/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-notsent-bytes/",
 							},
 						},
-						"is_tls": &Object{
+						"tcpi_pacing_rate": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.BoolType,
+								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pacing-rate/",
+							},
+						},
+						"tcpi_pmtu": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pmtu/",
+							},
+						},
+						"tcpi_rcv_mss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-mss/",
+							},
+						},
+						"tcpi_rcv_rtt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-rtt/",
+							},
+						},
+						"tcpi_rcv_space": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-space/",
+							},
+						},
+						"tcpi_rcv_ssthresh": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-ssthresh/",
+							},
+						},
+						"tcpi_reordering": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-reordering/",
+							},
+						},
+						"tcpi_rtt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rtt/",
+							},
+						},
+						"tcpi_rttvar": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rttvar/",
+							},
+						},
+						"tcpi_segs_in": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-in/",
+							},
+						},
+						"tcpi_segs_out": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-out/",
+							},
+						},
+						"tcpi_snd_cwnd": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-cwnd/",
+							},
+						},
+						"tcpi_snd_mss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-mss/",
+							},
+						},
+						"tcpi_snd_ssthresh": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-ssthresh/",
+							},
+						},
+						"tcpi_total_retrans": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-total-retrans/",
 							},
 						},
 					},
 				},
 			},
 		},
-		"resp": &Object{
+		"bereq": &Object{
 			Items: map[string]*Object{
-				"is_locally_generated": &Object{
+				"between_bytes_timeout": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
 						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/",
+						Scopes:    PASS | MISS,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/",
 					},
 				},
 				"body_bytes_written": &Object{
@@ -353,93 +353,8 @@ func predefinedVariables() Variables {
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-body-bytes-written/",
-					},
-				},
-				"proto": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-proto/",
-					},
-				},
-				"http": &Object{
-					Items: map[string]*Object{
-						"%any%": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.StringType,
-								Unset:     true,
-								Scopes:    DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-http/",
-							},
-						},
-					},
-				},
-				"completed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-completed/",
-					},
-				},
-				"stale": &Object{
-					Items: map[string]*Object{
-						"is_revalidating": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.BoolType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-revalidating/",
-							},
-						},
-						"is_error": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.BoolType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-error/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale/",
-					},
-				},
-				"status": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-status/",
-					},
-				},
-				"response": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/",
+						Scopes:    FETCH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-body-bytes-written/",
 					},
 				},
 				"bytes_written": &Object{
@@ -448,8 +363,28 @@ func predefinedVariables() Variables {
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-bytes-written/",
+						Scopes:    FETCH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-bytes-written/",
+					},
+				},
+				"connect_timeout": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    PASS | MISS,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/",
+					},
+				},
+				"first_byte_timeout": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    PASS | MISS,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-first-byte-timeout/",
 					},
 				},
 				"header_bytes_written": &Object{
@@ -458,665 +393,8 @@ func predefinedVariables() Variables {
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-header-bytes-written/",
-					},
-				},
-			},
-		},
-		"waf": &Object{
-			Items: map[string]*Object{
-				"logged": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"executed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"logdata": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"rce_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"http_violation_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"php_injection_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"blocked": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"passed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"message": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"rule_id": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"sql_injection_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"rfi_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"severity": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"session_fixation_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"anomaly_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"lfi_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-				"xss_score": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
-					},
-				},
-			},
-		},
-		"stale": &Object{
-			Items: map[string]*Object{
-				"exists": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/stale-exists/",
-					},
-				},
-			},
-		},
-		"req": &Object{
-			Items: map[string]*Object{
-				"hash": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    HASH | ERROR,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-hash/",
-					},
-				},
-				"is_purge": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-purge/",
-					},
-				},
-				"postbody": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-postbody/",
-					},
-				},
-				"is_ipv6": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ipv6/",
-					},
-				},
-				"topurl": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-topurl/",
-					},
-				},
-				"url": &Object{
-					Items: map[string]*Object{
-						"qs": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-qs/",
-							},
-						},
-						"dirname": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-dirname/",
-							},
-						},
-						"ext": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-ext/",
-							},
-						},
-						"path": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-path/",
-							},
-						},
-						"basename": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-basename/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url/",
-					},
-				},
-				"hash_always_miss": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-always-miss/",
-					},
-				},
-				"body": &Object{
-					Items: map[string]*Object{
-						"base64": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-base64/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body/",
-					},
-				},
-				"hash_ignore_busy": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-ignore-busy/",
-					},
-				},
-				"esi": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV | FETCH | ERROR | DELIVER,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi/",
-					},
-				},
-				"max_stale_if_error": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-if-error/",
-					},
-				},
-				"restarts": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-restarts/",
-					},
-				},
-				"enable_range_on_pass": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-range-on-pass/",
-					},
-				},
-				"method": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-method/",
-					},
-				},
-				"proto": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-proto/",
-					},
-				},
-				"xid": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-xid/",
-					},
-				},
-				"enable_segmented_caching": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-segmented-caching/",
-					},
-				},
-				"protocol": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-protocol/",
-					},
-				},
-				"bytes_read": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-bytes-read/",
-					},
-				},
-				"vcl": &Object{
-					Items: map[string]*Object{
-						"md5": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-md5/",
-							},
-						},
-						"version": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-version/",
-							},
-						},
-						"generation": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-generation/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl/",
-					},
-				},
-				"digest": &Object{
-					Items: map[string]*Object{
-						"ratio": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.FloatType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest-ratio/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest/",
-					},
-				},
-				"max_stale_while_revalidate": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-while-revalidate/",
-					},
-				},
-				"is_ssl": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ssl/",
-					},
-				},
-				"backend": &Object{
-					Items: map[string]*Object{
-						"name": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-name/",
-							},
-						},
-						"is_origin": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-origin/",
-							},
-						},
-						"healthy": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-healthy/",
-							},
-						},
-						"is_shield": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-shield/",
-							},
-						},
-						"is_cluster": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    DELIVER,
-								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
-							},
-						},
-						"ip": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IPType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-ip/",
-							},
-						},
-						"port": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-port/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.BackendType,
-						Set:       types.BackendType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/",
-					},
-				},
-				"body_bytes_read": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-bytes-read/",
-					},
-				},
-				"grace": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-grace/",
-					},
-				},
-				"is_esi_subreq": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-is-esi-subreq/",
-					},
-				},
-				"request": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-request/",
-					},
-				},
-				"header_bytes_read": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-header-bytes-read/",
+						Scopes:    FETCH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-header-bytes-written/",
 					},
 				},
 				"http": &Object{
@@ -1127,8 +405,8 @@ func predefinedVariables() Variables {
 								Get:       types.StringType,
 								Set:       types.StringType,
 								Unset:     true,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-http/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-http/",
 							},
 						},
 					},
@@ -1140,213 +418,106 @@ func predefinedVariables() Variables {
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-is-clustering/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-is-clustering/",
 					},
 				},
-				"esi_level": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | DELIVER,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi-level/",
-					},
-				},
-				"service_id": &Object{
+				"method": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-service-id/",
+						Scopes:    PASS | MISS | FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/",
 					},
 				},
-				"is_background_fetch": &Object{
+				"proto": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
-						Get:       types.BoolType,
+						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-background-fetch/",
+						Scopes:    PASS | MISS | FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/",
 					},
 				},
-			},
-		},
-		"tls": &Object{
-			Items: map[string]*Object{
-				"client": &Object{
+				"request": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    PASS | MISS | FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/",
+					},
+				},
+				"url": &Object{
 					Items: map[string]*Object{
-						"tlsexts_list_sha": &Object{
+						"basename": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-sha/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/",
 							},
 						},
-						"tlsexts_list": &Object{
+						"dirname": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-dirname/",
 							},
 						},
-						"handshake_sent_bytes": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-handshake-sent-bytes/",
-							},
-						},
-						"iana_chosen_cipher_id": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-iana-chosen-cipher-id/",
-							},
-						},
-						"tlsexts_list_txt": &Object{
+						"ext": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-txt/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-ext/",
 							},
 						},
-						"servername": &Object{
+						"path": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-servername/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-path/",
 							},
 						},
-						"ciphers_list": &Object{
+						"qs": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list/",
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-qs/",
 							},
 						},
-						"ciphers_list_sha": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-sha/",
-							},
-						},
-						"protocol": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-protocol/",
-							},
-						},
-						"ciphers_sha": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-sha/",
-							},
-						},
-						"cipher": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-cipher/",
-							},
-						},
-						"tlsexts_sha": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-sha/",
-							},
-						},
-						"ciphers_list_txt": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-txt/",
-							},
-						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    PASS | MISS | FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/",
 					},
 				},
 			},
 		},
 		"beresp": &Object{
 			Items: map[string]*Object{
-				"status": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.IntegerType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-status/",
-					},
-				},
 				"backend": &Object{
 					Items: map[string]*Object{
-						"requests": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-requests/",
-							},
-						},
-						"src_ip": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IPType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-src-ip/",
-							},
-						},
 						"alternate_ips": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -1355,6 +526,16 @@ func predefinedVariables() Variables {
 								Unset:     false,
 								Scopes:    FETCH,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-alternate-ips/",
+							},
+						},
+						"ip": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IPType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-ip/",
 							},
 						},
 						"name": &Object{
@@ -1377,16 +558,86 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-port/",
 							},
 						},
-						"ip": &Object{
+						"requests": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-requests/",
+							},
+						},
+						"src_ip": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IPType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-ip/",
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-src-ip/",
 							},
 						},
+					},
+				},
+				"brotli": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-brotli/",
+					},
+				},
+				"cacheable": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-cacheable/",
+					},
+				},
+				"do_esi": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/beresp-do-esi/",
+					},
+				},
+				"do_stream": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-do-stream/",
+					},
+				},
+				"grace": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/",
+					},
+				},
+				"gzip": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-gzip/",
 					},
 				},
 				"handshake_time_to_origin_ms": &Object{
@@ -1409,6 +660,40 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-hipaa/",
 					},
 				},
+				"http": &Object{
+					Items: map[string]*Object{
+						"%any%": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.StringType,
+								Unset:     true,
+								Scopes:    FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-http/",
+							},
+						},
+					},
+				},
+				"pci": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-pci/",
+					},
+				},
+				"proto": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-proto/",
+					},
+				},
 				"response": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
@@ -1429,26 +714,6 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-saintmode/",
 					},
 				},
-				"do_stream": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-do-stream/",
-					},
-				},
-				"cacheable": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-cacheable/",
-					},
-				},
 				"stale_if_error": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
@@ -1457,70 +722,6 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-if-error/",
-					},
-				},
-				"proto": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-proto/",
-					},
-				},
-				"gzip": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-gzip/",
-					},
-				},
-				"do_esi": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/beresp-do-esi/",
-					},
-				},
-				"http": &Object{
-					Items: map[string]*Object{
-						"%any%": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.StringType,
-								Unset:     true,
-								Scopes:    FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-http/",
-							},
-						},
-					},
-				},
-				"ttl": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-ttl/",
-					},
-				},
-				"pci": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-pci/",
 					},
 				},
 				"stale_while_revalidate": &Object{
@@ -1533,24 +734,24 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-while-revalidate/",
 					},
 				},
-				"grace": &Object{
+				"status": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.IntegerType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-status/",
+					},
+				},
+				"ttl": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.RTimeType,
-						Set:       types.BoolType,
+						Set:       types.RTimeType,
 						Unset:     false,
 						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/",
-					},
-				},
-				"brotli": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-brotli/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-ttl/",
 					},
 				},
 				"used_alternate_path_to_origin": &Object{
@@ -1565,978 +766,28 @@ func predefinedVariables() Variables {
 				},
 			},
 		},
-		"workspace": &Object{
-			Items: map[string]*Object{
-				"overflowed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-overflowed/",
-					},
-				},
-				"bytes_total": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-total/",
-					},
-				},
-				"bytes_free": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-free/",
-					},
-				},
-			},
-		},
-		"esi": &Object{
-			Items: map[string]*Object{
-				"allow_inside_cdata": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV | FETCH | ERROR | DELIVER,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/esi-allow-inside-cdata/",
-					},
-				},
-			},
-		},
-		"quic": &Object{
-			Items: map[string]*Object{
-				"num_bytes": &Object{
-					Items: map[string]*Object{
-						"sent": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-sent/",
-							},
-						},
-						"received": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-received/",
-							},
-						},
-					},
-				},
-				"num_packets": &Object{
-					Items: map[string]*Object{
-						"received": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-received/",
-							},
-						},
-						"ack_received": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-ack-received/",
-							},
-						},
-						"decryption_failed": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-decryption-failed/",
-							},
-						},
-						"sent": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-sent/",
-							},
-						},
-						"lost": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-lost/",
-							},
-						},
-						"late_acked": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-late-acked/",
-							},
-						},
-					},
-				},
-				"rtt": &Object{
-					Items: map[string]*Object{
-						"variance": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-variance/",
-							},
-						},
-						"minimum": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-minimum/",
-							},
-						},
-						"latest": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-latest/",
-							},
-						},
-						"smoothed": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-smoothed/",
-							},
-						},
-					},
-				},
-				"cc": &Object{
-					Items: map[string]*Object{
-						"cwnd": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/",
-							},
-						},
-						"ssthresh": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-ssthresh/",
-							},
-						},
-					},
-				},
-			},
-		},
-		"geoip": &Object{
-			Items: map[string]*Object{
-				"country_name": &Object{
-					Items: map[string]*Object{
-						"utf8": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-utf8/",
-							},
-						},
-						"latin1": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-latin1/",
-							},
-						},
-						"ascii": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-ascii/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name/",
-					},
-				},
-				"continent_code": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-continent-code/",
-					},
-				},
-				"ip_override": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-ip-override/",
-					},
-				},
-				"postal_code": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-postal-code/",
-					},
-				},
-				"longitude": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-longitude/",
-					},
-				},
-				"country_code": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code/",
-					},
-				},
-				"use_x_forwarded_for": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-use-x-forwarded-for/",
-					},
-				},
-				"metro_code": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-metro-code/",
-					},
-				},
-				"region": &Object{
-					Items: map[string]*Object{
-						"utf8": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-utf8/",
-							},
-						},
-						"ascii": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-ascii/",
-							},
-						},
-						"latin1": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-latin1/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region/",
-					},
-				},
-				"latitude": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-latitude/",
-					},
-				},
-				"country_code3": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code3/",
-					},
-				},
-				"area_code": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-area-code/",
-					},
-				},
-				"city": &Object{
-					Items: map[string]*Object{
-						"ascii": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-ascii/",
-							},
-						},
-						"utf8": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-utf8/",
-							},
-						},
-						"latin1": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-latin1/",
-							},
-						},
-					},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city/",
-					},
-				},
-			},
-		},
-		"segmented_caching": &Object{
-			Items: map[string]*Object{
-				"is_outer_req": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-outer-req/",
-					},
-				},
-				"is_inner_req": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-inner-req/",
-					},
-				},
-				"completed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-completed/",
-					},
-				},
-				"block_number": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-number/",
-					},
-				},
-				"obj": &Object{
-					Items: map[string]*Object{
-						"complete_length": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-obj-complete-length/",
-							},
-						},
-					},
-				},
-				"cancelled": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-cancelled/",
-					},
-				},
-				"autopurged": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-autopurged/",
-					},
-				},
-				"failed": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-failed/",
-					},
-				},
-				"rounded_req": &Object{
-					Items: map[string]*Object{
-						"range_high": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-high/",
-							},
-						},
-						"range_low": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-low/",
-							},
-						},
-					},
-				},
-				"error": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-error/",
-					},
-				},
-				"block_size": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.IntegerType,
-						Unset:     false,
-						Scopes:    RECV | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-size/",
-					},
-				},
-				"client_req": &Object{
-					Items: map[string]*Object{
-						"is_open_ended": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-open-ended/",
-							},
-						},
-						"range_low": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-low/",
-							},
-						},
-						"is_range": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-range/",
-							},
-						},
-						"range_high": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-high/",
-							},
-						},
-					},
-				},
-				"total_blocks": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-total-blocks/",
-					},
-				},
-			},
-		},
-		"fastly": &Object{
-			Items: map[string]*Object{
-				"ff": &Object{
-					Items: map[string]*Object{
-						"visits_this_pop_this_service": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    MISS,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop-this-service/",
-							},
-						},
-						"visits_this_service": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/",
-							},
-						},
-					},
-				},
-				"error": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     true,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/",
-					},
-				},
-			},
-		},
-		"server": &Object{
-			Items: map[string]*Object{
-				"hostname": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-hostname/",
-					},
-				},
-				"datacenter": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-datacenter/",
-					},
-				},
-				"region": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-region/",
-					},
-				},
-				"ip": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IPType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/",
-					},
-				},
-				"identity": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-identity/",
-					},
-				},
-				"port": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-port/",
-					},
-				},
-			},
-		},
-		"fastly_info": &Object{
-			Items: map[string]*Object{
-				"h2": &Object{
-					Items: map[string]*Object{
-						"stream_id": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-h2-stream-id/",
-							},
-						},
-						"is_push": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/",
-							},
-						},
-					},
-				},
-				"edge": &Object{
-					Items: map[string]*Object{
-						"is_tls": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-edge-is-tls/",
-							},
-						},
-					},
-				},
-				"state": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-info-state/",
-					},
-				},
-				"is_h2": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h2/",
-					},
-				},
-				"is_cluster_edge": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER,
-						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
-					},
-				},
-				"is_cluster_shield": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    MISS | FETCH,
-						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
-					},
-				},
-			},
-		},
-		"now": &Object{
-			Items: map[string]*Object{
-				"sec": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now-sec/",
-					},
-				},
-			},
-			Value: &accessor{
-				Get:       types.TimeType,
-				Set:       types.NeverType,
-				Unset:     false,
-				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now/",
-			},
-		},
 		"client": &Object{
 			Items: map[string]*Object{
-				"ip": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-ip/",
-					},
-				},
-				"display": &Object{
+				"as": &Object{
 					Items: map[string]*Object{
-						"touchscreen": &Object{
+						"name": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.BoolType,
+								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-name/",
 							},
 						},
-						"height": &Object{
+						"number": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/",
-							},
-						},
-						"width": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/",
-							},
-						},
-						"ppi": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/",
-							},
-						},
-					},
-				},
-				"identified": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/",
-					},
-				},
-				"class": &Object{
-					Items: map[string]*Object{
-						"feedreader": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/",
-							},
-						},
-						"browser": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-browser/",
-							},
-						},
-						"bot": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-bot/",
-							},
-						},
-						"masquerading": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/",
-							},
-						},
-						"spam": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/",
-							},
-						},
-						"downloader": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/",
-							},
-						},
-						"filter": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/",
-							},
-						},
-						"checker": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-number/",
 							},
 						},
 					},
@@ -2579,144 +830,148 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"identity": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-identity/",
+				"class": &Object{
+					Items: map[string]*Object{
+						"bot": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-bot/",
+							},
+						},
+						"browser": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-browser/",
+							},
+						},
+						"checker": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/",
+							},
+						},
+						"downloader": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/",
+							},
+						},
+						"feedreader": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/",
+							},
+						},
+						"filter": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/",
+							},
+						},
+						"masquerading": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/",
+							},
+						},
+						"spam": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/",
+							},
+						},
 					},
 				},
-				"platform": &Object{
+				"display": &Object{
 					Items: map[string]*Object{
-						"tablet": &Object{
+						"height": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/",
+							},
+						},
+						"ppi": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/",
+							},
+						},
+						"touchscreen": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tablet/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/",
 							},
 						},
-						"mobile": &Object{
+						"width": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.BoolType,
+								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mobile/",
-							},
-						},
-						"ereader": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/",
-							},
-						},
-						"tvplayer": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/",
-							},
-						},
-						"mediaplayer": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mediaplayer/",
-							},
-						},
-						"gameconsole": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/",
-							},
-						},
-						"smarttv": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-smarttv/",
-							},
-						},
-						"hwtype": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-hwtype/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/",
 							},
 						},
 					},
 				},
 				"geo": &Object{
 					Items: map[string]*Object{
-						"latitude": &Object{
+						"area_code": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.FloatType,
+								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-latitude/",
-							},
-						},
-						"ip_override": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.StringType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-ip-override/",
-							},
-						},
-						"proxy_description": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-description/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-area-code/",
 							},
 						},
 						"city": &Object{
 							Items: map[string]*Object{
-								"utf8": &Object{
-									Items: map[string]*Object{},
-									Value: &accessor{
-										Get:       types.StringType,
-										Set:       types.NeverType,
-										Unset:     false,
-										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-utf8/",
-									},
-								},
 								"ascii": &Object{
 									Items: map[string]*Object{},
 									Value: &accessor{
@@ -2737,6 +992,16 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-latin1/",
 									},
 								},
+								"utf8": &Object{
+									Items: map[string]*Object{},
+									Value: &accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-utf8/",
+									},
+								},
 							},
 							Value: &accessor{
 								Get:       types.StringType,
@@ -2746,34 +1011,14 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city/",
 							},
 						},
-						"proxy_type": &Object{
+						"conn_speed": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-type/",
-							},
-						},
-						"utc_offset": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-utc-offset/",
-							},
-						},
-						"gmt_offset": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-gmt-offset/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-speed/",
 							},
 						},
 						"conn_type": &Object{
@@ -2786,28 +1031,38 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-type/",
 							},
 						},
-						"postal_code": &Object{
+						"continent_code": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-postal-code/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-continent-code/",
+							},
+						},
+						"country_code": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code/",
+							},
+						},
+						"country_code3": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code3/",
 							},
 						},
 						"country_name": &Object{
 							Items: map[string]*Object{
-								"utf8": &Object{
-									Items: map[string]*Object{},
-									Value: &accessor{
-										Get:       types.StringType,
-										Set:       types.NeverType,
-										Unset:     false,
-										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-utf8/",
-									},
-								},
 								"ascii": &Object{
 									Items: map[string]*Object{},
 									Value: &accessor{
@@ -2828,6 +1083,16 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-latin1/",
 									},
 								},
+								"utf8": &Object{
+									Items: map[string]*Object{},
+									Value: &accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-utf8/",
+									},
+								},
 							},
 							Value: &accessor{
 								Get:       types.StringType,
@@ -2837,55 +1102,34 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name/",
 							},
 						},
-						"region": &Object{
-							Items: map[string]*Object{
-								"utf8": &Object{
-									Items: map[string]*Object{},
-									Value: &accessor{
-										Get:       types.StringType,
-										Set:       types.NeverType,
-										Unset:     false,
-										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-utf8/",
-									},
-								},
-								"latin1": &Object{
-									Items: map[string]*Object{},
-									Value: &accessor{
-										Get:       types.StringType,
-										Set:       types.NeverType,
-										Unset:     false,
-										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-latin1/",
-									},
-								},
-								"ascii": &Object{
-									Items: map[string]*Object{},
-									Value: &accessor{
-										Get:       types.StringType,
-										Set:       types.NeverType,
-										Unset:     false,
-										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-ascii/",
-									},
-								},
-							},
+						"gmt_offset": &Object{
+							Items: map[string]*Object{},
 							Value: &accessor{
-								Get:       types.StringType,
+								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-gmt-offset/",
 							},
 						},
-						"country_code": &Object{
+						"ip_override": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
+								Set:       types.StringType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-ip-override/",
+							},
+						},
+						"latitude": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.FloatType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-latitude/",
 							},
 						},
 						"longitude": &Object{
@@ -2898,16 +1142,6 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-longitude/",
 							},
 						},
-						"conn_speed": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-speed/",
-							},
-						},
 						"metro_code": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -2918,70 +1152,117 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-metro-code/",
 							},
 						},
-						"continent_code": &Object{
+						"postal_code": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-continent-code/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-postal-code/",
 							},
 						},
-						"area_code": &Object{
+						"proxy_description": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-description/",
+							},
+						},
+						"proxy_type": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-type/",
+							},
+						},
+						"region": &Object{
+							Items: map[string]*Object{
+								"ascii": &Object{
+									Items: map[string]*Object{},
+									Value: &accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-ascii/",
+									},
+								},
+								"latin1": &Object{
+									Items: map[string]*Object{},
+									Value: &accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-latin1/",
+									},
+								},
+								"utf8": &Object{
+									Items: map[string]*Object{},
+									Value: &accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-utf8/",
+									},
+								},
+							},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region/",
+							},
+						},
+						"utc_offset": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-area-code/",
-							},
-						},
-						"country_code3": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code3/",
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-utc-offset/",
 							},
 						},
 					},
 				},
-				"as": &Object{
-					Items: map[string]*Object{
-						"number": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-number/",
-							},
-						},
-						"name": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-name/",
-							},
-						},
-					},
-				},
-				"requests": &Object{
+				"identified": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/",
+					},
+				},
+				"identity": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-identity/",
+					},
+				},
+				"ip": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-ip/",
 					},
 				},
 				"os": &Object{
@@ -3008,8 +1289,412 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
+				"platform": &Object{
+					Items: map[string]*Object{
+						"ereader": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/",
+							},
+						},
+						"gameconsole": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/",
+							},
+						},
+						"hwtype": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-hwtype/",
+							},
+						},
+						"mediaplayer": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mediaplayer/",
+							},
+						},
+						"mobile": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mobile/",
+							},
+						},
+						"smarttv": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-smarttv/",
+							},
+						},
+						"tablet": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tablet/",
+							},
+						},
+						"tvplayer": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/",
+							},
+						},
+					},
+				},
+				"port": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-port/",
+					},
+				},
+				"requests": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/",
+					},
+				},
 				"socket": &Object{
 					Items: map[string]*Object{
+						"congestion_algorithm": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/",
+							},
+						},
+						"cwnd": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | FETCH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/",
+							},
+						},
+						"nexthop": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IPType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-nexthop/",
+							},
+						},
+						"pace": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.IntegerType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-pace/",
+							},
+						},
+						"ploss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.FloatType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-ploss/",
+							},
+						},
+						"tcp_info": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcp-info/",
+							},
+						},
+						"tcpi_advmss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-advmss/",
+							},
+						},
+						"tcpi_bytes_acked": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-acked/",
+							},
+						},
+						"tcpi_bytes_received": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-received/",
+							},
+						},
+						"tcpi_data_segs_in": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-in/",
+							},
+						},
+						"tcpi_data_segs_out": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-out/",
+							},
+						},
+						"tcpi_delivery_rate": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delivery-rate/",
+							},
+						},
+						"tcpi_delta_retrans": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delta-retrans/",
+							},
+						},
+						"tcpi_last_data_sent": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-last-data-sent/",
+							},
+						},
+						"tcpi_max_pacing_rate": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-max-pacing-rate/",
+							},
+						},
+						"tcpi_min_rtt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-min-rtt/",
+							},
+						},
+						"tcpi_notsent_bytes": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-notsent-bytes/",
+							},
+						},
+						"tcpi_pacing_rate": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pacing-rate/",
+							},
+						},
+						"tcpi_pmtu": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pmtu/",
+							},
+						},
+						"tcpi_rcv_mss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-mss/",
+							},
+						},
+						"tcpi_rcv_rtt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-rtt/",
+							},
+						},
+						"tcpi_rcv_space": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-space/",
+							},
+						},
+						"tcpi_rcv_ssthresh": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-ssthresh/",
+							},
+						},
+						"tcpi_reordering": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-reordering/",
+							},
+						},
+						"tcpi_rtt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rtt/",
+							},
+						},
+						"tcpi_rttvar": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rttvar/",
+							},
+						},
+						"tcpi_segs_in": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-in/",
+							},
+						},
+						"tcpi_segs_out": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-out/",
+							},
+						},
+						"tcpi_snd_cwnd": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | FETCH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-cwnd/",
+							},
+						},
+						"tcpi_snd_mss": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-mss/",
+							},
+						},
 						"tcpi_snd_ssthresh": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -3030,380 +1715,381 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-total-retrans/",
 							},
 						},
-						"tcpi_min_rtt": &Object{
+					},
+				},
+			},
+		},
+		"esi": &Object{
+			Items: map[string]*Object{
+				"allow_inside_cdata": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV | FETCH | ERROR | DELIVER,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/esi-allow-inside-cdata/",
+					},
+				},
+			},
+		},
+		"fastly": &Object{
+			Items: map[string]*Object{
+				"error": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     true,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/",
+					},
+				},
+				"ff": &Object{
+					Items: map[string]*Object{
+						"visits_this_pop_this_service": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-min-rtt/",
+								Scopes:    MISS,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop-this-service/",
 							},
 						},
-						"tcpi_advmss": &Object{
+						"visits_this_service": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-advmss/",
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/",
 							},
 						},
-						"tcpi_delta_retrans": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delta-retrans/",
-							},
-						},
-						"tcpi_rtt": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rtt/",
-							},
-						},
-						"congestion_algorithm": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/",
-							},
-						},
-						"nexthop": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IPType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-nexthop/",
-							},
-						},
-						"tcpi_snd_cwnd": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | FETCH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-cwnd/",
-							},
-						},
-						"tcpi_segs_in": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-in/",
-							},
-						},
-						"tcpi_pacing_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pacing-rate/",
-							},
-						},
-						"tcpi_bytes_acked": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-acked/",
-							},
-						},
-						"tcpi_pmtu": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pmtu/",
-							},
-						},
-						"tcpi_segs_out": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-out/",
-							},
-						},
-						"ploss": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.FloatType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-ploss/",
-							},
-						},
-						"tcpi_data_segs_in": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-in/",
-							},
-						},
-						"tcpi_rcv_space": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-space/",
-							},
-						},
-						"tcpi_rcv_mss": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-mss/",
-							},
-						},
-						"tcpi_rttvar": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rttvar/",
-							},
-						},
-						"tcpi_bytes_received": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-received/",
-							},
-						},
-						"tcpi_reordering": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-reordering/",
-							},
-						},
-						"tcpi_rcv_ssthresh": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-ssthresh/",
-							},
-						},
-						"pace": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.IntegerType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-pace/",
-							},
-						},
-						"tcpi_delivery_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delivery-rate/",
-							},
-						},
-						"tcpi_rcv_rtt": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-rtt/",
-							},
-						},
-						"tcpi_snd_mss": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-mss/",
-							},
-						},
-						"tcpi_last_data_sent": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-last-data-sent/",
-							},
-						},
-						"tcpi_data_segs_out": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-out/",
-							},
-						},
-						"tcpi_max_pacing_rate": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-max-pacing-rate/",
-							},
-						},
-						"tcpi_notsent_bytes": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-notsent-bytes/",
-							},
-						},
-						"tcp_info": &Object{
+					},
+				},
+			},
+		},
+		"fastly_info": &Object{
+			Items: map[string]*Object{
+				"edge": &Object{
+					Items: map[string]*Object{
+						"is_tls": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.BoolType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcp-info/",
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-edge-is-tls/",
 							},
 						},
-						"cwnd": &Object{
+					},
+				},
+				"h2": &Object{
+					Items: map[string]*Object{
+						"is_push": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/",
+							},
+						},
+						"stream_id": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.IntegerType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    RECV | ERROR | FETCH | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-h2-stream-id/",
 							},
 						},
 					},
 				},
-				"port": &Object{
+				"is_cluster_edge": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER,
+						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+					},
+				},
+				"is_cluster_shield": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    MISS | FETCH,
+						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+					},
+				},
+				"is_h2": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h2/",
+					},
+				},
+				"state": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-info-state/",
+					},
+				},
+			},
+		},
+		"geoip": &Object{
+			Items: map[string]*Object{
+				"area_code": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-port/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-area-code/",
+					},
+				},
+				"city": &Object{
+					Items: map[string]*Object{
+						"ascii": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-ascii/",
+							},
+						},
+						"latin1": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-latin1/",
+							},
+						},
+						"utf8": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-utf8/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city/",
+					},
+				},
+				"continent_code": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-continent-code/",
+					},
+				},
+				"country_code": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code/",
+					},
+				},
+				"country_code3": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code3/",
+					},
+				},
+				"country_name": &Object{
+					Items: map[string]*Object{
+						"ascii": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-ascii/",
+							},
+						},
+						"latin1": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-latin1/",
+							},
+						},
+						"utf8": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-utf8/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name/",
+					},
+				},
+				"ip_override": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-ip-override/",
+					},
+				},
+				"latitude": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-latitude/",
+					},
+				},
+				"longitude": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-longitude/",
+					},
+				},
+				"metro_code": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-metro-code/",
+					},
+				},
+				"postal_code": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-postal-code/",
+					},
+				},
+				"region": &Object{
+					Items: map[string]*Object{
+						"ascii": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-ascii/",
+							},
+						},
+						"latin1": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-latin1/",
+							},
+						},
+						"utf8": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-utf8/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region/",
+					},
+				},
+				"use_x_forwarded_for": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-use-x-forwarded-for/",
 					},
 				},
 			},
 		},
 		"math": &Object{
 			Items: map[string]*Object{
-				"FLOAT_MIN_10_EXP": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-10-exp/",
-					},
-				},
-				"SQRT1_2": &Object{
+				"1_PI": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.FloatType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt1-2/",
-					},
-				},
-				"PI": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi/",
-					},
-				},
-				"FLOAT_MIN_EXP": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-exp/",
-					},
-				},
-				"POS_INFINITY": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-infinity/",
-					},
-				},
-				"NAN": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-nan/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-1-pi/",
 					},
 				},
 				"2PI": &Object{
@@ -3416,66 +2102,6 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2pi/",
 					},
 				},
-				"LOG2E": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log2e/",
-					},
-				},
-				"PI_4": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-4/",
-					},
-				},
-				"TAU": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-tau/",
-					},
-				},
-				"FLOAT_MAX_EXP": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-exp/",
-					},
-				},
-				"FLOAT_DIG": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-dig/",
-					},
-				},
-				"LN10": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln10/",
-					},
-				},
 				"2_PI": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
@@ -3484,156 +2110,6 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-pi/",
-					},
-				},
-				"LOG10E": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log10e/",
-					},
-				},
-				"1_PI": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-1-pi/",
-					},
-				},
-				"FLOAT_MAX_10_EXP": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-10-exp/",
-					},
-				},
-				"NEG_HUGE_VAL": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-huge-val/",
-					},
-				},
-				"FLOAT_EPSILON": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-epsilon/",
-					},
-				},
-				"LN2": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln2/",
-					},
-				},
-				"INTEGER_MIN": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-min/",
-					},
-				},
-				"FLOAT_MIN": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min/",
-					},
-				},
-				"E": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-e/",
-					},
-				},
-				"PHI": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-phi/",
-					},
-				},
-				"INTEGER_MAX": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-max/",
-					},
-				},
-				"SQRT2": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt2/",
-					},
-				},
-				"FLOAT_RADIX": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-radix/",
-					},
-				},
-				"NEG_INFINITY": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-infinity/",
-					},
-				},
-				"POS_HUGE_VAL": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-huge-val/",
 					},
 				},
 				"2_SQRTPI": &Object{
@@ -3646,6 +2122,36 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-sqrtpi/",
 					},
 				},
+				"E": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-e/",
+					},
+				},
+				"FLOAT_DIG": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-dig/",
+					},
+				},
+				"FLOAT_EPSILON": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-epsilon/",
+					},
+				},
 				"FLOAT_MANT_DIG": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
@@ -3654,16 +2160,6 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-mant-dig/",
-					},
-				},
-				"PI_2": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.FloatType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-2/",
 					},
 				},
 				"FLOAT_MAX": &Object{
@@ -3676,6 +2172,66 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max/",
 					},
 				},
+				"FLOAT_MAX_10_EXP": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-10-exp/",
+					},
+				},
+				"FLOAT_MAX_EXP": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-exp/",
+					},
+				},
+				"FLOAT_MIN": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min/",
+					},
+				},
+				"FLOAT_MIN_10_EXP": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-10-exp/",
+					},
+				},
+				"FLOAT_MIN_EXP": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-exp/",
+					},
+				},
+				"FLOAT_RADIX": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-radix/",
+					},
+				},
 				"INTEGER_BIT": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
@@ -3686,18 +2242,259 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-bit/",
 					},
 				},
+				"INTEGER_MAX": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-max/",
+					},
+				},
+				"INTEGER_MIN": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-min/",
+					},
+				},
+				"LN10": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln10/",
+					},
+				},
+				"LN2": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln2/",
+					},
+				},
+				"LOG10E": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log10e/",
+					},
+				},
+				"LOG2E": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log2e/",
+					},
+				},
+				"NAN": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-nan/",
+					},
+				},
+				"NEG_HUGE_VAL": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-huge-val/",
+					},
+				},
+				"NEG_INFINITY": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-infinity/",
+					},
+				},
+				"PHI": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-phi/",
+					},
+				},
+				"PI": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi/",
+					},
+				},
+				"PI_2": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-2/",
+					},
+				},
+				"PI_4": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-4/",
+					},
+				},
+				"POS_HUGE_VAL": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-huge-val/",
+					},
+				},
+				"POS_INFINITY": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-infinity/",
+					},
+				},
+				"SQRT1_2": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt1-2/",
+					},
+				},
+				"SQRT2": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt2/",
+					},
+				},
+				"TAU": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-tau/",
+					},
+				},
+			},
+		},
+		"now": &Object{
+			Items: map[string]*Object{
+				"sec": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now-sec/",
+					},
+				},
+			},
+			Value: &accessor{
+				Get:       types.TimeType,
+				Set:       types.NeverType,
+				Unset:     false,
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/variables/date-and-time/now/",
 			},
 		},
 		"obj": &Object{
 			Items: map[string]*Object{
-				"response": &Object{
+				"age": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.StringType,
+						Get:       types.RTimeType,
+						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    HIT | ERROR,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-response/",
+						Scopes:    HIT | DELIVER | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-age/",
+					},
+				},
+				"cacheable": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-cacheable/",
+					},
+				},
+				"entered": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | DELIVER | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-entered/",
+					},
+				},
+				"grace": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
+					},
+				},
+				"hits": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/",
 					},
 				},
 				"http": &Object{
@@ -3714,64 +2511,14 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"stale_if_error": &Object{
+				"is_pci": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
-						Get:       types.RTimeType,
+						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    HIT | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-if-error/",
-					},
-				},
-				"ttl": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    HIT | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-ttl/",
-					},
-				},
-				"proto": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | ERROR,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-proto/",
-					},
-				},
-				"status": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.IntegerType,
-						Unset:     false,
-						Scopes:    HIT | ERROR,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-status/",
-					},
-				},
-				"hits": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/",
-					},
-				},
-				"grace": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
+						Scopes:    HIT | DELIVER | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/",
 					},
 				},
 				"lastuse": &Object{
@@ -3784,44 +2531,34 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-lastuse/",
 					},
 				},
-				"entered": &Object{
+				"proto": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | ERROR,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-proto/",
+					},
+				},
+				"response": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    HIT | ERROR,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-response/",
+					},
+				},
+				"stale_if_error": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.RTimeType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    HIT | DELIVER | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-entered/",
-					},
-				},
-				"age": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | DELIVER | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-age/",
-					},
-				},
-				"is_pci": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | DELIVER | ERROR | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/",
-					},
-				},
-				"cacheable": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.BoolType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-cacheable/",
+						Scopes:    HIT | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-if-error/",
 					},
 				},
 				"stale_while_revalidate": &Object{
@@ -3834,42 +2571,1108 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-while-revalidate/",
 					},
 				},
+				"status": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.IntegerType,
+						Unset:     false,
+						Scopes:    HIT | ERROR,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-status/",
+					},
+				},
+				"ttl": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    HIT | ERROR | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-ttl/",
+					},
+				},
+			},
+		},
+		"quic": &Object{
+			Items: map[string]*Object{
+				"cc": &Object{
+					Items: map[string]*Object{
+						"cwnd": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/",
+							},
+						},
+						"ssthresh": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-ssthresh/",
+							},
+						},
+					},
+				},
+				"num_bytes": &Object{
+					Items: map[string]*Object{
+						"received": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-received/",
+							},
+						},
+						"sent": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-sent/",
+							},
+						},
+					},
+				},
+				"num_packets": &Object{
+					Items: map[string]*Object{
+						"ack_received": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-ack-received/",
+							},
+						},
+						"decryption_failed": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-decryption-failed/",
+							},
+						},
+						"late_acked": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-late-acked/",
+							},
+						},
+						"lost": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-lost/",
+							},
+						},
+						"received": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-received/",
+							},
+						},
+						"sent": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-sent/",
+							},
+						},
+					},
+				},
+				"rtt": &Object{
+					Items: map[string]*Object{
+						"latest": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-latest/",
+							},
+						},
+						"minimum": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-minimum/",
+							},
+						},
+						"smoothed": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-smoothed/",
+							},
+						},
+						"variance": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-variance/",
+							},
+						},
+					},
+				},
+			},
+		},
+		"req": &Object{
+			Items: map[string]*Object{
+				"backend": &Object{
+					Items: map[string]*Object{
+						"healthy": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-healthy/",
+							},
+						},
+						"ip": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IPType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-ip/",
+							},
+						},
+						"is_cluster": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    DELIVER,
+								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+							},
+						},
+						"is_origin": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    PASS | MISS | FETCH,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-origin/",
+							},
+						},
+						"is_shield": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-shield/",
+							},
+						},
+						"name": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-name/",
+							},
+						},
+						"port": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-port/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.BackendType,
+						Set:       types.BackendType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/",
+					},
+				},
+				"body": &Object{
+					Items: map[string]*Object{
+						"base64": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-base64/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body/",
+					},
+				},
+				"body_bytes_read": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-bytes-read/",
+					},
+				},
+				"bytes_read": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-bytes-read/",
+					},
+				},
+				"digest": &Object{
+					Items: map[string]*Object{
+						"ratio": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.FloatType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest-ratio/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest/",
+					},
+				},
+				"enable_range_on_pass": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-range-on-pass/",
+					},
+				},
+				"enable_segmented_caching": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-segmented-caching/",
+					},
+				},
+				"esi": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV | FETCH | ERROR | DELIVER,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi/",
+					},
+				},
+				"esi_level": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | DELIVER,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi-level/",
+					},
+				},
+				"grace": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-grace/",
+					},
+				},
+				"hash": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    HASH | ERROR,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-hash/",
+					},
+				},
+				"hash_always_miss": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-always-miss/",
+					},
+				},
+				"hash_ignore_busy": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-ignore-busy/",
+					},
+				},
+				"header_bytes_read": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-header-bytes-read/",
+					},
+				},
+				"http": &Object{
+					Items: map[string]*Object{
+						"%any%": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.StringType,
+								Unset:     true,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-http/",
+							},
+						},
+					},
+				},
+				"is_background_fetch": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-background-fetch/",
+					},
+				},
+				"is_clustering": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-is-clustering/",
+					},
+				},
+				"is_esi_subreq": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-is-esi-subreq/",
+					},
+				},
+				"is_ipv6": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ipv6/",
+					},
+				},
+				"is_purge": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-purge/",
+					},
+				},
+				"is_ssl": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ssl/",
+					},
+				},
+				"max_stale_if_error": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-if-error/",
+					},
+				},
+				"max_stale_while_revalidate": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-while-revalidate/",
+					},
+				},
+				"method": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-method/",
+					},
+				},
+				"postbody": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-postbody/",
+					},
+				},
+				"proto": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-proto/",
+					},
+				},
+				"protocol": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-protocol/",
+					},
+				},
+				"request": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-request/",
+					},
+				},
+				"restarts": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-restarts/",
+					},
+				},
+				"service_id": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-service-id/",
+					},
+				},
+				"topurl": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-topurl/",
+					},
+				},
+				"url": &Object{
+					Items: map[string]*Object{
+						"basename": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-basename/",
+							},
+						},
+						"dirname": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-dirname/",
+							},
+						},
+						"ext": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-ext/",
+							},
+						},
+						"path": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-path/",
+							},
+						},
+						"qs": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-qs/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.StringType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url/",
+					},
+				},
+				"vcl": &Object{
+					Items: map[string]*Object{
+						"generation": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-generation/",
+							},
+						},
+						"md5": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-md5/",
+							},
+						},
+						"version": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-version/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl/",
+					},
+				},
+				"xid": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-xid/",
+					},
+				},
+			},
+		},
+		"resp": &Object{
+			Items: map[string]*Object{
+				"body_bytes_written": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-body-bytes-written/",
+					},
+				},
+				"bytes_written": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-bytes-written/",
+					},
+				},
+				"completed": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-completed/",
+					},
+				},
+				"header_bytes_written": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-header-bytes-written/",
+					},
+				},
+				"http": &Object{
+					Items: map[string]*Object{
+						"%any%": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.StringType,
+								Unset:     true,
+								Scopes:    DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-http/",
+							},
+						},
+					},
+				},
+				"is_locally_generated": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/",
+					},
+				},
+				"proto": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-proto/",
+					},
+				},
+				"response": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/",
+					},
+				},
+				"stale": &Object{
+					Items: map[string]*Object{
+						"is_error": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.BoolType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-error/",
+							},
+						},
+						"is_revalidating": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.BoolType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-revalidating/",
+							},
+						},
+					},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale/",
+					},
+				},
+				"status": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-status/",
+					},
+				},
+			},
+		},
+		"segmented_caching": &Object{
+			Items: map[string]*Object{
+				"autopurged": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-autopurged/",
+					},
+				},
+				"block_number": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-number/",
+					},
+				},
+				"block_size": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.IntegerType,
+						Unset:     false,
+						Scopes:    RECV | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-size/",
+					},
+				},
+				"cancelled": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-cancelled/",
+					},
+				},
+				"client_req": &Object{
+					Items: map[string]*Object{
+						"is_open_ended": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-open-ended/",
+							},
+						},
+						"is_range": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-range/",
+							},
+						},
+						"range_high": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-high/",
+							},
+						},
+						"range_low": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-low/",
+							},
+						},
+					},
+				},
+				"completed": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-completed/",
+					},
+				},
+				"error": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-error/",
+					},
+				},
+				"failed": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-failed/",
+					},
+				},
+				"is_inner_req": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-inner-req/",
+					},
+				},
+				"is_outer_req": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-outer-req/",
+					},
+				},
+				"obj": &Object{
+					Items: map[string]*Object{
+						"complete_length": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-obj-complete-length/",
+							},
+						},
+					},
+				},
+				"rounded_req": &Object{
+					Items: map[string]*Object{
+						"range_high": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-high/",
+							},
+						},
+						"range_low": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-low/",
+							},
+						},
+					},
+				},
+				"total_blocks": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-total-blocks/",
+					},
+				},
+			},
+		},
+		"server": &Object{
+			Items: map[string]*Object{
+				"datacenter": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-datacenter/",
+					},
+				},
+				"hostname": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-hostname/",
+					},
+				},
+				"identity": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-identity/",
+					},
+				},
+				"ip": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IPType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/",
+					},
+				},
+				"port": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-port/",
+					},
+				},
+				"region": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-region/",
+					},
+				},
+			},
+		},
+		"stale": &Object{
+			Items: map[string]*Object{
+				"exists": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/stale-exists/",
+					},
+				},
 			},
 		},
 		"time": &Object{
 			Items: map[string]*Object{
 				"elapsed": &Object{
 					Items: map[string]*Object{
-						"sec": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-sec/",
-							},
-						},
-						"usec_frac": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec-frac/",
-							},
-						},
-						"usec": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec/",
-							},
-						},
 						"msec": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -3888,6 +3691,36 @@ func predefinedVariables() Variables {
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-msec-frac/",
+							},
+						},
+						"sec": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-sec/",
+							},
+						},
+						"usec": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec/",
+							},
+						},
+						"usec_frac": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec-frac/",
 							},
 						},
 					},
@@ -3911,6 +3744,26 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec/",
 							},
 						},
+						"msec_frac": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec-frac/",
+							},
+						},
+						"sec": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-sec/",
+							},
+						},
 						"usec": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -3931,26 +3784,6 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-usec-frac/",
 							},
 						},
-						"sec": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-sec/",
-							},
-						},
-						"msec_frac": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec-frac/",
-							},
-						},
 					},
 					Value: &accessor{
 						Get:       types.TimeType,
@@ -3960,18 +3793,18 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end/",
 					},
 				},
-				"to_first_byte": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/time-to-first-byte/",
-					},
-				},
 				"start": &Object{
 					Items: map[string]*Object{
+						"msec": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec/",
+							},
+						},
 						"msec_frac": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
@@ -3980,6 +3813,16 @@ func predefinedVariables() Variables {
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec-frac/",
+							},
+						},
+						"sec": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-sec/",
 							},
 						},
 						"usec": &Object{
@@ -4002,26 +3845,6 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-usec-frac/",
 							},
 						},
-						"msec": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec/",
-							},
-						},
-						"sec": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-sec/",
-							},
-						},
 					},
 					Value: &accessor{
 						Get:       types.TimeType,
@@ -4031,183 +3854,360 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start/",
 					},
 				},
+				"to_first_byte": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.RTimeType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/time-to-first-byte/",
+					},
+				},
 			},
 		},
-		"bereq": &Object{
+		"tls": &Object{
 			Items: map[string]*Object{
-				"bytes_written": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    FETCH | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-bytes-written/",
-					},
-				},
-				"proto": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.StringType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    PASS | MISS | FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/",
-					},
-				},
-				"first_byte_timeout": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    PASS | MISS,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-first-byte-timeout/",
-					},
-				},
-				"url": &Object{
+				"client": &Object{
 					Items: map[string]*Object{
-						"dirname": &Object{
+						"cipher": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-dirname/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-cipher/",
 							},
 						},
-						"path": &Object{
+						"ciphers_list": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-path/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list/",
 							},
 						},
-						"basename": &Object{
+						"ciphers_list_sha": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-sha/",
 							},
 						},
-						"qs": &Object{
+						"ciphers_list_txt": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-qs/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-txt/",
 							},
 						},
-						"ext": &Object{
+						"ciphers_sha": &Object{
 							Items: map[string]*Object{},
 							Value: &accessor{
 								Get:       types.StringType,
 								Set:       types.NeverType,
 								Unset:     false,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-ext/",
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-sha/",
+							},
+						},
+						"handshake_sent_bytes": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-handshake-sent-bytes/",
+							},
+						},
+						"iana_chosen_cipher_id": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-iana-chosen-cipher-id/",
+							},
+						},
+						"protocol": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-protocol/",
+							},
+						},
+						"servername": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-servername/",
+							},
+						},
+						"tlsexts_list": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list/",
+							},
+						},
+						"tlsexts_list_sha": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-sha/",
+							},
+						},
+						"tlsexts_list_txt": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-txt/",
+							},
+						},
+						"tlsexts_sha": &Object{
+							Items: map[string]*Object{},
+							Value: &accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-sha/",
 							},
 						},
 					},
+				},
+			},
+		},
+		"waf": &Object{
+			Items: map[string]*Object{
+				"anomaly_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"blocked": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"executed": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"http_violation_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"lfi_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"logdata": &Object{
+					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    PASS | MISS | FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/",
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
 					},
 				},
-				"between_bytes_timeout": &Object{
+				"logged": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
+						Get:       types.BoolType,
+						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    PASS | MISS,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/",
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
 					},
 				},
-				"method": &Object{
+				"message": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    PASS | MISS | FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/",
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
 					},
 				},
-				"request": &Object{
+				"passed": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"php_injection_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"rce_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"rfi_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"rule_id": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    PASS | MISS | FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/",
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
 					},
 				},
-				"header_bytes_written": &Object{
+				"session_fixation_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"severity": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"sql_injection_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+				"xss_score": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.FloatType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/",
+					},
+				},
+			},
+		},
+		"workspace": &Object{
+			Items: map[string]*Object{
+				"bytes_free": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.IntegerType,
 						Set:       types.NeverType,
 						Unset:     false,
-						Scopes:    FETCH | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-header-bytes-written/",
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-free/",
 					},
 				},
-				"is_clustering": &Object{
+				"bytes_total": &Object{
+					Items: map[string]*Object{},
+					Value: &accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-total/",
+					},
+				},
+				"overflowed": &Object{
 					Items: map[string]*Object{},
 					Value: &accessor{
 						Get:       types.BoolType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-is-clustering/",
-					},
-				},
-				"connect_timeout": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.RTimeType,
-						Set:       types.RTimeType,
-						Unset:     false,
-						Scopes:    PASS | MISS,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/",
-					},
-				},
-				"http": &Object{
-					Items: map[string]*Object{
-						"%any%": &Object{
-							Items: map[string]*Object{},
-							Value: &accessor{
-								Get:       types.StringType,
-								Set:       types.StringType,
-								Unset:     true,
-								Scopes:    PASS | MISS | FETCH,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-http/",
-							},
-						},
-					},
-				},
-				"body_bytes_written": &Object{
-					Items: map[string]*Object{},
-					Value: &accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    FETCH | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-body-bytes-written/",
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-overflowed/",
 					},
 				},
 			},

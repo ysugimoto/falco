@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"go/format"
@@ -98,10 +99,11 @@ func (g *BuiltinGenerator) generate() error {
 	}
 
 	g.buf.WriteString("Functions{\n")
-	for k, v := range fns {
+	for _, k := range g.keySort(fns) {
+		v := fns[k]
 		g.buf.WriteString(quote(k) + ": &FunctionSpec{\n")
 		g.buf.WriteString("Items: map[string]*FunctionSpec{\n")
-		g.generateSpec(*v)
+		g.generateSpec(v)
 		g.buf.WriteString("},\n")
 		if v.Value != nil {
 			g.buf.WriteString("Value: ")
@@ -155,11 +157,12 @@ func (g *BuiltinGenerator) addOrSet(v *Spec, key string) *Spec {
 	return o
 }
 
-func (g *BuiltinGenerator) generateSpec(s Spec) {
-	for k, v := range s.Items {
+func (g *BuiltinGenerator) generateSpec(s *Spec) {
+	for _, k := range g.keySort(s.Items) {
+		v := s.Items[k]
 		g.buf.WriteString(quote(k) + ": &FunctionSpec{\n")
 		g.buf.WriteString("Items: map[string]*FunctionSpec{\n")
-		g.generateSpec(*v)
+		g.generateSpec(v)
 		g.buf.WriteString("},\n")
 		if v.Value != nil {
 			g.buf.WriteString("Value: ")
@@ -167,4 +170,14 @@ func (g *BuiltinGenerator) generateSpec(s Spec) {
 		}
 		g.buf.WriteString("},\n")
 	}
+}
+
+func (g *BuiltinGenerator) keySort(m map[string]*Spec) []string {
+	keys := make([]string, 0, len(m))
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	return keys
 }
