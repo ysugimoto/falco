@@ -3,7 +3,6 @@ package context
 import (
 	"testing"
 
-	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/types"
 )
 

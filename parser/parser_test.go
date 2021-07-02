@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
 )

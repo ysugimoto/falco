@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
