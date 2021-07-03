@@ -53,17 +53,6 @@ type Runner struct {
 }
 
 func NewRunner(mainVcl string, c *Config) (*Runner, error) {
-	// Validate main VCL
-	if mainVcl == "" {
-		return nil, fmt.Errorf("Main VCL file is not specified.")
-	} else if _, err := os.Stat(mainVcl); err != nil {
-		if err == os.ErrNotExist {
-			return nil, fmt.Errorf("%s is not found", mainVcl)
-		}
-		return nil, fmt.Errorf("Unexpected stat error: %s", err.Error())
-	}
-
-	mainVcl, _ = filepath.Abs(mainVcl) // nolint: errcheck
 	r := &Runner{
 		mainVclFile: mainVcl,
 		context:     context.New(),

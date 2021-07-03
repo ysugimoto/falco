@@ -257,11 +257,13 @@ func (l *Lexer) NextToken() token.Token {
 			t = newToken(token.MULTIPLICATION, l.char, line, index)
 			t.Literal = "*="
 		}
-	case 0x00:
+	case 0x00: // EOF
 		t.Literal = ""
 		t.Type = token.EOF
 		t.Line = line
 		t.Position = index
+	case 0x0A: // '\n'
+		t = newToken(token.LF, l.char, line, index)
 	default:
 		switch {
 		case l.isLetter(l.char):
@@ -354,7 +356,7 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) skipWhitespace() {
-	for l.char == ' ' || l.char == '\t' || l.char == '\n' || l.char == '\r' {
+	for l.char == ' ' || l.char == '\t' || l.char == '\r' {
 		l.readChar()
 	}
 }
@@ -435,10 +437,10 @@ func (l *Lexer) readNumber() string {
 func (l *Lexer) readEOL() string {
 	var rs []rune
 	for {
-		if l.char == '\n' || l.char == 0x00 {
+		rs = append(rs, l.char)
+		if l.peekChar() == 0x00 || l.peekChar() == '\n' {
 			break
 		}
-		rs = append(rs, l.char)
 		l.readChar()
 	}
 	return string(rs)
@@ -454,7 +456,6 @@ func (l *Lexer) readMultiComment() string {
 			rs = append(rs, l.char)
 			l.readChar()
 			rs = append(rs, l.char)
-			l.readChar()
 			break
 		}
 		rs = append(rs, l.char)

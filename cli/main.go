@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"path/filepath"
+
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
@@ -95,9 +97,22 @@ func main() {
 	mainVcl := fs.Arg(0)
 	if mainVcl == "" {
 		printUsage()
+	} else if _, err := os.Stat(mainVcl); err != nil {
+		if err == os.ErrNotExist {
+			writeln(white, "Input file %s is not found", mainVcl)
+		} else {
+			writeln(red, "Unexpected stat error: %s", err.Error())
+		}
+		os.Exit(1)
 	}
 
-	runner, err := NewRunner(mainVcl, c)
+	vcl, err := filepath.Abs(mainVcl)
+	if err != nil {
+		writeln(red, "Failed to get absolute path: %s", err.Error())
+		os.Exit(1)
+	}
+
+	runner, err := NewRunner(vcl, c)
 	if err != nil {
 		writeln(red, err.Error())
 		os.Exit(1)
