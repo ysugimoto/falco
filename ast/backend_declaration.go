@@ -25,6 +25,7 @@ func (b *BackendDeclaration) String() string {
 	for _, prop := range b.Properties {
 		buf.WriteString(prop.String() + "\n")
 	}
+	buf.WriteString(b.InfixComment())
 	buf.WriteString("}")
 	buf.WriteString(b.TrailingComment())
 	buf.WriteString("\n")
@@ -75,6 +76,7 @@ func (o *BackendProbeObject) String() string {
 		buf.WriteString(p.TrailingComment())
 		buf.WriteString("\n")
 	}
+	buf.WriteString(o.InfixComment())
 	buf.WriteString(indent(o.Nest) + "}")
 
 	return buf.String()

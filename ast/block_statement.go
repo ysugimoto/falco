@@ -20,6 +20,7 @@ func (b *BlockStatement) String() string {
 	for _, stmt := range b.Statements {
 		buf.WriteString(stmt.String())
 	}
+	buf.WriteString(b.InfixComment())
 	if b.Nest == 0 {
 		buf.WriteString("}")
 	} else {

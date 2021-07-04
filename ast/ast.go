@@ -30,6 +30,7 @@ type Meta struct {
 	Token    token.Token
 	Leading  Comments
 	Trailing Comments
+	Infix    Comments
 	Nest     int
 }
 
@@ -72,19 +73,40 @@ func (m *Meta) TrailingComment() string {
 	return " " + buf.String()
 }
 
+func (m *Meta) InfixComment() string {
+	if len(m.Infix) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Infix {
+		buf.WriteString(indent(m.Nest) + m.Infix[i].String() + "\n")
+	}
+
+	return buf.String()
+}
+
 func New(t token.Token, nest int, comments ...Comments) *Meta {
 	m := &Meta{
 		Token:    t,
 		Nest:     nest,
 		Leading:  Comments{},
 		Trailing: Comments{},
+		Infix:    Comments{},
 	}
 
-	if len(comments) == 1 {
+	switch len(comments) {
+	case 0:
+		break
+	case 1:
 		m.Leading = comments[0]
-	} else if len(comments) > 1 {
+	case 2:
 		m.Leading = comments[0]
 		m.Trailing = comments[1]
+	default:
+		m.Leading = comments[0]
+		m.Trailing = comments[1]
+		m.Infix = comments[2]
 	}
 
 	return m

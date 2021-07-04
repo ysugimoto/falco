@@ -42,8 +42,8 @@ var precedences = map[token.TokenType]int{
 }
 
 type (
-	prefixParser func(ast.Comments) (ast.Expression, error)
-	infixParser  func(ast.Expression, ast.Comments) (ast.Expression, error)
+	prefixParser func() (ast.Expression, error)
+	infixParser  func(ast.Expression) (ast.Expression, error)
 )
 
 type Parser struct {
@@ -52,6 +52,7 @@ type Parser struct {
 	prevToken token.Token
 	curToken  token.Token
 	peekToken token.Token
+	stack     ast.Comments
 
 	prefixParsers map[token.TokenType]prefixParser
 	infixParsers  map[token.TokenType]infixParser
@@ -63,18 +64,18 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	p.prefixParsers = map[token.TokenType]prefixParser{
-		token.IDENT:      func(c ast.Comments) (ast.Expression, error) { return p.parseIdent(c) },
-		token.STRING:     func(c ast.Comments) (ast.Expression, error) { return p.parseString(c) },
-		token.INT:        func(c ast.Comments) (ast.Expression, error) { return p.parseInteger(c) },
-		token.FLOAT:      func(c ast.Comments) (ast.Expression, error) { return p.parseFloat(c) },
-		token.RTIME:      func(c ast.Comments) (ast.Expression, error) { return p.parseRTime(c) },
-		token.NOT:        func(c ast.Comments) (ast.Expression, error) { return p.parsePrefixExpression(c) },
-		token.MINUS:      func(c ast.Comments) (ast.Expression, error) { return p.parsePrefixExpression(c) },
-		token.PLUS:       func(c ast.Comments) (ast.Expression, error) { return p.parsePrefixExpression(c) },
-		token.TRUE:       func(c ast.Comments) (ast.Expression, error) { return p.parseBoolean(c) },
-		token.FALSE:      func(c ast.Comments) (ast.Expression, error) { return p.parseBoolean(c) },
-		token.LEFT_PAREN: func(c ast.Comments) (ast.Expression, error) { return p.parseGroupedExpression(c) },
-		token.IF:         func(c ast.Comments) (ast.Expression, error) { return p.parseIfExpression(c) },
+		token.IDENT:      func() (ast.Expression, error) { return p.parseIdent(), nil },
+		token.STRING:     func() (ast.Expression, error) { return p.parseString(), nil },
+		token.INT:        func() (ast.Expression, error) { return p.parseInteger() },
+		token.FLOAT:      func() (ast.Expression, error) { return p.parseFloat() },
+		token.RTIME:      func() (ast.Expression, error) { return p.parseRTime() },
+		token.NOT:        func() (ast.Expression, error) { return p.parsePrefixExpression() },
+		token.MINUS:      func() (ast.Expression, error) { return p.parsePrefixExpression() },
+		token.PLUS:       func() (ast.Expression, error) { return p.parsePrefixExpression() },
+		token.TRUE:       func() (ast.Expression, error) { return p.parseBoolean(), nil },
+		token.FALSE:      func() (ast.Expression, error) { return p.parseBoolean(), nil },
+		token.LEFT_PAREN: func() (ast.Expression, error) { return p.parseGroupedExpression() },
+		token.IF:         func() (ast.Expression, error) { return p.parseIfExpression() },
 	}
 	p.infixParsers = map[token.TokenType]infixParser{
 		token.IF:                 p.parseInfixStringConcatExpression,
@@ -104,7 +105,26 @@ func New(l *lexer.Lexer) *Parser {
 func (p *Parser) nextToken() {
 	p.prevToken = p.curToken
 	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
+	for {
+		t := p.l.NextToken()
+		if t.Type == token.LF {
+			continue
+		} else if t.Type == token.COMMENT {
+			p.stack = append(p.stack, &ast.Comment{
+				Token: t,
+				Value: t.Literal,
+			})
+			continue
+		}
+		p.peekToken = t
+		break
+	}
+}
+
+func (p *Parser) comments() ast.Comments {
+	c := append(ast.Comments{}, p.stack...)
+	p.stack = ast.Comments{}
+	return c
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -116,9 +136,6 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {
-	for p.peekTokenIs(token.LF) {
-		p.nextToken()
-	}
 	if !p.peekTokenIs(t) {
 		return false
 	}
@@ -126,61 +143,27 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	return true
 }
 
-func (p *Parser) comments() ast.Comments {
-	cs := ast.Comments{}
-
+func (p *Parser) expectTrail(t token.TokenType) (ast.Comments, bool) {
+	if !p.peekTokenIs(t) {
+		return nil, false
+	}
+	c := ast.Comments{}
 	for {
-		if p.curTokenIs(token.LF) {
-			p.nextToken()
+		tok := p.l.NextToken()
+		if tok.Type == token.LF || tok.Type == token.EOF {
+			break
+		}
+		if tok.Type == token.COMMENT {
+			c = append(c, &ast.Comment{
+				Token: tok,
+				Value: tok.Literal,
+			})
 			continue
-		} else if !p.curTokenIs(token.COMMENT) {
-			break
 		}
-		cs = append(cs, &ast.Comment{
-			Token: p.curToken,
-			Value: p.curToken.Literal,
-		})
-		p.nextToken()
+		break
 	}
-	return cs
-}
-
-func (p *Parser) peekComments() ast.Comments {
-	cs := ast.Comments{}
-
-	for {
-		if p.peekTokenIs(token.LF) {
-			p.nextToken()
-			continue
-		} else if !p.peekTokenIs(token.COMMENT) {
-			break
-		}
-		p.nextToken()
-		cs = append(cs, &ast.Comment{
-			Token: p.curToken,
-			Value: p.curToken.Literal,
-		})
-	}
-	return cs
-}
-
-func (p *Parser) trailComment() ast.Comments {
-	cs := ast.Comments{}
-
-	for {
-		if p.peekTokenIs(token.LF) {
-			p.nextToken()
-			break
-		} else if !p.peekTokenIs(token.COMMENT) {
-			break
-		}
-		p.nextToken()
-		cs = append(cs, &ast.Comment{
-			Token: p.curToken,
-			Value: p.curToken.Literal,
-		})
-	}
-	return cs
+	p.nextToken()
+	return c, true
 }
 
 func (p *Parser) curPrecedence() int {
@@ -216,23 +199,21 @@ func (p *Parser) parseDeclaration() (ast.Statement, error) {
 	var stmt ast.Statement
 	var err error
 
-	comments := p.comments()
-
 	switch p.curToken.Type {
 	case token.ACL:
-		stmt, err = p.parseAclDeclaration(comments)
+		stmt, err = p.parseAclDeclaration()
 	case token.IMPORT:
-		stmt, err = p.parseImportStatement(comments)
+		stmt, err = p.parseImportStatement()
 	case token.INCLUDE:
-		stmt, err = p.parseIncludeStatement(comments)
+		stmt, err = p.parseIncludeStatement()
 	case token.BACKEND:
-		stmt, err = p.parseBackendDeclaration(comments)
+		stmt, err = p.parseBackendDeclaration()
 	case token.DIRECTOR:
-		stmt, err = p.parseDirectorDeclaration(comments)
+		stmt, err = p.parseDirectorDeclaration()
 	case token.TABLE:
-		stmt, err = p.parseTableDeclaration(comments)
+		stmt, err = p.parseTableDeclaration()
 	case token.SUBROUTINE:
-		stmt, err = p.parseSubroutineDeclaration(comments)
+		stmt, err = p.parseSubroutineDeclaration()
 	default:
 		err = UnexpectedToken(p.curToken)
 	}
@@ -244,27 +225,23 @@ func (p *Parser) parseDeclaration() (ast.Statement, error) {
 	return stmt, nil
 }
 
-func (p *Parser) parseAclDeclaration(comments ast.Comments) (*ast.AclDeclaration, error) {
+func (p *Parser) parseAclDeclaration() (*ast.AclDeclaration, error) {
 	acl := &ast.AclDeclaration{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.IDENT))
 	}
-
-	var err error
-	acl.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	acl.Name = p.parseIdent()
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.LEFT_BRACE))
 	}
+	acl.Name.Meta.Trailing = p.comments()
 
 	for !p.peekTokenIs(token.RIGHT_BRACE) {
+		p.nextToken()
 		cidr, err := p.parseAclCidr()
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -272,23 +249,24 @@ func (p *Parser) parseAclDeclaration(comments ast.Comments) (*ast.AclDeclaration
 			acl.CIDRs = append(acl.CIDRs, cidr)
 		}
 	}
-	p.nextToken() // on RIGHT_BRACE
-	acl.Meta.Trailing = p.trailComment()
+	acl.Meta.Infix = p.comments()
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+	} else {
+		acl.Meta.Trailing = c
+	}
 	return acl, nil
 }
 
 func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
-	comments := p.peekComments()
-	p.nextToken()
-
 	cidr := &ast.AclCidr{
-		Meta: ast.New(p.curToken, 1, comments),
+		Meta: ast.New(p.curToken, 1, p.comments()),
 	}
 	// Set inverse if "!" token exists
 	var err error
 	if p.curTokenIs(token.NOT) {
 		cidr.Inverse = &ast.Boolean{
-			Meta:  ast.New(p.curToken, 0),
+			Meta:  ast.New(p.curToken, 0, p.comments()),
 			Value: true,
 		}
 		p.nextToken()
@@ -297,99 +275,77 @@ func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
 	if !p.curTokenIs(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
 	}
-
-	cidr.IP, err = p.parseIP(ast.Comments{})
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	cidr.IP = p.parseIP()
 
 	// Add mask token if found in "/" on next token
 	if p.peekTokenIs(token.SLASH) {
 		p.nextToken()
-		c := p.peekComments()
 		if !p.expectPeek(token.INT) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.INT))
 		}
 
-		cidr.Mask, err = p.parseInteger(c)
+		cidr.Mask, err = p.parseInteger()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	} else {
+		cidr.Meta.Trailing = c
 	}
-
-	cidr.Meta.Trailing = p.trailComment()
 
 	return cidr, nil
 }
 
-func (p *Parser) parseImportStatement(comments ast.Comments) (*ast.ImportStatement, error) {
+func (p *Parser) parseImportStatement() (*ast.ImportStatement, error) {
 	i := &ast.ImportStatement{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	i.Name = p.parseIdent()
 
-	var err error
-	i.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	} else {
+		i.Meta.Trailing = c
 	}
-	i.Meta.Trailing = p.trailComment()
 
 	return i, nil
 }
 
-func (p *Parser) parseIncludeStatement(comments ast.Comments) (ast.Statement, error) {
+func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 	i := &ast.IncludeStatement{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
+	i.Module = p.parseString()
 
-	var err error
-	i.Module, err = p.parseString(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	} else {
+		i.Meta.Trailing = c
 	}
-
-	i.Meta.Trailing = p.trailComment()
 
 	return i, nil
 }
 
-func (p *Parser) parseBackendDeclaration(comments ast.Comments) (*ast.BackendDeclaration, error) {
+func (p *Parser) parseBackendDeclaration() (*ast.BackendDeclaration, error) {
 	b := &ast.BackendDeclaration{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	b.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	b.Name = p.parseIdent()
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
@@ -403,34 +359,32 @@ func (p *Parser) parseBackendDeclaration(comments ast.Comments) (*ast.BackendDec
 		b.Properties = append(b.Properties, prop)
 	}
 
-	p.nextToken() // RIGHT_BRACE
-	b.Meta.Trailing = p.trailComment()
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+	} else {
+		b.Meta.Trailing = c
+	}
 	return b, nil
 }
 
 func (p *Parser) parseBackendProperty(nestLevel int) (*ast.BackendProperty, error) {
-	comments := p.peekComments()
 	if !p.expectPeek(token.DOT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "DOT"))
 	}
 
 	prop := &ast.BackendProperty{
-		Meta: ast.New(p.curToken, nestLevel, comments),
+		Meta: ast.New(p.curToken, nestLevel, p.comments()),
 	}
 
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	prop.Key, err = p.parseIdent(ast.Comments{})
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	prop.Key = p.parseIdent()
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 	}
+	prop.Key.Meta.Trailing = p.comments()
 
 	p.nextToken() // point to right token
 
@@ -447,8 +401,12 @@ func (p *Parser) parseBackendProperty(nestLevel int) (*ast.BackendProperty, erro
 			}
 			probe.Values = append(probe.Values, pp)
 		}
-		p.nextToken() // point to RIGHT_BRACE
-		probe.Meta.Trailing = p.trailComment()
+
+		if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+			return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+		} else {
+			probe.Meta.Trailing = c
+		}
 		prop.Value = probe
 		return prop, nil
 	}
@@ -460,83 +418,123 @@ func (p *Parser) parseBackendProperty(nestLevel int) (*ast.BackendProperty, erro
 	}
 	prop.Value = exp
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	} else {
+		prop.Meta.Trailing = c
 	}
 
-	prop.Meta.Trailing = p.trailComment()
 	return prop, nil
 }
 
-func (p *Parser) parseDirectorDeclaration(comments ast.Comments) (*ast.DirectorDeclaration, error) {
+func (p *Parser) parseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 	d := &ast.DirectorDeclaration{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
 	// director name
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	d.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	d.Name = p.parseIdent()
 
 	// director type
-	cc := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	d.DirectorType, err = p.parseIdent(cc)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	d.DirectorType = p.parseIdent()
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
 
 	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		prop, err := p.parseDirectorProperty()
+		var prop ast.Expression
+		var err error
+
+		switch p.peekToken.Type {
+		case token.DOT:
+			// single property definition like ".quorum = 10%;"
+			p.nextToken()
+			prop, err = p.parseDirectorProperty()
+		case token.LEFT_BRACE:
+			p.nextToken()
+			// object definition e.g. { .backend = F_origin_1; .weight = 1; }
+			prop, err = p.parseDirectorBackend()
+		default:
+			err = errors.WithStack(UnexpectedToken(p.peekToken))
+		}
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		d.Properties = append(d.Properties, prop)
 	}
-	p.nextToken() // RIGHT_BRACE
-	d.Meta.Trailing = p.trailComment()
+	d.Meta.Infix = p.comments()
+
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+	} else {
+		d.Meta.Trailing = c
+	}
 	return d, nil
 }
 
 func (p *Parser) parseDirectorProperty() (ast.Expression, error) {
-	comments := p.peekComments()
+	prop := &ast.DirectorProperty{
+		Meta: ast.New(p.curToken, 1, p.comments()),
+	}
 
-	switch p.peekToken.Type {
-	// single property definition like ".quorum = 10%;"
-	case token.DOT:
-		p.nextToken()
-		prop := &ast.DirectorProperty{
-			Meta: ast.New(p.curToken, 1, comments),
+	// token may token.BACKEND because backend object has ".backend" property key
+	if !p.expectPeek(token.IDENT) && !p.expectPeek(token.BACKEND) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
+	}
+	prop.Key = p.parseIdent()
+
+	if !p.expectPeek(token.ASSIGN) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
+	}
+	prop.Key.Meta.Trailing = p.comments()
+
+	p.nextToken() // point to expression start token
+
+	exp, err := p.parseExpression(LOWEST)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	prop.Value = exp
+
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	} else {
+		prop.Meta.Trailing = c
+	}
+	return prop, nil
+}
+
+func (p *Parser) parseDirectorBackend() (ast.Expression, error) {
+	prop := &ast.DirectorBackendObject{
+		Meta: ast.New(p.curToken, 1, p.comments()),
+	}
+
+	for !p.peekTokenIs(token.RIGHT_BRACE) {
+		if !p.expectPeek(token.DOT) {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "DOT"))
+		}
+
+		subProp := &ast.DirectorProperty{
+			Meta: ast.New(p.curToken, 1, p.comments()),
 		}
 
 		// token may token.BACKEND because backend object has ".backend" property key
 		if !p.expectPeek(token.IDENT) && !p.expectPeek(token.BACKEND) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 		}
-
-		var err error
-		prop.Key, err = p.parseIdent(ast.Comments{})
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		subProp.Key = p.parseIdent()
 
 		if !p.expectPeek(token.ASSIGN) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 		}
+		subProp.Key.Meta.Trailing = p.comments()
 
 		p.nextToken() // point to expression start token
 
@@ -544,65 +542,45 @@ func (p *Parser) parseDirectorProperty() (ast.Expression, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		prop.Value = exp
-
+		subProp.Value = exp
 		if !p.expectPeek(token.SEMICOLON) {
 			return nil, errors.WithStack(MissingSemicolon(p.curToken))
 		}
-		prop.Meta.Trailing = p.trailComment()
-
-		return prop, nil
-	// object definition e.g. { .backend = F_origin_1; .weight = 1; }
-	case token.LEFT_BRACE:
-		p.nextToken()
-		prop := &ast.DirectorBackendObject{
-			Meta: ast.New(p.curToken, 1, comments),
-		}
-
-		for !p.peekTokenIs(token.RIGHT_BRACE) {
-			pp, err := p.parseDirectorProperty()
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			prop.Values = append(prop.Values, pp.(*ast.DirectorProperty))
-		}
-		p.nextToken() // point to RIGHT_BRACE
-		prop.Meta.Trailing = p.trailComment()
-
-		return prop, nil
-	default:
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken))
+		subProp.Meta.Trailing = p.comments()
+		prop.Values = append(prop.Values, subProp)
 	}
+
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+	} else {
+		prop.Meta.Trailing = c
+	}
+	return prop, nil
 }
 
-func (p *Parser) parseTableDeclaration(comments ast.Comments) (*ast.TableDeclaration, error) {
+func (p *Parser) parseTableDeclaration() (*ast.TableDeclaration, error) {
 	t := &ast.TableDeclaration{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	t.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	t.Name = p.parseIdent()
 
 	// Table value type is optional
-	cc := p.peekComments()
 	if p.peekTokenIs(token.IDENT) {
 		p.nextToken()
-		t.ValueType, err = p.parseIdent(cc)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		t.ValueType = p.parseIdent()
 	}
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
+	}
+	if t.ValueType != nil {
+		t.ValueType.Meta.Trailing = p.comments()
+	} else {
+		t.Name.Meta.Trailing = p.comments()
 	}
 
 	for !p.peekTokenIs(token.RIGHT_BRACE) {
@@ -612,126 +590,100 @@ func (p *Parser) parseTableDeclaration(comments ast.Comments) (*ast.TableDeclara
 		}
 		t.Properties = append(t.Properties, prop)
 	}
-	p.nextToken() // RIGHT_BRACE
-	t.Meta.Trailing = p.trailComment()
 
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
+	} else {
+		t.Meta.Trailing = c
+	}
 	return t, nil
 }
 
 func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
-	comments := p.peekComments()
+	prop := &ast.TableProperty{
+		Meta: ast.New(p.curToken, 1, p.comments()),
+	}
+
 	if !p.expectPeek(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
-
-	prop := &ast.TableProperty{
-		Meta: ast.New(p.curToken, 1, comments),
-	}
-
-	var err error
-	prop.Key, err = p.parseString(ast.Comments{})
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	prop.Key = p.parseString()
 
 	if !p.expectPeek(token.COLON) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COLON"))
 	}
 
-	c := p.peekComments()
 	switch p.peekToken.Type {
 	case token.STRING:
 		p.nextToken()
-		prop.Value = &ast.String{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: p.curToken.Literal,
-		}
+		prop.Value = p.parseString()
 	case token.ACL, token.BACKEND:
 		p.nextToken()
-		prop.Value = &ast.Ident{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: p.curToken.Literal,
-		}
-	case token.TRUE:
+		prop.Value = p.parseIdent()
+	case token.TRUE, token.FALSE:
 		p.nextToken()
-		prop.Value = &ast.Boolean{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: true,
-		}
-	case token.FALSE:
-		p.nextToken()
-		prop.Value = &ast.Boolean{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: false,
-		}
+		prop.Value = p.parseBoolean()
 	case token.FLOAT:
 		p.nextToken()
-		v, err := strconv.ParseFloat(p.curToken.Literal, 64)
-		if err != nil {
+		if v, err := p.parseFloat(); err != nil {
 			return nil, errors.WithStack(err)
-		}
-		prop.Value = &ast.Float{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: v,
+		} else {
+			prop.Value = v
 		}
 	case token.INT:
 		p.nextToken()
-		v, err := strconv.ParseInt(p.curToken.Literal, 10, 64)
-		if err != nil {
+		if v, err := p.parseInteger(); err != nil {
 			return nil, errors.WithStack(err)
-		}
-		prop.Value = &ast.Integer{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: v,
+		} else {
+			prop.Value = v
 		}
 	case token.RTIME:
 		p.nextToken()
-		prop.Value = &ast.RTime{
-			Meta:  ast.New(p.curToken, 0, c),
-			Value: p.curToken.Literal,
+		if v, err := p.parseRTime(); err != nil {
+			return nil, errors.WithStack(err)
+		} else {
+			prop.Value = v
 		}
 	default:
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken))
 	}
 
-	if p.expectPeek(token.COMMA) {
-		prop.Meta.Trailing = p.trailComment()
-	} else {
-		prop.Meta.Trailing = p.trailComment()
-		// But last table item does not need commma
-		if !p.peekTokenIs(token.RIGHT_BRACE) {
-			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA"))
+	if p.peekTokenIs(token.COMMA) {
+		if c, ok := p.expectTrail(token.COMMA); ok {
+			prop.Meta.Trailing = c
 		}
+	} else if p.peekTokenIs(token.RIGHT_BRACE) {
+		prop.Meta.Trailing = p.comments()
+	} else {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "COMMA"))
 	}
 	return prop, nil
 }
 
-func (p *Parser) parseSubroutineDeclaration(comments ast.Comments) (*ast.SubroutineDeclaration, error) {
+func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error) {
 	s := &ast.SubroutineDeclaration{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	s.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	s.Name = p.parseIdent()
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
 
-	block, err := p.parseBlockStatement(1)
-	if err != nil {
+	var err error
+	if s.Block, err = p.parseBlockStatement(1); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	s.Block = block
-	s.Meta.Trailing = p.trailComment()
+
+	if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, "COMMA"))
+	} else {
+		s.Meta.Trailing = c
+	}
 
 	return s, nil
 }
@@ -746,54 +698,47 @@ func (p *Parser) parseBlockStatement(nest int) (*ast.BlockStatement, error) {
 		var stmt ast.Statement
 		var err error
 
-		comments := p.peekComments()
-
 		switch p.peekToken.Type {
 		case token.SET:
-			p.nextToken()
-			stmt, err = p.parseSetStatement(comments, nest)
+			stmt, err = p.parseSetStatement(nest)
 		case token.UNSET:
 			p.nextToken()
-			stmt, err = p.parseUnsetStatement(comments, nest)
+			stmt, err = p.parseUnsetStatement(nest)
 		case token.REMOVE:
 			p.nextToken()
-			stmt, err = p.parseRemoveStatement(comments, nest)
+			stmt, err = p.parseRemoveStatement(nest)
 		case token.ADD:
 			p.nextToken()
-			stmt, err = p.parseAddStatement(comments, nest)
+			stmt, err = p.parseAddStatement(nest)
 		case token.CALL:
 			p.nextToken()
-			stmt, err = p.parseCallStatement(comments, nest)
+			stmt, err = p.parseCallStatement(nest)
 		case token.DECLARE:
 			p.nextToken()
-			stmt, err = p.parseDeclareStatement(comments, nest)
+			stmt, err = p.parseDeclareStatement(nest)
 		case token.ERROR:
 			p.nextToken()
-			stmt, err = p.parseErrorStatement(comments, nest)
+			stmt, err = p.parseErrorStatement(nest)
 		case token.ESI:
 			p.nextToken()
-			stmt, err = p.parseEsiStatement(comments, nest)
+			stmt, err = p.parseEsiStatement(nest)
 		case token.LOG:
 			p.nextToken()
-			stmt, err = p.parseLogStatement(comments, nest)
+			stmt, err = p.parseLogStatement(nest)
 		case token.RESTART:
 			p.nextToken()
-			stmt, err = p.parseRestartStatement(comments, nest)
+			stmt, err = p.parseRestartStatement(nest)
 		case token.RETURN:
 			p.nextToken()
-			stmt, err = p.parseReturnStatement(comments, nest)
+			stmt, err = p.parseReturnStatement(nest)
 		case token.SYNTHETIC:
 			p.nextToken()
-			stmt, err = p.parseSyntheticStatement(comments, nest)
+			stmt, err = p.parseSyntheticStatement(nest)
 		case token.SYNTHETIC_BASE64:
 			p.nextToken()
-			stmt, err = p.parseSyntheticBase64Statement(comments, nest)
+			stmt, err = p.parseSyntheticBase64Statement(nest)
 		case token.IF:
-			p.nextToken()
-			stmt, err = p.parseIfStatement(comments, nest)
-		case token.COMMENT:
-			p.nextToken()
-			continue
+			stmt, err = p.parseIfStatement(nest)
 		default:
 			err = UnexpectedToken(p.peekToken)
 		}
@@ -803,32 +748,28 @@ func (p *Parser) parseBlockStatement(nest int) (*ast.BlockStatement, error) {
 		b.Statements = append(b.Statements, stmt)
 	}
 
-	p.nextToken() // point to RIGHT_BRACE that end of block
+	b.Meta.Trailing = p.comments()
 	return b, nil
 }
 
 // nolint: dupl
-func (p *Parser) parseSetStatement(comments ast.Comments, nest int) (*ast.SetStatement, error) {
+func (p *Parser) parseSetStatement(nest int) (*ast.SetStatement, error) {
 	stmt := &ast.SetStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.peekToken, nest, p.comments()),
 	}
+	p.nextToken()
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	stmt.Ident, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	stmt.Ident = p.parseIdent()
+	stmt.Ident.Meta.Leading = p.comments()
 
 	if !isAssignmentOperator(p.peekToken) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, assignmentOperatorLiterals...))
 	}
-
 	p.nextToken() // point to assignment operator
+
 	stmt.Operator = &ast.Operator{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -841,10 +782,11 @@ func (p *Parser) parseSetStatement(comments ast.Comments, nest int) (*ast.SetSta
 	}
 	stmt.Value = exp
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-	stmt.Meta.Trailing = p.trailComment()
 
 	return stmt, nil
 }
@@ -858,109 +800,90 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	//   # Some line comment here // trim this line
 	//   req.http,Bar
 	// ) { ... }
-	c := p.comments()
 	prefix, ok := p.prefixParsers[p.curToken.Type]
 	if !ok {
 		return nil, errors.WithStack(UndefinedPrefix(p.curToken))
 	}
 
-	left, err := prefix(c)
+	left, err := prefix()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	// same as prefix expression
-	for {
-		cc := p.peekComments()
-		if !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
-			infix, ok := p.infixParsers[p.peekToken.Type]
-			if !ok {
-				return left, nil
-			}
-			p.nextToken()
-			left, err = infix(left, cc)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			continue
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix, ok := p.infixParsers[p.peekToken.Type]
+		if !ok {
+			return left, nil
 		}
-		break
+		p.nextToken()
+		left, err = infix(left)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		continue
 	}
-	// TODO: store trailing comments
-	p.trailComment()
 
 	return left, nil
 }
 
 // nolint: unparam
-func (p *Parser) parseIdent(comments ast.Comments) (*ast.Ident, error) {
-	n := &ast.Ident{
-		Meta:  ast.New(p.curToken, 0, comments),
+func (p *Parser) parseIdent() *ast.Ident {
+	return &ast.Ident{
+		Meta:  ast.New(p.curToken, 0),
 		Value: p.curToken.Literal,
 	}
-	n.Meta.Trailing = p.trailComment()
-	return n, nil
 }
 
 // nolint: unparam
-func (p *Parser) parseIP(comments ast.Comments) (*ast.IP, error) {
-	n := &ast.IP{
-		Meta:  ast.New(p.curToken, 0, comments),
+func (p *Parser) parseIP() *ast.IP {
+	return &ast.IP{
+		Meta:  ast.New(p.curToken, 0),
 		Value: p.curToken.Literal,
 	}
-	n.Meta.Trailing = p.trailComment()
-	return n, nil
 }
 
 // nolint: unparam
-func (p *Parser) parseString(comments ast.Comments) (*ast.String, error) {
-	n := &ast.String{
-		Meta:  ast.New(p.curToken, 0, comments),
+func (p *Parser) parseString() *ast.String {
+	return &ast.String{
+		Meta:  ast.New(p.curToken, 0),
 		Value: p.curToken.Literal,
 	}
-	n.Meta.Trailing = p.trailComment()
-	return n, nil
 }
 
-func (p *Parser) parseInteger(comments ast.Comments) (*ast.Integer, error) {
+func (p *Parser) parseInteger() (*ast.Integer, error) {
 	v, err := strconv.ParseInt(p.curToken.Literal, 10, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
 	}
 
-	n := &ast.Integer{
-		Meta:  ast.New(p.curToken, 0, comments),
+	return &ast.Integer{
+		Meta:  ast.New(p.curToken, 0),
 		Value: v,
-	}
-	n.Meta.Trailing = p.trailComment()
-	return n, nil
+	}, nil
 }
 
-func (p *Parser) parseFloat(comments ast.Comments) (*ast.Float, error) {
+func (p *Parser) parseFloat() (*ast.Float, error) {
 	v, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "FLOAT"))
 	}
 
-	n := &ast.Float{
-		Meta:  ast.New(p.curToken, 0, comments),
+	return &ast.Float{
+		Meta:  ast.New(p.curToken, 0),
 		Value: v,
-	}
-	n.Meta.Trailing = p.trailComment()
-	return n, nil
+	}, nil
 }
 
 // nolint: unparam
-func (p *Parser) parseBoolean(comments ast.Comments) (*ast.Boolean, error) {
-	b := &ast.Boolean{
-		Meta:  ast.New(p.curToken, 0, comments),
+func (p *Parser) parseBoolean() *ast.Boolean {
+	return &ast.Boolean{
+		Meta:  ast.New(p.curToken, 0),
 		Value: p.curToken.Type == token.TRUE,
 	}
-	b.Meta.Trailing = p.trailComment()
-	return b, nil
 }
 
-func (p *Parser) parseRTime(comments ast.Comments) (*ast.RTime, error) {
+func (p *Parser) parseRTime() (*ast.RTime, error) {
 	var value string
 
 	switch {
@@ -983,17 +906,15 @@ func (p *Parser) parseRTime(comments ast.Comments) (*ast.RTime, error) {
 	if _, err := strconv.ParseFloat(value, 64); err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "RTIME"))
 	}
-	r := &ast.RTime{
-		Meta:  ast.New(p.curToken, 0, comments),
+	return &ast.RTime{
+		Meta:  ast.New(p.curToken, 0),
 		Value: p.curToken.Literal,
-	}
-	r.Meta.Trailing = p.trailComment()
-	return r, nil
+	}, nil
 }
 
-func (p *Parser) parsePrefixExpression(comments ast.Comments) (*ast.PrefixExpression, error) {
+func (p *Parser) parsePrefixExpression() (*ast.PrefixExpression, error) {
 	exp := &ast.PrefixExpression{
-		Meta:     ast.New(p.curToken, 0, comments),
+		Meta:     ast.New(p.curToken, 0),
 		Operator: p.curToken.Literal,
 	}
 
@@ -1007,9 +928,9 @@ func (p *Parser) parsePrefixExpression(comments ast.Comments) (*ast.PrefixExpres
 	return exp, nil
 }
 
-func (p *Parser) parseGroupedExpression(comments ast.Comments) (*ast.GroupedExpression, error) {
+func (p *Parser) parseGroupedExpression() (*ast.GroupedExpression, error) {
 	exp := &ast.GroupedExpression{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
 	p.nextToken()
@@ -1018,22 +939,25 @@ func (p *Parser) parseGroupedExpression(comments ast.Comments) (*ast.GroupedExpr
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+
 	if !p.expectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	exp.Meta.Infix = p.comments()
 
 	return exp, nil
 }
 
 // NOTE: On VCL, if expression syntax is defined like "if(cond, consequence, alternative)"
-func (p *Parser) parseIfExpression(comments ast.Comments) (*ast.IfExpression, error) {
+func (p *Parser) parseIfExpression() (*ast.IfExpression, error) {
 	exp := &ast.IfExpression{
-		Meta: ast.New(p.curToken, 0, comments),
+		Meta: ast.New(p.curToken, 0, p.comments()),
 	}
 
 	if !p.expectPeek(token.LEFT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
+	exp.Meta.Infix = p.comments()
 	p.nextToken()
 
 	cond, err := p.parseExpression(LOWEST)
@@ -1042,7 +966,6 @@ func (p *Parser) parseIfExpression(comments ast.Comments) (*ast.IfExpression, er
 	}
 	exp.Condition = cond
 
-	p.peekComments()
 	if !p.expectPeek(token.COMMA) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA"))
 	}
@@ -1053,7 +976,6 @@ func (p *Parser) parseIfExpression(comments ast.Comments) (*ast.IfExpression, er
 		return nil, errors.WithStack(err)
 	}
 
-	p.peekComments()
 	if !p.expectPeek(token.COMMA) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA"))
 	}
@@ -1066,18 +988,23 @@ func (p *Parser) parseIfExpression(comments ast.Comments) (*ast.IfExpression, er
 	if !p.expectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	exp.Meta.Trailing = p.comments()
+
 	// if expression is an expression so do not check trailing semicolon
 	return exp, nil
 }
 
-func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfStatement, error) {
+// nolint: gocognit
+func (p *Parser) parseIfStatement(nest int) (*ast.IfStatement, error) {
 	exp := &ast.IfStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
+	p.nextToken()
 
 	if !p.expectPeek(token.LEFT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
+	exp.Meta.Infix = p.comments()
 	p.nextToken()
 
 	cond, err := p.parseExpression(LOWEST)
@@ -1090,9 +1017,6 @@ func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfState
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
 
-	// TODO: store trailing comments
-	p.peekComments()
-
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
@@ -1100,17 +1024,19 @@ func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfState
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	if !p.expectPeek(token.RIGHT_BRACE) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_BRACE"))
+	}
 
 	// If statement may have some "else if" or "else" as another/alternative statement.
 	// Note that before each statement, user could write comment
 	for {
-		comments := p.peekComments()
 		switch p.peekToken.Type {
 		case token.ELSE: // else
 			p.nextToken()
 			if p.peekTokenIs(token.IF) { // else if
 				p.nextToken()
-				another, err := p.parseAnotherIfStatement(comments, nest)
+				another, err := p.parseAnotherIfStatement(nest)
 				if err != nil {
 					return nil, errors.WithStack(err)
 				}
@@ -1122,23 +1048,26 @@ func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfState
 			if !p.expectPeek(token.LEFT_BRACE) {
 				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 			}
-			exp.AlternativeComments = comments
+			exp.AlternativeComments = p.comments()
 			exp.Alternative, err = p.parseBlockStatement(nest + 1)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			exp.Meta.Trailing = p.peekComments()
+			if c, ok := p.expectTrail(token.RIGHT_BRACE); !ok {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_BRACE"))
+			} else {
+				exp.Meta.Trailing = c
+			}
 			goto FINISH
 		case token.ELSEIF, token.ELSIF: // elseif, elsif
 			p.nextToken()
-			another, err := p.parseAnotherIfStatement(comments, nest)
+			another, err := p.parseAnotherIfStatement(nest)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
 			exp.Another = append(exp.Another, another)
 			continue
 		}
-		exp.Meta.Trailing = comments
 		goto FINISH
 	}
 FINISH:
@@ -1146,14 +1075,15 @@ FINISH:
 }
 
 // AnotherIfStatement is very similar to IfStatement but always do not have alternative statement.
-func (p *Parser) parseAnotherIfStatement(comments ast.Comments, nest int) (*ast.IfStatement, error) {
+func (p *Parser) parseAnotherIfStatement(nest int) (*ast.IfStatement, error) {
 	exp := &ast.IfStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	if !p.expectPeek(token.LEFT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
+	exp.Meta.Infix = p.comments()
 	p.nextToken()
 
 	cond, err := p.parseExpression(LOWEST)
@@ -1166,9 +1096,6 @@ func (p *Parser) parseAnotherIfStatement(comments ast.Comments, nest int) (*ast.
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
 
-	// TODO: store trailing comments
-	p.peekComments()
-
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
@@ -1176,13 +1103,15 @@ func (p *Parser) parseAnotherIfStatement(comments ast.Comments, nest int) (*ast.
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	exp.Meta.Trailing = p.trailComment()
+	if !p.expectPeek(token.RIGHT_BRACE) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_BRACE"))
+	}
 	return exp, nil
 }
 
-func (p *Parser) parseInfixExpression(left ast.Expression, comments ast.Comments) (ast.Expression, error) {
+func (p *Parser) parseInfixExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
-		Meta:     ast.New(p.curToken, 0, comments),
+		Meta:     ast.New(p.curToken, 0, p.comments()),
 		Operator: p.curToken.Literal,
 		Left:     left,
 	}
@@ -1198,9 +1127,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression, comments ast.Comments
 	return exp, nil
 }
 
-func (p *Parser) parseInfixStringConcatExpression(left ast.Expression, comments ast.Comments) (ast.Expression, error) {
+func (p *Parser) parseInfixStringConcatExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
-		Meta:     ast.New(p.curToken, 0, comments),
+		Meta:     ast.New(p.curToken, 0, p.comments()),
 		Operator: "+",
 		Left:     left,
 	}
@@ -1215,74 +1144,59 @@ func (p *Parser) parseInfixStringConcatExpression(left ast.Expression, comments 
 	return exp, nil
 }
 
-func (p *Parser) parseUnsetStatement(comments ast.Comments, nest int) (*ast.UnsetStatement, error) {
+func (p *Parser) parseUnsetStatement(nest int) (*ast.UnsetStatement, error) {
 	stmt := &ast.UnsetStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	stmt.Ident = p.parseIdent()
 
-	var err error
-	stmt.Ident, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseRemoveStatement(comments ast.Comments, nest int) (*ast.RemoveStatement, error) {
+func (p *Parser) parseRemoveStatement(nest int) (*ast.RemoveStatement, error) {
 	stmt := &ast.RemoveStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	stmt.Ident = p.parseIdent()
 
-	var err error
-	stmt.Ident, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
 // nolint: dupl
-func (p *Parser) parseAddStatement(comments ast.Comments, nest int) (*ast.AddStatement, error) {
+func (p *Parser) parseAddStatement(nest int) (*ast.AddStatement, error) {
 	stmt := &ast.AddStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	stmt.Ident, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	stmt.Ident = p.parseIdent()
 
 	if !isAssignmentOperator(p.peekToken) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, assignmentOperatorLiterals...))
 	}
+	stmt.Ident.Trailing = p.comments()
 	p.nextToken() // assignment operator
 	stmt.Operator = &ast.Operator{
 		Token:    p.curToken,
@@ -1296,67 +1210,62 @@ func (p *Parser) parseAddStatement(comments ast.Comments, nest int) (*ast.AddSta
 	}
 	stmt.Value = exp
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseEsiStatement(comments ast.Comments, nest int) (*ast.EsiStatement, error) {
+func (p *Parser) parseEsiStatement(nest int) (*ast.EsiStatement, error) {
 	stmt := &ast.EsiStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseRestartStatement(comments ast.Comments, nest int) (*ast.RestartStatement, error) {
+func (p *Parser) parseRestartStatement(nest int) (*ast.RestartStatement, error) {
 	stmt := &ast.RestartStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseCallStatement(comments ast.Comments, nest int) (*ast.CallStatement, error) {
+func (p *Parser) parseCallStatement(nest int) (*ast.CallStatement, error) {
 	stmt := &ast.CallStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	stmt.Subroutine = p.parseIdent()
 
-	var err error
-	stmt.Subroutine, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseDeclareStatement(comments ast.Comments, nest int) (*ast.DeclareStatement, error) {
+func (p *Parser) parseDeclareStatement(nest int) (*ast.DeclareStatement, error) {
 	stmt := &ast.DeclareStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	// Declare Syntax is declare [IDENT:"local"] [IDENT:variable name] [IDENT:VCL type]
@@ -1367,49 +1276,39 @@ func (p *Parser) parseDeclareStatement(comments ast.Comments, nest int) (*ast.De
 		return nil, errors.WithStack(UnexpectedToken(p.curToken, "local"))
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	stmt.Name = p.parseIdent()
 
-	var err error
-	stmt.Name, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	cc := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	stmt.ValueType, err = p.parseIdent(cc)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	stmt.ValueType = p.parseIdent()
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseErrorStatement(comments ast.Comments, nest int) (*ast.ErrorStatement, error) {
+func (p *Parser) parseErrorStatement(nest int) (*ast.ErrorStatement, error) {
 	stmt := &ast.ErrorStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
-	c := p.peekComments()
 	// error code token must be ident or integer
 	var err error
 	switch p.peekToken.Type {
 	case token.INT:
 		p.nextToken()
-		stmt.Code, err = p.parseInteger(c)
+		stmt.Code, err = p.parseInteger()
 	case token.IDENT:
 		p.nextToken()
-		stmt.Code, err = p.parseIdent(c)
+		stmt.Code = p.parseIdent()
 	default:
 		err = UnexpectedToken(p.peekToken)
 	}
@@ -1426,17 +1325,18 @@ func (p *Parser) parseErrorStatement(comments ast.Comments, nest int) (*ast.Erro
 		}
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseLogStatement(comments ast.Comments, nest int) (*ast.LogStatement, error) {
+func (p *Parser) parseLogStatement(nest int) (*ast.LogStatement, error) {
 	stmt := &ast.LogStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	p.nextToken()
@@ -1446,23 +1346,28 @@ func (p *Parser) parseLogStatement(comments ast.Comments, nest int) (*ast.LogSta
 		return nil, errors.WithStack(err)
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
 
-	stmt.Meta.Trailing = p.trailComment()
 	return stmt, nil
 }
 
-func (p *Parser) parseReturnStatement(comments ast.Comments, nest int) (*ast.ReturnStatement, error) {
+func (p *Parser) parseReturnStatement(nest int) (*ast.ReturnStatement, error) {
 	stmt := &ast.ReturnStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	// return statement may not have any arguments
 	// https://developer.fastly.com/reference/vcl/statements/return/
 	if p.peekTokenIs(token.SEMICOLON) {
-		p.nextToken()
+		if c, ok := p.expectTrail(token.SEMICOLON); !ok {
+			return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+		} else {
+			stmt.Meta.Trailing = c
+		}
 		return stmt, nil
 	}
 
@@ -1470,32 +1375,28 @@ func (p *Parser) parseReturnStatement(comments ast.Comments, nest int) (*ast.Ret
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
 
-	c := p.peekComments()
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-
-	var err error
-	stmt.Ident, err = p.parseIdent(c)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	stmt.Ident = p.parseIdent()
 
 	if !p.expectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	stmt.Meta.Trailing = p.comments()
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-	stmt.Meta.Trailing = p.trailComment()
 
 	return stmt, nil
 }
 
-func (p *Parser) parseSyntheticStatement(comments ast.Comments, nest int) (*ast.SyntheticStatement, error) {
+func (p *Parser) parseSyntheticStatement(nest int) (*ast.SyntheticStatement, error) {
 	stmt := &ast.SyntheticStatement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	p.nextToken()
@@ -1505,17 +1406,18 @@ func (p *Parser) parseSyntheticStatement(comments ast.Comments, nest int) (*ast.
 		return nil, errors.WithStack(err)
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-	stmt.Meta.Trailing = p.trailComment()
 
 	return stmt, nil
 }
 
-func (p *Parser) parseSyntheticBase64Statement(comments ast.Comments, nest int) (*ast.SyntheticBase64Statement, error) {
+func (p *Parser) parseSyntheticBase64Statement(nest int) (*ast.SyntheticBase64Statement, error) {
 	stmt := &ast.SyntheticBase64Statement{
-		Meta: ast.New(p.curToken, nest, comments),
+		Meta: ast.New(p.curToken, nest, p.comments()),
 	}
 
 	p.nextToken()
@@ -1525,21 +1427,22 @@ func (p *Parser) parseSyntheticBase64Statement(comments ast.Comments, nest int) 
 		return nil, errors.WithStack(err)
 	}
 
-	if !p.expectPeek(token.SEMICOLON) {
+	if c, ok := p.expectTrail(token.SEMICOLON); !ok {
 		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+	} else {
+		stmt.Meta.Trailing = c
 	}
-	stmt.Meta.Trailing = p.trailComment()
 
 	return stmt, nil
 }
 
-func (p *Parser) parseFunctionCallExpression(fn ast.Expression, comments ast.Comments) (ast.Expression, error) {
+func (p *Parser) parseFunctionCallExpression(fn ast.Expression) (ast.Expression, error) {
 	ident, ok := fn.(*ast.Ident)
 	if !ok {
 		return nil, fmt.Errorf("Function name must be IDENT")
 	}
 	exp := &ast.FunctionCallExpression{
-		Meta:     ast.New(p.curToken, 0, comments),
+		Meta:     ast.New(p.curToken, 0, p.comments()),
 		Function: ident,
 	}
 

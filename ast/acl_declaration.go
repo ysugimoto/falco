@@ -25,6 +25,7 @@ func (a *AclDeclaration) String() string {
 	for _, cidr := range a.CIDRs {
 		buf.WriteString(cidr.String() + "\n")
 	}
+	buf.WriteString(a.InfixComment())
 	buf.WriteString("}")
 	buf.WriteString(a.TrailingComment())
 	buf.WriteString("\n")

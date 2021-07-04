@@ -1,5 +1,3 @@
-// +build ignore
-
 package parser
 
 import (
@@ -10,7 +8,7 @@ import (
 
 // nolint: unused
 func (p *Parser) debug(mark string) {
-	fmt.Printf("[%s] curToken: %s / peekToken: %s\n", mark, p.curToken, p.peekToken)
+	fmt.Printf("[%s] curToken: %s / peekToken: %s / comments: %v\n", mark, p.curToken, p.peekToken, p.stack)
 }
 
 // nolint: unused
