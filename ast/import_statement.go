@@ -7,19 +7,19 @@ import (
 )
 
 type ImportStatement struct {
-	Token    token.Token
-	Value    *Ident
-	Comments Comments
+	*Meta
+	Name *Ident
 }
 
 func (i *ImportStatement) statement()            {}
-func (i *ImportStatement) GetComments() string   { return i.Comments.String() }
 func (i *ImportStatement) GetToken() token.Token { return i.Token }
 func (i *ImportStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(i.Comments.String())
-	buf.WriteString("import " + i.Value.String() + ";\n")
+	buf.WriteString(i.LeadingComment())
+	buf.WriteString(indent(i.Nest) + "import " + i.Name.String() + ";")
+	buf.WriteString(i.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

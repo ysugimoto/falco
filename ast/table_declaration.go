@@ -7,20 +7,18 @@ import (
 )
 
 type TableDeclaration struct {
-	Token      token.Token
+	*Meta
 	Name       *Ident
 	ValueType  *Ident
 	Properties []*TableProperty
-	Comments   Comments
 }
 
 func (t *TableDeclaration) statement()            {}
-func (t *TableDeclaration) GetComments() string   { return t.Comments.String() }
 func (t *TableDeclaration) GetToken() token.Token { return t.Token }
 func (t *TableDeclaration) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(t.Comments.String())
+	buf.WriteString(t.LeadingComment())
 	buf.WriteString("table ")
 	buf.WriteString(t.Name.String())
 	if t.ValueType != nil {
@@ -28,30 +26,31 @@ func (t *TableDeclaration) String() string {
 	}
 	buf.WriteString(" {\n")
 	for _, props := range t.Properties {
-		buf.WriteString("  " + props.String() + "\n")
+		buf.WriteString(props.String())
 	}
-	buf.WriteString("}\n")
+	buf.WriteString("}")
+	buf.WriteString(t.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }
 
 type TableProperty struct {
-	Token         token.Token
-	Key           *String
-	Value         Expression
-	Comments      Comments
-	AfterComments Comments
+	*Meta
+	Key   *String
+	Value Expression
 }
 
 func (t *TableProperty) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(t.Comments.String())
-	buf.WriteString(t.Key.String())
+	buf.WriteString(t.LeadingComment())
+	buf.WriteString(indent(t.Nest) + t.Key.String())
 	buf.WriteString(": ")
 	buf.WriteString(t.Value.String())
 	buf.WriteString(",")
-	buf.WriteString(t.AfterComments.String())
+	buf.WriteString(t.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

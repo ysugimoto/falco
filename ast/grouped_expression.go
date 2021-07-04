@@ -7,7 +7,7 @@ import (
 )
 
 type GroupedExpression struct {
-	Token token.Token
+	*Meta
 	Right Expression
 }
 

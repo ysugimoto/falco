@@ -7,8 +7,7 @@ import (
 )
 
 type CallStatement struct {
-	*Base
-	Token      token.Token
+	*Meta
 	Subroutine *Ident
 }
 

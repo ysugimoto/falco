@@ -7,22 +7,21 @@ import (
 )
 
 type SubroutineDeclaration struct {
-	Token    token.Token
-	Name     *Ident
-	Block    *BlockStatement
-	Comments Comments
+	*Meta
+	Name  *Ident
+	Block *BlockStatement
 }
 
 func (s *SubroutineDeclaration) statement()            {}
-func (s *SubroutineDeclaration) GetComments() string   { return s.Comments.String() }
 func (s *SubroutineDeclaration) GetToken() token.Token { return s.Token }
 func (s *SubroutineDeclaration) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(s.Comments.String())
+	buf.WriteString(s.LeadingComment())
 	buf.WriteString("sub ")
 	buf.WriteString(s.Name.String())
 	buf.WriteString(" " + s.Block.String())
+	buf.WriteString(s.TrailingComment())
 	buf.WriteString("\n")
 
 	return buf.String()

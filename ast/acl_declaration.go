@@ -7,7 +7,7 @@ import (
 )
 
 type AclDeclaration struct {
-	*Base
+	*Meta
 	Name  *Ident
 	CIDRs []*AclCidr
 }
@@ -23,7 +23,7 @@ func (a *AclDeclaration) String() string {
 	buf.WriteString(a.Name.String())
 	buf.WriteString(" {\n")
 	for _, cidr := range a.CIDRs {
-		buf.WriteString("  " + cidr.String() + "\n")
+		buf.WriteString(cidr.String() + "\n")
 	}
 	buf.WriteString("}")
 	buf.WriteString(a.TrailingComment())
@@ -33,7 +33,7 @@ func (a *AclDeclaration) String() string {
 }
 
 type AclCidr struct {
-	*Base
+	*Meta
 	Inverse *Boolean
 	IP      *IP
 	Mask    *Integer
@@ -44,10 +44,11 @@ func (c *AclCidr) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(c.LeadingComment())
+	buf.WriteString(indent(c.Nest))
 	if c.Inverse != nil && c.Inverse.Value {
 		buf.WriteString("!")
 	}
-	buf.WriteString(c.IP.String())
+	buf.WriteString(`"` + c.IP.String() + `"`)
 	if c.Mask != nil {
 		buf.WriteString("/" + c.Mask.String())
 	}

@@ -7,21 +7,19 @@ import (
 )
 
 type UnsetStatement struct {
-	Token     token.Token
-	Ident     *Ident
-	NestLevel int
-	Comments  Comments
+	*Meta
+	Ident *Ident
 }
 
 func (u *UnsetStatement) statement()            {}
-func (u *UnsetStatement) GetComments() string   { return u.Comments.String() }
 func (u *UnsetStatement) GetToken() token.Token { return u.Token }
 func (u *UnsetStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(u.Comments.String())
-	buf.WriteString(indent(u.NestLevel) + "unset ")
-	buf.WriteString(u.Ident.String() + ";\n")
+	buf.WriteString(u.LeadingComment())
+	buf.WriteString(indent(u.Nest) + "unset " + u.Ident.String() + ";")
+	buf.WriteString(u.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

@@ -243,6 +243,19 @@ func expectState(cur string, expects ...string) bool {
 	return false
 }
 
+func annotations(comments ast.Comments) []string {
+	var a []string
+
+	for i := range comments {
+		l := strings.TrimLeft(comments[i].Value, " */#")
+		if strings.HasPrefix(l, "@") {
+			a = append(a, strings.TrimPrefix(l, "@"))
+		}
+	}
+
+	return a
+}
+
 func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	// Detect phase from subroutine name
 	switch {
@@ -268,7 +281,7 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 
 	// If could not via subroutine name, find by annotations
 	// typically defined is module file
-	for _, a := range s.Comments.Annotations() {
+	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
 		case "RECV":
 			return context.RECV

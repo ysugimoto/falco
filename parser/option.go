@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/ysugimoto/falco/tree"
+	"github.com/ysugimoto/falco/ast"
 )
 
 type OptionFunc func(o *Option)

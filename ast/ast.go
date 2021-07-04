@@ -14,49 +14,66 @@ type Node interface {
 type Statement interface {
 	Node
 	statement()
+	LeadingComment() string
+	TrailingComment() string
 }
 
 type Expression interface {
 	Node
 	expression()
+	LeadingComment() string
+	TrailingComment() string
 }
 
-// Base struct of all nodes
-type Base struct {
+// Meta struct of all nodes
+type Meta struct {
 	Token    token.Token
 	Leading  Comments
 	Trailing Comments
 	Nest     int
 }
 
-func (b *Base) LeadingComment() string {
-	if len(b.Leading) == 0 {
+func (m *Meta) LeadingComment() string {
+	if len(m.Leading) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range b.Leading {
-		buf.WriteString(b.Leading[i].String(b.Nest) + "\n")
+	for i := range m.Leading {
+		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + "\n")
 	}
 
 	return buf.String()
 }
 
-func (b *Base) TrailingComment() string {
-	if len(b.Leading) == 0 {
+func (m *Meta) LeadingInlineComment() string {
+	if len(m.Leading) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range b.Trailing {
-		buf.WriteString(b.Trailing[i].String(0))
+	for i := range m.Leading {
+		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + " ")
+	}
+
+	return buf.String()
+}
+
+func (m *Meta) TrailingComment() string {
+	if len(m.Trailing) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Trailing {
+		buf.WriteString(m.Trailing[i].String())
 	}
 
 	return " " + buf.String()
 }
 
-func New(t token.Token, nest int, comments ...Comments) *Base {
-	b := &Base{
+func New(t token.Token, nest int, comments ...Comments) *Meta {
+	m := &Meta{
 		Token:    t,
 		Nest:     nest,
 		Leading:  Comments{},
@@ -64,13 +81,13 @@ func New(t token.Token, nest int, comments ...Comments) *Base {
 	}
 
 	if len(comments) == 1 {
-		b.Leading = comments[0]
+		m.Leading = comments[0]
 	} else if len(comments) > 1 {
-		b.Leading = comments[0]
-		b.Trailing = comments[1]
+		m.Leading = comments[0]
+		m.Trailing = comments[1]
 	}
 
-	return b
+	return m
 }
 
 type LineFeed struct{}
@@ -78,3 +95,10 @@ type LineFeed struct{}
 func (l *LineFeed) expression()    {}
 func (l *LineFeed) statement()     {}
 func (l *LineFeed) String() string { return "\n" }
+
+type Operator struct {
+	Token    token.Token
+	Operator string
+}
+
+func (o *Operator) String() string { return o.Operator }

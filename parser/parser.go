@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/tree"
 )
 
 const (

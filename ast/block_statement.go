@@ -7,8 +7,7 @@ import (
 )
 
 type BlockStatement struct {
-	*Base
-	Token      token.Token
+	*Meta
 	Statements []Statement
 }
 
@@ -17,7 +16,6 @@ func (b *BlockStatement) GetToken() token.Token { return b.Token }
 func (b *BlockStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(b.LeadingComment())
 	buf.WriteString("{\n")
 	for _, stmt := range b.Statements {
 		buf.WriteString(stmt.String())
@@ -27,7 +25,6 @@ func (b *BlockStatement) String() string {
 	} else {
 		buf.WriteString(indent(b.Nest-1) + "}")
 	}
-	buf.WriteString(b.TrailingComment())
 
 	return buf.String()
 }

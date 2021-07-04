@@ -7,7 +7,7 @@ import (
 )
 
 type BackendDeclaration struct {
-	*Base
+	*Meta
 	Name       *Ident
 	Properties []*BackendProperty
 }
@@ -22,18 +22,18 @@ func (b *BackendDeclaration) String() string {
 	buf.WriteString("backend ")
 	buf.WriteString(b.Name.String())
 	buf.WriteString(" {\n")
-	for _, props := range b.Properties {
-		v := props.String()
-		buf.WriteString(indent(1) + v + "\n")
+	for _, prop := range b.Properties {
+		buf.WriteString(prop.String() + "\n")
 	}
 	buf.WriteString("}")
 	buf.WriteString(b.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }
 
 type BackendProperty struct {
-	*Base
+	*Meta
 	Key   *Ident
 	Value Expression
 }
@@ -44,7 +44,7 @@ func (p *BackendProperty) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(p.LeadingComment())
-	buf.WriteString("." + p.Key.String())
+	buf.WriteString(indent(p.Nest) + "." + p.Key.String())
 	buf.WriteString(" = ")
 	buf.WriteString(p.Value.String())
 	if _, ok := p.Value.(*BackendProbeObject); !ok {
@@ -56,7 +56,7 @@ func (p *BackendProperty) String() string {
 }
 
 type BackendProbeObject struct {
-	*Base
+	*Meta
 	Values []*BackendProperty
 }
 
@@ -67,9 +67,15 @@ func (o *BackendProbeObject) String() string {
 
 	buf.WriteString("{\n")
 	for _, p := range o.Values {
-		buf.WriteString(indent(2) + p.String() + ";\n")
+		buf.WriteString(p.LeadingComment())
+		buf.WriteString(indent(p.Nest) + "." + p.Key.String())
+		buf.WriteString(" = ")
+		buf.WriteString(p.Value.String())
+		buf.WriteString(";")
+		buf.WriteString(p.TrailingComment())
+		buf.WriteString("\n")
 	}
-	buf.WriteString(indent(1) + "}")
+	buf.WriteString(indent(o.Nest) + "}")
 
 	return buf.String()
 }

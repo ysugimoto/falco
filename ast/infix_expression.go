@@ -7,7 +7,7 @@ import (
 )
 
 type InfixExpression struct {
-	Token    token.Token
+	*Meta
 	Left     Expression
 	Operator string
 	Right    Expression
