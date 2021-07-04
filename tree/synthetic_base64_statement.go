@@ -6,14 +6,14 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-type SyntheticMeta64Statement struct {
+type SyntheticBase64Statement struct {
 	*Meta
 	Value Expression
 }
 
-func (s *SyntheticMeta64Statement) statement()            {}
-func (s *SyntheticMeta64Statement) GetToken() token.Token { return s.Token }
-func (s *SyntheticMeta64Statement) String() string {
+func (s *SyntheticBase64Statement) statement()            {}
+func (s *SyntheticBase64Statement) GetToken() token.Token { return s.Token }
+func (s *SyntheticBase64Statement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(s.LeadingComment())

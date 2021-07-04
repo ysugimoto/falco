@@ -56,7 +56,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		cmpopts.IgnoreFields(ast.LogStatement{}),
 		cmpopts.IgnoreFields(ast.ReturnStatement{}),
 		cmpopts.IgnoreFields(ast.SyntheticStatement{}),
-		cmpopts.IgnoreFields(ast.SyntheticMeta64Statement{}),
+		cmpopts.IgnoreFields(ast.SyntheticBase64Statement{}),
 		cmpopts.IgnoreFields(ast.IfExpression{}),
 		cmpopts.IgnoreFields(ast.FunctionCallExpression{}),
 		cmpopts.IgnoreFields(ast.RestartStatement{}),
@@ -67,7 +67,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 }
 
 func comments(c ...string) ast.Comments {
-	var cs ast.Comments
+	cs := ast.Comments{}
 	for i := range c {
 		cs = append(cs, &ast.Comment{
 			Value: c[i],
@@ -502,742 +502,1376 @@ sub vcl_recv {
 	})
 }
 
-//
-// func TestParseIfStatement(t *testing.T) {
-// 	t.Run("only if", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com") {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "~",
-// 				Left: &ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				Right: &ast.String{
-// 					Value: "example.com",
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("logical and condtions", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com" && req.http.Host == "foobar") {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "&&",
-// 				Left: &ast.InfixExpression{
-// 					Operator: "~",
-// 					Left: &ast.Ident{
-// 						Value: "req.http.Host",
-// 					},
-// 					Right: &ast.String{
-// 						Value: "example.com",
-// 					},
-// 				},
-// 				Right: &ast.InfixExpression{
-// 					Operator: "==",
-// 					Left: &ast.Ident{
-// 						Value: "req.http.Host",
-// 					},
-// 					Right: &ast.String{
-// 						Value: "foobar",
-// 					},
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("logical or condtions", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com" || req.http.Host == "foobar") {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "||",
-// 				Left: &ast.InfixExpression{
-// 					Operator: "~",
-// 					Left: &ast.Ident{
-// 						Value: "req.http.Host",
-// 					},
-// 					Right: &ast.String{
-// 						Value: "example.com",
-// 					},
-// 				},
-// 				Right: &ast.InfixExpression{
-// 					Operator: "==",
-// 					Left: &ast.Ident{
-// 						Value: "req.http.Host",
-// 					},
-// 					Right: &ast.String{
-// 						Value: "foobar",
-// 					},
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("if else", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com") {
-// 	restart;
-// } else {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "~",
-// 				Left: &ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				Right: &ast.String{
-// 					Value: "example.com",
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 			Alternative: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("if else if else ", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com") {
-// 	restart;
-// } else if (req.http.X-Forwarded-For ~ "192.168.0.1") {
-// 	restart;
-// } else {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "~",
-// 				Left: &ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				Right: &ast.String{
-// 					Value: "example.com",
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 			Another: []*ast.IfStatement{
-// 				{
-// 					Condition: &ast.InfixExpression{
-// 						Operator: "~",
-// 						Left: &ast.Ident{
-// 							Value: "req.http.X-Forwarded-For",
-// 						},
-// 						Right: &ast.String{
-// 							Value: "192.168.0.1",
-// 						},
-// 					},
-// 					Consequence: &ast.BlockStatement{
-// 						Statements: []ast.Statement{
-// 							&ast.RestartStatement{},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			Alternative: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("if elseif else ", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com") {
-// 	restart;
-// } elseif (req.http.X-Forwarded-For ~ "192.168.0.1") {
-// 	restart;
-// } else {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "~",
-// 				Left: &ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				Right: &ast.String{
-// 					Value: "example.com",
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 			Another: []*ast.IfStatement{
-// 				{
-// 					Condition: &ast.InfixExpression{
-// 						Operator: "~",
-// 						Left: &ast.Ident{
-// 							Value: "req.http.X-Forwarded-For",
-// 						},
-// 						Right: &ast.String{
-// 							Value: "192.168.0.1",
-// 						},
-// 					},
-// 					Consequence: &ast.BlockStatement{
-// 						Statements: []ast.Statement{
-// 							&ast.RestartStatement{},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			Alternative: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("if elsif else ", func(t *testing.T) {
-// 		input := `
-// if (req.http.Host ~ "example.com") {
-// 	restart;
-// } elsif (req.http.X-Forwarded-For ~ "192.168.0.1") {
-// 	restart;
-// } else {
-// 	restart;
-// }`
-// 		expect := &ast.IfStatement{
-// 			Condition: &ast.InfixExpression{
-// 				Operator: "~",
-// 				Left: &ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				Right: &ast.String{
-// 					Value: "example.com",
-// 				},
-// 			},
-// 			Consequence: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 			Another: []*ast.IfStatement{
-// 				{
-// 					Condition: &ast.InfixExpression{
-// 						Operator: "~",
-// 						Left: &ast.Ident{
-// 							Value: "req.http.X-Forwarded-For",
-// 						},
-// 						Right: &ast.String{
-// 							Value: "192.168.0.1",
-// 						},
-// 					},
-// 					Consequence: &ast.BlockStatement{
-// 						Statements: []ast.Statement{
-// 							&ast.RestartStatement{},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			Alternative: &ast.BlockStatement{
-// 				Statements: []ast.Statement{
-// 					&ast.RestartStatement{},
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseIfStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-// }
-//
-// func TestParseUnsetStatement(t *testing.T) {
-// 	input := `unset req.http.Host;`
-// 	expect := &ast.UnsetStatement{
-// 		Ident: &ast.Ident{
-// 			Value: "req.http.Host",
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseUnsetStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestParseAddStatement(t *testing.T) {
-// 	t.Run("simple assign", func(t *testing.T) {
-// 		input := `add req.http.Cookie:session = "example.com";`
-// 		expect := &ast.AddStatement{
-// 			Ident: &ast.Ident{
-// 				Value: "req.http.Cookie:session",
-// 			},
-// 			Operator: &ast.Operator{
-// 				Operator: "=",
-// 			},
-// 			Value: &ast.String{
-// 				Value: "example.com",
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseAddStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("with string concatenation", func(t *testing.T) {
-// 		input := `add req.http.Host = "example" req.http.User-Agent "com";`
-// 		expect := &ast.AddStatement{
-// 			Ident: &ast.Ident{
-// 				Value: "req.http.Host",
-// 			},
-// 			Operator: &ast.Operator{
-// 				Operator: "=",
-// 			},
-// 			Value: &ast.InfixExpression{
-// 				Operator: "+",
-// 				Left: &ast.InfixExpression{
-// 					Operator: "+",
-// 					Left: &ast.String{
-// 						Value: "example",
-// 					},
-// 					Right: &ast.Ident{
-// 						Value: "req.http.User-Agent",
-// 					},
-// 				},
-// 				Right: &ast.String{
-// 					Value: "com",
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseAddStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-// }
-//
-// func TestCallStatement(t *testing.T) {
-// 	input := `call feature_mod_recv;`
-// 	expect := &ast.CallStatement{
-// 		Subroutine: &ast.Ident{
-// 			Value: "feature_mod_recv",
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseCallStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestDeclareStatement(t *testing.T) {
-// 	input := `declare local var.foo STRING;`
-// 	expect := &ast.DeclareStatement{
-// 		Name: &ast.Ident{
-// 			Value: "var.foo",
-// 		},
-// 		ValueType: &ast.Ident{
-// 			Value: "STRING",
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseDeclareStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestErrorStatement(t *testing.T) {
-// 	t.Run("without argument", func(t *testing.T) {
-// 		input := `error 750;`
-// 		expect := &ast.ErrorStatement{
-// 			Code: &ast.Integer{
-// 				Value: 750,
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseErrorStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("with argument", func(t *testing.T) {
-// 		input := `error 750 "/foobar";`
-// 		expect := &ast.ErrorStatement{
-// 			Code: &ast.Integer{
-// 				Value: 750,
-// 			},
-// 			Argument: &ast.String{
-// 				Value: "/foobar",
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseErrorStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("with ident argument", func(t *testing.T) {
-// 		input := `error var.IntValue;`
-// 		expect := &ast.ErrorStatement{
-// 			Code: &ast.Ident{
-// 				Value: "var.IntValue",
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseErrorStatement()
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-// }
-//
-// func TestLogStatement(t *testing.T) {
-// 	input := `log {"syslog "} {" fastly-log :: "} {"	timestamp:"} req.http.Timestamp;`
-// 	expect := &ast.LogStatement{
-// 		Value: &ast.InfixExpression{
-// 			Operator: "+",
-// 			Right: &ast.Ident{
-// 				Value: "req.http.Timestamp",
-// 			},
-// 			Left: &ast.InfixExpression{
-// 				Operator: "+",
-// 				Right: &ast.String{
-// 					Value: "	timestamp:",
-// 				},
-// 				Left: &ast.InfixExpression{
-// 					Operator: "+",
-// 					Right: &ast.String{
-// 						Value: " fastly-log :: ",
-// 					},
-// 					Left: &ast.String{
-// 						Value: "syslog ",
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseLogStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestReturnStatement(t *testing.T) {
-// 	input := `return(deliver);`
-// 	expect := &ast.ReturnStatement{
-// 		Ident: &ast.Ident{
-// 			Value: "deliver",
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseReturnStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestSyntheticStatement(t *testing.T) {
-// 	input := `synthetic {"Access "} {"denined"};`
-// 	expect := &ast.SyntheticStatement{
-// 		Value: &ast.InfixExpression{
-// 			Operator: "+",
-// 			Right: &ast.String{
-// 				Value: "denined",
-// 			},
-// 			Left: &ast.String{
-// 				Value: "Access ",
-// 			},
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseSyntheticStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestSyntheticMeta64Statement(t *testing.T) {
-// 	input := `synthetic.base64 {"Access "} {"denined"};`
-// 	expect := &ast.SyntheticMeta64Statement{
-// 		Value: &ast.InfixExpression{
-// 			Operator: "+",
-// 			Right: &ast.String{
-// 				Value: "denined",
-// 			},
-// 			Left: &ast.String{
-// 				Value: "Access ",
-// 			},
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseSyntheticMeta64Statement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestIfExpression(t *testing.T) {
-// 	input := `
-// if (req.http.Host, "example.com", "foobar");`
-//
-// 	expect := &ast.IfExpression{
-// 		Condition: &ast.Ident{
-// 			Value: "req.http.Host",
-// 		},
-// 		Consequence: &ast.String{
-// 			Value: "example.com",
-// 		},
-// 		Alternative: &ast.String{
-// 			Value: "foobar",
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseIfExpression()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestInfixIfExpression(t *testing.T) {
-// 	input := `
-// log {"foo bar"} if (req.http.Host, "example.com", "foobar") {"baz"};`
-//
-// 	expect := &ast.LogStatement{
-// 		Value: &ast.InfixExpression{
-// 			Left: &ast.InfixExpression{
-// 				Left: &ast.String{
-// 					Value: "foo bar",
-// 				},
-// 				Operator: "+",
-// 				Right: &ast.IfExpression{
-// 					Condition: &ast.Ident{
-// 						Value: "req.http.Host",
-// 					},
-// 					Consequence: &ast.String{
-// 						Value: "example.com",
-// 					},
-// 					Alternative: &ast.String{
-// 						Value: "foobar",
-// 					},
-// 				},
-// 			},
-// 			Operator: "+",
-// 			Right: &ast.String{
-// 				Value: "baz",
-// 			},
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseLogStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
-//
-// func TestFunctionCallExpression(t *testing.T) {
-// 	t.Run("no argument", func(t *testing.T) {
-// 		input := `uuid.version4();`
-// 		expect := &ast.FunctionCallExpression{
-// 			Function: &ast.Ident{
-// 				Value: "uuid.version4",
-// 			},
-// 			Arguments: []ast.Expression{},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseExpression(LOWEST)
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-//
-// 	t.Run("some arguments", func(t *testing.T) {
-// 		t.Skip()
-// 		input := `regsub(req.http.Host, "foo", "bar");`
-// 		expect := &ast.FunctionCallExpression{
-// 			Function: &ast.Ident{
-// 				Value: "regsub",
-// 			},
-// 			Arguments: []ast.Expression{
-// 				&ast.Ident{
-// 					Value: "req.http.Host",
-// 				},
-// 				&ast.String{
-// 					Value: "foo",
-// 				},
-// 				&ast.String{
-// 					Value: "bar",
-// 				},
-// 			},
-// 		}
-// 		vcl, err := New(lexer.NewFromString(input)).parseExpression(LOWEST)
-// 		if err != nil {
-// 			t.Errorf("%+v", err)
-// 		}
-// 		assert(t, vcl, expect)
-// 	})
-// }
-//
-// func TestAnnotationComment(t *testing.T) {
-// 	input := `
-// // @recv
-// sub check_request {
-// }`
-//
-// 	expect := &ast.VCL{
-// 		Statements: []ast.Statement{
-// 			&ast.SubroutineDeclaration{
-// 				Name: &ast.Ident{
-// 					Value: "check_request",
-// 				},
-// 				Block: &ast.BlockStatement{
-// 					Statements: []ast.Statement{},
-// 				},
-// 				Comments: ast.Comments{
-// 					&ast.CommentStatement{
-// 						Value: "// @recv",
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// 	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	assert(t, vcl, expect)
-//
-// 	sub := expect.Statements[0].(*ast.SubroutineDeclaration)
-// 	annotations := sub.Comments.Annotations()
-//
-// 	if diff := cmp.Diff([]string{"recv"}, annotations); diff != "" {
-// 		t.Errorf("annotations assertion error: diff=%s", diff)
-// 	}
-//
-// }
-//
-// func TestParseStringConcatExpression(t *testing.T) {
-// 	input := `
-// sub vcl_recv {
-// 	declare local var.S STRING;
-// 	set var.S = "foo" "bar" + "baz";
-// }`
-// 	_, err := New(lexer.NewFromString(input)).ParseVCL()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-//
-// func TestCommentInInfixExpression(t *testing.T) {
-// 	input := `
-// sub vcl_recv {
-// 	if (
-// 		req.http.Host &&
-// 		# Some comment here inside infix expressions
-// 		req.http.Foo == "bar"
-// 	) {
-// 		set req.http.Host = "bar";
-// 	}
-// }`
-// 	_, err := New(lexer.NewFromString(input)).ParseVCL()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// }
-//
-// func TestSetStatementWithGroupedExpression(t *testing.T) {
-// 	input := `set var.Bool = (var.IsOk && var.IsNg);`
-// 	expect := &ast.SetStatement{
-// 		Ident: &ast.Ident{
-// 			Value: "var.Bool",
-// 		},
-// 		Operator: &ast.Operator{
-// 			Operator: "=",
-// 		},
-// 		Value: &ast.GroupedExpression{
-// 			Right: &ast.InfixExpression{
-// 				Left: &ast.Ident{
-// 					Value: "var.IsOk",
-// 				},
-// 				Operator: "&&",
-// 				Right: &ast.Ident{
-// 					Value: "var.IsNg",
-// 				},
-// 			},
-// 		},
-// 	}
-// 	vcl, err := New(lexer.NewFromString(input)).parseSetStatement()
-// 	if err != nil {
-// 		t.Errorf("%+v", err)
-// 	}
-// 	assert(t, vcl, expect)
-// }
+func TestParseIfStatement(t *testing.T) {
+	t.Run("only if", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ /* infix */"example.com") {
+		restart;
+	} // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "~",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Host",
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0, comments("/* infix */")),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("logical and condtions", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com" && /* infix */req.http.Host == "foobar") {
+		restart;
+	} // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "&&",
+									Left: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "~",
+										Left: &ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.Host",
+										},
+										Right: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "example.com",
+										},
+									},
+									Right: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "==",
+										Left: &ast.Ident{
+											Meta:  ast.New(T, 0, comments("/* infix */")),
+											Value: "req.http.Host",
+										},
+										Right: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "foobar",
+										},
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("logical or condtions", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com"/* infix */ || req.http.Host == "foobar") {
+		restart;
+	}
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "||",
+									Left: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "~",
+										Left: &ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.Host",
+										},
+										Right: &ast.String{
+											Meta:  ast.New(T, 0, comments(), comments("/* infix */")),
+											Value: "example.com",
+										},
+									},
+									Right: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "==",
+										Left: &ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.Host",
+										},
+										Right: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "foobar",
+										},
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("if-else", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	}
+	// Leading comment
+	else {
+		restart;
+	} // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "~",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Host",
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+								AlternativeComments: comments("// Leading comment"),
+								Alternative: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("if else if else ", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} else if (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "~",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Host",
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+								Another: []*ast.IfStatement{
+									{
+										Meta: ast.New(T, 1),
+										Condition: &ast.InfixExpression{
+											Meta:     ast.New(T, 0),
+											Operator: "~",
+											Left: &ast.Ident{
+												Meta:  ast.New(T, 0),
+												Value: "req.http.X-Forwarded-For",
+											},
+											Right: &ast.String{
+												Meta:  ast.New(T, 0),
+												Value: "192.168.0.1",
+											},
+										},
+										Consequence: &ast.BlockStatement{
+											Meta: ast.New(T, 2),
+											Statements: []ast.Statement{
+												&ast.RestartStatement{
+													Meta: ast.New(T, 2),
+												},
+											},
+										},
+									},
+								},
+								Alternative: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("if elseif else ", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} elseif (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "~",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Host",
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+								Another: []*ast.IfStatement{
+									{
+										Meta: ast.New(T, 1),
+										Condition: &ast.InfixExpression{
+											Meta:     ast.New(T, 0),
+											Operator: "~",
+											Left: &ast.Ident{
+												Meta:  ast.New(T, 0),
+												Value: "req.http.X-Forwarded-For",
+											},
+											Right: &ast.String{
+												Meta:  ast.New(T, 0),
+												Value: "192.168.0.1",
+											},
+										},
+										Consequence: &ast.BlockStatement{
+											Meta: ast.New(T, 2),
+											Statements: []ast.Statement{
+												&ast.RestartStatement{
+													Meta: ast.New(T, 2),
+												},
+											},
+										},
+									},
+								},
+								Alternative: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("if elsif else ", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} elsif (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "~",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Host",
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+								Another: []*ast.IfStatement{
+									{
+										Meta: ast.New(T, 1),
+										Condition: &ast.InfixExpression{
+											Meta:     ast.New(T, 0),
+											Operator: "~",
+											Left: &ast.Ident{
+												Meta:  ast.New(T, 0),
+												Value: "req.http.X-Forwarded-For",
+											},
+											Right: &ast.String{
+												Meta:  ast.New(T, 0),
+												Value: "192.168.0.1",
+											},
+										},
+										Consequence: &ast.BlockStatement{
+											Meta: ast.New(T, 2),
+											Statements: []ast.Statement{
+												&ast.RestartStatement{
+													Meta: ast.New(T, 2),
+												},
+											},
+										},
+									},
+								},
+								Alternative: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
+
+func TestParseUnsetStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	unset req.http.Host; // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.UnsetStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "req.http.Host",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParseAddStatement(t *testing.T) {
+	t.Run("simple assign", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	add req.http.Cookie:session = "example.com"; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.AddStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Ident: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.Cookie:session",
+								},
+								Operator: &ast.Operator{
+									Operator: "=",
+								},
+								Value: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "example.com",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("with string concatenation", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	add req.http.Host = "example" req.http.User-Agent "com"; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.AddStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Ident: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.Host",
+								},
+								Operator: &ast.Operator{
+									Operator: "=",
+								},
+								Value: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "+",
+									Left: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "+",
+										Left: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "example",
+										},
+										Right: &ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.User-Agent",
+										},
+									},
+									Right: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "com",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
+
+func TestCallStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	call feature_mod_recv; // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.CallStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Subroutine: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "feature_mod_recv",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestDeclareStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	declare local var.foo STRING; // Trailing comment
+}`
+
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.DeclareStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Name: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "var.foo",
+							},
+							ValueType: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "STRING",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestErrorStatement(t *testing.T) {
+	t.Run("without argument", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	error 750; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.ErrorStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Code: &ast.Integer{
+									Meta:  ast.New(T, 0),
+									Value: 750,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("with argument", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	error 750 "/foobar/" req.http.Foo; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.ErrorStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Code: &ast.Integer{
+									Meta:  ast.New(T, 0),
+									Value: 750,
+								},
+								Argument: &ast.InfixExpression{
+									Meta: ast.New(T, 0),
+									Left: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "/foobar/",
+									},
+									Operator: "+",
+									Right: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "req.http.Foo",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("with ident argument", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	error var.IntValue; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.ErrorStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Code: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "var.IntValue",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
+
+func TestLogStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	log {"syslog "}
+		{" fastly-log :: "} {"	timestamp:"}
+		req.http.Timestamp
+	; // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.LogStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Value: &ast.InfixExpression{
+								Meta:     ast.New(T, 0),
+								Operator: "+",
+								Right: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.Timestamp",
+								},
+								Left: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "+",
+									Right: &ast.String{
+										Meta: ast.New(T, 0),
+										Value: "	timestamp:",
+									},
+									Left: &ast.InfixExpression{
+										Meta:     ast.New(T, 0),
+										Operator: "+",
+										Right: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: " fastly-log :: ",
+										},
+										Left: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "syslog ",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestReturnStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	return(deliver); // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.ReturnStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "deliver",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestSyntheticStatement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	synthetic {"Access "}
+		{"denied"}; // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.SyntheticStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Value: &ast.InfixExpression{
+								Meta: ast.New(T, 0),
+								Left: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "Access ",
+								},
+								Operator: "+",
+								Right: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "denied",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestSyntheticBase64Statement(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	synthetic.base64 {"Access "}
+		{"denied"}; // Trailing comment
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.SyntheticBase64Statement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Value: &ast.InfixExpression{
+								Meta: ast.New(T, 0),
+								Left: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "Access ",
+								},
+								Operator: "+",
+								Right: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "denied",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestIfExpression(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	set req.http.Foo = if (req.http.Host, "example.com", "foobar"); // Trailing comment
+}`
+
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.SetStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "req.http.Foo",
+							},
+							Operator: &ast.Operator{
+								Operator: "=",
+							},
+							Value: &ast.IfExpression{
+								Meta: ast.New(T, 0),
+								Condition: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.Host",
+								},
+								Consequence: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "example.com",
+								},
+								Alternative: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "foobar",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestInfixIfExpression(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	log {"foo bar"}
+		if (req.http.Host, "example.com", "foobar")
+		{"baz"}; // Trailing comment
+}`
+
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("// Subroutine")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.LogStatement{
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Value: &ast.InfixExpression{
+								Meta:     ast.New(T, 0),
+								Operator: "+",
+								Right: &ast.String{
+									Meta:  ast.New(T, 0),
+									Value: "baz",
+								},
+								Left: &ast.InfixExpression{
+									Meta:     ast.New(T, 0),
+									Operator: "+",
+									Left: &ast.String{
+										Meta:  ast.New(T, 0),
+										Value: "foo bar",
+									},
+									Right: &ast.IfExpression{
+										Meta: ast.New(T, 0),
+										Condition: &ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.Host",
+										},
+										Consequence: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "example.com",
+										},
+										Alternative: &ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "foobar",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestFunctionCallExpression(t *testing.T) {
+	t.Run("no argument", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	set req.http.X-Trace-Id = uuid.version4();
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SetStatement{
+								Meta: ast.New(T, 1),
+								Ident: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.X-Trace-Id",
+								},
+								Operator: &ast.Operator{
+									Operator: "=",
+								},
+								Value: &ast.FunctionCallExpression{
+									Meta: ast.New(T, 0),
+									Function: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "uuid.version4",
+									},
+									Arguments: []ast.Expression{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("some arguments", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	set req.http.X-Trace-Id = regsub(req.http.Host, "example.com", "");
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SetStatement{
+								Meta: ast.New(T, 1),
+								Ident: &ast.Ident{
+									Meta:  ast.New(T, 0),
+									Value: "req.http.X-Trace-Id",
+								},
+								Operator: &ast.Operator{
+									Operator: "=",
+								},
+								Value: &ast.FunctionCallExpression{
+									Meta: ast.New(T, 0),
+									Function: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "regsub",
+									},
+									Arguments: []ast.Expression{
+										&ast.Ident{
+											Meta:  ast.New(T, 0),
+											Value: "req.http.Host",
+										},
+										&ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "example.com",
+										},
+										&ast.String{
+											Meta:  ast.New(T, 0),
+											Value: "",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
+
+func TestParseStringConcatExpression(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	declare local var.S STRING;
+	set var.S = "foo" "bar" + "baz";
+}`
+	_, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCommentInInfixExpression(t *testing.T) {
+	input := `
+sub vcl_recv {
+	if (
+		req.http.Host &&
+		# Some comment here inside infix expressions
+		req.http.Foo == "bar"
+	) {
+		set req.http.Host = "bar";
+	}
+}`
+	_, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+}
+
+func TestSetStatementWithGroupedExpression(t *testing.T) {
+	input := `
+sub vcl_recv {
+	set var.Bool = (var.IsOk && var.IsNg);
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.SetStatement{
+							Meta: ast.New(T, 1),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 0),
+								Value: "var.Bool",
+							},
+							Operator: &ast.Operator{
+								Operator: "=",
+							},
+							Value: &ast.GroupedExpression{
+								Meta: ast.New(T, 0),
+								Right: &ast.InfixExpression{
+									Meta: ast.New(T, 0),
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "var.IsOk",
+									},
+									Operator: "&&",
+									Right: &ast.Ident{
+										Meta:  ast.New(T, 0),
+										Value: "var.IsNg",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}

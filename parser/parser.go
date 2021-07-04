@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	_ "time"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/token"
@@ -57,16 +55,6 @@ type Parser struct {
 
 	prefixParsers map[token.TokenType]prefixParser
 	infixParsers  map[token.TokenType]infixParser
-}
-
-// nolint: unused
-func (p *Parser) debug(mark string) {
-	fmt.Printf("[%s] curToken: %s / peekToken: %s\n", mark, p.curToken, p.peekToken)
-}
-
-// nolint: unused
-func (p *Parser) pp(v interface{}) {
-	pp.Println(v)
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -128,18 +116,14 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {
-	p.skipLineFeed()
+	for p.peekTokenIs(token.LF) {
+		p.nextToken()
+	}
 	if !p.peekTokenIs(t) {
 		return false
 	}
 	p.nextToken()
 	return true
-}
-
-func (p *Parser) skipLineFeed() {
-	for p.peekTokenIs(token.LF) {
-		p.nextToken()
-	}
 }
 
 func (p *Parser) comments(lv int) ast.Comments {
@@ -803,7 +787,7 @@ func (p *Parser) parseBlockStatement(nest int) (*ast.BlockStatement, error) {
 			stmt, err = p.parseSyntheticStatement(comments, nest)
 		case token.SYNTHETIC_BASE64:
 			p.nextToken()
-			stmt, err = p.parseSyntheticMeta64Statement(comments, nest)
+			stmt, err = p.parseSyntheticBase64Statement(comments, nest)
 		case token.IF:
 			p.nextToken()
 			stmt, err = p.parseIfStatement(comments, nest)
@@ -1138,6 +1122,7 @@ func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfState
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
+			exp.Meta.Trailing = p.peekComments()
 			goto FINISH
 		case token.ELSEIF, token.ELSIF: // elseif, elsif
 			p.nextToken()
@@ -1148,10 +1133,10 @@ func (p *Parser) parseIfStatement(comments ast.Comments, nest int) (*ast.IfState
 			exp.Another = append(exp.Another, another)
 			continue
 		}
+		exp.Meta.Trailing = comments
 		goto FINISH
 	}
 FINISH:
-	exp.Meta.Trailing = p.trailComment()
 	return exp, nil
 }
 
@@ -1522,8 +1507,8 @@ func (p *Parser) parseSyntheticStatement(comments ast.Comments, nest int) (*ast.
 	return stmt, nil
 }
 
-func (p *Parser) parseSyntheticMeta64Statement(comments ast.Comments, nest int) (*ast.SyntheticMeta64Statement, error) {
-	stmt := &ast.SyntheticMeta64Statement{
+func (p *Parser) parseSyntheticBase64Statement(comments ast.Comments, nest int) (*ast.SyntheticBase64Statement, error) {
+	stmt := &ast.SyntheticBase64Statement{
 		Meta: ast.New(p.curToken, nest, comments),
 	}
 

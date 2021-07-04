@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestSynthericMeta64Statement(t *testing.T) {
-	s := &SyntheticMeta64Statement{
+func TestSynthericBase64Statement(t *testing.T) {
+	s := &SyntheticBase64Statement{
 		Meta: &Meta{
 			Leading: []*Comment{
 				{
