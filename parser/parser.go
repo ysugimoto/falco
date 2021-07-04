@@ -126,7 +126,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	return true
 }
 
-func (p *Parser) comments(lv int) ast.Comments {
+func (p *Parser) comments() ast.Comments {
 	cs := ast.Comments{}
 
 	for {
@@ -216,7 +216,7 @@ func (p *Parser) parseDeclaration() (ast.Statement, error) {
 	var stmt ast.Statement
 	var err error
 
-	comments := p.comments(0)
+	comments := p.comments()
 
 	switch p.curToken.Type {
 	case token.ACL:
@@ -807,6 +807,7 @@ func (p *Parser) parseBlockStatement(nest int) (*ast.BlockStatement, error) {
 	return b, nil
 }
 
+// nolint: dupl
 func (p *Parser) parseSetStatement(comments ast.Comments, nest int) (*ast.SetStatement, error) {
 	stmt := &ast.SetStatement{
 		Meta: ast.New(p.curToken, nest, comments),
@@ -857,7 +858,7 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	//   # Some line comment here // trim this line
 	//   req.http,Bar
 	// ) { ... }
-	c := p.comments(0)
+	c := p.comments()
 	prefix, ok := p.prefixParsers[p.curToken.Type]
 	if !ok {
 		return nil, errors.WithStack(UndefinedPrefix(p.curToken))
@@ -891,6 +892,7 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	return left, nil
 }
 
+// nolint: unparam
 func (p *Parser) parseIdent(comments ast.Comments) (*ast.Ident, error) {
 	n := &ast.Ident{
 		Meta:  ast.New(p.curToken, 0, comments),
@@ -900,6 +902,7 @@ func (p *Parser) parseIdent(comments ast.Comments) (*ast.Ident, error) {
 	return n, nil
 }
 
+// nolint: unparam
 func (p *Parser) parseIP(comments ast.Comments) (*ast.IP, error) {
 	n := &ast.IP{
 		Meta:  ast.New(p.curToken, 0, comments),
@@ -909,6 +912,7 @@ func (p *Parser) parseIP(comments ast.Comments) (*ast.IP, error) {
 	return n, nil
 }
 
+// nolint: unparam
 func (p *Parser) parseString(comments ast.Comments) (*ast.String, error) {
 	n := &ast.String{
 		Meta:  ast.New(p.curToken, 0, comments),
@@ -946,6 +950,7 @@ func (p *Parser) parseFloat(comments ast.Comments) (*ast.Float, error) {
 	return n, nil
 }
 
+// nolint: unparam
 func (p *Parser) parseBoolean(comments ast.Comments) (*ast.Boolean, error) {
 	b := &ast.Boolean{
 		Meta:  ast.New(p.curToken, 0, comments),
@@ -1258,6 +1263,7 @@ func (p *Parser) parseRemoveStatement(comments ast.Comments, nest int) (*ast.Rem
 	return stmt, nil
 }
 
+// nolint: dupl
 func (p *Parser) parseAddStatement(comments ast.Comments, nest int) (*ast.AddStatement, error) {
 	stmt := &ast.AddStatement{
 		Meta: ast.New(p.curToken, nest, comments),

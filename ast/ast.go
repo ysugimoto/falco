@@ -90,12 +90,6 @@ func New(t token.Token, nest int, comments ...Comments) *Meta {
 	return m
 }
 
-type LineFeed struct{}
-
-func (l *LineFeed) expression()    {}
-func (l *LineFeed) statement()     {}
-func (l *LineFeed) String() string { return "\n" }
-
 type Operator struct {
 	Token    token.Token
 	Operator string
