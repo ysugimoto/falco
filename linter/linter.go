@@ -132,7 +132,7 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Conte
 
 	// validate ACL name
 	if !isValidName(decl.Name.Value) {
-		l.Error(InvalidName(decl.Name.GetToken(), decl.Name.Value, "acl").Match(ACL_SYNTAX))
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "acl").Match(ACL_SYNTAX))
 	}
 
 	// CIDRs validity
@@ -142,7 +142,7 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Conte
 		// If mask is nil, validate as IP address
 		if cidr.Mask == nil {
 			if v := net.ParseIP(c); v == nil {
-				l.Error(InvalidValue(cidr.GetToken(), "IP", c).Match(ACL_SYNTAX))
+				l.Error(InvalidValue(cidr.GetMeta(), "IP", c).Match(ACL_SYNTAX))
 			}
 			continue
 		}
@@ -150,14 +150,14 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Conte
 		// Otherwise, validate as CIDR
 		c += "/" + cidr.Mask.String()
 		if _, _, err := net.ParseCIDR(c); err != nil {
-			l.Error(InvalidValue(cidr.GetToken(), "CIDR", c).Match(ACL_SYNTAX))
+			l.Error(InvalidValue(cidr.GetMeta(), "CIDR", c).Match(ACL_SYNTAX))
 		}
 	}
 
 	if err := ctx.AddAcl(decl.Name.Value, acl); err != nil {
 		e := &LintError{
 			Severity: ERROR,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(e.Match(ACL_DUPLICATED))
@@ -173,7 +173,7 @@ func (l *Linter) lintBackendDeclaration(decl *ast.BackendDeclaration, ctx *conte
 
 	// lint BACKEND name
 	if !isValidName(decl.Name.Value) {
-		l.Error(InvalidName(decl.Name.GetToken(), decl.Name.Value, "backend").Match(BACKEND_SYNTAX))
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "backend").Match(BACKEND_SYNTAX))
 	}
 
 	// lint property definitions
@@ -184,7 +184,7 @@ func (l *Linter) lintBackendDeclaration(decl *ast.BackendDeclaration, ctx *conte
 	if err := ctx.AddBackend(decl.Name.Value, backend); err != nil {
 		e := &LintError{
 			Severity: ERROR,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(e.Match(BACKEND_DUPLICATED))
@@ -200,7 +200,7 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 		if prop.Key.Value != "probe" {
 			err := &LintError{
 				Severity: ERROR,
-				Token:    prop.Key.GetToken(),
+				Token:    prop.Key.GetMeta().Token,
 				Message:  fmt.Sprintf(`object definition is allowed only for "probe", disallowed for "%s"`, prop.Key.Value),
 			}
 			l.Error(err.Match(BACKEND_SYNTAX))
@@ -210,23 +210,23 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 		for _, v := range t.Values {
 			kt, ok := BackendProbePropertyTypes[v.Key.Value]
 			if !ok {
-				l.Error(UndefinedBackendProperty(v.Key.GetToken(), v.Key.Value).Match(BACKEND_SYNTAX))
+				l.Error(UndefinedBackendProperty(v.Key.GetMeta(), v.Key.Value).Match(BACKEND_SYNTAX))
 			}
 			vt := l.Lint(v.Value, ctx)
 			if kt != vt {
-				l.Error(InvalidType(v.Value.GetToken(), v.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
+				l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 			}
 		}
 	default:
 		// Otherwise, simply compare key type
 		kt, ok := BackendPropertyTypes[prop.Key.Value]
 		if !ok {
-			l.Error(UndefinedBackendProperty(prop.Key.GetToken(), prop.Key.Value).Match(BACKEND_SYNTAX))
+			l.Error(UndefinedBackendProperty(prop.Key.GetMeta(), prop.Key.Value).Match(BACKEND_SYNTAX))
 			return
 		}
 		vt := l.Lint(prop.Value, ctx)
 		if kt != vt {
-			l.Error(InvalidType(prop.Value.GetToken(), prop.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
+			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 		}
 	}
 }
@@ -249,7 +249,7 @@ func (l *Linter) lintDirectorDeclaration(decl *ast.DirectorDeclaration, ctx *con
 
 	// validate director name
 	if !isValidName(decl.Name.Value) {
-		l.Error(InvalidName(decl.Name.GetToken(), decl.Name.Value, "director").Match(DIRECTOR_SYNTAX))
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "director").Match(DIRECTOR_SYNTAX))
 	}
 
 	l.lintDirectorProperty(decl, ctx)
@@ -257,7 +257,7 @@ func (l *Linter) lintDirectorDeclaration(decl *ast.DirectorDeclaration, ctx *con
 	if err := ctx.AddDirector(decl.Name.Value, director); err != nil {
 		e := &LintError{
 			Severity: ERROR,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(e.Match(DIRECTOR_DUPLICATED))
@@ -271,7 +271,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 	if !ok {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    decl.DirectorType.GetToken(),
+			Token:    decl.DirectorType.GetMeta().Token,
 			Message:  "Unexpected director type: " + decl.DirectorType.Value,
 		}
 		l.Error(err.Match(DIRECTOR_SYNTAX))
@@ -288,7 +288,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 				vv, ok := dps.Props[v.Key.Value]
 				if !ok {
 					l.Error(UndefinedDirectorProperty(
-						v.Key.GetToken(), v.Key.Value, decl.DirectorType.Value,
+						v.Key.GetMeta(), v.Key.Value, decl.DirectorType.Value,
 					).Match(dps.Rule))
 					continue
 				}
@@ -297,7 +297,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 				if v.Key.Value == "backend" {
 					ident, ok := v.Value.(*ast.Ident)
 					if !ok {
-						l.Error(InvalidType(v.Key.GetToken(), v.Key.Value, vv, types.IDType).Match(dps.Rule))
+						l.Error(InvalidType(v.Key.GetMeta(), v.Key.Value, vv, types.IDType).Match(dps.Rule))
 						continue
 					}
 					if _, ok := ctx.Backends[ident.Value]; !ok {
@@ -311,7 +311,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 				} else {
 					val := l.Lint(v.Value, ctx)
 					if vv != val {
-						l.Error(InvalidType(v.Value.GetToken(), v.Key.Value, vv, val).Match(dps.Rule))
+						l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, vv, val).Match(dps.Rule))
 					}
 				}
 				keys[v.Key.Value] = struct{}{}
@@ -338,13 +338,13 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 			vv, ok := dps.Props[t.Key.Value]
 			if !ok {
 				l.Error(UndefinedDirectorProperty(
-					t.Key.GetToken(), t.Key.Value, decl.DirectorType.Value,
+					t.Key.GetMeta(), t.Key.Value, decl.DirectorType.Value,
 				).Match(dps.Rule))
 				continue
 			}
 			val := l.Lint(t.Value, ctx)
 			if vv != val {
-				l.Error(InvalidType(t.Value.GetToken(), t.Key.Value, vv, val).Match(dps.Rule))
+				l.Error(InvalidType(t.Value.GetMeta(), t.Key.Value, vv, val).Match(dps.Rule))
 			}
 		}
 	}
@@ -369,7 +369,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 
 	// validate table name
 	if !isValidName(decl.Name.Value) {
-		l.Error(InvalidName(decl.Name.GetToken(), decl.Name.Value, "table").Match(TABLE_SYNTAX))
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "table").Match(TABLE_SYNTAX))
 	}
 
 	// validate table type specification
@@ -379,7 +379,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 		v, ok := ValueTypeMap[decl.ValueType.Value]
 		if !ok {
 			l.Error(UndefinedTableType(
-				decl.ValueType.GetToken(), decl.Name.Value, decl.ValueType.Value,
+				decl.ValueType.GetMeta(), decl.Name.Value, decl.ValueType.Value,
 			).Match(TABLE_TYPE_VARIATION))
 		} else {
 			table.ValueType = v
@@ -392,7 +392,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 	if len(decl.Properties) > 1000 {
 		err := &LintError{
 			Severity: WARNING,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  fmt.Sprintf(`table "%s" items are limited under 1000`, table.Name),
 		}
 		l.Error(err.Match(TABLE_ITEM_LIMITATION))
@@ -406,7 +406,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 	if err := ctx.AddTable(decl.Name.Value, table); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(TABLE_DUPLICATED))
@@ -420,25 +420,25 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 	case types.AclType:
 		ident, ok := prop.Value.(*ast.Ident)
 		if !ok {
-			l.Error(InvalidTypeConversion(prop.Value.GetToken(), "ID").Match(TABLE_SYNTAX))
+			l.Error(InvalidTypeConversion(prop.Value.GetMeta(), "ID").Match(TABLE_SYNTAX))
 			return
 		}
 		if _, ok := ctx.Acls[ident.Value]; !ok {
-			l.Error(UndefinedAcl(ident.Token, ident.Value))
+			l.Error(UndefinedAcl(ident.GetMeta(), ident.Value))
 		}
 	case types.BackendType:
 		ident, ok := prop.Value.(*ast.Ident)
 		if !ok {
-			l.Error(InvalidTypeConversion(prop.Value.GetToken(), "ID").Match(TABLE_SYNTAX))
+			l.Error(InvalidTypeConversion(prop.Value.GetMeta(), "ID").Match(TABLE_SYNTAX))
 			return
 		}
 		if _, ok := ctx.Backends[ident.Value]; !ok {
-			l.Error(UndefinedBackend(ident.Token, ident.Value))
+			l.Error(UndefinedBackend(ident.GetMeta(), ident.Value))
 		}
 	default:
 		vt := l.Lint(prop.Value, ctx)
 		if vt != tableType {
-			l.Error(InvalidType(prop.Value.GetToken(), prop.Key.Value, tableType, vt))
+			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, tableType, vt))
 		}
 	}
 }
@@ -451,13 +451,13 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 
 	// validate subroutine name
 	if !isValidName(decl.Name.Value) {
-		l.Error(InvalidName(decl.Name.GetToken(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
 	}
 
 	if err := ctx.AddSubroutine(decl.Name.Value, subroutine); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    decl.Name.GetToken(),
+			Token:    decl.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(SUBROUTINE_DUPLICATED))
@@ -492,7 +492,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phra
 	// Macro not found
 	err := &LintError{
 		Severity: ERROR,
-		Token:    sub.GetToken(),
+		Token:    sub.GetMeta().Token,
 		Message: fmt.Sprintf(
 			`Subroutine "%s" does not have fastly boilerplate comment "%s" inside definition`, sub.Name.Value, phrase,
 		),
@@ -511,13 +511,13 @@ func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Cont
 func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.Context) types.Type {
 	// Validate variable syntax
 	if !isValidVariableName(stmt.Name.Value) {
-		l.Error(InvalidName(stmt.Name.GetToken(), stmt.Name.Value, "declare local").Match(DECLARE_STATEMENT_SYNTAX))
+		l.Error(InvalidName(stmt.Name.GetMeta(), stmt.Name.Value, "declare local").Match(DECLARE_STATEMENT_SYNTAX))
 	}
 	// user defined variable must start with "var."
 	if !strings.HasPrefix(stmt.Name.Value, "var.") {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.Name.GetToken(),
+			Token:    stmt.Name.GetMeta().Token,
 			Message:  fmt.Sprintf(`User defined variable must start with "var.", got: "%s"`, stmt.ValueType.Value),
 		}
 		l.Error(err.Match(DECLARE_STATEMENT_SYNTAX))
@@ -527,7 +527,7 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 	if !ok {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.ValueType.GetToken(),
+			Token:    stmt.ValueType.GetMeta().Token,
 			Message:  fmt.Sprintf("Unexpected variable type found: %s", stmt.ValueType.Value),
 		}
 		l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
@@ -536,7 +536,7 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 	if err := ctx.Declare(stmt.Name.Value, vt); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.Name.GetToken(),
+			Token:    stmt.Name.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(DECLARE_STATEMENT_DUPLICATED))
@@ -546,14 +546,14 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 
 func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
-		l.Error(InvalidName(stmt.Ident.GetToken(), stmt.Ident.Value, "set").Match(SET_STATEMENT_SYNTAX))
+		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "set").Match(SET_STATEMENT_SYNTAX))
 	}
 
 	left, err := ctx.Get(stmt.Ident.Value)
 	if err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.Ident.GetToken(),
+			Token:    stmt.Ident.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err)
@@ -562,7 +562,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	if err := isValidStatmentExpression(stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.Value.GetToken(),
+			Token:    stmt.Value.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
@@ -605,7 +605,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.lintLogicalOROperator(stmt.Operator, left, right)
 	default: // "="
 		if left != right {
-			l.Error(InvalidType(stmt.Value.GetToken(), stmt.Ident.Value, left, right))
+			l.Error(InvalidType(stmt.Value.GetMeta(), stmt.Ident.Value, left, right))
 		}
 	}
 
@@ -777,13 +777,13 @@ func (l *Linter) lintLogicalOROperator(op *ast.Operator, left, right types.Type)
 
 func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
-		l.Error(InvalidName(stmt.Ident.GetToken(), stmt.Ident.Value, "unset").Match(UNSET_STATEMENT_SYNTAX))
+		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "unset").Match(UNSET_STATEMENT_SYNTAX))
 	}
 
 	if err := ctx.Unset(stmt.Ident.Value); err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    stmt.Ident.GetToken(),
+			Token:    stmt.Ident.GetMeta().Token,
 			Message:  err.Error(),
 		})
 	}
@@ -793,13 +793,13 @@ func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Conte
 
 func (l *Linter) lintRemoveStatement(stmt *ast.RemoveStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
-		l.Error(InvalidName(stmt.Ident.GetToken(), stmt.Ident.Value, "remove").Match(REMOVE_STATEMENT_SYNTAX))
+		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "remove").Match(REMOVE_STATEMENT_SYNTAX))
 	}
 
 	if err := ctx.Unset(stmt.Ident.Value); err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    stmt.Ident.GetToken(),
+			Token:    stmt.Ident.GetMeta().Token,
 			Message:  err.Error(),
 		})
 	}
@@ -814,7 +814,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 	if err := pushRegexGroupVars(stmt.Condition, ctx); err != nil {
 		err := &LintError{
 			Severity: WARNING,
-			Token:    stmt.Condition.GetToken(),
+			Token:    stmt.Condition.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
@@ -826,7 +826,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 		if err := pushRegexGroupVars(a.Condition, ctx); err != nil {
 			err := &LintError{
 				Severity: WARNING,
-				Token:    a.Condition.GetToken(),
+				Token:    a.Condition.GetMeta().Token,
 				Message:  err.Error(),
 			}
 			l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
@@ -852,7 +852,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 	if err := isValidConditionExpression(cond); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    cond.GetToken(),
+			Token:    cond.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(CONDITION_LITERAL))
@@ -863,7 +863,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 	if !expectType(cc, types.StringType, types.BoolType) {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    cond.GetToken(),
+			Token:    cond.GetMeta().Token,
 			Message:  fmt.Sprintf("condition return type %s may not compare as bool", cc.String()),
 		})
 	}
@@ -874,7 +874,7 @@ func (l *Linter) lintRestartStatement(stmt *ast.RestartStatement, ctx *context.C
 	if ctx.Mode()&(context.RECV|context.HIT|context.FETCH|context.ERROR|context.DELIVER) == 0 {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.GetToken(),
+			Token:    stmt.GetMeta().Token,
 			Message:  fmt.Sprintf("restart statement could not use in %s scope", context.ScopeString(ctx.Mode())),
 		}
 		l.Error(err.Match(RESTART_STATEMENT_SCOPE))
@@ -890,14 +890,14 @@ func (l *Linter) lintEsiStatement(stmt *ast.EsiStatement, ctx *context.Context) 
 
 func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
-		l.Error(InvalidName(stmt.Ident.GetToken(), stmt.Ident.Value, "add").Match(ADD_STATEMENT_SYNTAX))
+		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "add").Match(ADD_STATEMENT_SYNTAX))
 	}
 
 	left, err := ctx.Get(stmt.Ident.Value)
 	if err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    stmt.Ident.GetToken(),
+			Token:    stmt.Ident.GetMeta().Token,
 			Message:  err.Error(),
 		})
 	}
@@ -905,7 +905,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 	if err := isValidStatmentExpression(stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.Value.GetToken(),
+			Token:    stmt.Value.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
@@ -913,7 +913,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 
 	right := l.Lint(stmt.Value, ctx)
 	if left != right {
-		l.Error(InvalidType(stmt.Value.GetToken(), stmt.Ident.Value, left, right))
+		l.Error(InvalidType(stmt.Value.GetMeta(), stmt.Ident.Value, left, right))
 	}
 
 	// Commonly, add statement operator must be "="
@@ -933,7 +933,7 @@ func (l *Linter) lintCallStatement(stmt *ast.CallStatement, ctx *context.Context
 	// Note that this linter analyze up to down,
 	// so all call target subroutine must be defined before call it.
 	if _, ok := ctx.Subroutines[stmt.Subroutine.Value]; !ok {
-		l.Error(UndefinedSubroutine(stmt.GetToken(), stmt.Subroutine.Value).Match(CALL_STATEMENT_SUBROUTINE_NOTFOUND))
+		l.Error(UndefinedSubroutine(stmt.GetMeta(), stmt.Subroutine.Value).Match(CALL_STATEMENT_SUBROUTINE_NOTFOUND))
 	}
 
 	return types.NeverType
@@ -944,7 +944,7 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 	if ctx.Mode()&(context.RECV|context.HIT|context.MISS|context.PASS|context.FETCH) == 0 {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.GetToken(),
+			Token:    stmt.GetMeta().Token,
 			Message:  "error statement can use only in RECV, HIT, MISS, PASS and FETCH scope",
 		}
 		l.Error(err.Match(ERROR_STATEMENT_SCOPE))
@@ -956,15 +956,15 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 	case *ast.Ident:
 		code := l.Lint(t, ctx)
 		if code != types.IntegerType {
-			l.Error(InvalidType(t.GetToken(), t.Value, types.IntegerType, code))
+			l.Error(InvalidType(t.GetMeta(), t.Value, types.IntegerType, code))
 		}
 	case *ast.Integer:
 		if t.Value > 699 {
-			l.Error(ErrorCodeRange(t.GetToken(), t.Value).Match(ERROR_STATEMENT_CODE))
+			l.Error(ErrorCodeRange(t.GetMeta(), t.Value).Match(ERROR_STATEMENT_CODE))
 		}
 	default:
 		code := l.Lint(t, ctx)
-		l.Error(InvalidType(t.GetToken(), "error code", types.IntegerType, code))
+		l.Error(InvalidType(t.GetMeta(), "error code", types.IntegerType, code))
 	}
 
 	return types.NeverType
@@ -1012,7 +1012,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 
 	if !expectState(stmt.Ident.Value, expects...) {
 		l.Error(InvalidReturnState(
-			stmt.Ident.Token, context.ScopeString(ctx.Mode()), stmt.Ident.Value, expects...,
+			stmt.Ident.GetMeta(), context.ScopeString(ctx.Mode()), stmt.Ident.Value, expects...,
 		).Match(RESTART_STATEMENT_SCOPE))
 	}
 	return types.NeverType
@@ -1023,7 +1023,7 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 	if ctx.Mode()&(context.ERROR) == 0 {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.GetToken(),
+			Token:    stmt.GetMeta().Token,
 			Message:  "synthetic statement can use only in ERROR scope",
 		}
 		l.Error(err.Match(SYNTHETIC_STATEMENT_SCOPE))
@@ -1053,7 +1053,7 @@ func (l *Linter) lintSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement
 	if ctx.Mode()&(context.ERROR) == 0 {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    stmt.GetToken(),
+			Token:    stmt.GetMeta().Token,
 			Message:  "synthetic.base64 statement can use only in ERROR scope",
 		}
 		l.Error(err.Match(SYNTHETIC_BASE64_STATEMENT_SCOPE))
@@ -1070,7 +1070,7 @@ func (l *Linter) lintIP(exp *ast.IP) types.Type {
 	if v := net.ParseIP(exp.Value); v == nil {
 		err := &LintError{
 			Severity: ERROR,
-			Token:    exp.GetToken(),
+			Token:    exp.GetMeta().Token,
 			Message:  fmt.Sprintf(`"%s" is invalid IP string`, exp.Value),
 		}
 		l.Error(err.Match(VALID_IP))
@@ -1110,14 +1110,14 @@ func (l *Linter) lintPrefixExpression(exp *ast.PrefixExpression, ctx *context.Co
 	case "-":
 		if !expectType(right, types.IntegerType, types.FloatType, types.RTimeType) {
 			l.Error(InvalidTypeExpression(
-				exp.GetToken(), right, types.IntegerType, types.FloatType, types.RTimeType,
+				exp.GetMeta(), right, types.IntegerType, types.FloatType, types.RTimeType,
 			))
 		}
 		return right
 	case "+":
 		if !expectType(right, types.StringType, types.IntegerType, types.FloatType, types.RTimeType, types.BoolType) {
 			l.Error(InvalidTypeExpression(
-				exp.GetToken(), right, types.StringType, types.IntegerType, types.FloatType, types.RTimeType, types.BoolType,
+				exp.GetMeta(), right, types.StringType, types.IntegerType, types.FloatType, types.RTimeType, types.BoolType,
 			))
 		}
 		return right
@@ -1146,7 +1146,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 	case "==", "!=":
 		// Equal operator could compare any types but both left and right type must be the same.
 		if left != right {
-			l.Error(InvalidTypeComparison(exp.Token, left, right))
+			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right))
 		}
 		return types.BoolType
 	case ">", ">=", "<", "<=":
@@ -1155,23 +1155,23 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		case types.IntegerType:
 			// When left type is INTEGER, right type must be INTEGER or RTIME
 			if !expectType(right, types.IntegerType, types.RTimeType) {
-				l.Error(InvalidTypeExpression(exp.Token, right, types.IntegerType, types.RTimeType))
+				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.RTimeType))
 			}
 		case types.FloatType, types.RTimeType:
 			// When left type is FLOAT or RTIME, right type must be INTEGER or FLOAT or RTIME
 			if !expectType(right, types.IntegerType, types.FloatType, types.RTimeType) {
-				l.Error(InvalidTypeExpression(exp.Token, right, types.IntegerType, types.FloatType, types.RTimeType))
+				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.FloatType, types.RTimeType))
 			}
 		default:
-			l.Error(InvalidTypeExpression(exp.Token, left, types.IntegerType, types.FloatType, types.RTimeType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.IntegerType, types.FloatType, types.RTimeType))
 		}
 		return types.BoolType
 	case "~", "!~":
 		// Regex operator could compare only STRING,  IP or ACL type
 		if !expectType(left, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.Token, left, types.StringType, types.IPType, types.AclType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType))
 		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.Token, right, types.StringType, types.IPType, types.AclType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType))
 		}
 		return types.BoolType
 	case "+":
@@ -1188,26 +1188,26 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		case types.AclType, types.BackendType:
 			l.Error(&LintError{
 				Severity: ERROR,
-				Token:    exp.Token,
+				Token:    exp.GetMeta().Token,
 				Message:  "ACL or BACKEND type cannot use in string concatenation",
 			})
 		case types.StringType:
 			break
 		default:
-			l.Error(ImplicitTypeConversion(exp.Token, left, types.StringType))
+			l.Error(ImplicitTypeConversion(exp.GetMeta(), left, types.StringType))
 		}
 
 		switch right {
 		case types.AclType, types.BackendType:
 			l.Error(&LintError{
 				Severity: ERROR,
-				Token:    exp.Token,
+				Token:    exp.GetMeta().Token,
 				Message:  "ACL or BACKEND type cannot use in string concatenation",
 			})
 		case types.StringType:
 			break
 		default:
-			l.Error(ImplicitTypeConversion(exp.Token, right, types.StringType))
+			l.Error(ImplicitTypeConversion(exp.GetMeta(), right, types.StringType))
 		}
 		return types.StringType
 	case "&&", "||":
@@ -1223,7 +1223,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	if err := pushRegexGroupVars(exp.Condition, ctx); err != nil {
 		err := &LintError{
 			Severity: WARNING,
-			Token:    exp.Condition.GetToken(),
+			Token:    exp.Condition.GetMeta().Token,
 			Message:  err.Error(),
 		}
 		l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
@@ -1232,7 +1232,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	if isConstantExpression(exp.Consequence) {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    exp.Consequence.GetToken(),
+			Token:    exp.Consequence.GetMeta().Token,
 			Message:  "cannot use constant literal in If expression consequence",
 		})
 	}
@@ -1241,7 +1241,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	if isConstantExpression(exp.Alternative) {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    exp.Alternative.GetToken(),
+			Token:    exp.Alternative.GetMeta().Token,
 			Message:  "cannot use constant literal in If expression alternative",
 		})
 	}
@@ -1250,7 +1250,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	if left != right {
 		l.Error(&LintError{
 			Severity: WARNING,
-			Token:    exp.Token,
+			Token:    exp.GetMeta().Token,
 			Message:  "If expression returns differernt type between consequence and alternative",
 		})
 	}
@@ -1262,7 +1262,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 	if err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    exp.Function.GetToken(),
+			Token:    exp.Function.GetMeta().Token,
 			Message:  err.Error(),
 		})
 		return types.NeverType
@@ -1272,7 +1272,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		if len(exp.Arguments) > 0 {
 			err := &LintError{
 				Severity: ERROR,
-				Token:    exp.Token,
+				Token:    exp.GetMeta().Token,
 				Message: fmt.Sprintf(
 					"function %s wants no arguments but provides %d argument",
 					exp.Function.String(), len(exp.Arguments),
@@ -1290,7 +1290,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		}
 		if len(argTypes) == 0 {
 			l.Error(FunctionArgumentMismatch(
-				exp.Function.GetToken(), exp.Function.String(),
+				exp.Function.GetMeta(), exp.Function.String(),
 				len(fn.Arguments), len(exp.Arguments),
 			).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
 		}
@@ -1299,7 +1299,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 			arg := l.Lint(exp.Arguments[i], ctx)
 			if v != arg {
 				l.Error(FunctionArgumentTypeMismatch(
-					exp.Function.GetToken(), exp.Function.String(), i+1, v, arg,
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
 		}

@@ -21,6 +21,6 @@ func (v *VCL) String() string {
 	return buf.String()
 }
 
-func (v *VCL) GetToken() token.Token {
-	return token.Null
+func (v *VCL) GetMeta() *Meta {
+	return New(token.Null, 0)
 }

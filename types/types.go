@@ -78,7 +78,7 @@ type Acl struct {
 }
 
 func (a *Acl) Type() Type         { return AclType }
-func (a *Acl) Token() token.Token { return a.Decl.GetToken() }
+func (a *Acl) Token() token.Token { return a.Decl.GetMeta().Token }
 func (a *Acl) String() string     { return a.Decl.String() }
 
 type Backend struct {
@@ -89,9 +89,9 @@ type Backend struct {
 func (b *Backend) Type() Type { return BackendType }
 func (b *Backend) Token() token.Token {
 	if b.DirectorDecl != nil {
-		return b.DirectorDecl.GetToken()
+		return b.DirectorDecl.GetMeta().Token
 	}
-	return b.BackendDecl.GetToken()
+	return b.BackendDecl.GetMeta().Token
 }
 func (b *Backend) String() string {
 	if b.DirectorDecl != nil {
@@ -106,7 +106,7 @@ type Bool struct {
 }
 
 func (b *Bool) Type() Type         { return BoolType }
-func (b *Bool) Token() token.Token { return b.Exp.GetToken() }
+func (b *Bool) Token() token.Token { return b.Exp.GetMeta().Token }
 func (b *Bool) String() string     { return b.Exp.String() }
 
 type Float struct {
@@ -115,7 +115,7 @@ type Float struct {
 }
 
 func (f *Float) Type() Type         { return FloatType }
-func (f *Float) Token() token.Token { return f.Exp.GetToken() }
+func (f *Float) Token() token.Token { return f.Exp.GetMeta().Token }
 func (f *Float) String() string     { return f.Exp.String() }
 
 type ID struct {
@@ -124,7 +124,7 @@ type ID struct {
 }
 
 func (i *ID) Type() Type         { return IDType }
-func (i *ID) Token() token.Token { return i.Exp.GetToken() }
+func (i *ID) Token() token.Token { return i.Exp.GetMeta().Token }
 func (i *ID) String() string     { return i.Exp.String() }
 
 type Integer struct {
@@ -133,7 +133,7 @@ type Integer struct {
 }
 
 func (i *Integer) Type() Type         { return IntegerType }
-func (i *Integer) Token() token.Token { return i.Exp.GetToken() }
+func (i *Integer) Token() token.Token { return i.Exp.GetMeta().Token }
 func (i *Integer) String() string     { return i.Exp.String() }
 
 type IP struct {
@@ -142,7 +142,7 @@ type IP struct {
 }
 
 func (i *IP) Type() Type         { return IPType }
-func (i *IP) Token() token.Token { return i.Exp.GetToken() }
+func (i *IP) Token() token.Token { return i.Exp.GetMeta().Token }
 func (i *IP) String() string     { return i.Exp.String() }
 
 type RTime struct {
@@ -151,7 +151,7 @@ type RTime struct {
 }
 
 func (r *RTime) Type() Type         { return RTimeType }
-func (r *RTime) Token() token.Token { return r.Exp.GetToken() }
+func (r *RTime) Token() token.Token { return r.Exp.GetMeta().Token }
 func (r *RTime) String() string     { return r.Exp.Value }
 
 type String struct {
@@ -160,7 +160,7 @@ type String struct {
 }
 
 func (s *String) Type() Type         { return StringType }
-func (s *String) Token() token.Token { return s.Exp.GetToken() }
+func (s *String) Token() token.Token { return s.Exp.GetMeta().Token }
 func (s *String) String() string     { return s.Exp.String() }
 
 type Time struct {
@@ -169,7 +169,7 @@ type Time struct {
 }
 
 func (t *Time) Type() Type         { return TimeType }
-func (t *Time) Token() token.Token { return t.Exp.GetToken() }
+func (t *Time) Token() token.Token { return t.Exp.GetMeta().Token }
 func (t *Time) String() string     { return t.Exp.String() }
 
 type Null struct {
@@ -195,7 +195,7 @@ type Table struct {
 }
 
 func (t *Table) Type() Type         { return TableType }
-func (t *Table) Token() token.Token { return t.Decl.GetToken() }
+func (t *Table) Token() token.Token { return t.Decl.GetMeta().Token }
 func (t *Table) String() string     { return t.Decl.String() }
 
 type Subroutine struct {

@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type AclDeclaration struct {
@@ -40,7 +38,7 @@ type AclCidr struct {
 	Mask    *Integer
 }
 
-func (c *AclCidr) GetToken() token.Token { return c.Token }
+func (c *AclCidr) GetMeta() *Meta { return c.Meta }
 func (c *AclCidr) String() string {
 	var buf bytes.Buffer
 
