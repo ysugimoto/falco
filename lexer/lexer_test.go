@@ -573,3 +573,28 @@ func TestComplecatedStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestPeekToken(t *testing.T) {
+	input := `set var.expires`
+	l := NewFromString(input)
+
+	tok := l.NextToken()
+	if diff := cmp.Diff(token.Token{Type: token.SET}, tok, cmpopts.IgnoreFields(token.Token{}, "Literal", "Line", "Position", "Offset")); diff != "" {
+		t.Errorf(`Assertion failed, diff= %s`, diff)
+	}
+
+	tok = l.PeekToken()
+	if diff := cmp.Diff(token.Token{Type: token.IDENT}, tok, cmpopts.IgnoreFields(token.Token{}, "Literal", "Line", "Position", "Offset")); diff != "" {
+		t.Errorf(`Assertion failed, diff= %s`, diff)
+	}
+
+	tok = l.NextToken()
+	if diff := cmp.Diff(token.Token{Type: token.IDENT}, tok, cmpopts.IgnoreFields(token.Token{}, "Literal", "Line", "Position", "Offset")); diff != "" {
+		t.Errorf(`Assertion failed, diff= %s`, diff)
+	}
+
+	tok = l.NextToken()
+	if diff := cmp.Diff(token.Token{Type: token.EOF}, tok, cmpopts.IgnoreFields(token.Token{}, "Literal", "Line", "Position", "Offset")); diff != "" {
+		t.Errorf(`Assertion failed, diff= %s`, diff)
+	}
+}

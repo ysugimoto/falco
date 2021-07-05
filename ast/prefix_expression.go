@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type PrefixExpression struct {
@@ -12,8 +10,8 @@ type PrefixExpression struct {
 	Right    Expression
 }
 
-func (p *PrefixExpression) expression()           {}
-func (p *PrefixExpression) GetToken() token.Token { return p.Token }
+func (p *PrefixExpression) expression()    {}
+func (p *PrefixExpression) GetMeta() *Meta { return p.Meta }
 func (p *PrefixExpression) String() string {
 	var buf bytes.Buffer
 

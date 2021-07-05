@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type LogStatement struct {
@@ -11,8 +9,8 @@ type LogStatement struct {
 	Value Expression
 }
 
-func (l *LogStatement) statement()            {}
-func (l *LogStatement) GetToken() token.Token { return l.Token }
+func (l *LogStatement) statement()     {}
+func (l *LogStatement) GetMeta() *Meta { return l.Meta }
 func (l *LogStatement) String() string {
 	var buf bytes.Buffer
 

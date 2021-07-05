@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type IfStatement struct {
@@ -15,8 +13,8 @@ type IfStatement struct {
 	AlternativeComments Comments
 }
 
-func (i *IfStatement) statement()            {}
-func (i *IfStatement) GetToken() token.Token { return i.Token }
+func (i *IfStatement) statement()     {}
+func (i *IfStatement) GetMeta() *Meta { return i.Meta }
 func (i *IfStatement) String() string {
 	var buf bytes.Buffer
 

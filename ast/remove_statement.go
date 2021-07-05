@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type RemoveStatement struct {
@@ -11,8 +9,8 @@ type RemoveStatement struct {
 	Ident *Ident
 }
 
-func (r *RemoveStatement) statement()            {}
-func (r *RemoveStatement) GetToken() token.Token { return r.Token }
+func (r *RemoveStatement) statement()     {}
+func (r *RemoveStatement) GetMeta() *Meta { return r.Meta }
 func (r *RemoveStatement) String() string {
 	var buf bytes.Buffer
 

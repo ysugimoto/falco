@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type SyntheticStatement struct {
@@ -11,8 +9,8 @@ type SyntheticStatement struct {
 	Value Expression
 }
 
-func (s *SyntheticStatement) statement()            {}
-func (s *SyntheticStatement) GetToken() token.Token { return s.Token }
+func (s *SyntheticStatement) statement()     {}
+func (s *SyntheticStatement) GetMeta() *Meta { return s.Meta }
 func (s *SyntheticStatement) String() string {
 	var buf bytes.Buffer
 

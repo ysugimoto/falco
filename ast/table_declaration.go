@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type TableDeclaration struct {
@@ -13,8 +11,8 @@ type TableDeclaration struct {
 	Properties []*TableProperty
 }
 
-func (t *TableDeclaration) statement()            {}
-func (t *TableDeclaration) GetToken() token.Token { return t.Token }
+func (t *TableDeclaration) statement()     {}
+func (t *TableDeclaration) GetMeta() *Meta { return t.Meta }
 func (t *TableDeclaration) String() string {
 	var buf bytes.Buffer
 
@@ -37,8 +35,9 @@ func (t *TableDeclaration) String() string {
 
 type TableProperty struct {
 	*Meta
-	Key   *String
-	Value Expression
+	Key      *String
+	Value    Expression
+	HasComma bool
 }
 
 func (t *TableProperty) String() string {

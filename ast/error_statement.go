@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type ErrorStatement struct {
@@ -12,8 +10,8 @@ type ErrorStatement struct {
 	Argument Expression
 }
 
-func (e *ErrorStatement) statement()            {}
-func (e *ErrorStatement) GetToken() token.Token { return e.Token }
+func (e *ErrorStatement) statement()     {}
+func (e *ErrorStatement) GetMeta() *Meta { return e.Meta }
 func (e *ErrorStatement) String() string {
 	var buf bytes.Buffer
 

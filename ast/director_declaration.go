@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type DirectorDeclaration struct {
@@ -13,8 +11,8 @@ type DirectorDeclaration struct {
 	Properties   []Expression
 }
 
-func (d *DirectorDeclaration) statement()            {}
-func (d *DirectorDeclaration) GetToken() token.Token { return d.Token }
+func (d *DirectorDeclaration) statement()     {}
+func (d *DirectorDeclaration) GetMeta() *Meta { return d.Meta }
 func (d *DirectorDeclaration) String() string {
 	var buf bytes.Buffer
 
@@ -41,8 +39,8 @@ type DirectorProperty struct {
 	Value Expression
 }
 
-func (d *DirectorProperty) expression()           {}
-func (d *DirectorProperty) GetToken() token.Token { return d.Token }
+func (d *DirectorProperty) expression()    {}
+func (d *DirectorProperty) GetMeta() *Meta { return d.Meta }
 func (d *DirectorProperty) String() string {
 	var buf bytes.Buffer
 
@@ -62,8 +60,8 @@ type DirectorBackendObject struct {
 	Values []*DirectorProperty
 }
 
-func (d *DirectorBackendObject) expression()           {}
-func (d *DirectorBackendObject) GetToken() token.Token { return d.Token }
+func (d *DirectorBackendObject) expression()    {}
+func (d *DirectorBackendObject) GetMeta() *Meta { return d.Meta }
 func (d *DirectorBackendObject) String() string {
 	var buf bytes.Buffer
 

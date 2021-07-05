@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type CallStatement struct {
@@ -11,8 +9,8 @@ type CallStatement struct {
 	Subroutine *Ident
 }
 
-func (c *CallStatement) statement()            {}
-func (c *CallStatement) GetToken() token.Token { return c.Token }
+func (c *CallStatement) statement()     {}
+func (c *CallStatement) GetMeta() *Meta { return c.Meta }
 func (c *CallStatement) String() string {
 	var buf bytes.Buffer
 

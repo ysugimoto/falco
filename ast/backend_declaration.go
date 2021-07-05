@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type BackendDeclaration struct {
@@ -12,9 +10,9 @@ type BackendDeclaration struct {
 	Properties []*BackendProperty
 }
 
-func (b *BackendDeclaration) statement()            {}
-func (b *BackendDeclaration) expression()           {}
-func (b *BackendDeclaration) GetToken() token.Token { return b.Token }
+func (b *BackendDeclaration) statement()     {}
+func (b *BackendDeclaration) expression()    {}
+func (b *BackendDeclaration) GetMeta() *Meta { return b.Meta }
 func (b *BackendDeclaration) String() string {
 	var buf bytes.Buffer
 
@@ -39,8 +37,8 @@ type BackendProperty struct {
 	Value Expression
 }
 
-func (p *BackendProperty) expression()           {}
-func (p *BackendProperty) GetToken() token.Token { return p.Token }
+func (p *BackendProperty) expression()    {}
+func (p *BackendProperty) GetMeta() *Meta { return p.Meta }
 func (p *BackendProperty) String() string {
 	var buf bytes.Buffer
 
@@ -61,8 +59,8 @@ type BackendProbeObject struct {
 	Values []*BackendProperty
 }
 
-func (o *BackendProbeObject) expression()           {}
-func (o *BackendProbeObject) GetToken() token.Token { return o.Token }
+func (o *BackendProbeObject) expression()    {}
+func (o *BackendProbeObject) GetMeta() *Meta { return o.Meta }
 func (o *BackendProbeObject) String() string {
 	var buf bytes.Buffer
 

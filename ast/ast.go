@@ -8,7 +8,7 @@ import (
 
 type Node interface {
 	String() string
-	GetToken() token.Token
+	GetMeta() *Meta
 }
 
 type Statement interface {

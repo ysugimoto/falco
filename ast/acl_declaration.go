@@ -12,9 +12,9 @@ type AclDeclaration struct {
 	CIDRs []*AclCidr
 }
 
-func (a *AclDeclaration) statement()            {}
-func (a *AclDeclaration) expression()           {}
-func (a *AclDeclaration) GetToken() token.Token { return a.Token }
+func (a *AclDeclaration) statement()     {}
+func (a *AclDeclaration) expression()    {}
+func (a *AclDeclaration) GetMeta() *Meta { return a.Meta }
 func (a *AclDeclaration) String() string {
 	var buf bytes.Buffer
 

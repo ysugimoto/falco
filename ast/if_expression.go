@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type IfExpression struct {
@@ -13,8 +11,8 @@ type IfExpression struct {
 	Alternative Expression
 }
 
-func (i *IfExpression) expression()           {}
-func (i *IfExpression) GetToken() token.Token { return i.Token }
+func (i *IfExpression) expression()    {}
+func (i *IfExpression) GetMeta() *Meta { return i.Meta }
 func (i *IfExpression) String() string {
 	var buf bytes.Buffer
 

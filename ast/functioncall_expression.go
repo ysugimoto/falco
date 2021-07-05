@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type FunctionCallExpression struct {
@@ -12,8 +10,8 @@ type FunctionCallExpression struct {
 	Arguments []Expression
 }
 
-func (f *FunctionCallExpression) expression()           {}
-func (f *FunctionCallExpression) GetToken() token.Token { return f.Token }
+func (f *FunctionCallExpression) expression()    {}
+func (f *FunctionCallExpression) GetMeta() *Meta { return f.Meta }
 func (f *FunctionCallExpression) String() string {
 	var buf bytes.Buffer
 

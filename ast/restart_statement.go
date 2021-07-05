@@ -2,16 +2,14 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type RestartStatement struct {
 	*Meta
 }
 
-func (r *RestartStatement) statement()            {}
-func (r *RestartStatement) GetToken() token.Token { return r.Token }
+func (r *RestartStatement) statement()     {}
+func (r *RestartStatement) GetMeta() *Meta { return r.Meta }
 func (r *RestartStatement) String() string {
 	var buf bytes.Buffer
 

@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type SubroutineDeclaration struct {
@@ -12,8 +10,8 @@ type SubroutineDeclaration struct {
 	Block *BlockStatement
 }
 
-func (s *SubroutineDeclaration) statement()            {}
-func (s *SubroutineDeclaration) GetToken() token.Token { return s.Token }
+func (s *SubroutineDeclaration) statement()     {}
+func (s *SubroutineDeclaration) GetMeta() *Meta { return s.Meta }
 func (s *SubroutineDeclaration) String() string {
 	var buf bytes.Buffer
 

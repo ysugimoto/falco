@@ -2,8 +2,6 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type IncludeStatement struct {
@@ -11,8 +9,8 @@ type IncludeStatement struct {
 	Module *String
 }
 
-func (i *IncludeStatement) statement()            {}
-func (i *IncludeStatement) GetToken() token.Token { return i.Token }
+func (i *IncludeStatement) statement()     {}
+func (i *IncludeStatement) GetMeta() *Meta { return i.Meta }
 func (i *IncludeStatement) String() string {
 	var buf bytes.Buffer
 
