@@ -60,6 +60,26 @@ Youe VCL will have dependent modules and loaded via `include [module]`. `falco` 
 
 `falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail.
 
+## Error Levels
+
+`falco` reports three of severity on linting:
+
+### ERROR
+
+VCL may cause error on Fastly, or may cause unexpected behavior for acrual works.
+
+### WRANING
+
+VCL could work, but may have potencial bug and cause unexpected behavior for acrual works.
+
+`falco` does not output warnings defaulty. To see them, run with `-v` option.
+
+### INFORMATION
+
+VCL is fine, but we suggest to improve your VCL considing from Fastly recommendation.
+
+`falco` does not output informations defaulty. To see them, run with `-vv` option.
+
 ## Tranforming
 
 `falco` is planning to transpile Fastly VCL to the other programing language e.g Go (HTTP service), node.js (Lambda@Edge) to use temporal CDN instead of Fastly.

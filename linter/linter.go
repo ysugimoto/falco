@@ -471,7 +471,7 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	// If fastly reserved subroutine name (e.g vcl_recv, vcl_fetch, etc),
 	// validate fastly specific boilerplate macro is embedded like "FASTLY recv"
 	if scope := getFastlySubroutineScope(decl.Name.Value); scope != "" {
-		l.lintFastlyBoilerPlateMacro(decl, fmt.Sprintf("FASTLY %s", scope))
+		l.lintFastlyBoilerPlateMacro(decl, strings.ToUpper("FASTLY "+scope))
 	}
 
 	return types.NeverType
@@ -483,7 +483,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phra
 		comments := strings.Split(stmt.LeadingComment(), "\n")
 		for _, c := range comments {
 			c = strings.TrimLeft(c, " */#")
-			if strings.HasPrefix(c, phrase) {
+			if strings.HasPrefix(strings.ToUpper(c), phrase) {
 				return
 			}
 		}
