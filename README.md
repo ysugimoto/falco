@@ -48,6 +48,7 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
+    -V                 : Display version
     -v,                : Verbose warning lint result
     -vv,               : Varbose all lint result
 
