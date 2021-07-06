@@ -58,6 +58,18 @@ Example:
 ### Note:
 Youe VCL will have dependent modules and loaded via `include [module]`. `falco` accept include path from `-I, --include_path` flag and search and load destination module from include path.
 
+## Fastly related features
+
+Currently, we don't support snippets which are managed in Fastly:
+
+- Edge Distionary
+- VCL Snippets
+- Log defnitions
+- Etc
+
+Above snippets will be injected to your VCL top or extracting `FASTLY XXX` macro, but this tool does aims to run locally, not communicating with Fastly service.
+However, we're planning to solve them using Fastly API.
+
 ## Lint error
 
 `falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail.
