@@ -13,6 +13,8 @@ import (
 	"github.com/mattn/go-colorable"
 )
 
+var version string = ""
+
 var (
 	output  = colorable.NewColorableStderr()
 	yellow  = color.New(color.FgYellow)
@@ -40,6 +42,7 @@ type Config struct {
 	Help         bool
 	V            bool
 	VV           bool
+	Version      bool
 }
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -62,6 +65,7 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
+    -V                 : Display version
     -v,                : Verbose warning lint result
     -vv,               : Varbose all lint result
 
@@ -84,14 +88,20 @@ func main() {
 	fs.BoolVar(&c.Help, "help", false, "Show Usage")
 	fs.BoolVar(&c.V, "v", false, "Verbose warning")
 	fs.BoolVar(&c.VV, "vv", false, "Verbose info")
+	fs.BoolVar(&c.Version, "V", false, "Print Version")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
 			printUsage()
 		}
 		os.Exit(1)
-	} else if c.Help {
+	}
+
+	if c.Help {
 		printUsage()
+	} else if c.Version {
+		writeln(white, version)
+		os.Exit(1)
 	}
 
 	mainVcl := fs.Arg(0)
