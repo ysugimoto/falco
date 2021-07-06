@@ -491,7 +491,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phra
 
 	// Macro not found
 	err := &LintError{
-		Severity: ERROR,
+		Severity: WARNING,
 		Token:    sub.GetMeta().Token,
 		Message: fmt.Sprintf(
 			`Subroutine "%s" does not have fastly boilerplate comment "%s" inside definition`, sub.Name.Value, phrase,
