@@ -23,7 +23,7 @@ Typically our deployment flow using custom VCLs is following:
 3. Upload new VCL files to the Fastly
 4. Activate new sevice version // <= Validate VCLs on the Fastly cloud
 
-Above flows take a few times, and then if we have some mistakes on VCL e.g. missing semicolon X(, the deployment will fail.
+Above flows take a time, and then if we have some mistakes on VCL e.g. missing semicolon X(, the deployment will fail.
 Additionally, unnecessary service version will be created by our trivial issue.
 
 To solve them, we made Fastly dedicated VCL parser and linter tool to notice syntax error and unexpected mistakes before starting above deployment flow.
@@ -68,19 +68,19 @@ Youe VCL will have dependent modules and loaded via `include [module]`. `falco` 
 
 ### ERROR
 
-VCL may cause error on Fastly, or may cause unexpected behavior for acrual works.
+VCL may cause error on Fastly, or may cause unexpected behavior for actual works.
 
 ### WRANING
 
-VCL could work, but may have potencial bug and cause unexpected behavior for acrual works.
+VCL could work, but may have potencial bug and cause unexpected behavior for actual works.
 
-`falco` does not output warnings defaulty. To see them, run with `-v` option.
+`falco` does not output warnings as default. To see them, run with `-v` option.
 
 ### INFORMATION
 
 VCL is fine, but we suggest to improve your VCL considing from Fastly recommendation.
 
-`falco` does not output informations defaulty. To see them, run with `-vv` option.
+`falco` does not output informations ad default. To see them, run with `-vv` option.
 
 ## Tranforming
 
