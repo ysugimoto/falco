@@ -10,7 +10,7 @@ Acl syntax is:
 
 ```vcl
 acl (?<acl_name>[a-zA-Z0-9_]+) {
-  (?<inverse>!?)"(?<ip_address>[0-9\.]+)"(/?)(?<cidr_mask>[0-9]+);
+  (?<inverse>!?)"(?<ip_address>[0-9a-z\.:]+)"(/?)(?<cidr_mask>[0-9]+);
   ...
 }
 ```
@@ -26,6 +26,8 @@ acl internal {
   ...
 }
 ```
+
+Note: `ip_address` variable could specify ipv6 format like "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff".
 
 Fastly Document : https://developer.fastly.com/reference/vcl/declarations/acl/
 

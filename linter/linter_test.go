@@ -1167,4 +1167,16 @@ sub foo {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("fuzzy type check for TIME type argument", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.S STRING;
+	declare local var.T TIME;
+	set var.S = "Mon, 02 Jan 2006 22:04:05 GMT";
+
+	set var.T = std.time(var.S, "Mon Jan 2 22:04:05 2006");
+}`
+		assertNoError(t, input)
+	})
 }
