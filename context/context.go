@@ -2,7 +2,6 @@ package context
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/types"
@@ -46,10 +45,20 @@ func ScopeString(s int) string {
 	}
 }
 
-var fastlySubRegex = regexp.MustCompile("^vcl_(recv|hash|hit|miss|pass|fetch|error|deliver|log)$")
+var fastlyReservedSubroutines = map[string]bool{
+	"vcl_recv":    true,
+	"vcl_hash":    true,
+	"vcl_hit":     true,
+	"vcl_miss":    true,
+	"vcl_pass":    true,
+	"vcl_fetch":   true,
+	"vcl_error":   true,
+	"vcl_deliver": true,
+	"vcl_log":     true,
+}
 
 func IsFastlySubroutine(name string) bool {
-	return fastlySubRegex.MatchString(name)
+	return fastlyReservedSubroutines[name]
 }
 
 type Context struct {
