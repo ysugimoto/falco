@@ -1272,6 +1272,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		return types.NeverType
 	}
 
+	// lint empty arguments
 	if len(fn.Arguments) == 0 {
 		if len(exp.Arguments) > 0 {
 			err := &LintError{
@@ -1284,58 +1285,59 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 			}
 			l.Error(err.Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
 		}
-	} else {
-		var argTypes []types.Type
-		for _, a := range fn.Arguments {
-			if len(a) == len(exp.Arguments) {
-				argTypes = a
-				break
+		return fn.Return
+	}
+
+	var argTypes []types.Type
+	for _, a := range fn.Arguments {
+		if len(a) == len(exp.Arguments) {
+			argTypes = a
+			break
+		}
+	}
+	if len(argTypes) == 0 {
+		l.Error(FunctionArgumentMismatch(
+			exp.Function.GetMeta(), exp.Function.String(),
+			len(fn.Arguments), len(exp.Arguments),
+		).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
+	}
+
+	for i, v := range argTypes {
+		arg := l.Lint(exp.Arguments[i], ctx)
+
+		switch v {
+		case types.TimeType:
+			// fuzzy type check: some builtin function expects TIME type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.TimeType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
-		}
-		if len(argTypes) == 0 {
-			l.Error(FunctionArgumentMismatch(
-				exp.Function.GetMeta(), exp.Function.String(),
-				len(fn.Arguments), len(exp.Arguments),
-			).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
-		}
-
-		for i, v := range argTypes {
-			arg := l.Lint(exp.Arguments[i], ctx)
-
-			switch v {
-			case types.TimeType:
-				// fuzzy type check: some builtin function expects TIME type,
-				// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-				if !expectType(arg, types.TimeType, types.StringType) {
-					l.Error(FunctionArgumentTypeMismatch(
-						exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-				}
-				continue
-			case types.RTimeType:
-				// fuzzy type check: some builtin function expects RTIME type,
-				// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-				if !expectType(arg, types.TimeType, types.StringType) {
-					l.Error(FunctionArgumentTypeMismatch(
-						exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-				}
-				continue
-			case types.IPType:
-				// fuzzy type check: some builtin function expects IP type,
-				// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-				if !expectType(arg, types.IPType, types.StringType) {
-					l.Error(FunctionArgumentTypeMismatch(
-						exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-				}
-			default:
-				// Otherwise, strict type check
-				if v != arg {
-					l.Error(FunctionArgumentTypeMismatch(
-						exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-				}
+			continue
+		case types.RTimeType:
+			// fuzzy type check: some builtin function expects RTIME type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.TimeType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+			continue
+		case types.IPType:
+			// fuzzy type check: some builtin function expects IP type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.IPType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+		default:
+			// Otherwise, strict type check
+			if v != arg {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
 		}
 	}
