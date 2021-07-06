@@ -286,7 +286,7 @@ table example_table FOO { // unexpected value type of FOO
 Fix:
 
 ```vcl
-table example_table FOO { // unexpected value type of FOO
+table example_table {
   "some_key": "value",
   ...
 }
