@@ -46,11 +46,11 @@ func (e *LintError) Error() string {
 		ref = "\ndocument: " + e.Reference
 	}
 	if e.Token.File != "" {
-		file = " in " + e.Token.File
+		file = " in" + e.Token.File
 	}
 
 	msg := fmt.Sprintf(
-		"[%s] %s%s%sat line: %d, position: %d%s",
+		"[%s] %s%s%s at line: %d, position: %d%s",
 		e.Severity, e.Message, rule, file, e.Token.Line, e.Token.Position, ref,
 	)
 	return msg

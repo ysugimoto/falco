@@ -53,7 +53,7 @@ type Context struct {
 	Tables         map[string]*types.Table
 	Directors      map[string]*types.Director
 	Subroutines    map[string]*types.Subroutine
-	Identifiers    map[string]types.VCLType
+	Identifiers    map[string]struct{}
 	functions      Functions
 	Variables      Variables
 	RegexVariables map[string]int
@@ -67,7 +67,7 @@ func New() *Context {
 		Tables:         make(map[string]*types.Table),
 		Directors:      make(map[string]*types.Director),
 		Subroutines:    make(map[string]*types.Subroutine),
-		Identifiers:    make(map[string]types.VCLType),
+		Identifiers:    builtinIdentifiers(),
 		functions:      builtinFunctions(),
 		Variables:      predefinedVariables(),
 		RegexVariables: newRegexMatchedValues(),

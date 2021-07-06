@@ -1036,14 +1036,16 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 	v, err := ctx.Get(exp.Value)
 	if err != nil {
-		if _, ok := ctx.Acls[exp.Value]; ok {
+		if _, ok := ctx.Identifiers[exp.Value]; ok {
+			return types.IDType
+		} else if _, ok := ctx.Acls[exp.Value]; ok {
 			return types.AclType
 		} else if _, ok := ctx.Backends[exp.Value]; ok {
 			return types.BackendType
 		} else if _, ok := ctx.Tables[exp.Value]; ok {
 			return types.TableType
 		}
-		return types.IDType
+		l.Error(UndefinedVariable(exp.GetMeta(), exp.Value))
 	}
 	return v
 }
@@ -1177,6 +1179,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 	case "+":
 		// Plus operator behaves string concatenation.
 		// VCL accepts other types with implicit type conversion as following:
+		// IDENT   -> point value
 		// STRING  -> raw string
 		// INTEGER -> stringify
 		// FLOAT   -> stringify
@@ -1223,7 +1226,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	l.lintIfCondition(exp.Condition, ctx)
 	if err := pushRegexGroupVars(exp.Condition, ctx); err != nil {
 		err := &LintError{
-			Severity: WARNING,
+			Severity: INFO,
 			Token:    exp.Condition.GetMeta().Token,
 			Message:  err.Error(),
 		}
@@ -1269,6 +1272,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		return types.NeverType
 	}
 
+	// lint empty arguments
 	if len(fn.Arguments) == 0 {
 		if len(exp.Arguments) > 0 {
 			err := &LintError{
@@ -1281,23 +1285,55 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 			}
 			l.Error(err.Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
 		}
-	} else {
-		var argTypes []types.Type
-		for _, a := range fn.Arguments {
-			if len(a) == len(exp.Arguments) {
-				argTypes = a
-				break
-			}
-		}
-		if len(argTypes) == 0 {
-			l.Error(FunctionArgumentMismatch(
-				exp.Function.GetMeta(), exp.Function.String(),
-				len(fn.Arguments), len(exp.Arguments),
-			).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
-		}
+		return fn.Return
+	}
 
-		for i, v := range argTypes {
-			arg := l.Lint(exp.Arguments[i], ctx)
+	var argTypes []types.Type
+	for _, a := range fn.Arguments {
+		if len(a) == len(exp.Arguments) {
+			argTypes = a
+			break
+		}
+	}
+	if len(argTypes) == 0 {
+		l.Error(FunctionArgumentMismatch(
+			exp.Function.GetMeta(), exp.Function.String(),
+			len(fn.Arguments), len(exp.Arguments),
+		).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
+	}
+
+	for i, v := range argTypes {
+		arg := l.Lint(exp.Arguments[i], ctx)
+
+		switch v {
+		case types.TimeType:
+			// fuzzy type check: some builtin function expects TIME type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.TimeType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+			continue
+		case types.RTimeType:
+			// fuzzy type check: some builtin function expects RTIME type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.TimeType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+			continue
+		case types.IPType:
+			// fuzzy type check: some builtin function expects IP type,
+			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
+			if !expectType(arg, types.IPType, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+		default:
+			// Otherwise, strict type check
 			if v != arg {
 				l.Error(FunctionArgumentTypeMismatch(
 					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
