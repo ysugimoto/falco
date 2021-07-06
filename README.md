@@ -153,7 +153,7 @@ VCL could work, but may have potencial bug and cause unexpected behavior for act
 
 VCL is fine, but we suggest to improve your VCL considering from Fastly recommendation.
 
-`falco` does not output informations ad default. To see them, run with `-vv` option.
+`falco` does not output informations as default. To see them, run with `-vv` option.
 
 ## Tranforming
 
