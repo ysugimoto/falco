@@ -48,7 +48,7 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
-    -V                 : Display version
+    -V, --version      : Display build version
     -v,                : Verbose warning lint result
     -vv,               : Varbose all lint result
 
@@ -81,14 +81,14 @@ Following table describes subroutine name and recognizing scope:
 
 | suffix  | scope   | example               |
 |:--------|:--------|:----------------------|
-| recv    | RECV    | sub custom_recv {}    |
-| miss    | MISS    | sub custom_miss {}    |
-| hash    | HASH    | sub custom_hash {}    |
-| pass    | PASS    | sub custom_pass {}    |
-| fetch   | FETCH   | sub custom_fetch {}   |
-| error   | ERROR   | sub custom_error {}   |
-| deliver | DELIVER | sub custom_deliver {} |
-| log     | LOG     | sub custom_log {}     |
+| _recv    | RECV    | sub custom_recv {}    |
+| _miss    | MISS    | sub custom_miss {}    |
+| _hash    | HASH    | sub custom_hash {}    |
+| _pass    | PASS    | sub custom_pass {}    |
+| _fetch   | FETCH   | sub custom_fetch {}   |
+| _error   | ERROR   | sub custom_error {}   |
+| _deliver | DELIVER | sub custom_deliver {} |
+| _log     | LOG     | sub custom_log {}     |
 
 ### Annotation
 
@@ -123,7 +123,7 @@ Following table describes annotation name and recognizing scope:
 
 Currently, we don't support snippets which are managed in Fastly:
 
-- Edge Distionary
+- Edge Dictionary
 - VCL Snippets
 - Log defnitions
 - Etc
@@ -153,7 +153,7 @@ VCL could work, but may have potencial bug and cause unexpected behavior for act
 
 VCL is fine, but we suggest to improve your VCL considering from Fastly recommendation.
 
-`falco` does not output informations ad default. To see them, run with `-vv` option.
+`falco` does not output informations as default. To see them, run with `-vv` option.
 
 ## Tranforming
 

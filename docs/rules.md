@@ -286,7 +286,7 @@ table example_table FOO { // unexpected value type of FOO
 Fix:
 
 ```vcl
-table example_table FOO { // unexpected value type of FOO
+table example_table {
   "some_key": "value",
   ...
 }
@@ -318,7 +318,7 @@ table example_table {
 }
 ```
 
-Note: 1000 items as default, but you may increase this limitation by containing to Fastly support.
+Note: 1000 items as default, but you may increase this limitation by contacting to Fastly support.
 
 Fastly document: https://developer.fastly.com/reference/vcl/declarations/table/#limitations
 
@@ -480,7 +480,6 @@ For example:
 ```vcl
 set req.http.X-Forwarded-For = client.ip;
 set req.http.Cookie:session = "session";
-}
 ```
 
 Fastly document: https://developer.fastly.com/reference/vcl/statements/set/
@@ -514,7 +513,6 @@ For example:
 
 ```vcl
 unset req.http.X-Forwarded-For;
-}
 ```
 
 Fastly document: https://developer.fastly.com/reference/vcl/statements/unset/
@@ -533,7 +531,6 @@ For example:
 
 ```vcl
 remove req.http.X-Forwarded-For;
-}
 ```
 
 Note: `remove` is just alias for `unset`.
@@ -786,20 +783,20 @@ For example:
 declare local var.S STRING;
 set var.S = "foo bar baz";
 if (req.http.Host) {
-	if (var.S) {
-		if (var.S !~ "(foo)\s(bar)\s(baz)") { // make matched values first (1)
-			set req.http.First = "1";
-		}
-		set var.S = "hoge huga";
-		if (var.S ~ "(hoge)\s(huga)") { // override matched values (2)
-			set req.http.First = re.group.1;
-		}
-	}
-	set req.http.Third = re.group.2; // difficult to know which (1) or (2) matched result is used
+  if (var.S) {
+    if (var.S !~ "(foo)\s(bar)\s(baz)") { // make matched values first (1)
+      set req.http.First = "1";
+    }
+    set var.S = "hoge huga";
+    if (var.S ~ "(hoge)\s(huga)") { // override matched values (2)
+      set req.http.First = re.group.1;
+    }
+  }
+  set req.http.Third = re.group.2; // difficult to know which (1) or (2) matched result is used
 }
 
 if (req.http.Host) {
-	set req.http.Fourth = re.group.3; // difficult to know which (1) or (2) matched result is used or empty
+  set req.http.Fourth = re.group.3; // difficult to know which (1) or (2) matched result is used or empty
 }
 ```
 
