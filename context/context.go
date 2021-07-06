@@ -45,6 +45,22 @@ func ScopeString(s int) string {
 	}
 }
 
+var fastlyReservedSubroutines = map[string]bool{
+	"vcl_recv":    true,
+	"vcl_hash":    true,
+	"vcl_hit":     true,
+	"vcl_miss":    true,
+	"vcl_pass":    true,
+	"vcl_fetch":   true,
+	"vcl_error":   true,
+	"vcl_deliver": true,
+	"vcl_log":     true,
+}
+
+func IsFastlySubroutine(name string) bool {
+	return fastlyReservedSubroutines[name]
+}
+
 type Context struct {
 	curMode        int
 	prevMode       int
@@ -207,9 +223,12 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error {
 	// check existence
 	if _, duplicated := c.Subroutines[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of subroutine "%s"`, name)
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplicate deifnition of subroutine "%s"`, name)
+		}
+	} else {
+		c.Subroutines[name] = subroutine
 	}
-	c.Subroutines[name] = subroutine
 	return nil
 }
 
