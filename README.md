@@ -58,6 +58,66 @@ Example:
 ### Note:
 Youe VCL will have dependent modules and loaded via `include [module]`. `falco` accept include path from `-I, --include_path` flag and search and load destination module from include path.
 
+## User defined subroutine
+
+On linting, `falco` could not recognize when the user-defined subroutine is called, so you should apply the subroutine scope by adding annotation or its subroutine name. falco understands call scope by following rules:
+
+### Subroutine name
+
+If subroutine name has suffix of `_[scope]`, falco lint within that scope.
+
+```vcl
+sub custom_recv { // name has `_recv` suffix, lint with RECV scope
+  ...
+}
+
+sub custom_fetch { // name has `_fetch` suffix, lint with FETCH scope
+  ...
+}
+```
+
+Following table describes subroutine name and recognizing scope:
+
+| suffix  | scope   | example               |
+|:--------|:--------|:----------------------|
+| recv    | RECV    | sub custom_recv {}    |
+| miss    | MISS    | sub custom_miss {}    |
+| hash    | HASH    | sub custom_hash {}    |
+| pass    | PASS    | sub custom_pass {}    |
+| fetch   | FETCH   | sub custom_fetch {}   |
+| error   | ERROR   | sub custom_error {}   |
+| deliver | DELIVER | sub custom_deliver {} |
+| log     | LOG     | sub custom_log {}     |
+
+### Annotation
+
+Since project reason, subroutine name could not be changed. Then, if you apply a hint of scope on annotation, `falco` also understands scope:
+
+```vcl
+// @recv
+sub custom_process { // subroutine has `recv` annotation, lint with RECV scope
+  ...
+}
+
+// fetch
+sub custom_request { // subroutine has `fetch` annotation, lint with FETCH scope
+  ...
+}
+```
+
+Following table describes annotation name and recognizing scope:
+
+| annotation  | scope   | example                      |
+|:------------|:--------|:-----------------------------|
+| @recv       | RECV    | // @recv<br>sub custom {}    |
+| @miss       | MISS    | // @miss<br>sub custom {}    |
+| @hash       | HASH    | // @hash<br>sub custom {}    |
+| @pass       | PASS    | // @pass<br>sub custom {}    |
+| @fetch      | FETCH   | // @fetch<br>sub custom {}   |
+| @error      | ERROR   | // @error<br>sub custom {}   |
+| @deliver    | DELIVER | // @deliver<br>sub custom {} |
+| @log        | LOG     | // @log<br>sub custom {}     |
+
 ## Fastly related features
 
 Currently, we don't support snippets which are managed in Fastly:
