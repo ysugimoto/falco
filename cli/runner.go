@@ -136,7 +136,6 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 		if ok {
 			r.printParseError(lx, pe)
 		}
-		fmt.Printf("%+v\n", err)
 		return nil, ErrParser
 	}
 	lx.NewLine()

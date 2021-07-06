@@ -135,8 +135,14 @@ func main() {
 		switch {
 		case result.Warnings > 0:
 			writeln(white, "VCL seems having some warnings, but it should be OK :thumbsup:")
+			if runner.level < LevelWarning {
+				writeln(white, "To see warning detail, run command with -v option.")
+			}
 		case result.Infos > 0:
-			writeln(green, "VCL looks fine :sparkles: And we suggested some informations to vcl will be more accurate :memo:")
+			writeln(green, "VCL looks fine :sparkles: And we suggested some informations to vcl get more accuracy :thumbsup:")
+			if runner.level < LevelInfo {
+				writeln(white, "To see informations detail, run command with -vv option.")
+			}
 		default:
 			writeln(green, "VCL looks very nice :sparkles:")
 		}
