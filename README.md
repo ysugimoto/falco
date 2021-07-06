@@ -133,7 +133,7 @@ However, we're planning to solve them using Fastly API.
 
 ## Lint error
 
-`falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints strct type checks, disallows implicit type conversions event VCL is fuzzy typed language. 
+`falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints with strict type checks, disallows implicit type conversions even VCL is fuzzy typed language. 
 
 ## Overriding Severity
 
