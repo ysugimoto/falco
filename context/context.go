@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/types"
@@ -43,6 +44,12 @@ func ScopeString(s int) string {
 	default:
 		return "UNKNOWN"
 	}
+}
+
+var fastlySubRegex = regexp.MustCompile("^vcl_(recv|hash|hit|miss|pass|fetch|error|deliver|log)$")
+
+func IsFastlySubroutine(name string) bool {
+	return fastlySubRegex.MatchString(name)
 }
 
 type Context struct {
@@ -207,9 +214,12 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error {
 	// check existence
 	if _, duplicated := c.Subroutines[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of subroutine "%s"`, name)
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplicate deifnition of subroutine "%s"`, name)
+		}
+	} else {
+		c.Subroutines[name] = subroutine
 	}
-	c.Subroutines[name] = subroutine
 	return nil
 }
 
