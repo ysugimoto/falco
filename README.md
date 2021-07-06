@@ -21,7 +21,7 @@ Typically our deployment flow using custom VCLs is following:
 1. Clone active service and create new version
 2. Delete existing custom VCLs
 3. Upload new VCL files to the Fastly
-4. Activate new sevice version // <= Validate VCLs on the Fastly cloud
+4. Activate new sevice version **<= Validate VCLs on the Fastly cloud**
 
 Above flows take a time, and then if we have some mistakes on VCL e.g. missing semicolon X(, the deployment will fail.
 Additionally, unnecessary service version will be created by our trivial issue.
