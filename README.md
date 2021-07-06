@@ -99,7 +99,7 @@ sub custom_process { // subroutine has `recv` annotation, lint with RECV scope
   ...
 }
 
-// fetch
+// @fetch
 sub custom_request { // subroutine has `fetch` annotation, lint with FETCH scope
   ...
 }
