@@ -15,6 +15,7 @@ const (
 	WARNING Severity = "Warning"
 	ERROR   Severity = "Error"
 	INFO    Severity = "Info"
+	IGNORE  Severity = "Ignore"
 )
 
 type LintError struct {

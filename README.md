@@ -21,7 +21,7 @@ Typically our deployment flow using custom VCLs is following:
 1. Clone active service and create new version
 2. Delete existing custom VCLs
 3. Upload new VCL files to the Fastly
-4. Activate new sevice version // <= Validate VCLs on the Fastly cloud
+4. Activate new sevice version **<= Validate VCLs on the Fastly cloud**
 
 Above flows take a time, and then if we have some mistakes on VCL e.g. missing semicolon X(, the deployment will fail.
 Additionally, unnecessary service version will be created by our trivial issue.
@@ -57,7 +57,7 @@ Example:
 ```
 
 ### Note:
-Youe VCL will have dependent modules and loaded via `include [module]`. `falco` accept include path from `-I, --include_path` flag and search and load destination module from include path.
+Your VCL will have dependent modules and loaded via `include [module]`. `falco` accept include path from `-I, --include_path` flag and search and load destination module from include path.
 
 ## User defined subroutine
 
@@ -133,7 +133,21 @@ However, we're planning to solve them using Fastly API.
 
 ## Lint error
 
-`falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail.
+`falco` has builtin lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints with strict type checks, disallows implicit type conversions even VCL is fuzzy typed language. 
+
+## Overriding Severity
+
+To avoid them, you can override severity levels by putting configuration file named `.falcorc` on working directory. the configuration file contents format is following:
+
+```yaml
+## /path/to/working/directory/.falcorc
+regex/matched-value-override: IGNORE
+...
+```
+
+Format is simply yaml key-value object. The key is rule name, see [rules.md](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) and value should be one of `IGNORE`, `INFO`, `WARGNING` and `ERROR`, case insensitive.
+
+On above case, the rule of `regex/matched-value-override` reports `INFO` as default, but override to `IGNORE` which does not report it.
 
 ## Error Levels
 

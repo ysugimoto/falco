@@ -813,7 +813,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 	// push regex captured variables
 	if err := pushRegexGroupVars(stmt.Condition, ctx); err != nil {
 		err := &LintError{
-			Severity: WARNING,
+			Severity: INFO,
 			Token:    stmt.Condition.GetMeta().Token,
 			Message:  err.Error(),
 		}
@@ -825,7 +825,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 		l.lintIfCondition(a.Condition, ctx)
 		if err := pushRegexGroupVars(a.Condition, ctx); err != nil {
 			err := &LintError{
-				Severity: WARNING,
+				Severity: INFO,
 				Token:    a.Condition.GetMeta().Token,
 				Message:  err.Error(),
 			}
