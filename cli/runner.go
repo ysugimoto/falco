@@ -8,6 +8,7 @@ import (
 
 	"path/filepath"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
@@ -18,7 +19,8 @@ import (
 )
 
 var (
-	ErrParser = fmt.Errorf("parser error")
+	ErrParser   = fmt.Errorf("parser error")
+	DotfileName = ".falcorc"
 )
 
 type Level int
@@ -40,6 +42,7 @@ type Runner struct {
 	transformers []*Transformer
 	includePaths []string
 	mainVclFile  string
+	overrides    map[string]linter.Severity
 
 	level Level
 
@@ -57,6 +60,7 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		mainVclFile: mainVcl,
 		context:     context.New(),
 		level:       LevelError,
+		overrides:   make(map[string]linter.Severity),
 	}
 
 	// Directory which placed main VCL adds to include path
@@ -88,7 +92,59 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		r.level = LevelWarning
 	}
 
+	// Make overriding error level setting from rc file
+	r.initOverrides()
+
 	return r, nil
+}
+
+func (r *Runner) initOverrides() {
+	// find up rc file
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	var rcFile string
+	for {
+		rcFile = filepath.Join(cwd, DotfileName)
+		if _, err := os.Stat(rcFile); err == nil {
+			break
+		}
+		cwd = filepath.Dir(cwd)
+		if cwd == "/" {
+			// find up to root directory, stop it
+			return
+		}
+	}
+
+	fp, err := os.Open(rcFile)
+	if err != nil {
+		writeln(yellow, "Configuration file found at %s but could not open", rcFile)
+		return
+	}
+	defer fp.Close()
+	o := make(map[string]string)
+	if err := yaml.NewDecoder(fp).Decode(&o); err != nil {
+		writeln(yellow, "Failed to decode configuration file at %s: %s", rcFile, err)
+		return
+	}
+
+	// validate configuration file
+	for k, v := range o {
+		switch strings.ToUpper(v) {
+		case "ERROR":
+			r.overrides[k] = linter.ERROR
+		case "WARNING":
+			r.overrides[k] = linter.WARNING
+		case "INFO":
+			r.overrides[k] = linter.INFO
+		case "IGNORE":
+			r.overrides[k] = linter.IGNORE
+		default:
+			writeln(yellow, "level for rule %s has invalid value %s, skip it.", k, v)
+			return
+		}
+	}
 }
 
 func (r *Runner) Transform(vcls []*plugin.VCL) error {
@@ -223,7 +279,13 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 		file = "in " + err.Token.File + " "
 	}
 
-	switch err.Severity {
+	// check severity with overrides
+	severity := err.Severity
+	if v, ok := r.overrides[string(err.Rule)]; ok {
+		severity = v
+	}
+
+	switch severity {
 	case linter.ERROR:
 		r.errors++
 		writeln(red, ":fire:[ERROR] %s%s", err.Message, rule)
@@ -239,6 +301,8 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 			return
 		}
 		writeln(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
+	case linter.IGNORE:
+		return
 	}
 
 	writeln(white, "%sat line %d, position %d", file, err.Token.Line, err.Token.Position)

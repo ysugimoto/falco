@@ -641,7 +641,7 @@ sub foo {
 	}
 	set var.S = re.group.1;
 }`
-		assertErrorWithSeverity(t, input, WARNING)
+		assertErrorWithSeverity(t, input, INFO)
 	})
 
 	t.Run("condition type is not expected", func(t *testing.T) {
