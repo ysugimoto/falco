@@ -10,7 +10,7 @@ This is a VCL parser, but dedicate to Fastly's VCL (version 2.x), so we don't ca
 The Varnish may have additional syntax, builtin function, predefined variables, but this tool may not parse correctly.
 
 Additionally, Fastly provides its special builtin functio, predefined variables. It's not compatibility for Varnish.
-But this is tool is optimized for them, we could parse and lint their declarations.
+But this tool is optimized for them, we could parse and lint their declarations.
 
 ## Motivation
 
