@@ -870,7 +870,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 }
 
 func (l *Linter) lintRestartStatement(stmt *ast.RestartStatement, ctx *context.Context) types.Type {
-	// restart stament enables in RECV, HIT, FETCH, ERROR and DELIVER scope
+	// restart statement enables in RECV, HIT, FETCH, ERROR and DELIVER scope
 	if ctx.Mode()&(context.RECV|context.HIT|context.FETCH|context.ERROR|context.DELIVER) == 0 {
 		err := &LintError{
 			Severity: ERROR,
@@ -1146,7 +1146,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 	case "==", "!=":
 		// Equal operator could compare any types but both left and right type must be the same.
 		if left != right {
-			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right))
+			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
 		}
 		return types.BoolType
 	case ">", ">=", "<", "<=":
@@ -1155,23 +1155,23 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		case types.IntegerType:
 			// When left type is INTEGER, right type must be INTEGER or RTIME
 			if !expectType(right, types.IntegerType, types.RTimeType) {
-				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.RTimeType))
+				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.RTimeType).Match(OPERATOR_CONDITIONAL))
 			}
 		case types.FloatType, types.RTimeType:
 			// When left type is FLOAT or RTIME, right type must be INTEGER or FLOAT or RTIME
 			if !expectType(right, types.IntegerType, types.FloatType, types.RTimeType) {
-				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.FloatType, types.RTimeType))
+				l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.IntegerType, types.FloatType, types.RTimeType).Match(OPERATOR_CONDITIONAL))
 			}
 		default:
-			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.IntegerType, types.FloatType, types.RTimeType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.IntegerType, types.FloatType, types.RTimeType).Match(OPERATOR_CONDITIONAL))
 		}
 		return types.BoolType
 	case "~", "!~":
 		// Regex operator could compare only STRING,  IP or ACL type
 		if !expectType(left, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
 		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType))
+			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
 		}
 		return types.BoolType
 	case "+":
@@ -1186,11 +1186,12 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		// BOOL    -> 0 (false) or 1 (true)
 		switch left {
 		case types.AclType, types.BackendType:
-			l.Error(&LintError{
+			err := &LintError{
 				Severity: ERROR,
 				Token:    exp.GetMeta().Token,
 				Message:  "ACL or BACKEND type cannot use in string concatenation",
-			})
+			}
+			l.Error(err.Match(OPERATOR_CONDITIONAL))
 		case types.StringType:
 			break
 		default:
