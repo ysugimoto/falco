@@ -30,7 +30,7 @@ To solve them, we made Fastly dedicated VCL parser and linter tool to notice syn
 
 ## Installation
 
-Download binary from [releaes page](https://github.com/ysugimoto/falco/releases) according your platform and place under the `$PATH`.
+Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according your platform and place under the `$PATH`.
 
 ## Usage
 
