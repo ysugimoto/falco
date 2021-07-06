@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -45,4 +46,22 @@ func isAssignmentOperator(t token.Token) bool {
 		return true
 	}
 	return false
+}
+
+// Comment control helper
+func swapLeadingTrailing(from, to *ast.Meta) {
+	to.Trailing = from.Leading
+	from.Leading = ast.Comments{}
+}
+
+func swapLeadingInfix(from, to *ast.Meta) {
+	to.Infix = from.Leading
+	from.Leading = ast.Comments{}
+}
+
+func clearComments(m *ast.Meta) *ast.Meta {
+	mm := *m
+	mm.Leading = ast.Comments{}
+	mm.Trailing = ast.Comments{}
+	return &mm
 }

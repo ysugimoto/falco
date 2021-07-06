@@ -2,76 +2,80 @@ package ast
 
 import (
 	"bytes"
-	"strings"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type BackendDeclaration struct {
-	Token      token.Token
+	*Meta
 	Name       *Ident
 	Properties []*BackendProperty
-	Comments   Comments
 }
 
-func (b *BackendDeclaration) statement()            {}
-func (b *BackendDeclaration) expression()           {}
-func (b *BackendDeclaration) GetComments() string   { return b.Comments.String() }
-func (b *BackendDeclaration) GetToken() token.Token { return b.Token }
+func (b *BackendDeclaration) statement()     {}
+func (b *BackendDeclaration) expression()    {}
+func (b *BackendDeclaration) GetMeta() *Meta { return b.Meta }
 func (b *BackendDeclaration) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(b.Comments.String())
+	buf.WriteString(b.LeadingComment())
 	buf.WriteString("backend ")
 	buf.WriteString(b.Name.String())
 	buf.WriteString(" {\n")
-	for _, props := range b.Properties {
-		v := props.String()
-		buf.WriteString("  " + v + "\n")
+	for _, prop := range b.Properties {
+		buf.WriteString(prop.String() + "\n")
 	}
-	buf.WriteString("}\n")
+	buf.WriteString(b.InfixComment())
+	buf.WriteString("}")
+	buf.WriteString(b.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }
 
 type BackendProperty struct {
-	Token    token.Token
-	Key      *Ident
-	Value    Expression
-	Comments Comments
+	*Meta
+	Key   *Ident
+	Value Expression
 }
 
-func (p *BackendProperty) expression()           {}
-func (p *BackendProperty) GetToken() token.Token { return p.Token }
+func (p *BackendProperty) expression()    {}
+func (p *BackendProperty) GetMeta() *Meta { return p.Meta }
 func (p *BackendProperty) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(p.Comments.String())
-	buf.WriteString("." + p.Key.String())
+	buf.WriteString(p.LeadingComment())
+	buf.WriteString(indent(p.Nest) + "." + p.Key.String())
 	buf.WriteString(" = ")
-	v := p.Value.String()
-	if !strings.HasSuffix(v, "}") {
+	buf.WriteString(p.Value.String())
+	if _, ok := p.Value.(*BackendProbeObject); !ok {
 		buf.WriteString(";")
 	}
+	buf.WriteString(p.TrailingComment())
 
 	return buf.String()
 }
 
 type BackendProbeObject struct {
-	Token  token.Token
+	*Meta
 	Values []*BackendProperty
 }
 
-func (o *BackendProbeObject) expression()           {}
-func (o *BackendProbeObject) GetToken() token.Token { return o.Token }
+func (o *BackendProbeObject) expression()    {}
+func (o *BackendProbeObject) GetMeta() *Meta { return o.Meta }
 func (o *BackendProbeObject) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString("{\n")
 	for _, p := range o.Values {
-		buf.WriteString("    " + p.String() + ";\n")
+		buf.WriteString(p.LeadingComment())
+		buf.WriteString(indent(p.Nest) + "." + p.Key.String())
+		buf.WriteString(" = ")
+		buf.WriteString(p.Value.String())
+		buf.WriteString(";")
+		buf.WriteString(p.TrailingComment())
+		buf.WriteString("\n")
 	}
-	buf.WriteString("  }")
+	buf.WriteString(o.InfixComment())
+	buf.WriteString(indent(o.Nest) + "}")
 
 	return buf.String()
 }

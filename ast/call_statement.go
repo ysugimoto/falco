@@ -2,25 +2,22 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type CallStatement struct {
-	Token      token.Token
+	*Meta
 	Subroutine *Ident
-	NestLevel  int
-	Comments   Comments
 }
 
-func (c *CallStatement) statement()            {}
-func (c *CallStatement) GetComments() string   { return c.Comments.String() }
-func (c *CallStatement) GetToken() token.Token { return c.Token }
+func (c *CallStatement) statement()     {}
+func (c *CallStatement) GetMeta() *Meta { return c.Meta }
 func (c *CallStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(c.Comments.String())
-	buf.WriteString(indent(c.NestLevel) + "call " + c.Subroutine.String() + ";\n")
+	buf.WriteString(c.LeadingComment())
+	buf.WriteString(indent(c.Nest) + "call " + c.Subroutine.String() + ";")
+	buf.WriteString(c.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

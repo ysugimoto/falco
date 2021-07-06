@@ -7,22 +7,21 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-type CommentStatement struct {
-	Token     token.Token
-	Value     string
-	NestLevel int
+type Comment struct {
+	Token token.Token
+	Value string
 }
 
-func (c *CommentStatement) statement()            {}
-func (c *CommentStatement) GetComments() string   { return c.String() }
-func (c *CommentStatement) GetToken() token.Token { return c.Token }
-func (c *CommentStatement) String() string {
-	return indent(c.NestLevel) + c.Value + "\n"
+func (c *Comment) String() string {
+	return c.Value
 }
 
-type Comments []*CommentStatement
+type Comments []*Comment
 
 func (c Comments) String() string {
+	if len(c) == 0 {
+		return ""
+	}
 	var buf bytes.Buffer
 
 	for i := range c {

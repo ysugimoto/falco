@@ -40,6 +40,7 @@ const (
 	COMMENT = "COMMENT"
 	TRUE    = "TRUE"
 	FALSE   = "FALSE"
+	LF      = "LF" // "\n"
 
 	// Operators
 	// https://developer.fastly.com/reference/vcl/operators/

@@ -2,19 +2,17 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type InfixExpression struct {
-	Token    token.Token
+	*Meta
 	Left     Expression
 	Operator string
 	Right    Expression
 }
 
-func (i *InfixExpression) expression()           {}
-func (i *InfixExpression) GetToken() token.Token { return i.Token }
+func (i *InfixExpression) expression()    {}
+func (i *InfixExpression) GetMeta() *Meta { return i.Meta }
 func (i *InfixExpression) String() string {
 	var buf bytes.Buffer
 

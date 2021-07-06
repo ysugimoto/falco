@@ -8,50 +8,113 @@ import (
 
 type Node interface {
 	String() string
-	GetToken() token.Token
+	GetMeta() *Meta
 }
 
 type Statement interface {
 	Node
 	statement()
-	GetComments() string
+	LeadingComment() string
+	TrailingComment() string
 }
 
 type Expression interface {
 	Node
 	expression()
+	LeadingComment() string
+	TrailingComment() string
 }
 
-// VCL is a root of program
-type VCL struct {
-	Statements []Statement
+// Meta struct of all nodes
+type Meta struct {
+	Token    token.Token
+	Leading  Comments
+	Trailing Comments
+	Infix    Comments
+	Nest     int
 }
 
-func (v *VCL) String() string {
+func (m *Meta) LeadingComment() string {
+	if len(m.Leading) == 0 {
+		return ""
+	}
 	var buf bytes.Buffer
 
-	for i := range v.Statements {
-		buf.WriteString(v.Statements[i].String())
+	for i := range m.Leading {
+		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + "\n")
 	}
 
 	return buf.String()
 }
 
-func (v *VCL) GetToken() token.Token {
-	return token.Null
+func (m *Meta) LeadingInlineComment() string {
+	if len(m.Leading) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Leading {
+		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + " ")
+	}
+
+	return buf.String()
+}
+
+func (m *Meta) TrailingComment() string {
+	if len(m.Trailing) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Trailing {
+		buf.WriteString(m.Trailing[i].String())
+	}
+
+	return " " + buf.String()
+}
+
+func (m *Meta) InfixComment() string {
+	if len(m.Infix) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Infix {
+		buf.WriteString(indent(m.Nest) + m.Infix[i].String() + "\n")
+	}
+
+	return buf.String()
+}
+
+func New(t token.Token, nest int, comments ...Comments) *Meta {
+	m := &Meta{
+		Token:    t,
+		Nest:     nest,
+		Leading:  Comments{},
+		Trailing: Comments{},
+		Infix:    Comments{},
+	}
+
+	switch len(comments) {
+	case 0:
+		break
+	case 1:
+		m.Leading = comments[0]
+	case 2:
+		m.Leading = comments[0]
+		m.Trailing = comments[1]
+	default:
+		m.Leading = comments[0]
+		m.Trailing = comments[1]
+		m.Infix = comments[2]
+	}
+
+	return m
 }
 
 type Operator struct {
-	Token    token.Token
+	*Meta
 	Operator string
 }
 
 func (o *Operator) String() string { return o.Operator }
-
-func indent(lv int) string {
-	var str string
-	for i := 0; i < lv; i++ {
-		str += "  "
-	}
-	return str
-}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
@@ -55,110 +56,111 @@ func (e *LintError) Error() string {
 	return msg
 }
 
-func InvalidName(t token.Token, name, ident string) *LintError {
+func InvalidName(m *ast.Meta, name, ident string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`ident %s has invalid name of "%s"`, ident, name),
 	}
 }
 
-func InvalidValue(t token.Token, tt, val string) *LintError {
+func InvalidValue(m *ast.Meta, tt, val string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`invalid %s value: %s`, tt, val),
 	}
 }
 
-func InvalidType(t token.Token, name string, expect, actual types.Type) *LintError {
+func InvalidType(m *ast.Meta, name string, expect, actual types.Type) *LintError {
 	return &LintError{
 		Severity: WARNING,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("%s wants type %s but assign %s", name, expect.String(), actual.String()),
 	}
 }
 
-func UndefinedVariable(t token.Token, name string) *LintError {
+func UndefinedVariable(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`variable "%s" is not defined`, name),
 	}
 }
 
-func UndefinedAcl(t token.Token, name string) *LintError {
+func UndefinedAcl(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`acl "%s" is not defined`, name),
 	}
 }
-func UndefinedBackend(t token.Token, name string) *LintError {
+func UndefinedBackend(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`backend "%s" is not defined`, name),
 	}
 }
 
-func UndefinedSubroutine(t token.Token, name string) *LintError {
+func UndefinedSubroutine(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("Subroutine %s is not defined. If you have this subroutine, please define before call it", name),
 	}
 }
 
-func InvalidOperation(t token.Token, name, operation string) *LintError {
+func InvalidOperation(m *ast.Meta, name, operation string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("%s could not %s", name, operation),
 	}
 }
 
-func Duplicated(t token.Token, name, ident string) *LintError {
+func Duplicated(m *ast.Meta, name, ident string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`%s "%s" is duplicated`, ident, name),
 	}
 }
 
-func AccessDenined(t token.Token, name, scope string) *LintError {
+func AccessDenined(m *ast.Meta, name, scope string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("could not access %s in scope %s", name, scope),
 	}
 }
 
-func UndefinedFunction(t token.Token, name string) *LintError {
+func UndefinedFunction(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("function %s is undefined", name),
 	}
 }
 
-func NotFunction(t token.Token, name string) *LintError {
+func NotFunction(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("%s is not a function", name),
 	}
 }
 
-func ErrorCodeRange(t token.Token, code int64) *LintError {
+func ErrorCodeRange(m *ast.Meta, code int64) *LintError {
 	return &LintError{
 		Severity: INFO,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("code %d in error statemnt should use between 600-699", code),
 	}
 }
 
-func InvalidTypeOperator(t token.Token, op string, expects ...types.Type) *LintError {
+// FIXME: accept *ast.Meta
+func InvalidTypeOperator(m *ast.Meta, op string, expects ...types.Type) *LintError {
 	es := make([]string, len(expects))
 	for i, v := range expects {
 		es[i] = v.String()
@@ -166,20 +168,21 @@ func InvalidTypeOperator(t token.Token, op string, expects ...types.Type) *LintE
 
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`could not operand, "%s" operator expects type %s on right expression`, op, strings.Join(es, " or ")),
 	}
 }
 
-func InvalidOperator(t token.Token, op string, left types.Type) *LintError {
+// FIXME: accept *ast.Meta
+func InvalidOperator(m *ast.Meta, op string, left types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf(`operator "%s" could not use for %s`, op, left.String()),
 	}
 }
 
-func InvalidTypeExpression(t token.Token, actual types.Type, expects ...types.Type) *LintError {
+func InvalidTypeExpression(m *ast.Meta, actual types.Type, expects ...types.Type) *LintError {
 	es := make([]string, len(expects))
 	for i, v := range expects {
 		es[i] = v.String()
@@ -187,68 +190,68 @@ func InvalidTypeExpression(t token.Token, actual types.Type, expects ...types.Ty
 
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("expression has type of %s but should have %s", actual.String(), strings.Join(es, " or ")),
 	}
 }
 
-func InvalidTypeComparison(t token.Token, left, right types.Type) *LintError {
+func InvalidTypeComparison(m *ast.Meta, left, right types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("different type comparison between %s and %s", left.String(), right.String()),
 	}
 }
 
-func ImplicitTypeConversion(t token.Token, from, to types.Type) *LintError {
+func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	return &LintError{
 		Severity: INFO,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("Type %s will treat as %s implicitly on string concatenation", from.String(), to.String()),
 	}
 }
 
-func UndefinedBackendProperty(t token.Token, name string) *LintError {
+func UndefinedBackendProperty(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("undefined backend property %s specified", name),
 	}
 }
 
-func UndefinedDirectorProperty(t token.Token, name, dt string) *LintError {
+func UndefinedDirectorProperty(m *ast.Meta, name, dt string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("undefined director property %s for director type %s specified", name, dt),
 	}
 }
 
-func UndefinedTableType(t token.Token, name, tt string) *LintError {
+func UndefinedTableType(m *ast.Meta, name, tt string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("undefined table type %s for %s", tt, name),
 	}
 }
 
-func InvalidTypeConversion(t token.Token, vclType string) *LintError {
+func InvalidTypeConversion(m *ast.Meta, vclType string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("type conversion failed, need to be able to cast as %s", vclType),
 	}
 }
 
-func FunctionArgumentMismatch(t token.Token, name string, expect, actual int) *LintError {
+func FunctionArgumentMismatch(m *ast.Meta, name string, expect, actual int) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message:  fmt.Sprintf("function %s wants argument count %d but provides %d", name, expect, actual),
 	}
 }
 
-func FunctionArgumentTypeMismatch(t token.Token, name string, num int, expect, actual types.Type) *LintError {
+func FunctionArgumentTypeMismatch(m *ast.Meta, name string, num int, expect, actual types.Type) *LintError {
 	suffix := "th"
 	if num == 1 {
 		suffix = "st"
@@ -258,7 +261,7 @@ func FunctionArgumentTypeMismatch(t token.Token, name string, num int, expect, a
 
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message: fmt.Sprintf(
 			"function %s wants argument %d%s as %s but applies %s",
 			name, num, suffix, expect.String(), actual.String(),
@@ -266,10 +269,10 @@ func FunctionArgumentTypeMismatch(t token.Token, name string, num int, expect, a
 	}
 }
 
-func InvalidReturnState(t token.Token, scope, state string, expects ...string) *LintError {
+func InvalidReturnState(m *ast.Meta, scope, state string, expects ...string) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    t,
+		Token:    m.Token,
 		Message: fmt.Sprintf(
 			`return statement "%s" is invalid in %s, expects %s`,
 			state, scope, strings.Join(expects, " or "),

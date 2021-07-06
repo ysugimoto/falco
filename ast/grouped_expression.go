@@ -2,17 +2,15 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type GroupedExpression struct {
-	Token token.Token
+	*Meta
 	Right Expression
 }
 
-func (g *GroupedExpression) expression()           {}
-func (g *GroupedExpression) GetToken() token.Token { return g.Token }
+func (g *GroupedExpression) expression()    {}
+func (g *GroupedExpression) GetMeta() *Meta { return g.Meta }
 func (g *GroupedExpression) String() string {
 	var buf bytes.Buffer
 

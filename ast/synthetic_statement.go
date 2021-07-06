@@ -2,25 +2,22 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type SyntheticStatement struct {
-	Token     token.Token
-	Value     Expression
-	NestLevel int
-	Comments  Comments
+	*Meta
+	Value Expression
 }
 
-func (s *SyntheticStatement) statement()            {}
-func (s *SyntheticStatement) GetComments() string   { return s.Comments.String() }
-func (s *SyntheticStatement) GetToken() token.Token { return s.Token }
+func (s *SyntheticStatement) statement()     {}
+func (s *SyntheticStatement) GetMeta() *Meta { return s.Meta }
 func (s *SyntheticStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(s.Comments.String())
-	buf.WriteString(indent(s.NestLevel) + "synthetic " + s.Value.String() + ";\n")
+	buf.WriteString(s.LeadingComment())
+	buf.WriteString(indent(s.Nest) + "synthetic " + s.Value.String() + ";")
+	buf.WriteString(s.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

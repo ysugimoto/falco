@@ -2,85 +2,84 @@ package ast
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type Ident struct {
-	Token token.Token
+	*Meta
 	Value string
 }
 
-func (i *Ident) expression()           {}
-func (i *Ident) GetToken() token.Token { return i.Token }
+func (i *Ident) expression()    {}
+func (i *Ident) GetMeta() *Meta { return i.Meta }
 func (i *Ident) String() string {
-	return i.Value
+	return i.LeadingInlineComment() + i.Value + i.TrailingComment()
 }
 
 type IP struct {
-	Token token.Token
+	*Meta
 	Value string
 }
 
-func (i *IP) expression()           {}
-func (i *IP) GetToken() token.Token { return i.Token }
+func (i *IP) expression()    {}
+func (i *IP) GetMeta() *Meta { return i.Meta }
 func (i *IP) String() string {
-	return i.Value
+	return i.LeadingInlineComment() + i.Value + i.TrailingComment()
 }
 
 type Boolean struct {
-	Token token.Token
+	*Meta
 	Value bool
 }
 
-func (b *Boolean) expression()           {}
-func (b *Boolean) GetToken() token.Token { return b.Token }
+func (b *Boolean) expression()    {}
+func (b *Boolean) GetMeta() *Meta { return b.Meta }
 func (b *Boolean) String() string {
-	return fmt.Sprintf("%t", b.Value)
+	return b.LeadingInlineComment() + fmt.Sprintf("%t", b.Value) + b.TrailingComment()
 }
 
 type Integer struct {
-	Token token.Token
+	*Meta
 	Value int64
 }
 
-func (i *Integer) expression()           {}
-func (i *Integer) GetToken() token.Token { return i.Token }
+func (i *Integer) expression()    {}
+func (i *Integer) GetMeta() *Meta { return i.Meta }
 func (i *Integer) String() string {
-	return fmt.Sprintf("%d", i.Value)
+	return i.LeadingInlineComment() + fmt.Sprintf("%d", i.Value) + i.TrailingComment()
 }
 
 type String struct {
-	Token token.Token
+	*Meta
 	Value string
 }
 
-func (s *String) expression()           {}
-func (s *String) GetToken() token.Token { return s.Token }
+func (s *String) expression()    {}
+func (s *String) GetMeta() *Meta { return s.Meta }
 func (s *String) String() string {
-	return fmt.Sprintf(`"%s"`, s.Value)
+	if s.Token.Offset == 4 { // offset=4 means bracket string
+		return s.LeadingComment() + fmt.Sprintf(`{"%s"}`, s.Value) + s.TrailingComment()
+	}
+	return s.LeadingInlineComment() + fmt.Sprintf(`"%s"`, s.Value) + s.TrailingComment()
 }
 
 type Float struct {
-	Token token.Token
+	*Meta
 	Value float64
 }
 
-func (f *Float) expression()           {}
-func (f *Float) GetToken() token.Token { return f.Token }
+func (f *Float) expression()    {}
+func (f *Float) GetMeta() *Meta { return f.Meta }
 func (f *Float) String() string {
-	return fmt.Sprintf("%f", f.Value)
+	return f.LeadingInlineComment() + fmt.Sprintf("%f", f.Value) + f.TrailingComment()
 }
 
 type RTime struct {
-	Token    token.Token
-	Value    string
-	Duration time.Duration
+	*Meta
+	Value string
 }
 
-func (r *RTime) expression()           {}
-func (r *RTime) GetToken() token.Token { return r.Token }
+func (r *RTime) expression()    {}
+func (r *RTime) GetMeta() *Meta { return r.Meta }
 func (r *RTime) String() string {
-	return r.Value
+	return r.LeadingInlineComment() + r.Value + r.TrailingComment()
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -23,34 +24,34 @@ func (e *ParseError) ErrorToken() token.Token {
 	return e.Token
 }
 
-func MissingSemicolon(t token.Token) *ParseError {
+func MissingSemicolon(m *ast.Meta) *ParseError {
 	return &ParseError{
-		Token:   t,
+		Token:   m.Token,
 		Message: "Missing semilocon",
 	}
 }
 
-func UnexpectedToken(t token.Token, expects ...string) *ParseError {
-	m := fmt.Sprintf(`Unexpected token "%s" found`, t.Literal)
+func UnexpectedToken(m *ast.Meta, expects ...string) *ParseError {
+	message := fmt.Sprintf(`Unexpected token "%s" found`, m.Token.Literal)
 	if len(expects) > 0 {
-		m += fmt.Sprintf(`, expects %s`, strings.Join(expects, " or "))
+		message += fmt.Sprintf(`, expects %s`, strings.Join(expects, " or "))
 	}
 	return &ParseError{
-		Token:   t,
-		Message: m,
-	}
-}
-
-func UndefinedPrefix(t token.Token) *ParseError {
-	return &ParseError{
-		Token:   t,
-		Message: "Undefined prefix expression parse of " + t.Literal,
+		Token:   m.Token,
+		Message: message,
 	}
 }
 
-func TypeConversionError(t token.Token, tt string) *ParseError {
+func UndefinedPrefix(m *ast.Meta) *ParseError {
 	return &ParseError{
-		Token:   t,
-		Message: fmt.Sprintf("Failed type conversion token %s to %s ", t.Literal, tt),
+		Token:   m.Token,
+		Message: "Undefined prefix expression parse of " + m.Token.Literal,
+	}
+}
+
+func TypeConversionError(m *ast.Meta, tt string) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: fmt.Sprintf("Failed type conversion token %s to %s ", m.Token.Literal, tt),
 	}
 }

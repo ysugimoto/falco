@@ -2,24 +2,21 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type RestartStatement struct {
-	Token     token.Token
-	NestLevel int
-	Comments  Comments
+	*Meta
 }
 
-func (r *RestartStatement) statement()            {}
-func (r *RestartStatement) GetComments() string   { return r.Comments.String() }
-func (r *RestartStatement) GetToken() token.Token { return r.Token }
+func (r *RestartStatement) statement()     {}
+func (r *RestartStatement) GetMeta() *Meta { return r.Meta }
 func (r *RestartStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(r.Comments.String())
-	buf.WriteString(indent(r.NestLevel) + "restart;\n")
+	buf.WriteString(r.LeadingComment())
+	buf.WriteString(indent(r.Nest) + "restart;")
+	buf.WriteString(r.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

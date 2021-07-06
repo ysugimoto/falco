@@ -2,25 +2,22 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type LogStatement struct {
-	Token     token.Token
-	Value     Expression
-	NestLevel int
-	Comments  Comments
+	*Meta
+	Value Expression
 }
 
-func (l *LogStatement) statement()            {}
-func (l *LogStatement) GetComments() string   { return l.Comments.String() }
-func (l *LogStatement) GetToken() token.Token { return l.Token }
+func (l *LogStatement) statement()     {}
+func (l *LogStatement) GetMeta() *Meta { return l.Meta }
 func (l *LogStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(l.Comments.String())
-	buf.WriteString(indent(l.NestLevel) + "log " + l.Value.String() + ";\n")
+	buf.WriteString(l.LeadingComment())
+	buf.WriteString(indent(l.Nest) + "log " + l.Value.String() + ";")
+	buf.WriteString(l.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

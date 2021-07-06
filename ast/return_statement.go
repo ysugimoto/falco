@@ -2,25 +2,22 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type ReturnStatement struct {
-	Token     token.Token
-	Ident     *Ident
-	NestLevel int
-	Comments  Comments
+	*Meta
+	Ident *Ident
 }
 
-func (r *ReturnStatement) statement()            {}
-func (r *ReturnStatement) GetComments() string   { return r.Comments.String() }
-func (r *ReturnStatement) GetToken() token.Token { return r.Token }
+func (r *ReturnStatement) statement()     {}
+func (r *ReturnStatement) GetMeta() *Meta { return r.Meta }
 func (r *ReturnStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(r.Comments.String())
-	buf.WriteString(indent(r.NestLevel) + "return(" + r.Ident.String() + ");\n")
+	buf.WriteString(r.LeadingComment())
+	buf.WriteString(indent(r.Nest) + "return(" + r.Ident.String() + ");")
+	buf.WriteString(r.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }

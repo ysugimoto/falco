@@ -2,24 +2,22 @@ package ast
 
 import (
 	"bytes"
-
-	"github.com/ysugimoto/falco/token"
 )
 
 type IncludeStatement struct {
-	Token    token.Token
-	Module   *String
-	Comments Comments
+	*Meta
+	Module *String
 }
 
-func (i *IncludeStatement) statement()            {}
-func (i *IncludeStatement) GetComments() string   { return i.Comments.String() }
-func (i *IncludeStatement) GetToken() token.Token { return i.Token }
+func (i *IncludeStatement) statement()     {}
+func (i *IncludeStatement) GetMeta() *Meta { return i.Meta }
 func (i *IncludeStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(i.Comments.String())
-	buf.WriteString("include " + i.Module.String() + ";\n")
+	buf.WriteString(i.LeadingComment())
+	buf.WriteString(indent(i.Nest) + "include " + i.Module.String() + ";")
+	buf.WriteString(i.TrailingComment())
+	buf.WriteString("\n")
 
 	return buf.String()
 }
