@@ -1,3 +1,8 @@
+## v0.2.1
+
+- remove old file [#10](https://github.com/ysugimoto/falco/pull/10) (@ysugimoto)
+- skip duplication check against Fastly's reserved subroutines [#9](skip duplication check against Fastly's reserved subroutines) (@smaeda-ks)
+
 ## v0.2.0
 
 - override severity via config [#7](https://github.com/ysugimoto/falco/pull/7) (@ysugimoto)
