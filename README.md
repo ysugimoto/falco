@@ -2,6 +2,8 @@
 
 falco is VCL parser and linter optimized for [Fastly](https://www.fastly.com).
 
+![falco-demo](https://user-images.githubusercontent.com/1000401/124563760-4aab0e00-de7b-11eb-911b-a68aaa909802.gif)
+
 ## Disclaimer
 
 This is a VCL parser, but dedicate to Fastly's VCL (version 2.x), so we don't care about latest Varnish (7.x or later) syntax.
