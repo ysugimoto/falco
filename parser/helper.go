@@ -60,8 +60,7 @@ func swapLeadingInfix(from, to *ast.Meta) {
 }
 
 func clearComments(m *ast.Meta) *ast.Meta {
-	var mm ast.Meta
-	mm = *m
+	mm := *m
 	mm.Leading = ast.Comments{}
 	mm.Trailing = ast.Comments{}
 	return &mm

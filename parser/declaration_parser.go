@@ -159,12 +159,11 @@ func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
 	}
 
 	// Otherwise, parse expression
-	// exp, err := p.parseExpression(LOWEST)
-	// if err != nil {
-	// 	return nil, errors.WithStack(err)
-	// }
-	// prop.Value = exp
-	prop.Value = p.parseString()
+	exp, err := p.parseExpression(LOWEST)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	prop.Value = exp
 
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))

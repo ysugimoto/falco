@@ -18,7 +18,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		// Meta structs ignores Token info
 		cmpopts.IgnoreFields(ast.Comment{}, "Token"),
 		cmpopts.IgnoreFields(ast.Meta{}, "Token"),
-		cmpopts.IgnoreFields(ast.Operator{}, "Token"),
+		cmpopts.IgnoreFields(ast.Operator{}),
 
 		// VCL type struct ignores Meta info
 		cmpopts.IgnoreFields(ast.Ident{}),
@@ -129,6 +129,7 @@ sub vcl_recv {
 								Value: "var.Bool",
 							},
 							Operator: &ast.Operator{
+								Meta:     ast.New(T, 1),
 								Operator: "=",
 							},
 							Value: &ast.GroupedExpression{

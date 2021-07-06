@@ -76,6 +76,7 @@ sub vcl_recv {
 									Value: "req.http.Host",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.String{
@@ -119,6 +120,7 @@ sub vcl_recv {
 									Value: "req.http.Host",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.InfixExpression{
@@ -752,6 +754,7 @@ sub vcl_recv {
 									Value: "req.http.Cookie:session",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.String{
@@ -795,6 +798,7 @@ sub vcl_recv {
 									Value: "req.http.Host",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.InfixExpression{

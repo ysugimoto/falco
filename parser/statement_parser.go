@@ -120,7 +120,7 @@ func (p *Parser) parseSetStatement() (*ast.SetStatement, error) {
 	swapLeadingTrailing(p.curToken, stmt.Ident.Meta)
 
 	stmt.Operator = &ast.Operator{
-		Token:    p.curToken.Token,
+		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
 	p.nextToken() // point to right expression start
@@ -196,7 +196,7 @@ func (p *Parser) parseAddStatement() (*ast.AddStatement, error) {
 	swapLeadingTrailing(p.curToken, stmt.Ident.Meta)
 
 	stmt.Operator = &ast.Operator{
-		Token:    p.curToken.Token,
+		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
 	p.nextToken() // start expression token

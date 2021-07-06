@@ -113,7 +113,7 @@ func New(t token.Token, nest int, comments ...Comments) *Meta {
 }
 
 type Operator struct {
-	Token    token.Token
+	*Meta
 	Operator string
 }
 

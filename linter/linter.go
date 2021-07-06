@@ -617,11 +617,11 @@ func (l *Linter) lintAdditionOperator(op *ast.Operator, left, right types.Type) 
 	case types.IntegerType, types.FloatType, types.RTimeType:
 		if !expectType(right, types.FloatType, types.RTimeType, types.IntegerType) {
 			l.Error(InvalidTypeOperator(
-				op.Token, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
+				op.Meta, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
 			).Match(OPERATOR_ASSIGNMENT))
 		}
 	case types.BoolType, types.AclType, types.BackendType:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 	// "+=" operator can use for STRING type to concat.
 }
@@ -631,11 +631,11 @@ func (l *Linter) lintSubtractionOperator(op *ast.Operator, left, right types.Typ
 	case types.IntegerType, types.FloatType, types.RTimeType:
 		if !expectType(right, types.FloatType, types.RTimeType, types.IntegerType) {
 			l.Error(InvalidTypeOperator(
-				op.Token, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
+				op.Meta, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
 			).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -644,11 +644,11 @@ func (l *Linter) lintMutiplicationOperator(op *ast.Operator, left, right types.T
 	case types.IntegerType, types.FloatType, types.RTimeType:
 		if !expectType(right, types.FloatType, types.IntegerType) {
 			l.Error(InvalidTypeOperator(
-				op.Token, op.Operator, types.IntegerType, types.FloatType,
+				op.Meta, op.Operator, types.IntegerType, types.FloatType,
 			).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -657,11 +657,11 @@ func (l *Linter) lintDivistionOperator(op *ast.Operator, left, right types.Type)
 	case types.IntegerType, types.FloatType, types.RTimeType:
 		if !expectType(right, types.FloatType, types.IntegerType) {
 			l.Error(InvalidTypeOperator(
-				op.Token, op.Operator, types.IntegerType, types.FloatType,
+				op.Meta, op.Operator, types.IntegerType, types.FloatType,
 			).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -670,11 +670,11 @@ func (l *Linter) lintRemainderOperator(op *ast.Operator, left, right types.Type)
 	case types.IntegerType, types.FloatType, types.RTimeType:
 		if !expectType(right, types.FloatType, types.IntegerType) {
 			l.Error(InvalidTypeOperator(
-				op.Token, op.Operator, types.IntegerType, types.FloatType,
+				op.Meta, op.Operator, types.IntegerType, types.FloatType,
 			).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -682,10 +682,10 @@ func (l *Linter) lintBitwiseOROperator(op *ast.Operator, left, right types.Type)
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -693,20 +693,20 @@ func (l *Linter) lintBitwiseANDOperator(op *ast.Operator, left, right types.Type
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 func (l *Linter) lintBitwiseXOROperator(op *ast.Operator, left, right types.Type) {
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -714,20 +714,20 @@ func (l *Linter) lintLeftShiftOperator(op *ast.Operator, left, right types.Type)
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 func (l *Linter) lintRightShiftOperator(op *ast.Operator, left, right types.Type) {
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -735,10 +735,10 @@ func (l *Linter) lintLeftRorateOperator(op *ast.Operator, left, right types.Type
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -746,10 +746,10 @@ func (l *Linter) lintRightRotateOperator(op *ast.Operator, left, right types.Typ
 	switch left {
 	case types.IntegerType:
 		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -757,10 +757,10 @@ func (l *Linter) lintLogicalANDOperator(op *ast.Operator, left, right types.Type
 	switch left {
 	case types.BoolType:
 		if !expectType(right, types.BoolType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 
@@ -768,10 +768,10 @@ func (l *Linter) lintLogicalOROperator(op *ast.Operator, left, right types.Type)
 	switch left {
 	case types.BoolType:
 		if !expectType(right, types.BoolType) {
-			l.Error(InvalidTypeOperator(op.Token, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
 		}
 	default:
-		l.Error(InvalidOperator(op.Token, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
+		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
 	}
 }
 

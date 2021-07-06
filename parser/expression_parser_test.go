@@ -32,6 +32,7 @@ sub vcl_recv {
 								Value: "req.http.Foo",
 							},
 							Operator: &ast.Operator{
+								Meta:     ast.New(T, 1),
 								Operator: "=",
 							},
 							Value: &ast.IfExpression{
@@ -152,6 +153,7 @@ sub vcl_recv {
 									Value: "req.http.X-Trace-Id",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.FunctionCallExpression{
@@ -198,6 +200,7 @@ sub vcl_recv {
 									Value: "req.http.X-Trace-Id",
 								},
 								Operator: &ast.Operator{
+									Meta:     ast.New(T, 1),
 									Operator: "=",
 								},
 								Value: &ast.FunctionCallExpression{
