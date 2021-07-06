@@ -99,5 +99,5 @@ MIT License
 
 ## Author
 
-Yoshiaki Sugimoto <sugimoto@wnotes.net>
+Yoshiaki Sugimoto
 
