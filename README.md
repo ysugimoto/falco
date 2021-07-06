@@ -67,7 +67,7 @@ Currently, we don't support snippets which are managed in Fastly:
 - Log defnitions
 - Etc
 
-Above snippets will be injected to your VCL top or extracting `FASTLY XXX` macro, but this tool does aims to run locally, not communicating with Fastly service.
+Above snippets will be injected to your VCL top or extracting `FASTLY XXX` macro, but this tool aims to run locally, not communicating with Fastly service.
 However, we're planning to solve them using Fastly API.
 
 ## Lint error
@@ -82,7 +82,7 @@ However, we're planning to solve them using Fastly API.
 
 VCL may cause error on Fastly, or may cause unexpected behavior for actual works.
 
-### WRANING
+### WARNING
 
 VCL could work, but may have potencial bug and cause unexpected behavior for actual works.
 
