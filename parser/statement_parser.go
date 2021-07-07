@@ -99,6 +99,10 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 
 	b.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT_BRACE
+
+	// RIGHT_BRACE leading comments are block infix comments
+	swapLeadingInfix(p.curToken, b.Meta)
+
 	return b, nil
 }
 
