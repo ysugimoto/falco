@@ -1222,3 +1222,98 @@ sub vcl_recv {
 	}
 	assert(t, vcl, expect)
 }
+
+func TestBlockSyntaxInsideBlockStatement(t *testing.T) {
+	t.Run("nested block", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	{
+		log "vcl_recv";
+	}
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.BlockStatement{
+								Meta: ast.New(T, 2),
+								Statements: []ast.Statement{
+									&ast.LogStatement{
+										Meta: ast.New(T, 2),
+										Value: &ast.String{
+											Meta:  ast.New(T, 2),
+											Value: "vcl_recv",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("nested two blocks", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	{
+		{
+			log "vcl_recv";
+		}
+	}
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.BlockStatement{
+								Meta: ast.New(T, 2),
+								Statements: []ast.Statement{
+									&ast.BlockStatement{
+										Meta: ast.New(T, 3),
+										Statements: []ast.Statement{
+											&ast.LogStatement{
+												Meta: ast.New(T, 3),
+												Value: &ast.String{
+													Meta:  ast.New(T, 3),
+													Value: "vcl_recv",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
