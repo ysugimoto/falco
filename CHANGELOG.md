@@ -1,3 +1,8 @@
+## v0.2.3
+
+- fix: prevent to die linter on return statement [#19](https://github.com/ysugimoto/falco/pull/19) (@ysugimoto)
+- fix: nested block syntax could parse/lint [#18](https://github.com/ysugimoto/falco/pull/18) (@ysugimoto)
+
 ## v0.2.2
 
 - Fix parsing infix block comments [#13](https://github.com/ysugimoto/falco/pull/13) (@dora1998)
