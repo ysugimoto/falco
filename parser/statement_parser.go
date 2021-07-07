@@ -59,6 +59,17 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 
 		p.nextToken() // point to statement
 		switch p.curToken.Token.Type {
+		// https://github.com/ysugimoto/falco/issues/17
+		// VCL accepts block syntax:
+		// ```
+		// sub vcl_recv {
+		//   {
+		//      log "recv";
+		//   }
+		// }
+		// ```
+		case token.LEFT_BRACE:
+			stmt, err = p.parseBlockStatement()
 		case token.SET:
 			stmt, err = p.parseSetStatement()
 		case token.UNSET:
