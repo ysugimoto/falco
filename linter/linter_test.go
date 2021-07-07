@@ -1186,3 +1186,27 @@ sub foo {
 		assertNoError(t, input)
 	})
 }
+
+func TestBlockSyntaxInsideBlockStatement(t *testing.T) {
+	input := `
+sub vcl_recv {
+	#Fastly recv
+	{
+		log "vcl_recv";
+	}
+}`
+	assertNoError(t, input)
+}
+
+func TestBlockSyntaxInsideBlockStatementmultiply(t *testing.T) {
+	input := `
+sub vcl_recv {
+	#Fastly recv
+	{
+		{
+			log "vcl_recv";
+		}
+	}
+}`
+	assertNoError(t, input)
+}
