@@ -1,3 +1,8 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/ysugimoto/falco.svg)](https://pkg.go.dev/github.com/ysugimoto/falco)
+![Build](https://github.com/ysugimoto/falco/actions/workflows/build.yml/badge.svg)
+
+https://github.com/<OWNER>/<REPOSITORY>/actions/workflows/<WORKFLOW_FILE>/badge.svg
+
 # falco
 
 falco is VCL parser and linter optimized for [Fastly](https://www.fastly.com).
