@@ -1009,6 +1009,11 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		expects = append(expects, "deliver")
 	}
 
+	// return statement may not have arguments, then stop linting
+	if stmt.Ident == nil {
+		return types.NeverType
+	}
+
 	if !expectState(stmt.Ident.Value, expects...) {
 		l.Error(InvalidReturnState(
 			stmt.Ident.GetMeta(), context.ScopeString(ctx.Mode()), stmt.Ident.Value, expects...,
