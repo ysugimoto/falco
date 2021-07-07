@@ -187,6 +187,7 @@ VCL is fine, but we suggest you improve your VCL considering Fastly recommendati
 
 MIT License
 
-## Author
+## Contributors
 
-Yoshiaki Sugimoto
+- [@ysugimoto](https://github.com/ysugimoto)
+- [@smaeda-ks](https://github.com/smaeda-ks)
