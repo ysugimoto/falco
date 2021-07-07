@@ -1,7 +1,11 @@
+## v0.2.2
+
+- Fix parsing infix block comments [#13](https://github.com/ysugimoto/falco/pull/13) (@dora1998)
+
 ## v0.2.1
 
 - remove old file [#10](https://github.com/ysugimoto/falco/pull/10) (@ysugimoto)
-- skip duplication check against Fastly's reserved subroutines [#9](skip duplication check against Fastly's reserved subroutines) (@smaeda-ks)
+- skip duplication check against Fastly's reserved subroutines [#9](https://github.com/ysugimoto/falco/pull/9) (@smaeda-ks)
 
 ## v0.2.0
 

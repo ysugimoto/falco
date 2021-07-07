@@ -329,3 +329,14 @@ func getFastlySubroutineScope(name string) string {
 	}
 	return ""
 }
+
+func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
+	comments := strings.Split(commentText, "\n")
+	for _, c := range comments {
+		c = strings.TrimLeft(c, " */#")
+		if strings.HasPrefix(strings.ToUpper(c), phrase) {
+			return true
+		}
+	}
+	return false
+}

@@ -479,13 +479,12 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 
 func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phrase string) {
 	// visit all statement comments and find "FASTLY [phase]" comment
+	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
+		return
+	}
 	for _, stmt := range sub.Block.Statements {
-		comments := strings.Split(stmt.LeadingComment(), "\n")
-		for _, c := range comments {
-			c = strings.TrimLeft(c, " */#")
-			if strings.HasPrefix(strings.ToUpper(c), phrase) {
-				return
-			}
+		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) {
+			return
 		}
 	}
 

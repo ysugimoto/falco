@@ -300,6 +300,12 @@ sub vcl_recv {
 	set req.http.Host = "example.com";
 }`
 		assertNoError(t, input)
+
+		input = `
+sub vcl_log {
+	# FASTLY log
+}`
+		assertNoError(t, input)
 	})
 
 	t.Run("invalid subroutine name", func(t *testing.T) {
