@@ -8,6 +8,7 @@ func builtinIdentifiers() map[string]struct{} {
 		// use for backend.ssl_check_cert
 		// https://developer.fastly.com/reference/vcl/declarations/backend/
 		"always": {},
+		"never":  {},
 
 		// use for crypto.encrypt_xxx function cipher argument
 		// https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/
