@@ -2504,7 +2504,7 @@ func predefinedVariables() Variables {
 							Value: &Accessor{
 								Get:       types.StringType,
 								Set:       types.StringType,
-								Unset:     false,
+								Unset:     true,
 								Scopes:    HIT | ERROR,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-http/",
 							},

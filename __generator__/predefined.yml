@@ -437,6 +437,7 @@ obj.http.%any%:
   on: [HIT, ERROR]
   get: STRING
   set: STRING
+  unset: true
 
 obj.is_pci:
   reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/"
