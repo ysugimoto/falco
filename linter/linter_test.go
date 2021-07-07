@@ -1186,3 +1186,22 @@ sub foo {
 		assertNoError(t, input)
 	})
 }
+
+func TestReturnStatement(t *testing.T) {
+	t.Run("pass: without argument", func(t *testing.T) {
+		input := `
+sub foo {
+	return;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: with argument", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#Fastly recv
+	return (pass);
+}`
+		assertNoError(t, input)
+	})
+}
