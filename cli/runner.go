@@ -63,6 +63,28 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		overrides:   make(map[string]linter.Severity),
 	}
 
+	if c.Remote {
+		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		// If remote flag is pfovided, fetch predefined data from Fastly.
+		// Currently, we only support Edge Dictionary.
+		//
+		// We communiate Fastly API with service id and api key,
+		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
+		// So user need to set them with "-r" argument.
+		serviceId := os.Getenv("FASTLY_SERVICE_ID")
+		apiKey := os.Getenv("FASTLY_API_KEY")
+		if serviceId == "" || apiKey == "" {
+			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
+		}
+		snippet := NewSnippet(serviceId, apiKey)
+		if err := snippet.Fetch(); err != nil {
+			return nil, err
+		}
+		if err := snippet.Compile(r.context); err != nil {
+			return nil, err
+		}
+	}
+
 	// Directory which placed main VCL adds to include path
 	r.includePaths = append(r.includePaths, filepath.Dir(mainVcl))
 

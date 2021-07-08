@@ -51,6 +51,7 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
+    -r, --remote       : Communicate with Fastly API
     -V, --version      : Display build version
     -v,                : Verbose warning lint result
     -vv,               : Verbose all lint result
@@ -124,15 +125,23 @@ Following table describes annotation name and recognizing scope:
 
 ## Fastly related features
 
-Currently, we don't support snippets which are managed in Fastly:
+`falco` supports to communicate with Fastly API. To enable it, you need following settings:
 
-- Edge Dictionary
+1. Apply `-r, --remote` flag in command. falco will communicate with Fastly API if this flag is supplied.
+2. Fastly API requires target _ServiceID_ and _APIKey_ to call, therefore, you need to specify them via environment varialbes named `FASTLY_SERVICE_ID` and `FASTLY_API_KEY`. falco will use these values automatically.
+
+Note: this feature is experimental so environment variable name is fixed.
+
+### Edge Dictionary
+
+`falco` can fetch [Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries) from Fastly and pre-parse.
+
+
+Currently, other snippets are not supported:
+
 - VCL Snippets
 - Log definitions
 - Etc
-
-Above snippets will be injected to your VCL top or extracting `FASTLY XXX` macro, but this tool aims to run locally, not communicating with Fastly service.
-However, we're planning to solve them using the Fastly API.
 
 ## Lint error
 
