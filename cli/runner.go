@@ -65,23 +65,23 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 
 	if c.Remote {
 		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
-		// If remote flag is pfovided, fetch predefined data from Fastly.
+		// If remote flag is provided, fetch predefined data from Fastly.
 		// Currently, we only support Edge Dictionary.
 		//
-		// We communiate Fastly API with service id and api key,
+		// We communicate Fastly API with service id and api key,
 		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
-		// So user need to set them with "-r" argument.
+		// So user needs to set them with "-r" argument.
 		serviceId := os.Getenv("FASTLY_SERVICE_ID")
 		apiKey := os.Getenv("FASTLY_API_KEY")
 		if serviceId == "" || apiKey == "" {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
 		snippet := NewSnippet(serviceId, apiKey)
+		// Remote communication is optional so we keep processing even if remote communication is failed
 		if err := snippet.Fetch(); err != nil {
-			return nil, err
-		}
-		if err := snippet.Compile(r.context); err != nil {
-			return nil, err
+			writeln(red, err.Error())
+		} else if err := snippet.Compile(r.context); err != nil {
+			writeln(red, err.Error())
 		}
 	}
 
