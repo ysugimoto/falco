@@ -52,8 +52,8 @@ func (c *FastlyClient) request(ctx context.Context, method, url string, body io.
 	return nil
 }
 
-func (c *FastlyClient) LatestVersion() (int64, error) {
-	ctx, timeout := context.WithTimeout(context.Background(), 5*time.Second)
+func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
+	ctx, timeout := context.WithTimeout(ctx, 5*time.Second)
 	defer timeout()
 
 	endpoint := fmt.Sprintf("/service/%s/version/active", c.serviceId)
@@ -65,10 +65,7 @@ func (c *FastlyClient) LatestVersion() (int64, error) {
 	return v.Number, nil
 }
 
-func (c *FastlyClient) ListEdgeDictionaries(version int64) ([]*EdgeDictionary, error) {
-	ctx, timeout := context.WithTimeout(context.Background(), 5*time.Second)
-	defer timeout()
-
+func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) ([]*EdgeDictionary, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/dictionary", c.serviceId, version)
 	var dicts []*EdgeDictionary
 	if err := c.request(ctx, http.MethodGet, endpoint, nil, &dicts); err != nil {
@@ -83,7 +80,7 @@ func (c *FastlyClient) ListEdgeDictionaries(version int64) ([]*EdgeDictionary, e
 		go func(d *EdgeDictionary) {
 			defer wg.Done()
 			var err error
-			if d.Items, err = c.ListEdgeDictionaryItems(d.Id); err != nil {
+			if d.Items, err = c.ListEdgeDictionaryItems(ctx, d.Id); err != nil {
 				once.Do(func() {
 					errch <- err
 				})
@@ -105,10 +102,7 @@ func (c *FastlyClient) ListEdgeDictionaries(version int64) ([]*EdgeDictionary, e
 	}
 }
 
-func (c *FastlyClient) ListEdgeDictionaryItems(dictId string) ([]*EdgeDictionaryItem, error) {
-	ctx, timeout := context.WithTimeout(context.Background(), 5*time.Second)
-	defer timeout()
-
+func (c *FastlyClient) ListEdgeDictionaryItems(ctx context.Context, dictId string) ([]*EdgeDictionaryItem, error) {
 	endpoint := fmt.Sprintf("/service/%s/dictionary/%s/items", c.serviceId, dictId)
 	var items []*EdgeDictionaryItem
 	if err := c.request(ctx, http.MethodGet, endpoint, nil, &items); err != nil {

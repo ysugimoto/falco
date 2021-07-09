@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	_context "context"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"path/filepath"
 
@@ -76,13 +78,18 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		if serviceId == "" || apiKey == "" {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
-		snippet := NewSnippet(serviceId, apiKey)
-		// Remote communication is optional so we keep processing even if remote communication is failed
-		if err := snippet.Fetch(); err != nil {
-			writeln(red, err.Error())
-		} else if err := snippet.Compile(r.context); err != nil {
-			writeln(red, err.Error())
-		}
+		func() {
+			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
+			defer timeout()
+
+			snippet := NewSnippet(serviceId, apiKey)
+			// Remote communication is optional so we keep processing even if remote communication is failed
+			if err := snippet.Fetch(ctx); err != nil {
+				writeln(red, err.Error())
+			} else if err := snippet.Compile(r.context); err != nil {
+				writeln(red, err.Error())
+			}
+		}()
 	}
 
 	// Directory which placed main VCL adds to include path

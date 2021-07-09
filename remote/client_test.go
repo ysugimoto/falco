@@ -1,6 +1,7 @@
 package remote
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -46,7 +47,7 @@ func TestLatestVersion(t *testing.T) {
 		},
 	}, "dummy", "dummy")
 
-	version, err := c.LatestVersion()
+	version, err := c.LatestVersion(context.Background())
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 		t.FailNow()
@@ -77,7 +78,7 @@ func TestListDictionaries(t *testing.T) {
 		},
 	}, "dummy", "dummy")
 
-	dicts, err := c.ListEdgeDictionaries(10)
+	dicts, err := c.ListEdgeDictionaries(context.Background(), 10)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 		t.FailNow()
@@ -116,7 +117,7 @@ func TestListDictionaryItems(t *testing.T) {
 		},
 	}, "dummy", "dummy")
 
-	items, err := c.ListEdgeDictionaryItems("3vjTN8v1O7nOAY7aNDGOL")
+	items, err := c.ListEdgeDictionaryItems(context.Background(), "3vjTN8v1O7nOAY7aNDGOL")
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 		t.FailNow()

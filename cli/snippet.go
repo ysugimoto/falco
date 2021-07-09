@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_context "context"
 	"fmt"
 	"strings"
 
@@ -44,9 +45,9 @@ func (s *Snippet) Compile(ctx *context.Context) error {
 	return nil
 }
 
-func (s *Snippet) Fetch() error {
+func (s *Snippet) Fetch(c _context.Context) error {
 	write(white, "Fetching Edge Dictionaries...")
-	dicts, err := s.fetchEdgeDictionary()
+	dicts, err := s.fetchEdgeDictionary(c)
 	if err != nil {
 		return err
 	}
@@ -56,14 +57,14 @@ func (s *Snippet) Fetch() error {
 }
 
 // Fetch remote Edge dictionary items
-func (s *Snippet) fetchEdgeDictionary() ([]string, error) {
+func (s *Snippet) fetchEdgeDictionary(c _context.Context) ([]string, error) {
 	// Fetch latest version
-	version, err := s.client.LatestVersion()
+	version, err := s.client.LatestVersion(c)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 
-	dicts, err := s.client.ListEdgeDictionaries(version)
+	dicts, err := s.client.ListEdgeDictionaries(c, version)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
