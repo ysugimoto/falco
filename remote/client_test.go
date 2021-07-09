@@ -25,13 +25,12 @@ func (t *TestRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func TestListVerions(t *testing.T) {
+func TestLatestVersion(t *testing.T) {
 	c := NewFastlyClient(&http.Client{
 		Transport: &TestRoundTripper{
 			StatusCode: 200,
 			Body: `
-[
-  {
+{
 	"created_at": "2020-04-09T18:14:30.000Z",
 	"updated_at": "2020-04-09T18:15:30.000Z",
 	"deleted_at": null,
@@ -43,8 +42,7 @@ func TestListVerions(t *testing.T) {
 	"staging": false,
 	"testing": false,
 	"service_id": "SU1Z0isxPaozGVKXdv0eY"
-  }
-]`,
+}`,
 		},
 	}, "dummy", "dummy")
 

@@ -56,13 +56,12 @@ func (c *FastlyClient) LatestVersion() (int64, error) {
 	ctx, timeout := context.WithTimeout(context.Background(), 5*time.Second)
 	defer timeout()
 
-	endpoint := fmt.Sprintf("/service/%s/version", c.serviceId)
-	var vs []Version
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &vs); err != nil {
+	endpoint := fmt.Sprintf("/service/%s/version/active", c.serviceId)
+	var v Version
+	if err := c.request(ctx, http.MethodGet, endpoint, nil, &v); err != nil {
 		return 0, errors.WithStack(err)
 	}
 
-	v := vs[len(vs)-1]
 	return v.Number, nil
 }
 
