@@ -125,23 +125,7 @@ Following table describes annotation name and recognizing scope:
 
 ## Fastly related features
 
-`falco` supports to communicate with Fastly API. To enable it, you need following settings:
-
-1. Apply `-r, --remote` flag in command. falco will communicate with Fastly API if this flag is supplied.
-2. Fastly API requires target _ServiceID_ and _APIKey_ to call, therefore, you need to specify them via environment varialbes named `FASTLY_SERVICE_ID` and `FASTLY_API_KEY`. falco will use these values automatically.
-
-Note: this feature is experimental so environment variable name is fixed.
-
-### Edge Dictionary
-
-`falco` can fetch [Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries) from Fastly and pre-parse.
-
-
-Currently, other snippets are not supported:
-
-- VCL Snippets
-- Log definitions
-- Etc
+Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
 
 ## Lint error
 
