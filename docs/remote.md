@@ -24,7 +24,7 @@ The environment varialbe name is fixed:
 | variable name     | usage |
 |:------------------|:----  |
 | FASTLY_SERVICE_ID | Service ID |
-| FASTLY_API_KEY    | API Key, yo can create via [Personal API Tokens](https://manage.fastly.com/account/personal/tokens) |
+| FASTLY_API_KEY    | API Key, you can create via [Personal API Tokens](https://manage.fastly.com/account/personal/tokens) |
 
 **Note: We recommend the Fastly API Key has `global:read` scope. falco only just call _read_ related API.**
 
