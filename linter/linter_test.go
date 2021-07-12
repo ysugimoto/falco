@@ -504,6 +504,15 @@ sub foo {
 		assertError(t, input)
 	})
 
+	t.Run("only can use for HTTP headers", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.FOO STRING;
+	add var.FOO = "bar";
+}`
+
+		assertError(t, input)
+	})
 }
 
 func TestLintCallStatement(t *testing.T) {
