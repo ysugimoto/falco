@@ -73,9 +73,11 @@ func InvalidValue(m *ast.Meta, tt, val string) *LintError {
 	}
 }
 
+// InvalidType raises ERROR due to strict type assertion failed.
+// Actually, it cause compile error for that VCL.
 func InvalidType(m *ast.Meta, name string, expect, actual types.Type) *LintError {
 	return &LintError{
-		Severity: WARNING,
+		Severity: ERROR,
 		Token:    m.Token,
 		Message:  fmt.Sprintf("%s wants type %s but assign %s", name, expect.String(), actual.String()),
 	}

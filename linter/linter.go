@@ -892,6 +892,21 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "add").Match(ADD_STATEMENT_SYNTAX))
 	}
 
+	// Add statement could use only for HTTP headers.
+	// https://developer.fastly.com/reference/vcl/statements/add/
+	if !strings.Contains(stmt.Ident.Value, "req.http.") &&
+		!strings.Contains(stmt.Ident.Value, "bereq.http.") &&
+		!strings.Contains(stmt.Ident.Value, "beresp.http.") &&
+		!strings.Contains(stmt.Ident.Value, "obj.http.") &&
+		!strings.Contains(stmt.Ident.Value, "resp.http.") {
+		err := &LintError{
+			Severity: ERROR,
+			Token:    stmt.Ident.GetMeta().Token,
+			Message:  "Add statement could not use for " + stmt.Ident.Value,
+		}
+		l.Error(err.Match(ADD_STATEMENT_SYNTAX))
+	}
+
 	left, err := ctx.Get(stmt.Ident.Value)
 	if err != nil {
 		l.Error(&LintError{
