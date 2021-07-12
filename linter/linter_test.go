@@ -1238,3 +1238,13 @@ sub vcl_recv {
 }`
 	assertNoError(t, input)
 }
+
+func TestRegexExpressionIsInvalid(t *testing.T) {
+	input := `
+sub vcl_recv {
+	#Fastly recv
+	if (req.url ~ "/foo/(.+") {
+	}
+}`
+	assertError(t, input)
+}
