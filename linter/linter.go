@@ -899,6 +899,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		!strings.Contains(stmt.Ident.Value, "beresp.http.") &&
 		!strings.Contains(stmt.Ident.Value, "obj.http.") &&
 		!strings.Contains(stmt.Ident.Value, "resp.http.") {
+
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Ident.GetMeta().Token,
