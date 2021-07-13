@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -892,6 +893,22 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "add").Match(ADD_STATEMENT_SYNTAX))
 	}
 
+	// Add statement could use only for HTTP headers.
+	// https://developer.fastly.com/reference/vcl/statements/add/
+	if !strings.Contains(stmt.Ident.Value, "req.http.") &&
+		!strings.Contains(stmt.Ident.Value, "bereq.http.") &&
+		!strings.Contains(stmt.Ident.Value, "beresp.http.") &&
+		!strings.Contains(stmt.Ident.Value, "obj.http.") &&
+		!strings.Contains(stmt.Ident.Value, "resp.http.") {
+
+		err := &LintError{
+			Severity: ERROR,
+			Token:    stmt.Ident.GetMeta().Token,
+			Message:  "Add statement could not use for " + stmt.Ident.Value,
+		}
+		l.Error(err.Match(ADD_STATEMENT_SYNTAX))
+	}
+
 	left, err := ctx.Get(stmt.Ident.Value)
 	if err != nil {
 		l.Error(&LintError{
@@ -1178,6 +1195,17 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
 		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
 			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
+		}
+		// And, if right expression is STRING, regex must be valid
+		if v, ok := exp.Right.(*ast.String); ok {
+			if _, err := regexp.Compile(v.Value); err != nil {
+				err := &LintError{
+					Severity: ERROR,
+					Token:    exp.Right.GetMeta().Token,
+					Message:  "regex string is invalid, " + err.Error(),
+				}
+				l.Error(err)
+			}
 		}
 		return types.BoolType
 	case "+":
