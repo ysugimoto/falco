@@ -43,6 +43,7 @@ type Config struct {
 	V            bool
 	VV           bool
 	Version      bool
+	Remote       bool
 }
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -65,9 +66,10 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
+    -r, --remote       : Communicate with Fastly API
     -V, --version      : Display build version
-    -v,                : Verbose warning lint result
-    -vv,               : Varbose all lint result
+    -v                 : Verbose warning lint result
+    -vv                : Varbose all lint result
 
 Example:
     falco -I . -vv /path/to/vcl/main.vcl
@@ -90,6 +92,8 @@ func main() {
 	fs.BoolVar(&c.VV, "vv", false, "Verbose info")
 	fs.BoolVar(&c.Version, "V", false, "Print Version")
 	fs.BoolVar(&c.Version, "version", false, "Print Version")
+	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
+	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {

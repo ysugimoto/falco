@@ -51,6 +51,7 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
+    -r, --remote       : Communicate with Fastly API
     -V, --version      : Display build version
     -v,                : Verbose warning lint result
     -vv,               : Verbose all lint result
@@ -124,15 +125,7 @@ Following table describes annotation name and recognizing scope:
 
 ## Fastly related features
 
-Currently, we don't support snippets which are managed in Fastly:
-
-- Edge Dictionary
-- VCL Snippets
-- Log definitions
-- Etc
-
-Above snippets will be injected to your VCL top or extracting `FASTLY XXX` macro, but this tool aims to run locally, not communicating with Fastly service.
-However, we're planning to solve them using the Fastly API.
+Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
 
 ## Lint error
 

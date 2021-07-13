@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	_context "context"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"path/filepath"
 
@@ -61,6 +63,33 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		context:     context.New(),
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
+	}
+
+	if c.Remote {
+		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		// If remote flag is provided, fetch predefined data from Fastly.
+		// Currently, we only support Edge Dictionary.
+		//
+		// We communicate Fastly API with service id and api key,
+		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
+		// So user needs to set them with "-r" argument.
+		serviceId := os.Getenv("FASTLY_SERVICE_ID")
+		apiKey := os.Getenv("FASTLY_API_KEY")
+		if serviceId == "" || apiKey == "" {
+			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
+		}
+		func() {
+			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
+			defer timeout()
+
+			snippet := NewSnippet(serviceId, apiKey)
+			// Remote communication is optional so we keep processing even if remote communication is failed
+			if err := snippet.Fetch(ctx); err != nil {
+				writeln(red, err.Error())
+			} else if err := snippet.Compile(r.context); err != nil {
+				writeln(red, err.Error())
+			}
+		}()
 	}
 
 	// Directory which placed main VCL adds to include path
