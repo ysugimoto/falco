@@ -9,7 +9,7 @@ import (
 func TestContextSet(t *testing.T) {
 	t.Run("Error on undefined variable", func(t *testing.T) {
 		c := New()
-		err := c.Set("foo.bar", &types.String{Value: "example"})
+		_, err := c.Set("foo.bar")
 		if err == nil {
 			t.Errorf("expected error but got nil")
 		}
@@ -18,7 +18,7 @@ func TestContextSet(t *testing.T) {
 	t.Run("Error on invalid scope", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		err := c.Set("beresp.http.X-Forwarded-Host", &types.String{Value: "example.com"})
+		_, err := c.Set("beresp.http.X-Forwarded-Host")
 		if err == nil {
 			t.Errorf("expected error but got nil")
 		}
@@ -27,25 +27,26 @@ func TestContextSet(t *testing.T) {
 	t.Run("Error on set to read-only variable", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		err := c.Set("backend.conn.is_tls", &types.Bool{Value: true})
+		_, err := c.Set("backend.conn.is_tls")
 		if err == nil {
 			t.Errorf("expected error but got nil")
 		}
 	})
 
-	t.Run("Error on set to invalid type", func(t *testing.T) {
+	t.Run("Can return right variable type", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		err := c.Set("req.backend", &types.Bool{Value: true})
-		if err == nil {
-			t.Errorf("expected error but got nil")
+		expectedType := types.BackendType
+		variableType, _ := c.Set("req.backend")
+		if variableType != expectedType {
+			t.Errorf("expected %s but got %s", expectedType, variableType)
 		}
 	})
 
 	t.Run("Able to set to {NAME} variables", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		err := c.Set("req.http.X-Forwarded-Host", &types.String{Value: "example.com"})
+		_, err := c.Set("req.http.X-Forwarded-Host")
 		if err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		}
@@ -144,7 +145,7 @@ func TestContextGetSet(t *testing.T) {
 	t.Run("Case insensitive", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		err := c.Set("req.http.X-Forwarded-Host", &types.String{Value: "example.com"})
+		_, err := c.Set("req.http.X-Forwarded-Host")
 		if err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		}

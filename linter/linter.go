@@ -549,7 +549,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "set").Match(SET_STATEMENT_SYNTAX))
 	}
 
-	left, err := ctx.Get(stmt.Ident.Value)
+	left, err := ctx.Set(stmt.Ident.Value)
 	if err != nil {
 		err := &LintError{
 			Severity: ERROR,
