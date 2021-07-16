@@ -288,17 +288,17 @@ func (c *Context) Get(name string) (types.Type, error) {
 	return obj.Value.Get, nil
 }
 
-func (c *Context) Set(name string, value types.VCLType) error {
+func (c *Context) Set(name string) (types.Type, error) {
 	first, remains := splitName(name)
 
 	// regex group variable like "re.group.N" is known read-only,
 	if first == "re" {
-		return fmt.Errorf(`variable "%s" is read-only`, name)
+		return types.NullType, fmt.Errorf(`variable "%s" is read-only`, name)
 	}
 
 	obj, ok := c.Variables[first]
 	if !ok {
-		return fmt.Errorf(`undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	for _, key := range remains {
@@ -314,7 +314,7 @@ func (c *Context) Set(name string, value types.VCLType) error {
 				}
 				obj = obj.Items[key]
 			} else {
-				return fmt.Errorf(`undefined variable "%s"`, name)
+				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 			}
 		} else {
 			obj = v
@@ -323,7 +323,7 @@ func (c *Context) Set(name string, value types.VCLType) error {
 
 	// Check object existence
 	if obj == nil || obj.Value == nil {
-		return fmt.Errorf(`undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 	// Value exists, but uneable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
@@ -331,7 +331,7 @@ func (c *Context) Set(name string, value types.VCLType) error {
 		if obj.Value.Reference != "" {
 			message += "\ndocument: " + obj.Value.Reference
 		}
-		return fmt.Errorf(message)
+		return types.NullType, fmt.Errorf(message)
 	}
 	// Unable "Set" access, means read-only.
 	if obj.Value.Set == types.NeverType {
@@ -339,18 +339,9 @@ func (c *Context) Set(name string, value types.VCLType) error {
 		if obj.Value.Reference != "" {
 			message += "\ndocument: " + obj.Value.Reference
 		}
-		return fmt.Errorf(message)
+		return types.NullType, fmt.Errorf(message)
 	}
-
-	// Compare variable type and assign value type
-	if obj.Value.Set != value.Type() {
-		message := fmt.Sprintf(`variable "%s" wants %s type but will set as %s`, name, obj.Value.Set, value.Type())
-		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
-		}
-		return fmt.Errorf(message)
-	}
-	return nil
+	return obj.Value.Set, nil
 }
 
 func (c *Context) Declare(name string, valueType types.Type) error {
