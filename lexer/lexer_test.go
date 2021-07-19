@@ -558,12 +558,28 @@ func TestComplecatedStatement(t *testing.T) {
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 37},
 		{Type: token.STRING, Literal: `^.*?"exp"\s*:\s*(\d+).*?$`, Line: 1, Position: 39},
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 68},
-		{Type: token.STRING, Literal: `1`, Line: 1, Position: 70},
+		{Type: token.STRING, Literal: `\1`, Line: 1, Position: 70},
 		{Type: token.RIGHT_PAREN, Literal: ")", Line: 1, Position: 74},
 		{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 75},
 		{Type: token.EOF, Literal: "", Line: 1, Position: 76},
 	}
 
+	l := NewFromString(input)
+	for i, tt := range expects {
+		tok := l.NextToken()
+
+		if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+			t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+		}
+	}
+}
+
+func TestEscapeSequence(t *testing.T) {
+	input := `"\1"`
+	expects := []token.Token{
+		{Type: token.STRING, Literal: "\\1", Line: 1, Position: 1},
+		{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+	}
 	l := NewFromString(input)
 	for i, tt := range expects {
 		tok := l.NextToken()
