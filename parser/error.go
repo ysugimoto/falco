@@ -27,7 +27,7 @@ func (e *ParseError) ErrorToken() token.Token {
 func MissingSemicolon(m *ast.Meta) *ParseError {
 	return &ParseError{
 		Token:   m.Token,
-		Message: "Missing semilocon",
+		Message: "Missing semicolon",
 	}
 }
 
