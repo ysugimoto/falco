@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -1194,6 +1195,17 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
 		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
 			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
+		}
+		// And, if right expression is STRING, regex must be valid
+		if v, ok := exp.Right.(*ast.String); ok {
+			if _, err := regexp.Compile(strings.ReplaceAll(v.Value, "\\", "\\\\")); err != nil {
+				err := &LintError{
+					Severity: ERROR,
+					Token:    exp.Right.GetMeta().Token,
+					Message:  "regex string is invalid, " + err.Error(),
+				}
+				l.Error(err)
+			}
 		}
 		return types.BoolType
 	case "+":

@@ -1,3 +1,8 @@
+## v0.3.0
+
+- fix: add statement linter [#22](https://github.com/ysugimoto/falco/pull/22) (@ysugimoto)
+- impl: Support edge dictionary [#20](https://github.com/ysugimoto/falco/pull/20) (@ysugimoto)
+
 ## v0.2.3
 
 - fix: prevent to die linter on return statement [#19](https://github.com/ysugimoto/falco/pull/19) (@ysugimoto)

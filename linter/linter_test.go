@@ -1238,3 +1238,27 @@ sub vcl_recv {
 }`
 	assertNoError(t, input)
 }
+
+func TestRegexExpressionIsInvalid(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#Fastly recv
+	if (req.url ~ "^/([^\?]*)?(\?.*)?$") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("error: invalid regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#Fastly recv
+	if (req.url ~ "^/([^\?]*)?(\?.*?$") {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+}

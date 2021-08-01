@@ -388,6 +388,7 @@ func (l *Lexer) readString() string {
 			if l.peekChar() != 0x5C {
 				isEscape = true
 			}
+			rs = append(rs, l.char)
 			l.readChar()
 			continue
 		}
