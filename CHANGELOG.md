@@ -1,3 +1,9 @@
+## v0.4.0
+
+- Implement regex validity linting [#26](https://github.com/ysugimoto/falco/pull/26) (@ysugimoto)
+- Fix minor typo [#25](https://github.com/ysugimoto/falco/pull/25) (@shawnps)
+- use context.Set() for set statement linter [#23](https://github.com/ysugimoto/falco/pull/23) (@smaeda-ks)
+
 ## v0.3.0
 
 - fix: add statement linter [#22](https://github.com/ysugimoto/falco/pull/22) (@ysugimoto)
