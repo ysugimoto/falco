@@ -1,3 +1,7 @@
+## v0.4.1
+
+- Fix definition of TCP congestion parameters [#27](https://github.com/ysugimoto/falco/pull/27) (@bungoume)
+
 ## v0.4.0
 
 - Implement regex validity linting [#26](https://github.com/ysugimoto/falco/pull/26) (@ysugimoto)
