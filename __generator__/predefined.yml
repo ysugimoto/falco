@@ -538,11 +538,13 @@ client.socket.congestion_algorithm:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/"
   on: [RECV, ERROR, DELIVER, LOG]
   get: STRING
+  set: STRING
 
 client.socket.cwnd:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/"
   on: [RECV, ERROR, FETCH, DELIVER, LOG]
   get: INTEGER
+  set: INTEGER
 
 client.socket.nexthop:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-nexthop/"
