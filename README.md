@@ -5,7 +5,8 @@
 
 falco is VCL parser and linter optimized for [Fastly](https://www.fastly.com).
 
-![falco-demo](https://user-images.githubusercontent.com/1000401/124563760-4aab0e00-de7b-11eb-911b-a68aaa909802.gif)
+![falco-demo](https://user-images.githubusercontent.com/1000401/132373603-f4050ee8-945a-4cc3-9ea8-2df992f4136d.gif)
+
 
 ## Disclaimer
 
