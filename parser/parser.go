@@ -171,7 +171,7 @@ func (p *Parser) ParseVCL() (*ast.VCL, error) {
 
 // ParseStatement parses included VCL.
 // In "include" statement, process read partial an VCL (file or snippet, regular or dynamic),
-// but the partial VCL may not be used in root VCL, can be unsed inside subroutine.
+// but the partial VCL may not be used in root VCL, can be used inside subroutine.
 // Then we need to parse them as inline statement, e.g:
 //
 // #main.vcl

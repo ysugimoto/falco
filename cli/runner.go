@@ -42,7 +42,6 @@ type RunnerResult struct {
 
 type Runner struct {
 	transformers []*Transformer
-	includePaths []string
 	mainVclFile  string
 	overrides    map[string]linter.Severity
 	resolver     *Resolver

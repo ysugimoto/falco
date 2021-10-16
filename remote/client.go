@@ -3,7 +3,6 @@ package remote
 import (
 	"context"
 	"fmt"
-	"io"
 	"sync"
 	"time"
 
@@ -31,8 +30,8 @@ func NewFastlyClient(c *http.Client, serviceId, apiKey string) *FastlyClient {
 	}
 }
 
-func (c *FastlyClient) request(ctx context.Context, method, url string, body io.Reader, v interface{}) error {
-	req, err := http.NewRequestWithContext(ctx, method, fastlyApiBaseUrl+url, body)
+func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fastlyApiBaseUrl+url, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -58,7 +57,7 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 
 	endpoint := fmt.Sprintf("/service/%s/version/active", c.serviceId)
 	var v Version
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &v); err != nil {
+	if err := c.request(ctx, endpoint, &v); err != nil {
 		return 0, errors.WithStack(err)
 	}
 
@@ -68,7 +67,7 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) ([]*EdgeDictionary, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/dictionary", c.serviceId, version)
 	var dicts []*EdgeDictionary
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &dicts); err != nil {
+	if err := c.request(ctx, endpoint, &dicts); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -105,22 +104,17 @@ func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) 
 func (c *FastlyClient) ListEdgeDictionaryItems(ctx context.Context, dictId string) ([]*EdgeDictionaryItem, error) {
 	endpoint := fmt.Sprintf("/service/%s/dictionary/%s/items", c.serviceId, dictId)
 	var items []*EdgeDictionaryItem
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &items); err != nil {
+	if err := c.request(ctx, endpoint, &items); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	return items, nil
 }
 
-func (c *FastlyClient) ListVCLSnippets(ctx context.Context) ([]*VCLSnippet, error) {
-	version, err := c.LatestVersion(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
+func (c *FastlyClient) ListVCLSnippets(ctx context.Context, version int64) ([]*VCLSnippet, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/snippet", c.serviceId, version)
 	var snippets []*VCLSnippet
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &snippets); err != nil {
+	if err := c.request(ctx, endpoint, &snippets); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -145,7 +139,7 @@ func (c *FastlyClient) GetDynamicSnippetContent(ctx context.Context, snippetId s
 	var snippet struct {
 		Content string `json:"content"`
 	}
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &snippet); err != nil {
+	if err := c.request(ctx, endpoint, &snippet); err != nil {
 		return nil, errors.WithStack(err)
 	}
 

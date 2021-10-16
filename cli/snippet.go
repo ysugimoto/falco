@@ -80,7 +80,7 @@ func (s *Snippet) fetchEdgeDictionary(ctx context.Context, version int64) ([]str
 
 // Fetch remote VCL snippets
 func (s *Snippet) fetchVCLSnippets(ctx context.Context, version int64) ([]*remote.VCLSnippet, error) {
-	snippets, err := s.client.ListVCLSnippets(ctx)
+	snippets, err := s.client.ListVCLSnippets(ctx, version)
 	if err != nil {
 		return nil, err
 	}
