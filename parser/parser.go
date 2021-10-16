@@ -153,6 +153,7 @@ func (p *Parser) peekPrecedence() int {
 	return LOWEST
 }
 
+// ParseVCL parses main VCL
 func (p *Parser) ParseVCL() (*ast.VCL, error) {
 	vcl := &ast.VCL{}
 
@@ -166,6 +167,79 @@ func (p *Parser) ParseVCL() (*ast.VCL, error) {
 	}
 
 	return vcl, nil
+}
+
+// ParseStatement parses included VCL.
+// In "include" statement, process read partial an VCL (file or snippet, regular or dynamic),
+// but the partial VCL may not be used in root VCL, can be unsed inside subroutine.
+// Then we need to parse them as inline statement, e.g:
+//
+// #main.vcl
+// include "module"; // <- valid, read and parse as ParseVCL()
+// ...
+// sub foo_recv {
+//   include "snippet::some_module"; // valid, need parse as ParseStatement()
+//   include "statement-module";     // valid, need parse as ParseStatement()
+// }
+func (p *Parser) ParseStatement() ([]ast.Statement, error) {
+	var statements []ast.Statement
+
+	for !p.curTokenIs(token.EOF) {
+		var stmt ast.Statement
+		var err error
+
+		switch p.curToken.Token.Type {
+		// https://github.com/ysugimoto/falco/issues/17
+		// VCL accepts block syntax:
+		// ```
+		// sub vcl_recv {
+		//   {
+		//      log "recv";
+		//   }
+		// }
+		// ```
+		case token.LEFT_BRACE:
+			stmt, err = p.parseBlockStatement()
+		case token.SET:
+			stmt, err = p.parseSetStatement()
+		case token.UNSET:
+			stmt, err = p.parseUnsetStatement()
+		case token.REMOVE:
+			stmt, err = p.parseRemoveStatement()
+		case token.ADD:
+			stmt, err = p.parseAddStatement()
+		case token.CALL:
+			stmt, err = p.parseCallStatement()
+		case token.DECLARE:
+			stmt, err = p.parseDeclareStatement()
+		case token.ERROR:
+			stmt, err = p.parseErrorStatement()
+		case token.ESI:
+			stmt, err = p.parseEsiStatement()
+		case token.LOG:
+			stmt, err = p.parseLogStatement()
+		case token.RESTART:
+			stmt, err = p.parseRestartStatement()
+		case token.RETURN:
+			stmt, err = p.parseReturnStatement()
+		case token.SYNTHETIC:
+			stmt, err = p.parseSyntheticStatement()
+		case token.SYNTHETIC_BASE64:
+			stmt, err = p.parseSyntheticBase64Statement()
+		case token.IF:
+			stmt, err = p.parseIfStatement()
+		default:
+			err = UnexpectedToken(p.peekToken)
+		}
+
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		statements = append(statements, stmt)
+		p.nextToken()
+	}
+
+	return statements, nil
 }
 
 func (p *Parser) parse() (ast.Statement, error) {

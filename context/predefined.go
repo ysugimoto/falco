@@ -1399,7 +1399,7 @@ func predefinedVariables() Variables {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
-								Set:       types.NeverType,
+								Set:       types.StringType,
 								Unset:     false,
 								Scopes:    RECV | ERROR | DELIVER | LOG,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/",
@@ -1409,7 +1409,7 @@ func predefinedVariables() Variables {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
-								Set:       types.NeverType,
+								Set:       types.IntegerType,
 								Unset:     false,
 								Scopes:    RECV | ERROR | FETCH | DELIVER | LOG,
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/",

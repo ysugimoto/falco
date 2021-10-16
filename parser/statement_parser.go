@@ -44,7 +44,7 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 	return i, nil
 }
 
-func (p *Parser) ParseBlockStatement() (*ast.BlockStatement, error) {
+func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	// Note: block statement is used for declaration/statement inside like subroutine, if, elseif, else
 	// on start this statement, current token must point start of LEFT_BRACE
 	// and after on end this statement, current token must poinrt end of RIGHT_BRACE
@@ -69,7 +69,7 @@ func (p *Parser) ParseBlockStatement() (*ast.BlockStatement, error) {
 		// }
 		// ```
 		case token.LEFT_BRACE:
-			stmt, err = p.ParseBlockStatement()
+			stmt, err = p.parseBlockStatement()
 		case token.SET:
 			stmt, err = p.parseSetStatement()
 		case token.UNSET:
@@ -84,6 +84,8 @@ func (p *Parser) ParseBlockStatement() (*ast.BlockStatement, error) {
 			stmt, err = p.parseDeclareStatement()
 		case token.ERROR:
 			stmt, err = p.parseErrorStatement()
+		case token.INCLUDE:
+			stmt, err = p.parseIncludeStatement()
 		case token.ESI:
 			stmt, err = p.parseEsiStatement()
 		case token.LOG:
@@ -474,7 +476,7 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 	}
 
 	// parse Consequence block
-	stmt.Consequence, err = p.ParseBlockStatement()
+	stmt.Consequence, err = p.parseBlockStatement()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -501,7 +503,7 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 			if !p.expectPeek(token.LEFT_BRACE) {
 				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 			}
-			stmt.Alternative, err = p.ParseBlockStatement()
+			stmt.Alternative, err = p.parseBlockStatement()
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
@@ -550,7 +552,7 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 	}
 
 	// parse Consequence block
-	stmt.Consequence, err = p.ParseBlockStatement()
+	stmt.Consequence, err = p.parseBlockStatement()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

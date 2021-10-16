@@ -2,17 +2,12 @@ package main
 
 import (
 	"bytes"
-	_context "context"
+	"context"
 	"fmt"
-	"strings"
 
 	"net/http"
 	"text/template"
 
-	"github.com/ysugimoto/falco/context"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter"
-	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/remote"
 )
 
@@ -25,8 +20,9 @@ table {{ .Name }} {
 `
 
 type Snippet struct {
-	client   *remote.FastlyClient
-	snippets []string
+	client           *remote.FastlyClient
+	edgeDictinalries []string
+	vclSnippets      []*remote.VCLSnippet
 }
 
 func NewSnippet(serviceId, apiKey string) *Snippet {
@@ -35,36 +31,33 @@ func NewSnippet(serviceId, apiKey string) *Snippet {
 	}
 }
 
-func (s *Snippet) Compile(ctx *context.Context) error {
-	vcl, err := parser.New(lexer.NewFromString(strings.Join(s.snippets, "\n"))).ParseVCL()
+func (s *Snippet) Fetch(ctx context.Context) error {
+	// Fetch latest version
+	version, err := s.client.LatestVersion(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to get latest version %w", err)
 	}
-	l := linter.New()
-	l.Lint(vcl, ctx)
-	return nil
-}
 
-func (s *Snippet) Fetch(c _context.Context) error {
 	write(white, "Fetching Edge Dictionaries...")
-	dicts, err := s.fetchEdgeDictionary(c)
+	s.edgeDictinalries, err = s.fetchEdgeDictionary(ctx, version)
 	if err != nil {
 		return err
 	}
 	writeln(white, "Done")
-	s.snippets = append(s.snippets, dicts...)
+
+	write(white, "Fetching VCL snippets...")
+	s.vclSnippets, err = s.fetchVCLSnippets(ctx, version)
+	if err != nil {
+		return err
+	}
+	writeln(white, "Done")
+
 	return nil
 }
 
 // Fetch remote Edge dictionary items
-func (s *Snippet) fetchEdgeDictionary(c _context.Context) ([]string, error) {
-	// Fetch latest version
-	version, err := s.client.LatestVersion(c)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get latest version %w", err)
-	}
-
-	dicts, err := s.client.ListEdgeDictionaries(c, version)
+func (s *Snippet) fetchEdgeDictionary(ctx context.Context, version int64) ([]string, error) {
+	dicts, err := s.client.ListEdgeDictionaries(ctx, version)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
@@ -82,5 +75,15 @@ func (s *Snippet) fetchEdgeDictionary(c _context.Context) ([]string, error) {
 		}
 		snippets = append(snippets, buf.String())
 	}
+	return snippets, nil
+}
+
+// Fetch remote VCL snippets
+func (s *Snippet) fetchVCLSnippets(ctx context.Context, version int64) ([]*remote.VCLSnippet, error) {
+	snippets, err := s.client.ListVCLSnippets(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return snippets, nil
 }

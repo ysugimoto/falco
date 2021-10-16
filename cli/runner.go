@@ -12,12 +12,12 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
+	"github.com/ysugimoto/falco/remote"
 )
 
 var (
@@ -45,6 +45,7 @@ type Runner struct {
 	includePaths []string
 	mainVclFile  string
 	overrides    map[string]linter.Severity
+	resolver     *Resolver
 
 	level Level
 
@@ -63,12 +64,22 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		context:     context.New(),
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
+		resolver:    newResolver(),
+	}
+
+	// Directory which placed main VCL adds to include path
+	r.resolver.addIncludePaths(filepath.Dir(mainVcl))
+	// Add include paths as absolute
+	for i := range c.IncludePaths {
+		abs, err := filepath.Abs(c.IncludePaths[i])
+		if err == nil {
+			r.resolver.addIncludePaths(abs)
+		}
 	}
 
 	if c.Remote {
 		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
 		// If remote flag is provided, fetch predefined data from Fastly.
-		// Currently, we only support Edge Dictionary.
 		//
 		// We communicate Fastly API with service id and api key,
 		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
@@ -78,29 +89,26 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		if serviceId == "" || apiKey == "" {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
+		snippet := NewSnippet(serviceId, apiKey)
 		func() {
 			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
 			defer timeout()
 
-			snippet := NewSnippet(serviceId, apiKey)
-			// Remote communication is optional so we keep processing even if remote communication is failed
 			if err := snippet.Fetch(ctx); err != nil {
-				writeln(red, err.Error())
-			} else if err := snippet.Compile(r.context); err != nil {
+				// Remote communication is optional so we keep processing even if remote communication is failed
 				writeln(red, err.Error())
 			}
 		}()
-	}
 
-	// Directory which placed main VCL adds to include path
-	r.includePaths = append(r.includePaths, filepath.Dir(mainVcl))
-
-	// Add include paths as absolute
-	for i := range c.IncludePaths {
-		abs, err := filepath.Abs(c.IncludePaths[i])
-		if err == nil {
-			r.includePaths = append(r.includePaths, abs)
+		// Parse and Lint EdgeDictionary to predefine before start main VCL
+		vcl, err := parser.New(lexer.NewFromString(strings.Join(snippet.edgeDictinalries, "\n"))).ParseVCL()
+		if err != nil {
+			writeln(red, err.Error())
 		}
+		// Lint and stack to context edge dictionary as table
+		linter.New().Lint(vcl, r.context)
+		// copy VCL snippets to runner
+		r.resolver.addSnippets(snippet.vclSnippets...)
 	}
 
 	// Check transformer exists and format to absolute path
@@ -225,29 +233,35 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 	}
 	lx.NewLine()
 
-	var vcls []*plugin.VCL
-	// Lint dependent VCLs before execute main VCL
-	for _, stmt := range vcl.Statements {
-		include, ok := stmt.(*ast.IncludeStatement)
-		if !ok {
-			continue
-		}
-
-		var file string
-		// Find for each include paths
-		for _, p := range r.includePaths {
-			if _, err := os.Stat(filepath.Join(p, include.Module.Value+".vcl")); err == nil {
-				file = filepath.Join(p, include.Module.Value+".vcl")
-				break
-			}
-		}
-
-		subVcl, err := r.run(file)
-		if err != nil {
-			return nil, err
-		}
-		vcls = append(vcls, subVcl...)
+	// Resolve dependecies (extract fastly xxx macro, include file or snippets)
+	vcl.Statements, err = r.resolver.Resolve(vcl.Statements, remote.SnippetTypeInit)
+	if err != nil {
+		return nil, err
 	}
+
+	var vcls []*plugin.VCL
+	// // Lint dependent VCLs before execute main VCL
+	// for _, stmt := range vcl.Statements {
+	// 	include, ok := stmt.(*ast.IncludeStatement)
+	// 	if !ok {
+	// 		continue
+	// 	}
+
+	// 	var file string
+	// 	// Find for each include paths
+	// 	for _, p := range r.includePaths {
+	// 		if _, err := os.Stat(filepath.Join(p, include.Module.Value+".vcl")); err == nil {
+	// 			file = filepath.Join(p, include.Module.Value+".vcl")
+	// 			break
+	// 		}
+	// 	}
+
+	// 	subVcl, err := r.run(file)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	vcls = append(vcls, subVcl...)
+	// }
 
 	// Append main to the last of proceeds VCLs
 	vcls = append(vcls, &plugin.VCL{

@@ -111,3 +111,43 @@ func (c *FastlyClient) ListEdgeDictionaryItems(ctx context.Context, dictId strin
 
 	return items, nil
 }
+
+func (c *FastlyClient) ListVCLSnippets(ctx context.Context) ([]*VCLSnippet, error) {
+	version, err := c.LatestVersion(ctx)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	endpoint := fmt.Sprintf("/service/%s/version/%d/snippet", c.serviceId, version)
+	var snippets []*VCLSnippet
+	if err := c.request(ctx, http.MethodGet, endpoint, nil, &snippets); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Dynamic snippet context is null ont this API response,
+	// so we need to call additional API to get snippet content.
+	for i := range snippets {
+		if snippets[i].Dynamic == "0" {
+			continue
+		}
+		content, err := c.GetDynamicSnippetContent(ctx, snippets[i].Id)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		snippets[i].Content = content
+	}
+
+	return snippets, nil
+}
+
+func (c *FastlyClient) GetDynamicSnippetContent(ctx context.Context, snippetId string) (*string, error) {
+	endpoint := fmt.Sprintf("/service/%s/snippet/%s", c.serviceId, snippetId)
+	var snippet struct {
+		Content string `json:"content"`
+	}
+	if err := c.request(ctx, http.MethodGet, endpoint, nil, &snippet); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &snippet.Content, nil
+}

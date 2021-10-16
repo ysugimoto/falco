@@ -159,3 +159,52 @@ sub vcl_recv {
 	}
 	assert(t, vcl, expect)
 }
+
+func TestParseStatement(t *testing.T) {
+	input := `
+set req.http.BlockStatement = "yes";
+set req.http.Foo = "bar";
+restart;
+`
+	expect := []ast.Statement{
+		&ast.SetStatement{
+			Meta: ast.New(T, 0),
+			Ident: &ast.Ident{
+				Meta:  ast.New(T, 0),
+				Value: "req.http.BlockStatement",
+			},
+			Operator: &ast.Operator{
+				Meta:     ast.New(T, 0),
+				Operator: "=",
+			},
+			Value: &ast.String{
+				Meta:  ast.New(T, 0),
+				Value: "yes",
+			},
+		},
+		&ast.SetStatement{
+			Meta: ast.New(T, 0),
+			Ident: &ast.Ident{
+				Meta:  ast.New(T, 0),
+				Value: "req.http.Foo",
+			},
+			Operator: &ast.Operator{
+				Meta:     ast.New(T, 0),
+				Operator: "=",
+			},
+			Value: &ast.String{
+				Meta:  ast.New(T, 0),
+				Value: "bar",
+			},
+		},
+		&ast.RestartStatement{
+			Meta: ast.New(T, 0),
+		},
+	}
+
+	vcl, err := New(lexer.NewFromString(input)).ParseStatement()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
