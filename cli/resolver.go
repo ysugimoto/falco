@@ -204,7 +204,6 @@ func (r *Resolver) resolveSubroutine(decl *ast.SubroutineDeclaration) error {
 
 	scope := getFastlySubroutineScope(decl.Name.Value)
 	if scope != "" {
-		// pp.Println(decl.Block.InfixComment())
 		// if "FASTLY [phase]" macro found in subroutine root, prepend snippet
 		if hasFastlyBoilerPlateMacro(decl.Block.InfixComment(), "FASTLY "+scope) {
 			ss, err := r.findSnippetsByPhase(remote.SnippetType(scope))
