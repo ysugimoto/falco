@@ -178,8 +178,8 @@ func (p *Parser) ParseVCL() (*ast.VCL, error) {
 // include "module"; // <- valid, read and parse as ParseVCL()
 // ...
 // sub foo_recv {
-//   include "snippet::some_module"; // valid, need parse as ParseStatement()
-//   include "statement-module";     // valid, need parse as ParseStatement()
+//   include "snippet::some_module"; // valid, need to parse by ParseStatement()
+//   include "statement-module";     // valid, need to parse by ParseStatement()
 // }
 func (p *Parser) ParseStatement() ([]ast.Statement, error) {
 	var statements []ast.Statement

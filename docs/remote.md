@@ -52,7 +52,10 @@ Currently not supported.
 
 ### VCL snippets
 
-Currently not supported.
+Prefetch [VCL dynamic snippets](https://docs.fastly.com/en/guides/using-dynamic-vcl-snippets) and [VCL regular snippets](https://docs.fastly.com/en/guides/using-regular-vcl-snippets) from Fastly and parse them to embed in your VCL:
+
+- embed VCLs that correspond to `include` statement like `include "snippet::<snipppet_name>"
+- Find Fastly's macro (e.g. `#FASTLY recv`) and embed VCLs that correspond type
 
 ### Access control lists
 
