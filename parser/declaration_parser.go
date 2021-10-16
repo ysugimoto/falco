@@ -435,7 +435,7 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	swapLeadingTrailing(p.curToken, s.Name.Meta)
 
 	var err error
-	if s.Block, err = p.parseBlockStatement(); err != nil {
+	if s.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	// After block statement is parsed, cusor should point RIGHT_BRACE, end of block statement
