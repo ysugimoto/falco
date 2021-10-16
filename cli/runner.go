@@ -239,35 +239,9 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 		return nil, err
 	}
 
-	var vcls []*plugin.VCL
-	// // Lint dependent VCLs before execute main VCL
-	// for _, stmt := range vcl.Statements {
-	// 	include, ok := stmt.(*ast.IncludeStatement)
-	// 	if !ok {
-	// 		continue
-	// 	}
-
-	// 	var file string
-	// 	// Find for each include paths
-	// 	for _, p := range r.includePaths {
-	// 		if _, err := os.Stat(filepath.Join(p, include.Module.Value+".vcl")); err == nil {
-	// 			file = filepath.Join(p, include.Module.Value+".vcl")
-	// 			break
-	// 		}
-	// 	}
-
-	// 	subVcl, err := r.run(file)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	vcls = append(vcls, subVcl...)
-	// }
-
-	// Append main to the last of proceeds VCLs
-	vcls = append(vcls, &plugin.VCL{
-		File: vclFile,
-		AST:  vcl,
-	})
+	vcls := []*plugin.VCL{
+		{File: vclFile, AST: vcl},
+	}
 
 	lt := linter.New()
 	lt.Lint(vcl, r.context)
