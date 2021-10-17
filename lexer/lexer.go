@@ -32,8 +32,8 @@ func New(r io.Reader, opts ...OptionFunc) *Lexer {
 	return l
 }
 
-func NewFromString(input string) *Lexer {
-	return New(strings.NewReader(input))
+func NewFromString(input string, opts ...OptionFunc) *Lexer {
+	return New(strings.NewReader(input), opts...)
 }
 
 func (l *Lexer) readChar() {

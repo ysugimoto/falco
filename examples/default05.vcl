@@ -19,11 +19,13 @@ backend httpbin_org {
     .timeout = 5s;
     .initial = 1;
     .expected_response = 200;
-    .interval = 10s # missing semicolon X(
+    .interval = 10s;
   }
 }
 
 sub vcl_recv {
+
+  include "_feature_default";
 
   #Fastly recv
   set req.backend = httpbin_org;

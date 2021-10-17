@@ -84,6 +84,8 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 			stmt, err = p.parseDeclareStatement()
 		case token.ERROR:
 			stmt, err = p.parseErrorStatement()
+		case token.INCLUDE:
+			stmt, err = p.parseIncludeStatement()
 		case token.ESI:
 			stmt, err = p.parseEsiStatement()
 		case token.LOG:
