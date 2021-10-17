@@ -118,8 +118,8 @@ func (c *FastlyClient) ListVCLSnippets(ctx context.Context, version int64) ([]*V
 		return nil, errors.WithStack(err)
 	}
 
-	// Dynamic snippet context is null ont this API response,
-	// so we need to call additional API to get snippet content.
+	// Dynamic snippet context is null on this API response,
+	// We need to call additional API to get snippet content.
 	for i := range snippets {
 		if snippets[i].Dynamic == "0" {
 			continue
