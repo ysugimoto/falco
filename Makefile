@@ -11,18 +11,18 @@ test: generate
 linux:
 	GOOS=linux GOARCH=amd64 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
-			 -o dist/falco-linux-amd64 cli/*.go
+			 -o dist/falco-linux-amd64 ./cmd/falco
 
 darwin:
 	GOOS=darwin GOARCH=amd64 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
-			 -o dist/falco-darwin-amd64 cli/*.go
+			 -o dist/falco-darwin-amd64 ./cmd/falco
 
 lint:
 	golangci-lint run
 
 local: test lint
-	go build -o falco cli/*.go
+	go build ./cmd/falco
 
 all: linux darwin
 

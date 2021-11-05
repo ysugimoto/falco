@@ -36,6 +36,8 @@ To solve them, we made a Fastly dedicated VCL parser and linter tool to notice s
 
 Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according to your platform and place it under the `$PATH`.
 
+Or compile it yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
+
 ## Usage
 
 Command help displays following:
