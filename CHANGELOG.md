@@ -1,3 +1,7 @@
+## v0.5.0
+
+- Rename main package to cmd/falco [#32](https://github.com/ysugimoto/falco/pull/32) (@xordspar0)
+
 ## v0.4.1
 
 - Fix definition of TCP congestion parameters [#27](https://github.com/ysugimoto/falco/pull/27) (@bungoume)
