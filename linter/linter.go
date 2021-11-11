@@ -32,15 +32,86 @@ func (l *Linter) Error(err error) {
 	}
 }
 
+// Expose lint function to call from external program.
+// It means this method is bootstrap, called only once.
 func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 	if ctx == nil {
 		ctx = context.New()
 	}
 
+	l.lint(node, ctx)
+
+	// After whole VCLs have been linted, check all definitions are exactly used.
+	l.lintUnusedTables(ctx)
+	l.lintUnusedAcls(ctx)
+	l.lintUnusedBackends(ctx)
+	l.lintUnusedSubroutines(ctx)
+
+	return types.NeverType
+}
+
+func (l *Linter) lintUnusedTables(ctx *context.Context) {
+	for _, t := range ctx.Tables {
+		if t.IsUsed {
+			continue
+		}
+		l.Error(UnusedDeclaration(t.Decl.GetMeta(), t.Name, "table").Match(UNUSED_DECLARATION))
+	}
+}
+
+func (l *Linter) lintUnusedAcls(ctx *context.Context) {
+	for _, a := range ctx.Acls {
+		if a.IsUsed {
+			continue
+		}
+		l.Error(UnusedDeclaration(a.Decl.GetMeta(), a.Decl.Name.Value, "acl").Match(UNUSED_DECLARATION))
+	}
+}
+
+func (l *Linter) lintUnusedBackends(ctx *context.Context) {
+	for _, b := range ctx.Backends {
+		if b.IsUsed {
+			continue
+		}
+		if b.DirectorDecl != nil {
+			l.Error(UnusedDeclaration(b.DirectorDecl.GetMeta(), b.DirectorDecl.Name.Value, "director").Match(UNUSED_DECLARATION))
+		} else {
+			l.Error(UnusedDeclaration(b.BackendDecl.GetMeta(), b.BackendDecl.Name.Value, "backend").Match(UNUSED_DECLARATION))
+		}
+	}
+}
+
+func (l *Linter) lintUnusedSubroutines(ctx *context.Context) {
+	for _, s := range ctx.Subroutines {
+		if s.IsUsed {
+			continue
+		}
+		// If subroutine name is fastly's one, it's ok to be unused
+		if context.IsFastlySubroutine(s.Decl.Name.Value) {
+			continue
+		}
+		l.Error(UnusedDeclaration(s.Decl.GetMeta(), s.Decl.Name.Value, "subroutine").Match(UNUSED_DECLARATION))
+	}
+}
+
+func (l *Linter) lintUnusedVariables(ctx *context.Context) {
+	v, ok := ctx.Variables["var"]
+	if !ok {
+		return
+	}
+
+	for k, o := range v.Items {
+		if o.IsUsed {
+			continue
+		}
+		l.Error(UnusedVariable(o.Meta, k).Match(UNUSED_VARIABLE))
+	}
+}
+
+func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	switch t := node.(type) {
 	// Root program
 	case *ast.VCL:
-
 		return l.lintVCL(t, ctx)
 	// Statements
 	case *ast.AclDeclaration:
@@ -121,7 +192,7 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 
 func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 	for _, stmt := range vcl.Statements {
-		l.Lint(stmt, ctx)
+		l.lint(stmt, ctx)
 	}
 	return types.NeverType
 }
@@ -213,7 +284,7 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			if !ok {
 				l.Error(UndefinedBackendProperty(v.Key.GetMeta(), v.Key.Value).Match(BACKEND_SYNTAX))
 			}
-			vt := l.Lint(v.Value, ctx)
+			vt := l.lint(v.Value, ctx)
 			if kt != vt {
 				l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 			}
@@ -225,7 +296,7 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			l.Error(UndefinedBackendProperty(prop.Key.GetMeta(), prop.Key.Value).Match(BACKEND_SYNTAX))
 			return
 		}
-		vt := l.Lint(prop.Value, ctx)
+		vt := l.lint(prop.Value, ctx)
 		if kt != vt {
 			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 		}
@@ -310,7 +381,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 						l.Error(err.Match(BACKEND_NOTFOUND))
 					}
 				} else {
-					val := l.Lint(v.Value, ctx)
+					val := l.lint(v.Value, ctx)
 					if vv != val {
 						l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, vv, val).Match(dps.Rule))
 					}
@@ -343,7 +414,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 				).Match(dps.Rule))
 				continue
 			}
-			val := l.Lint(t.Value, ctx)
+			val := l.lint(t.Value, ctx)
 			if vv != val {
 				l.Error(InvalidType(t.Value.GetMeta(), t.Key.Value, vv, val).Match(dps.Rule))
 			}
@@ -437,7 +508,7 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 			l.Error(UndefinedBackend(ident.GetMeta(), ident.Value))
 		}
 	default:
-		vt := l.Lint(prop.Value, ctx)
+		vt := l.lint(prop.Value, ctx)
 		if vt != tableType {
 			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, tableType, vt))
 		}
@@ -466,8 +537,12 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 
 	cc := ctx.Scope(getSubroutineCallScope(decl))
 	// Switch context mode which corredponds to call scope and restore after linting block statements
-	defer cc.Restore()
-	l.Lint(decl.Block, cc)
+	defer func() {
+		// Lint declared variables are used
+		l.lintUnusedVariables(ctx)
+		cc.Restore()
+	}()
+	l.lint(decl.Block, cc)
 
 	// If fastly reserved subroutine name (e.g vcl_recv, vcl_fetch, etc),
 	// validate fastly specific boilerplate macro is embedded like "FASTLY recv"
@@ -502,7 +577,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phra
 
 func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Context) types.Type {
 	for _, stmt := range block.Statements {
-		l.Lint(stmt, ctx)
+		l.lint(stmt, ctx)
 	}
 
 	return types.NeverType
@@ -533,7 +608,7 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 		l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
 	}
 
-	if err := ctx.Declare(stmt.Name.Value, vt); err != nil {
+	if err := ctx.Declare(stmt.Name.Value, vt, stmt.GetMeta()); err != nil {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Name.GetMeta().Token,
@@ -568,7 +643,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
 	}
 
-	right := l.Lint(stmt.Value, ctx)
+	right := l.lint(stmt.Value, ctx)
 
 	// Fastly has various assignment operators and required correspond types for each operator
 	// https://developer.fastly.com/reference/vcl/operators/#assignment-operators
@@ -819,7 +894,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 		}
 		l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
 	}
-	l.Lint(stmt.Consequence, ctx)
+	l.lint(stmt.Consequence, ctx)
 
 	for _, a := range stmt.Another {
 		l.lintIfCondition(a.Condition, ctx)
@@ -831,11 +906,11 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 			}
 			l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
 		}
-		l.Lint(a.Consequence, ctx)
+		l.lint(a.Consequence, ctx)
 	}
 
 	if stmt.Alternative != nil {
-		l.Lint(stmt.Alternative, ctx)
+		l.lint(stmt.Alternative, ctx)
 	}
 
 	return types.NeverType
@@ -858,7 +933,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 		l.Error(err.Match(CONDITION_LITERAL))
 	}
 
-	cc := l.Lint(cond, ctx)
+	cc := l.lint(cond, ctx)
 	// Condition expression return type must be BOOL or STRING
 	if !expectType(cc, types.StringType, types.BoolType) {
 		l.Error(&LintError{
@@ -927,7 +1002,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
 	}
 
-	right := l.Lint(stmt.Value, ctx)
+	right := l.lint(stmt.Value, ctx)
 	if left != right {
 		l.Error(InvalidType(stmt.Value.GetMeta(), stmt.Ident.Value, left, right))
 	}
@@ -948,8 +1023,11 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 func (l *Linter) lintCallStatement(stmt *ast.CallStatement, ctx *context.Context) types.Type {
 	// Note that this linter analyze up to down,
 	// so all call target subroutine must be defined before call it.
-	if _, ok := ctx.Subroutines[stmt.Subroutine.Value]; !ok {
+	if s, ok := ctx.Subroutines[stmt.Subroutine.Value]; !ok {
 		l.Error(UndefinedSubroutine(stmt.GetMeta(), stmt.Subroutine.Value).Match(CALL_STATEMENT_SUBROUTINE_NOTFOUND))
+	} else {
+		// Mark subroutine is explicitly called
+		s.IsUsed = true
 	}
 
 	return types.NeverType
@@ -970,7 +1048,7 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 	// https://developer.fastly.com/reference/vcl/statements/error/
 	switch t := stmt.Code.(type) {
 	case *ast.Ident:
-		code := l.Lint(t, ctx)
+		code := l.lint(t, ctx)
 		if code != types.IntegerType {
 			l.Error(InvalidType(t.GetMeta(), t.Value, types.IntegerType, code))
 		}
@@ -979,7 +1057,7 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 			l.Error(ErrorCodeRange(t.GetMeta(), t.Value).Match(ERROR_STATEMENT_CODE))
 		}
 	default:
-		code := l.Lint(t, ctx)
+		code := l.lint(t, ctx)
 		l.Error(InvalidType(t.GetMeta(), "error code", types.IntegerType, code))
 	}
 
@@ -987,7 +1065,7 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 }
 
 func (l *Linter) lintLogStatement(stmt *ast.LogStatement, ctx *context.Context) types.Type {
-	l.Lint(stmt.Value, ctx)
+	l.lint(stmt.Value, ctx)
 	return types.NeverType
 }
 
@@ -1050,7 +1128,7 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 		l.Error(err.Match(SYNTHETIC_STATEMENT_SCOPE))
 	}
 
-	l.Lint(stmt.Value, ctx)
+	l.lint(stmt.Value, ctx)
 	return types.NeverType
 }
 
@@ -1059,11 +1137,18 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 	if err != nil {
 		if _, ok := ctx.Identifiers[exp.Value]; ok {
 			return types.IDType
-		} else if _, ok := ctx.Acls[exp.Value]; ok {
+		} else if a, ok := ctx.Acls[exp.Value]; ok {
+			// mark acl is used
+			a.IsUsed = true
 			return types.AclType
-		} else if _, ok := ctx.Backends[exp.Value]; ok {
+		} else if b, ok := ctx.Backends[exp.Value]; ok {
+			// mark backend is used
+			b.IsUsed = true
+
 			return types.BackendType
-		} else if _, ok := ctx.Tables[exp.Value]; ok {
+		} else if t, ok := ctx.Tables[exp.Value]; ok {
+			// mark table is used
+			t.IsUsed = true
 			return types.TableType
 		}
 		l.Error(UndefinedVariable(exp.GetMeta(), exp.Value))
@@ -1083,7 +1168,7 @@ func (l *Linter) lintSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement
 	}
 
 	// TODO: check decodable string
-	l.Lint(stmt.Value, ctx)
+	l.lint(stmt.Value, ctx)
 
 	return types.NeverType
 }
@@ -1122,7 +1207,7 @@ func (l *Linter) lintRTime(exp *ast.RTime) types.Type {
 }
 
 func (l *Linter) lintPrefixExpression(exp *ast.PrefixExpression, ctx *context.Context) types.Type {
-	right := l.Lint(exp.Right, ctx)
+	right := l.lint(exp.Right, ctx)
 	if right == types.NeverType {
 		return right
 	}
@@ -1150,17 +1235,17 @@ func (l *Linter) lintPrefixExpression(exp *ast.PrefixExpression, ctx *context.Co
 }
 
 func (l *Linter) lintGroupedExpression(exp *ast.GroupedExpression, ctx *context.Context) types.Type {
-	right := l.Lint(exp.Right, ctx)
+	right := l.lint(exp.Right, ctx)
 	return right
 }
 
 func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Context) types.Type {
 	// Type comparison
-	left := l.Lint(exp.Left, ctx)
+	left := l.lint(exp.Left, ctx)
 	if left == types.NeverType {
 		return left
 	}
-	right := l.Lint(exp.Right, ctx)
+	right := l.lint(exp.Right, ctx)
 	if right == types.NeverType {
 		return right
 	}
@@ -1272,7 +1357,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 			Message:  "cannot use constant literal in If expression consequence",
 		})
 	}
-	left := l.Lint(exp.Consequence, ctx)
+	left := l.lint(exp.Consequence, ctx)
 
 	if isConstantExpression(exp.Alternative) {
 		l.Error(&LintError{
@@ -1281,7 +1366,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 			Message:  "cannot use constant literal in If expression alternative",
 		})
 	}
-	right := l.Lint(exp.Alternative, ctx)
+	right := l.lint(exp.Alternative, ctx)
 
 	if left != right {
 		l.Error(&LintError{
@@ -1335,7 +1420,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 	}
 
 	for i, v := range argTypes {
-		arg := l.Lint(exp.Arguments[i], ctx)
+		arg := l.lint(exp.Arguments[i], ctx)
 
 		switch v {
 		case types.TimeType:
