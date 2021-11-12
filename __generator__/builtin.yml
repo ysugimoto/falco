@@ -793,6 +793,7 @@ randomstr:
   reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
+    - [INTEGER]
     - [INTEGER, STRING]
   return: STRING
 
