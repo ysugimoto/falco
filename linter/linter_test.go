@@ -16,7 +16,7 @@ func assertNoError(t *testing.T, input string) {
 	}
 
 	l := New()
-	l.Lint(vcl, context.New())
+	l.lint(vcl, context.New())
 	if len(l.Errors) > 0 {
 		t.Errorf("Lint error: %s", l.Errors)
 	}
@@ -30,7 +30,7 @@ func assertError(t *testing.T, input string) {
 	}
 
 	l := New()
-	l.Lint(vcl, context.New())
+	l.lint(vcl, context.New())
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
 	}
@@ -43,7 +43,7 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity) {
 	}
 
 	l := New()
-	l.Lint(vcl, context.New())
+	l.lint(vcl, context.New())
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
 	}
@@ -341,7 +341,9 @@ sub vcl_recv {
 func TestLintDeclareStatement(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		input := `
-sub foo {
+acl foo {}
+backend bar {}
+sub bax {
 	declare local var.item1 STRING;
 	declare local var.item2 INTEGER;
 	declare local var.item3 FLOAT;
@@ -349,6 +351,15 @@ sub foo {
 	declare local var.item5 ID;
 	declare local var.item6 ACL;
 	declare local var.item7 BACKEND;
+
+	set var.item1 = "1";
+	set var.item2 = 1;
+	set var.item3 = 1.0;
+	set var.item4 = std.ip("192.168.0.1", "192.168.2");
+	set var.item5 = always;
+	set var.item6 = foo;
+	set var.item7 = bar;
+
 }`
 		assertNoError(t, input)
 	})
@@ -366,6 +377,8 @@ sub foo {
 sub foo {
 	declare local var.item1 STRING;
 	declare local var.item1 STRING;
+
+	set var.item1 = "bar";
 }`
 		assertError(t, input)
 	})
@@ -1091,7 +1104,6 @@ func TestLintIfExpression(t *testing.T) {
 		input := `
 sub foo {
 	declare local var.S STRING;
-	declare local var.I INTEGER;
 
 	set var.S = if(req.http.Host == "example.com" && req.http.Host ~ "example", "foo", "bar");
 }`
@@ -1112,7 +1124,6 @@ sub foo {
 	t.Run("raise warning when if expression returns different type", func(t *testing.T) {
 		input := `
 sub foo {
-	declare local var.S STRING;
 	declare local var.I INTEGER;
 
 	set var.I = if(req.http.Host ~ "example", "1", var.I);
@@ -1260,5 +1271,197 @@ sub vcl_recv {
 	}
 }`
 		assertError(t, input)
+	})
+}
+
+func TestUnusedAcls(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+acl foo {}
+sub bar {
+	if (client.ip ~ foo) {}
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+	t.Run("raise unused error", func(t *testing.T) {
+		input := `
+acl foo {}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+}
+
+func TestUnusedTables(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+table foo {}
+sub bar {
+	set req.http.Foo = table.lookup(foo, "bar");
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+	t.Run("raise unused error", func(t *testing.T) {
+		input := `
+table foo {}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+}
+
+func TestUnusedBackend(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+backend foo {}
+sub vcl_recl {
+	set req.backend = foo;
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+	t.Run("raise unused error", func(t *testing.T) {
+		input := `
+backend foo {}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+}
+
+func TestUnusedSubroutine(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+sub foo {}
+sub vcl_recl {
+	call foo;
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+	t.Run("raise unused error", func(t *testing.T) {
+		input := `
+sub foo {}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+}
+
+func TestUnusedVariable(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	declare local var.bar STRING;
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+	t.Run("raise unused error", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	declare local var.bar STRING;
+	set var.bar = "baz";
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New()
+		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -59,6 +60,23 @@ var fastlyReservedSubroutines = map[string]bool{
 
 func IsFastlySubroutine(name string) bool {
 	return fastlyReservedSubroutines[name]
+}
+
+type Variables map[string]*Object
+
+type Object struct {
+	Items  map[string]*Object
+	Value  *Accessor
+	IsUsed bool
+	Meta   *ast.Meta
+}
+
+type Accessor struct {
+	Get       types.Type
+	Set       types.Type
+	Unset     bool
+	Scopes    int
+	Reference string
 }
 
 type Context struct {
@@ -249,7 +267,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 	for _, key := range remains {
 		if v, ok := obj.Items[key]; !ok {
 			// Special case, VCL allows to Set/Get/Unset for {NAME} of any key name.
-			// If program would set to this prperty, we enables to assign with its types (may string type).
+			// If program would set to this property, we enables to assign with its types (may string type).
 			if v, ok := obj.Items["%any%"]; ok {
 				key = strings.ToLower(key)
 				obj.Items[key] = &Object{
@@ -285,6 +303,10 @@ func (c *Context) Get(name string) (types.Type, error) {
 		}
 		return types.NullType, fmt.Errorf(message)
 	}
+
+	// Mark as accessed
+	obj.IsUsed = true
+
 	return obj.Value.Get, nil
 }
 
@@ -341,10 +363,14 @@ func (c *Context) Set(name string) (types.Type, error) {
 		}
 		return types.NullType, fmt.Errorf(message)
 	}
+
+	// Mark as accessed
+	obj.IsUsed = true
+
 	return obj.Value.Set, nil
 }
 
-func (c *Context) Declare(name string, valueType types.Type) error {
+func (c *Context) Declare(name string, valueType types.Type, m *ast.Meta) error {
 	if _, err := c.Get(name); err == nil {
 		// If error is nil, variable already defined
 		return fmt.Errorf(`variable "%s" is already declared`, name)
@@ -366,6 +392,7 @@ func (c *Context) Declare(name string, valueType types.Type) error {
 			// Newly assign object
 			obj.Items[key] = &Object{
 				Items: map[string]*Object{},
+				Meta:  m,
 			}
 			obj = obj.Items[key]
 		} else {
@@ -431,6 +458,10 @@ func (c *Context) Unset(name string) error {
 		}
 		return fmt.Errorf(message)
 	}
+
+	// Mark as accessed
+	obj.IsUsed = true
+
 	return nil
 }
 

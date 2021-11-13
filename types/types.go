@@ -74,7 +74,8 @@ type VCLType interface {
 }
 
 type Acl struct {
-	Decl *ast.AclDeclaration
+	Decl   *ast.AclDeclaration
+	IsUsed bool // mark this acl is accessed at least once
 }
 
 func (a *Acl) Type() Type         { return AclType }
@@ -84,6 +85,7 @@ func (a *Acl) String() string     { return a.Decl.String() }
 type Backend struct {
 	BackendDecl  *ast.BackendDeclaration
 	DirectorDecl *ast.DirectorDeclaration
+	IsUsed       bool // mark this backend is accessed at least once
 }
 
 func (b *Backend) Type() Type { return BackendType }
@@ -192,6 +194,7 @@ type Table struct {
 	Name       string
 	ValueType  Type
 	Properties []*ast.TableProperty
+	IsUsed     bool // mark this table is accessed at least once
 }
 
 func (t *Table) Type() Type         { return TableType }
@@ -199,8 +202,9 @@ func (t *Table) Token() token.Token { return t.Decl.GetMeta().Token }
 func (t *Table) String() string     { return t.Decl.String() }
 
 type Subroutine struct {
-	Decl *ast.SubroutineDeclaration
-	Body *ast.BlockStatement
+	Decl   *ast.SubroutineDeclaration
+	Body   *ast.BlockStatement
+	IsUsed bool // mark this subroutine is called at least once
 }
 
 func (s *Subroutine) Type() Type         { return SubroutineType }

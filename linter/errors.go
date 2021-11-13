@@ -282,3 +282,22 @@ func InvalidReturnState(m *ast.Meta, scope, state string, expects ...string) *Li
 		),
 	}
 }
+
+func UnusedDeclaration(m *ast.Meta, name, declType string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`%s "%s" is unused in VCL program`,
+			declType, name,
+		),
+	}
+}
+
+func UnusedVariable(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`variable "%s" is unused`, name),
+	}
+}

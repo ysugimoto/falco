@@ -53,6 +53,8 @@ const (
 	INCLUDE_STATEMENT_MODULE_NOT_FOUND   = "include/module-not-found"
 	INCLUDE_STATEMENT_MODULE_LOAD_FAILED = "include/module-load-failed"
 	REGEX_MATCHED_VALUE_MAY_OVERRIDE     = "regex/matched-value-override"
+	UNUSED_DECLARATION                   = "unused/declaration"
+	UNUSED_VARIABLE                      = "unused/variable"
 )
 
 var references = map[Rule]string{

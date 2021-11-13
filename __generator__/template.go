@@ -9,21 +9,6 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-type Variables map[string]*Object
-
-type Object struct {
-	Items map[string]*Object
-	Value *Accessor
-}
-
-type Accessor struct {
-	Get       types.Type
-	Set       types.Type
-	Unset     bool
-	Scopes    int
-	Reference string
-}
-
 func predefinedVariables() Variables {
 	return {{ .Variables }}
 }

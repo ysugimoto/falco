@@ -123,10 +123,10 @@ func TestContextUnset(t *testing.T) {
 func TestContextDeclare(t *testing.T) {
 	t.Run("error when variable is already declared", func(t *testing.T) {
 		c := New()
-		if err := c.Declare("var.foo", types.StringType); err != nil {
+		if err := c.Declare("var.foo", types.StringType, nil); err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		}
-		if err := c.Declare("var.foo", types.StringType); err == nil {
+		if err := c.Declare("var.foo", types.StringType, nil); err == nil {
 			t.Errorf("expected error but got nil")
 		}
 	})
