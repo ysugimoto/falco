@@ -41,7 +41,7 @@ func (s *Snippet) Compile(ctx *context.Context) error {
 		return err
 	}
 	l := linter.New()
-	l.Lint(vcl, ctx)
+	l.Lint(vcl, ctx, false)
 	return nil
 }
 
