@@ -3,6 +3,7 @@ package context
 import (
 	"testing"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -174,7 +175,11 @@ func TestDynamicVariableExist(t *testing.T) {
 		if _, err := c.Get("director.example.healthy"); err == nil {
 			t.Errorf("expected error but got nil")
 		}
-		c.AddDirector("example", &types.Director{})
+		c.AddDirector("example", &types.Director{
+			Decl: &ast.DirectorDeclaration{
+				Properties: []ast.Expression{},
+			},
+		})
 		if v, err := c.Get("director.example.healthy"); err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		} else if v != types.BoolType {

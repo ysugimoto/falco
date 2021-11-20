@@ -272,6 +272,7 @@ bereq.method:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/"
   on: [PASS, MISS, FETCH]
   get: STRING
+  set: STRING
 
 bereq.proto:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/"
@@ -282,11 +283,13 @@ bereq.request:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/"
   on: [PASS, MISS, FETCH]
   get: STRING
+  set: STRING
 
 bereq.url:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/"
   on: [PASS, MISS, FETCH]
   get: STRING
+  set: STRING
 
 bereq.url.basename:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/"
@@ -340,7 +343,7 @@ beresp.grace:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/"
   on: [FETCH]
   get: RTIME
-  set: BOOL
+  set: RTIME
 
 beresp.gzip:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-gzip/"
@@ -426,6 +429,7 @@ obj.grace:
   reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/"
   on: [HIT, ERROR, LOG]
   get: RTIME
+  set: RTIME
 
 obj.hits:
   reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/"
@@ -1252,11 +1256,13 @@ resp.response:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/"
   on: [DELIVER, LOG]
   get: STRING
+  set: STRING
 
 resp.status:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-status/"
   on: [DELIVER, LOG]
   get: INTEGER
+  set: INTEGER
 
 time.to_first_byte:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-response/time-to-first-byte/"
@@ -2049,3 +2055,8 @@ waf.logged:
   reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
   on: [LOG]
   get: BOOL
+
+LF:
+  reference: "https://developer.fastly.com/reference/vcl/types/string/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING

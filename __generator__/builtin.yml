@@ -1216,3 +1216,4 @@ uuid.x500:
   reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-x500/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   return: STRING
+

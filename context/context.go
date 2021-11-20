@@ -235,6 +235,24 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 		},
 	}
 
+	// And, director target backend identifilers should be marked as used
+	for _, d := range director.Decl.Properties {
+		bo, ok := d.(*ast.DirectorBackendObject)
+		if !ok {
+			continue
+		}
+		for _, v := range bo.Values {
+			if v.Key.Value != "backend" {
+				continue
+			}
+			if ident, ok := v.Value.(*ast.Ident); ok {
+				if b, ok := c.Backends[ident.Value]; ok {
+					b.IsUsed = true
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

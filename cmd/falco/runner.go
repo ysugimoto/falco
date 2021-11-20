@@ -45,6 +45,7 @@ type Runner struct {
 	includePaths []string
 	mainVclFile  string
 	overrides    map[string]linter.Severity
+	lexers       map[string]*lexer.Lexer
 
 	level Level
 
@@ -63,6 +64,7 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 		context:     context.New(),
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
+		lexers:      make(map[string]*lexer.Lexer),
 	}
 
 	if c.Remote {
@@ -192,7 +194,7 @@ func (r *Runner) Transform(vcls []*plugin.VCL) error {
 }
 
 func (r *Runner) Run() (*RunnerResult, error) {
-	vcls, err := r.run(r.mainVclFile)
+	vcls, err := r.run(r.mainVclFile, true)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +207,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
+func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
 	fp, err := os.Open(vclFile)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open file: %s", vclFile)
@@ -224,6 +226,7 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 		return nil, ErrParser
 	}
 	lx.NewLine()
+	r.lexers[vclFile] = lx
 
 	var vcls []*plugin.VCL
 	// Lint dependent VCLs before execute main VCL
@@ -242,7 +245,7 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 			}
 		}
 
-		subVcl, err := r.run(file)
+		subVcl, err := r.run(file, false)
 		if err != nil {
 			return nil, err
 		}
@@ -256,7 +259,7 @@ func (r *Runner) run(vclFile string) ([]*plugin.VCL, error) {
 	})
 
 	lt := linter.New()
-	lt.Lint(vcl, r.context)
+	lt.Lint(vcl, r.context, isMain)
 	if len(lt.Errors) > 0 {
 		for _, err := range lt.Errors {
 			le, ok := err.(*linter.LintError)
@@ -306,6 +309,7 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	}
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
+		lx = r.lexers[err.Token.File]
 	}
 
 	// check severity with overrides

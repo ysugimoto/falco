@@ -34,18 +34,21 @@ func (l *Linter) Error(err error) {
 
 // Expose lint function to call from external program.
 // It means this method is bootstrap, called only once.
-func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
+func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Type {
 	if ctx == nil {
 		ctx = context.New()
 	}
 
 	l.lint(node, ctx)
 
-	// After whole VCLs have been linted, check all definitions are exactly used.
-	l.lintUnusedTables(ctx)
-	l.lintUnusedAcls(ctx)
-	l.lintUnusedBackends(ctx)
-	l.lintUnusedSubroutines(ctx)
+	// After whole VCLs have been linted in main VCL, check all definitions are exactly used.
+	if isMain {
+		println("main vcl")
+		l.lintUnusedTables(ctx)
+		l.lintUnusedAcls(ctx)
+		l.lintUnusedBackends(ctx)
+		l.lintUnusedSubroutines(ctx)
+	}
 
 	return types.NeverType
 }
@@ -679,12 +682,32 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	case "||=":
 		l.lintLogicalOROperator(stmt.Operator, left, right)
 	default: // "="
-		if left != right {
-			l.Error(InvalidType(stmt.Value.GetMeta(), stmt.Ident.Value, left, right))
-		}
+		l.lintAssignOperator(stmt.Value, stmt.Ident.Value, left, right)
 	}
 
 	return types.NeverType
+}
+
+func (l *Linter) lintAssignOperator(value ast.Expression, name string, left, right types.Type) {
+	switch left {
+	case types.StringType:
+		switch right {
+		case types.StringType:
+			return
+		case types.FloatType, types.RTimeType, types.IntegerType, types.BoolType, types.NullType:
+			// Note: on right expression of set statement, could not assign with literal,
+			// but can assign with variable/identity as stringified value
+			if isLiteralExpression(value) {
+				l.Error(InvalidType(value.GetMeta(), name, left, right))
+			}
+		default:
+			l.Error(InvalidType(value.GetMeta(), name, left, right))
+		}
+	default:
+		if left != right {
+			l.Error(InvalidType(value.GetMeta(), name, left, right))
+		}
+	}
 }
 
 func (l *Linter) lintAdditionOperator(op *ast.Operator, left, right types.Type) {
@@ -1003,9 +1026,6 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 	}
 
 	right := l.lint(stmt.Value, ctx)
-	if left != right {
-		l.Error(InvalidType(stmt.Value.GetMeta(), stmt.Ident.Value, left, right))
-	}
 
 	// Commonly, add statement operator must be "="
 	if stmt.Operator.Operator != "=" {
@@ -1016,6 +1036,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		}
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
 	}
+	l.lintAssignOperator(stmt.Value, stmt.Ident.Value, left, right)
 
 	return types.NeverType
 }
@@ -1435,7 +1456,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		case types.RTimeType:
 			// fuzzy type check: some builtin function expects RTIME type,
 			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.TimeType, types.StringType) {
+			if !expectType(arg, types.RTimeType, types.TimeType, types.StringType) {
 				l.Error(FunctionArgumentTypeMismatch(
 					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))

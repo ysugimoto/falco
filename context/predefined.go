@@ -8,6 +8,16 @@ import (
 
 func predefinedVariables() Variables {
 	return Variables{
+		"LF": &Object{
+			Items: map[string]*Object{},
+			Value: &Accessor{
+				Get:       types.StringType,
+				Set:       types.NeverType,
+				Unset:     false,
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "",
+			},
+		},
 		"backend": &Object{
 			Items: map[string]*Object{
 				"conn": &Object{
@@ -410,7 +420,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
-						Set:       types.NeverType,
+						Set:       types.StringType,
 						Unset:     false,
 						Scopes:    PASS | MISS | FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/",
@@ -430,7 +440,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
-						Set:       types.NeverType,
+						Set:       types.StringType,
 						Unset:     false,
 						Scopes:    PASS | MISS | FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/",
@@ -491,7 +501,7 @@ func predefinedVariables() Variables {
 					},
 					Value: &Accessor{
 						Get:       types.StringType,
-						Set:       types.NeverType,
+						Set:       types.StringType,
 						Unset:     false,
 						Scopes:    PASS | MISS | FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/",
@@ -609,7 +619,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
-						Set:       types.BoolType,
+						Set:       types.RTimeType,
 						Unset:     false,
 						Scopes:    FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/",
@@ -2466,7 +2476,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
-						Set:       types.NeverType,
+						Set:       types.RTimeType,
 						Unset:     false,
 						Scopes:    HIT | ERROR | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
@@ -3341,7 +3351,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
-						Set:       types.NeverType,
+						Set:       types.StringType,
 						Unset:     false,
 						Scopes:    DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/",
@@ -3382,7 +3392,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
-						Set:       types.NeverType,
+						Set:       types.IntegerType,
 						Unset:     false,
 						Scopes:    DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-status/",

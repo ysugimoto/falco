@@ -38,5 +38,12 @@ func builtinIdentifiers() map[string]struct{} {
 		"standard":  {},
 		"url":       {},
 		"url_nopad": {},
+
+		// use for setcookie.get_value_by_name argument of ID
+		"req":    {},
+		"bereq":  {},
+		"obj":    {},
+		"beresp": {},
+		"resp":   {},
 	}
 }
