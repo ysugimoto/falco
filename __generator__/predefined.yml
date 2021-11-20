@@ -2057,5 +2057,6 @@ waf.logged:
   get: BOOL
 
 LF:
+  reference: "https://developer.fastly.com/reference/vcl/types/string/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: STRING
