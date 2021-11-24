@@ -43,7 +43,6 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Ty
 
 	// After whole VCLs have been linted in main VCL, check all definitions are exactly used.
 	if isMain {
-		println("main vcl")
 		l.lintUnusedTables(ctx)
 		l.lintUnusedAcls(ctx)
 		l.lintUnusedBackends(ctx)
