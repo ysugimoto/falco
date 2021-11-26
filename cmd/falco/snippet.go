@@ -81,7 +81,7 @@ func (s *Snippet) Fetch(c _context.Context) error {
 func (s *Snippet) fetchEdgeDictionary(c _context.Context, version int64) ([]string, error) {
 	dicts, err := s.client.ListEdgeDictionaries(c, version)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get latest version %w", err)
+		return nil, fmt.Errorf("Failed to get edge dictionaries for version %w", err)
 	}
 
 	tmpl, err := template.New("table").Parse(tableTemplate)
@@ -103,6 +103,9 @@ func (s *Snippet) fetchEdgeDictionary(c _context.Context, version int64) ([]stri
 // Fetch remote Access Control entries
 func (s *Snippet) fetchAccessControl(c _context.Context, version int64) ([]string, error) {
 	acls, err := s.client.ListAccessControlLists(c, version)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get access control lists for version %w", err)
+	}
 
 	tmpl, err := template.New("acl").Parse(aclTemplate)
 	if err != nil {
