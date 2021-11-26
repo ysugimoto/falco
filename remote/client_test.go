@@ -136,3 +136,87 @@ func TestListDictionaryItems(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestListAccessControlLists(t *testing.T) {
+	c := NewFastlyClient(&http.Client{
+		Transport: &TestRoundTripper{
+			StatusCode: 200,
+			Body: `
+[
+  {
+    "name": "blocked_ips",
+    "service_id": "0yGwmmav8rcXRC7yRwzPNQ",
+    "id": "1GJz4D4wxiP8DeVCVdYDfo",
+    "deleted_at": null,
+    "created_at": "2021-11-25T23:40:04Z",
+    "updated_at": "2021-11-25T23:40:04Z",
+    "version": "10"
+  }
+]]`,
+		},
+	}, "dummy", "dummy")
+
+	acls, err := c.ListAccessControlLists(context.Background(), 10)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		t.FailNow()
+	}
+	if len(acls) != 1 {
+		t.Errorf("dictionaries should have 1 but got %d", len(acls))
+		t.FailNow()
+	}
+	a := acls[0]
+	if a.Id != "1GJz4D4wxiP8DeVCVdYDfo" {
+		t.Errorf("acl id assertion error, expects=1GJz4D4wxiP8DeVCVdYDfo but got=%s", a.Id)
+		t.FailNow()
+	}
+	if a.Name != "blocked_ips" {
+		t.Errorf("acl name assertion error, expects=blocked_ips but got=%s", a.Name)
+		t.FailNow()
+	}
+}
+
+func TestListAccessControlEntiries(t *testing.T) {
+	c := NewFastlyClient(&http.Client{
+		Transport: &TestRoundTripper{
+			StatusCode: 200,
+			Body: `
+[
+  {
+    "updated_at": "2021-11-25T23:40:33Z",
+    "ip": "10.0.0.0",
+    "negated": "0",
+    "acl_id": "1GJz4D4wxiP8DeVCVdYDfo",
+    "id": "4BCmH8eb7p9absKKcaADIp",
+    "subnet": 32,
+    "service_id": "0yGwmmav8rcXRC7yRwzPNQ",
+    "comment": "example",
+    "created_at": "2021-11-25T23:40:33Z"
+  }
+]`,
+		},
+	}, "dummy", "dummy")
+
+	items, err := c.ListAccessControlEntries(context.Background(), "1GJz4D4wxiP8DeVCVdYDfo")
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		t.FailNow()
+	}
+	if len(items) != 1 {
+		t.Errorf("entries should have 1 items but got %d", len(items))
+		t.FailNow()
+	}
+	i := items[0]
+	if i.Ip != "10.0.0.0" {
+		t.Errorf("ip assertion error, expects=10.0.0.0 but got=%s", i.Ip)
+		t.FailNow()
+	}
+	if i.Negated != "0" {
+		t.Errorf("negated field assertion error, expects=0 but got=%s", i.Negated)
+		t.FailNow()
+	}
+	if *i.Subnet != 32 {
+		t.Errorf("subnet field assertion error, expects=32 but got=%d", *i.Subnet)
+		t.FailNow()
+	}
+}

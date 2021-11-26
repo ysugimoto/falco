@@ -111,3 +111,50 @@ func (c *FastlyClient) ListEdgeDictionaryItems(ctx context.Context, dictId strin
 
 	return items, nil
 }
+
+func (c *FastlyClient) ListAccessControlLists(ctx context.Context, version int64) ([]*AccessControl, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/acl", c.serviceId, version)
+	var acls []*AccessControl
+	if err := c.request(ctx, http.MethodGet, endpoint, nil, &acls); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var wg sync.WaitGroup
+	var once sync.Once
+	errch := make(chan error)
+	for _, a := range acls {
+		wg.Add(1)
+		go func(a *AccessControl) {
+			defer wg.Done()
+			var err error
+			if a.Entries, err = c.ListAccessControlEntries(ctx, a.Id); err != nil {
+				once.Do(func() {
+					errch <- err
+				})
+			}
+		}(a)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return acls, nil
+	case err := <-errch:
+		return nil, err
+	}
+}
+
+func (c *FastlyClient) ListAccessControlEntries(ctx context.Context, aclId string) ([]*AccessControlEntry, error) {
+	endpoint := fmt.Sprintf("/service/%s/acl/%s/entries", c.serviceId, aclId)
+	var entries []*AccessControlEntry
+	if err := c.request(ctx, http.MethodGet, endpoint, nil, &entries); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return entries, nil
+}

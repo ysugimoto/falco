@@ -91,6 +91,7 @@ func NewRunner(mainVcl string, c *Config) (*Runner, error) {
 			} else if err := snippet.Compile(r.context); err != nil {
 				writeln(red, err.Error())
 			}
+			fmt.Printf("%+v\n", r.context.Acls)
 		}()
 	}
 
