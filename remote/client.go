@@ -3,7 +3,6 @@ package remote
 import (
 	"context"
 	"fmt"
-	"io"
 	"sync"
 	"time"
 
@@ -31,8 +30,9 @@ func NewFastlyClient(c *http.Client, serviceId, apiKey string) *FastlyClient {
 	}
 }
 
-func (c *FastlyClient) request(ctx context.Context, method, url string, body io.Reader, v interface{}) error {
-	req, err := http.NewRequestWithContext(ctx, method, fastlyApiBaseUrl+url, body)
+func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) error {
+	// falco always call API with GET request because we DO NOT change any resources
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fastlyApiBaseUrl+url, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -58,7 +58,7 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 
 	endpoint := fmt.Sprintf("/service/%s/version/active", c.serviceId)
 	var v Version
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &v); err != nil {
+	if err := c.request(ctx, endpoint, &v); err != nil {
 		return 0, errors.WithStack(err)
 	}
 
@@ -68,7 +68,7 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) ([]*EdgeDictionary, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/dictionary", c.serviceId, version)
 	var dicts []*EdgeDictionary
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &dicts); err != nil {
+	if err := c.request(ctx, endpoint, &dicts); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -105,9 +105,56 @@ func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) 
 func (c *FastlyClient) ListEdgeDictionaryItems(ctx context.Context, dictId string) ([]*EdgeDictionaryItem, error) {
 	endpoint := fmt.Sprintf("/service/%s/dictionary/%s/items", c.serviceId, dictId)
 	var items []*EdgeDictionaryItem
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &items); err != nil {
+	if err := c.request(ctx, endpoint, &items); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	return items, nil
+}
+
+func (c *FastlyClient) ListAccessControlLists(ctx context.Context, version int64) ([]*AccessControl, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/acl", c.serviceId, version)
+	var acls []*AccessControl
+	if err := c.request(ctx, endpoint, &acls); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var wg sync.WaitGroup
+	var once sync.Once
+	errch := make(chan error)
+	for _, a := range acls {
+		wg.Add(1)
+		go func(a *AccessControl) {
+			defer wg.Done()
+			var err error
+			if a.Entries, err = c.ListAccessControlEntries(ctx, a.Id); err != nil {
+				once.Do(func() {
+					errch <- err
+				})
+			}
+		}(a)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return acls, nil
+	case err := <-errch:
+		return nil, err
+	}
+}
+
+func (c *FastlyClient) ListAccessControlEntries(ctx context.Context, aclId string) ([]*AccessControlEntry, error) {
+	endpoint := fmt.Sprintf("/service/%s/acl/%s/entries", c.serviceId, aclId)
+	var entries []*AccessControlEntry
+	if err := c.request(ctx, endpoint, &entries); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return entries, nil
 }

@@ -15,7 +15,7 @@ func predefinedVariables() Variables {
 				Set:       types.NeverType,
 				Unset:     false,
 				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-				Reference: "",
+				Reference: "https://developer.fastly.com/reference/vcl/types/string/",
 			},
 		},
 		"backend": &Object{
