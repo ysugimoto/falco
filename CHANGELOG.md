@@ -1,3 +1,7 @@
+## v0.7.0
+
+- impl: Support access control list [#38](https://github.com/ysugimoto/falco/pull/38) (@ysugimoto)
+
 ## v0.6.1
 
 - [bugfix] Fix builtin accessor and assign operator [#36](https://github.com/ysugimoto/falco/pull/36) (@ysugimoto)
