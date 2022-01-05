@@ -162,21 +162,17 @@ func ErrorCodeRange(m *ast.Meta, code int64) *LintError {
 	}
 }
 
-// FIXME: accept *ast.Meta
-func InvalidTypeOperator(m *ast.Meta, op string, expects ...types.Type) *LintError {
-	es := make([]string, len(expects))
-	for i, v := range expects {
-		es[i] = v.String()
-	}
-
+func InvalidTypeOperator(m *ast.Meta, op string, left, right types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`could not operand, "%s" operator expects type %s on right expression`, op, strings.Join(es, " or ")),
+		Message: fmt.Sprintf(
+			`invalid operator, "%s" count not use between left %s and %s right types`,
+			op, left, right,
+		),
 	}
 }
 
-// FIXME: accept *ast.Meta
 func InvalidOperator(m *ast.Meta, op string, left types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
