@@ -1465,3 +1465,19 @@ sub vcl_recv {
 		}
 	})
 }
+
+// https://github.com/ysugimoto/falco/issues/39
+func TestPassIssue39(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+	### FASTLY fetch
+    if (parse_time_delta(beresp.http.Edge-Control:cache-maxage) >= 0) {
+      set beresp.ttl = parse_time_delta(beresp.http.Edge-Control:cache-maxage);
+    }
+    return(deliver);
+}
+`
+		assertNoError(t, input)
+	})
+}

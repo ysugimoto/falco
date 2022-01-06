@@ -651,225 +651,22 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	// https://developer.fastly.com/reference/vcl/operators/#assignment-operators
 	//
 	// Above document is not enough to explain for other types... actually more complex type coparison may occur.
+	// We investigated type comparison and summarized.
+	// See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 	switch stmt.Operator.Operator {
-	case "+=":
-		l.lintAdditionOperator(stmt.Operator, left, right)
-	case "-=":
-		l.lintSubtractionOperator(stmt.Operator, left, right)
-	case "*=":
-		l.lintMutiplicationOperator(stmt.Operator, left, right)
-	case "/=":
-		l.lintDivistionOperator(stmt.Operator, left, right)
-	case "%=":
-		l.lintRemainderOperator(stmt.Operator, left, right)
-	case "|=":
-		l.lintBitwiseOROperator(stmt.Operator, left, right)
-	case "&=":
-		l.lintBitwiseANDOperator(stmt.Operator, left, right)
-	case "^=":
-		l.lintBitwiseXOROperator(stmt.Operator, left, right)
-	case "<<=":
-		l.lintLeftShiftOperator(stmt.Operator, left, right)
-	case ">>=":
-		l.lintRightShiftOperator(stmt.Operator, left, right)
-	case "rol=":
-		l.lintLeftRorateOperator(stmt.Operator, left, right)
-	case "ror=":
-		l.lintRightRotateOperator(stmt.Operator, left, right)
-	case "&&=":
-		l.lintLogicalANDOperator(stmt.Operator, left, right)
-	case "||=":
-		l.lintLogicalOROperator(stmt.Operator, left, right)
+	case "+=", "-=":
+		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
+	case "*=", "/=", "%=":
+		l.lintArithmeticOpereator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
+	case "|=", "&=", "^=", "<<=", ">>=", "rol=", "ror=":
+		l.lintBitwiseOperator(stmt.Operator, left, right)
+	case "||=", "&&=":
+		l.lintLogicalOperator(stmt.Operator, left, right)
 	default: // "="
-		l.lintAssignOperator(stmt.Value, stmt.Ident.Value, left, right)
+		l.lintAssignOperator(stmt.Operator, stmt.Ident.Value, left, right, isLiteralExpression(stmt.Value))
 	}
 
 	return types.NeverType
-}
-
-func (l *Linter) lintAssignOperator(value ast.Expression, name string, left, right types.Type) {
-	switch left {
-	case types.StringType:
-		switch right {
-		case types.StringType:
-			return
-		case types.FloatType, types.RTimeType, types.IntegerType, types.BoolType, types.NullType:
-			// Note: on right expression of set statement, could not assign with literal,
-			// but can assign with variable/identity as stringified value
-			if isLiteralExpression(value) {
-				l.Error(InvalidType(value.GetMeta(), name, left, right))
-			}
-		default:
-			l.Error(InvalidType(value.GetMeta(), name, left, right))
-		}
-	default:
-		if left != right {
-			l.Error(InvalidType(value.GetMeta(), name, left, right))
-		}
-	}
-}
-
-func (l *Linter) lintAdditionOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType, types.FloatType, types.RTimeType:
-		if !expectType(right, types.FloatType, types.RTimeType, types.IntegerType) {
-			l.Error(InvalidTypeOperator(
-				op.Meta, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
-			).Match(OPERATOR_ASSIGNMENT))
-		}
-	case types.BoolType, types.AclType, types.BackendType:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-	// "+=" operator can use for STRING type to concat.
-}
-
-func (l *Linter) lintSubtractionOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType, types.FloatType, types.RTimeType:
-		if !expectType(right, types.FloatType, types.RTimeType, types.IntegerType) {
-			l.Error(InvalidTypeOperator(
-				op.Meta, op.Operator, types.IntegerType, types.FloatType, types.RTimeType,
-			).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintMutiplicationOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType, types.FloatType, types.RTimeType:
-		if !expectType(right, types.FloatType, types.IntegerType) {
-			l.Error(InvalidTypeOperator(
-				op.Meta, op.Operator, types.IntegerType, types.FloatType,
-			).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintDivistionOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType, types.FloatType, types.RTimeType:
-		if !expectType(right, types.FloatType, types.IntegerType) {
-			l.Error(InvalidTypeOperator(
-				op.Meta, op.Operator, types.IntegerType, types.FloatType,
-			).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintRemainderOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType, types.FloatType, types.RTimeType:
-		if !expectType(right, types.FloatType, types.IntegerType) {
-			l.Error(InvalidTypeOperator(
-				op.Meta, op.Operator, types.IntegerType, types.FloatType,
-			).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintBitwiseOROperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintBitwiseANDOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-func (l *Linter) lintBitwiseXOROperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintLeftShiftOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-func (l *Linter) lintRightShiftOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintLeftRorateOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintRightRotateOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.IntegerType:
-		if !expectType(right, types.IntegerType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.IntegerType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintLogicalANDOperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.BoolType:
-		if !expectType(right, types.BoolType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
-}
-
-func (l *Linter) lintLogicalOROperator(op *ast.Operator, left, right types.Type) {
-	switch left {
-	case types.BoolType:
-		if !expectType(right, types.BoolType) {
-			l.Error(InvalidTypeOperator(op.Meta, op.Operator, types.BoolType).Match(OPERATOR_ASSIGNMENT))
-		}
-	default:
-		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_ASSIGNMENT))
-	}
 }
 
 func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Context) types.Type {
@@ -1035,7 +832,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		}
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
 	}
-	l.lintAssignOperator(stmt.Value, stmt.Ident.Value, left, right)
+	l.lintAssignOperator(stmt.Operator, stmt.Ident.Value, left, right, isLiteralExpression(stmt.Value))
 
 	return types.NeverType
 }
