@@ -148,7 +148,7 @@ func (l *Linter) lintAddSubOperator(op *ast.Operator, left, right types.Type, is
 	}
 }
 
-// Lint arithmetic operator excepts addition and subtraction of "*=", "/=" and "%="
+// Lint arithmetic operator excepts addition and subtraction. Lint "*=", "/=" and "%=" operator
 func (l *Linter) lintArithmeticOpereator(op *ast.Operator, left, right types.Type, isLiteral bool) {
 	switch left {
 	case types.IntegerType:
@@ -179,6 +179,7 @@ func (l *Linter) lintArithmeticOpereator(op *ast.Operator, left, right types.Typ
 	}
 }
 
+// Lint bitwise related operators "|=", "&=", "^=", "<<=", ">>=", "rol=" and "ror=".
 func (l *Linter) lintBitwiseOperator(op *ast.Operator, left, right types.Type) {
 	switch left {
 	case types.IntegerType:
@@ -190,6 +191,7 @@ func (l *Linter) lintBitwiseOperator(op *ast.Operator, left, right types.Type) {
 	}
 }
 
+// Lint logical operators "||=" and "&&=".
 func (l *Linter) lintLogicalOperator(op *ast.Operator, left, right types.Type) {
 	switch left {
 	case types.BoolType:
