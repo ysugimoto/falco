@@ -1,3 +1,7 @@
+## v0.7.1
+
+- [bugfix] improve type comparison in set/add statement [#40](https://github.com/ysugimoto/falco/pull/40) (@ysugimoto)
+
 ## v0.7.0
 
 - impl: Support access control list [#38](https://github.com/ysugimoto/falco/pull/38) (@ysugimoto)
