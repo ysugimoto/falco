@@ -54,6 +54,16 @@ Currently not supported.
 
 Currently not supported.
 
-### Access control lists
+### Access Control Lists
 
-Currently not supported.
+Prefetch [Access Control Lists](https://docs.fastly.com/en/guides/about-acls) from Fastly and parse as `Acl`.
+
+If you defined Access Control Lists named `my_acl`, falco deals with as acl:
+
+```
+acl my_acl {
+  "ip_range01",
+  "ip_range02",
+  ...
+}
+```
