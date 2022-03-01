@@ -518,7 +518,7 @@ func splitName(name string) (string, []string) {
 	var first string
 	var remains []string
 
-	sep := strings.SplitN(name, ".", 3)
+	sep := strings.SplitN(name, ".", 4)
 	if len(sep) == 1 {
 		first = sep[0]
 	} else {

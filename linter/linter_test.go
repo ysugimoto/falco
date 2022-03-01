@@ -403,6 +403,15 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with deep fastly variable", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.Host = client.geo.city.utf8;
+}`
+
+		assertNoError(t, input)
+	})
+
 	t.Run("invalid variable name", func(t *testing.T) {
 		input := `
 sub foo {
