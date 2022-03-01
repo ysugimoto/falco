@@ -396,6 +396,13 @@ func (c *Context) Declare(name string, valueType types.Type, m *ast.Meta) error 
 
 	first, remains := splitName(name)
 
+	// declaration syntax for variables is:
+	// declare local var.variableName [type]
+	// which means that they must be prefixed with var.
+	if first != "var" {
+		return fmt.Errorf(`variable "%s" declaration error. Variable be prefixed with 'var.'`, name)
+	}
+
 	obj, ok := c.Variables[first]
 	if !ok {
 		// Newly assign object

@@ -130,6 +130,9 @@ func TestContextDeclare(t *testing.T) {
 		if err := c.Declare("var.foo", types.StringType, nil); err == nil {
 			t.Errorf("expected error but got nil")
 		}
+		if err := c.Declare("variable.bar", types.StringType, nil); err == nil {
+			t.Errorf("expected error but got nil")
+		}
 	})
 }
 
