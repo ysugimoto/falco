@@ -1,3 +1,7 @@
+## v0.7.2
+
+- [bugfix] Linting `client.geo.city.utf8` [#43](https://github.com/ysugimoto/falco/pull/43) (@davinci26)
+
 ## v0.7.1
 
 - [bugfix] improve type comparison in set/add statement [#40](https://github.com/ysugimoto/falco/pull/40) (@ysugimoto)
