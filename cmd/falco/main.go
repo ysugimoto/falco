@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"encoding/json"
 	"path/filepath"
 
 	"github.com/fatih/color"
@@ -23,6 +24,11 @@ var (
 	green   = color.New(color.FgGreen)
 	cyan    = color.New(color.FgCyan)
 	magenta = color.New(color.FgMagenta)
+)
+
+const (
+	subcommandStats = "stats"
+	subcommandLint  = "lint"
 )
 
 type multiStringFlags []string
@@ -44,6 +50,8 @@ type Config struct {
 	VV           bool
 	Version      bool
 	Remote       bool
+	Stats        bool
+	Json         bool
 }
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -60,7 +68,11 @@ func printUsage() {
   falco: Fastly VCL parser / linter
 =======================================
 Usage:
-    falco [main vcl file]
+    falco [subcommand] [main vcl file]
+
+Subcommands:
+    stats : Analyze VCL statistics
+    lint  : Run lint (default)
 
 Flags:
     -I, --include_path : Add include path
@@ -70,9 +82,11 @@ Flags:
     -V, --version      : Display build version
     -v                 : Verbose warning lint result
     -vv                : Varbose all lint result
+    -json              : Output statistics as JSON
 
 Example:
     falco -I . -vv /path/to/vcl/main.vcl
+    falco -I . stats /path/to/vcl/main.vcl
 `
 
 	fmt.Println(strings.TrimLeft(usage, "\n"))
@@ -94,6 +108,8 @@ func main() {
 	fs.BoolVar(&c.Version, "version", false, "Print Version")
 	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
 	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
+	fs.BoolVar(&c.Stats, "s", false, "Enable VCL stat mode")
+	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
@@ -109,7 +125,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	mainVcl := fs.Arg(0)
+	var command, mainVcl string
+	switch fs.Arg(0) {
+	case subcommandStats:
+		command = subcommandStats
+		mainVcl = fs.Arg(1)
+	case subcommandLint:
+		mainVcl = fs.Arg(1)
+	default:
+		mainVcl = fs.Arg(0)
+	}
+
 	if mainVcl == "" {
 		printUsage()
 	} else if _, err := os.Stat(mainVcl); err != nil {
@@ -133,6 +159,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if command == subcommandStats {
+		runStats(runner, c.Json)
+	} else {
+		runLint(runner)
+	}
+}
+
+func runLint(runner *Runner) {
 	result, err := runner.Run()
 	if err != nil {
 		if err != ErrParser {
@@ -175,4 +209,45 @@ func main() {
 		writeln(red, err.Error())
 		os.Exit(1)
 	}
+}
+
+func runStats(runner *Runner, printJson bool) {
+	stats, err := runner.Stats()
+	if err != nil {
+		if err != ErrParser {
+			writeln(red, err.Error())
+		}
+		os.Exit(1)
+	}
+
+	if printJson {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(stats)
+		return
+	}
+
+	printStats(strings.Repeat("=", 80))
+	printStats("| %-76s |", "falco VCL statistics ")
+	printStats(strings.Repeat("=", 80))
+	printStats("| %-22s | %51s |", "Main VCL File", stats.Main)
+	printStats(strings.Repeat("=", 80))
+	printStats("| %-22s | %51d |", "Included Module Files", stats.Files-1)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Total VCL Lines", stats.Lines)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Subroutines", stats.Subroutines)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Backends", stats.Backends)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Tables", stats.Tables)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Access Control Lists", stats.Acls)
+	printStats(strings.Repeat("-", 80))
+	printStats("| %-22s | %51d |", "Directors", stats.Directors)
+	printStats(strings.Repeat("-", 80))
+}
+
+func printStats(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, format+"\n", args...)
 }

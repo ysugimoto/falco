@@ -40,6 +40,22 @@ type RunnerResult struct {
 	Vcls     []*plugin.VCL
 }
 
+type StatsResult struct {
+	Main        string `json:"main"`
+	Subroutines int    `json:"subroutines"`
+	Tables      int    `json:"tables"`
+	Backends    int    `json:"backends"`
+	Acls        int    `json:"acls"`
+	Directors   int    `json:"directors"`
+	Files       int    `json:"files"`
+	Lines       int    `json:"lines"`
+}
+
+type RunMode struct {
+	isMain bool
+	isStat bool
+}
+
 type Runner struct {
 	transformers []*Transformer
 	includePaths []string
@@ -194,7 +210,10 @@ func (r *Runner) Transform(vcls []*plugin.VCL) error {
 }
 
 func (r *Runner) Run() (*RunnerResult, error) {
-	vcls, err := r.run(r.mainVclFile, true)
+	vcls, err := r.run(r.mainVclFile, &RunMode{
+		isMain: true,
+		isStat: false,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +226,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
+func (r *Runner) run(vclFile string, mode *RunMode) ([]*plugin.VCL, error) {
 	fp, err := os.Open(vclFile)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open file: %s", vclFile)
@@ -245,7 +264,10 @@ func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
 			}
 		}
 
-		subVcl, err := r.run(file, false)
+		subVcl, err := r.run(file, &RunMode{
+			isMain: false,
+			isStat: mode.isStat,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +281,13 @@ func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
 	})
 
 	lt := linter.New()
-	lt.Lint(vcl, r.context, isMain)
+	lt.Lint(vcl, r.context, mode.isMain)
+
+	// If runner is running as stat mode, prevent to output lint result
+	if mode.isStat {
+		return vcls, nil
+	}
+
 	if len(lt.Errors) > 0 {
 		for _, err := range lt.Errors {
 			le, ok := err.(*linter.LintError)
@@ -364,4 +392,30 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 		writeln(white, "See document in detail: %s", err.Reference)
 	}
 	writeln(white, "")
+}
+
+func (r *Runner) Stats() (*StatsResult, error) {
+	vcls, err := r.run(r.mainVclFile, &RunMode{
+		isMain: true,
+		isStat: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	stats := &StatsResult{
+		Main:        r.mainVclFile,
+		Subroutines: len(r.context.Subroutines),
+		Tables:      len(r.context.Tables),
+		Backends:    len(r.context.Backends),
+		Acls:        len(r.context.Acls),
+		Directors:   len(r.context.Directors),
+	}
+
+	for _, vcl := range vcls {
+		stats.Files++
+		stats.Lines += r.lexers[vcl.File].LineCount()
+	}
+
+	return stats, nil
 }

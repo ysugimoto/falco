@@ -147,7 +147,7 @@ func (p *Parser) parseSetStatement() (*ast.SetStatement, error) {
 	stmt.Value = exp
 
 	if !p.peekTokenIs(token.SEMICOLON) {
-		return nil, errors.WithStack(MissingSemicolon(p.peekToken))
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
