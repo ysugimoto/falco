@@ -1,3 +1,7 @@
+## v0.7.3
+
+- [bugfix] fix token point for missing semicolon [#44](https://github.com/ysugimoto/falco/pull/44) (@ysugimoto)
+
 ## v0.7.2
 
 - [bugfix] Linting `client.geo.city.utf8` [#43](https://github.com/ysugimoto/falco/pull/43) (@davinci26)
