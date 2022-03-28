@@ -208,9 +208,13 @@ func (r *Runner) Run() (*RunnerResult, error) {
 }
 
 func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
+	fmt.Printf("%q\n", vclFile)
+	if vclFile == "" {
+		return nil, nil
+	}
 	fp, err := os.Open(vclFile)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to open file: %s", vclFile)
+	if err != nil { 
+		return nil, fmt.Errorf("Failed to open file: %s %v", vclFile, err)
 	}
 	defer fp.Close()
 
@@ -239,8 +243,8 @@ func (r *Runner) run(vclFile string, isMain bool) ([]*plugin.VCL, error) {
 		var file string
 		// Find for each include paths
 		for _, p := range r.includePaths {
-			if _, err := os.Stat(filepath.Join(p, include.Module.Value+".vcl")); err == nil {
-				file = filepath.Join(p, include.Module.Value+".vcl")
+			if _, err := os.Stat(filepath.Join(p, include.Module.Value)); err == nil {
+				file = filepath.Join(p, include.Module.Value)
 				break
 			}
 		}
