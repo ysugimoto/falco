@@ -1,3 +1,7 @@
+## v0.8.0
+
+- Implement stats subcommand [#46](https://github.com/ysugimoto/falco/pull/46) (@ysugimoto)
+
 ## v0.7.3
 
 - [bugfix] fix token point for missing semicolon [#44](https://github.com/ysugimoto/falco/pull/44) (@ysugimoto)
