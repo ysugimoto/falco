@@ -223,7 +223,10 @@ func runStats(runner *Runner, printJson bool) {
 	if printJson {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(stats)
+		if err := enc.Encode(stats); err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
+		}
 		return
 	}
 
