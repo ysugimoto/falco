@@ -73,6 +73,10 @@ func (l *Lexer) GetLine(n int) (string, bool) {
 	return l.stack[n-1], true
 }
 
+func (l *Lexer) LineCount() int {
+	return l.line - 1
+}
+
 func (l *Lexer) PeekToken() token.Token {
 	t := l.NextToken()
 	// peek token stack works FIFO queue
