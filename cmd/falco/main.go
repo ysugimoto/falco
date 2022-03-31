@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"encoding/json"
-	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
@@ -27,8 +26,8 @@ var (
 )
 
 const (
-	subcommandStats = "stats"
-	subcommandLint  = "lint"
+	subcommandLint      = "lint"
+	subcommandTerraform = "terraform"
 )
 
 type multiStringFlags []string
@@ -71,8 +70,8 @@ Usage:
     falco [subcommand] [main vcl file]
 
 Subcommands:
-    stats : Analyze VCL statistics
-    lint  : Run lint (default)
+    terraform : Run lint from terraform planned JSON
+    lint      : Run lint (default)
 
 Flags:
     -I, --include_path : Add include path
@@ -83,10 +82,17 @@ Flags:
     -v                 : Verbose warning lint result
     -vv                : Varbose all lint result
     -json              : Output statistics as JSON
+    -stats             : Analyze VCL statistics
 
-Example:
+Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
-    falco -I . stats /path/to/vcl/main.vcl
+
+Get statistics example:
+    falco -I . -stats /path/to/vcl/main.vcl
+
+Linting with terraform:
+    terraform plan -out planned.out
+    terraform show -json planned.out | falco -vv terraform
 `
 
 	fmt.Println(strings.TrimLeft(usage, "\n"))
@@ -108,10 +114,12 @@ func main() {
 	fs.BoolVar(&c.Version, "version", false, "Print Version")
 	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
 	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
-	fs.BoolVar(&c.Stats, "s", false, "Enable VCL stat mode")
+	fs.BoolVar(&c.Stats, "stats", false, "Analyze VCL statistics")
 	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
+	fs.Usage = printUsage
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
+	var err error
+	if err = fs.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
 			printUsage()
 		}
@@ -125,41 +133,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	var command, mainVcl string
+	var resolver Resolver
 	switch fs.Arg(0) {
-	case subcommandStats:
-		command = subcommandStats
-		mainVcl = fs.Arg(1)
+	case subcommandTerraform:
+		resolver, err = NewStdinResolver()
 	case subcommandLint:
-		mainVcl = fs.Arg(1)
+		resolver, err = NewFileResolver(fs.Arg(1), c)
 	default:
-		mainVcl = fs.Arg(0)
+		resolver, err = NewFileResolver(fs.Arg(0), c)
 	}
 
-	if mainVcl == "" {
-		printUsage()
-	} else if _, err := os.Stat(mainVcl); err != nil {
-		if err == os.ErrNotExist {
-			writeln(white, "Input file %s is not found", mainVcl)
-		} else {
-			writeln(red, "Unexpected stat error: %s", err.Error())
-		}
-		os.Exit(1)
-	}
-
-	vcl, err := filepath.Abs(mainVcl)
 	if err != nil {
-		writeln(red, "Failed to get absolute path: %s", err.Error())
+		println("OK")
+		writeln(red, err.Error())
 		os.Exit(1)
 	}
 
-	runner, err := NewRunner(vcl, c)
+	runner, err := NewRunner(resolver, c)
 	if err != nil {
 		writeln(red, err.Error())
 		os.Exit(1)
 	}
 
-	if command == subcommandStats {
+	if c.Stats {
 		runStats(runner, c.Json)
 	} else {
 		runLint(runner)
