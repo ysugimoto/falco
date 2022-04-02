@@ -130,6 +130,10 @@ Following table describes annotation name and recognizing scope:
 
 Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
 
+## Terraform support
+
+`falco` supports to parse and lint for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly). See [terraform.md](https://github.com/ysugimoto/falco/blob/master/docs/terraform.md) in detail.
+
 ## Lint error
 
 `falco` has built in lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints with strict type checks, disallows implicit type conversions even VCL is fuzzy typed language.
