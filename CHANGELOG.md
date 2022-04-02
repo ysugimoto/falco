@@ -1,6 +1,6 @@
 ## v0.8.0
 
-- Implement stats subcommand [#46](https://github.com/ysugimoto/falco/pull/46) (@ysugimoto)
+- Support terraform [#48](https://github.com/ysugimoto/falco/pull/48) (@ysugimoto)
 
 ## v0.7.3
 
