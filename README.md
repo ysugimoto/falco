@@ -130,9 +130,9 @@ Following table describes annotation name and recognizing scope:
 
 Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
 
-## Terraform Support
+## Terraform support
 
-`falco` support to parse and lint for [terraform](https://www.terraform.io/) that planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly). See [terraform.md](https://github.com/ysugimoto/falco/blob/master/docs/terraform.md) in detail.
+`falco` supports to parse and lint for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly). See [terraform.md](https://github.com/ysugimoto/falco/blob/master/docs/terraform.md) in detail.
 
 ## Lint error
 
