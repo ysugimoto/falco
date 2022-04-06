@@ -6,7 +6,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const fastlyTerraformProviderName = "registry.terraform.io/fastly/fastly"
+const (
+	fastlyTerraformProviderName = "registry.terraform.io/fastly/fastly"
+	fastlyVCLServiceType        = "fastly_service_vcl"
+)
 
 // Terraform planned input struct
 // This struct could be unmarshled from input of `terraform show -json [planned json]
@@ -23,6 +26,7 @@ type FastlyService struct {
 
 type TerraformPlannedResource struct {
 	ProviderName string `json:"provider_name"`
+	Type         string `json:"type"`
 	Values       *struct {
 		Name string          `json:"name"`
 		Vcl  []*TerraformVcl `json:"vcl"`
@@ -56,11 +60,13 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 	}
 
 	var services []*FastlyService
+	// Case: service is declared in root module
 	if len(root.PlannedValues.RootModule.Resources) > 0 {
 		for _, v := range root.PlannedValues.RootModule.Resources {
-			if v.ProviderName != fastlyTerraformProviderName {
+			if !isFastlyVCLServiceResource(v) {
 				continue
 			}
+
 			services = append(services, &FastlyService{
 				Name: v.Values.Name,
 				Vcls: v.Values.Vcl,
@@ -68,11 +74,13 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 		}
 	}
 
+	// Case: service is declared in child module
 	for _, v := range root.PlannedValues.RootModule.ChildModules {
 		for _, v := range v.Resources {
-			if v.ProviderName != fastlyTerraformProviderName {
+			if !isFastlyVCLServiceResource(v) {
 				continue
 			}
+
 			services = append(services, &FastlyService{
 				Name: v.Values.Name,
 				Vcls: v.Values.Vcl,
@@ -85,4 +93,9 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 	}
 
 	return services, nil
+}
+
+func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
+	return r.ProviderName == fastlyTerraformProviderName &&
+		r.Type == fastlyVCLServiceType
 }
