@@ -1490,3 +1490,20 @@ sub vcl_fetch {
 		assertNoError(t, input)
 	})
 }
+
+func TestSubroutineHoisting(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	### FASTLY recv
+	call hoisted_subroutine;
+	return(lookup);
+}
+
+sub hoisted_subroutine {
+	set req.http.X-Subrountine-Hoisted = "yes";
+}
+`
+		assertNoError(t, input)
+	})
+}
