@@ -117,8 +117,9 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintVCL(t, ctx)
 
 	// Declarations
+	// Note: root declaration has already added in linter context.
 	case *ast.AclDeclaration:
-		return l.lintAclDeclaration(t, ctx)
+		return l.lintAclDeclaration(t)
 	case *ast.BackendDeclaration:
 		return l.lintBackendDeclaration(t, ctx)
 	case *ast.DirectorDeclaration:
@@ -293,7 +294,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 	return statements
 }
 
-func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Context) types.Type {
+func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration) types.Type {
 	// validate ACL name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "acl").Match(ACL_SYNTAX))
