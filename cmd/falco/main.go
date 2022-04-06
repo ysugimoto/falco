@@ -133,7 +133,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// falco could lint multiple services so resolver should be an slice
+	// falco could lint multiple services so resolver should be a slice
 	var resolvers []Resolver
 	switch fs.Arg(0) {
 	case subcommandTerraform:
