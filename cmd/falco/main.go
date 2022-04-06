@@ -133,32 +133,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	var resolver Resolver
+	// falco could lint multiple services so resolver should be an slice
+	var resolvers []Resolver
 	switch fs.Arg(0) {
 	case subcommandTerraform:
-		resolver, err = NewStdinResolver()
+		resolvers, err = NewStdinResolvers()
 	case subcommandLint:
-		resolver, err = NewFileResolver(fs.Arg(1), c)
+		// "lint" command provides single file of service, then resolvers size is always 1
+		resolvers, err = NewFileResolvers(fs.Arg(1), c)
 	default:
-		resolver, err = NewFileResolver(fs.Arg(0), c)
+		// "lint" command provides single file of service, then resolvers size is always 1
+		resolvers, err = NewFileResolvers(fs.Arg(0), c)
 	}
 
-	if err != nil {
-		println("OK")
-		writeln(red, err.Error())
-		os.Exit(1)
-	}
-
-	runner, err := NewRunner(resolver, c)
 	if err != nil {
 		writeln(red, err.Error())
 		os.Exit(1)
 	}
 
-	if c.Stats {
-		runStats(runner, c.Json)
-	} else {
-		runLint(runner)
+	for _, v := range resolvers {
+		if name := v.Name(); name != "" {
+			writeln(white, `Lint service of "%s"`, name)
+			writeln(white, strings.Repeat("=", 18+len(name)))
+		}
+
+		runner, err := NewRunner(v, c)
+		if err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
+		}
+
+		if c.Stats {
+			runStats(runner, c.Json)
+		} else {
+			runLint(runner)
+		}
 	}
 }
 
