@@ -1,3 +1,9 @@
+## v0.9.0
+
+- Improve waf related variables [#49](https://github.com/ysugimoto/falco/pull/49) (@ysugimoto)
+- Allow subroutine hoisting [#52](https://github.com/ysugimoto/falco/pull/52) (@ysugimoto)
+- Support linting multiple services [#53](https://github.com/ysugimoto/falco/pull/53) (@ysugimoto)
+
 ## v0.8.0
 
 - Support terraform [#48](https://github.com/ysugimoto/falco/pull/48) (@ysugimoto)
