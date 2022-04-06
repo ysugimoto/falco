@@ -25,6 +25,7 @@ type VCL struct {
 type Resolver interface {
 	MainVCL() (*VCL, error)
 	Resolve(module string) (*VCL, error)
+	Name() string
 }
 
 // FileResolver is filesystem resolver, basically used for built vcl files
@@ -33,7 +34,7 @@ type FileResolver struct {
 	includePaths []string
 }
 
-func NewFileResolver(main string, c *Config) (*FileResolver, error) {
+func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
 	if main == "" {
 		return nil, ErrEmptyMain
 	}
@@ -60,10 +61,16 @@ func NewFileResolver(main string, c *Config) (*FileResolver, error) {
 	}
 	includePaths = append(includePaths, filepath.Dir(abs))
 
-	return &FileResolver{
-		main:         abs,
-		includePaths: includePaths,
+	return []Resolver{
+		&FileResolver{
+			main:         abs,
+			includePaths: includePaths,
+		},
 	}, nil
+}
+
+func (f *FileResolver) Name() string {
+	return ""
 }
 
 func (f *FileResolver) getVCL(file string) (*VCL, error) {
@@ -105,11 +112,12 @@ func (f *FileResolver) Resolve(module string) (*VCL, error) {
 
 // StdinResolver is in memory resolver, read and factory vcl data from terraform planned JSON input
 type StdinResolver struct {
-	Modules []*VCL
-	Main    *VCL
+	Modules     []*VCL
+	Main        *VCL
+	ServiceName string
 }
 
-func NewStdinResolver() (*StdinResolver, error) {
+func NewStdinResolvers() ([]Resolver, error) {
 	// Consider reading from stdin timeout to not to hang up in CI flow
 	input := make(chan []byte)
 	errChan := make(chan error)
@@ -123,32 +131,42 @@ func NewStdinResolver() (*StdinResolver, error) {
 		input <- buf
 	}()
 
+	var resolvers []Resolver
 	select {
 	case buf := <-input:
-		tfVcls, err := unmarshalTerraformPlannedInput(buf)
+		services, err := unmarshalTerraformPlannedInput(buf)
 		if err != nil {
 			return nil, err
 		}
-		s := &StdinResolver{}
-		for _, v := range tfVcls {
-			if v.Main {
-				s.Main = &VCL{
-					Name: v.Name,
-					Data: v.Content,
-				}
-			} else {
-				s.Modules = append(s.Modules, &VCL{
-					Name: v.Name,
-					Data: v.Content,
-				})
+		for _, v := range services {
+			s := &StdinResolver{
+				ServiceName: v.Name,
 			}
+			for _, vcl := range v.Vcls {
+				if vcl.Main {
+					s.Main = &VCL{
+						Name: vcl.Name,
+						Data: vcl.Content,
+					}
+				} else {
+					s.Modules = append(s.Modules, &VCL{
+						Name: vcl.Name,
+						Data: vcl.Content,
+					})
+				}
+			}
+			resolvers = append(resolvers, s)
 		}
-		return s, nil
+		return resolvers, nil
 	case err := <-errChan:
 		return nil, errors.New(fmt.Sprintf("Failed to read from stdin: %s", err.Error()))
 	case <-time.After(time.Second):
 		return nil, errors.New(("Failed to read from stdin: timed out"))
 	}
+}
+
+func (s *StdinResolver) Name() string {
+	return s.ServiceName
 }
 
 func (s *StdinResolver) MainVCL() (*VCL, error) {

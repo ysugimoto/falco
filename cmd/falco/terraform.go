@@ -6,7 +6,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const fastlyTerraformProviderName = "registry.terraform.io/fastly/fastly"
+const (
+	fastlyTerraformProviderName = "registry.terraform.io/fastly/fastly"
+	fastlyVCLServiceType        = "fastly_service_vcl"
+)
 
 // Terraform planned input struct
 // This struct could be unmarshled from input of `terraform show -json [planned json]
@@ -16,10 +19,17 @@ type TerraformVcl struct {
 	Name    string
 }
 
+type FastlyService struct {
+	Name string
+	Vcls []*TerraformVcl
+}
+
 type TerraformPlannedResource struct {
 	ProviderName string `json:"provider_name"`
+	Type         string `json:"type"`
 	Values       *struct {
-		Vcl []*TerraformVcl `json:"vcl"`
+		Name string          `json:"name"`
+		Vcl  []*TerraformVcl `json:"vcl"`
 	} `json:"values"`
 }
 
@@ -34,7 +44,7 @@ type TerraformPlannedInput struct {
 	} `json:"planned_values"`
 }
 
-func unmarshalTerraformPlannedInput(buf []byte) ([]*TerraformVcl, error) {
+func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 	var root TerraformPlannedInput
 
 	if err := json.Unmarshal(buf, &root); err != nil {
@@ -49,23 +59,43 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*TerraformVcl, error) {
 		return nil, errors.New(`Input does not seem to terraform planned JSON: "root_module" field does not exist`)
 	}
 
-	var resources []*TerraformVcl
-	for _, v := range root.PlannedValues.RootModule.Resources {
-		if v.ProviderName == fastlyTerraformProviderName {
-			resources = append(resources, v.Values.Vcl...)
+	var services []*FastlyService
+	// Case: service is declared in root module
+	if len(root.PlannedValues.RootModule.Resources) > 0 {
+		for _, v := range root.PlannedValues.RootModule.Resources {
+			if !isFastlyVCLServiceResource(v) {
+				continue
+			}
+
+			services = append(services, &FastlyService{
+				Name: v.Values.Name,
+				Vcls: v.Values.Vcl,
+			})
 		}
 	}
+
+	// Case: service is declared in child module
 	for _, v := range root.PlannedValues.RootModule.ChildModules {
 		for _, v := range v.Resources {
-			if v.ProviderName == fastlyTerraformProviderName {
-				resources = append(resources, v.Values.Vcl...)
+			if !isFastlyVCLServiceResource(v) {
+				continue
 			}
+
+			services = append(services, &FastlyService{
+				Name: v.Values.Name,
+				Vcls: v.Values.Vcl,
+			})
 		}
 	}
 
-	if len(resources) == 0 {
-		return nil, errors.New(`Planned VCL is empty. Did you plan with fastly terraform provider?`)
+	if len(services) == 0 {
+		return nil, errors.New(`Fastly service does not exist. Did you plan with fastly terraform provider?`)
 	}
 
-	return resources, nil
+	return services, nil
+}
+
+func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
+	return r.ProviderName == fastlyTerraformProviderName &&
+		r.Type == fastlyVCLServiceType
 }
