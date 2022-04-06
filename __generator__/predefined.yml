@@ -1972,89 +1972,122 @@ server.region:
 # But unfornunately undocumented of its variable types...so, we assume types from variable name.
 # see: https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/
 waf.anomaly_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-anomaly-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
 
-waf.xss_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
+waf.blocked:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-blocked/"
+  on: [PASS, MISS, DELIVER, LOG, ERROR]
+  get: BOOL
+  set: BOOL
 
-waf.sql_injection_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
+waf.counter:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-counter/"
+  on: [PASS, MISS, DELIVER]
+  get: INTEGER
+  set: INTEGER
 
-waf.rfi_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
+waf.executed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-executed/"
+  on: [PASS, MISS, DELIVER, LOG, ERROR]
+  get: BOOL
+  set: BOOL
 
-waf.rce_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
-
-waf.php_injection_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
-
-waf.session_fixation_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
-
-waf.lfi_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: FLOAT
+waf.failures:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-failures/"
+  on: [PASS, MISS, DELIVER, LOG, ERROR]
+  get: INTEGER
 
 waf.http_violation_score:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-http-violation-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+waf.inbound_anomaly_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-inbound-anomaly-score/"
+  on: [PASS, MISS]
+  get: INTEGER
+  set: INTEGER
+
+waf.lfi_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-lfi-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+waf.logdata:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-logdata/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+waf.logged:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-logged/"
+  on: [PASS, MISS, DELIVER, LOG, ERROR]
+  get: BOOL
+  set: BOOL
+
+waf.message:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-message/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: STRING
+  set: STRING
+
+waf.passed:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-passed/"
+  on: [PASS, MISS, DELIVER, LOG, ERROR]
+  get: BOOL
+  set: BOOL
+
+waf.php_injection_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  get: INTEGER
+
+waf.rce_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  get: INTEGER
+
+waf.rfi_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rfi-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+waf.rule_id:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rule-id/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+waf.session_fixation_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-session-fixation-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
+
+waf.sql_injection_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-sql-injection-score/"
   on: [LOG]
   get: FLOAT
 
 waf.severity:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: STRING
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-severity/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
 
-waf.rule_id:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: STRING
-
-waf.message:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: STRING
-
-waf.logdata:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: STRING
-
-waf.executed:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: BOOL
-
-waf.blocked:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: BOOL
-
-waf.passed:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: BOOL
-
-waf.logged:
-  reference: "https://developer.fastly.com/reference/vcl/subroutines/waf-debug-log/"
-  on: [LOG]
-  get: BOOL
+waf.xss_score:
+  reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-xss-score/"
+  on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
+  set: INTEGER
 
 LF:
   reference: "https://developer.fastly.com/reference/vcl/types/string/"
