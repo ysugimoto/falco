@@ -9,6 +9,7 @@ import (
 const (
 	fastlyTerraformProviderName = "registry.terraform.io/fastly/fastly"
 	fastlyVCLServiceType        = "fastly_service_vcl"
+	fastlyVCLServiceTypeV1      = "fastly_service_v1"
 )
 
 // Terraform planned input struct
@@ -97,5 +98,5 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 
 func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
 	return r.ProviderName == fastlyTerraformProviderName &&
-		r.Type == fastlyVCLServiceType
+		(r.Type == fastlyVCLServiceType || r.Type == fastlyVCLServiceTypeV1)
 }

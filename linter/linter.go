@@ -533,8 +533,10 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 			l.Error(InvalidTypeConversion(prop.Value.GetMeta(), "ID").Match(TABLE_SYNTAX))
 			return
 		}
-		if _, ok := ctx.Acls[ident.Value]; !ok {
+		if a, ok := ctx.Acls[ident.Value]; !ok {
 			l.Error(UndefinedAcl(ident.GetMeta(), ident.Value))
+		} else {
+			a.IsUsed = true
 		}
 	case types.BackendType:
 		ident, ok := prop.Value.(*ast.Ident)
@@ -542,8 +544,10 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 			l.Error(InvalidTypeConversion(prop.Value.GetMeta(), "ID").Match(TABLE_SYNTAX))
 			return
 		}
-		if _, ok := ctx.Backends[ident.Value]; !ok {
+		if b, ok := ctx.Backends[ident.Value]; !ok {
 			l.Error(UndefinedBackend(ident.GetMeta(), ident.Value))
+		} else {
+			b.IsUsed = true
 		}
 	default:
 		vt := l.lint(prop.Value, ctx)
@@ -974,21 +978,20 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 	v, err := ctx.Get(exp.Value)
 	if err != nil {
-		if _, ok := ctx.Identifiers[exp.Value]; ok {
-			return types.IDType
+		if b, ok := ctx.Backends[exp.Value]; ok {
+			// mark backend is used
+			b.IsUsed = true
+			return types.BackendType
 		} else if a, ok := ctx.Acls[exp.Value]; ok {
 			// mark acl is used
 			a.IsUsed = true
 			return types.AclType
-		} else if b, ok := ctx.Backends[exp.Value]; ok {
-			// mark backend is used
-			b.IsUsed = true
-
-			return types.BackendType
 		} else if t, ok := ctx.Tables[exp.Value]; ok {
 			// mark table is used
 			t.IsUsed = true
 			return types.TableType
+		} else if _, ok := ctx.Identifiers[exp.Value]; ok {
+			return types.IDType
 		}
 		l.Error(UndefinedVariable(exp.GetMeta(), exp.Value))
 	}
