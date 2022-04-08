@@ -11,6 +11,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
+	"github.com/pkg/errors"
 )
 
 var version string = ""
@@ -23,6 +24,8 @@ var (
 	green   = color.New(color.FgGreen)
 	cyan    = color.New(color.FgCyan)
 	magenta = color.New(color.FgMagenta)
+
+	ErrExit = errors.New("exit")
 )
 
 const (
@@ -151,6 +154,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	var shouldExit bool
 	for _, v := range resolvers {
 		if name := v.Name(); name != "" {
 			writeln(white, `Lint service of "%s"`, name)
@@ -163,21 +167,29 @@ func main() {
 			os.Exit(1)
 		}
 
+		var exitErr error
 		if c.Stats {
-			runStats(runner, c.Json)
+			exitErr = runStats(runner, c.Json)
 		} else {
-			runLint(runner)
+			exitErr = runLint(runner)
 		}
+		if exitErr == ErrExit {
+			shouldExit = true
+		}
+	}
+
+	if shouldExit {
+		os.Exit(1)
 	}
 }
 
-func runLint(runner *Runner) {
+func runLint(runner *Runner) error {
 	result, err := runner.Run()
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())
 		}
-		os.Exit(1)
+		return ErrExit
 	}
 
 	write(red, ":fire:%d errors, ", result.Errors)
@@ -207,22 +219,23 @@ func runLint(runner *Runner) {
 		if len(runner.transformers) > 0 {
 			writeln(white, "Program aborted. Please fix lint errors before transforming.")
 		}
-		os.Exit(1)
+		return ErrExit
 	}
 
 	if err := runner.Transform(result.Vcls); err != nil {
 		writeln(red, err.Error())
-		os.Exit(1)
+		return ErrExit
 	}
+	return nil
 }
 
-func runStats(runner *Runner, printJson bool) {
+func runStats(runner *Runner, printJson bool) error {
 	stats, err := runner.Stats()
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())
 		}
-		os.Exit(1)
+		return ErrExit
 	}
 
 	if printJson {
@@ -232,7 +245,7 @@ func runStats(runner *Runner, printJson bool) {
 			writeln(red, err.Error())
 			os.Exit(1)
 		}
-		return
+		return ErrExit
 	}
 
 	printStats(strings.Repeat("=", 80))
@@ -254,6 +267,7 @@ func runStats(runner *Runner, printJson bool) {
 	printStats(strings.Repeat("-", 80))
 	printStats("| %-22s | %51d |", "Directors", stats.Directors)
 	printStats(strings.Repeat("-", 80))
+	return nil
 }
 
 func printStats(format string, args ...interface{}) {

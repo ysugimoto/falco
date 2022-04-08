@@ -368,6 +368,8 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	p.nextToken() // point to table value token
 
 	switch p.curToken.Token.Type {
+	case token.IDENT:
+		prop.Value = p.parseIdent()
 	case token.STRING:
 		prop.Value = p.parseString()
 	case token.ACL, token.BACKEND:

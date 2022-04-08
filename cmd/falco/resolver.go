@@ -160,7 +160,7 @@ func NewStdinResolvers() ([]Resolver, error) {
 		return resolvers, nil
 	case err := <-errChan:
 		return nil, errors.New(fmt.Sprintf("Failed to read from stdin: %s", err.Error()))
-	case <-time.After(time.Second):
+	case <-time.After(10 * time.Second):
 		return nil, errors.New(("Failed to read from stdin: timed out"))
 	}
 }
