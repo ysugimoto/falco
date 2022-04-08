@@ -1,3 +1,11 @@
+## v0.9.1
+
+- Tweak multiple service linting for terraform [#54](https://github.com/ysugimoto/falco/pull/54) (@ysugimoto)
+  - extend stdin timeout, `terraform show -json` command might be a few seconds to output them
+- Support legacy Fastly Provider service definition of `fastly_service_v1`
+- Fix ident parse for table property value
+  - If some declaration access in table property, it should be marked as used
+
 ## v0.9.0
 
 - Improve waf related variables [#49](https://github.com/ysugimoto/falco/pull/49) (@ysugimoto)
