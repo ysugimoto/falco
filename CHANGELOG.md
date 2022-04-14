@@ -1,3 +1,7 @@
+## v0.9.2
+
+- Support platform of `alipne`, `darwin-arm64` [#55](https://github.com/ysugimoto/falco/pull/55) (@ysugimoto)
+
 ## v0.9.1
 
 - Tweak multiple service linting for terraform [#54](https://github.com/ysugimoto/falco/pull/54) (@ysugimoto)
