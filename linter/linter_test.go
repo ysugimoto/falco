@@ -1173,6 +1173,18 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with user defined sub", func(t *testing.T) {
+		input := `
+sub returns_one INTEGER {
+	return 1;
+}
+
+sub returns_true BOOL {
+	return returns_one() == 1;
+}`
+		assertNoError(t, input)
+	})
+
 	t.Run("function not found", func(t *testing.T) {
 		input := `
 sub foo {
@@ -1232,6 +1244,47 @@ sub vcl_recv {
 	return (pass);
 }`
 		assertNoError(t, input)
+	})
+
+	t.Run("sub: return correct type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	#Fastly recv
+	return 1;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return empty statement", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return wrong type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (req.http.foo);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (pass);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value as action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (1);
+}`
+		assertError(t, input)
 	})
 }
 
