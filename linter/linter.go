@@ -278,13 +278,35 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			}
 			statements = append(statements, stmt)
 		case *ast.SubroutineDeclaration:
-			if err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block}); err != nil {
-				e := &LintError{
-					Severity: ERROR,
-					Token:    t.Name.GetMeta().Token,
-					Message:  err.Error(),
+			if t.ReturnType != nil {
+				returnType, ok := ValueTypeMap[*&t.ReturnType.Value]
+				if !ok {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    *&t.ReturnType.GetMeta().Token,
+						Message:  fmt.Sprintf("Unexpected variable type found: %s", *&t.ReturnType.Value),
+					}
+					l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
 				}
-				l.Error(e.Match(SUBROUTINE_DUPLICATED))
+
+				if err := ctx.AddUserDefinedFunction(t.Name.Value, getSubroutineCallScope(t), returnType); err != nil {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    t.Name.GetMeta().Token,
+						Message:  err.Error(),
+					}
+					l.Error(err.Match(SUBROUTINE_DUPLICATED))
+				}
+			} else {
+				if err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block}); err != nil {
+					e := &LintError{
+						Severity: ERROR,
+						Token:    t.Name.GetMeta().Token,
+						Message:  err.Error(),
+					}
+					l.Error(e.Match(SUBROUTINE_DUPLICATED))
+				}
+
 			}
 			statements = append(statements, stmt)
 		default:
@@ -566,24 +588,10 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	scope := getSubroutineCallScope(decl)
 	var cc *context.Context
 	if decl.ReturnType != nil {
-		returnType, ok := ValueTypeMap[*&decl.ReturnType.Value]
-		if !ok {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    *&decl.ReturnType.GetMeta().Token,
-				Message:  fmt.Sprintf("Unexpected variable type found: %s", *&decl.ReturnType.Value),
-			}
-			l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
-		}
-		if err := ctx.AddUserDefinedFunction(decl.Name.Value, scope, returnType); err != nil {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    decl.Name.GetMeta().Token,
-				Message:  err.Error(),
-			}
-			l.Error(err.Match(SUBROUTINE_DUPLICATED))
-		}
+		returnType, _ := ValueTypeMap[*&decl.ReturnType.Value]
 		cc = ctx.UserDefinedFunctionScope(decl.Name.Value, scope, returnType)
+	} else {
+		cc = ctx.Scope(scope)
 	}
 
 	// Switch context mode which corredponds to call scope and restore after linting block statements
