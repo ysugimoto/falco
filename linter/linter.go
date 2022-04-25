@@ -279,12 +279,12 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			statements = append(statements, stmt)
 		case *ast.SubroutineDeclaration:
 			if t.ReturnType != nil {
-				returnType, ok := ValueTypeMap[*&t.ReturnType.Value]
+				returnType, ok := ValueTypeMap[t.ReturnType.Value]
 				if !ok {
 					err := &LintError{
 						Severity: ERROR,
-						Token:    *&t.ReturnType.GetMeta().Token,
-						Message:  fmt.Sprintf("Unexpected variable type found: %s", *&t.ReturnType.Value),
+						Token:    t.ReturnType.GetMeta().Token,
+						Message:  fmt.Sprintf("Unexpected variable type found: %s", t.ReturnType.Value),
 					}
 					l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
 				}
@@ -306,7 +306,6 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 					}
 					l.Error(e.Match(SUBROUTINE_DUPLICATED))
 				}
-
 			}
 			statements = append(statements, stmt)
 		default:
@@ -588,7 +587,7 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	scope := getSubroutineCallScope(decl)
 	var cc *context.Context
 	if decl.ReturnType != nil {
-		returnType, _ := ValueTypeMap[*&decl.ReturnType.Value]
+		returnType := ValueTypeMap[decl.ReturnType.Value]
 		cc = ctx.UserDefinedFunctionScope(decl.Name.Value, scope, returnType)
 	} else {
 		cc = ctx.Scope(scope)
