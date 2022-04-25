@@ -11,6 +11,8 @@ backend httpbin_org {
   .ssl_sni_hostname = "httpbin.org";
   .ssl_cert_hostname = "httpbin.org";
   .ssl_check_cert = always;
+    .min_tls_version = "1.2";
+  .max_tls_version = "1.2";
   .probe = {
     .request = "GET /status/200 HTTP/1.1" "Host: httpbin.org" "Connection: close";
     .dummy = true;
