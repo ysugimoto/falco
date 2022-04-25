@@ -298,7 +298,8 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 					l.Error(err.Match(SUBROUTINE_DUPLICATED))
 				}
 			} else {
-				if err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block}); err != nil {
+				err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block})
+				if err != nil {
 					e := &LintError{
 						Severity: ERROR,
 						Token:    t.Name.GetMeta().Token,
