@@ -29,5 +29,4 @@ penaltybox ip_pbox {
 	if p.String() != expect {
 		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, p.String())
 	}
-
 }
