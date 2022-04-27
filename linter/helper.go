@@ -19,6 +19,8 @@ var BackendPropertyTypes = map[string]types.Type{
 	"port":                   types.StringType,
 	"ssl":                    types.BoolType,
 	"ssl_cert_hostname":      types.StringType,
+	"max_tls_version":        types.StringType,
+	"min_tls_version":        types.StringType,
 	"ssl_check_cert":         types.IDType,
 	"ssl_sni_hostname":       types.StringType,
 	"between_bytes_timeout":  types.RTimeType,
