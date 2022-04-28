@@ -440,7 +440,30 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if s.Block, err = p.parseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	// After block statement is parsed, cusor should point RIGHT_BRACE, end of block statement
+	// After block statement is parsed, cursor should point RIGHT_BRACE, end of block statement
+
+	return s, nil
+}
+
+func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error) {
+	s := &ast.PenaltyboxDeclaration{
+		Meta: p.curToken,
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
+	}
+	s.Name = p.parseIdent()
+
+	if !p.expectPeek(token.LEFT_BRACE) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
+	}
+	swapLeadingTrailing(p.curToken, s.Name.Meta)
+
+	var err error
+	if s.Block, err = p.parseBlockStatement(); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	return s, nil
 }

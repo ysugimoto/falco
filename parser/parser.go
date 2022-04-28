@@ -187,6 +187,8 @@ func (p *Parser) parse() (ast.Statement, error) {
 		stmt, err = p.parseTableDeclaration()
 	case token.SUBROUTINE:
 		stmt, err = p.parseSubroutineDeclaration()
+	case token.PENALTYBOX:
+		stmt, err = p.parsePenaltyboxDeclaration()
 	default:
 		err = UnexpectedToken(p.curToken)
 	}
