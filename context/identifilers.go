@@ -1,8 +1,8 @@
 package context
 
-// Fastly predifned identifier list.
+// Fastly predefined identifier list.
 // we listed as possible as found in Fastly document site,
-// but perhapse there are more builtin identifiers.
+// but perhaps there are more builtin identifiers.
 func builtinIdentifiers() map[string]struct{} {
 	return map[string]struct{}{
 		// use for backend.ssl_check_cert
