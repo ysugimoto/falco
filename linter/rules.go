@@ -28,6 +28,8 @@ const (
 	TABLE_ITEM_LIMITATION                = "table/item-limitation"
 	TABLE_DUPLICATED                     = "table/duplicated"
 	SUBROUTINE_SYNTAX                    = "subroutine/syntax"
+	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
+	RATECOUNTER_SYNTAX                   = "ratecounter/syntax"
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	DECLARE_STATEMENT_SYNTAX             = "declare-statement/syntax"
@@ -71,6 +73,8 @@ var references = map[Rule]string{
 	TABLE_ITEM_LIMITATION:            "https://developer.fastly.com/reference/vcl/declarations/table/#limitations",
 	SUBROUTINE_SYNTAX:                "https://developer.fastly.com/reference/vcl/subroutines/",
 	SUBROUTINE_BOILERPLATE_MACRO:     "https://developer.fastly.com/learning/vcl/using/#adding-vcl-to-your-service-configuration",
+	PENALTYBOX_SYNTAX:                "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",
+	RATECOUNTER_SYNTAX:               "https://developer.fastly.com/reference/vcl/declarations/ratecounter/",
 	DECLARE_STATEMENT_SYNTAX:         "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	DECLARE_STATEMENT_INVALID_TYPE:   "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	SET_STATEMENT_SYNTAX:             "https://developer.fastly.com/reference/vcl/statements/set/",
