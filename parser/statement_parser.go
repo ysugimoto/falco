@@ -557,3 +557,36 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 	// cursor must be on RIGHT_BRACE
 	return stmt, nil
 }
+
+func (p *Parser) parseNoProperitiesBlockStatement() (*ast.BlockStatement, error) {
+	b := &ast.BlockStatement{
+		Meta:       p.curToken,
+		Statements: []ast.Statement{},
+	}
+
+	for !p.peekTokenIs(token.RIGHT_BRACE) {
+		var stmt ast.Statement
+		var err error
+
+		p.nextToken() // point to statement
+		switch p.curToken.Token.Type {
+		case token.LEFT_BRACE:
+			stmt, err = p.parseNoProperitiesBlockStatement()
+		default:
+			err = UnexpectedToken(p.peekToken)
+		}
+
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		b.Statements = append(b.Statements, stmt)
+	}
+
+	b.Meta.Trailing = p.trailing()
+	p.nextToken() // point to RIGHT_BRACE
+
+	// RIGHT_BRACE leading comments are block infix comments
+	swapLeadingInfix(p.curToken, b.Meta)
+
+	return b, nil
+}

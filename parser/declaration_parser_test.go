@@ -386,9 +386,7 @@ director example client {
 func TestParsePenaltybox(t *testing.T) {
 	input := `// Penaltybox definition
 	penaltybox ip_pbox {
-	// Leading comment
-	set req.http.Host = "example.com"; // Trailing comment
-}`
+} // Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.PenaltyboxDeclaration{
@@ -397,25 +395,27 @@ func TestParsePenaltybox(t *testing.T) {
 					Meta:  ast.New(T, 0),
 					Value: "ip_pbox",
 				},
-				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1),
-					Statements: []ast.Statement{
-						&ast.SetStatement{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
-							Ident: &ast.Ident{
-								Meta:  ast.New(T, 1),
-								Value: "req.http.Host",
-							},
-							Operator: &ast.Operator{
-								Meta:     ast.New(T, 1),
-								Operator: "=",
-							},
-							Value: &ast.String{
-								Meta:  ast.New(T, 1),
-								Value: "example.com",
-							},
-						},
-					},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v\n", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParseRatecounter(t *testing.T) {
+	input := `// Ratecounter definition
+	ratecounter ip_ratecounter {
+} // Trailing comment`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.RatecounterDeclaration{
+				Meta: ast.New(T, 0, comments("// Ratecounter definition")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "ip_ratecounter",
 				},
 			},
 		},

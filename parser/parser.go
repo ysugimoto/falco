@@ -189,6 +189,8 @@ func (p *Parser) parse() (ast.Statement, error) {
 		stmt, err = p.parseSubroutineDeclaration()
 	case token.PENALTYBOX:
 		stmt, err = p.parsePenaltyboxDeclaration()
+	case token.RATECOUNTER:
+		stmt, err = p.parseRatecounterDeclaration()
 	default:
 		err = UnexpectedToken(p.curToken)
 	}
