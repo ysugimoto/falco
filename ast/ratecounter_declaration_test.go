@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestPenaltyboxStatement(t *testing.T) {
-	p := &PenaltyboxDeclaration{
+func TestRatecounterStatement(t *testing.T) {
+	r := &RatecounterDeclaration{
 		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
 		Name: &Ident{
 			Meta:  New(T, 0),
-			Value: "ip_pbox",
+			Value: "requests_rate",
 		},
 		Block: &BlockStatement{
 			Meta: New(T, 0, comments("/* This is comment */")),
@@ -17,11 +17,11 @@ func TestPenaltyboxStatement(t *testing.T) {
 	}
 
 	expect := `// This is comment
-penaltybox ip_pbox {
+ratecounter requests_rate {
 } /* This is comment */
 `
 
-	if p.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, p.String())
+	if r.String() != expect {
+		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, r.String())
 	}
 }

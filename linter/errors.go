@@ -130,7 +130,7 @@ func Duplicated(m *ast.Meta, name, ident string) *LintError {
 	}
 }
 
-func AccessDenined(m *ast.Meta, name, scope string) *LintError {
+func AccessDenied(m *ast.Meta, name, scope string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,

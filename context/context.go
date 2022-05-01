@@ -87,6 +87,8 @@ type Context struct {
 	Tables         map[string]*types.Table
 	Directors      map[string]*types.Director
 	Subroutines    map[string]*types.Subroutine
+	Penaltyboxes   map[string]*types.Penaltybox
+	Ratecounters   map[string]*types.Ratecounter
 	Identifiers    map[string]struct{}
 	functions      Functions
 	Variables      Variables
@@ -101,6 +103,8 @@ func New() *Context {
 		Tables:         make(map[string]*types.Table),
 		Directors:      make(map[string]*types.Director),
 		Subroutines:    make(map[string]*types.Subroutine),
+		Penaltyboxes:   make(map[string]*types.Penaltybox),
+		Ratecounters:   make(map[string]*types.Ratecounter),
 		Identifiers:    builtinIdentifiers(),
 		functions:      builtinFunctions(),
 		Variables:      predefinedVariables(),
@@ -264,6 +268,26 @@ func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error
 		}
 	} else {
 		c.Subroutines[name] = subroutine
+	}
+	return nil
+}
+
+func (c *Context) AddPenaltybox(name string, penaltybox *types.Penaltybox) error {
+	// check existence
+	if _, duplicated := c.Penaltyboxes[name]; duplicated {
+		return fmt.Errorf(`duplicate definition of penaltybox "%s"`, name)
+	} else {
+		c.Penaltyboxes[name] = penaltybox
+	}
+	return nil
+}
+
+func (c *Context) AddRatecounter(name string, ratecounter *types.Ratecounter) error {
+	// check existence
+	if _, duplicated := c.Ratecounters[name]; duplicated {
+		return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
+	} else {
+		c.Ratecounters[name] = ratecounter
 	}
 	return nil
 }
