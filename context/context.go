@@ -544,13 +544,12 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 
 	obj, ok := c.functions[first]
 	if !ok {
-		fmt.Printf("Function %s is not defined \n", first)
-		return nil, fmt.Errorf(`Function "%s" is not defined 1`, name)
+		return nil, fmt.Errorf(`Function "%s" is not defined`, name)
 	}
 
 	for _, key := range remains {
 		if v, ok := obj.Items[key]; !ok {
-			return nil, fmt.Errorf(`Function "%s" is not defined 2`, name)
+			return nil, fmt.Errorf(`Function "%s" is not defined`, name)
 		} else {
 			obj = v
 		}

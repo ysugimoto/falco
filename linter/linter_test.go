@@ -336,6 +336,14 @@ sub vcl_recv {
 		assertError(t, input)
 	})
 
+	t.Run("Fastly reserved subroutine cannot have a return type", func(t *testing.T) {
+		input := `
+sub vcl_recv BOOL {
+	set req.http.Host = "example.com";
+	return true;
+}`
+		assertError(t, input)
+	})
 }
 
 func TestLintDeclareStatement(t *testing.T) {

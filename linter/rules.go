@@ -30,6 +30,7 @@ const (
 	SUBROUTINE_SYNTAX                    = "subroutine/syntax"
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
+	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
 	DECLARE_STATEMENT_SYNTAX             = "declare-statement/syntax"
 	DECLARE_STATEMENT_INVALID_TYPE       = "declare-statement/invalid-type"
 	DECLARE_STATEMENT_DUPLICATED         = "declare-statement/duplicated"

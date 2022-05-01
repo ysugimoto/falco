@@ -279,6 +279,16 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			statements = append(statements, stmt)
 		case *ast.SubroutineDeclaration:
 			if t.ReturnType != nil {
+
+				if context.IsFastlySubroutine(t.Name.Value) {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    t.ReturnType.GetMeta().Token,
+						Message:  fmt.Sprintf("State-machine method %s may not have a return type", t.Name.Value),
+					}
+					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
+				}
+
 				returnType, ok := ValueTypeMap[t.ReturnType.Value]
 				if !ok {
 					err := &LintError{
@@ -286,7 +296,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 						Token:    t.ReturnType.GetMeta().Token,
 						Message:  fmt.Sprintf("Unexpected variable type found: %s", t.ReturnType.Value),
 					}
-					l.Error(err.Match(DECLARE_STATEMENT_INVALID_TYPE))
+					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 				}
 
 				if err := ctx.AddUserDefinedFunction(t.Name.Value, getSubroutineCallScope(t), returnType); err != nil {
