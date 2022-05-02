@@ -395,6 +395,10 @@ func TestParsePenaltybox(t *testing.T) {
 					Meta:  ast.New(T, 0),
 					Value: "ip_pbox",
 				},
+				Block: &ast.BlockStatement{
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Statements: []ast.Statement{},
+				},
 			},
 		},
 	}
@@ -416,6 +420,10 @@ func TestParseRatecounter(t *testing.T) {
 				Name: &ast.Ident{
 					Meta:  ast.New(T, 0),
 					Value: "ip_ratecounter",
+				},
+				Block: &ast.BlockStatement{
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Statements: []ast.Statement{},
 				},
 			},
 		},
