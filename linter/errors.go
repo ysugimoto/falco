@@ -297,3 +297,19 @@ func UnusedVariable(m *ast.Meta, name string) *LintError {
 		Message:  fmt.Sprintf(`variable "%s" is unused`, name),
 	}
 }
+
+func NonEmptyPenaltyboxBlock(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Penaltybox %s cannot have any properties and should be declared as an empty block", name),
+	}
+}
+
+func NonEmptyRatecounterBlock(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Ratecounter %s cannot have any properties and should be declared as an empty block", name),
+	}
+}

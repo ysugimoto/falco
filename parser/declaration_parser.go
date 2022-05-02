@@ -461,7 +461,7 @@ func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	swapLeadingTrailing(p.curToken, pb.Name.Meta)
 
 	var err error
-	if pb.Block, err = p.parseNoProperitiesBlockStatement(); err != nil {
+	if pb.Block, err = p.parseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -484,7 +484,7 @@ func (p *Parser) parseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	swapLeadingTrailing(p.curToken, r.Name.Meta)
 
 	var err error
-	if r.Block, err = p.parseNoProperitiesBlockStatement(); err != nil {
+	if r.Block, err = p.parseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
