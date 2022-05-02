@@ -285,7 +285,7 @@ func (c *Context) AddPenaltybox(name string, penaltybox *types.Penaltybox) error
 func (c *Context) AddRatecounter(name string, ratecounter *types.Ratecounter) error {
 	// check existence
 	if _, duplicated := c.Ratecounters[name]; duplicated {
-		return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
+		return fmt.Errorf(`duplicate definition of ratecounter "%s"`, name)
 	} else {
 		c.Ratecounters[name] = ratecounter
 	}
