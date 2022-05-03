@@ -1291,6 +1291,47 @@ sub custom_sub INTEGER {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("sub: return local value", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	declare local var.tmp INTEGER;
+	set var.tmp = 10;
+	return var.tmp;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return value contains operations", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return var.tmp "bar";
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value contains jibber", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return +-var.tmp;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: bool return value is allowed to have operations", func(t *testing.T) {
+		input := `
+sub get_bool BOOL {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return std.strlen(var.tmp) > 5;
+}`
+		assertNoError(t, input)
+	})
+
 }
 
 func TestBlockSyntaxInsideBlockStatement(t *testing.T) {

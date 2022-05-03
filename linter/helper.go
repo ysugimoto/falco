@@ -184,6 +184,23 @@ func isValidStatmentExpression(exp ast.Expression) error {
 	return nil
 }
 
+func isValidReturnExpression(exp ast.Expression) error {
+	switch t := exp.(type) {
+	case *ast.PrefixExpression:
+		if t.Operator != "!" {
+			return fmt.Errorf("expected variable or function")
+		}
+		return isValidReturnExpression(t.Right)
+	case *ast.InfixExpression:
+		// Only comparison and boolean operators are allowed
+		if !(isBooleanOperator(t.Operator) || isComparisonOperator(t.Operator)) {
+			return fmt.Errorf("expected ;, got %s", t.Operator)
+		}
+		return isValidReturnExpression(t.Left)
+	}
+	return nil
+}
+
 func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
@@ -199,6 +216,44 @@ func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) error {
 		}
 	}
 	return nil
+}
+
+func isBooleanOperator(operator string) bool {
+	switch operator {
+	case "(":
+		return true
+	case ")":
+		return true
+	case "!":
+		return true
+	case "&&":
+		return true
+	case "||":
+		return true
+	}
+	return false
+}
+
+func isComparisonOperator(operator string) bool {
+	switch operator {
+	case "==":
+		return true
+	case "!=":
+		return true
+	case "~":
+		return true
+	case "!~":
+		return true
+	case ">":
+		return true
+	case "<":
+		return true
+	case ">=":
+		return true
+	case "<=":
+		return true
+	}
+	return false
 }
 
 func isConstantExpression(exp ast.Expression) bool {

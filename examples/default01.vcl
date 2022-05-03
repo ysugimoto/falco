@@ -25,6 +25,24 @@ backend httpbin_org {
   }
 }
 
+# sub get_str STRING {
+#   declare local var.tmp STRING;
+#   set var.tmp = "foo";
+#   return "foo" "bar";
+# }
+
+# sub get_int INTEGER {
+#   declare local var.tmp INTEGER;
+#   set var.tmp = 1;
+#   return +var.tmp;
+# }
+
+# sub get_int BOOL {
+#   declare local var.tmp STRING;
+#   set var.tmp = "foo"+"b";
+#   return +(std.strlen(var.tmp) > 5);
+# }
+
 sub vcl_recv {
 
   #Fastly recv

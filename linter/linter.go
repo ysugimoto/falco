@@ -1024,6 +1024,17 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			})
 			return types.NeverType
 		}
+
+		err := isValidReturnExpression(*stmt.ReturnExpression)
+		if err != nil {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Message:  err.Error(),
+			})
+			return types.NeverType
+		}
+
 		cc := l.lint(*stmt.ReturnExpression, ctx)
 		// Condition expression return type must be BOOL or STRING
 		if !expectType(cc, *ctx.ReturnType) {
