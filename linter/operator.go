@@ -149,7 +149,7 @@ func (l *Linter) lintAddSubOperator(op *ast.Operator, left, right types.Type, is
 }
 
 // Lint arithmetic operator excepts addition and subtraction. Lint "*=", "/=" and "%=" operator
-func (l *Linter) lintArithmeticOpereator(op *ast.Operator, left, right types.Type, isLiteral bool) {
+func (l *Linter) lintArithmeticOperator(op *ast.Operator, left, right types.Type, isLiteral bool) {
 	switch left {
 	case types.IntegerType:
 		switch right {

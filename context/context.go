@@ -87,6 +87,8 @@ type Context struct {
 	Tables         map[string]*types.Table
 	Directors      map[string]*types.Director
 	Subroutines    map[string]*types.Subroutine
+	Penaltyboxes   map[string]*types.Penaltybox
+	Ratecounters   map[string]*types.Ratecounter
 	Identifiers    map[string]struct{}
 	functions      Functions
 	Variables      Variables
@@ -101,6 +103,8 @@ func New() *Context {
 		Tables:         make(map[string]*types.Table),
 		Directors:      make(map[string]*types.Director),
 		Subroutines:    make(map[string]*types.Subroutine),
+		Penaltyboxes:   make(map[string]*types.Penaltybox),
+		Ratecounters:   make(map[string]*types.Ratecounter),
 		Identifiers:    builtinIdentifiers(),
 		functions:      builtinFunctions(),
 		Variables:      predefinedVariables(),
@@ -167,7 +171,7 @@ func (c *Context) PushRegexVariables(matchN int) error {
 
 	// If pushed count is greater than 1, variable is overridden in the subroutine statement
 	if c.RegexVariables["re.group.0"] > 1 {
-		return fmt.Errorf("Regex captured variable may override older one.")
+		return fmt.Errorf("regex captured variable may override older one")
 	}
 	return nil
 }
@@ -184,7 +188,7 @@ func (c *Context) GetRegexGroupVariable(name string) (types.Type, error) {
 func (c *Context) AddAcl(name string, acl *types.Acl) error {
 	// check existence
 	if _, duplicated := c.Acls[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of acl "%s"`, name)
+		return fmt.Errorf(`duplicate definition of acl "%s"`, name)
 	}
 	c.Acls[name] = acl
 	return nil
@@ -193,11 +197,11 @@ func (c *Context) AddAcl(name string, acl *types.Acl) error {
 func (c *Context) AddBackend(name string, backend *types.Backend) error {
 	// check existence
 	if _, duplicated := c.Backends[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of backend "%s"`, name)
+		return fmt.Errorf(`duplicate definition of backend "%s"`, name)
 	}
 	c.Backends[name] = backend
 
-	// Additionally, assign some backend name related predefiend variable
+	// Additionally, assign some backend name related predefined variable
 	c.Variables["backend"].Items[name] = dynamicBackend()
 	c.Variables["ratecounter"] = &Object{
 		Items: map[string]*Object{
@@ -211,7 +215,7 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 func (c *Context) AddTable(name string, table *types.Table) error {
 	// check existence
 	if _, duplicated := c.Tables[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of table "%s"`, name)
+		return fmt.Errorf(`duplicate definition of table "%s"`, name)
 	}
 	c.Tables[name] = table
 	return nil
@@ -220,7 +224,7 @@ func (c *Context) AddTable(name string, table *types.Table) error {
 func (c *Context) AddDirector(name string, director *types.Director) error {
 	// check existence
 	if _, duplicated := c.Directors[name]; duplicated {
-		return fmt.Errorf(`duplicate deifnition of director "%s"`, name)
+		return fmt.Errorf(`duplicate definition of director "%s"`, name)
 	}
 	c.Directors[name] = director
 
@@ -235,7 +239,7 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 		},
 	}
 
-	// And, director target backend identifilers should be marked as used
+	// And, director target backend identifiers should be marked as used
 	for _, d := range director.Decl.Properties {
 		bo, ok := d.(*ast.DirectorBackendObject)
 		if !ok {
@@ -260,10 +264,30 @@ func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error
 	// check existence
 	if _, duplicated := c.Subroutines[name]; duplicated {
 		if !IsFastlySubroutine(name) {
-			return fmt.Errorf(`duplicate deifnition of subroutine "%s"`, name)
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
 	} else {
 		c.Subroutines[name] = subroutine
+	}
+	return nil
+}
+
+func (c *Context) AddPenaltybox(name string, penaltybox *types.Penaltybox) error {
+	// check existence
+	if _, duplicated := c.Penaltyboxes[name]; duplicated {
+		return fmt.Errorf(`duplicate definition of penaltybox "%s"`, name)
+	} else {
+		c.Penaltyboxes[name] = penaltybox
+	}
+	return nil
+}
+
+func (c *Context) AddRatecounter(name string, ratecounter *types.Ratecounter) error {
+	// check existence
+	if _, duplicated := c.Ratecounters[name]; duplicated {
+		return fmt.Errorf(`duplicate definition of ratecounter "%s"`, name)
+	} else {
+		c.Ratecounters[name] = ratecounter
 	}
 	return nil
 }
@@ -305,7 +329,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 	if obj == nil || obj.Value == nil {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
-	// Value exists, but uneable to access in current scope
+	// Value exists, but unable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
 		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
 		if obj.Value.Reference != "" {
@@ -365,7 +389,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 	if obj == nil || obj.Value == nil {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
-	// Value exists, but uneable to access in current scope
+	// Value exists, but unable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
 		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
 		if obj.Value.Reference != "" {
@@ -467,7 +491,7 @@ func (c *Context) Unset(name string) error {
 	if obj == nil || obj.Value == nil {
 		return nil
 	}
-	// Value exists, but uneable to access in current scope
+	// Value exists, but unable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
 		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
 		if obj.Value.Reference != "" {
@@ -495,12 +519,12 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 
 	obj, ok := c.functions[first]
 	if !ok {
-		return nil, fmt.Errorf(`Function "%s" is not defined`, name)
+		return nil, fmt.Errorf(`function "%s" is not defined`, name)
 	}
 
 	for _, key := range remains {
 		if v, ok := obj.Items[key]; !ok {
-			return nil, fmt.Errorf(`Function "%s" is not defined`, name)
+			return nil, fmt.Errorf(`function "%s" is not defined`, name)
 		} else {
 			obj = v
 		}
@@ -510,7 +534,7 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 	if obj == nil || obj.Value == nil {
 		return nil, fmt.Errorf(`"%s" is not a function`, name)
 	}
-	// Value exists, but uneable to access in current scope
+	// Value exists, but unable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
 		return nil, fmt.Errorf(
 			`function "%s" could not call in scope of %s\ndocument: %s`,

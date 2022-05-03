@@ -1197,6 +1197,64 @@ func builtinFunctions() Functions {
 				Reference: "https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/",
 			},
 		},
+		"ratelimit": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"check_rate": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.TimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rate/",
+					},
+				},
+				"check_rates": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.TimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rates/",
+					},
+				},
+				"penaltybox_add": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType, types.RTimeType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-add/",
+					},
+				},
+				"penaltybox_has": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-has/",
+					},
+				},
+				"ratecounter_increment": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.IntegerType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType, types.IntegerType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-ratecounter-increment/",
+					},
+				},
+			},
+		},
 		"regsub": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{

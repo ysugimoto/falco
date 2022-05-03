@@ -348,7 +348,7 @@ director example client {
 					&ast.DirectorBackendObject{
 						Meta: ast.New(T, 2, comments("// Leading comment"), comments("// Trailing comment")),
 						Values: []*ast.DirectorProperty{
-							&ast.DirectorProperty{
+							{
 								Meta: ast.New(T, 2),
 								Key: &ast.Ident{
 									Meta:  ast.New(T, 2),
@@ -359,7 +359,7 @@ director example client {
 									Value: "example",
 								},
 							},
-							&ast.DirectorProperty{
+							{
 								Meta: ast.New(T, 2),
 								Key: &ast.Ident{
 									Meta:  ast.New(T, 2),
@@ -372,6 +372,58 @@ director example client {
 							},
 						},
 					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v\n", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParsePenaltybox(t *testing.T) {
+	input := `// Penaltybox definition
+	penaltybox ip_pbox {
+} // Trailing comment`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.PenaltyboxDeclaration{
+				Meta: ast.New(T, 0, comments("// Penaltybox definition")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "ip_pbox",
+				},
+				Block: &ast.BlockStatement{
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Statements: []ast.Statement{},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v\n", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParseRatecounter(t *testing.T) {
+	input := `// Ratecounter definition
+	ratecounter ip_ratecounter {
+} // Trailing comment`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.RatecounterDeclaration{
+				Meta: ast.New(T, 0, comments("// Ratecounter definition")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "ip_ratecounter",
+				},
+				Block: &ast.BlockStatement{
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Statements: []ast.Statement{},
 				},
 			},
 		},

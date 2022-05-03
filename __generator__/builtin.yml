@@ -1217,3 +1217,36 @@ uuid.x500:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   return: STRING
 
+ratelimit.check_rate:
+  reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rate/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, TIME]
+  return: BOOL
+
+ratelimit.check_rates:
+  reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rates/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, INTEGER, INTEGER, INTEGER, ID, TIME]
+  return: BOOL
+
+ratelimit.penaltybox_add:
+  reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-add/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, RTIME]
+
+ratelimit.penaltybox_has:
+  reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-has/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING]
+  return: BOOL
+
+ratelimit.ratecounter_increment:
+  reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-ratecounter-increment/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, INTEGER]
+  return: INTEGER
