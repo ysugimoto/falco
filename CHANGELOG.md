@@ -1,6 +1,7 @@
 ## v0.10.0
 
 - Add support for Fastly Rate Limiting [#60](https://github.com/ysugimoto/falco/pull/60) (@shadialtarsha)
+- fix ci linting [#61](https://github.com/ysugimoto/falco/pull/61) (@ysugimoto)
 
 ## v0.9.2
 
