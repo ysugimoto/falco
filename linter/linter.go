@@ -284,7 +284,6 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			statements = append(statements, stmt)
 		case *ast.SubroutineDeclaration:
 			if t.ReturnType != nil {
-
 				if context.IsFastlySubroutine(t.Name.Value) {
 					err := &LintError{
 						Severity: ERROR,
