@@ -31,6 +31,12 @@ const (
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
+	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
+	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
+	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"
+	RATECOUNTER_SYNTAX                   = "ratecounter/syntax"
+	RATECOUNTER_DUPLICATED               = "ratecounter/duplicated"
+	RATECOUNTER_NONEMPTY_BLOCK           = "ratecounter/nonempty-block"
 	DECLARE_STATEMENT_SYNTAX             = "declare-statement/syntax"
 	DECLARE_STATEMENT_INVALID_TYPE       = "declare-statement/invalid-type"
 	DECLARE_STATEMENT_DUPLICATED         = "declare-statement/duplicated"
@@ -49,7 +55,7 @@ const (
 	SYNTHETIC_BASE64_STATEMENT_SCOPE     = "synthetic-base64-statement/scope"
 	CONDITION_LITERAL                    = "condition/literal"
 	VALID_IP                             = "valid-ip"
-	FUNCTION_ARGUMENS                    = "function/arguments"
+	FUNCTION_ARGUMENTS                   = "function/arguments"
 	FUNCTION_ARGUMENT_TYPE               = "function/argument-type"
 	INCLUDE_STATEMENT_MODULE_NOT_FOUND   = "include/module-not-found"
 	INCLUDE_STATEMENT_MODULE_LOAD_FAILED = "include/module-load-failed"
@@ -72,6 +78,10 @@ var references = map[Rule]string{
 	TABLE_ITEM_LIMITATION:            "https://developer.fastly.com/reference/vcl/declarations/table/#limitations",
 	SUBROUTINE_SYNTAX:                "https://developer.fastly.com/reference/vcl/subroutines/",
 	SUBROUTINE_BOILERPLATE_MACRO:     "https://developer.fastly.com/learning/vcl/using/#adding-vcl-to-your-service-configuration",
+	PENALTYBOX_SYNTAX:                "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",
+	PENALTYBOX_NONEMPTY_BLOCK:        "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",
+	RATECOUNTER_SYNTAX:               "https://developer.fastly.com/reference/vcl/declarations/ratecounter/",
+	RATECOUNTER_NONEMPTY_BLOCK:       "https://developer.fastly.com/reference/vcl/declarations/ratecounter/",
 	DECLARE_STATEMENT_SYNTAX:         "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	DECLARE_STATEMENT_INVALID_TYPE:   "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	SET_STATEMENT_SYNTAX:             "https://developer.fastly.com/reference/vcl/statements/set/",

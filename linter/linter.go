@@ -128,6 +128,10 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintTableDeclaration(t, ctx)
 	case *ast.SubroutineDeclaration:
 		return l.lintSubRoutineDeclaration(t, ctx)
+	case *ast.PenaltyboxDeclaration:
+		return l.lintPenaltyboxDeclaration(t)
+	case *ast.RatecounterDeclaration:
+		return l.lintRatecounterDeclaration(t)
 
 	// Statements
 	case *ast.BlockStatement:
@@ -191,7 +195,7 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.FunctionCallExpression:
 		return l.lintFunctionCallExpression(t, ctx)
 	default:
-		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
+		l.Error(fmt.Errorf("unexpected node: %s", node.String()))
 	}
 	return types.NeverType
 }
@@ -209,6 +213,7 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 	return types.NeverType
 }
 
+//nolint:gocognit
 func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast.Statement {
 	var statements []ast.Statement
 	for _, stmt := range vcl.Statements {
@@ -319,8 +324,28 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 			}
 			statements = append(statements, stmt)
+		case *ast.PenaltyboxDeclaration:
+			if err := ctx.AddPenaltybox(t.Name.Value, &types.Penaltybox{Penaltybox: t}); err != nil {
+				e := &LintError{
+					Severity: ERROR,
+					Token:    t.Name.GetMeta().Token,
+					Message:  err.Error(),
+				}
+				l.Error(e.Match(PENALTYBOX_DUPLICATED))
+			}
+			statements = append(statements, stmt)
+		case *ast.RatecounterDeclaration:
+			if err := ctx.AddRatecounter(t.Name.Value, &types.Ratecounter{Ratecounter: t}); err != nil {
+				e := &LintError{
+					Severity: ERROR,
+					Token:    t.Name.GetMeta().Token,
+					Message:  err.Error(),
+				}
+				l.Error(e.Match(SUBROUTINE_DUPLICATED))
+			}
+			statements = append(statements, stmt)
 		default:
-			l.Error(fmt.Errorf("Unexpected statement declaration found: %s", t.String()))
+			l.Error(fmt.Errorf("unexpected statement declaration found: %s", t.String()))
 		}
 	}
 	return statements
@@ -624,6 +649,32 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	return types.NeverType
 }
 
+func (l *Linter) lintPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) types.Type {
+	// validate penaltybox name
+	if !isValidName(decl.Name.Value) {
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "penaltybox").Match(PENALTYBOX_SYNTAX))
+	}
+
+	if len(decl.Block.Statements) > 0 {
+		l.Error(NonEmptyPenaltyboxBlock(decl.GetMeta(), decl.Name.Value).Match(PENALTYBOX_NONEMPTY_BLOCK))
+	}
+
+	return types.NeverType
+}
+
+func (l *Linter) lintRatecounterDeclaration(decl *ast.RatecounterDeclaration) types.Type {
+	// validate ratecounter name
+	if !isValidName(decl.Name.Value) {
+		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "ratecounter").Match(RATECOUNTER_SYNTAX))
+	}
+
+	if len(decl.Block.Statements) > 0 {
+		l.Error(NonEmptyRatecounterBlock(decl.GetMeta(), decl.Name.Value).Match(RATECOUNTER_NONEMPTY_BLOCK))
+	}
+
+	return types.NeverType
+}
+
 func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phrase string) {
 	// visit all statement comments and find "FASTLY [phase]" comment
 	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
@@ -726,7 +777,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	case "+=", "-=":
 		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
 	case "*=", "/=", "%=":
-		l.lintArithmeticOpereator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
+		l.lintArithmeticOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
 	case "|=", "&=", "^=", "<<=", ">>=", "rol=", "ror=":
 		l.lintBitwiseOperator(stmt.Operator, left, right)
 	case "||=", "&&=":
@@ -1314,7 +1365,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 					exp.Function.String(), len(exp.Arguments),
 				),
 			}
-			l.Error(err.Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
+			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
 		}
 		return fn.Return
 	}
@@ -1330,7 +1381,7 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		l.Error(FunctionArgumentMismatch(
 			exp.Function.GetMeta(), exp.Function.String(),
 			len(fn.Arguments), len(exp.Arguments),
-		).Match(FUNCTION_ARGUMENS).Ref(fn.Reference))
+		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
 	}
 
 	for i, v := range argTypes {

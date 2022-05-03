@@ -19,6 +19,8 @@ var BackendPropertyTypes = map[string]types.Type{
 	"port":                   types.StringType,
 	"ssl":                    types.BoolType,
 	"ssl_cert_hostname":      types.StringType,
+	"max_tls_version":        types.StringType,
+	"min_tls_version":        types.StringType,
 	"ssl_check_cert":         types.IDType,
 	"ssl_sni_hostname":       types.StringType,
 	"between_bytes_timeout":  types.RTimeType,
@@ -137,7 +139,7 @@ func isValidVariableName(name string) bool {
 
 // In VCL, could not specify literal in if condition expression.
 //
-// if (!req.http.Cookie) { ... } // -> valid, inverse actual dentity variable (implicit type conversion will occur)
+// if (!req.http.Cookie) { ... } // -> valid, inverse actual identity variable (implicit type conversion will occur)
 // if (!false) { ... }           // -> valid, inverse boolean
 // if (!10) { ... }              // -> invalid, could not use with integer literal
 // if (!"example") { ... }       // -> invalid, could not use with string literal
@@ -151,7 +153,7 @@ func isValidConditionExpression(cond ast.Expression) error {
 		return isValidConditionExpression(t.Left)
 	default:
 		if isLiteralExpression(cond) {
-			return fmt.Errorf("Could not specify literal in first expression")
+			return fmt.Errorf("could not specify literal in first expression")
 		}
 	}
 	return nil
@@ -172,11 +174,11 @@ func isValidStatmentExpression(exp ast.Expression) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
 		if t.Operator == "!" {
-			return fmt.Errorf("Could not specify bang operator in first expression")
+			return fmt.Errorf("could not specify bang operator in first expression")
 		}
 	case *ast.InfixExpression:
 		if t.Operator != "+" {
-			return fmt.Errorf("Could not specify %s operator in statement", t.Operator)
+			return fmt.Errorf("could not specify %s operator in statement", t.Operator)
 		}
 	}
 	return nil

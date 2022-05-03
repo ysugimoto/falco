@@ -11,22 +11,24 @@ type Type int
 
 const (
 	// https://developer.fastly.com/reference/vcl/types/
-	NeverType      Type = 0x000000000000000
-	AclType        Type = 0x000000000000001
-	BackendType    Type = 0x000000000000010
-	BoolType       Type = 0x000000000000100
-	FloatType      Type = 0x000000000001000
-	IDType         Type = 0x000000000010000
-	IntegerType    Type = 0x000000000100000
-	IPType         Type = 0x000000001000000
-	RTimeType      Type = 0x000000010000000
-	StringType     Type = 0x000000100000000
-	TimeType       Type = 0x000001000000000
-	NullType       Type = 0x000010000000000
-	ErrorType      Type = 0x000100000000000
-	SubroutineType Type = 0x001000000000000
-	TableType      Type = 0x010000000000000
-	DirectorType   Type = 0x100000000000000
+	NeverType       Type = 0x000000000000000
+	AclType         Type = 0x000000000000001
+	BackendType     Type = 0x000000000000010
+	BoolType        Type = 0x000000000000100
+	FloatType       Type = 0x000000000001000
+	IDType          Type = 0x000000000010000
+	IntegerType     Type = 0x000000000100000
+	IPType          Type = 0x000000001000000
+	RTimeType       Type = 0x000000010000000
+	StringType      Type = 0x000000100000000
+	TimeType        Type = 0x000001000000000
+	NullType        Type = 0x000010000000000
+	ErrorType       Type = 0x000100000000000
+	SubroutineType  Type = 0x001000000000000
+	TableType       Type = 0x010000000000000
+	DirectorType    Type = 0x100000000000000
+	PenaltyboxType  Type = 0x100000000000001
+	RatecounterType Type = 0x100000000000010
 )
 
 func (t Type) String() string {
@@ -63,6 +65,10 @@ func (t Type) String() string {
 		return "TABLE"
 	case DirectorType:
 		return "DIRECTOR"
+	case PenaltyboxType:
+		return "PENALTYBOX"
+	case RatecounterType:
+		return "RATECOUNTER"
 	}
 	return "UNKNOWN"
 }
@@ -218,3 +224,19 @@ type Director struct {
 func (d *Director) Type() Type         { return DirectorType }
 func (d *Director) Token() token.Token { return d.Decl.Token }
 func (d *Director) String() string     { return d.Decl.String() }
+
+type Penaltybox struct {
+	Penaltybox *ast.PenaltyboxDeclaration
+}
+
+func (pb *Penaltybox) Type() Type         { return PenaltyboxType }
+func (pb *Penaltybox) Token() token.Token { return pb.Penaltybox.Token }
+func (pb *Penaltybox) String() string     { return pb.Penaltybox.String() }
+
+type Ratecounter struct {
+	Ratecounter *ast.RatecounterDeclaration
+}
+
+func (rc *Ratecounter) Type() Type         { return RatecounterType }
+func (rc *Ratecounter) Token() token.Token { return rc.Ratecounter.Token }
+func (rc *Ratecounter) String() string     { return rc.Ratecounter.String() }

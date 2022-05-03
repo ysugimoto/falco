@@ -446,7 +446,6 @@ sub foo {
 
 		assertError(t, input)
 	})
-
 }
 
 func TestLintUnsetStatement(t *testing.T) {
@@ -485,7 +484,6 @@ sub foo {
 
 		assertError(t, input)
 	})
-
 }
 
 func TestLintAddStatement(t *testing.T) {
@@ -598,7 +596,6 @@ sub foo {
 `
 		assertError(t, input)
 	})
-
 }
 
 func TestLintIfStatement(t *testing.T) {
@@ -1566,5 +1563,89 @@ sub hoisted_subroutine {
 }
 `
 		assertNoError(t, input)
+	})
+}
+
+func TestLintPenaltyboxStatement(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with comments", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {
+	// This is a comment
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("invalid penaltybox name", func(t *testing.T) {
+		input := `
+penaltybox vcl-recv {}
+	`
+		assertError(t, input)
+	})
+
+	t.Run("duplicate penaltybox declared", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+penaltybox ip_pb {}
+	`
+		assertError(t, input)
+	})
+
+	t.Run("penaltybox block is not empty", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {
+	set var.bar = "baz";
+}
+`
+		assertError(t, input)
+	})
+}
+
+func TestLintRatecounterStatement(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+ratecounter req_counter {}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with comments", func(t *testing.T) {
+		input := `
+ratecounter req_counter {
+	// This is a comment
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("invalid ratecounter name", func(t *testing.T) {
+		input := `
+ratecounter vcl-recv {}
+	`
+		assertError(t, input)
+	})
+
+	t.Run("duplicate ratecounter declared", func(t *testing.T) {
+		input := `
+ratecounter req_counter {}
+ratecounter req_counter {}
+	`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter block is not empty", func(t *testing.T) {
+		input := `
+ratecounter req_counter {
+	set var.bar = "baz";
+}
+`
+		assertError(t, input)
 	})
 }

@@ -49,6 +49,8 @@ func init() {
 	gob.Register(&ast.SetStatement{})
 	gob.Register(&ast.String{})
 	gob.Register(&ast.SubroutineDeclaration{})
+	gob.Register(&ast.PenaltyboxDeclaration{})
+	gob.Register(&ast.RatecounterDeclaration{})
 	gob.Register(&ast.SyntheticBase64Statement{})
 	gob.Register(&ast.SyntheticStatement{})
 	gob.Register(&ast.TableDeclaration{})
