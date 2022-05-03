@@ -213,6 +213,7 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 	return types.NeverType
 }
 
+//nolint:gocognit
 func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast.Statement {
 	var statements []ast.Statement
 	for _, stmt := range vcl.Statements {
