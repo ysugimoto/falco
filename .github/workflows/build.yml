@@ -23,3 +23,5 @@ jobs:
         version: v1.42
         skip-pkg-cache: true
         skip-build-cache: true
+        skip-go-installation: true
+
