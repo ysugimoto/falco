@@ -612,7 +612,7 @@ func (l *Linter) lintPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) type
 	}
 
 	if len(decl.Block.Statements) > 0 {
-		l.Error(NonEmptyPenaltyboxBlock(decl.GetMeta(), decl.Name.Value))
+		l.Error(NonEmptyPenaltyboxBlock(decl.GetMeta(), decl.Name.Value).Match(PENALTYBOX_NONEMPTY_BLOCK))
 	}
 
 	return types.NeverType
@@ -625,7 +625,7 @@ func (l *Linter) lintRatecounterDeclaration(decl *ast.RatecounterDeclaration) ty
 	}
 
 	if len(decl.Block.Statements) > 0 {
-		l.Error(NonEmptyRatecounterBlock(decl.GetMeta(), decl.Name.Value))
+		l.Error(NonEmptyRatecounterBlock(decl.GetMeta(), decl.Name.Value).Match(RATECOUNTER_NONEMPTY_BLOCK))
 	}
 
 	return types.NeverType

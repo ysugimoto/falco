@@ -32,8 +32,10 @@ const (
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
+	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"
 	RATECOUNTER_SYNTAX                   = "ratecounter/syntax"
 	RATECOUNTER_DUPLICATED               = "ratecounter/duplicated"
+	RATECOUNTER_NONEMPTY_BLOCK           = "ratecounter/nonempty-block"
 	DECLARE_STATEMENT_SYNTAX             = "declare-statement/syntax"
 	DECLARE_STATEMENT_INVALID_TYPE       = "declare-statement/invalid-type"
 	DECLARE_STATEMENT_DUPLICATED         = "declare-statement/duplicated"
@@ -76,7 +78,9 @@ var references = map[Rule]string{
 	SUBROUTINE_SYNTAX:                "https://developer.fastly.com/reference/vcl/subroutines/",
 	SUBROUTINE_BOILERPLATE_MACRO:     "https://developer.fastly.com/learning/vcl/using/#adding-vcl-to-your-service-configuration",
 	PENALTYBOX_SYNTAX:                "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",
+	PENALTYBOX_NONEMPTY_BLOCK:        "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",
 	RATECOUNTER_SYNTAX:               "https://developer.fastly.com/reference/vcl/declarations/ratecounter/",
+	RATECOUNTER_NONEMPTY_BLOCK:       "https://developer.fastly.com/reference/vcl/declarations/ratecounter/",
 	DECLARE_STATEMENT_SYNTAX:         "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	DECLARE_STATEMENT_INVALID_TYPE:   "https://developer.fastly.com/reference/vcl/variables/#user-defined-variables",
 	SET_STATEMENT_SYNTAX:             "https://developer.fastly.com/reference/vcl/statements/set/",
