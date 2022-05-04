@@ -16,7 +16,7 @@ backend httpbin_org {
   .probe = {
     .request = "GET /status/200 HTTP/1.1" "Host: httpbin.org" "Connection: close";
     .dummy = true;
-    .threshold = 6;
+    .threshold = 1;
     .window = 2;
     .timeout = 5s;
     .initial = 1;
