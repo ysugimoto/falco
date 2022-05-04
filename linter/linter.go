@@ -385,6 +385,17 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 				l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 			}
 		}
+
+		err := isProbeMakingTheBackendStartAsUnhealthy(*t)
+		if err != nil {
+			err := &LintError{
+				Severity: WARNING,
+				Token:    prop.Key.GetMeta().Token,
+				Message:  err.Error(),
+			}
+			l.Error(err.Match(BACKEND_PROBER_CONFIGURATION))
+		}
+
 	default:
 		// Otherwise, simply compare key type
 		kt, ok := BackendPropertyTypes[prop.Key.Value]

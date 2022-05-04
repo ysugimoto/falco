@@ -15,6 +15,7 @@ const (
 	BACKEND_SYNTAX                       = "backend/syntax"
 	BACKEND_DUPLICATED                   = "backend/duplicated"
 	BACKEND_NOTFOUND                     = "backend/notfound"
+	BACKEND_PROBER_CONFIGURATION         = "backend/prober-configuration"
 	DIRECTOR_SYNTAX                      = "director/syntax"
 	DIRECTOR_DUPLICATED                  = "director/duplicated"
 	DIRECTOR_PROPS_RANDOM                = "director/props-random"

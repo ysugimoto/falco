@@ -137,6 +137,34 @@ backend foo {
 `
 		assertError(t, input)
 	})
+
+	t.Run("Probe is configured correctly", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "example.com";
+
+  .probe = {
+    .request = "GET / HTTP/1.1";
+	.threshold = 1;
+	.initial = 5;
+  }
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("Probe is configured in such a way that the backend will start as unhealthy", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "example.com";
+
+  .probe = {
+    .request = "GET / HTTP/1.1";
+	.threshold = 5;
+	.initial = 1;
+  }
+}`
+		assertError(t, input)
+	})
 }
 
 func TestLintTableStatement(t *testing.T) {
