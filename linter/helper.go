@@ -351,6 +351,11 @@ func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) erro
 	var threshold int
 	var initial int
 	var err error
+
+	// The code below works also if either/both initial and threshold are not present:
+	// * if both dont appear then both have values 0 and 0 in which case you get no warning
+	// * if initial exists but no threshold then it is also correct because initial > 0 (threshold)
+	// * if threshold exists but no initial then we generate an error correctly because threshold > 0 (initial)
 	for _, v := range prober.Values {
 		if strings.EqualFold(v.Key.Value, "initial") {
 			// Optimistically cast this to int, if we can do it because the value is a literal
