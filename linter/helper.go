@@ -348,7 +348,6 @@ func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
 // then the prober will be marked as unhealthy at the beginning which is can
 // cause issues at startup.
 func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) error {
-
 	var threshold int
 	var initial int
 	var err error
