@@ -104,7 +104,12 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 			// Could be a goto destination
 			stmt, err = p.parseGotoDestination()
 		default:
-			err = UnexpectedToken(p.peekToken)
+			// Check if the current ident is a function call
+			if p.isFunctionCall() {
+				stmt, err = p.parseFunctionCall()
+			} else {
+				err = UnexpectedToken(p.peekToken)
+			}
 		}
 
 		if err != nil {
@@ -605,6 +610,29 @@ func (p *Parser) parseGotoDestination() (*ast.GotoDestinationStatement, error) {
 	}
 	stmt.Name = p.parseIdent()
 	stmt.Meta.Trailing = p.trailing()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseFunctionCall() (*ast.FunctionCallStatement, error) {
+	stmt := &ast.FunctionCallStatement{
+		Meta:     p.curToken,
+		Function: p.parseIdent(),
+	}
+
+	p.nextToken() // point to LEFT_PAREN
+	args, err := p.parseFunctionArgumentExpressions()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	stmt.Arguments = args
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+
+	stmt.Meta.Trailing = p.trailing()
+	p.nextToken() // point to SEMICOLON
 
 	return stmt, nil
 }
