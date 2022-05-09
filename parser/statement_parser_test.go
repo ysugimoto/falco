@@ -1317,3 +1317,142 @@ sub vcl_recv {
 		assert(t, vcl, expect)
 	})
 }
+
+func TestFunctionCallStatement(t *testing.T) {
+	t.Run("normal function call without arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	testFun();
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.FunctionCallStatement{
+								Meta: ast.New(T, 1),
+								Function: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "testFun",
+								},
+								Arguments: []ast.Expression{},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("normal function call with arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	testFun(test1, "test2", 3);
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.FunctionCallStatement{
+								Meta: ast.New(T, 1),
+								Function: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "testFun",
+								},
+								Arguments: []ast.Expression{
+									&ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "test1",
+									},
+									&ast.String{
+										Meta:  ast.New(T, 1),
+										Value: "test2",
+									},
+									&ast.Integer{
+										Meta:  ast.New(T, 1),
+										Value: 3,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("method call with arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	std.collect(test1, "test2", 3);
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.FunctionCallStatement{
+								Meta: ast.New(T, 1),
+								Function: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "std.collect",
+								},
+								Arguments: []ast.Expression{
+									&ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "test1",
+									},
+									&ast.String{
+										Meta:  ast.New(T, 1),
+										Value: "test2",
+									},
+									&ast.Integer{
+										Meta:  ast.New(T, 1),
+										Value: 3,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}

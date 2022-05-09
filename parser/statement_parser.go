@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
@@ -99,7 +101,12 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 		case token.IF:
 			stmt, err = p.parseIfStatement()
 		default:
-			err = UnexpectedToken(p.peekToken)
+			// Check if the current ident is a function call
+			if p.isFunctionCall() {
+				stmt, err = p.parseFunctionCall()
+			} else {
+				err = UnexpectedToken(p.peekToken)
+			}
 		}
 
 		if err != nil {
@@ -555,5 +562,30 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 		return nil, errors.WithStack(err)
 	}
 	// cursor must be on RIGHT_BRACE
+	return stmt, nil
+}
+
+func (p *Parser) parseFunctionCall() (*ast.FunctionCallStatement, error) {
+	stmt := &ast.FunctionCallStatement{
+		Meta:     p.curToken,
+		Function: p.parseIdent(),
+	}
+
+	p.nextToken() // point to LEFT_PAREN
+	args, err := p.parseFunctionArgumentExpressions()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	stmt.Arguments = args
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+
+	stmt.Meta.Trailing = p.trailing()
+
+	p.nextToken() // point to SEMICOLON
+
+	fmt.Println(stmt.Function)
 	return stmt, nil
 }
