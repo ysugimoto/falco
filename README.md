@@ -38,7 +38,7 @@ Download binary from [releases page](https://github.com/ysugimoto/falco/releases
 
 Or compile it yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
 
-**Note:** Varnish supports [PCRE regular expressions](https://www.pcre.org/). To be able to parse regex you need to install the PCRE library on your machine.  
+**Note:** [Fastly](https://developer.fastly.com/reference/vcl/regex/) supports [PCRE regular expressions](https://www.pcre.org/). To be able to parse regex you need to install the PCRE library on your machine.  
 
 For mac:
 ```
