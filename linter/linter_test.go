@@ -1084,7 +1084,7 @@ sub foo {
 	t.Run("pass with expression that has backslash", func(t *testing.T) {
 		input := `
 sub foo {
-	if (req.http.Host ~ "\(compatible.?; Googlebot/2.1.?; \+http://www.google.com/bot.html") {
+	if (req.http.User-Agent ~ "\(compatible.?; Googlebot/2.1.?; \+http://www.google.com/bot.html") {
 		restart;
 	}
 }`
@@ -1094,7 +1094,7 @@ sub foo {
 	t.Run("pass with PCRE expression that has backslash", func(t *testing.T) {
 		input := `
 sub foo {
-	if (req.http.Host ~ "(?i)windows\ ?ce") {
+	if (req.http.User-Agent ~ "(?i)windows\ ?ce") {
 		restart;
 	}
 }`
