@@ -1070,6 +1070,36 @@ sub foo {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("pass with PCRE expression", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host ~ "(?i)^word") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with expression that has backslash", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host ~ "\(compatible.?; Googlebot/2.1.?; \+http://www.google.com/bot.html") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with PCRE expression that has backslash", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host ~ "(?i)windows\ ?ce") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintRegexNotOperator(t *testing.T) {
