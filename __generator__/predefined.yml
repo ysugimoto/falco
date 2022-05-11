@@ -2093,3 +2093,48 @@ LF:
   reference: "https://developer.fastly.com/reference/vcl/types/string/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: STRING
+
+ratecounter.%any%.bucket.10s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-10s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.bucket.20s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-20s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.bucket.30s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-30s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.bucket.40s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-40s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.bucket.50s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-50s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.bucket.60s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-60s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+ratecounter.%any%.rate.1s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-1s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+ratecounter.%any%.rate.10s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-10s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
+
+ratecounter.%any%.rate.60s:
+  reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-60s/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: FLOAT
