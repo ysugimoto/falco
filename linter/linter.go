@@ -1071,6 +1071,8 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 			rc.IsUsed = true
 			// Fastly treats these variables as type IDs
 			return types.IDType
+		} else if _, ok := ctx.Identifiers[exp.Value]; ok {
+			return types.IDType
 		}
 		l.Error(UndefinedVariable(exp.GetMeta(), exp.Value))
 	}
