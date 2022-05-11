@@ -1544,6 +1544,45 @@ penaltybox ip_pb {
 `
 		assertError(t, input)
 	})
+
+	t.Run("penaltybox variable should be pass if it is defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("penaltybox variable should be defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertError(t, input)
+	})
 }
 
 func TestLintRatecounterStatement(t *testing.T) {
@@ -1582,6 +1621,78 @@ ratecounter req_counter {}
 		input := `
 ratecounter req_counter {
 	set var.bar = "baz";
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter variable should be pass if it is defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("ratecounter variable should be defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should pass if the ratecounter is defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_bucket_10s = std.itoa(ratecounter.counter_60.bucket.10s);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should not pass if the ratecounter is not defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_rate_10s = std.itoa(ratecounter.counter.bucket.10s);
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should exist", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_bucket_10s = std.itoa(ratecounter.counter_60.bucket.100s);
 }
 `
 		assertError(t, input)

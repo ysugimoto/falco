@@ -1221,14 +1221,14 @@ ratelimit.check_rate:
   reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rate/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
-    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, TIME]
+    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, RTIME]
   return: BOOL
 
 ratelimit.check_rates:
   reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rates/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
-    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, INTEGER, INTEGER, INTEGER, ID, TIME]
+    - [STRING, ID, INTEGER, INTEGER, INTEGER, ID, INTEGER, INTEGER, INTEGER, ID, RTIME]
   return: BOOL
 
 ratelimit.penaltybox_add:
