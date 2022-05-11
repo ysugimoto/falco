@@ -651,8 +651,8 @@ std.collect:
   reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
-    - [ID]
-    - [ID, STRING]
+    - [STRING]
+    - [STRING, STRING]
 
 std.count:
   reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/"

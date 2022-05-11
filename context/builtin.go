@@ -1379,8 +1379,8 @@ func builtinFunctions() Functions {
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Arguments: [][]types.Type{
-							[]types.Type{types.IDType},
-							[]types.Type{types.IDType, types.StringType},
+							[]types.Type{types.StringType},
+							[]types.Type{types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/",
