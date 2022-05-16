@@ -1016,32 +1016,35 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		}
 
 		if stmt.ReturnExpression == nil {
-			l.Error(&LintError{
+			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    stmt.Token,
 				Message:  fmt.Sprintf("function %s must have a return value", ctx.CurrentFunction()),
-			})
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 			return types.NeverType
 		}
 
 		err := isValidReturnExpression(*stmt.ReturnExpression)
 		if err != nil {
-			l.Error(&LintError{
+			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    (*stmt.ReturnExpression).GetMeta().Token,
 				Message:  err.Error(),
-			})
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 			return types.NeverType
 		}
 
 		cc := l.lint(*stmt.ReturnExpression, ctx)
 		// Condition expression return type must be BOOL or STRING
 		if !expectType(cc, *ctx.ReturnType) {
-			l.Error(&LintError{
+			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    (*stmt.ReturnExpression).GetMeta().Token,
 				Message:  fmt.Sprintf("function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
-			})
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 		}
 		return types.NeverType
 	}
