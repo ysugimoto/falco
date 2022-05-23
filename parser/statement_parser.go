@@ -98,6 +98,8 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 			stmt, err = p.parseSyntheticBase64Statement()
 		case token.IF:
 			stmt, err = p.parseIfStatement()
+		case token.GOTO:
+			stmt, err = p.parseGotoStatement()
 		default:
 			err = UnexpectedToken(p.peekToken)
 		}
@@ -555,5 +557,24 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 		return nil, errors.WithStack(err)
 	}
 	// cursor must be on RIGHT_BRACE
+	return stmt, nil
+}
+
+func (p *Parser) parseGotoStatement() (*ast.GotoStatement, error) {
+	stmt := &ast.GotoStatement{
+		Meta: p.curToken,
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
+	}
+	stmt.Destination = p.parseIdent()
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+	stmt.Meta.Trailing = p.trailing()
+	p.nextToken() // point to SEMICOLON
+
 	return stmt, nil
 }

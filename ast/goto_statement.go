@@ -6,7 +6,7 @@ import (
 
 type GotoStatement struct {
 	*Meta
-	destination *Ident
+	Destination *Ident
 }
 
 func (g *GotoStatement) statement()     {}
@@ -15,7 +15,7 @@ func (g *GotoStatement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(g.LeadingComment())
-	buf.WriteString(indent(g.Nest) + "goto " + g.destination.String() + ";")
+	buf.WriteString(indent(g.Nest) + "goto " + g.Destination.String() + ";")
 	buf.WriteString(g.TrailingComment())
 	buf.WriteString("\n")
 
