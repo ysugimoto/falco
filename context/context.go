@@ -228,11 +228,6 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 
 	// Additionally, assign some backend name related predefined variable
 	c.Variables["backend"].Items[name] = dynamicBackend()
-	c.Variables["ratecounter"] = &Object{
-		Items: map[string]*Object{
-			name: dynamicRateCounter(),
-		},
-	}
 
 	return nil
 }
