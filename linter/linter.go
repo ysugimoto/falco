@@ -47,6 +47,7 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Ty
 		l.lintUnusedAcls(ctx)
 		l.lintUnusedBackends(ctx)
 		l.lintUnusedSubroutines(ctx)
+		l.lintUnusedGotos(ctx)
 	}
 
 	return types.NeverType
@@ -110,6 +111,16 @@ func (l *Linter) lintUnusedVariables(ctx *context.Context) {
 	}
 }
 
+func (l *Linter) lintUnusedGotos(ctx *context.Context) {
+	for _, s := range ctx.Gotos {
+		if s.IsUsed {
+			continue
+		}
+
+		l.Error(UnusedDeclaration(s.Decl.GetMeta(), s.Decl.Destination.Value, "goto").Match(UNUSED_GOTO))
+	}
+}
+
 func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	switch t := node.(type) {
 	// Root program
@@ -168,6 +179,10 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintSyntheticStatement(t, ctx)
 	case *ast.SyntheticBase64Statement:
 		return l.lintSyntheticBase64Statement(t, ctx)
+	case *ast.GotoStatement:
+		return l.lintGotoStatement(t, ctx)
+	case *ast.GotoDestinationStatement:
+		return l.lintGotoDestinationStatement(t, ctx)
 
 	// Expressions
 	case *ast.Ident:
@@ -606,6 +621,40 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	return types.NeverType
 }
 
+func (l *Linter) lintGotoStatement(stmt *ast.GotoStatement, ctx *context.Context) types.Type {
+	// validate destination name
+	if !isValidName(stmt.Destination.Value) {
+		l.Error(InvalidName(stmt.Destination.GetMeta(), stmt.Destination.Value, "goto").Match(GOTO_SYNTAX))
+	}
+
+	if err := ctx.AddGoto(stmt.Destination.Value, &types.Goto{Decl: stmt}); err != nil {
+		e := &LintError{
+			Severity: ERROR,
+			Token:    stmt.Destination.GetMeta().Token,
+			Message:  err.Error(),
+		}
+		l.Error(e.Match(GOTO_DUPLICATED))
+	}
+
+	return types.NeverType
+}
+
+func (l *Linter) lintGotoDestinationStatement(stmt *ast.GotoDestinationStatement, ctx *context.Context) types.Type {
+	if gd, ok := ctx.Gotos[stmt.Name.Value]; ok {
+		if gd.IsUsed {
+			l.Error(DuplicatedUseForGotoDestination(stmt.GetMeta(), stmt.Name.Value))
+			return types.NullType
+		}
+
+		gd.IsUsed = true
+		return types.GotoType
+	} else {
+		l.Error(UndefinedGotoDestination(stmt.GetMeta(), stmt.Name.Value))
+	}
+
+	return types.NullType
+}
+
 func (l *Linter) lintPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) types.Type {
 	// validate penaltybox name
 	if !isValidName(decl.Name.Value) {
@@ -1038,6 +1087,11 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 			a.IsUsed = true
 			return types.AclType
 		} else if t, ok := ctx.Tables[exp.Value]; ok {
+			// mark table is used
+			t.IsUsed = true
+			return types.TableType
+		} else if t, ok := ctx.Gotos[exp.Value]; ok {
+			fmt.Println("herere")
 			// mark table is used
 			t.IsUsed = true
 			return types.TableType

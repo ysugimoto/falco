@@ -89,6 +89,7 @@ type Context struct {
 	Subroutines    map[string]*types.Subroutine
 	Penaltyboxes   map[string]*types.Penaltybox
 	Ratecounters   map[string]*types.Ratecounter
+	Gotos          map[string]*types.Goto
 	Identifiers    map[string]struct{}
 	functions      Functions
 	Variables      Variables
@@ -105,6 +106,7 @@ func New() *Context {
 		Subroutines:    make(map[string]*types.Subroutine),
 		Penaltyboxes:   make(map[string]*types.Penaltybox),
 		Ratecounters:   make(map[string]*types.Ratecounter),
+		Gotos:          make(map[string]*types.Goto),
 		Identifiers:    builtinIdentifiers(),
 		functions:      builtinFunctions(),
 		Variables:      predefinedVariables(),
@@ -288,6 +290,19 @@ func (c *Context) AddRatecounter(name string, ratecounter *types.Ratecounter) er
 		return fmt.Errorf(`duplicate definition of ratecounter "%s"`, name)
 	} else {
 		c.Ratecounters[name] = ratecounter
+	}
+	return nil
+}
+
+func (c *Context) AddGoto(name string, newGoto *types.Goto) error {
+	// append colon to the goto name to be able to identify it when it is been used.
+	name += ":"
+
+	// check existence
+	if _, duplicated := c.Gotos[name]; duplicated {
+		return fmt.Errorf(`duplicate definition of goto "%s"`, name)
+	} else {
+		c.Gotos[name] = newGoto
 	}
 	return nil
 }

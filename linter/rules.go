@@ -52,6 +52,8 @@ const (
 	ERROR_STATEMENT_CODE                 = "error-statement/code"
 	SYNTHETIC_STATEMENT_SCOPE            = "synthetic-statement/scope"
 	SYNTHETIC_BASE64_STATEMENT_SCOPE     = "synthetic-base64-statement/scope"
+	GOTO_DUPLICATED                      = "goto/duplicated"
+	GOTO_SYNTAX                          = "goto/syntax"
 	CONDITION_LITERAL                    = "condition/literal"
 	VALID_IP                             = "valid-ip"
 	FUNCTION_ARGUMENTS                   = "function/arguments"
@@ -61,6 +63,7 @@ const (
 	REGEX_MATCHED_VALUE_MAY_OVERRIDE     = "regex/matched-value-override"
 	UNUSED_DECLARATION                   = "unused/declaration"
 	UNUSED_VARIABLE                      = "unused/variable"
+	UNUSED_GOTO                          = "unused/goto"
 )
 
 var references = map[Rule]string{

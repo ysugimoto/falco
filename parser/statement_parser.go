@@ -100,6 +100,9 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 			stmt, err = p.parseIfStatement()
 		case token.GOTO:
 			stmt, err = p.parseGotoStatement()
+		case token.IDENT:
+			// Could be a goto destination
+			stmt, err = p.parseGotoDestination()
 		default:
 			err = UnexpectedToken(p.peekToken)
 		}
@@ -575,6 +578,20 @@ func (p *Parser) parseGotoStatement() (*ast.GotoStatement, error) {
 	}
 	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+
+	return stmt, nil
+}
+
+func (p *Parser) parseGotoDestination() (*ast.GotoDestinationStatement, error) {
+	if !isGotoDestination(p.curToken.Token) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
+	}
+
+	stmt := &ast.GotoDestinationStatement{
+		Meta: p.curToken,
+	}
+	stmt.Name = p.parseIdent()
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }

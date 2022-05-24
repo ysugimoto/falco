@@ -29,6 +29,7 @@ const (
 	DirectorType    Type = 0x100000000000000
 	PenaltyboxType  Type = 0x100000000000001
 	RatecounterType Type = 0x100000000000010
+	GotoType        Type = 0x100000000000100
 )
 
 func (t Type) String() string {
@@ -69,6 +70,8 @@ func (t Type) String() string {
 		return "PENALTYBOX"
 	case RatecounterType:
 		return "RATECOUNTER"
+	case GotoType:
+		return "GOTO"
 	}
 	return "UNKNOWN"
 }
@@ -240,3 +243,12 @@ type Ratecounter struct {
 func (rc *Ratecounter) Type() Type         { return RatecounterType }
 func (rc *Ratecounter) Token() token.Token { return rc.Ratecounter.Token }
 func (rc *Ratecounter) String() string     { return rc.Ratecounter.String() }
+
+type Goto struct {
+	Decl   *ast.GotoStatement
+	IsUsed bool // mark this goto is called at least once
+}
+
+func (g *Goto) Type() Type         { return GotoType }
+func (g *Goto) Token() token.Token { return g.Decl.Token }
+func (g *Goto) String() string     { return g.Decl.String() }
