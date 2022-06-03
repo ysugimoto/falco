@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -396,4 +397,43 @@ func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
 		}
 	}
 	return false
+}
+
+// According to fastly if a prober is configured with initial < threshold
+// then the prober will be marked as unhealthy at the beginning which is can
+// cause issues at startup.
+func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) error {
+	var threshold int
+	var initial int
+	var err error
+
+	// The code below works also if either/both initial and threshold are not present:
+	// * if both dont appear then both have values 0 and 0 in which case you get no warning
+	// * if initial exists but no threshold then it is also correct because initial > 0 (threshold)
+	// * if threshold exists but no initial then we generate an error correctly because threshold > 0 (initial)
+	for _, v := range prober.Values {
+		if strings.EqualFold(v.Key.Value, "initial") {
+			// Optimistically cast this to int, if we can do it because the value is a literal
+			// we can apply the check
+			initial, err = strconv.Atoi(v.Value.String())
+			if err != nil {
+				return nil
+			}
+		}
+
+		if strings.EqualFold(v.Key.Value, "threshold") {
+			// Optimistically cast this to int, if we can do it because the value is a literal
+			// we can apply the check
+			threshold, err = strconv.Atoi(v.Value.String())
+			if err != nil {
+				return nil
+			}
+		}
+	}
+
+	if threshold > initial {
+		return fmt.Errorf("healthcheck initial value is lower than the threshold. Backend will start as unhealthy")
+	}
+
+	return nil
 }
