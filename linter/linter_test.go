@@ -335,6 +335,15 @@ sub vcl_recv {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("Fastly reserved subroutine cannot have a return type", func(t *testing.T) {
+		input := `
+sub vcl_recv BOOL {
+	set req.http.Host = "example.com";
+	return true;
+}`
+		assertError(t, input)
+	})
 }
 
 func TestLintDeclareStatement(t *testing.T) {
@@ -1169,6 +1178,18 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with user defined sub", func(t *testing.T) {
+		input := `
+sub returns_one INTEGER {
+	return 1;
+}
+
+sub returns_true BOOL {
+	return returns_one() == 1;
+}`
+		assertNoError(t, input)
+	})
+
 	t.Run("function not found", func(t *testing.T) {
 		input := `
 sub foo {
@@ -1229,6 +1250,88 @@ sub vcl_recv {
 }`
 		assertNoError(t, input)
 	})
+
+	t.Run("sub: return correct type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	#Fastly recv
+	return 1;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return empty statement", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return wrong type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (req.http.foo);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (pass);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value as action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (1);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return local value", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	declare local var.tmp INTEGER;
+	set var.tmp = 10;
+	return var.tmp;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return value contains operations", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return var.tmp "bar";
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value contains jibber", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return +-var.tmp;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: bool return value is allowed to have operations", func(t *testing.T) {
+		input := `
+sub get_bool BOOL {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return std.strlen(var.tmp) > 5;
+}`
+		assertNoError(t, input)
+	})
+
 }
 
 func TestBlockSyntaxInsideBlockStatement(t *testing.T) {

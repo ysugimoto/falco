@@ -82,6 +82,7 @@ type Accessor struct {
 type Context struct {
 	curMode        int
 	prevMode       int
+	curName        string
 	Acls           map[string]*types.Acl
 	Backends       map[string]*types.Backend
 	Tables         map[string]*types.Table
@@ -93,11 +94,13 @@ type Context struct {
 	functions      Functions
 	Variables      Variables
 	RegexVariables map[string]int
+	ReturnType     *types.Type
 }
 
 func New() *Context {
 	return &Context{
 		curMode:        RECV,
+		curName:        "vcl_recv",
 		Acls:           make(map[string]*types.Acl),
 		Backends:       make(map[string]*types.Backend),
 		Tables:         make(map[string]*types.Table),
@@ -116,6 +119,10 @@ func (c *Context) Mode() int {
 	return c.curMode
 }
 
+func (c *Context) CurrentFunction() string {
+	return c.curName
+}
+
 func (c *Context) Restore() *Context {
 	c.curMode = c.prevMode
 	c.prevMode = 0
@@ -131,6 +138,16 @@ func (c *Context) Scope(mode int) *Context {
 	c.curMode = mode
 	// reset regex matched value
 	c.RegexVariables = newRegexMatchedValues()
+	return c
+}
+
+func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType types.Type) *Context {
+	c.prevMode = c.curMode
+	c.curMode = mode
+	// reset regex matched value
+	c.RegexVariables = newRegexMatchedValues()
+	c.ReturnType = &returnType
+	c.curName = name
 	return c
 }
 
@@ -282,13 +299,45 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 
 func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error {
 	// check existence
+	if _, duplicated := c.functions[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
+		}
+	}
+
 	if _, duplicated := c.Subroutines[name]; duplicated {
 		if !IsFastlySubroutine(name) {
 			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
-	} else {
-		c.Subroutines[name] = subroutine
 	}
+
+	c.Subroutines[name] = subroutine
+	return nil
+}
+
+func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType types.Type) error {
+	// check existence
+	if _, duplicated := c.functions[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplication definition of subroutine "%s"`, name)
+		}
+	}
+
+	if _, duplicated := c.Subroutines[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplication definition of subroutine "%s"`, name)
+		}
+	}
+
+	c.functions[name] = &FunctionSpec{
+		Items: map[string]*FunctionSpec{},
+		Value: &BuiltinFunction{
+			Return:    returnType,
+			Arguments: [][]types.Type{},
+			Scopes:    scopes,
+		},
+	}
+
 	return nil
 }
 

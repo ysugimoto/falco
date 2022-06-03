@@ -6,8 +6,9 @@ import (
 
 type SubroutineDeclaration struct {
 	*Meta
-	Name  *Ident
-	Block *BlockStatement
+	Name       *Ident
+	Block      *BlockStatement
+	ReturnType *Ident
 }
 
 func (s *SubroutineDeclaration) statement()     {}

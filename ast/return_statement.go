@@ -6,7 +6,8 @@ import (
 
 type ReturnStatement struct {
 	*Meta
-	Ident *Ident
+	ReturnExpression *Expression
+	HasParenthesis   bool
 }
 
 func (r *ReturnStatement) statement()     {}
@@ -15,7 +16,11 @@ func (r *ReturnStatement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(r.LeadingComment())
-	buf.WriteString(indent(r.Nest) + "return(" + r.Ident.String() + ");")
+	if r.ReturnExpression != nil {
+		buf.WriteString(indent(r.Nest) + "return(" + (*r.ReturnExpression).String() + ");")
+	} else {
+		buf.WriteString(indent(r.Nest) + "return;")
+	}
 	buf.WriteString(r.TrailingComment())
 	buf.WriteString("\n")
 

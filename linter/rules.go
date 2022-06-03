@@ -30,6 +30,7 @@ const (
 	SUBROUTINE_SYNTAX                    = "subroutine/syntax"
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
+	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
 	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"

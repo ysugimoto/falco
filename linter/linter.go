@@ -303,13 +303,44 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			}
 			statements = append(statements, stmt)
 		case *ast.SubroutineDeclaration:
-			if err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block}); err != nil {
-				e := &LintError{
-					Severity: ERROR,
-					Token:    t.Name.GetMeta().Token,
-					Message:  err.Error(),
+			if t.ReturnType != nil {
+				if context.IsFastlySubroutine(t.Name.Value) {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    t.ReturnType.GetMeta().Token,
+						Message:  fmt.Sprintf("State-machine method %s may not have a return type", t.Name.Value),
+					}
+					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 				}
-				l.Error(e.Match(SUBROUTINE_DUPLICATED))
+
+				returnType, ok := ValueTypeMap[t.ReturnType.Value]
+				if !ok {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    t.ReturnType.GetMeta().Token,
+						Message:  fmt.Sprintf("Unexpected variable type found: %s", t.ReturnType.Value),
+					}
+					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
+				}
+
+				if err := ctx.AddUserDefinedFunction(t.Name.Value, getSubroutineCallScope(t), returnType); err != nil {
+					err := &LintError{
+						Severity: ERROR,
+						Token:    t.Name.GetMeta().Token,
+						Message:  err.Error(),
+					}
+					l.Error(err.Match(SUBROUTINE_DUPLICATED))
+				}
+			} else {
+				err := ctx.AddSubroutine(t.Name.Value, &types.Subroutine{Decl: t, Body: t.Block})
+				if err != nil {
+					e := &LintError{
+						Severity: ERROR,
+						Token:    t.Name.GetMeta().Token,
+						Message:  err.Error(),
+					}
+					l.Error(e.Match(SUBROUTINE_DUPLICATED))
+				}
 			}
 			statements = append(statements, stmt)
 		case *ast.PenaltyboxDeclaration:
@@ -608,7 +639,15 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
 	}
 
-	cc := ctx.Scope(getSubroutineCallScope(decl))
+	scope := getSubroutineCallScope(decl)
+	var cc *context.Context
+	if decl.ReturnType != nil {
+		returnType := ValueTypeMap[decl.ReturnType.Value]
+		cc = ctx.UserDefinedFunctionScope(decl.Name.Value, scope, returnType)
+	} else {
+		cc = ctx.Scope(scope)
+	}
+
 	// Switch context mode which corredponds to call scope and restore after linting block statements
 	defer func() {
 		// Lint declared variables are used
@@ -616,6 +655,9 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		cc.Restore()
 	}()
 	l.lint(decl.Block, cc)
+	// We are done linting inside the previous scope so
+	// we dont need the return type anymore
+	cc.ReturnType = nil
 
 	// If fastly reserved subroutine name (e.g vcl_recv, vcl_fetch, etc),
 	// validate fastly specific boilerplate macro is embedded like "FASTLY recv"
@@ -984,6 +1026,49 @@ func (l *Linter) lintLogStatement(stmt *ast.LogStatement, ctx *context.Context) 
 }
 
 func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Context) types.Type {
+	if ctx.ReturnType != nil {
+		if stmt.HasParenthesis {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    stmt.Token,
+				Message:  fmt.Sprintf("function %s: only actions should be enclosed in ()", ctx.CurrentFunction()),
+			})
+		}
+
+		if stmt.ReturnExpression == nil {
+			lintErr := &LintError{
+				Severity: ERROR,
+				Token:    stmt.Token,
+				Message:  fmt.Sprintf("function %s must have a return value", ctx.CurrentFunction()),
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
+			return types.NeverType
+		}
+
+		err := isValidReturnExpression(*stmt.ReturnExpression)
+		if err != nil {
+			lintErr := &LintError{
+				Severity: ERROR,
+				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Message:  err.Error(),
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
+			return types.NeverType
+		}
+
+		cc := l.lint(*stmt.ReturnExpression, ctx)
+		// Condition expression return type must be BOOL or STRING
+		if !expectType(cc, *ctx.ReturnType) {
+			lintErr := &LintError{
+				Severity: ERROR,
+				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Message:  fmt.Sprintf("function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
+			}
+			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
+		}
+		return types.NeverType
+	}
+
 	// legal return actions are different in subroutine.
 	// https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	expects := make([]string, 0, 3)
@@ -1019,13 +1104,13 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 	}
 
 	// return statement may not have arguments, then stop linting
-	if stmt.Ident == nil {
+	if stmt.ReturnExpression == nil {
 		return types.NeverType
 	}
 
-	if !expectState(stmt.Ident.Value, expects...) {
+	if !expectState((*stmt.ReturnExpression).String(), expects...) {
 		l.Error(InvalidReturnState(
-			stmt.Ident.GetMeta(), context.ScopeString(ctx.Mode()), stmt.Ident.Value, expects...,
+			(*stmt.ReturnExpression).GetMeta(), context.ScopeString(ctx.Mode()), (*stmt.ReturnExpression).String(), expects...,
 		).Match(RESTART_STATEMENT_SCOPE))
 	}
 	return types.NeverType

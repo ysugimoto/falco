@@ -431,6 +431,13 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	}
 	s.Name = p.parseIdent()
 
+	// Custom subroutines might be returning a type
+	// https://developer.fastly.com/reference/vcl/subroutines/
+	// we dont need to validate the type here, linter will do that later.
+	if p.expectPeek(token.IDENT) {
+		s.ReturnType = p.parseIdent()
+	}
+
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
