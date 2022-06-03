@@ -47,6 +47,8 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Ty
 		l.lintUnusedAcls(ctx)
 		l.lintUnusedBackends(ctx)
 		l.lintUnusedSubroutines(ctx)
+		l.lintUnusedPenaltyboxes(ctx)
+		l.lintUnusedRatecounters(ctx)
 	}
 
 	return types.NeverType
@@ -93,6 +95,24 @@ func (l *Linter) lintUnusedSubroutines(ctx *context.Context) {
 			continue
 		}
 		l.Error(UnusedDeclaration(s.Decl.GetMeta(), s.Decl.Name.Value, "subroutine").Match(UNUSED_DECLARATION))
+	}
+}
+
+func (l *Linter) lintUnusedPenaltyboxes(ctx *context.Context) {
+	for _, p := range ctx.Penaltyboxes {
+		if p.IsUsed {
+			continue
+		}
+		l.Error(UnusedDeclaration(p.Decl.GetMeta(), p.Decl.Name.Value, "penaltybox").Match(UNUSED_DECLARATION))
+	}
+}
+
+func (l *Linter) lintUnusedRatecounters(ctx *context.Context) {
+	for _, rc := range ctx.Ratecounters {
+		if rc.IsUsed {
+			continue
+		}
+		l.Error(UnusedDeclaration(rc.Decl.GetMeta(), rc.Decl.Name.Value, "ratecounter").Match(UNUSED_DECLARATION))
 	}
 }
 
@@ -293,7 +313,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			}
 			statements = append(statements, stmt)
 		case *ast.PenaltyboxDeclaration:
-			if err := ctx.AddPenaltybox(t.Name.Value, &types.Penaltybox{Penaltybox: t}); err != nil {
+			if err := ctx.AddPenaltybox(t.Name.Value, &types.Penaltybox{Decl: t}); err != nil {
 				e := &LintError{
 					Severity: ERROR,
 					Token:    t.Name.GetMeta().Token,
@@ -303,7 +323,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 			}
 			statements = append(statements, stmt)
 		case *ast.RatecounterDeclaration:
-			if err := ctx.AddRatecounter(t.Name.Value, &types.Ratecounter{Ratecounter: t}); err != nil {
+			if err := ctx.AddRatecounter(t.Name.Value, &types.Ratecounter{Decl: t}); err != nil {
 				e := &LintError{
 					Severity: ERROR,
 					Token:    t.Name.GetMeta().Token,
@@ -727,7 +747,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	// Fastly has various assignment operators and required correspond types for each operator
 	// https://developer.fastly.com/reference/vcl/operators/#assignment-operators
 	//
-	// Above document is not enough to explain for other types... actually more complex type coparison may occur.
+	// Above document is not enough to explain for other types... actually more complex type comparison may occur.
 	// We investigated type comparison and summarized.
 	// See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 	switch stmt.Operator.Operator {
@@ -1041,6 +1061,16 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 			// mark table is used
 			t.IsUsed = true
 			return types.TableType
+		} else if p, ok := ctx.Penaltyboxes[exp.Value]; ok {
+			// mark penaltybox is used
+			p.IsUsed = true
+			// Fastly treats these variables as type IDs
+			return types.IDType
+		} else if rc, ok := ctx.Ratecounters[exp.Value]; ok {
+			// mark ratecounter is used
+			rc.IsUsed = true
+			// Fastly treats these variables as type IDs
+			return types.IDType
 		} else if _, ok := ctx.Identifiers[exp.Value]; ok {
 			return types.IDType
 		}

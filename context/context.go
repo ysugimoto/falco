@@ -185,6 +185,31 @@ func (c *Context) GetRegexGroupVariable(name string) (types.Type, error) {
 	return types.StringType, nil
 }
 
+// Get ratecounter variable
+func (c *Context) GetRatecounterVariable(name string) (types.Type, error) {
+	// Ratecounter variables have the shape: ratecounter.{Variable Name}.[bucket/rate].Time
+	nameComponents := strings.Split(name, ".")
+	if len(nameComponents) != 4 {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+	}
+
+	ratecounterVariableName := nameComponents[1]
+	// Check first if this ratecounter is defined in the first place.
+	if _, ok := c.Ratecounters[ratecounterVariableName]; !ok {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+	}
+
+	// nameComponents[0] should be "ratecounter"
+	// nameComponents[1] should be the variable name
+	// nameComponents[2] should be either "bucket" or "rate"
+	// nameComponents[3] should be the time (10s, 60s, etc)
+	if v, ok := c.Variables[nameComponents[0]].Items["%any%"].Items[nameComponents[2]].Items[nameComponents[3]]; ok {
+		return v.Value.Get, nil
+	}
+
+	return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+}
+
 func (c *Context) AddAcl(name string, acl *types.Acl) error {
 	// check existence
 	if _, duplicated := c.Acls[name]; duplicated {
@@ -203,11 +228,6 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 
 	// Additionally, assign some backend name related predefined variable
 	c.Variables["backend"].Items[name] = dynamicBackend()
-	c.Variables["ratecounter"] = &Object{
-		Items: map[string]*Object{
-			name: dynamicRateCounter(),
-		},
-	}
 
 	return nil
 }
@@ -299,6 +319,12 @@ func (c *Context) Get(name string) (types.Type, error) {
 	// proxy to dedicated getter.
 	if first == "re" {
 		return c.GetRegexGroupVariable(name)
+	}
+
+	// If program want to access to ratecounter variables like "ratecounter.{Name}.bucket.10s",
+	// proxy to dedicated getter.
+	if first == "ratecounter" {
+		return c.GetRatecounterVariable(name)
 	}
 
 	obj, ok := c.Variables[first]
