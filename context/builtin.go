@@ -1283,8 +1283,8 @@ func builtinFunctions() Functions {
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType},
-							[]types.Type{types.StringType},
+							[]types.Type{types.IntegerType, types.IntegerType},
+							[]types.Type{types.IntegerType},
 						},
 						Scopes:    DELIVER,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/",
