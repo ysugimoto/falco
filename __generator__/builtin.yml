@@ -300,6 +300,10 @@ digest.time_hmac_sha512:
     - [STRING, INTEGER, INTEGER]
   return: STRING
 
+h3.alt_svc:
+  reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h3-alt-svc/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+
 parse_time_delta:
   reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/parse-time-delta/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]

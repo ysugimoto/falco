@@ -615,6 +615,17 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
+		"h3": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"alt_svc": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h3-alt-svc/",
+					},
+				},
+			},
+		},
 		"http_status_matches": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{
