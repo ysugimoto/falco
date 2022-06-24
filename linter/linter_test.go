@@ -1647,4 +1647,18 @@ func TestLintGotoStatement(t *testing.T) {
 
 		assertError(t, input)
 	})
+
+	t.Run("goto scope should be one subroutine", func(t *testing.T) {
+		input := `
+	sub some_function {
+		goto foo;
+	}
+	
+	sub another_function {
+		foo:
+	}
+	`
+
+		assertError(t, input)
+	})
 }

@@ -762,7 +762,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(err)
 	}
 
-	if err := isValidStatmentExpression(stmt.Value); err != nil {
+	if err := isValidStatementExpression(stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Value.GetMeta().Token,
@@ -776,7 +776,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	// Fastly has various assignment operators and required correspond types for each operator
 	// https://developer.fastly.com/reference/vcl/operators/#assignment-operators
 	//
-	// Above document is not enough to explain for other types... actually more complex type coparison may occur.
+	// Above document is not enough to explain for other types... actually more complex type comparison may occur.
 	// We investigated type comparison and summarized.
 	// See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 	switch stmt.Operator.Operator {
@@ -938,7 +938,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		})
 	}
 
-	if err := isValidStatmentExpression(stmt.Value); err != nil {
+	if err := isValidStatementExpression(stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Value.GetMeta().Token,
@@ -1091,10 +1091,9 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 			t.IsUsed = true
 			return types.TableType
 		} else if t, ok := ctx.Gotos[exp.Value]; ok {
-			fmt.Println("herere")
 			// mark table is used
 			t.IsUsed = true
-			return types.TableType
+			return types.GotoType
 		} else if _, ok := ctx.Identifiers[exp.Value]; ok {
 			return types.IDType
 		}

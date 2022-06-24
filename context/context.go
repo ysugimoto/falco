@@ -124,6 +124,8 @@ func (c *Context) Restore() *Context {
 
 	// clear local variables
 	delete(c.Variables, "var")
+	// clear local goto definitions
+	c.Gotos = make(map[string]*types.Goto)
 
 	return c
 }
