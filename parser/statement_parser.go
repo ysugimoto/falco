@@ -101,15 +101,15 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 		case token.GOTO:
 			stmt, err = p.parseGotoStatement()
 		case token.IDENT:
-			// Could be a goto destination
-			stmt, err = p.parseGotoDestination()
-		default:
 			// Check if the current ident is a function call
-			if p.isFunctionCall() {
+			if p.peekTokenIs(token.LEFT_PAREN) {
 				stmt, err = p.parseFunctionCall()
 			} else {
-				err = UnexpectedToken(p.peekToken)
+				// Could be a goto destination
+				stmt, err = p.parseGotoDestination()
 			}
+		default:
+			err = UnexpectedToken(p.peekToken)
 		}
 
 		if err != nil {

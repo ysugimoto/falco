@@ -201,8 +201,3 @@ func (p *Parser) parse() (ast.Statement, error) {
 	p.nextToken()
 	return stmt, nil
 }
-
-func (p *Parser) isFunctionCall() bool {
-	leftParen := "("
-	return p.curTokenIs(token.IDENT) && p.peekToken.Token.Literal == leftParen
-}
