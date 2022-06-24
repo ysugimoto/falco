@@ -1204,7 +1204,7 @@ func builtinFunctions() Functions {
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.TimeType},
+							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.RTimeType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rate/",
@@ -1215,7 +1215,7 @@ func builtinFunctions() Functions {
 					Value: &BuiltinFunction{
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.TimeType},
+							[]types.Type{types.StringType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.IntegerType, types.IntegerType, types.IntegerType, types.IDType, types.RTimeType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rates/",

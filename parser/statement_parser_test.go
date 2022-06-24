@@ -1103,6 +1103,11 @@ sub vcl_recv {
 	// Leading comment
 	return(deliver); // Trailing comment
 }`
+	var rt ast.Expression
+	rt = &ast.Ident{
+		Meta:  ast.New(T, 1),
+		Value: "deliver",
+	}
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.SubroutineDeclaration{
@@ -1115,11 +1120,9 @@ sub vcl_recv {
 					Meta: ast.New(T, 1),
 					Statements: []ast.Statement{
 						&ast.ReturnStatement{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
-							Ident: &ast.Ident{
-								Meta:  ast.New(T, 1),
-								Value: "deliver",
-							},
+							Meta:             ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							ReturnExpression: &rt,
+							HasParenthesis:   true,
 						},
 					},
 				},

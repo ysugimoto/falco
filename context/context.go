@@ -82,6 +82,7 @@ type Accessor struct {
 type Context struct {
 	curMode        int
 	prevMode       int
+	curName        string
 	Acls           map[string]*types.Acl
 	Backends       map[string]*types.Backend
 	Tables         map[string]*types.Table
@@ -94,11 +95,13 @@ type Context struct {
 	functions      Functions
 	Variables      Variables
 	RegexVariables map[string]int
+	ReturnType     *types.Type
 }
 
 func New() *Context {
 	return &Context{
 		curMode:        RECV,
+		curName:        "vcl_recv",
 		Acls:           make(map[string]*types.Acl),
 		Backends:       make(map[string]*types.Backend),
 		Tables:         make(map[string]*types.Table),
@@ -118,6 +121,10 @@ func (c *Context) Mode() int {
 	return c.curMode
 }
 
+func (c *Context) CurrentFunction() string {
+	return c.curName
+}
+
 func (c *Context) Restore() *Context {
 	c.curMode = c.prevMode
 	c.prevMode = 0
@@ -135,6 +142,16 @@ func (c *Context) Scope(mode int) *Context {
 	c.curMode = mode
 	// reset regex matched value
 	c.RegexVariables = newRegexMatchedValues()
+	return c
+}
+
+func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType types.Type) *Context {
+	c.prevMode = c.curMode
+	c.curMode = mode
+	// reset regex matched value
+	c.RegexVariables = newRegexMatchedValues()
+	c.ReturnType = &returnType
+	c.curName = name
 	return c
 }
 
@@ -189,6 +206,31 @@ func (c *Context) GetRegexGroupVariable(name string) (types.Type, error) {
 	return types.StringType, nil
 }
 
+// Get ratecounter variable
+func (c *Context) GetRatecounterVariable(name string) (types.Type, error) {
+	// Ratecounter variables have the shape: ratecounter.{Variable Name}.[bucket/rate].Time
+	nameComponents := strings.Split(name, ".")
+	if len(nameComponents) != 4 {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+	}
+
+	ratecounterVariableName := nameComponents[1]
+	// Check first if this ratecounter is defined in the first place.
+	if _, ok := c.Ratecounters[ratecounterVariableName]; !ok {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+	}
+
+	// nameComponents[0] should be "ratecounter"
+	// nameComponents[1] should be the variable name
+	// nameComponents[2] should be either "bucket" or "rate"
+	// nameComponents[3] should be the time (10s, 60s, etc)
+	if v, ok := c.Variables[nameComponents[0]].Items["%any%"].Items[nameComponents[2]].Items[nameComponents[3]]; ok {
+		return v.Value.Get, nil
+	}
+
+	return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
+}
+
 func (c *Context) AddAcl(name string, acl *types.Acl) error {
 	// check existence
 	if _, duplicated := c.Acls[name]; duplicated {
@@ -207,11 +249,6 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 
 	// Additionally, assign some backend name related predefined variable
 	c.Variables["backend"].Items[name] = dynamicBackend()
-	c.Variables["ratecounter"] = &Object{
-		Items: map[string]*Object{
-			name: dynamicRateCounter(),
-		},
-	}
 
 	return nil
 }
@@ -266,13 +303,45 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 
 func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error {
 	// check existence
+	if _, duplicated := c.functions[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
+		}
+	}
+
 	if _, duplicated := c.Subroutines[name]; duplicated {
 		if !IsFastlySubroutine(name) {
 			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
-	} else {
-		c.Subroutines[name] = subroutine
 	}
+
+	c.Subroutines[name] = subroutine
+	return nil
+}
+
+func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType types.Type) error {
+	// check existence
+	if _, duplicated := c.functions[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplication definition of subroutine "%s"`, name)
+		}
+	}
+
+	if _, duplicated := c.Subroutines[name]; duplicated {
+		if !IsFastlySubroutine(name) {
+			return fmt.Errorf(`duplication definition of subroutine "%s"`, name)
+		}
+	}
+
+	c.functions[name] = &FunctionSpec{
+		Items: map[string]*FunctionSpec{},
+		Value: &BuiltinFunction{
+			Return:    returnType,
+			Arguments: [][]types.Type{},
+			Scopes:    scopes,
+		},
+	}
+
 	return nil
 }
 
@@ -316,6 +385,12 @@ func (c *Context) Get(name string) (types.Type, error) {
 	// proxy to dedicated getter.
 	if first == "re" {
 		return c.GetRegexGroupVariable(name)
+	}
+
+	// If program want to access to ratecounter variables like "ratecounter.{Name}.bucket.10s",
+	// proxy to dedicated getter.
+	if first == "ratecounter" {
+		return c.GetRatecounterVariable(name)
 	}
 
 	obj, ok := c.Variables[first]

@@ -2748,6 +2748,112 @@ func predefinedVariables() Variables {
 				},
 			},
 		},
+		"ratecounter": &Object{
+			Items: map[string]*Object{
+				"%any%": &Object{
+					Items: map[string]*Object{
+						"bucket": &Object{
+							Items: map[string]*Object{
+								"10s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-10s/",
+									},
+								},
+								"20s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-20s/",
+									},
+								},
+								"30s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-30s/",
+									},
+								},
+								"40s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-40s/",
+									},
+								},
+								"50s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-50s/",
+									},
+								},
+								"60s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.IntegerType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-60s/",
+									},
+								},
+							},
+						},
+						"rate": &Object{
+							Items: map[string]*Object{
+								"10s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.FloatType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-10s/",
+									},
+								},
+								"1s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.FloatType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-1s/",
+									},
+								},
+								"60s": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.FloatType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-60s/",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"req": &Object{
 			Items: map[string]*Object{
 				"backend": &Object{

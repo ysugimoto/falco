@@ -1,3 +1,9 @@
+## v0.11.0
+
+- Respect Ratelimit variables in context [#67](https://github.com/ysugimoto/falco/pull/67) (@shadialtarsha)
+- Add warning for backend health check prober [#64](https://github.com/ysugimoto/falco/pull/64) (@davinci26)
+- Adds support for subs with return type [#57](https://github.com/ysugimoto/falco/pull/57) (@davinci26)
+
 ## v0.10.0
 
 - Add support for Fastly Rate Limiting [#60](https://github.com/ysugimoto/falco/pull/60) (@shadialtarsha)

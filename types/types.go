@@ -229,20 +229,22 @@ func (d *Director) Token() token.Token { return d.Decl.Token }
 func (d *Director) String() string     { return d.Decl.String() }
 
 type Penaltybox struct {
-	Penaltybox *ast.PenaltyboxDeclaration
+	Decl   *ast.PenaltyboxDeclaration
+	IsUsed bool // mark this penaltybox is called at least once
 }
 
 func (pb *Penaltybox) Type() Type         { return PenaltyboxType }
-func (pb *Penaltybox) Token() token.Token { return pb.Penaltybox.Token }
-func (pb *Penaltybox) String() string     { return pb.Penaltybox.String() }
+func (pb *Penaltybox) Token() token.Token { return pb.Decl.Token }
+func (pb *Penaltybox) String() string     { return pb.Decl.String() }
 
 type Ratecounter struct {
-	Ratecounter *ast.RatecounterDeclaration
+	Decl   *ast.RatecounterDeclaration
+	IsUsed bool // mark this ratecounter is called at least once
 }
 
 func (rc *Ratecounter) Type() Type         { return RatecounterType }
-func (rc *Ratecounter) Token() token.Token { return rc.Ratecounter.Token }
-func (rc *Ratecounter) String() string     { return rc.Ratecounter.String() }
+func (rc *Ratecounter) Token() token.Token { return rc.Decl.Token }
+func (rc *Ratecounter) String() string     { return rc.Decl.String() }
 
 type Goto struct {
 	Decl   *ast.GotoStatement

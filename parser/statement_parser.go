@@ -377,7 +377,8 @@ func (p *Parser) parseRestartStatement() (*ast.RestartStatement, error) {
 
 func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	stmt := &ast.ReturnStatement{
-		Meta: p.curToken,
+		Meta:           p.curToken,
+		HasParenthesis: false,
 	}
 
 	// return statement may not have argument
@@ -388,19 +389,31 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 		return stmt, nil
 	}
 
-	if !p.expectPeek(token.LEFT_PAREN) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
+	hasLeftParen := p.peekTokenIs(token.LEFT_PAREN)
+	if hasLeftParen {
+		stmt.HasParenthesis = true
+		p.nextToken() // point to expression
+	}
+	p.nextToken()
+
+	expression, err := p.parseExpression(LOWEST)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	stmt.ReturnExpression = &expression
+
+	hasRightParen := p.peekTokenIs(token.RIGHT_PAREN)
+	if hasRightParen {
+		p.nextToken() // point to condition expression
+	}
+	if hasLeftParen != hasRightParen {
+		return nil, errors.WithStack(&ParseError{
+			Token:   p.curToken.Token,
+			Message: "Parenthesis missmatch",
+		})
 	}
 
-	if !p.expectPeek(token.IDENT) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
-	}
-	stmt.Ident = p.parseIdent()
-
-	if !p.expectPeek(token.RIGHT_PAREN) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
-	}
-	swapLeadingTrailing(p.curToken, stmt.Ident.Meta)
+	swapLeadingTrailing(p.curToken, (*stmt.ReturnExpression).GetMeta())
 
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))

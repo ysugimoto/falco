@@ -773,7 +773,7 @@ Failed to load include target module.
 
 Regex matched operator `re.group.N` value will be overriden.
 
-These variables could use if(else) block statement when condition has regex operator like "~" or "!~".
+These variables could use if(else) block statement when condition has regex operator like `~` or `!~`.
 Note that group matched variable has potential of making bugs due to its spec:
 
 1. re.group.N variable scope is subroutine-global, does not have block scope

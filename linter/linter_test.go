@@ -137,6 +137,34 @@ backend foo {
 `
 		assertError(t, input)
 	})
+
+	t.Run("Probe is configured correctly", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "example.com";
+
+  .probe = {
+    .request = "GET / HTTP/1.1";
+	.threshold = 1;
+	.initial = 5;
+  }
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("Probe is configured in such a way that the backend will start as unhealthy", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "example.com";
+
+  .probe = {
+    .request = "GET / HTTP/1.1";
+	.threshold = 5;
+	.initial = 1;
+  }
+}`
+		assertError(t, input)
+	})
 }
 
 func TestLintTableStatement(t *testing.T) {
@@ -332,6 +360,15 @@ sub foo {
 		input := `
 sub vcl_recv {
 	set req.http.Host = "example.com";
+}`
+		assertError(t, input)
+	})
+
+	t.Run("Fastly reserved subroutine cannot have a return type", func(t *testing.T) {
+		input := `
+sub vcl_recv BOOL {
+	set req.http.Host = "example.com";
+	return true;
 }`
 		assertError(t, input)
 	})
@@ -1169,6 +1206,18 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with user defined sub", func(t *testing.T) {
+		input := `
+sub returns_one INTEGER {
+	return 1;
+}
+
+sub returns_true BOOL {
+	return returns_one() == 1;
+}`
+		assertNoError(t, input)
+	})
+
 	t.Run("function not found", func(t *testing.T) {
 		input := `
 sub foo {
@@ -1229,6 +1278,88 @@ sub vcl_recv {
 }`
 		assertNoError(t, input)
 	})
+
+	t.Run("sub: return correct type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	#Fastly recv
+	return 1;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return empty statement", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return wrong type", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (req.http.foo);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (pass);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value as action", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	return (1);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return local value", func(t *testing.T) {
+		input := `
+sub custom_sub INTEGER {
+	declare local var.tmp INTEGER;
+	set var.tmp = 10;
+	return var.tmp;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("sub: return value contains operations", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return var.tmp "bar";
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: return value contains jibber", func(t *testing.T) {
+		input := `
+sub get_str STRING {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return +-var.tmp;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("sub: bool return value is allowed to have operations", func(t *testing.T) {
+		input := `
+sub get_bool BOOL {
+	declare local var.tmp STRING;
+	set var.tmp = "foo";
+	return std.strlen(var.tmp) > 5;
+}`
+		assertNoError(t, input)
+	})
+
 }
 
 func TestBlockSyntaxInsideBlockStatement(t *testing.T) {
@@ -1544,6 +1675,45 @@ penaltybox ip_pb {
 `
 		assertError(t, input)
 	})
+
+	t.Run("penaltybox variable should be pass if it is defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("penaltybox variable should be defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertError(t, input)
+	})
 }
 
 func TestLintRatecounterStatement(t *testing.T) {
@@ -1582,6 +1752,78 @@ ratecounter req_counter {}
 		input := `
 ratecounter req_counter {
 	set var.bar = "baz";
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter variable should be pass if it is defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+ratecounter counter_60 {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("ratecounter variable should be defined", func(t *testing.T) {
+		input := `
+penaltybox ip_pb {}
+
+sub test_sub{
+	declare local var.ratelimit_exceeded BOOL;
+	set var.ratelimit_exceeded = ratelimit.check_rate(
+		digest.hash_sha256("123"),
+		counter_60,
+		1,
+		60,
+		135,
+		ip_pb,
+		2m);
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should pass if the ratecounter is defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_bucket_10s = std.itoa(ratecounter.counter_60.bucket.10s);
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should not pass if the ratecounter is not defined", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_rate_10s = std.itoa(ratecounter.counter.bucket.10s);
+}
+`
+		assertError(t, input)
+	})
+
+	t.Run("ratecounter bucket variables should exist", func(t *testing.T) {
+		input := `
+ratecounter counter_60 {}
+
+sub test_sub{
+	set req.http.X-ERL:tls_bucket_10s = std.itoa(ratecounter.counter_60.bucket.100s);
 }
 `
 		assertError(t, input)
