@@ -110,7 +110,7 @@ func UndefinedSubroutine(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("Subroutine %s is not defined. Did you forget to include of typo its name?", name),
+		Message:  fmt.Sprintf("Subroutine %s is not defined. Did you forget to include it or have a typo in the name?", name),
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"io/ioutil"
@@ -77,7 +78,6 @@ func (f *FileResolver) getVCL(file string) (*VCL, error) {
 	if _, err := os.Stat(file); err != nil {
 		return nil, err
 	}
-
 	fp, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -100,13 +100,17 @@ func (f *FileResolver) MainVCL() (*VCL, error) {
 }
 
 func (f *FileResolver) Resolve(module string) (*VCL, error) {
+	module_path_with_extension := module
+	if !strings.HasSuffix(module_path_with_extension, ".vcl") {
+		module_path_with_extension += ".vcl"
+	}
+
 	// Find for each include paths
 	for _, p := range f.includePaths {
-		if vcl, err := f.getVCL(filepath.Join(p, module+".vcl")); err == nil {
+		if vcl, err := f.getVCL(filepath.Join(p, module_path_with_extension)); err == nil {
 			return vcl, nil
 		}
 	}
-
 	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s.vcl", module))
 }
 
