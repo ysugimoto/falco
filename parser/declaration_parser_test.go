@@ -267,7 +267,7 @@ table tbl {
 							HasComma: true,
 						},
 						{
-							Meta: ast.New(T, 1, comments("// Leading comment")),
+							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
 							Key: &ast.String{
 								Meta:  ast.New(T, 1),
 								Value: "dolor",

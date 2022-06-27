@@ -31,25 +31,49 @@ import boltsort; // Trailing comment`
 }
 
 func TestParseInclude(t *testing.T) {
-	input := `// Leading comment
+	t.Run("with semicolon at the end", func(t *testing.T) {
+		input := `// Leading comment
 include "feature_mod"; // Trailing comment`
-	expect := &ast.VCL{
-		Statements: []ast.Statement{
-			&ast.IncludeStatement{
-				Meta: ast.New(T, 0, comments("// Leading comment"), comments("// Trailing comment")),
-				Module: &ast.String{
-					Meta:  ast.New(token.Token{}, 0),
-					Value: "feature_mod",
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.IncludeStatement{
+					Meta: ast.New(T, 0, comments("// Leading comment"), comments("// Trailing comment")),
+					Module: &ast.String{
+						Meta:  ast.New(token.Token{}, 0),
+						Value: "feature_mod",
+					},
 				},
 			},
-		},
-	}
+		}
 
-	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
-	assert(t, vcl, expect)
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("without semicolon at the end", func(t *testing.T) {
+		input := `// Leading comment
+include "feature_mod" // Trailing comment`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.IncludeStatement{
+					Meta: ast.New(T, 0, comments("// Leading comment"), comments("// Trailing comment")),
+					Module: &ast.String{
+						Meta:  ast.New(token.Token{}, 0),
+						Value: "feature_mod",
+					},
+				},
+			},
+		}
+
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 func TestParseSetStatement(t *testing.T) {
 	t.Run("simple assign", func(t *testing.T) {
