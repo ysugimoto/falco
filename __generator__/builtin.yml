@@ -626,8 +626,8 @@ resp.tarpit:
   reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/"
   on: [DELIVER]
   arguments:
-    - [STRING, STRING]
-    - [STRING]
+    - [INTEGER, INTEGER]
+    - [INTEGER]
 
 setcookie.delete_by_name:
   reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/setcookie-delete-by-name/"
