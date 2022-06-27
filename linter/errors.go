@@ -313,3 +313,19 @@ func NonEmptyRatecounterBlock(m *ast.Meta, name string) *LintError {
 		Message:  fmt.Sprintf("Ratecounter %s cannot have any properties and should be declared as an empty block", name),
 	}
 }
+
+func UndefinedGotoDestination(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("goto destination %s is not defined", name),
+	}
+}
+
+func DuplicatedUseForGotoDestination(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("goto destination %s has been already in use", name),
+	}
+}

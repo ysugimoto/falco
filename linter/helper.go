@@ -171,7 +171,7 @@ func isValidConditionExpression(cond ast.Expression) error {
 // set var.Foo = req.http.Host == "example.com";   // -> invalid, equal operator could not use in set statement
 //
 // So we'd check validity following function.
-func isValidStatmentExpression(exp ast.Expression) error {
+func isValidStatementExpression(exp ast.Expression) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
 		if t.Operator == "!" {

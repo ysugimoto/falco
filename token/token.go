@@ -117,6 +117,7 @@ const (
 	ELSIF            = "ELSIF"            // elsif
 	PENALTYBOX       = "PENALTYBOX"       // penaltybox
 	RATECOUNTER      = "RATECOUNTER"      // ratecounter
+	GOTO             = "GOTO"             // goto
 )
 
 var keywords = map[string]TokenType{
@@ -149,6 +150,7 @@ var keywords = map[string]TokenType{
 	"synthetic.base64": SYNTHETIC_BASE64,
 	"penaltybox":       PENALTYBOX,
 	"ratecounter":      RATECOUNTER,
+	"goto":             GOTO,
 }
 
 func LookupIdent(ident string) TokenType {

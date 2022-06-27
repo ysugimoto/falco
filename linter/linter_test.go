@@ -1829,3 +1829,78 @@ sub test_sub{
 		assertError(t, input)
 	})
 }
+
+func TestLintGotoStatement(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+	sub foo {
+		declare local var.x INTEGER;
+		set var.x = 1;
+
+		goto set_and_update;
+
+		if (var.x == 1) {
+			set var.x = 2;
+		}
+
+		set_and_update:
+		set var.x = 3;
+	}
+	`
+
+		assertNoError(t, input)
+	})
+
+	t.Run("only one destination is allowed", func(t *testing.T) {
+		input := `
+	sub foo {
+		declare local var.x INTEGER;
+		set var.x = 1;
+
+		goto set_and_update;
+
+		if (var.x == 1) {
+			set var.x = 2;
+		}
+
+		set_and_update:
+		set var.x = 3;
+		set_and_update:
+	}
+	`
+
+		assertError(t, input)
+	})
+
+	t.Run("undefined goto destination", func(t *testing.T) {
+		input := `
+	sub foo {
+		declare local var.x INTEGER;
+		set var.x = 1;
+
+		if (var.x == 1) {
+			set var.x = 2;
+		}
+
+		set_and_update:
+		set var.x = 3;
+	}
+	`
+
+		assertError(t, input)
+	})
+
+	t.Run("goto scope should be one subroutine", func(t *testing.T) {
+		input := `
+	sub some_function {
+		goto foo;
+	}
+	
+	sub another_function {
+		foo:
+	}
+	`
+
+		assertError(t, input)
+	})
+}

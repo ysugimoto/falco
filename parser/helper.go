@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
 )
@@ -64,4 +66,10 @@ func clearComments(m *ast.Meta) *ast.Meta {
 	mm.Leading = ast.Comments{}
 	mm.Trailing = ast.Comments{}
 	return &mm
+}
+
+func isGotoDestination(t token.Token) bool {
+	components := strings.Split(t.Literal, ":")
+
+	return len(components) == 2
 }
