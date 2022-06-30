@@ -3,7 +3,7 @@
 - Add support for Goto declaration [#72](https://github.com/ysugimoto/falco/pull/72) (@shadialtarsha)
 - Updates types for resp.tarpit [#74](https://github.com/ysugimoto/falco/pull/74) (@davinci26)
 - Adds support for h3.alt_svc function [#75](https://github.com/ysugimoto/falco/pull/75) (@davinci26)
-- Improve include statement parsing [#77](https://github.com/ysugimoto/falco/pull/77) (davinci26)
+- Improve include statement parsing [#77](https://github.com/ysugimoto/falco/pull/77) (@davinci26)
 
 ## v0.11.0
 
