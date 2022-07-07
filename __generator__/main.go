@@ -7,17 +7,18 @@ import (
 )
 
 var typeToType = map[string]string{
-	"BOOL":    "types.BoolType",
-	"INTEGER": "types.IntegerType",
-	"FLOAT":   "types.FloatType",
-	"STRING":  "types.StringType",
-	"RTIME":   "types.RTimeType",
-	"TIME":    "types.TimeType",
-	"BACKEND": "types.BackendType",
-	"IP":      "types.IPType",
-	"ID":      "types.IDType",
-	"ACL":     "types.AclType",
-	"TABLE":   "types.TableType",
+	"BOOL":        "types.BoolType",
+	"INTEGER":     "types.IntegerType",
+	"FLOAT":       "types.FloatType",
+	"STRING":      "types.StringType",
+	"RTIME":       "types.RTimeType",
+	"TIME":        "types.TimeType",
+	"BACKEND":     "types.BackendType",
+	"IP":          "types.IPType",
+	"ID":          "types.IDType",
+	"ACL":         "types.AclType",
+	"TABLE":       "types.TableType",
+	"STRING_LIST": "types.StringListType",
 }
 
 func main() {

@@ -1489,7 +1489,9 @@ func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Conte
 
 	var argTypes []types.Type
 	for _, a := range fn.Arguments {
-		if len(a) == len(calledFn.arguments) {
+		// Special case of variadic arguments of types.StringListType,
+		// We do not compare argument length, just lint with "all arguemnt types are STRING".
+		if a[0] == types.StringListType || len(a) == len(calledFn.arguments) {
 			argTypes = a
 			break
 		}
@@ -1499,6 +1501,30 @@ func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Conte
 			calledFn.meta, calledFn.name,
 			len(fn.Arguments), len(calledFn.arguments),
 		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
+	} else if argTypes[0] == types.StringListType {
+		// Variadic arguments linting, at least one argument must be provided and must be a StringType
+		if len(calledFn.arguments) == 0 {
+			err := &LintError{
+				Severity: ERROR,
+				Token:    calledFn.token,
+				Message: fmt.Sprintf(
+					"function %s variadic arguments must be provided at least one argument",
+					calledFn.name,
+				),
+			}
+			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
+			return fn.Return
+		}
+
+		for i, arg := range calledFn.arguments {
+			a := l.lint(arg, ctx)
+			if !expectType(a, types.StringType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					calledFn.meta, calledFn.name, i+1, types.StringType, a,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
+		}
+		return fn.Return
 	}
 
 	for i, v := range argTypes {

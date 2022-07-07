@@ -1904,3 +1904,35 @@ func TestLintGotoStatement(t *testing.T) {
 		assertError(t, input)
 	})
 }
+
+func TestLintVariadicStringArguments(t *testing.T) {
+	t.Run("pass", func(t *testing.T) {
+		input := `
+	sub foo {
+	  h2.disable_header_compression("Authorization", "Secret");
+	}
+	`
+
+		assertNoError(t, input)
+	})
+
+	t.Run("empty arguments are invalid", func(t *testing.T) {
+		input := `
+	sub foo {
+	  h2.disable_header_compression();
+	}
+	`
+
+		assertError(t, input)
+	})
+
+	t.Run("type error", func(t *testing.T) {
+		input := `
+	sub foo {
+	  h2.disable_header_compression(10);
+	}
+	`
+
+		assertError(t, input)
+	})
+}

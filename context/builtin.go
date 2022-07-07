@@ -597,7 +597,7 @@ func builtinFunctions() Functions {
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Arguments: [][]types.Type{
-							[]types.Type{},
+							[]types.Type{types.StringListType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-disable-header-compression/",
