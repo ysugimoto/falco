@@ -1490,7 +1490,7 @@ func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Conte
 	var argTypes []types.Type
 	for _, a := range fn.Arguments {
 		// Special case of variadic arguments of types.StringListType,
-		// We do not compare argument length, just lint with "all arguemnt types are STRING".
+		// We do not compare argument length, just lint with "all argument types are STRING".
 		if a[0] == types.StringListType || len(a) == len(calledFn.arguments) {
 			argTypes = a
 			break
@@ -1508,7 +1508,7 @@ func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Conte
 				Severity: ERROR,
 				Token:    calledFn.token,
 				Message: fmt.Sprintf(
-					"function %s variadic arguments must be provided at least one argument",
+					"function %s requires at least one argument",
 					calledFn.name,
 				),
 			}
