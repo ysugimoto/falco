@@ -42,11 +42,12 @@ Or compile it yourself with `go install github.com/ysugimoto/falco/cmd/falco@lat
 
 For mac:
 ```
-brew install pcre
+make darwin-deps
 ``` 
+
 For Linux
 ```
-apt-get install -y libpcre3-dev
+make linux-deps
 ```
 
 ## Usage
