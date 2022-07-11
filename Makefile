@@ -8,20 +8,23 @@ generate:
 test: generate
 	go list ./... | xargs go test
 
-linux:
+darwin-deps:
+	brew list pcre || brew install pcre
+
+linux-deps:
 	apt-get install -y libpcre3-dev
+
+linux: linux-deps
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-linux-amd64 ./cmd/falco
 
-darwin_amd64:
-	brew install pcre
+darwin_amd64: darwin-deps
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-amd64 ./cmd/falco
 
-darwin_arm64:
-	brew install pcre
+darwin_arm64: darwin-deps
 	GOOS=darwin GOARCH=arm64 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-arm64 ./cmd/falco
