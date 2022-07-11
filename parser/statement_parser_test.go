@@ -1322,39 +1322,85 @@ sub vcl_recv {
 }
 
 func TestGotoStatement(t *testing.T) {
-	input := `// Goto Statement
-sub vcl_recv {
-	// Leading comment
-	goto update_and_set; // Trailing comment
-}`
-	expect := &ast.VCL{
-		Statements: []ast.Statement{
-			&ast.SubroutineDeclaration{
-				Meta: ast.New(T, 0, comments("// Goto Statement")),
-				Name: &ast.Ident{
-					Meta:  ast.New(T, 0),
-					Value: "vcl_recv",
-				},
-				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1),
-					Statements: []ast.Statement{
-						&ast.GotoStatement{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
-							Destination: &ast.Ident{
-								Meta:  ast.New(T, 1),
-								Value: "update_and_set",
+	t.Run("goto statement", func(t *testing.T) {
+		input := `// Goto Statement
+		sub vcl_recv {
+			// Leading comment
+			goto update_and_set; // Trailing comment
+		}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Goto Statement")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.GotoStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Destination: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "update_and_set",
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	}
-	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
-	assert(t, vcl, expect)
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("goto destination as IDENT", func(t *testing.T) {
+		input := `// Goto Statement
+		sub vcl_recv {
+			// Leading comment
+			goto update_and_set; // Trailing comment
+			update_and_set:
+		}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Goto Statement")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.GotoStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Destination: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "update_and_set",
+								},
+							},
+							&ast.GotoDestinationStatement{
+								Meta: ast.New(T, 1),
+								Name: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "update_and_set:",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestFunctionCallStatement(t *testing.T) {
