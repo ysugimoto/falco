@@ -120,7 +120,7 @@ linters-settings:
       - wrapperFunc
       - yodaStyleExpr
   gocyclo:
-    min-complexity: 40
+    min-complexity: 50
   gofmt:
     simplify: true
   golint:
