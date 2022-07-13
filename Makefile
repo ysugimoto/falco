@@ -14,17 +14,17 @@ darwin-deps:
 linux-deps:
 	apt-get install -y libpcre3-dev
 
-linux: linux-deps 
+linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-linux-amd64 ./cmd/falco
 
-darwin_amd64: darwin-deps
+darwin_amd64:
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-amd64 ./cmd/falco
 
-darwin_arm64: darwin-deps
+darwin_arm64:
 	GOOS=darwin GOARCH=arm64 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-arm64 ./cmd/falco
