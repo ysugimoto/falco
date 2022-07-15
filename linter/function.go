@@ -17,7 +17,6 @@ type functionMeta struct {
 }
 
 func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn functionMeta, ctx *context.Context) types.Type {
-
 	// lint empty arguments
 	if len(fn.Arguments) == 0 {
 		if len(calledFn.arguments) > 0 {
