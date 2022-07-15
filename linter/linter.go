@@ -1453,7 +1453,17 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 }
 
 func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx *context.Context) types.Type {
-	return l.lintFunctionArguments(functionMeta{
+	fn, err := ctx.GetFunction(exp.Function.String())
+	if err != nil {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  err.Error(),
+		})
+		return types.NeverType
+	}
+
+	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.String(),
 		token:     exp.Function.GetMeta().Token,
 		arguments: exp.Arguments,
@@ -1462,7 +1472,26 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 }
 
 func (l *Linter) lintFunctionStatement(exp *ast.FunctionCallStatement, ctx *context.Context) types.Type {
-	return l.lintFunctionArguments(functionMeta{
+	fn, err := ctx.GetFunction(exp.Function.Value)
+	if err != nil {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  err.Error(),
+		})
+		return types.NeverType
+	}
+
+	if fn.Return != types.NeverType {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  fmt.Sprintf(`unused return type for function "%s"`, exp.Function.Value),
+		})
+		return types.NeverType
+	}
+
+	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.Value,
 		token:     exp.Function.GetMeta().Token,
 		arguments: exp.Arguments,

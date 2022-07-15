@@ -16,16 +16,7 @@ type functionMeta struct {
 	meta      *ast.Meta
 }
 
-func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Context) types.Type {
-	fn, err := ctx.GetFunction(calledFn.name)
-	if err != nil {
-		l.Error(&LintError{
-			Severity: ERROR,
-			Token:    calledFn.token,
-			Message:  err.Error(),
-		})
-		return types.NeverType
-	}
+func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn functionMeta, ctx *context.Context) types.Type {
 
 	// lint empty arguments
 	if len(fn.Arguments) == 0 {

@@ -336,9 +336,10 @@ func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType typ
 	c.functions[name] = &FunctionSpec{
 		Items: map[string]*FunctionSpec{},
 		Value: &BuiltinFunction{
-			Return:    returnType,
-			Arguments: [][]types.Type{},
-			Scopes:    scopes,
+			Return:                returnType,
+			Arguments:             [][]types.Type{},
+			Scopes:                scopes,
+			IsUserDefinedFunction: true,
 		},
 	}
 
