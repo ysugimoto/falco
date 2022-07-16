@@ -48,7 +48,7 @@ func ScopeString(s int) string {
 
 func ScopesString(s int) string {
 	var sb strings.Builder
-	for i := RECV; i != LOG; i = i << 4 {
+	for i := RECV; i != LOG; i <<= 4 {
 		scope := ScopeString(s & i)
 		if scope != "UNKNOWN" {
 			sb.WriteString(scope)
@@ -59,7 +59,7 @@ func ScopesString(s int) string {
 }
 
 func CanAccessVariableInScope(objScope int, objReference string, name string, currentScope int) error {
-	// objScope: is a bitmap of all the scopes that the variable is available in e.g. 0x100000001 is only avaiable in RECV and LOG
+	// objScope: is a bitmap of all the scopes that the variable is available in e.g. 0x100000001 is only available in RECV and LOG
 	// currentScope: is the bitmap of the current scope. In VCL state functions such as vcl_recv only one bit will be set.
 	// however in subroutines or user defined functions things are different, since a subroutine might be used in multiple function.
 	// We calculate if objScope & currentScope (the common scopes) is the same as the current scope
