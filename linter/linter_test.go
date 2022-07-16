@@ -372,6 +372,73 @@ sub vcl_recv BOOL {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("Subroutines can be reused in multiple vcl state functions", func(t *testing.T) {
+		input := `
+//@recv
+//@log
+sub example {
+	set req.http.Host = "example.com";
+}
+
+sub vcl_log {
+    # FASTLY log
+	call example;
+}
+
+sub vcl_recv {
+# FASTLY recv
+call example;
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("Functions can be reused in multiple vcl state functions", func(t *testing.T) {
+		input := `
+//@recv
+//@log
+sub example BOOL {
+	return true;
+}
+
+sub vcl_log {
+	# FASTLY log
+	if (example()) {
+		log "foo";
+	}
+}
+
+sub vcl_recv {
+# FASTLY recv
+	if (example()) {
+		log "foo";
+	}
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("Errros when subroutines want variables they don't have access to", func(t *testing.T) {
+		input := `
+//@recv
+//@deliver
+sub example {
+	log resp.http.bar;
+}
+
+sub vcl_recv {
+# FASTLY log
+	call example;
+}
+
+sub vcl_deliver {
+# FASTLY recv
+	call example;
+}
+`
+		assertError(t, input)
+	})
 }
 
 func TestLintDeclareStatement(t *testing.T) {
@@ -1895,7 +1962,7 @@ func TestLintGotoStatement(t *testing.T) {
 	sub some_function {
 		goto foo;
 	}
-	
+
 	sub another_function {
 		foo:
 	}

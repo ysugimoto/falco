@@ -99,16 +99,22 @@ Following table describes subroutine name and recognizing scope:
 
 ### Annotation
 
-For some reasons, the subroutine name could not be changed. Then, if you apply a hint of scope on annotation, `falco` also understands scope:
+For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes.
+
+Then, if you apply a hint of scope on annotation, `falco` also understands scope:
 
 ```vcl
 // @recv
-sub custom_process { // subroutine has `recv` annotation, lint with RECV scope
+// @miss
+sub custom_process {
+   // subroutine has `recv` annotation, lint with RECV|MISS scope.
+   // All variables must be accessible in both RECV and MISS scope.
   ...
 }
 
 // @fetch
-sub custom_request { // subroutine has `fetch` annotation, lint with FETCH scope
+sub custom_request {
+  // subroutine has `fetch` annotation, lint with FETCH scope
   ...
 }
 ```

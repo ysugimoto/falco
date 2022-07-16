@@ -46,6 +46,34 @@ func ScopeString(s int) string {
 	}
 }
 
+func ScopesString(s int) string {
+	var sb strings.Builder
+	for i := RECV; i != LOG; i = i << 4 {
+		scope := ScopeString(s & i)
+		if scope != "UNKNOWN" {
+			sb.WriteString(scope)
+			sb.WriteString(" ")
+		}
+	}
+	return sb.String()
+}
+
+func CanAccessVariableInScope(objScope int, objReference string, name string, currentScope int) error {
+	// objScope: is a bitmap of all the scopes that the variable is available in e.g. 0x100000001 is only avaiable in RECV and LOG
+	// currentScope: is the bitmap of the current scope. In VCL state functions such as vcl_recv only one bit will be set.
+	// however in subroutines or user defined functions things are different, since a subroutine might be used in multiple function.
+	// We calculate if objScope & currentScope (the common scopes) is the same as the current scope
+	if (objScope & currentScope) != currentScope {
+		missingScopes := (objScope & currentScope) ^ currentScope
+		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopesString(missingScopes))
+		if objReference != "" {
+			message += "\ndocument: " + objReference
+		}
+		return fmt.Errorf(message)
+	}
+	return nil
+}
+
 var fastlyReservedSubroutines = map[string]bool{
 	"vcl_recv":    true,
 	"vcl_hash":    true,
@@ -422,13 +450,10 @@ func (c *Context) Get(name string) (types.Type, error) {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 	// Value exists, but unable to access in current scope
-	if obj.Value.Scopes&c.curMode == 0 {
-		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
-		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
-		}
-		return types.NullType, fmt.Errorf(message)
+	if err := CanAccessVariableInScope(obj.Value.Scopes, obj.Value.Reference, name, c.curMode); err != nil {
+		return types.NullType, err
 	}
+
 	// Unable "Get" access
 	if obj.Value.Get == types.NeverType {
 		message := fmt.Sprintf(`variable "%s" could not read`, name)
@@ -481,14 +506,12 @@ func (c *Context) Set(name string) (types.Type, error) {
 	if obj == nil || obj.Value == nil {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
+
 	// Value exists, but unable to access in current scope
-	if obj.Value.Scopes&c.curMode == 0 {
-		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
-		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
-		}
-		return types.NullType, fmt.Errorf(message)
+	if err := CanAccessVariableInScope(obj.Value.Scopes, obj.Value.Reference, name, c.curMode); err != nil {
+		return types.NullType, err
 	}
+
 	// Unable "Set" access, means read-only.
 	if obj.Value.Set == types.NeverType {
 		message := fmt.Sprintf(`variable "%s" is read-only`, name)
@@ -584,12 +607,8 @@ func (c *Context) Unset(name string) error {
 		return nil
 	}
 	// Value exists, but unable to access in current scope
-	if obj.Value.Scopes&c.curMode == 0 {
-		message := fmt.Sprintf(`variable "%s" could not access in scope of %s`, name, ScopeString(c.curMode))
-		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
-		}
-		return fmt.Errorf(message)
+	if err := CanAccessVariableInScope(obj.Value.Scopes, obj.Value.Reference, name, c.curMode); err != nil {
+		return err
 	}
 	// Unable "Unset" access, means could not unset.
 	if !obj.Value.Unset {
