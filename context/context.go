@@ -58,7 +58,7 @@ func ScopesString(s int) string {
 	return sb.String()
 }
 
-func CanAccessVariableInScope(objScope int, objReference string, name string, currentScope int) error {
+func CanAccessVariableInScope(objScope int, objReference, name string, currentScope int) error {
 	// objScope: is a bitmap of all the scopes that the variable is available in e.g. 0x100000001 is only available in RECV and LOG
 	// currentScope: is the bitmap of the current scope. In VCL state functions such as vcl_recv only one bit will be set.
 	// however in subroutines or user defined functions things are different, since a subroutine might be used in multiple function.
