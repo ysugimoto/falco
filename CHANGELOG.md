@@ -1,3 +1,8 @@
+## v0.13.0
+
+- Add support for function calls as statements [#73](https://github.com/ysugimoto/falco/pull/73) (@shadialtarsha)
+- Support PCRE Regular Expressions [#66](https://github.com/ysugimoto/falco/pull/66) (@shadialtarsha)
+
 ## v0.12.0
 
 - Add support for Goto declaration [#72](https://github.com/ysugimoto/falco/pull/72) (@shadialtarsha)
