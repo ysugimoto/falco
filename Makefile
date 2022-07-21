@@ -12,7 +12,7 @@ darwin-deps:
 	brew list pcre || brew install pcre
 
 linux-deps:
-	apt-get install -y libpcre3-dev
+	sudo apt-get install -y libpcre3-dev
 
 linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
