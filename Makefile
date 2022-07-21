@@ -12,7 +12,7 @@ darwin-deps:
 	brew list pcre || brew install pcre
 
 linux-deps:
-	sudo apt-get install -y libpcre3-dev
+	apt-get install -y libpcre3-dev
 
 linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
@@ -29,7 +29,7 @@ darwin_arm64:
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-arm64 ./cmd/falco
 
-release: linux-deps linux darwin_amd64 darwin_arm64
+release: linux darwin_amd64 darwin_arm64
 
 lint:
 	golangci-lint run
