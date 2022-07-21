@@ -716,6 +716,11 @@ fastly_info.is_h2:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
 
+fastly_info.is_h3:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
 quic.cc.cwnd:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/"
   on: [RECV, HASH, DELIVER, LOG]
@@ -836,6 +841,11 @@ tls.client.iana_chosen_cipher_id:
   on: [RECV, HASH, DELIVER, LOG]
   get: INTEGER
 
+tls.client.ja3_md5:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ja3-md5/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
 tls.client.protocol:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-protocol/"
   on: [RECV, HASH, DELIVER, LOG]
@@ -863,6 +873,16 @@ tls.client.tlsexts_list_txt:
 
 tls.client.tlsexts_sha:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-sha/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+transport.bw_estimate:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-bw-estimate/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: INTEGER
+
+transport.type:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-type/"
   on: [RECV, HASH, DELIVER, LOG]
   get: STRING
 
