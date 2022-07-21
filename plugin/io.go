@@ -31,6 +31,7 @@ func init() {
 	gob.Register(&ast.EsiStatement{})
 	gob.Register(&ast.Float{})
 	gob.Register(&ast.FunctionCallExpression{})
+	gob.Register(&ast.FunctionCallStatement{})
 	gob.Register(&ast.IP{})
 	gob.Register(&ast.Ident{})
 	gob.Register(&ast.IfExpression{})

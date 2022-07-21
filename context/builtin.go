@@ -14,11 +14,12 @@ type FunctionSpec struct {
 }
 
 type BuiltinFunction struct {
-	Arguments [][]types.Type
-	Return    types.Type
-	Extra     func(c *Context, name string) interface{}
-	Scopes    int
-	Reference string
+	Arguments             [][]types.Type
+	Return                types.Type
+	Extra                 func(c *Context, name string) interface{}
+	Scopes                int
+	Reference             string
+	IsUserDefinedFunction bool
 }
 
 func builtinFunctions() Functions {
@@ -1379,8 +1380,8 @@ func builtinFunctions() Functions {
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Arguments: [][]types.Type{
-							[]types.Type{types.IDType},
-							[]types.Type{types.IDType, types.StringType},
+							[]types.Type{types.StringType},
+							[]types.Type{types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/",

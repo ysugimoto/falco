@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func testingncludeStatement(t *testing.T) {
+func TestIncludeStatement(t *testing.T) {
 	is := &IncludeStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Module: &String{

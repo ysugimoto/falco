@@ -203,6 +203,8 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintGotoStatement(t, ctx)
 	case *ast.GotoDestinationStatement:
 		return l.lintGotoDestinationStatement(t, ctx)
+	case *ast.FunctionCallStatement:
+		return l.lintFunctionStatement(t, ctx)
 
 	// Expressions
 	case *ast.Ident:
@@ -1444,7 +1446,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 		l.Error(&LintError{
 			Severity: WARNING,
 			Token:    exp.GetMeta().Token,
-			Message:  "If expression returns differernt type between consequence and alternative",
+			Message:  "If expression returns different type between consequence and alternative",
 		})
 	}
 	return left
@@ -1461,75 +1463,38 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		return types.NeverType
 	}
 
-	// lint empty arguments
-	if len(fn.Arguments) == 0 {
-		if len(exp.Arguments) > 0 {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    exp.GetMeta().Token,
-				Message: fmt.Sprintf(
-					"function %s wants no arguments but provides %d argument",
-					exp.Function.String(), len(exp.Arguments),
-				),
-			}
-			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-		}
-		return fn.Return
+	return l.lintFunctionArguments(fn, functionMeta{
+		name:      exp.Function.String(),
+		token:     exp.Function.GetMeta().Token,
+		arguments: exp.Arguments,
+		meta:      exp.Meta,
+	}, ctx)
+}
+
+func (l *Linter) lintFunctionStatement(exp *ast.FunctionCallStatement, ctx *context.Context) types.Type {
+	fn, err := ctx.GetFunction(exp.Function.Value)
+	if err != nil {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  err.Error(),
+		})
+		return types.NeverType
 	}
 
-	var argTypes []types.Type
-	for _, a := range fn.Arguments {
-		if len(a) == len(exp.Arguments) {
-			argTypes = a
-			break
-		}
-	}
-	if len(argTypes) == 0 {
-		l.Error(FunctionArgumentMismatch(
-			exp.Function.GetMeta(), exp.Function.String(),
-			len(fn.Arguments), len(exp.Arguments),
-		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
+	if fn.Return != types.NeverType {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  fmt.Sprintf(`unused return type for function "%s"`, exp.Function.Value),
+		})
+		return types.NeverType
 	}
 
-	for i, v := range argTypes {
-		arg := l.lint(exp.Arguments[i], ctx)
-
-		switch v {
-		case types.TimeType:
-			// fuzzy type check: some builtin function expects TIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.TimeType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-			continue
-		case types.RTimeType:
-			// fuzzy type check: some builtin function expects RTIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.RTimeType, types.TimeType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-			continue
-		case types.IPType:
-			// fuzzy type check: some builtin function expects IP type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.IPType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		default:
-			// Otherwise, strict type check
-			if v != arg {
-				l.Error(FunctionArgumentTypeMismatch(
-					exp.Function.GetMeta(), exp.Function.String(), i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		}
-	}
-
-	return fn.Return
+	return l.lintFunctionArguments(fn, functionMeta{
+		name:      exp.Function.Value,
+		token:     exp.Function.GetMeta().Token,
+		arguments: exp.Arguments,
+		meta:      exp.Meta,
+	}, ctx)
 }
