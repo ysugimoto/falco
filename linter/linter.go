@@ -3,8 +3,8 @@ package linter
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
-    "regexp"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
