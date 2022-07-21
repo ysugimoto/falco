@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
@@ -106,6 +108,12 @@ func (p *Parser) trailing() ast.Comments {
 			break
 		}
 		if tok.Type == token.EOF {
+			if len(p.peekToken.LeadingComment()) > 0 {
+				cs = append(cs, &ast.Comment{
+					Token: tok,
+					Value: strings.TrimSpace(p.peekToken.LeadingComment()),
+				})
+			}
 			return cs
 		}
 		if tok.Type == token.COMMENT {

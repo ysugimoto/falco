@@ -1,3 +1,15 @@
+## v0.13.0
+
+- Add support for function calls as statements [#73](https://github.com/ysugimoto/falco/pull/73) (@shadialtarsha)
+- Support PCRE Regular Expressions [#66](https://github.com/ysugimoto/falco/pull/66) (@shadialtarsha)
+
+## v0.12.0
+
+- Add support for Goto declaration [#72](https://github.com/ysugimoto/falco/pull/72) (@shadialtarsha)
+- Updates types for resp.tarpit [#74](https://github.com/ysugimoto/falco/pull/74) (@davinci26)
+- Adds support for h3.alt_svc function [#75](https://github.com/ysugimoto/falco/pull/75) (@davinci26)
+- Improve include statement parsing [#77](https://github.com/ysugimoto/falco/pull/77) (@davinci26)
+
 ## v0.11.0
 
 - Respect Ratelimit variables in context [#67](https://github.com/ysugimoto/falco/pull/67) (@shadialtarsha)

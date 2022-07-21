@@ -5,7 +5,7 @@
 ## Usage
 
 terraform can output plan result to file and show as JSON. `falco` could retrieve planned VCL definition from it.
-To lint them, run `falco terraform` subcomment with providing JSON as stdin:
+To lint them, run `falco terraform` subcommand with providing JSON as stdin:
 
 ```shell
 # Plan terraform and output to file using fastly terraform provider

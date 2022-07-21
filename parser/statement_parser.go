@@ -34,12 +34,13 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
 	i.Module = p.parseString()
-
-	if !p.peekTokenIs(token.SEMICOLON) {
-		return nil, errors.WithStack(MissingSemicolon(p.curToken))
-	}
 	i.Meta.Trailing = p.trailing()
-	p.nextToken() // point to SEMICOLON
+
+	// Semicolons are actually not required at the end of include lines
+	// either works on fastly.
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken() // point to SEMICOLON
+	}
 
 	return i, nil
 }

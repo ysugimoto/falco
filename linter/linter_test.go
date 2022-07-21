@@ -1070,6 +1070,36 @@ sub foo {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("pass with PCRE expression", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host ~ "(?i)^word") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with expression that has backslash", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.User-Agent ~ "\(compatible.?; Googlebot/2.1.?; \+http://www.google.com/bot.html") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with PCRE expression that has backslash", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.User-Agent ~ "(?i)windows\ ?ce") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintRegexNotOperator(t *testing.T) {
@@ -1901,6 +1931,46 @@ func TestLintGotoStatement(t *testing.T) {
 	}
 	`
 
+		assertError(t, input)
+	})
+}
+
+func TestLintFunctionStatement(t *testing.T) {
+	t.Run("pass because it is one of Fastly builtin function", func(t *testing.T) {
+		input := `
+	sub foo {
+		std.collect(req.http.Cookie, "|");
+	}
+	`
+
+		assertNoError(t, input)
+	})
+
+	t.Run("cannot call a custom sub as a function statement", func(t *testing.T) {
+		input := `
+	sub foo {
+		log "123";
+	}
+	
+	sub bar {
+		foo();
+	}
+	`
+
+		assertError(t, input)
+	})
+
+	t.Run("cannot call a custom sub with return type as a function statement", func(t *testing.T) {
+		input := `
+	sub foo BOOL {
+		log "123";
+		return true;
+	}
+	
+	sub bar {
+		foo();
+	}
+	`
 		assertError(t, input)
 	})
 }

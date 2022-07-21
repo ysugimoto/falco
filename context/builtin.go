@@ -14,11 +14,12 @@ type FunctionSpec struct {
 }
 
 type BuiltinFunction struct {
-	Arguments [][]types.Type
-	Return    types.Type
-	Extra     func(c *Context, name string) interface{}
-	Scopes    int
-	Reference string
+	Arguments             [][]types.Type
+	Return                types.Type
+	Extra                 func(c *Context, name string) interface{}
+	Scopes                int
+	Reference             string
+	IsUserDefinedFunction bool
 }
 
 func builtinFunctions() Functions {

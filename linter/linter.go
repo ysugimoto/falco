@@ -3,9 +3,9 @@ package linter
 import (
 	"fmt"
 	"net"
-	"regexp"
 	"strings"
 
+	regexp "github.com/gijsbers/go-pcre"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/token"
@@ -1357,7 +1357,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		}
 		// And, if right expression is STRING, regex must be valid
 		if v, ok := exp.Right.(*ast.String); ok {
-			if _, err := regexp.Compile(strings.ReplaceAll(v.Value, "\\", "\\\\")); err != nil {
+			if _, err := regexp.Compile(v.Value, regexp.BSR_UNICODE); err != nil {
 				err := &LintError{
 					Severity: ERROR,
 					Token:    exp.Right.GetMeta().Token,
@@ -1452,126 +1452,18 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 	return left
 }
 
-type functionMeta struct {
-	name      string
-	token     token.Token
-	arguments []ast.Expression
-	meta      *ast.Meta
-}
-
-func (l *Linter) lintFunctionArguments(calledFn functionMeta, ctx *context.Context) types.Type {
-	fn, err := ctx.GetFunction(calledFn.name)
+func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx *context.Context) types.Type {
+	fn, err := ctx.GetFunction(exp.Function.Value)
 	if err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token:    calledFn.token,
+			Token:    exp.Function.GetMeta().Token,
 			Message:  err.Error(),
 		})
 		return types.NeverType
 	}
 
-	// lint empty arguments
-	if len(fn.Arguments) == 0 {
-		if len(calledFn.arguments) > 0 {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    calledFn.token,
-				Message: fmt.Sprintf(
-					"function %s wants no arguments but provides %d argument",
-					calledFn.name, len(calledFn.arguments),
-				),
-			}
-			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-			return types.NeverType
-		}
-		return fn.Return
-	}
-
-	var argTypes []types.Type
-	for _, a := range fn.Arguments {
-		// Special case of variadic arguments of types.StringListType,
-		// We do not compare argument length, just lint with "all argument types are STRING".
-		if a[0] == types.StringListType || len(a) == len(calledFn.arguments) {
-			argTypes = a
-			break
-		}
-	}
-	if len(argTypes) == 0 {
-		l.Error(FunctionArgumentMismatch(
-			calledFn.meta, calledFn.name,
-			len(fn.Arguments), len(calledFn.arguments),
-		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-	} else if argTypes[0] == types.StringListType {
-		// Variadic arguments linting, at least one argument must be provided and must be a StringType
-		if len(calledFn.arguments) == 0 {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    calledFn.token,
-				Message: fmt.Sprintf(
-					"function %s requires at least one argument",
-					calledFn.name,
-				),
-			}
-			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-			return fn.Return
-		}
-
-		for i, arg := range calledFn.arguments {
-			a := l.lint(arg, ctx)
-			if !expectType(a, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, types.StringType, a,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		}
-		return fn.Return
-	}
-
-	for i, v := range argTypes {
-		arg := l.lint(calledFn.arguments[i], ctx)
-
-		switch v {
-		case types.TimeType:
-			// fuzzy type check: some builtin function expects TIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.TimeType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-			continue
-		case types.RTimeType:
-			// fuzzy type check: some builtin function expects RTIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.RTimeType, types.TimeType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-			continue
-		case types.IPType:
-			// fuzzy type check: some builtin function expects IP type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.IPType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		default:
-			// Otherwise, strict type check
-			if v != arg {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		}
-	}
-
-	return fn.Return
-}
-
-func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx *context.Context) types.Type {
-	return l.lintFunctionArguments(functionMeta{
+	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.String(),
 		token:     exp.Function.GetMeta().Token,
 		arguments: exp.Arguments,
@@ -1580,7 +1472,26 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 }
 
 func (l *Linter) lintFunctionStatement(exp *ast.FunctionCallStatement, ctx *context.Context) types.Type {
-	return l.lintFunctionArguments(functionMeta{
+	fn, err := ctx.GetFunction(exp.Function.Value)
+	if err != nil {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  err.Error(),
+		})
+		return types.NeverType
+	}
+
+	if fn.Return != types.NeverType {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    exp.Function.GetMeta().Token,
+			Message:  fmt.Sprintf(`unused return type for function "%s"`, exp.Function.Value),
+		})
+		return types.NeverType
+	}
+
+	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.Value,
 		token:     exp.Function.GetMeta().Token,
 		arguments: exp.Arguments,
