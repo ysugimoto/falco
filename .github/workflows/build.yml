@@ -25,11 +25,3 @@ jobs:
         skip-pkg-cache: true
         skip-build-cache: true
         skip-go-installation: true
-    - name: Set version
-      id: version
-      run: |
-        VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
-        echo ::set-output name=version::$VERSION
-    - name: Build platform binaries
-      run: VERSION=${{ steps.version.outputs.version }} make release
-

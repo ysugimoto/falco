@@ -6,7 +6,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build:
+  build-for-linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,13 +30,45 @@ jobs:
           VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
           echo ::set-output name=version::$VERSION
       - name: Build platform binaries
-        run: VERSION=${{ steps.version.outputs.version }} make all
+        run: VERSION=${{ steps.version.outputs.version }} make release-linux
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist/falco-linux-amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-for-darwin:
+    runs-on: macos-12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.5
+      - name: Run tests
+        run: make test
+      - name: Lint programs
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.42
+          skip-pkg-cache: true
+          skip-build-cache: true
+          skip-go-installation: true
+      - name: Set version
+        id: version
+        run: |
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo ::set-output name=version::$VERSION
+      - name: Build platform binaries
+        run: VERSION=${{ steps.version.outputs.version }} make release-darwin
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
             dist/falco-darwin-amd64
             dist/falco-darwin-arm64
         env:
