@@ -29,10 +29,6 @@ darwin_arm64:
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \
 			 -o dist/falco-darwin-arm64 ./cmd/falco
 
-release-linux: linux-deps linux
-
-release-darwin: darwin-deps darwin_amd64 darwin_arm64
-
 lint:
 	golangci-lint run
 
