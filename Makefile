@@ -6,7 +6,7 @@ generate:
 	cd ./__generator__/ && go generate .
 
 test: generate
-	go list ./... | xargs go test
+	go test ./...
 
 linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \

@@ -1083,6 +1083,20 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 }
 
 func (l *Linter) lintLogStatement(stmt *ast.LogStatement, ctx *context.Context) types.Type {
+	if isTypeLiteral(stmt.Value) {
+		switch stmt.Value.(type) {
+		case *ast.String:
+			return types.NeverType
+		default:
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    stmt.GetMeta().Token,
+				Message:  "Only string literals can be passed to log directly.",
+			})
+			return types.NeverType
+		}
+	}
+
 	l.lint(stmt.Value, ctx)
 	return types.NeverType
 }

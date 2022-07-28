@@ -1,6 +1,7 @@
 package linter
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ysugimoto/falco/context"
@@ -1895,7 +1896,7 @@ func TestLintGotoStatement(t *testing.T) {
 	sub some_function {
 		goto foo;
 	}
-	
+
 	sub another_function {
 		foo:
 	}
@@ -1921,7 +1922,7 @@ func TestLintFunctionStatement(t *testing.T) {
 	sub foo {
 		log "123";
 	}
-	
+
 	sub bar {
 		foo();
 	}
@@ -1936,7 +1937,7 @@ func TestLintFunctionStatement(t *testing.T) {
 		log "123";
 		return true;
 	}
-	
+
 	sub bar {
 		foo();
 	}
@@ -1944,4 +1945,56 @@ func TestLintFunctionStatement(t *testing.T) {
 
 		assertError(t, input)
 	})
+}
+
+func TestLintLogStatementr(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		logStatment string
+		shouldError bool
+	}{
+		{
+			name:        "log variable",
+			logStatment: "log req.restarts;",
+		},
+		{
+			name:        "log string literal",
+			logStatment: "log \"foo\";",
+		},
+		{
+			name:        "log int",
+			logStatment: "log 42;",
+			shouldError: true,
+		},
+		{
+			name:        "log bool",
+			logStatment: "log true;",
+			shouldError: true,
+		},
+		// IP literal fails due to parsing error
+		// but it should also fail as a lint error
+		// as well.
+		{
+			name:        "log float",
+			logStatment: "log 0.1;",
+			shouldError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`
+	sub foo {
+		%s
+	}`, tt.logStatment)
+			if tt.shouldError {
+				assertError(t, input)
+			} else {
+				assertNoError(t, input)
+			}
+
+		})
+	}
+
 }
