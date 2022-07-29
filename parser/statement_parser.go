@@ -252,9 +252,19 @@ func (p *Parser) parseCallStatement() (*ast.CallStatement, error) {
 	}
 	stmt.Subroutine = p.parseIdent()
 
+	// Parse functions with ()
+	if p.peekTokenIs(token.LEFT_PAREN) {
+		p.nextToken() // point to the token to check if it is RIGHT_PAREN
+		if !p.peekTokenIs(token.RIGHT_PAREN) {
+			return nil, errors.WithStack(UnexpectedToken(p.curToken))
+		}
+		p.nextToken() // point to RIGHT_PAREN
+	}
+
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+
 	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
 
