@@ -36,7 +36,7 @@ jobs:
           echo ::set-output name=version::$VERSION
       - name: Build platform binary
         run: VERSION=${{ steps.version.outputs.version }} make linux
-  build-for-darwin:
+  build-for-amd64:
     runs-on: macos-12
     needs: test-and-lint
     steps:
@@ -47,4 +47,16 @@ jobs:
           VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
           echo ::set-output name=version::$VERSION
       - name: Build platform binary
-        run: VERSION=${{ steps.version.outputs.version }} make darwin-deps darwin
+        run: VERSION=${{ steps.version.outputs.version }} make darwin-deps darwin_amd64
+  build-for-arm64:
+    runs-on: macos-12
+    needs: test-and-lint
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set version
+        id: version
+        run: |
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo ::set-output name=version::$VERSION
+      - name: Build platform binary
+        run: VERSION=${{ steps.version.outputs.version }} make darwin-deps darwin_arm64
