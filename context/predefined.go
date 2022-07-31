@@ -1836,6 +1836,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h2/",
 					},
 				},
+				"is_h3": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/",
+					},
+				},
 				"state": &Object{
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -4041,6 +4051,16 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-iana-chosen-cipher-id/",
 							},
 						},
+						"ja3_md5": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ja3-md5/",
+							},
+						},
 						"protocol": &Object{
 							Items: map[string]*Object{},
 							Value: &Accessor{
@@ -4101,6 +4121,30 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-sha/",
 							},
 						},
+					},
+				},
+			},
+		},
+		"transport": &Object{
+			Items: map[string]*Object{
+				"bw_estimate": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-bw-estimate/",
+					},
+				},
+				"type": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-type/",
 					},
 				},
 			},
