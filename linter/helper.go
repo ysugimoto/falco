@@ -302,16 +302,18 @@ func expectState(cur string, expects ...string) bool {
 }
 
 func annotations(comments ast.Comments) []string {
-	var a []string
-
+	var rv []string
 	for i := range comments {
 		l := strings.TrimLeft(comments[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
-			a = append(a, strings.TrimPrefix(l, "@"))
+			an := strings.Split(strings.TrimPrefix(l, "@"), ",")
+			for _, s := range an {
+				rv = append(rv, strings.TrimSpace(s))
+			}
 		}
 	}
 
-	return a
+	return rv
 }
 
 func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {

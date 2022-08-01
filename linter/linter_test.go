@@ -375,8 +375,7 @@ sub vcl_recv BOOL {
 
 	t.Run("Subroutines can be reused in multiple vcl state functions", func(t *testing.T) {
 		input := `
-//@recv
-//@log
+//@recv, log
 sub example {
 	set req.http.Host = "example.com";
 }
@@ -396,8 +395,7 @@ call example;
 
 	t.Run("Functions can be reused in multiple vcl state functions", func(t *testing.T) {
 		input := `
-//@recv
-//@log
+//@recv, log
 sub example BOOL {
 	return true;
 }
@@ -421,8 +419,7 @@ sub vcl_recv {
 
 	t.Run("Errros when subroutines want variables they don't have access to", func(t *testing.T) {
 		input := `
-//@recv
-//@deliver
+//@recv, deliver
 sub example {
 	log resp.http.bar;
 }

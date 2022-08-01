@@ -99,13 +99,13 @@ Following table describes subroutine name and recognizing scope:
 
 ### Annotation
 
-For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes.
+For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes. Multiple scopes
+are declared as comma seperated values.
 
 Then, if you apply a hint of scope on annotation, `falco` also understands scope:
 
 ```vcl
-// @recv
-// @miss
+// @recv, miss
 sub custom_process {
    // subroutine has `recv` annotation, lint with RECV|MISS scope.
    // All variables must be accessible in both RECV and MISS scope.
