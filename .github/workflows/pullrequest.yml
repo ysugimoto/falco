@@ -57,4 +57,6 @@ jobs:
           VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
           echo ::set-output name=version::$VERSION
       - name: Build platform binary
-        run: VERSION=${{ steps.version.outputs.version }} make darwin-deps darwin_arm64
+        run: |
+          brew tap ArmMbed/homebrew-formulae
+          VERSION=${{ steps.version.outputs.version }} make darwin-deps darwin_arm64
