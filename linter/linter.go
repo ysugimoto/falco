@@ -1467,7 +1467,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 }
 
 func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx *context.Context) types.Type {
-	fn, err := ctx.GetFunction(exp.Function.String())
+	fn, err := ctx.GetFunction(exp.Function.Value)
 	if err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,

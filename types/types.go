@@ -30,6 +30,11 @@ const (
 	PenaltyboxType  Type = 0x100000000000001
 	RatecounterType Type = 0x100000000000010
 	GotoType        Type = 0x100000000000100
+
+	// StringListType is unusual VCL type, just alias for Array<String>.
+	// This type is used for variadic arguments of builtin function like h2.disable_header_compression(string...)
+	// Note that this type must not be used in VCL codes, only use for linting function arguments.
+	StringListType Type = 0x100000000001000
 )
 
 func (t Type) String() string {
@@ -72,6 +77,8 @@ func (t Type) String() string {
 		return "RATECOUNTER"
 	case GotoType:
 		return "GOTO"
+	case StringListType:
+		return "STRING_LIST"
 	}
 	return "UNKNOWN"
 }
