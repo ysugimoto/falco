@@ -437,3 +437,20 @@ func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) erro
 
 	return nil
 }
+
+func isTypeLiteral(node ast.Node) bool {
+	switch node.(type) {
+	case *ast.IP:
+		return true
+	case *ast.Boolean:
+		return true
+	case *ast.Integer:
+		return true
+	case *ast.String:
+		return true
+	case *ast.Float:
+		return true
+	default:
+		return false
+	}
+}
