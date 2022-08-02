@@ -860,39 +860,76 @@ sub vcl_recv {
 }
 
 func TestCallStatement(t *testing.T) {
-	input := `// Subroutine
-sub vcl_recv {
-	// Leading comment
-	call feature_mod_recv; // Trailing comment
-}`
-	expect := &ast.VCL{
-		Statements: []ast.Statement{
-			&ast.SubroutineDeclaration{
-				Meta: ast.New(T, 0, comments("// Subroutine")),
-				Name: &ast.Ident{
-					Meta:  ast.New(T, 0),
-					Value: "vcl_recv",
-				},
-				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1),
-					Statements: []ast.Statement{
-						&ast.CallStatement{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
-							Subroutine: &ast.Ident{
-								Meta:  ast.New(T, 1),
-								Value: "feature_mod_recv",
+	t.Run("without parentheses", func(t *testing.T) {
+		input := `// Subroutine
+		sub vcl_recv {
+			// Leading comment
+			call feature_mod_recv; // Trailing comment
+		}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.CallStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Subroutine: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "feature_mod_recv",
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	}
-	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
-	assert(t, vcl, expect)
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+	t.Run("with parentheses", func(t *testing.T) {
+		input := `// Subroutine
+		sub vcl_recv {
+			// Leading comment
+			call feature_mod_recv(); // Trailing comment
+		}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.CallStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Subroutine: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "feature_mod_recv",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestDeclareStatement(t *testing.T) {
