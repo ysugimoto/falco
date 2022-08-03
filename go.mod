@@ -11,5 +11,5 @@ require (
 	github.com/kyokomi/emoji v1.5.1
 	github.com/mattn/go-colorable v0.1.8
 	github.com/pkg/errors v0.9.1
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
+	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
 )

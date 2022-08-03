@@ -3,13 +3,13 @@ package linter
 import (
 	"fmt"
 	"net"
-	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
+	regexp "go.arsenm.dev/pcre"
 )
 
 type Linter struct {
@@ -1371,7 +1371,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		}
 		// And, if right expression is STRING, regex must be valid
 		if v, ok := exp.Right.(*ast.String); ok {
-			if _, err := regexp.Compile(strings.ReplaceAll(v.Value, "\\", "\\\\")); err != nil {
+			if _, err := regexp.Compile(v.Value); err != nil {
 				err := &LintError{
 					Severity: ERROR,
 					Token:    exp.Right.GetMeta().Token,
