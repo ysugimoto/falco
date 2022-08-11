@@ -1,3 +1,10 @@
+## v0.14.0
+
+- Allow calling functions with parentheses [#92](https://github.com/ysugimoto/falco/pull/92) (@shadialtarsha)
+- Fix lint of log statement [#91](https://github.com/ysugimoto/falco/pull/91) (@davinci26)
+- Add new VCL predefined variables [#89](https://github.com/ysugimoto/falco/pull/89) (@bungoume)
+- String list arguments [#82](https://github.com/ysugimoto/falco/pull/82) (@ysugimoto)
+
 ## v0.13.0
 
 - Add support for function calls as statements [#73](https://github.com/ysugimoto/falco/pull/73) (@shadialtarsha)
