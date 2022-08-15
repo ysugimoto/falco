@@ -33,8 +33,7 @@ type snippetItem struct {
 }
 
 type Snippet struct {
-	client   *remote.FastlyClient
-	snippets []snippetItem
+	client *remote.FastlyClient
 }
 
 func NewSnippet(serviceId, apiKey string) *Snippet {
