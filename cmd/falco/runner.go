@@ -233,31 +233,39 @@ func (r *Runner) run(v *VCL, mode *RunMode) ([]*plugin.VCL, error) {
 	lx.NewLine()
 	r.lexers[v.Name] = lx
 
-	var vcls []*plugin.VCL
-	// Lint dependent VCLs before execute main VCL
-	for _, stmt := range vcl.Statements {
-		include, ok := stmt.(*ast.IncludeStatement)
-		if !ok {
-			continue
-		}
-
-		if module, err := r.resolver.Resolve(include.Module.Value); err == nil {
-			subVcl, err := r.run(module, &RunMode{
-				isMain: false,
-				isStat: mode.isStat,
-			})
-			if err != nil {
-				return nil, err
-			}
-			vcls = append(vcls, subVcl...)
-		}
+	vcl.Statements, err = r.resolveStatements(vcl.Statements)
+	if err != nil {
+		return nil, err
 	}
 
-	// Append main to the last of proceeds VCLs
-	vcls = append(vcls, &plugin.VCL{
-		File: v.Name,
-		AST:  vcl,
-	})
+	vcls := []*plugin.VCL{
+		{ File: v.Name, AST: vcl },
+	}
+	// var vcls []*plugin.VCL
+	// // Lint dependent VCLs before execute main VCL
+	// for _, stmt := range vcl.Statements {
+	// 	include, ok := stmt.(*ast.IncludeStatement)
+	// 	if !ok {
+	// 		continue
+	// 	}
+
+	// 	if module, err := r.resolver.Resolve(include.Module.Value); err == nil {
+	// 		subVcl, err := r.run(module, &RunMode{
+	// 			isMain: false,
+	// 			isStat: mode.isStat,
+	// 		})
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		vcls = append(vcls, subVcl...)
+	// 	}
+	// }
+
+	// // Append main to the last of proceeds VCLs
+	// vcls = append(vcls, &plugin.VCL{
+	// 	File: v.Name,
+	// 	AST:  vcl,
+	// })
 
 	lt := linter.New()
 	lt.Lint(vcl, r.context, mode.isMain)
@@ -278,6 +286,80 @@ func (r *Runner) run(v *VCL, mode *RunMode) ([]*plugin.VCL, error) {
 	}
 
 	return vcls, nil
+}
+
+func (r *Runner) resolveStatements(statements []ast.Statement) ([]ast.Statement, error) {
+	var resolved []ast.Statement
+
+	for _, stmt := range statements {
+		switch t := stmt.(type) {
+		case *ast.IncludeStatement:
+			module, err := r.resolver.Resolve(t.Module.Value)
+			if err != nil {
+				return nil, err
+			}
+			lx := lexer.NewFromString(module.Data, lexer.WithFile(module.Name))
+			p := parser.New(lx)
+			vcl, err := p.ParseVCL()
+			if err != nil {
+				lx.NewLine()
+				pe, ok := errors.Cause(err).(*parser.ParseError)
+				if ok {
+					r.printParseError(lx, pe)
+				}
+				return nil, ErrParser
+			}
+			lx.NewLine()
+			r.lexers[module.Name] = lx
+
+			vcl.Statements, err = r.resolveStatements(vcl.Statements)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, vcl.Statements...)
+		case *ast.IfStatement:
+			if err := r.resolveIfStatement(t); err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, t)
+		case *ast.SubroutineDeclaration:
+			ss, err := r.resolveStatements(t.Block.Statements)
+			if err != nil {
+				return nil, err
+			}
+			t.Block.Statements = ss
+			resolved = append(resolved, t)
+		default:
+			resolved = append(resolved, t)
+		}
+	}
+	return resolved, nil
+}
+
+func (r *Runner) resolveIfStatement(s *ast.IfStatement) error {
+	if s.Consequence != nil {
+		ss, err := r.resolveStatements(s.Consequence.Statements)
+		if err != nil {
+			return err
+		}
+		s.Consequence.Statements = ss
+	}
+
+	for _, a := range s.Another {
+		if err := r.resolveIfStatement(a); err != nil {
+			return err
+		}
+	}
+
+	if s.Alternative != nil {
+		ss, err := r.resolveStatements(s.Alternative.Statements)
+		if err != nil {
+			return err
+		}
+		s.Alternative.Statements = ss
+	}
+
+	return nil
 }
 
 func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
