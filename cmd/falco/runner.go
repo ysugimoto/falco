@@ -289,19 +289,11 @@ func (r *Runner) resolveStatements(statements []ast.Statement) ([]ast.Statement,
 			if err != nil {
 				return nil, err
 			}
-			lx := lexer.NewFromString(module.Data, lexer.WithFile(module.Name))
-			p := parser.New(lx)
-			vcl, err := p.ParseVCL()
+
+			vcl, err := r.parseVCL(module.Name, module.Data)
 			if err != nil {
-				lx.NewLine()
-				pe, ok := errors.Cause(err).(*parser.ParseError)
-				if ok {
-					r.printParseError(lx, pe)
-				}
-				return nil, ErrParser
+				return nil, err
 			}
-			lx.NewLine()
-			r.lexers[module.Name] = lx
 
 			vcl.Statements, err = r.resolveStatements(vcl.Statements)
 			if err != nil {
