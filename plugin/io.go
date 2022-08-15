@@ -72,7 +72,7 @@ type Metadata struct {
 
 type FalcoTransformInput struct {
 	Metadata Metadata
-	VCL     *VCL
+	VCL      *VCL
 }
 
 func Encode(vcl *VCL) ([]byte, error) {

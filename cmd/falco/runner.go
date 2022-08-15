@@ -37,7 +37,7 @@ type RunnerResult struct {
 	Infos    int
 	Warnings int
 	Errors   int
-	Vcl     *plugin.VCL
+	Vcl      *plugin.VCL
 }
 
 type StatsResult struct {
@@ -231,7 +231,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 		Infos:    r.infos,
 		Warnings: r.warnings,
 		Errors:   r.errors,
-		Vcl:     vcl,
+		Vcl:      vcl,
 	}, nil
 }
 
@@ -259,7 +259,7 @@ func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
 	lt.Lint(vcl, r.context)
 
 	// If runner is running as stat mode, prevent to output lint result
-	if mode & RunModeStat > 0 {
+	if mode&RunModeStat > 0 {
 		return nil, nil
 	}
 
@@ -275,7 +275,7 @@ func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
 
 	return &plugin.VCL{
 		File: v.Name,
-		AST: vcl,
+		AST:  vcl,
 	}, nil
 }
 
