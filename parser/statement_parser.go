@@ -316,7 +316,13 @@ func (p *Parser) parseErrorStatement() (*ast.ErrorStatement, error) {
 		stmt.Code, err = p.parseInteger()
 	case token.IDENT:
 		p.nextToken()
-		stmt.Code = p.parseIdent()
+		if p.peekTokenIs(token.LEFT_PAREN) {
+			i := p.parseIdent()
+			p.nextToken()
+			stmt.Code, err = p.parseFunctionCallExpression(i)
+		} else {
+			stmt.Code = p.parseIdent()
+		}
 	default:
 		err = UnexpectedToken(p.peekToken)
 	}
