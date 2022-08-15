@@ -37,7 +37,7 @@ type RunnerResult struct {
 	Infos    int
 	Warnings int
 	Errors   int
-	Vcls     []*plugin.VCL
+	Vcl     *plugin.VCL
 }
 
 type StatsResult struct {
@@ -51,16 +51,19 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
-type RunMode struct {
-	isMain bool
-	isStat bool
-}
+type RunMode int
+
+const (
+	RunModeLint RunMode = 0x000001
+	RunModeStat RunMode = 0x000010
+)
 
 type Runner struct {
 	transformers []*Transformer
 	resolver     Resolver
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
+	snippets     []snippetItem
 
 	level Level
 
@@ -99,13 +102,13 @@ func NewRunner(rz Resolver, c *Config) (*Runner, error) {
 			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
 			defer timeout()
 
-			snippet := NewSnippet(serviceId, apiKey)
 			// Remote communication is optional so we keep processing even if remote communication is failed
-			if err := snippet.Fetch(ctx); err != nil {
-				writeln(red, err.Error())
-			} else if err := snippet.Compile(r.context); err != nil {
+			snippets, err := NewSnippet(serviceId, apiKey).Fetch(ctx)
+			if err != nil {
 				writeln(red, err.Error())
 			}
+			// Stack to runner field, combime before run()
+			r.snippets = snippets
 		}()
 	}
 
@@ -182,9 +185,9 @@ func (r *Runner) initOverrides() {
 	}
 }
 
-func (r *Runner) Transform(vcls []*plugin.VCL) error {
+func (r *Runner) Transform(vcl *plugin.VCL) error {
 	// VCL data is shared between parser and transformar through the falco/io package.
-	encoded, err := plugin.Encode(vcls)
+	encoded, err := plugin.Encode(vcl)
 	if err != nil {
 		return fmt.Errorf("Failed to encode VCL: %w", err)
 	}
@@ -197,29 +200,8 @@ func (r *Runner) Transform(vcls []*plugin.VCL) error {
 	return nil
 }
 
-func (r *Runner) Run() (*RunnerResult, error) {
-	main, err := r.resolver.MainVCL()
-	if err != nil {
-		return nil, err
-	}
-	vcls, err := r.run(main, &RunMode{
-		isMain: true,
-		isStat: false,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &RunnerResult{
-		Infos:    r.infos,
-		Warnings: r.warnings,
-		Errors:   r.errors,
-		Vcls:     vcls,
-	}, nil
-}
-
-func (r *Runner) run(v *VCL, mode *RunMode) ([]*plugin.VCL, error) {
-	lx := lexer.NewFromString(v.Data, lexer.WithFile(v.Name))
+func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
+	lx := lexer.NewFromString(code, lexer.WithFile(name))
 	p := parser.New(lx)
 	vcl, err := p.ParseVCL()
 	if err != nil {
@@ -231,48 +213,54 @@ func (r *Runner) run(v *VCL, mode *RunMode) ([]*plugin.VCL, error) {
 		return nil, ErrParser
 	}
 	lx.NewLine()
-	r.lexers[v.Name] = lx
+	r.lexers[name] = lx
+	return vcl, nil
+}
+
+func (r *Runner) Run() (*RunnerResult, error) {
+	main, err := r.resolver.MainVCL()
+	if err != nil {
+		return nil, err
+	}
+	vcl, err := r.run(main, RunModeLint)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RunnerResult{
+		Infos:    r.infos,
+		Warnings: r.warnings,
+		Errors:   r.errors,
+		Vcl:     vcl,
+	}, nil
+}
+
+func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
+	vcl, err := r.parseVCL(v.Name, v.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	for _, snip := range r.snippets {
+		s, err := r.parseVCL(snip.Name, snip.Data)
+		if err != nil {
+			return nil, err
+		}
+		vcl.Statements = append(s.Statements, vcl.Statements...)
+	}
 
 	vcl.Statements, err = r.resolveStatements(vcl.Statements)
 	if err != nil {
 		return nil, err
 	}
 
-	vcls := []*plugin.VCL{
-		{ File: v.Name, AST: vcl },
-	}
-	// var vcls []*plugin.VCL
-	// // Lint dependent VCLs before execute main VCL
-	// for _, stmt := range vcl.Statements {
-	// 	include, ok := stmt.(*ast.IncludeStatement)
-	// 	if !ok {
-	// 		continue
-	// 	}
-
-	// 	if module, err := r.resolver.Resolve(include.Module.Value); err == nil {
-	// 		subVcl, err := r.run(module, &RunMode{
-	// 			isMain: false,
-	// 			isStat: mode.isStat,
-	// 		})
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		vcls = append(vcls, subVcl...)
-	// 	}
-	// }
-
-	// // Append main to the last of proceeds VCLs
-	// vcls = append(vcls, &plugin.VCL{
-	// 	File: v.Name,
-	// 	AST:  vcl,
-	// })
-
 	lt := linter.New()
-	lt.Lint(vcl, r.context, mode.isMain)
+	lt.Lint(vcl, r.context)
 
 	// If runner is running as stat mode, prevent to output lint result
-	if mode.isStat {
-		return vcls, nil
+	if mode & RunModeStat > 0 {
+		return nil, nil
 	}
 
 	if len(lt.Errors) > 0 {
@@ -281,11 +269,14 @@ func (r *Runner) run(v *VCL, mode *RunMode) ([]*plugin.VCL, error) {
 			if !ok {
 				continue
 			}
-			r.printLinterError(lx, le)
+			r.printLinterError(r.lexers[v.Name], le)
 		}
 	}
 
-	return vcls, nil
+	return &plugin.VCL{
+		File: v.Name,
+		AST: vcl,
+	}, nil
 }
 
 func (r *Runner) resolveStatements(statements []ast.Statement) ([]ast.Statement, error) {
@@ -396,6 +387,8 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	if err.Rule != "" {
 		rule = " (" + string(err.Rule) + ")"
 	}
+
+	// Override lexer because error may cause in other included module
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
 		lx = r.lexers[err.Token.File]
@@ -460,11 +453,7 @@ func (r *Runner) Stats() (*StatsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	vcls, err := r.run(main, &RunMode{
-		isMain: true,
-		isStat: true,
-	})
-	if err != nil {
+	if _, err := r.run(main, RunModeStat); err != nil {
 		return nil, err
 	}
 
@@ -477,9 +466,9 @@ func (r *Runner) Stats() (*StatsResult, error) {
 		Directors:   len(r.context.Directors),
 	}
 
-	for _, vcl := range vcls {
+	for _, lx := range r.lexers {
 		stats.Files++
-		stats.Lines += r.lexers[vcl.File].LineCount()
+		stats.Lines += lx.LineCount()
 	}
 
 	return stats, nil

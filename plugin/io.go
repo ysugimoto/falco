@@ -72,10 +72,10 @@ type Metadata struct {
 
 type FalcoTransformInput struct {
 	Metadata Metadata
-	VCLs     []*VCL
+	VCL     *VCL
 }
 
-func Encode(vcls []*VCL) ([]byte, error) {
+func Encode(vcl *VCL) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -85,7 +85,7 @@ func Encode(vcls []*VCL) ([]byte, error) {
 		Metadata: Metadata{
 			WorkingDirectory: cwd,
 		},
-		VCLs: vcls,
+		VCL: vcl,
 	}); err != nil {
 		return nil, err
 	}

@@ -1426,7 +1426,7 @@ sub bar {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1442,7 +1442,7 @@ acl foo {}
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1464,7 +1464,7 @@ sub bar {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1480,7 +1480,7 @@ table foo {}
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1502,7 +1502,7 @@ sub vcl_recl {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1518,7 +1518,7 @@ backend foo {}
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1540,7 +1540,7 @@ sub vcl_recl {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1556,7 +1556,7 @@ sub foo {}
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1577,7 +1577,7 @@ sub vcl_recv {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}
@@ -1596,7 +1596,7 @@ sub vcl_recv {
 		}
 
 		l := New()
-		l.Lint(vcl, context.New(), true)
+		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}

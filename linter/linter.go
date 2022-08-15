@@ -34,7 +34,7 @@ func (l *Linter) Error(err error) {
 
 // Expose lint function to call from external program.
 // It means this method is bootstrap, called only once.
-func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Type {
+func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 	if ctx == nil {
 		ctx = context.New()
 	}
@@ -42,15 +42,13 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context, isMain bool) types.Ty
 	l.lint(node, ctx)
 
 	// After whole VCLs have been linted in main VCL, check all definitions are exactly used.
-	if isMain {
-		l.lintUnusedTables(ctx)
-		l.lintUnusedAcls(ctx)
-		l.lintUnusedBackends(ctx)
-		l.lintUnusedSubroutines(ctx)
-		l.lintUnusedGotos(ctx)
-		l.lintUnusedPenaltyboxes(ctx)
-		l.lintUnusedRatecounters(ctx)
-	}
+	l.lintUnusedTables(ctx)
+	l.lintUnusedAcls(ctx)
+	l.lintUnusedBackends(ctx)
+	l.lintUnusedSubroutines(ctx)
+	l.lintUnusedGotos(ctx)
+	l.lintUnusedPenaltyboxes(ctx)
+	l.lintUnusedRatecounters(ctx)
 
 	return types.NeverType
 }
