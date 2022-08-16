@@ -27,3 +27,21 @@ type AccessControlEntry struct {
 	Subnet  *int64 `json:"subnet"`
 	Comment string `json:"comment"`
 }
+
+type Backend struct {
+	Name   string  `json:"name"`
+	Shield *string `json:"shield"`
+}
+
+type DirectorType int8
+
+const (
+	Random DirectorType = iota + 1
+	Hash
+	Client
+)
+
+type Director struct {
+	Name string       `json:"name"`
+	Type DirectorType `json:"type"`
+}

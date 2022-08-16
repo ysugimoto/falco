@@ -158,3 +158,13 @@ func (c *FastlyClient) ListAccessControlEntries(ctx context.Context, aclId strin
 
 	return entries, nil
 }
+
+func (c *FastlyClient) ListBackends(ctx context.Context, version int64) ([]*Backend, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/backend", c.serviceId, version)
+	var backends []*Backend
+	if err := c.request(ctx, endpoint, &backends); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return backends, nil
+}
