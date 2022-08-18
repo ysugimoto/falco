@@ -1093,6 +1093,63 @@ sub vcl_recv {
 		}
 		assert(t, vcl, expect)
 	})
+
+	t.Run("with function argument", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	error table.lookup_integer(errors, "foo", 600) "bar"; // Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.ErrorStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Code: &ast.FunctionCallExpression{
+									Meta: ast.New(T, 1),
+									Function: &ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "table.lookup_integer",
+									},
+									Arguments: []ast.Expression{
+										&ast.Ident{
+											Meta:  ast.New(T, 1),
+											Value: "errors",
+										},
+										&ast.String{
+											Meta:  ast.New(T, 1),
+											Value: "foo",
+										},
+										&ast.Integer{
+											Meta:  ast.New(T, 1),
+											Value: 600,
+										},
+									},
+								},
+								Argument: &ast.String{
+									Meta:  ast.New(T, 1),
+									Value: "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestLogStatement(t *testing.T) {
