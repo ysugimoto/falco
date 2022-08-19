@@ -37,7 +37,11 @@ backend F_{{ .Name }} {}
 `
 
 var directorTemplate = `
-director {{ .Name }} {{ .Type | printtype }} {}
+director {{ .Name }} {{ .Type | printtype }} {
+	{{- range .Backends }}
+	{ .backend = {{ . }}; .weight = 1; }
+	{{- end }}
+}
 `
 
 type Snippet struct {
@@ -194,10 +198,13 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]string, er
 	}
 
 	var snippets []string
+	// We need to pick an arbitrary backend to avoid an undeclared linter error
+	shieldBackend := "F_" + backends[0].Name
 	for sd := range shieldDirectors {
 		d := remote.Director{
-			Name: "ssl_shield_" + strings.ReplaceAll(sd, "-", "_"),
-			Type: remote.Random,
+			Name:     "ssl_shield_" + strings.ReplaceAll(sd, "-", "_"),
+			Type:     remote.Random,
+			Backends: []string{shieldBackend},
 		}
 		buf := new(bytes.Buffer)
 		if err := dirTmpl.Execute(buf, d); err != nil {

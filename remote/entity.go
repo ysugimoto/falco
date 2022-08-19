@@ -42,6 +42,7 @@ const (
 )
 
 type Director struct {
-	Name string       `json:"name"`
-	Type DirectorType `json:"type"`
+	Name     string       `json:"name"`
+	Type     DirectorType `json:"type"`
+	Backends []string     `json:"backends"`
 }
