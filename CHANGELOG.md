@@ -1,3 +1,9 @@
+## v0.15.0
+
+- Allow function expressions in error statements [#94](https://github.com/ysugimoto/falco/pull/94) (@ivomurrell)
+- Fetch backend snippets from Fastly API [#95](https://github.com/ysugimoto/falco/pull/95) (@ivomurrell)
+
+
 ## v0.14.0
 
 - Allow calling functions with parentheses [#92](https://github.com/ysugimoto/falco/pull/92) (@shadialtarsha)
