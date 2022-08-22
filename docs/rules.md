@@ -751,14 +751,14 @@ Calling function argument type mismatch.
 
 Problem:
 ```vcl
-declare local var.dir STRING;
-set var.dir = std.dirname(req.backend); // std.dirname expects 1st argument as STRING but BACKEND supplied
+declare local var.lat FLOAT;
+set var.lat = math.floor("2.2"); // math.floor expects 1st argument as FLOAT but STRING supplied
 ```
 
 Fix:
 ```vcl
-declare local var.dir STRING;
-set var.dir = std.dirname(req.url);
+declare local var.lat FLOAT;
+set var.lat = math.floor(2.2);
 ```
 
 ## include/module-not-found
