@@ -54,6 +54,8 @@ type Config struct {
 	Remote       bool
 	Stats        bool
 	Json         bool
+	GitMode      bool
+	RepoPath     string
 }
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -86,6 +88,8 @@ Flags:
     -vv                : Varbose all lint result
     -json              : Output statistics as JSON
     -stats             : Analyze VCL statistics
+	-repo              : Path to the git repo that contains the modules
+	-git               : Use git to read versioned files that in the form of path/to/file/:version
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
@@ -119,6 +123,8 @@ func main() {
 	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
 	fs.BoolVar(&c.Stats, "stats", false, "Analyze VCL statistics")
 	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
+	fs.StringVar(&c.RepoPath, "repo", "", "Path to the git repo that contains the modules")
+	fs.BoolVar(&c.GitMode, "git", false, "Use git to read versioned files that in the form of path/to/file/:version")
 	fs.Usage = printUsage
 
 	var err error
@@ -136,6 +142,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	getResolver := func(main string) ([]Resolver, error) {
+		if c.GitMode {
+			return NewGitFileResolvers(main, c, OsCommand)
+		} else {
+			return NewFileResolvers(main, c)
+		}
+	}
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []Resolver
 	switch fs.Arg(0) {
@@ -143,10 +156,10 @@ func main() {
 		resolvers, err = NewStdinResolvers()
 	case subcommandLint:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = NewFileResolvers(fs.Arg(1), c)
+		resolvers, err = getResolver(fs.Arg(1))
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = NewFileResolvers(fs.Arg(0), c)
+		resolvers, err = getResolver(fs.Arg(0))
 	}
 
 	if err != nil {
