@@ -625,6 +625,24 @@ sub foo {
 `
 		assertError(t, input)
 	})
+
+	t.Run("pass with function", func(t *testing.T) {
+		input := `
+sub foo {
+	error std.atoi("10");
+}
+`
+		assertNoError(t, input)
+	})
+
+	t.Run("invalid function return type", func(t *testing.T) {
+		input := `
+sub foo {
+	error std.strrev("error");
+}
+`
+		assertError(t, input)
+	})
 }
 
 func TestLintIfStatement(t *testing.T) {

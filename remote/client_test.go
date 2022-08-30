@@ -220,3 +220,41 @@ func TestListAccessControlEntiries(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestListBackends(t *testing.T) {
+	c := NewFastlyClient(&http.Client{
+		Transport: &TestRoundTripper{
+			StatusCode: 200,
+			Body: `
+[
+  {
+    "updated_at": "2021-11-25T23:40:33Z",
+		"name": "some_backend",
+		"shield": "some_shield",
+    "service_id": "0yGwmmav8rcXRC7yRwzPNQ",
+    "comment": "example",
+    "created_at": "2021-11-25T23:40:33Z"
+  }
+]`,
+		},
+	}, "dummy", "dummy")
+
+	items, err := c.ListBackends(context.Background(), 10)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		t.FailNow()
+	}
+	if len(items) != 1 {
+		t.Errorf("backends should have 1 items but got %d", len(items))
+		t.FailNow()
+	}
+	i := items[0]
+	if i.Name != "some_backend" {
+		t.Errorf("item name assertion error, expects=some_backend but got=%s", i.Name)
+		t.FailNow()
+	}
+	if *i.Shield != "some_shield" {
+		t.Errorf("item shield assertion error, expects=some_shield but got=%s", *i.Shield)
+		t.FailNow()
+	}
+}
