@@ -39,6 +39,7 @@ director {{ .Name }} {{ .Type | printtype }} {
 	{{- end }}
 }
 `
+
 type snippetItem struct {
 	Data string
 	Name string
@@ -186,8 +187,8 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]snippetIte
 		return ""
 	}
 	dirTmpl, err := template.New("director").
-	  Funcs(template.FuncMap{"printtype": printType}).
-	  Parse(directorTemplate)
+		Funcs(template.FuncMap{"printtype": printType}).
+		Parse(directorTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile director template: %w", err)
 	}
