@@ -2940,8 +2940,8 @@ func predefinedVariables() Variables {
 						},
 					},
 					Value: &Accessor{
-						Get:       types.BackendType,
-						Set:       types.BackendType,
+						Get:       types.ReqBackendType,
+						Set:       types.ReqBackendType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/",

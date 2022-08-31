@@ -37,7 +37,7 @@ func TestContextSet(t *testing.T) {
 	t.Run("Can return right variable type", func(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
-		expectedType := types.BackendType
+		expectedType := types.ReqBackendType
 		variableType, _ := c.Set("req.backend")
 		if variableType != expectedType {
 			t.Errorf("expected %s but got %s", expectedType, variableType)

@@ -35,6 +35,11 @@ const (
 	// This type is used for variadic arguments of builtin function like h2.disable_header_compression(string...)
 	// Note that this type must not be used in VCL codes, only use for linting function arguments.
 	StringListType Type = 0x100000000001000
+	// ReqBackendType is a virtual type used to represent the special behavior of
+	// the req.backend variable. Unlike typical backend variables, it can be cast
+	// to a string.
+	// Any backend is implicitly cast to ReqBackendType when set to req.backend.
+	ReqBackendType Type = 0x100000000010000
 )
 
 func (t Type) String() string {
@@ -45,6 +50,8 @@ func (t Type) String() string {
 		return "ACL"
 	case BackendType:
 		return "BACKEND"
+	case ReqBackendType:
+		return "REQBACKEND"
 	case BoolType:
 		return "BOOL"
 	case FloatType:

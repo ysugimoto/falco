@@ -45,7 +45,7 @@ func (l *Linter) lintAssignOperator(op *ast.Operator, name string, left, right t
 		case types.StringType, types.BoolType:
 			return
 		// allows variable only, disallow literal
-		case types.IntegerType, types.FloatType, types.RTimeType, types.TimeType, types.IPType:
+		case types.IntegerType, types.FloatType, types.RTimeType, types.TimeType, types.IPType, types.ReqBackendType:
 			if isLiteral {
 				l.Error(InvalidType(op.Meta, name, left, right).Match(OPERATOR_ASSIGNMENT))
 			}
@@ -76,7 +76,25 @@ func (l *Linter) lintAssignOperator(op *ast.Operator, name string, left, right t
 		default:
 			l.Error(InvalidType(op.Meta, name, left, right).Match(OPERATOR_ASSIGNMENT))
 		}
-	default: // types.BackendType or types.BoolType
+	case types.BackendType:
+		switch right {
+		// allows both variable and literal
+		case types.BackendType, types.ReqBackendType:
+			return
+		// disallow
+		default:
+			l.Error(InvalidType(op.Meta, name, left, right).Match(OPERATOR_ASSIGNMENT))
+		}
+	case types.ReqBackendType:
+		switch right {
+		// allows both variable and literal
+		case types.BackendType, types.ReqBackendType:
+			return
+		// disallow
+		default:
+			l.Error(InvalidType(op.Meta, name, left, right).Match(OPERATOR_ASSIGNMENT))
+		}
+	default: // types.BoolType
 		if left != right {
 			l.Error(InvalidType(op.Meta, name, left, right).Match(OPERATOR_ASSIGNMENT))
 		}

@@ -223,8 +223,8 @@ beresp.used_alternate_path_to_origin:
 req.backend:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
-  get: BACKEND
-  set: BACKEND
+  get: REQBACKEND
+  set: REQBACKEND
 
 req.backend.healthy:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-healthy/"
