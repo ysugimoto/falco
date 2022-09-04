@@ -5,11 +5,11 @@ import (
 	"net"
 	"strings"
 
+	regexp "github.com/shadialtarsha/go-pcre"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
-	regexp "go.arsenm.dev/pcre"
 )
 
 type Linter struct {
