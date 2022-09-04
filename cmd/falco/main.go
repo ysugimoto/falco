@@ -222,7 +222,7 @@ func runLint(runner *Runner) error {
 		return ErrExit
 	}
 
-	if err := runner.Transform(result.Vcls); err != nil {
+	if err := runner.Transform(result.Vcl); err != nil {
 		writeln(red, err.Error())
 		return ErrExit
 	}

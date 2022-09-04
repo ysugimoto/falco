@@ -9,10 +9,6 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/ysugimoto/falco/context"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter"
-	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/remote"
 )
 
@@ -44,9 +40,13 @@ director {{ .Name }} {{ .Type | printtype }} {
 }
 `
 
+type snippetItem struct {
+	Data string
+	Name string
+}
+
 type Snippet struct {
-	client   *remote.FastlyClient
-	snippets []string
+	client *remote.FastlyClient
 }
 
 func NewSnippet(serviceId, apiKey string) *Snippet {
@@ -55,51 +55,43 @@ func NewSnippet(serviceId, apiKey string) *Snippet {
 	}
 }
 
-func (s *Snippet) Compile(ctx *context.Context) error {
-	vcl, err := parser.New(lexer.NewFromString(strings.Join(s.snippets, "\n"))).ParseVCL()
-	if err != nil {
-		return err
-	}
-	l := linter.New()
-	l.Lint(vcl, ctx, false)
-	return nil
-}
+func (s *Snippet) Fetch(c _context.Context) ([]snippetItem, error) {
+	var snippets []snippetItem
 
-func (s *Snippet) Fetch(c _context.Context) error {
 	// Fetch latest version
 	version, err := s.client.LatestVersion(c)
 	if err != nil {
-		return fmt.Errorf("Failed to get latest version %w", err)
+		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 	write(white, "Fetching Edge Dictionaries...")
 	dicts, err := s.fetchEdgeDictionary(c, version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	writeln(white, "Done")
-	s.snippets = append(s.snippets, dicts...)
+	snippets = append(snippets, dicts...)
 
 	write(white, "Fatching Access Control Lists...")
 	acls, err := s.fetchAccessControl(c, version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	writeln(white, "Done")
-	s.snippets = append(s.snippets, acls...)
+	snippets = append(snippets, acls...)
 
 	write(white, "Fatching Backends...")
 	backends, err := s.fetchBackend(c, version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	writeln(white, "Done")
-	s.snippets = append(s.snippets, backends...)
+	snippets = append(snippets, backends...)
 
-	return nil
+	return snippets, nil
 }
 
 // Fetch remote Edge dictionary items
-func (s *Snippet) fetchEdgeDictionary(c _context.Context, version int64) ([]string, error) {
+func (s *Snippet) fetchEdgeDictionary(c _context.Context, version int64) ([]snippetItem, error) {
 	dicts, err := s.client.ListEdgeDictionaries(c, version)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get edge dictionaries for version %w", err)
@@ -110,19 +102,22 @@ func (s *Snippet) fetchEdgeDictionary(c _context.Context, version int64) ([]stri
 		return nil, fmt.Errorf("Failed to compilte table template: %w", err)
 	}
 
-	var snippets []string
+	var snippets []snippetItem
 	for _, dict := range dicts {
 		buf := new(bytes.Buffer)
 		if err := tmpl.Execute(buf, dict); err != nil {
 			return nil, fmt.Errorf("Failed to render table template: %w", err)
 		}
-		snippets = append(snippets, buf.String())
+		snippets = append(snippets, snippetItem{
+			Name: fmt.Sprintf("EdgeDictionary:%s", dict.Name),
+			Data: buf.String(),
+		})
 	}
 	return snippets, nil
 }
 
 // Fetch remote Access Control entries
-func (s *Snippet) fetchAccessControl(c _context.Context, version int64) ([]string, error) {
+func (s *Snippet) fetchAccessControl(c _context.Context, version int64) ([]snippetItem, error) {
 	acls, err := s.client.ListAccessControlLists(c, version)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get access control lists for version %w", err)
@@ -133,18 +128,21 @@ func (s *Snippet) fetchAccessControl(c _context.Context, version int64) ([]strin
 		return nil, fmt.Errorf("Failed to compilte acl template: %w", err)
 	}
 
-	var snippets []string
+	var snippets []snippetItem
 	for _, a := range acls {
 		buf := new(bytes.Buffer)
 		if err := tmpl.Execute(buf, a); err != nil {
 			return nil, fmt.Errorf("Failed to render table template: %w", err)
 		}
-		snippets = append(snippets, buf.String())
+		snippets = append(snippets, snippetItem{
+			Name: fmt.Sprintf("ACL:%s", a.Name),
+			Data: buf.String(),
+		})
 	}
 	return snippets, nil
 }
 
-func (s *Snippet) fetchBackend(c _context.Context, version int64) ([]string, error) {
+func (s *Snippet) fetchBackend(c _context.Context, version int64) ([]snippetItem, error) {
 	backends, err := s.client.ListBackends(c, version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get backends for version %w", err)
@@ -155,13 +153,16 @@ func (s *Snippet) fetchBackend(c _context.Context, version int64) ([]string, err
 		return nil, fmt.Errorf("failed to compile backend template: %w", err)
 	}
 
-	var snippets []string
+	var snippets []snippetItem
 	for _, b := range backends {
 		buf := new(bytes.Buffer)
 		if err := backTmpl.Execute(buf, b); err != nil {
 			return nil, fmt.Errorf("failed to render backend template: %w", err)
 		}
-		snippets = append(snippets, buf.String())
+		snippets = append(snippets, snippetItem{
+			Name: fmt.Sprintf("BACKEND:%s", b.Name),
+			Data: buf.String(),
+		})
 	}
 
 	directors, err := s.renderBackendShields(backends)
@@ -173,7 +174,7 @@ func (s *Snippet) fetchBackend(c _context.Context, version int64) ([]string, err
 	return snippets, nil
 }
 
-func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]string, error) {
+func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]snippetItem, error) {
 	printType := func(dtype remote.DirectorType) string {
 		switch dtype {
 		case remote.Random:
@@ -185,7 +186,9 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]string, er
 		}
 		return ""
 	}
-	dirTmpl, err := template.New("director").Funcs(template.FuncMap{"printtype": printType}).Parse(directorTemplate)
+	dirTmpl, err := template.New("director").
+		Funcs(template.FuncMap{"printtype": printType}).
+		Parse(directorTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile director template: %w", err)
 	}
@@ -197,7 +200,7 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]string, er
 		}
 	}
 
-	var snippets []string
+	var snippets []snippetItem
 	// We need to pick an arbitrary backend to avoid an undeclared linter error
 	shieldBackend := "F_" + backends[0].Name
 	for sd := range shieldDirectors {
@@ -210,7 +213,10 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]string, er
 		if err := dirTmpl.Execute(buf, d); err != nil {
 			return nil, fmt.Errorf("failed to render director template: %w", err)
 		}
-		snippets = append(snippets, buf.String())
+		snippets = append(snippets, snippetItem{
+			Name: fmt.Sprintf("DIRECTOR:%s", d.Name),
+			Data: buf.String(),
+		})
 	}
 
 	return snippets, nil
