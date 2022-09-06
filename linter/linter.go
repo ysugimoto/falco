@@ -1344,6 +1344,8 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 	switch exp.Operator {
 	case "==", "!=":
 		// Cast req.backend to standard backend type for comparisons
+		// Fiddle demonstrating these comparisons are valid:
+		// https://fiddle.fastly.dev/fiddle/06865e2d
 		if left == types.ReqBackendType {
 			left = types.BackendType
 		}

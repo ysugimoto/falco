@@ -850,6 +850,17 @@ sub foo {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("req.backend is comparable with BACKEND type", func(t *testing.T) {
+		input := `
+backend foo {}
+sub foo {
+	if (req.backend == foo) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintNotEqualOperator(t *testing.T) {
