@@ -449,6 +449,25 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("set backend as req.backend", func(t *testing.T) {
+		input := `
+backend foo {}
+sub bar {
+	set req.backend = foo;
+}`
+
+		assertNoError(t, input)
+	})
+
+	t.Run("pass req.backend as string", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.Debug-Backend = req.backend;
+}`
+
+		assertNoError(t, input)
+	})
+
 	t.Run("invalid variable name", func(t *testing.T) {
 		input := `
 sub foo {
@@ -830,6 +849,17 @@ sub foo {
 	}
 }`
 		assertError(t, input)
+	})
+
+	t.Run("req.backend is comparable with BACKEND type", func(t *testing.T) {
+		input := `
+backend foo {}
+sub foo {
+	if (req.backend == foo) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
 	})
 }
 
@@ -1276,6 +1306,17 @@ sub foo {
 
 	set var.T = std.time(var.S, "Mon Jan 2 22:04:05 2006");
 }`
+		assertNoError(t, input)
+	})
+
+	t.Run("fuzzy type check for STRING type argument", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.S STRING;
+
+	set var.S = substr(req.backend, 1);
+}
+`
 		assertNoError(t, input)
 	})
 }

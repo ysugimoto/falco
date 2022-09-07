@@ -104,6 +104,14 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 					calledFn.meta, calledFn.name, i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
+		case types.StringType:
+			// fuzzy type check: some builtin function expects STRING type,
+			// then actual argument type could be REQBACKEND because VCL STRING type can be cast from REQBACKEND.
+			if !expectType(arg, types.StringType, types.ReqBackendType) {
+				l.Error(FunctionArgumentTypeMismatch(
+					calledFn.meta, calledFn.name, i+1, v, arg,
+				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			}
 		default:
 			// Otherwise, strict type check
 			if v != arg {

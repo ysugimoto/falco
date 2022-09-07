@@ -14,6 +14,7 @@ var typeToType = map[string]string{
 	"RTIME":       "types.RTimeType",
 	"TIME":        "types.TimeType",
 	"BACKEND":     "types.BackendType",
+	"REQBACKEND":  "types.ReqBackendType",
 	"IP":          "types.IPType",
 	"ID":          "types.IDType",
 	"ACL":         "types.AclType",

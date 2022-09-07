@@ -1343,6 +1343,15 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 
 	switch exp.Operator {
 	case "==", "!=":
+		// Cast req.backend to standard backend type for comparisons
+		// Fiddle demonstrating these comparisons are valid:
+		// https://fiddle.fastly.dev/fiddle/06865e2d
+		if left == types.ReqBackendType {
+			left = types.BackendType
+		}
+		if right == types.ReqBackendType {
+			right = types.BackendType
+		}
 		// Equal operator could compare any types but both left and right type must be the same.
 		if left != right {
 			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
