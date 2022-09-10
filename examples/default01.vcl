@@ -13,6 +13,7 @@ backend httpbin_org {
   .ssl_check_cert = always;
   .min_tls_version = "1.2";
   .max_tls_version = "1.2";
+  .bypass_local_route_table = false;
   .probe = {
     .request = "GET /status/200 HTTP/1.1" "Host: httpbin.org" "Connection: close";
     .dummy = true;
