@@ -1,6 +1,7 @@
 package linter
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ysugimoto/falco/context"
@@ -392,50 +393,66 @@ call example;
 `
 		assertNoError(t, input)
 	})
-
-	t.Run("Functions can be reused in multiple vcl state functions", func(t *testing.T) {
-		input := `
-//@recv, log
-sub example BOOL {
-	return true;
 }
 
-sub vcl_log {
-	# FASTLY log
-	if (example()) {
-		log "foo";
+func TestLintStuff(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		annotations string
+		shouldError bool
+	}{
+		{
+			name:        "Functions can be reused in multiple vcl state functions",
+			annotations: "//@deliver, log",
+			shouldError: false,
+		},
+		{
+			name:        "Functions can be reused in multiple vcl state functions with scope",
+			annotations: "//@scope:deliver, log",
+			shouldError: false,
+		},
+		{
+			name:        "Errros when subroutines want variables they don't have access to",
+			annotations: "//@recv, log",
+			shouldError: true,
+		},
+		{
+			name:        "Errros when subroutines want variables they don't have access to with scope annotation",
+			annotations: "//@scope: recv, log",
+			shouldError: true,
+		},
 	}
-}
 
-sub vcl_recv {
-# FASTLY recv
-	if (example()) {
-		log "foo";
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`
+			%s
+			sub example BOOL {
+				log resp.http.bar;
+			}
+
+			sub vcl_log {
+				# FASTLY log
+				if (example()) {
+					log "foo";
+				}
+			}
+
+			sub vcl_deliver {
+			# FASTLY deliver
+				if (example()) {
+					log "foo";
+				}
+			}
+			`, tt.annotations)
+			if tt.shouldError {
+				assertError(t, input)
+			} else {
+				assertNoError(t, input)
+			}
+		})
 	}
-}
-`
-		assertNoError(t, input)
-	})
-
-	t.Run("Errros when subroutines want variables they don't have access to", func(t *testing.T) {
-		input := `
-//@recv, deliver
-sub example {
-	log resp.http.bar;
-}
-
-sub vcl_recv {
-# FASTLY log
-	call example;
-}
-
-sub vcl_deliver {
-# FASTLY recv
-	call example;
-}
-`
-		assertError(t, input)
-	})
 }
 
 func TestLintDeclareStatement(t *testing.T) {

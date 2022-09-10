@@ -306,7 +306,12 @@ func annotations(comments ast.Comments) []string {
 	for i := range comments {
 		l := strings.TrimLeft(comments[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
-			an := strings.Split(strings.TrimPrefix(l, "@"), ",")
+			var an []string
+			if strings.HasPrefix(l, "@scope:") {
+				an = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
+			} else {
+				an = strings.Split(strings.TrimPrefix(l, "@"), ",")
+			}
 			for _, s := range an {
 				rv = append(rv, strings.TrimSpace(s))
 			}

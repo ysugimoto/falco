@@ -102,17 +102,19 @@ Following table describes subroutine name and recognizing scope:
 For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes. Multiple scopes
 are declared as comma seperated values.
 
-Then, if you apply a hint of scope on annotation, `falco` also understands scope:
+Then, if you apply a hint of scope on annotation, `falco` also understands scope. There are two ways to define the scope annotation:
+1. `@scope: <scope_name1>, <scope_name2>` this is the newest annotation method and it should be prefered over 2.
+2. `@<scope_name1>, <scope_name2>`, this is used to maintain backwards compatibility and it may be deprecated in the future.
 
 ```vcl
-// @recv, miss
+// @scope: recv, miss
 sub custom_process {
    // subroutine has `recv` annotation, lint with RECV|MISS scope.
    // All variables must be accessible in both RECV and MISS scope.
   ...
 }
 
-// @fetch
+// @fetch, miss
 sub custom_request {
   // subroutine has `fetch` annotation, lint with FETCH scope
   ...
