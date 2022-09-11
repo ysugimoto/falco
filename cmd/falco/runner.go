@@ -18,6 +18,7 @@ import (
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
+	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -222,7 +223,22 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	vcl, err := r.run(main, RunModeLint)
+	acl, err := r.resolver.Acls()
+	if err != nil {
+		return nil, err
+	}
+
+	backends, err := r.resolver.Backends()
+	if err != nil {
+		return nil, err
+	}
+
+	dictionaries, err := r.resolver.Dictionaries()
+	if err != nil {
+		return nil, err
+	}
+
+	vcl, err := r.run(main, acl, backends, dictionaries, RunModeLint)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +251,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(v *VCL, a []Acl, b []Backend, d []Dictionary, mode RunMode) (*plugin.VCL, error) {
 	vcl, err := r.parseVCL(v.Name, v.Data)
 	if err != nil {
 		return nil, err
@@ -253,6 +269,30 @@ func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
 	vcl.Statements, err = r.resolveStatements(vcl.Statements)
 	if err != nil {
 		return nil, err
+	}
+
+	// In case of TF we have some externally defined objects that need to
+	// be added to the linter context. Since they are externally defined they
+	// have empty meta type and just a name.
+	for _, acl := range a {
+		err = r.context.AddAcl(acl.Name, &types.Acl{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, backend := range b {
+		err = r.context.AddBackend(backend.Name, &types.Backend{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, dictionary := range d {
+		err = r.context.AddTable(dictionary.Name, &types.Table{})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	lt := linter.New()
@@ -445,7 +485,22 @@ func (r *Runner) Stats() (*StatsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := r.run(main, RunModeStat); err != nil {
+	acl, err := r.resolver.Acls()
+	if err != nil {
+		return nil, err
+	}
+
+	backends, err := r.resolver.Backends()
+	if err != nil {
+		return nil, err
+	}
+
+	dictionaries, err := r.resolver.Dictionaries()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := r.run(main, acl, backends, dictionaries, RunModeStat); err != nil {
 		return nil, err
 	}
 

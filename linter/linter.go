@@ -54,32 +54,44 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 }
 
 func (l *Linter) lintUnusedTables(ctx *context.Context) {
-	for _, t := range ctx.Tables {
+	for key, t := range ctx.Tables {
 		if t.IsUsed {
 			continue
 		}
-		l.Error(UnusedDeclaration(t.Decl.GetMeta(), t.Name, "table").Match(UNUSED_DECLARATION))
+		if t.Decl == nil {
+			l.Error(UnusedExternalDeclaration(key, "backend").Match(UNUSED_DECLARATION))
+		} else {
+			l.Error(UnusedDeclaration(t.Decl.GetMeta(), t.Name, "table").Match(UNUSED_DECLARATION))
+		}
 	}
 }
 
 func (l *Linter) lintUnusedAcls(ctx *context.Context) {
-	for _, a := range ctx.Acls {
+	for key, a := range ctx.Acls {
 		if a.IsUsed {
 			continue
 		}
-		l.Error(UnusedDeclaration(a.Decl.GetMeta(), a.Decl.Name.Value, "acl").Match(UNUSED_DECLARATION))
+		if a.Decl == nil {
+			l.Error(UnusedExternalDeclaration(key, "acl").Match(UNUSED_DECLARATION))
+		} else {
+			l.Error(UnusedDeclaration(a.Decl.GetMeta(), a.Decl.Name.Value, "acl").Match(UNUSED_DECLARATION))
+		}
 	}
 }
 
 func (l *Linter) lintUnusedBackends(ctx *context.Context) {
-	for _, b := range ctx.Backends {
+	for key, b := range ctx.Backends {
 		if b.IsUsed {
 			continue
 		}
 		if b.DirectorDecl != nil {
 			l.Error(UnusedDeclaration(b.DirectorDecl.GetMeta(), b.DirectorDecl.Name.Value, "director").Match(UNUSED_DECLARATION))
 		} else {
-			l.Error(UnusedDeclaration(b.BackendDecl.GetMeta(), b.BackendDecl.Name.Value, "backend").Match(UNUSED_DECLARATION))
+			if b.BackendDecl == nil {
+				l.Error(UnusedExternalDeclaration(key, "backend").Match(UNUSED_DECLARATION))
+			} else {
+				l.Error(UnusedDeclaration(b.BackendDecl.GetMeta(), b.BackendDecl.Name.Value, "backend").Match(UNUSED_DECLARATION))
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/types"
 )
 
 func assertNoError(t *testing.T, input string) {
@@ -1506,6 +1507,23 @@ acl foo {}
 			t.Errorf("Expect one lint error but empty returned")
 		}
 	})
+
+	t.Run("raise unused external error", func(t *testing.T) {
+		input := ` sub foo{}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		ctx := context.New()
+		ctx.AddAcl("foo", &types.Acl{})
+		l := New()
+		l.Lint(vcl, ctx)
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
 }
 
 func TestUnusedTables(t *testing.T) {
@@ -1544,6 +1562,23 @@ table foo {}
 			t.Errorf("Expect one lint error but empty returned")
 		}
 	})
+
+	t.Run("raise unused external error", func(t *testing.T) {
+		input := ` sub foo{}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		ctx := context.New()
+		ctx.AddTable("foo", &types.Table{})
+		l := New()
+		l.Lint(vcl, ctx)
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
 }
 
 func TestUnusedBackend(t *testing.T) {
@@ -1578,6 +1613,23 @@ backend foo {}
 
 		l := New()
 		l.Lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+		}
+	})
+
+	t.Run("raise unused external error", func(t *testing.T) {
+		input := ` sub foo{}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		ctx := context.New()
+		ctx.AddBackend("foo", &types.Backend{})
+		l := New()
+		l.Lint(vcl, ctx)
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
 		}

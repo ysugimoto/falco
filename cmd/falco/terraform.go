@@ -20,17 +20,37 @@ type TerraformVcl struct {
 	Name    string
 }
 
-type FastlyService struct {
+type TerraformAcl struct {
 	Name string
-	Vcls []*TerraformVcl
+}
+
+type TerraformDictionary struct {
+	Name string
+}
+
+// TODO(davinci26): We can unmarshall all the properties from the TF file
+// and lint them to make sure they have sane values.
+type TerraformBackend struct {
+	Name string
+}
+
+type FastlyService struct {
+	Name         string
+	Vcls         []*TerraformVcl
+	Backends     []*TerraformBackend
+	Acls         []*TerraformAcl
+	Dictionaries []*TerraformDictionary
 }
 
 type TerraformPlannedResource struct {
 	ProviderName string `json:"provider_name"`
 	Type         string `json:"type"`
 	Values       *struct {
-		Name string          `json:"name"`
-		Vcl  []*TerraformVcl `json:"vcl"`
+		Name       string                 `json:"name"`
+		Vcl        []*TerraformVcl        `json:"vcl"`
+		Acl        []*TerraformAcl        `json:"acl"`
+		Backend    []*TerraformBackend    `json:"backend"`
+		Dictionary []*TerraformDictionary `json:"dictionary"`
 	} `json:"values"`
 }
 
@@ -69,8 +89,11 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 			}
 
 			services = append(services, &FastlyService{
-				Name: v.Values.Name,
-				Vcls: v.Values.Vcl,
+				Name:         v.Values.Name,
+				Vcls:         v.Values.Vcl,
+				Acls:         v.Values.Acl,
+				Backends:     v.Values.Backend,
+				Dictionaries: v.Values.Dictionary,
 			})
 		}
 	}
@@ -83,8 +106,11 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 			}
 
 			services = append(services, &FastlyService{
-				Name: v.Values.Name,
-				Vcls: v.Values.Vcl,
+				Name:         v.Values.Name,
+				Vcls:         v.Values.Vcl,
+				Acls:         v.Values.Acl,
+				Backends:     v.Values.Backend,
+				Dictionaries: v.Values.Dictionary,
 			})
 		}
 	}
