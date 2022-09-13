@@ -25,7 +25,8 @@ type Acl struct {
 	Name string
 }
 
-// Resolver is an interface for integrate VCL input from file or JSON (terraform planned data)
+// Resolver is an interface to fetch VCL source and dependencies
+// from various sources e.g. file or JSON (terraform planned data)
 type Resolver interface {
 	MainVCL() (*VCL, error)
 	Resolve(module string) (*VCL, error)

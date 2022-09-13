@@ -83,6 +83,34 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 	}
 }
 
+func TestResolveWithDuplicateDeclarations(t *testing.T) {
+	mock := &mockResolver{
+		main: `
+		acl_foo{}
+		sub vcl_recv {
+			#FASTLY RECV
+			if (req.http.foo ~ acl_foo && table.contains(table_foo, "foo")){
+				set req.backend = F_backend_foo;
+			}
+		 }
+		`,
+		acls:         []Acl{Acl{Name: "acl_foo"}},
+		backends:     []Backend{Backend{Name: "F_backend_foo"}},
+		dictionaries: []Dictionary{Dictionary{Name: "table_foo"}},
+	}
+
+	r, err := NewRunner(mock, &Config{V: true})
+	if err != nil {
+		t.Errorf("Unexpected runner creation error: %s", err)
+		return
+	}
+	_, err = r.Run()
+	if err == nil {
+		t.Errorf("Expected Run() error but got nil")
+		return
+	}
+}
+
 func TestResolveIncludeStatement(t *testing.T) {
 	mock := &mockResolver{
 		dependency: map[string]string{
