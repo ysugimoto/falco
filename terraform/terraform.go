@@ -1,4 +1,4 @@
-package main
+package terraform
 
 import (
 	"encoding/json"
@@ -65,7 +65,7 @@ type TerraformPlannedInput struct {
 	} `json:"planned_values"`
 }
 
-func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
+func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 	var root TerraformPlannedInput
 
 	if err := json.Unmarshal(buf, &root); err != nil {

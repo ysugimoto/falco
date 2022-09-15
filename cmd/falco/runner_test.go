@@ -2,27 +2,15 @@ package main
 
 import (
 	"errors"
+	"os"
 	"testing"
+
+	"github.com/ysugimoto/falco/terraform"
 )
 
 type mockResolver struct {
-	dependency   map[string]string
-	main         string
-	acls         []Acl
-	backends     []Backend
-	dictionaries []Dictionary
-}
-
-func (m *mockResolver) Acls() ([]Acl, error) {
-	return m.acls, nil
-}
-
-func (m *mockResolver) Backends() ([]Backend, error) {
-	return m.backends, nil
-}
-
-func (m *mockResolver) Dictionaries() ([]Dictionary, error) {
-	return m.dictionaries, nil
+	dependency map[string]string
+	main       string
 }
 
 func (m *mockResolver) MainVCL() (*VCL, error) {
@@ -47,30 +35,33 @@ func (m *mockResolver) Name() string {
 	return ""
 }
 
-func TestResolveExternalWithExternalProperties(t *testing.T) {
-	mock := &mockResolver{
-		main: `
-		sub vcl_recv {
-			#FASTLY RECV
-			if (req.http.foo ~ acl_foo && table.contains(table_foo, "foo")){
-				set req.backend = F_backend_foo;
-			}
-		 }
-		`,
-		acls:         []Acl{Acl{Name: "acl_foo"}},
-		backends:     []Backend{Backend{Name: "F_backend_foo"}},
-		dictionaries: []Dictionary{Dictionary{Name: "table_foo"}},
+func loadFromTfJson(fileName string, t *testing.T) ([]Resolver, Fetcher) {
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
 	}
 
-	r, err := NewRunner(mock, &Config{V: true})
+	services, err := terraform.UnmarshalTerraformPlannedInput(buf)
 	if err != nil {
-		t.Errorf("Unexpected runner creation error: %s", err)
+		t.Fatalf("Unexpected error %s unarshalling %s ", fileName, err)
+	}
+
+	rslv := NewTerraformResolver(services)
+	f := terraform.NewTerraformFetcher(services)
+	return rslv, f
+}
+
+func TestResolveExternalWithExternalProperties(t *testing.T) {
+	fileName := "../../terraform/data/terraform-valid.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
 		return
 	}
 	ret, err := r.Run()
 	if err != nil {
-		t.Errorf("Unexpected Run() error: %s", err)
-		return
+		t.Fatalf("Unexpected Run() error: %s", err)
 	}
 	if ret.Infos > 0 {
 		t.Errorf("Infos expects 0, got %d", ret.Infos)
@@ -84,30 +75,19 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 }
 
 func TestResolveWithDuplicateDeclarations(t *testing.T) {
-	mock := &mockResolver{
-		main: `
-		acl_foo{}
-		sub vcl_recv {
-			#FASTLY RECV
-			if (req.http.foo ~ acl_foo && table.contains(table_foo, "foo")){
-				set req.backend = F_backend_foo;
-			}
-		 }
-		`,
-		acls:         []Acl{Acl{Name: "acl_foo"}},
-		backends:     []Backend{Backend{Name: "F_backend_foo"}},
-		dictionaries: []Dictionary{Dictionary{Name: "table_foo"}},
+	fileName := "../../terraform/data/terraform-duplicate.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+	}
+	ret, err := r.Run()
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
 	}
 
-	r, err := NewRunner(mock, &Config{V: true})
-	if err != nil {
-		t.Errorf("Unexpected runner creation error: %s", err)
-		return
-	}
-	_, err = r.Run()
-	if err == nil {
-		t.Errorf("Expected Run() error but got nil")
-		return
+	if ret.Errors != 1 {
+		t.Errorf("Errors expects 1, got %d", ret.Errors)
 	}
 }
 
@@ -150,7 +130,7 @@ sub vcl_recv {
 }
 		`,
 	}
-	r, err := NewRunner(mock, &Config{V: true})
+	r, err := NewRunner(mock, &Config{V: true}, nil)
 	if err != nil {
 		t.Errorf("Unexpected runner creation error: %s", err)
 		return
@@ -213,7 +193,7 @@ sub vcl_recv {
 }
 		`,
 	}
-	r, err := NewRunner(mock, &Config{V: true})
+	r, err := NewRunner(mock, &Config{V: true}, nil)
 	if err != nil {
 		t.Errorf("Unexpected runner creation error: %s", err)
 		return

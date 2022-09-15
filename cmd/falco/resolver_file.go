@@ -17,18 +17,6 @@ type FileResolver struct {
 	includePaths []string
 }
 
-func (f *FileResolver) Backends() ([]Backend, error) {
-	return nil, nil
-}
-
-func (f *FileResolver) Dictionaries() ([]Dictionary, error) {
-	return nil, nil
-}
-
-func (f *FileResolver) Acls() ([]Acl, error) {
-	return nil, nil
-}
-
 func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
 	if main == "" {
 		return nil, ErrEmptyMain

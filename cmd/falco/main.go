@@ -12,6 +12,7 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/terraform"
 )
 
 var version string = ""
@@ -136,11 +137,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	var fetcher Fetcher
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []Resolver
 	switch fs.Arg(0) {
 	case subcommandTerraform:
-		resolvers, err = NewStdinResolvers()
+		fastlyServices, err := ParseStdin()
+		if err == nil {
+			resolvers = NewTerraformResolver(fastlyServices)
+			fetcher = terraform.NewTerraformFetcher(fastlyServices)
+		}
 	case subcommandLint:
 		// "lint" command provides single file of service, then resolvers size is always 1
 		resolvers, err = NewFileResolvers(fs.Arg(1), c)
@@ -161,7 +167,7 @@ func main() {
 			writeln(white, strings.Repeat("=", 18+len(name)))
 		}
 
-		runner, err := NewRunner(v, c)
+		runner, err := NewRunner(v, c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
 			os.Exit(1)

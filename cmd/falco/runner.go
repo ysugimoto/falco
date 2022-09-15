@@ -18,7 +18,7 @@ import (
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/remote"
 )
 
 var (
@@ -52,6 +52,12 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
+type Fetcher interface {
+	Backends(c _context.Context) ([]*remote.Backend, error)
+	Dictionaries(c _context.Context) ([]*remote.EdgeDictionary, error)
+	Acls(c _context.Context) ([]*remote.AccessControl, error)
+}
+
 type RunMode int
 
 const (
@@ -77,7 +83,7 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(rz Resolver, c *Config) (*Runner, error) {
+func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
 		resolver:  rz,
 		context:   context.New(),
@@ -102,15 +108,25 @@ func NewRunner(rz Resolver, c *Config) (*Runner, error) {
 		func() {
 			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
 			defer timeout()
-
 			// Remote communication is optional so we keep processing even if remote communication is failed
-			snippets, err := NewSnippet(serviceId, apiKey).Fetch(ctx)
+			f := remote.NewFastlyApiFetcher(serviceId, apiKey)
+			snippets, err := NewSnippet(f).Fetch(ctx)
 			if err != nil {
 				writeln(red, err.Error())
 			}
 			// Stack to runner field, combime before run()
 			r.snippets = snippets
 		}()
+	}
+
+	if f != nil {
+		ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
+		defer timeout()
+		snippets, err := NewSnippet(f).Fetch(ctx)
+		if err != nil {
+			writeln(red, err.Error())
+		}
+		r.snippets = append(r.snippets, snippets...)
 	}
 
 	// Check transformer exists and format to absolute path
@@ -223,22 +239,8 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	acl, err := r.resolver.Acls()
-	if err != nil {
-		return nil, err
-	}
 
-	backends, err := r.resolver.Backends()
-	if err != nil {
-		return nil, err
-	}
-
-	dictionaries, err := r.resolver.Dictionaries()
-	if err != nil {
-		return nil, err
-	}
-
-	vcl, err := r.run(main, acl, backends, dictionaries, RunModeLint)
+	vcl, err := r.run(main, RunModeLint)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +253,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(v *VCL, a []Acl, b []Backend, d []Dictionary, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
 	vcl, err := r.parseVCL(v.Name, v.Data)
 	if err != nil {
 		return nil, err
@@ -269,30 +271,6 @@ func (r *Runner) run(v *VCL, a []Acl, b []Backend, d []Dictionary, mode RunMode)
 	vcl.Statements, err = r.resolveStatements(vcl.Statements)
 	if err != nil {
 		return nil, err
-	}
-
-	// In case of TF we have some externally defined objects that need to
-	// be added to the linter context. Since they are externally defined they
-	// have empty meta type and just a name.
-	for _, acl := range a {
-		err = r.context.AddAcl(acl.Name, &types.Acl{})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for _, backend := range b {
-		err = r.context.AddBackend(backend.Name, &types.Backend{})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for _, dictionary := range d {
-		err = r.context.AddTable(dictionary.Name, &types.Table{})
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	lt := linter.New()
@@ -485,22 +463,8 @@ func (r *Runner) Stats() (*StatsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	acl, err := r.resolver.Acls()
-	if err != nil {
-		return nil, err
-	}
 
-	backends, err := r.resolver.Backends()
-	if err != nil {
-		return nil, err
-	}
-
-	dictionaries, err := r.resolver.Dictionaries()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := r.run(main, acl, backends, dictionaries, RunModeStat); err != nil {
+	if _, err := r.run(main, RunModeStat); err != nil {
 		return nil, err
 	}
 
