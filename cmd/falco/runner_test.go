@@ -288,7 +288,7 @@ func TestRepositoryExamples(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(resolvers[0], &Config{V: true})
+			r, err := NewRunner(resolvers[0], &Config{V: true}, nil)
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
