@@ -157,3 +157,77 @@ sub vcl_recv {
 		t.Errorf("Parsed VCL should have 3 statements, got %d", len(ret.Vcl.AST.Statements))
 	}
 }
+
+// Adds a test for all the example code in the repo to make sure we don't accidentally
+// break those as they are the first thing someone might try on the repo.
+func TestRepositoryExamples(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileName string
+		errors   int
+		warnings int
+		infos    int
+	}{
+		{
+			name:     "example 1",
+			fileName: "../../examples/default01.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    0,
+		},
+		{
+			name:     "example 2",
+			fileName: "../../examples/default02.vcl",
+			errors:   1,
+			warnings: 0,
+			infos:    0,
+		},
+		{
+			name:     "example 3",
+			fileName: "../../examples/default03.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    1,
+		},
+		{
+			name:     "example 4",
+			fileName: "../../examples/default04.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    1,
+		},
+	}
+
+	c := &Config{V: true}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resolvers, err := NewFileResolvers(tt.fileName, c)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			r, err := NewRunner(resolvers[0], &Config{V: true})
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			ret, err := r.Run()
+			if tt.errors != 0 {
+				if err == nil {
+					t.Errorf("Expected Run() to generate an error")
+				}
+				return
+			}
+
+			if ret.Infos != tt.infos {
+				t.Errorf("Infos expects %d, got %d", tt.infos, ret.Infos)
+			}
+			if ret.Warnings != tt.warnings {
+				t.Errorf("Warning expects %d, got %d", tt.warnings, ret.Warnings)
+			}
+			if ret.Errors != tt.errors {
+				t.Errorf("Errors expects %d, got %d", tt.errors, ret.Errors)
+			}
+		})
+	}
+}
