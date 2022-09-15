@@ -59,7 +59,7 @@ func (l *Linter) lintUnusedTables(ctx *context.Context) {
 			continue
 		}
 		if t.Decl == nil {
-			l.Error(UnusedExternalDeclaration(key, "backend").Match(UNUSED_DECLARATION))
+			l.Error(UnusedExternalDeclaration(key, "table").Match(UNUSED_DECLARATION))
 		} else {
 			l.Error(UnusedDeclaration(t.Decl.GetMeta(), t.Name, "table").Match(UNUSED_DECLARATION))
 		}
