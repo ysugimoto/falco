@@ -74,6 +74,29 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 	}
 }
 
+func TestResolveExternalWithNoExternalProperties(t *testing.T) {
+	fileName := "../../terraform/data/terraform-empty.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+		return
+	}
+	ret, err := r.Run()
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+	if ret.Infos > 0 {
+		t.Errorf("Infos expects 0, got %d", ret.Infos)
+	}
+	if ret.Warnings != 0 {
+		t.Errorf("Warning expects 0, got %d", ret.Warnings)
+	}
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
+	}
+}
+
 func TestResolveWithDuplicateDeclarations(t *testing.T) {
 	fileName := "../../terraform/data/terraform-duplicate.json"
 	rslv, f := loadFromTfJson(fileName, t)
