@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"context"
 	"os"
 	"testing"
 )
@@ -22,7 +21,7 @@ func TestStuff(t *testing.T) {
 
 	f := NewTerraformFetcher(services)
 
-	acls, _ := f.Acls(context.TODO())
+	acls, _ := f.Acls()
 	if len(acls) != 1 {
 		t.Errorf("Length of ACLs should be %d, got %d", 1, len(acls))
 	}
@@ -31,7 +30,7 @@ func TestStuff(t *testing.T) {
 		t.Errorf("Acl name want %s, got %s", acls[0].Name, "foo_acl")
 	}
 
-	backends, _ := f.Backends(context.TODO())
+	backends, _ := f.Backends()
 	if len(backends) != 1 {
 		t.Errorf("Length of Backends should be %d, got %d", 1, len(backends))
 	}
@@ -40,7 +39,7 @@ func TestStuff(t *testing.T) {
 		t.Errorf("Backend name want %s, got %s", backends[0].Name, "foo_backend")
 	}
 
-	dictionaries, _ := f.Dictionaries(context.TODO())
+	dictionaries, _ := f.Dictionaries()
 	if len(dictionaries) != 1 {
 		t.Errorf("Length of dictionaries should be %d, got %d", 1, len(dictionaries))
 	}

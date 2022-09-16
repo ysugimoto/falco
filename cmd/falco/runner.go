@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	_context "context"
 	"fmt"
 	"os"
 	"strings"
@@ -53,9 +52,9 @@ type StatsResult struct {
 }
 
 type Fetcher interface {
-	Backends(c _context.Context) ([]*remote.Backend, error)
-	Dictionaries(c _context.Context) ([]*remote.EdgeDictionary, error)
-	Acls(c _context.Context) ([]*remote.AccessControl, error)
+	Backends() ([]*remote.Backend, error)
+	Dictionaries() ([]*remote.EdgeDictionary, error)
+	Acls() ([]*remote.AccessControl, error)
 }
 
 type RunMode int
@@ -106,11 +105,10 @@ func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
 		func() {
-			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
-			defer timeout()
 			// Remote communication is optional so we keep processing even if remote communication is failed
-			f := remote.NewFastlyApiFetcher(serviceId, apiKey)
-			snippets, err := NewSnippet(f).Fetch(ctx)
+			// We allow each API call to take up to to 5 seconds
+			f := remote.NewFastlyApiFetcher(serviceId, apiKey, 5*time.Second)
+			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
 				writeln(red, err.Error())
 			}
@@ -120,9 +118,7 @@ func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
 	}
 
 	if f != nil {
-		ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
-		defer timeout()
-		snippets, err := NewSnippet(f).Fetch(ctx)
+		snippets, err := NewSnippet(f).Fetch()
 		if err != nil {
 			writeln(red, err.Error())
 		}

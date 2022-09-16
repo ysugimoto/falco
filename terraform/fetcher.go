@@ -1,8 +1,6 @@
 package terraform
 
 import (
-	"context"
-
 	"github.com/ysugimoto/falco/remote"
 )
 
@@ -16,7 +14,7 @@ func NewTerraformFetcher(s []*FastlyService) *TerraformFetcher {
 	}
 }
 
-func (f *TerraformFetcher) Backends(_ context.Context) ([]*remote.Backend, error) {
+func (f *TerraformFetcher) Backends() ([]*remote.Backend, error) {
 	var b []*remote.Backend
 	for _, s := range f.services {
 		for _, serviceBackend := range s.Backends {
@@ -28,7 +26,7 @@ func (f *TerraformFetcher) Backends(_ context.Context) ([]*remote.Backend, error
 	return b, nil
 }
 
-func (f *TerraformFetcher) Dictionaries(c context.Context) ([]*remote.EdgeDictionary, error) {
+func (f *TerraformFetcher) Dictionaries() ([]*remote.EdgeDictionary, error) {
 	var d []*remote.EdgeDictionary
 	for _, s := range f.services {
 		for _, sDictionary := range s.Dictionaries {
@@ -40,7 +38,7 @@ func (f *TerraformFetcher) Dictionaries(c context.Context) ([]*remote.EdgeDictio
 	return d, nil
 }
 
-func (f *TerraformFetcher) Acls(c context.Context) ([]*remote.AccessControl, error) {
+func (f *TerraformFetcher) Acls() ([]*remote.AccessControl, error) {
 	var a []*remote.AccessControl
 	for _, s := range f.services {
 		for _, sACL := range s.Acls {

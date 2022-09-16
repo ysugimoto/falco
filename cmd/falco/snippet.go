@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	_context "context"
 	"fmt"
 	"strings"
 
@@ -54,11 +53,11 @@ func NewSnippet(f Fetcher) *Snippet {
 	}
 }
 
-func (s *Snippet) Fetch(c _context.Context) ([]snippetItem, error) {
+func (s *Snippet) Fetch() ([]snippetItem, error) {
 	var snippets []snippetItem
 
 	write(white, "Fetching Edge Dictionaries...")
-	dicts, err := s.fetchEdgeDictionary(c)
+	dicts, err := s.fetchEdgeDictionary()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,7 @@ func (s *Snippet) Fetch(c _context.Context) ([]snippetItem, error) {
 	snippets = append(snippets, dicts...)
 
 	write(white, "Fatching Access Control Lists...")
-	acls, err := s.fetchAccessControl(c)
+	acls, err := s.fetchAccessControl()
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +73,7 @@ func (s *Snippet) Fetch(c _context.Context) ([]snippetItem, error) {
 	snippets = append(snippets, acls...)
 
 	write(white, "Fatching Backends...")
-	backends, err := s.fetchBackend(c)
+	backends, err := s.fetchBackend()
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +84,8 @@ func (s *Snippet) Fetch(c _context.Context) ([]snippetItem, error) {
 }
 
 // Fetch remote Edge dictionary items
-func (s *Snippet) fetchEdgeDictionary(c _context.Context) ([]snippetItem, error) {
-	dicts, err := s.fetcher.Dictionaries(c)
+func (s *Snippet) fetchEdgeDictionary() ([]snippetItem, error) {
+	dicts, err := s.fetcher.Dictionaries()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get edge dictionaries %w", err)
 	}
@@ -111,8 +110,8 @@ func (s *Snippet) fetchEdgeDictionary(c _context.Context) ([]snippetItem, error)
 }
 
 // Fetch remote Access Control entries
-func (s *Snippet) fetchAccessControl(c _context.Context) ([]snippetItem, error) {
-	acls, err := s.fetcher.Acls(c)
+func (s *Snippet) fetchAccessControl() ([]snippetItem, error) {
+	acls, err := s.fetcher.Acls()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get ACLs: %w", err)
 	}
@@ -136,9 +135,9 @@ func (s *Snippet) fetchAccessControl(c _context.Context) ([]snippetItem, error) 
 	return snippets, nil
 }
 
-func (s *Snippet) fetchBackend(c _context.Context) ([]snippetItem, error) {
+func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 	var snippets []snippetItem
-	backends, err := s.fetcher.Backends(c)
+	backends, err := s.fetcher.Backends()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get Backends: %w", err)
 	}

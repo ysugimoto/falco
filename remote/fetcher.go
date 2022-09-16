@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type FastlyApiFetcher struct {
@@ -12,24 +13,30 @@ type FastlyApiFetcher struct {
 	// Version can be set by multiple functions
 	lock    sync.RWMutex
 	version int64
+	timeout time.Duration
 }
 
-func NewFastlyApiFetcher(serviceId, apiKey string) *FastlyApiFetcher {
+func NewFastlyApiFetcher(serviceId, apiKey string, timeout time.Duration) *FastlyApiFetcher {
 	return &FastlyApiFetcher{
 		client:  NewFastlyClient(http.DefaultClient, serviceId, apiKey),
 		version: -1,
+		timeout: timeout,
 	}
 }
 
-func (f *FastlyApiFetcher) Backends(c _context.Context) ([]*Backend, error) {
-	version, err := f.getVersion(c)
+func (f *FastlyApiFetcher) Backends() ([]*Backend, error) {
+	ctx, timeout := _context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
+	version, err := f.getVersion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 
-	return f.client.ListBackends(c, version)
+	return f.client.ListBackends(ctx, version)
 }
-func (f *FastlyApiFetcher) Dictionaries(c _context.Context) ([]*EdgeDictionary, error) {
+func (f *FastlyApiFetcher) Dictionaries() ([]*EdgeDictionary, error) {
+	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
 	version, err := f.getVersion(c)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
@@ -37,7 +44,9 @@ func (f *FastlyApiFetcher) Dictionaries(c _context.Context) ([]*EdgeDictionary, 
 
 	return f.client.ListEdgeDictionaries(c, version)
 }
-func (f *FastlyApiFetcher) Acls(c _context.Context) ([]*AccessControl, error) {
+func (f *FastlyApiFetcher) Acls() ([]*AccessControl, error) {
+	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
 	version, err := f.getVersion(c)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
