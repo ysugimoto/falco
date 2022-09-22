@@ -31,7 +31,8 @@ type TerraformDictionary struct {
 // TODO(davinci26): We can unmarshall all the properties from the TF file
 // and lint them to make sure they have sane values.
 type TerraformBackend struct {
-	Name string
+	Name   string
+	Shield *string
 }
 
 type FastlyService struct {

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/ysugimoto/falco/types"
 )
 
 type FastlyApiFetcher struct {
@@ -24,7 +26,7 @@ func NewFastlyApiFetcher(serviceId, apiKey string, timeout time.Duration) *Fastl
 	}
 }
 
-func (f *FastlyApiFetcher) Backends() ([]*Backend, error) {
+func (f *FastlyApiFetcher) Backends() ([]*types.RemoteBackend, error) {
 	ctx, timeout := _context.WithTimeout(_context.Background(), f.timeout)
 	defer timeout()
 	version, err := f.getVersion(ctx)
@@ -32,9 +34,20 @@ func (f *FastlyApiFetcher) Backends() ([]*Backend, error) {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 
-	return f.client.ListBackends(ctx, version)
+	fstlyBack, err := f.client.ListBackends(ctx, version)
+	if err != nil {
+		return nil, err
+	}
+	r := []*types.RemoteBackend{}
+	for _, b := range fstlyBack {
+		r = append(r, &types.RemoteBackend{
+			Name:   b.Name,
+			Shield: b.Shield,
+		})
+	}
+	return r, nil
 }
-func (f *FastlyApiFetcher) Dictionaries() ([]*EdgeDictionary, error) {
+func (f *FastlyApiFetcher) Dictionaries() ([]*types.RemoteDictionary, error) {
 	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
 	defer timeout()
 	version, err := f.getVersion(c)
@@ -42,9 +55,20 @@ func (f *FastlyApiFetcher) Dictionaries() ([]*EdgeDictionary, error) {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 
-	return f.client.ListEdgeDictionaries(c, version)
+	fstlyDic, err := f.client.ListEdgeDictionaries(c, version)
+	if err != nil {
+		return nil, err
+	}
+
+	r := []*types.RemoteDictionary{}
+	for _, d := range fstlyDic {
+		r = append(r, &types.RemoteDictionary{
+			Name: d.Name,
+		})
+	}
+	return r, nil
 }
-func (f *FastlyApiFetcher) Acls() ([]*AccessControl, error) {
+func (f *FastlyApiFetcher) Acls() ([]*types.RemoteAcl, error) {
 	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
 	defer timeout()
 	version, err := f.getVersion(c)
@@ -52,7 +76,18 @@ func (f *FastlyApiFetcher) Acls() ([]*AccessControl, error) {
 		return nil, fmt.Errorf("Failed to get latest version %w", err)
 	}
 
-	return f.client.ListAccessControlLists(c, version)
+	fastlyAcls, err := f.client.ListAccessControlLists(c, version)
+	if err != nil {
+		return nil, err
+	}
+
+	r := []*types.RemoteAcl{}
+	for _, a := range fastlyAcls {
+		r = append(r, &types.RemoteAcl{
+			Name: a.Name,
+		})
+	}
+	return r, nil
 }
 
 func (f *FastlyApiFetcher) getVersion(c _context.Context) (int64, error) {

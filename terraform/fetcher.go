@@ -1,7 +1,7 @@
 package terraform
 
 import (
-	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/types"
 )
 
 type TerraformFetcher struct {
@@ -14,23 +14,24 @@ func NewTerraformFetcher(s []*FastlyService) *TerraformFetcher {
 	}
 }
 
-func (f *TerraformFetcher) Backends() ([]*remote.Backend, error) {
-	var b []*remote.Backend
+func (f *TerraformFetcher) Backends() ([]*types.RemoteBackend, error) {
+	var b []*types.RemoteBackend
 	for _, s := range f.services {
 		for _, serviceBackend := range s.Backends {
-			b = append(b, &remote.Backend{
-				Name: serviceBackend.Name,
+			b = append(b, &types.RemoteBackend{
+				Name:   serviceBackend.Name,
+				Shield: serviceBackend.Shield,
 			})
 		}
 	}
 	return b, nil
 }
 
-func (f *TerraformFetcher) Dictionaries() ([]*remote.EdgeDictionary, error) {
-	var d []*remote.EdgeDictionary
+func (f *TerraformFetcher) Dictionaries() ([]*types.RemoteDictionary, error) {
+	var d []*types.RemoteDictionary
 	for _, s := range f.services {
 		for _, sDictionary := range s.Dictionaries {
-			d = append(d, &remote.EdgeDictionary{
+			d = append(d, &types.RemoteDictionary{
 				Name: sDictionary.Name,
 			})
 		}
@@ -38,11 +39,11 @@ func (f *TerraformFetcher) Dictionaries() ([]*remote.EdgeDictionary, error) {
 	return d, nil
 }
 
-func (f *TerraformFetcher) Acls() ([]*remote.AccessControl, error) {
-	var a []*remote.AccessControl
+func (f *TerraformFetcher) Acls() ([]*types.RemoteAcl, error) {
+	var a []*types.RemoteAcl
 	for _, s := range f.services {
 		for _, sACL := range s.Acls {
-			a = append(a, &remote.AccessControl{
+			a = append(a, &types.RemoteAcl{
 				Name: sACL.Name,
 			})
 		}

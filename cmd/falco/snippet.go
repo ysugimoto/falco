@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/types"
 )
 
 var tableTemplate = `
@@ -125,7 +126,7 @@ func (s *Snippet) fetchAccessControl() ([]snippetItem, error) {
 	for _, a := range acls {
 		buf := new(bytes.Buffer)
 		if err := tmpl.Execute(buf, a); err != nil {
-			return nil, fmt.Errorf("Failed to render table template: %w", err)
+			return nil, fmt.Errorf("Failed to render acl template: %w", err)
 		}
 		snippets = append(snippets, snippetItem{
 			Name: fmt.Sprintf("ACL:%s", a.Name),
@@ -169,7 +170,7 @@ func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 	return snippets, nil
 }
 
-func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]snippetItem, error) {
+func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]snippetItem, error) {
 	printType := func(dtype remote.DirectorType) string {
 		switch dtype {
 		case remote.Random:
@@ -190,7 +191,7 @@ func (s *Snippet) renderBackendShields(backends []*remote.Backend) ([]snippetIte
 
 	shieldDirectors := make(map[string]struct{})
 	for _, b := range backends {
-		if b.Shield != nil {
+		if b.Shield != nil && *b.Shield != "" {
 			shieldDirectors[*b.Shield] = struct{}{}
 		}
 	}

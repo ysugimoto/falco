@@ -18,6 +18,7 @@ import (
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -52,9 +53,9 @@ type StatsResult struct {
 }
 
 type Fetcher interface {
-	Backends() ([]*remote.Backend, error)
-	Dictionaries() ([]*remote.EdgeDictionary, error)
-	Acls() ([]*remote.AccessControl, error)
+	Backends() ([]*types.RemoteBackend, error)
+	Dictionaries() ([]*types.RemoteDictionary, error)
+	Acls() ([]*types.RemoteAcl, error)
 }
 
 type RunMode int
