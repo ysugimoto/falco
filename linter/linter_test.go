@@ -374,6 +374,86 @@ sub vcl_recv BOOL {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("Subroutines can be reused in multiple vcl state functions", func(t *testing.T) {
+		input := `
+//@recv, log
+sub example {
+	set req.http.Host = "example.com";
+}
+
+sub vcl_log {
+    # FASTLY log
+	call example;
+}
+
+sub vcl_recv {
+# FASTLY recv
+call example;
+}
+`
+		assertNoError(t, input)
+	})
+}
+
+func TestLintStuff(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		annotations string
+		shouldError bool
+	}{
+		{
+			name:        "Functions can be reused in multiple vcl state functions",
+			annotations: "//@deliver, log",
+			shouldError: false,
+		},
+		{
+			name:        "Functions can be reused in multiple vcl state functions with scope",
+			annotations: "//@scope:deliver, log",
+			shouldError: false,
+		},
+		{
+			name:        "Errros when subroutines want variables they don't have access to",
+			annotations: "//@recv, log",
+			shouldError: true,
+		},
+		{
+			name:        "Errros when subroutines want variables they don't have access to with scope annotation",
+			annotations: "//@scope: recv, log",
+			shouldError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`
+			%s
+			sub example BOOL {
+				log resp.http.bar;
+			}
+
+			sub vcl_log {
+				# FASTLY log
+				if (example()) {
+					log "foo";
+				}
+			}
+
+			sub vcl_deliver {
+			# FASTLY deliver
+				if (example()) {
+					log "foo";
+				}
+			}
+			`, tt.annotations)
+			if tt.shouldError {
+				assertError(t, input)
+			} else {
+				assertNoError(t, input)
+			}
+		})
+	}
 }
 
 func TestLintDeclareStatement(t *testing.T) {

@@ -303,16 +303,23 @@ func expectState(cur string, expects ...string) bool {
 }
 
 func annotations(comments ast.Comments) []string {
-	var a []string
-
+	var rv []string
 	for i := range comments {
 		l := strings.TrimLeft(comments[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
-			a = append(a, strings.TrimPrefix(l, "@"))
+			var an []string
+			if strings.HasPrefix(l, "@scope:") {
+				an = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
+			} else {
+				an = strings.Split(strings.TrimPrefix(l, "@"), ",")
+			}
+			for _, s := range an {
+				rv = append(rv, strings.TrimSpace(s))
+			}
 		}
 	}
 
-	return a
+	return rv
 }
 
 func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
@@ -340,29 +347,33 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 
 	// If could not via subroutine name, find by annotations
 	// typically defined is module file
+	scopes := 0
 	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
 		case "RECV":
-			return context.RECV
+			scopes |= context.RECV
 		case "HASH":
-			return context.HASH
+			scopes |= context.HASH
 		case "HIT":
-			return context.HIT
+			scopes |= context.HIT
 		case "MISS":
-			return context.MISS
+			scopes |= context.MISS
 		case "PASS":
-			return context.PASS
+			scopes |= context.PASS
 		case "FETCH":
-			return context.FETCH
+			scopes |= context.FETCH
 		case "ERROR":
-			return context.ERROR
+			scopes |= context.ERROR
 		case "DELIVER":
-			return context.DELIVER
+			scopes |= context.DELIVER
 		case "LOG":
-			return context.LOG
+			scopes |= context.LOG
 		}
 	}
-	return context.RECV
+	if scopes == 0 {
+		return context.RECV
+	}
+	return scopes
 }
 
 func getFastlySubroutineScope(name string) string {

@@ -26,11 +26,16 @@ backend httpbin_org {
   }
 }
 
+//@scope: recv,deliver,log
+sub custom_logger {
+  log req.http.header;
+}
+
 sub vcl_recv {
 
   #Fastly recv
   set req.backend = httpbin_org;
-
+  call custom_logger;
   return (pass);
 }
 
@@ -38,11 +43,13 @@ sub vcl_deliver {
 
   #Fastly deliver
   set resp.http.X-Custom-Header = "Custom Header";
+  call custom_logger;
   return (deliver);
 }
 
 sub vcl_fetch {
 
   #Fastly fetch
+  call custom_logger;
   return(deliver);
 }
