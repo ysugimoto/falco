@@ -1,3 +1,10 @@
+## v0.16.0
+
+- Allow req.backend to be read as a string [#96](https://github.com/ysugimoto/falco/pull/96) (@ivomurrell)
+- Combine included VCL modules into main and parse once [#93](https://github.com/ysugimoto/falco/pull/93) (@ysugimoto)
+- Add missing backend property [#100](https://github.com/ysugimoto/falco/pull/100) (@davinci26)
+- Adds Tests for examples [#101](https://github.com/ysugimoto/falco/pull/101) (@davinci26)
+
 ## v0.15.0
 
 - Allow function expressions in error statements [#94](https://github.com/ysugimoto/falco/pull/94) (@ivomurrell)
