@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	_context "context"
 	"fmt"
 	"os"
 	"strings"
@@ -18,6 +17,8 @@ import (
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
+	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -51,6 +52,12 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
+type Fetcher interface {
+	Backends() ([]*types.RemoteBackend, error)
+	Dictionaries() ([]*types.RemoteDictionary, error)
+	Acls() ([]*types.RemoteAcl, error)
+}
+
 type RunMode int
 
 const (
@@ -76,7 +83,7 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(rz Resolver, c *Config) (*Runner, error) {
+func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
 		resolver:  rz,
 		context:   context.New(),
@@ -99,17 +106,24 @@ func NewRunner(rz Resolver, c *Config) (*Runner, error) {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
 		func() {
-			ctx, timeout := _context.WithTimeout(_context.Background(), 20*time.Second)
-			defer timeout()
-
 			// Remote communication is optional so we keep processing even if remote communication is failed
-			snippets, err := NewSnippet(serviceId, apiKey).Fetch(ctx)
+			// We allow each API call to take up to to 5 seconds
+			f := remote.NewFastlyApiFetcher(serviceId, apiKey, 5*time.Second)
+			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
 				writeln(red, err.Error())
 			}
 			// Stack to runner field, combime before run()
 			r.snippets = snippets
 		}()
+	}
+
+	if f != nil {
+		snippets, err := NewSnippet(f).Fetch()
+		if err != nil {
+			writeln(red, err.Error())
+		}
+		r.snippets = append(r.snippets, snippets...)
 	}
 
 	// Check transformer exists and format to absolute path
@@ -222,6 +236,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	vcl, err := r.run(main, RunModeLint)
 	if err != nil {
 		return nil, err
@@ -445,6 +460,7 @@ func (r *Runner) Stats() (*StatsResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if _, err := r.run(main, RunModeStat); err != nil {
 		return nil, err
 	}

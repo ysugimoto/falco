@@ -1,0 +1,27 @@
+{
+    "planned_values": {
+        "root_module": {
+            "resources": [
+                {
+                    "provider_name": "registry.terraform.io/fastly/fastly",
+                    "type": "fastly_service_vcl",
+                    "values": {
+                        "acl": [
+                        ],
+                        "backend": [
+                        ],
+                        "dictionary": [
+                        ],
+                        "vcl": [
+                            {
+                                "content": "sub vcl_recv {\n#FASTLY RECV set req.http.foo = \"bar\"; \n}",
+                                "main": true,
+                                "name": "main.vcl"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

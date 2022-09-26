@@ -290,6 +290,16 @@ func UnusedDeclaration(m *ast.Meta, name, declType string) *LintError {
 	}
 }
 
+func UnusedExternalDeclaration(name, declType string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Message: fmt.Sprintf(
+			`Externally defined %s "%s" is unused in VCL program`,
+			declType, name,
+		),
+	}
+}
+
 func UnusedVariable(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: WARNING,

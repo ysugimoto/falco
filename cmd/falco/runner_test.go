@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"os"
 	"testing"
+
+	"github.com/ysugimoto/falco/terraform"
 )
 
 type mockResolver struct {
@@ -30,6 +33,85 @@ func (m *mockResolver) Resolve(module string) (*VCL, error) {
 
 func (m *mockResolver) Name() string {
 	return ""
+}
+
+func loadFromTfJson(fileName string, t *testing.T) ([]Resolver, Fetcher) {
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
+	}
+
+	services, err := terraform.UnmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error %s unarshalling %s ", fileName, err)
+	}
+
+	rslv := NewTerraformResolver(services)
+	f := terraform.NewTerraformFetcher(services)
+	return rslv, f
+}
+
+func TestResolveExternalWithExternalProperties(t *testing.T) {
+	fileName := "../../terraform/data/terraform-valid.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+		return
+	}
+	ret, err := r.Run()
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+	if ret.Infos > 0 {
+		t.Errorf("Infos expects 0, got %d", ret.Infos)
+	}
+	if ret.Warnings != 0 {
+		t.Errorf("Warning expects 0, got %d", ret.Warnings)
+	}
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
+	}
+}
+
+func TestResolveExternalWithNoExternalProperties(t *testing.T) {
+	fileName := "../../terraform/data/terraform-empty.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+		return
+	}
+	ret, err := r.Run()
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+	if ret.Infos > 0 {
+		t.Errorf("Infos expects 0, got %d", ret.Infos)
+	}
+	if ret.Warnings != 0 {
+		t.Errorf("Warning expects 0, got %d", ret.Warnings)
+	}
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
+	}
+}
+
+func TestResolveWithDuplicateDeclarations(t *testing.T) {
+	fileName := "../../terraform/data/terraform-duplicate.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	r, err := NewRunner(rslv[0], &Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+	}
+	ret, err := r.Run()
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+
+	if ret.Errors != 1 {
+		t.Errorf("Errors expects 1, got %d", ret.Errors)
+	}
 }
 
 func TestResolveIncludeStatement(t *testing.T) {
@@ -71,7 +153,7 @@ sub vcl_recv {
 }
 		`,
 	}
-	r, err := NewRunner(mock, &Config{V: true})
+	r, err := NewRunner(mock, &Config{V: true}, nil)
 	if err != nil {
 		t.Errorf("Unexpected runner creation error: %s", err)
 		return
@@ -134,7 +216,7 @@ sub vcl_recv {
 }
 		`,
 	}
-	r, err := NewRunner(mock, &Config{V: true})
+	r, err := NewRunner(mock, &Config{V: true}, nil)
 	if err != nil {
 		t.Errorf("Unexpected runner creation error: %s", err)
 		return
@@ -206,7 +288,7 @@ func TestRepositoryExamples(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(resolvers[0], &Config{V: true})
+			r, err := NewRunner(resolvers[0], &Config{V: true}, nil)
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
