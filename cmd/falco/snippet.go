@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"text/template"
@@ -38,6 +39,12 @@ director {{ .Name }} {{ .Type | printtype }} {
 	{{- end }}
 }
 `
+
+func TerraformBackendNameSanitizer(name string) string {
+	invalid := regexp.MustCompile(`\W`)
+	s := invalid.ReplaceAllString(name, "_")
+	return s
+}
 
 type snippetItem struct {
 	Data string
@@ -152,6 +159,7 @@ func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 
 	for _, b := range backends {
 		buf := new(bytes.Buffer)
+		b.Name = TerraformBackendNameSanitizer(b.Name)
 		if err := backTmpl.Execute(buf, b); err != nil {
 			return nil, fmt.Errorf("failed to render backend template: %w", err)
 		}
