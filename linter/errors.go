@@ -339,3 +339,11 @@ func DuplicatedUseForGotoDestination(m *ast.Meta, name string) *LintError {
 		Message:  fmt.Sprintf("goto destination %s has been already in use", name),
 	}
 }
+
+func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("%s HTTP header could not be modified in VCL", name),
+	}
+}

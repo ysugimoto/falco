@@ -2220,3 +2220,90 @@ func TestLintLogStatementr(t *testing.T) {
 	}
 
 }
+
+func TestLintProtectedHTTPHeaders(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+	}{
+		{
+			name:  "Proxy-Authenticate",
+			value: "Basic realm=\"Access to the proxy site\"",
+		},
+		{
+			name:  "Proxy-Authorization",
+			value: "Basic foo",
+		},
+		{
+			name:  "Proxy-Authorization",
+			value: "Basic foo",
+		},
+		{
+			name:  "Content-Length",
+			value: "100",
+		},
+		{
+			name:  "Content-Range",
+			value: "bytes 200-100/12345",
+		},
+		{
+			name:  "TE",
+			value: "gzip",
+		},
+		{
+			name:  "Trailer",
+			value: "Expires",
+		},
+		{
+			name:  "Transfer-Encoding",
+			value: "gzip",
+		},
+		{
+			name:  "Expect",
+			value: "100-continue",
+		},
+		{
+			name:  "Upgrade",
+			value: "example/1",
+		},
+		{
+			name:  "Fastly-FF",
+			value: "qZarR/12OL0QOq4VyQPmqQ/CTp17AZv0d6cSG5nUSxU=!WDC!cache-wdc5548-WDC",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s in set statement", tt.name), func(t *testing.T) {
+			input := fmt.Sprintf(`
+	  sub vcl_recv {
+		  #FASTLY RECV
+		  set req.http.%s = "%s";
+	  }`, tt.name, tt.value)
+			assertError(t, input)
+		})
+		t.Run(fmt.Sprintf("%s in add statement", tt.name), func(t *testing.T) {
+			input := fmt.Sprintf(`
+	  sub vcl_recv {
+		  #FASTLY RECV
+		  add req.http.%s = "%s";
+	  }`, tt.name, tt.value)
+			assertError(t, input)
+		})
+		t.Run(fmt.Sprintf("%s in unset statement", tt.name), func(t *testing.T) {
+			input := fmt.Sprintf(`
+	  sub vcl_recv {
+		  #FASTLY RECV
+		  unset req.http.%s;
+	  }`, tt.name)
+			assertError(t, input)
+		})
+		t.Run(fmt.Sprintf("%s in remove statement", tt.name), func(t *testing.T) {
+			input := fmt.Sprintf(`
+	  sub vcl_recv {
+		  #FASTLY RECV
+		  remove req.http.%s;
+	  }`, tt.name)
+			assertError(t, input)
+		})
+	}
+}
