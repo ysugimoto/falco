@@ -58,6 +58,8 @@ func init() {
 	gob.Register(&ast.TableProperty{})
 	gob.Register(&ast.UnsetStatement{})
 	gob.Register(&ast.GroupedExpression{})
+	gob.Register(&ast.GotoStatement{})
+	gob.Register(&ast.GotoDestinationStatement{})
 	gob.Register(&ast.VCL{})
 }
 
