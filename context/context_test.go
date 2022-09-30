@@ -190,3 +190,21 @@ func TestDynamicVariableExist(t *testing.T) {
 		}
 	})
 }
+
+func TestSplitName(t *testing.T) {
+	t.Run(`concat after ":" token`, func(t *testing.T) {
+		first, remain := splitName("req.http.Cookie:foo-bar.baz")
+		if first != "req" {
+			t.Errorf("expect req, got %s", first)
+		}
+		if len(remain) != 2 {
+			t.Errorf("remaining token length should be 2, got %d", len(remain))
+		}
+		if remain[0] != "http" {
+			t.Errorf("expect http, got %s", remain[0])
+		}
+		if remain[1] != "Cookie:foo-bar.baz" {
+			t.Errorf("expect Cookie:foo-bar.baz, got %s", remain[1])
+		}
+	})
+}

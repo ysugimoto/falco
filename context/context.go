@@ -194,22 +194,24 @@ func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType typ
 // ```
 // declare local var.S STRING;
 // set var.S = "foo bar baz";
-// if (req.http.Host) {
-// 	if (var.S) {
-// 		if (var.S !~ "(foo)\s(bar)\s(baz)") { // make matched values first (1)
-// 			set req.http.First = "1";
-// 		}
-// 		set var.S = "hoge huga";
-// 		if (var.S ~ "(hoge)\s(huga)") { // override matched values (2)
-// 			set req.http.First = re.group.1;
-// 		}
-// 	}
-// 	set req.http.Third = re.group.2; // difficult to know which (1) or (2) matched result is used
-// }
 //
-// if (req.http.Host) {
-// 	set req.http.Fourth = re.group.3; // difficult to know which (1) or (2) matched result is used or empty
-// }
+//	if (req.http.Host) {
+//		if (var.S) {
+//			if (var.S !~ "(foo)\s(bar)\s(baz)") { // make matched values first (1)
+//				set req.http.First = "1";
+//			}
+//			set var.S = "hoge huga";
+//			if (var.S ~ "(hoge)\s(huga)") { // override matched values (2)
+//				set req.http.First = re.group.1;
+//			}
+//		}
+//		set req.http.Third = re.group.2; // difficult to know which (1) or (2) matched result is used
+//	}
+//
+//	if (req.http.Host) {
+//		set req.http.Fourth = re.group.3; // difficult to know which (1) or (2) matched result is used or empty
+//	}
+//
 // ```
 //
 // Therefore we will raise warning if matched value is overridden in subroutine.
@@ -662,10 +664,20 @@ func splitName(name string) (string, []string) {
 	var remains []string
 
 	sep := strings.SplitN(name, ".", 4)
+	first = sep[0]
 	if len(sep) == 1 {
-		first = sep[0]
-	} else {
-		first, remains = sep[0], sep[1:]
+		return first, remains
+	}
+
+	// Consider to object access like req.http.Cookie:cookie-name
+	// Cookie may has dot, so we need to concat remains after ":" token as object name
+	for i, v := range sep[1:] {
+		if strings.Contains(v, ":") {
+			remains = append(remains, strings.Join(sep[i+1:], "."))
+			break
+		} else {
+			remains = append(remains, v)
+		}
 	}
 
 	return first, remains
