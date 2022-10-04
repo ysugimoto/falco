@@ -1278,8 +1278,8 @@ func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 		// Convert to lint error
 		l.Error(&LintError{
 			Severity: ERROR,
-			Token: exp.GetMeta().Token,
-			Message: err.Error(),
+			Token:    exp.GetMeta().Token,
+			Message:  err.Error(),
 		})
 	}
 	return v
