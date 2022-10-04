@@ -1391,14 +1391,22 @@ sub foo {
 	})
 
 	t.Run("fuzzy type check for STRING type argument", func(t *testing.T) {
-		input := `
-sub foo {
-	declare local var.S STRING;
 
-	set var.S = substr(req.backend, 1);
-}
-`
-		assertNoError(t, input)
+		tests := []string{
+			"req.backend",
+			"fastly_info.is_h2",
+			"client.socket.ploss",
+		}
+		for _, c := range tests {
+			input := fmt.Sprintf(`
+			sub foo {
+				declare local var.S STRING;
+				set var.S = substr(%s, 1);
+			}
+			`, c)
+			assertNoError(t, input)
+		}
+
 	})
 }
 

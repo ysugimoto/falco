@@ -16,6 +16,14 @@ type functionMeta struct {
 	meta      *ast.Meta
 }
 
+var implicitCoersionTable = map[types.Type][]types.Type{
+	types.TimeType:   {types.StringType},
+	types.RTimeType:  {types.TimeType, types.StringType},
+	types.IPType:     {types.StringType},
+	types.IDType:     {types.StringType},
+	types.StringType: {types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType, types.IDType, types.RTimeType},
+}
+
 func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn functionMeta, ctx *context.Context) types.Type {
 	// lint empty arguments
 	if len(fn.Arguments) == 0 {
@@ -77,42 +85,13 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 	for i, v := range argTypes {
 		arg := l.lint(calledFn.arguments[i], ctx)
 
-		switch v {
-		case types.TimeType:
-			// fuzzy type check: some builtin function expects TIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.TimeType, types.StringType) {
+		if t, ok := implicitCoersionTable[v]; ok {
+			if !expectType(arg, append(t, v)...) {
 				l.Error(FunctionArgumentTypeMismatch(
 					calledFn.meta, calledFn.name, i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
-			continue
-		case types.RTimeType:
-			// fuzzy type check: some builtin function expects RTIME type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.RTimeType, types.TimeType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-			continue
-		case types.IPType:
-			// fuzzy type check: some builtin function expects IP type,
-			// then actual argument type could be STRING because VCL TIME type could be parsed from STRING.
-			if !expectType(arg, types.IPType, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		case types.StringType:
-			// fuzzy type check: some builtin function expects STRING type,
-			// then actual argument type could be REQBACKEND because VCL STRING type can be cast from REQBACKEND.
-			if !expectType(arg, types.StringType, types.ReqBackendType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		default:
+		} else {
 			// Otherwise, strict type check
 			if v != arg {
 				l.Error(FunctionArgumentTypeMismatch(
