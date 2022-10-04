@@ -466,3 +466,28 @@ func isTypeLiteral(node ast.Node) bool {
 		return false
 	}
 }
+
+// Some HTTP Headers is protected in Fastly.
+// @see https://developer.fastly.com/reference/http/http-headers/
+// Consider the character case, we always treat header names as lower-case.
+var protectedHeaderNames = map[string]struct{}{
+	"req.http.proxy-authenticate":  {},
+	"req.http.proxy-authorization": {},
+	"req.http.content-length":      {},
+	"req.http.content-range":       {},
+	"req.http.te":                  {},
+	"req.http.trailer":             {},
+	"req.http.expect":              {},
+	"req.http.transfer-encoding":   {},
+	"req.http.upgrade":             {},
+	"req.http.fastly-ff":           {},
+}
+
+// Check header name exists in protected header names
+func isProtectedHTTPHeaderName(name string) bool {
+	lower := strings.ToLower(name)
+	if _, ok := protectedHeaderNames[lower]; ok {
+		return true
+	}
+	return false
+}

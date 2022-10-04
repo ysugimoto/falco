@@ -837,6 +837,11 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "set").Match(SET_STATEMENT_SYNTAX))
 	}
 
+	// Check protected header will be modified
+	if isProtectedHTTPHeaderName(stmt.Ident.Value) {
+		l.Error(ProtectedHTTPHeader(stmt.Ident.GetMeta(), stmt.Ident.Value))
+	}
+
 	left, err := ctx.Set(stmt.Ident.Value)
 	if err != nil {
 		err := &LintError{
@@ -885,6 +890,11 @@ func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Conte
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "unset").Match(UNSET_STATEMENT_SYNTAX))
 	}
 
+	// Check protected header will be modified
+	if isProtectedHTTPHeaderName(stmt.Ident.Value) {
+		l.Error(ProtectedHTTPHeader(stmt.Ident.GetMeta(), stmt.Ident.Value))
+	}
+
 	if err := ctx.Unset(stmt.Ident.Value); err != nil {
 		l.Error(&LintError{
 			Severity: ERROR,
@@ -899,6 +909,11 @@ func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Conte
 func (l *Linter) lintRemoveStatement(stmt *ast.RemoveStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "remove").Match(REMOVE_STATEMENT_SYNTAX))
+	}
+
+	// Check protected header will be modified
+	if isProtectedHTTPHeaderName(stmt.Ident.Value) {
+		l.Error(ProtectedHTTPHeader(stmt.Ident.GetMeta(), stmt.Ident.Value))
 	}
 
 	if err := ctx.Unset(stmt.Ident.Value); err != nil {
@@ -996,6 +1011,11 @@ func (l *Linter) lintEsiStatement(stmt *ast.EsiStatement, ctx *context.Context) 
 func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) types.Type {
 	if !isValidVariableName(stmt.Ident.Value) {
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "add").Match(ADD_STATEMENT_SYNTAX))
+	}
+
+	// Check protected header will be modified
+	if isProtectedHTTPHeaderName(stmt.Ident.Value) {
+		l.Error(ProtectedHTTPHeader(stmt.Ident.GetMeta(), stmt.Ident.Value))
 	}
 
 	// Add statement could use only for HTTP headers.
