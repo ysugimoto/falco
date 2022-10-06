@@ -664,10 +664,20 @@ func splitName(name string) (string, []string) {
 	var remains []string
 
 	sep := strings.SplitN(name, ".", 4)
+	first = sep[0]
 	if len(sep) == 1 {
-		first = sep[0]
-	} else {
-		first, remains = sep[0], sep[1:]
+		return first, remains
+	}
+
+	// Consider to object access like req.http.Cookie:cookie-name
+	// Cookie may has dot, so we need to concat remains after ":" token as object name
+	for i, v := range sep[1:] {
+		if strings.Contains(v, ":") {
+			remains = append(remains, strings.Join(sep[i+1:], "."))
+			break
+		} else {
+			remains = append(remains, v)
+		}
 	}
 
 	return first, remains
