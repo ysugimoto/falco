@@ -40,8 +40,13 @@ director {{ .Name }} {{ .Type | printtype }} {
 }
 `
 
+var invalid *regexp.Regexp
+
+func init() {
+	invalid = regexp.MustCompile(`\W`)
+}
+
 func TerraformBackendNameSanitizer(name string) string {
-	invalid := regexp.MustCompile(`\W`)
 	s := invalid.ReplaceAllString(name, "_")
 	return s
 }
