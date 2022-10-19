@@ -1187,28 +1187,28 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 	switch ctx.Mode() {
 	case context.RECV:
 		// https://developer.fastly.com/reference/vcl/subroutines/recv/
-		expects = append(expects, "lookup", "pass")
+		expects = append(expects, "lookup", "pass", "error", "restart")
 	case context.HASH:
 		// https://developer.fastly.com/reference/vcl/subroutines/hash/
 		expects = append(expects, "hash")
 	case context.HIT:
 		// https://developer.fastly.com/reference/vcl/subroutines/hit/
-		expects = append(expects, "deliver", "pass")
+		expects = append(expects, "deliver", "pass", "error", "restart")
 	case context.MISS:
 		// https://developer.fastly.com/reference/vcl/subroutines/miss/
-		expects = append(expects, "fetch", "deliver_stale", "pass")
+		expects = append(expects, "fetch", "deliver_stale", "pass", "error")
 	case context.PASS:
 		// https://developer.fastly.com/reference/vcl/subroutines/pass/
 		expects = append(expects, "pass")
 	case context.FETCH:
 		// https://developer.fastly.com/reference/vcl/subroutines/fetch/
-		expects = append(expects, "deliver", "deliver_stale", "pass")
+		expects = append(expects, "deliver", "deliver_stale", "pass", "error", "restart")
 	case context.ERROR:
 		// https://developer.fastly.com/reference/vcl/subroutines/error/
-		expects = append(expects, "deliver", "deliver_stale")
+		expects = append(expects, "deliver", "deliver_stale", "restart")
 	case context.DELIVER:
 		// https://developer.fastly.com/reference/vcl/subroutines/deliver/
-		expects = append(expects, "deliver")
+		expects = append(expects, "deliver", "restart")
 	case context.LOG:
 		// https://developer.fastly.com/reference/vcl/subroutines/log/
 		expects = append(expects, "deliver")

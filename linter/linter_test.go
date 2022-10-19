@@ -1428,6 +1428,15 @@ sub vcl_recv {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass: with reserved word", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#Fastly recv
+	return (restart);
+}`
+		assertNoError(t, input)
+	})
+
 	t.Run("sub: return correct type", func(t *testing.T) {
 		input := `
 sub custom_sub INTEGER {
