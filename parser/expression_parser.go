@@ -20,6 +20,8 @@ func (p *Parser) registerExpressionParsers() {
 		token.FALSE:      func() (ast.Expression, error) { return p.parseBoolean(), nil },
 		token.LEFT_PAREN: func() (ast.Expression, error) { return p.parseGroupedExpression() },
 		token.IF:         func() (ast.Expression, error) { return p.parseIfExpression() },
+		token.ERROR:      func() (ast.Expression, error) { return p.parseIdent(), nil },
+		token.RESTART:    func() (ast.Expression, error) { return p.parseIdent(), nil },
 	}
 	p.infixParsers = map[token.TokenType]infixParser{
 		token.IF:                 p.parseInfixStringConcatExpression,
