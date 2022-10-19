@@ -174,7 +174,7 @@ func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 		})
 	}
 
-	// Generate director snippet at least one backend is declared
+	// Generate director snippet only when at least one backend is declared
 	if len(backends) > 0 {
 		directors, err := s.renderBackendShields(backends)
 		if err != nil {
