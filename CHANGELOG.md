@@ -1,3 +1,7 @@
+## v0.18.0
+
+- Add support for PCRE [#90](https://github.com/ysugimoto/falco/pull/90) (@shadialtarsha)
+
 ## v0.17.0
 
 - Sanitize invalid chars in backend name before adding them as snippets [#106](https://github.com/ysugimoto/falco/pull/106) (@davinci26)
