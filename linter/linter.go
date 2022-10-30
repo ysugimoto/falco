@@ -39,7 +39,6 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 		ctx = context.New()
 	}
 
-	l.lint(node, ctx)
 
 	// After whole VCLs have been linted in main VCL, check all definitions are exactly used.
 	l.lintUnusedTables(ctx)
