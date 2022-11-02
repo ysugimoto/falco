@@ -46,7 +46,7 @@ func quote(v interface{}) string {
 	return `"` + fmt.Sprint(v) + `"`
 }
 
-func keySort[T Spec|Object|Definition|FunctionSpec](m map[string]*T) []string {
+func keySort[T Spec | Object | Definition | FunctionSpec](m map[string]*T) []string {
 	keys := make([]string, 0, len(m))
 	for k, _ := range m {
 		keys = append(keys, k)
@@ -55,4 +55,3 @@ func keySort[T Spec|Object|Definition|FunctionSpec](m map[string]*T) []string {
 	sort.Strings(keys)
 	return keys
 }
-
