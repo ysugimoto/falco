@@ -55,6 +55,7 @@ func (i *Interpreter) restart() {
 }
 
 func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
+	i.ctx.Reset(r)
 	// i.prepare(w, r)
 	i.ProcessRecv()
 	return i.err
