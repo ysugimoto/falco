@@ -61,6 +61,30 @@ func (vs Variables) Get(name string) *Variable {
 
 	root, ok = vs[first]
 	if !ok {
+		return nil
+	}
+
+	for _, n := range remains {
+		v, ok := root.Children[n]
+		if !ok {
+			return nil
+		}
+		root = v
+	}
+	return root
+}
+
+func (vs Variables) Set(name string, value Value) *Variable {
+	first, remains := splitName(name)
+	if first == "" {
+		return nil
+	}
+
+	var root *Variable
+	var ok bool
+
+	root, ok = vs[first]
+	if !ok {
 		vs[first] = New()
 		root = vs[first]
 	}
@@ -73,6 +97,7 @@ func (vs Variables) Get(name string) *Variable {
 		}
 		root = v
 	}
+	root.Set(value)
 	return root
 }
 

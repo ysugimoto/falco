@@ -115,7 +115,7 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
-	right, err := i.ProcessExpression(stmt.Value)
+	right, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -173,7 +173,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		)
 	}
 
-	right, err := i.ProcessExpression(stmt.Value)
+	right, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -211,15 +211,15 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, erro
 }
 
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) {
-	code, _ := i.ProcessExpression(stmt.Code)
-	arg, _ := i.ProcessExpression(stmt.Argument)
+	code, _ := i.ProcessExpression(stmt.Code, false)
+	arg, _ := i.ProcessExpression(stmt.Argument, false)
 
 	i.vars.Get("obj.status").Set(code)
 	i.vars.Get("obj.response").Set(arg)
 }
 
 func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
-	log, err := i.ProcessExpression(stmt.Value)
+	log, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -229,7 +229,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 }
 
 func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) error {
-	value, err := i.ProcessExpression(stmt.Value)
+	value, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -239,7 +239,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 }
 
 func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) error {
-	value, err := i.ProcessExpression(stmt.Value)
+	value, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -269,7 +269,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 
 	args := make([]variable.Value, len(stmt.Arguments))
 	for j := range stmt.Arguments {
-		a, err := i.ProcessExpression(stmt.Arguments[j])
+		a, err := i.ProcessExpression(stmt.Arguments[j], false)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -283,32 +283,45 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 
 func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 	// if
-	cond, err := i.ProcessExpression(stmt.Condition)
+	cond, err := i.ProcessExpression(stmt.Condition, true)
 	if err != nil {
 		return NONE, errors.WithStack(err)
 	}
 
-	if v, ok := cond.(*variable.Boolean); ok {
-		if v.Value {
+	switch t := cond.(type) {
+	case *variable.Boolean:
+		if t.Value {
 			state := i.ProcessBlockStatement(stmt.Consequence.Statements)
 			return state, i.err
 		}
-	} else {
+	case *variable.String:
+		if t.Value != "" {
+			state := i.ProcessBlockStatement(stmt.Consequence.Statements)
+			return state, i.err
+		}
+	default:
 		return NONE, fmt.Errorf("If condition is not boolean")
 	}
 
 	// else if
 	for _, ei := range stmt.Another {
-		cond, err := i.ProcessExpression(ei.Condition)
+		cond, err := i.ProcessExpression(ei.Condition, true)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
-		if v, ok := cond.(*variable.Boolean); ok {
-			if v.Value {
+
+		switch t := cond.(type) {
+		case *variable.Boolean:
+			if t.Value {
 				state := i.ProcessBlockStatement(stmt.Consequence.Statements)
 				return state, i.err
 			}
-		} else {
+		case *variable.String:
+			if t.Value != "" {
+				state := i.ProcessBlockStatement(stmt.Consequence.Statements)
+				return state, i.err
+			}
+		default:
 			return NONE, fmt.Errorf("If condition is not boolean")
 		}
 	}

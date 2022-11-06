@@ -121,7 +121,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 }
 
 func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) (variable.Value, State, error) {
-	val, err := i.ProcessExpression(*stmt.ReturnExpression)
+	val, err := i.ProcessExpression(*stmt.ReturnExpression, false)
 	if err != nil {
 		return variable.Null, NONE, errors.WithStack(err)
 	}

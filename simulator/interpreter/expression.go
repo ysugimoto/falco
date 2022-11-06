@@ -25,11 +25,23 @@ func (i *Interpreter) IdentValue(val string) (variable.Value, error) {
 		return &variable.Ident{Value: val}, nil
 	} else if _, ok := i.ctx.Ratecounters[val]; ok {
 		return &variable.Ident{Value: val}, nil
+	} else if v := i.vars.Get(val); v != nil {
+		return v.Value, nil
+	} else {
+		return nil, errors.WithStack(fmt.Errorf(
+			"Undefined variable or ident %s", val,
+		))
 	}
-	return i.vars.Get(val).Value, nil
 }
 
-func (i *Interpreter) ProcessExpression(exp ast.Expression) (variable.Value, error) {
+// Evaluate expression.
+// allowInversePrefix bool is special flag for evaluating expression, used for if condition.
+// On if condition, prefix expression could use "!" prefix operator for null value.
+// For example:
+//   allowInversePrefix: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
+//   allowInversePrefix: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
+//   allowInversePrefix: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
+func (i *Interpreter) ProcessExpression(exp ast.Expression, allowInversePrefix bool) (variable.Value, error) {
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
 	case *ast.Ident:
@@ -62,34 +74,43 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression) (variable.Value, err
 
 	// Combinated expressions
 	case *ast.PrefixExpression:
-		return i.ProcessPrefixExpression(t)
+		return i.ProcessPrefixExpression(t, allowInversePrefix)
 	case *ast.GroupedExpression:
 		return i.ProcessGroupedExpression(t)
 	case *ast.InfixExpression:
-		return i.ProcessInfixExpression(t)
+		return i.ProcessInfixExpression(t, allowInversePrefix)
 	case *ast.IfExpression:
 		return i.ProcessIfExpression(t)
 	case *ast.FunctionCallExpression:
-		return i.ProcessFunctionCallExpression(t)
+		return i.ProcessFunctionCallExpression(t, allowInversePrefix)
 	default:
 		return variable.Null, errors.WithStack(fmt.Errorf("Undefined expression"))
 	}
 }
 
-func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression) (variable.Value, error) {
-	v, err := i.ProcessExpression(exp.Right)
+func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, allowInversePrefix bool) (variable.Value, error) {
+	v, err := i.ProcessExpression(exp.Right, allowInversePrefix)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
 	switch exp.Operator {
 	case "!":
-		if b, ok := v.(*variable.Boolean); ok {
-			b.Value = !b.Value
-			return b, nil
+		switch t := v.(type) {
+		case *variable.Boolean:
+			t.Value = !t.Value
+			return t, nil
+		case *variable.String:
+			if !allowInversePrefix {
+				return variable.Null, errors.WithStack(
+					fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
+				)
+			}
+			return &variable.Boolean{ Value: t.Value == "" }, nil
+		default:
+			return variable.Null, errors.WithStack(
+				fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
+			)
 		}
-		return variable.Null, errors.WithStack(
-			fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
-		)
 	case "-":
 		switch t := v.(type) {
 		case *variable.Integer:
@@ -117,7 +138,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression) (variab
 }
 
 func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (variable.Value, error) {
-	v, err := i.ProcessExpression(exp.Right)
+	v, err := i.ProcessExpression(exp.Right, true)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
@@ -126,31 +147,36 @@ func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (vari
 
 func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (variable.Value, error) {
 	// if
-	cond, err := i.ProcessExpression(exp.Condition)
+	cond, err := i.ProcessExpression(exp.Condition, true)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
 
-	if v, ok := cond.(*variable.Boolean); ok {
-		if v.Value {
-			return i.ProcessExpression(exp.Consequence)
+	switch t := cond.(type) {
+	case *variable.Boolean:
+		if t.Value {
+			return i.ProcessExpression(exp.Consequence, false)
 		}
-	} else {
+	case *variable.String:
+		if t.Value != "" {
+			return i.ProcessExpression(exp.Consequence, false)
+		}
+	default:
 		return variable.Null, fmt.Errorf("If condition is not boolean")
 	}
 
 	// else
-	return i.ProcessExpression(exp.Alternative)
+	return i.ProcessExpression(exp.Alternative, false)
 }
 
-func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression) (variable.Value, error) {
+func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, allowInversePrefix bool) (variable.Value, error) {
 	fn, err := function.Exists(exp.Function.Value, i.scope)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
 	args := make([]variable.Value, len(exp.Arguments))
 	for j := range exp.Arguments {
-		a, err := i.ProcessExpression(exp.Arguments[j])
+		a, err := i.ProcessExpression(exp.Arguments[j], allowInversePrefix)
 		if err != nil {
 			return variable.Null, errors.WithStack(err)
 		}
@@ -159,12 +185,12 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 	return fn.Call(i.ctx, args...)
 }
 
-func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression) (variable.Value, error) {
-	left, err := i.ProcessExpression(exp.Left)
+func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, allowInversePrefix bool) (variable.Value, error) {
+	left, err := i.ProcessExpression(exp.Left, allowInversePrefix)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(exp.Right)
+	right, err := i.ProcessExpression(exp.Right, allowInversePrefix)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
