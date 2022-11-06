@@ -9,7 +9,7 @@ import (
 	"github.com/ysugimoto/falco/simulator/variable"
 )
 
-func TestProcessAssignment(t *testing.T) {
+func TestProcessDivision(t *testing.T) {
 	t.Run("left is INTEGER", func(t *testing.T) {
 		now := time.Now()
 		tests := []struct {
@@ -18,25 +18,25 @@ func TestProcessAssignment(t *testing.T) {
 			expect  int64
 			isError bool
 		}{
-			{left: 10, right: &variable.Integer{Value: 100}, expect: 100},
-			{left: 10, right: &variable.Integer{Value: 100, Literal: true}, expect: 100},
-			{left: 10, right: &variable.Float{Value: 50.0}, expect: 50},
-			{left: 10, right: &variable.Float{Value: 50.0, Literal: true}, expect: 10, isError: true},
-			{left: 10, right: &variable.String{Value: "example"}, isError: true},
-			{left: 10, right: &variable.String{Value: "example", Literal: true}, expect: 0, isError: true},
-			{left: 10, right: &variable.RTime{Value: 100 * time.Second}, expect: 100},
-			{left: 10, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: 10, right: &variable.Time{Value: now}, expect: now.Unix()},
-			{left: 10, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: true}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
-			{left: 10, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: 1000, right: &variable.Integer{Value: 100}, expect: 10},
+			{left: 1000, right: &variable.Integer{Value: 100, Literal: true}, expect: 10},
+			{left: 1000, right: &variable.Float{Value: 50.0}, expect: 20},
+			{left: 1000, right: &variable.Float{Value: 50.0, Literal: true}, isError: true},
+			{left: 1000, right: &variable.String{Value: "example"}, isError: true},
+			{left: 1000, right: &variable.String{Value: "example", Literal: true}, isError: true},
+			{left: 1000, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
+			{left: 1000, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: 1000, right: &variable.Time{Value: now}, isError: true},
+			{left: 1000, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
+			{left: 1000, right: &variable.Boolean{Value: true}, isError: true},
+			{left: 1000, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
+			{left: 1000, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.Integer{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -57,25 +57,25 @@ func TestProcessAssignment(t *testing.T) {
 			expect  float64
 			isError bool
 		}{
-			{left: 10.0, right: &variable.Integer{Value: 100}, expect: 100.0},
-			{left: 10.0, right: &variable.Integer{Value: 100, Literal: true}, expect: 100.0},
-			{left: 10, right: &variable.Float{Value: 50.0}, expect: 50.0},
-			{left: 10, right: &variable.Float{Value: 50.0, Literal: true}, expect: 50.0},
-			{left: 10, right: &variable.String{Value: "example"}, isError: true},
-			{left: 10, right: &variable.String{Value: "example", Literal: true}, isError: true},
-			{left: 10, right: &variable.RTime{Value: 100 * time.Second}, expect: 100},
-			{left: 10, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, expect: 100, isError: true},
-			{left: 10, right: &variable.Time{Value: now}, expect: float64(now.Unix())},
-			{left: 10, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: true}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
-			{left: 10, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: 1000.0, right: &variable.Integer{Value: 100}, expect: 10.0},
+			{left: 1000.0, right: &variable.Integer{Value: 100, Literal: true}, expect: 10.0},
+			{left: 1000.0, right: &variable.Float{Value: 50.0}, expect: 20.0},
+			{left: 1000.0, right: &variable.Float{Value: 50.0, Literal: true}, expect: 20.0},
+			{left: 1000.0, right: &variable.String{Value: "example"}, isError: true},
+			{left: 1000.0, right: &variable.String{Value: "example", Literal: true}, isError: true},
+			{left: 1000.0, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
+			{left: 1000.0, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: 1000.0, right: &variable.Time{Value: now}, isError: true},
+			{left: 1000.0, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
+			{left: 1000.0, right: &variable.Boolean{Value: true}, isError: true},
+			{left: 1000.0, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
+			{left: 1000.0, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.Float{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -96,25 +96,25 @@ func TestProcessAssignment(t *testing.T) {
 			expect  string
 			isError bool
 		}{
-			{left: "left", right: &variable.Integer{Value: 100}, expect: "100"},
-			{left: "left", right: &variable.Integer{Value: 100, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &variable.Float{Value: 50.0}, expect: "50.000"},
-			{left: "left", right: &variable.Float{Value: 50.0, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &variable.RTime{Value: 100 * time.Second}, expect: "0.100"},
-			{left: "left", right: &variable.RTime{Value: 100 * time.Second, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &variable.Time{Value: now}, expect: now.Format(time.RFC1123)},
-			{left: "left", right: &variable.String{Value: "example"}, expect: "example"},
-			{left: "left", right: &variable.String{Value: "example", Literal: true}, expect: "example"},
-			{left: "left", right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foo"},
-			{left: "left", right: &variable.Boolean{Value: true}, expect: "1"},
-			{left: "left", right: &variable.Boolean{Value: false, Literal: true}, expect: "0"},
-			{left: "left", right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1"},
+			{left: "left", right: &variable.Integer{Value: 100}, isError: true},
+			{left: "left", right: &variable.Integer{Value: 100, Literal: true}, isError: true},
+			{left: "left", right: &variable.Float{Value: 50.0}, isError: true},
+			{left: "left", right: &variable.Float{Value: 50.0, Literal: true}, isError: true},
+			{left: "left", right: &variable.RTime{Value: 100 * time.Second}, isError: true},
+			{left: "left", right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: "left", right: &variable.Time{Value: now}, isError: true},
+			{left: "left", right: &variable.String{Value: "example"}, isError: true},
+			{left: "left", right: &variable.String{Value: "example", Literal: true}, isError: true},
+			{left: "left", right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
+			{left: "left", right: &variable.Boolean{Value: true}, isError: true},
+			{left: "left", right: &variable.Boolean{Value: false, Literal: true}, isError: true},
+			{left: "left", right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.String{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -135,25 +135,25 @@ func TestProcessAssignment(t *testing.T) {
 			expect  time.Duration
 			isError bool
 		}{
-			{left: 1, right: &variable.Integer{Value: 100}, expect: 100 * time.Second},
-			{left: 1, right: &variable.Integer{Value: 100, Literal: true}, expect: 0, isError: true},
-			{left: 1, right: &variable.Float{Value: 50.0}, expect: 50.0},
-			{left: 1, right: &variable.Float{Value: 50.0, Literal: true}, expect: 0, isError: true},
-			{left: 1, right: &variable.String{Value: "example"}, isError: true},
-			{left: 1, right: &variable.String{Value: "example", Literal: true}, isError: true},
-			{left: 1, right: &variable.RTime{Value: 100 * time.Second}, expect: 100 * time.Second},
-			{left: 1, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, expect: 0, isError: true},
-			{left: 1, right: &variable.Time{Value: now}, expect: time.Duration(now.Unix())},
-			{left: 10, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: true}, isError: true},
-			{left: 10, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
-			{left: 10, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: 100 * time.Second, right: &variable.Integer{Value: 100}, expect: 1 * time.Second},
+			{left: 100 * time.Second, right: &variable.Integer{Value: 100, Literal: true}, expect: 1 * time.Second},
+			{left: 100 * time.Second, right: &variable.Float{Value: 50.0}, expect: 2 * time.Second},
+			{left: 100 * time.Second, right: &variable.Float{Value: 50.0, Literal: true}, expect: 2 * time.Second},
+			{left: 100 * time.Second, right: &variable.String{Value: "example"}, isError: true},
+			{left: 100 * time.Second, right: &variable.String{Value: "example", Literal: true}, isError: true},
+			{left: 100 * time.Second, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
+			{left: 100 * time.Second, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: 100 * time.Second, right: &variable.Time{Value: now}, isError: true},
+			{left: 100 * time.Second, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
+			{left: 100 * time.Second, right: &variable.Boolean{Value: true}, isError: true},
+			{left: 100 * time.Second, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
+			{left: 100 * time.Second, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.RTime{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -175,15 +175,15 @@ func TestProcessAssignment(t *testing.T) {
 			expect  time.Time
 			isError bool
 		}{
-			{left: now, right: &variable.Integer{Value: 100}, expect: time.Unix(100, 0)},
+			{left: now, right: &variable.Integer{Value: 100}, isError: true},
 			{left: now, right: &variable.Integer{Value: 100, Literal: true}, isError: true},
-			{left: now, right: &variable.Float{Value: 50.0}, expect: time.Unix(50, 0)},
+			{left: now, right: &variable.Float{Value: 50.0}, isError: true},
 			{left: now, right: &variable.Float{Value: 50.0, Literal: true}, isError: true},
 			{left: now, right: &variable.String{Value: "example"}, isError: true},
 			{left: now, right: &variable.String{Value: "example", Literal: true}, isError: true},
-			{left: now, right: &variable.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
+			{left: now, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
 			{left: now, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: now, right: &variable.Time{Value: now2}, expect: now2},
+			{left: now, right: &variable.Time{Value: now2}, isError: true},
 			{left: now, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: now, right: &variable.Boolean{Value: true}, isError: true},
 			{left: now, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
@@ -193,7 +193,7 @@ func TestProcessAssignment(t *testing.T) {
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.Time{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -223,7 +223,7 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "backend", right: &variable.RTime{Value: 100 * time.Second}, isError: true},
 			{left: "backend", right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
 			{left: "backend", right: &variable.Time{Value: now}, isError: true},
-			{left: "backend", right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foo"},
+			{left: "backend", right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: "backend", right: &variable.Boolean{Value: true}, isError: true},
 			{left: "backend", right: &variable.Boolean{Value: false, Literal: true}, isError: true},
 			{left: "backend", right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
@@ -233,7 +233,7 @@ func TestProcessAssignment(t *testing.T) {
 			ip := New(nil)
 			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}},
 			}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -264,15 +264,15 @@ func TestProcessAssignment(t *testing.T) {
 			{left: false, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
 			{left: false, right: &variable.Time{Value: now}, isError: true},
 			{left: false, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: false, right: &variable.Boolean{Value: true}, expect: true},
-			{left: false, right: &variable.Boolean{Value: true, Literal: true}, expect: true},
+			{left: false, right: &variable.Boolean{Value: true}, isError: true},
+			{left: false, right: &variable.Boolean{Value: true, Literal: true}, isError: true},
 			{left: false, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.Boolean{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
@@ -304,17 +304,17 @@ func TestProcessAssignment(t *testing.T) {
 			{left: v, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
 			{left: v, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
 			{left: v, right: &variable.Time{Value: now}, isError: true},
-			{left: v, right: &variable.String{Value: "127.0.0.2", Literal: true}, expect: vv},
+			{left: v, right: &variable.String{Value: "127.0.0.2", Literal: true}, isError: true},
 			{left: v, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: v, right: &variable.Boolean{Value: true}, isError: true},
 			{left: v, right: &variable.Boolean{Value: true, Literal: true}, isError: true},
-			{left: v, right: &variable.IP{Value: vv}, expect: vv},
+			{left: v, right: &variable.IP{Value: vv}, isError: true},
 		}
 
 		for i, tt := range tests {
 			ip := New(nil)
 			left := &variable.IP{Value: tt.left}
-			err := ip.ProcessAssignment(left, tt.right)
+			err := ip.ProcessDivisionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)

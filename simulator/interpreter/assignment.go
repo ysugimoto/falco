@@ -333,7 +333,7 @@ func (i *Interpreter) ProcessSubtractionAssignment(left, right variable.Value) e
 		switch right.Type() {
 		case variable.IntegerType:
 			rv := variable.Unwrap[*variable.Integer](right)
-			lv.Value += rv.Value
+			lv.Value -= rv.Value
 		case variable.FloatType:
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not sub to INTEGER"))
@@ -345,7 +345,7 @@ func (i *Interpreter) ProcessSubtractionAssignment(left, right variable.Value) e
 				return errors.WithStack(fmt.Errorf("RTIME literal could not sub to INTEGER"))
 			}
 			rv := variable.Unwrap[*variable.RTime](right)
-			lv.Value += int64(rv.Value.Seconds())
+			lv.Value -= int64(rv.Value.Seconds())
 		case variable.TimeType:
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not sub to INTEGER"))
@@ -467,10 +467,10 @@ func (i *Interpreter) ProcessMultiplicationAssignment(left, right variable.Value
 		switch right.Type() {
 		case variable.IntegerType:
 			rv := variable.Unwrap[*variable.Integer](right)
-			lv.Value *= (time.Duration(rv.Value) * time.Second)
+			lv.Value *= time.Duration(rv.Value)
 		case variable.FloatType:
 			rv := variable.Unwrap[*variable.Float](right)
-			lv.Value *= (time.Duration(rv.Value) * time.Second)
+			lv.Value *= time.Duration(rv.Value)
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid multiplication RTIME type, got %s", right.Type()))
 		}
@@ -514,10 +514,10 @@ func (i *Interpreter) ProcessDivisionAssignment(left, right variable.Value) erro
 		switch right.Type() {
 		case variable.IntegerType:
 			rv := variable.Unwrap[*variable.Integer](right)
-			lv.Value /= (time.Duration(rv.Value) * time.Second)
+			lv.Value /= time.Duration(rv.Value)
 		case variable.FloatType:
 			rv := variable.Unwrap[*variable.Float](right)
-			lv.Value /= (time.Duration(rv.Value) * time.Second)
+			lv.Value /= time.Duration(rv.Value)
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
 		}
@@ -604,7 +604,7 @@ func (i *Interpreter) ProcessBitwiseANDAssignment(left, right variable.Value) er
 	return nil
 }
 
-func (i *Interpreter) ProcessBitwizsXORAssignment(left, right variable.Value) error {
+func (i *Interpreter) ProcessBitwiseXORAssignment(left, right variable.Value) error {
 	if left.Type() != variable.IntegerType || right.Type() != variable.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(

@@ -24,7 +24,7 @@ const (
 )
 
 type Interpreter struct {
-	vars variable.Variables
+	vars  variable.Variables
 	scope types.Scope
 
 	ctx      *context.Context

@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/simulator/variable"
 	"github.com/ysugimoto/falco/simulator/function"
+	"github.com/ysugimoto/falco/simulator/variable"
 )
 
 func (i *Interpreter) IdentValue(val string) (variable.Value, error) {

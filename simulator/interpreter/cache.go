@@ -6,7 +6,7 @@ import (
 )
 
 type CacheItem struct {
-	Vars variable.Variables
+	Vars    variable.Variables
 	Expires time.Time
 }
 

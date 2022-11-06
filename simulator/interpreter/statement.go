@@ -6,9 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/simulator/variable"
-	"github.com/ysugimoto/falco/simulator/types"
 	"github.com/ysugimoto/falco/simulator/function"
+	"github.com/ysugimoto/falco/simulator/types"
+	"github.com/ysugimoto/falco/simulator/variable"
 )
 
 func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
@@ -141,7 +141,7 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	case "&=":
 		return i.ProcessBitwiseANDAssignment(left.Value, right)
 	case "^=":
-		return i.ProcessBitwizsXORAssignment(left.Value, right)
+		return i.ProcessBitwiseXORAssignment(left.Value, right)
 	case "<<=":
 		return i.ProcessLeftShiftAssignment(left.Value, right)
 	case ">>=":
@@ -155,7 +155,7 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	case "&&=":
 		return i.ProcessLogicalANDAssignment(left.Value, right)
 	default: // "="
-		return i.ProcessAssignment(left.Value, right)
+		return i.ProcessAssignment(left.Value, right.Copy())
 	}
 }
 
