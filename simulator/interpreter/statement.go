@@ -189,13 +189,11 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 }
 
 func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
-	i.vars.Delete(stmt.Ident.Value, i.scope)
-	return nil
+	return i.vars.Delete(stmt.Ident.Value, i.scope)
 }
 
 func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
-	i.vars.Delete(stmt.Ident.Value, i.scope)
-	return nil
+	return i.vars.Delete(stmt.Ident.Value, i.scope)
 }
 
 func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, error) {

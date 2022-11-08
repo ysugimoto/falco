@@ -155,10 +155,10 @@ func (vs Variables) Set(name string, value Value) (*Variable, error) {
 	return root, nil
 }
 
-func (vs Variables) Delete(name string, s types.Scope) {
+func (vs Variables) Delete(name string, s types.Scope) error {
 	first, remains := splitName(name)
 	if first == "" {
-		return
+		return nil
 	}
 
 	var root *Variable
@@ -179,10 +179,12 @@ func (vs Variables) Delete(name string, s types.Scope) {
 		root = v
 	}
 	if l, ok := root.Children[last]; ok {
-		if err := l.Exists(s, types.PermissionUnset); err == nil {
-			delete(root.Children, last)
+		if err := l.Exists(s, types.PermissionUnset); err != nil {
+			return errors.WithStack(err)
 		}
+		delete(root.Children, last)
 	}
+	return nil
 }
 
 func splitName(name string) (string, []string) {
