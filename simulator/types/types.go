@@ -48,6 +48,7 @@ func (s Scope) String() string {
 type Permission int
 
 const (
+	PermissionDeny   Permission = 0x0000
 	PermissionGet   Permission = 0x0001
 	PermissionSet   Permission = 0x0010
 	PermissionUnset Permission = 0x0100

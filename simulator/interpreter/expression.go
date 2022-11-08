@@ -9,23 +9,27 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/simulator/function"
+	"github.com/ysugimoto/falco/simulator/types"
 	"github.com/ysugimoto/falco/simulator/variable"
 )
 
 func (i *Interpreter) IdentValue(val string) (variable.Value, error) {
 	if v, ok := i.ctx.Backends[val]; ok {
-		return &variable.Backend{Value: v}, nil
+		return &variable.Backend{Value: v, Literal: true}, nil
 	} else if v, ok := i.ctx.Acls[val]; ok {
-		return &variable.Acl{Value: v}, nil
+		return &variable.Acl{Value: v, Literal: true}, nil
 	} else if _, ok := i.ctx.Tables[val]; ok {
-		return &variable.Ident{Value: val}, nil
+		return &variable.Ident{Value: val, Literal: true}, nil
 	} else if _, ok := i.ctx.Gotos[val]; ok {
-		return &variable.Ident{Value: val}, nil
+		return &variable.Ident{Value: val, Literal: true}, nil
 	} else if _, ok := i.ctx.Penaltyboxes[val]; ok {
-		return &variable.Ident{Value: val}, nil
+		return &variable.Ident{Value: val, Literal: true}, nil
 	} else if _, ok := i.ctx.Ratecounters[val]; ok {
-		return &variable.Ident{Value: val}, nil
+		return &variable.Ident{Value: val, Literal: true}, nil
 	} else if v := i.vars.Get(val); v != nil {
+		if err := v.Exists(i.scope, types.PermissionGet); err != nil {
+			return nil, errors.WithStack(err)
+		}
 		return v.Value, nil
 	} else {
 		return nil, errors.WithStack(fmt.Errorf(
@@ -34,14 +38,14 @@ func (i *Interpreter) IdentValue(val string) (variable.Value, error) {
 	}
 }
 
-// Evaluate expression.
-// allowInversePrefix bool is special flag for evaluating expression, used for if condition.
+// Evaluate expression
+// withCondition boolean is special flag for evaluating expression, used for if condition.
 // On if condition, prefix expression could use "!" prefix operator for null value.
 // For example:
-//   allowInversePrefix: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
-//   allowInversePrefix: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
-//   allowInversePrefix: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
-func (i *Interpreter) ProcessExpression(exp ast.Expression, allowInversePrefix bool) (variable.Value, error) {
+//   withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
+//   withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
+//   withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
+func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) (variable.Value, error) {
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
 	case *ast.Ident:
@@ -74,22 +78,22 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, allowInversePrefix b
 
 	// Combinated expressions
 	case *ast.PrefixExpression:
-		return i.ProcessPrefixExpression(t, allowInversePrefix)
+		return i.ProcessPrefixExpression(t, withCondition)
 	case *ast.GroupedExpression:
 		return i.ProcessGroupedExpression(t)
 	case *ast.InfixExpression:
-		return i.ProcessInfixExpression(t, allowInversePrefix)
+		return i.ProcessInfixExpression(t, withCondition)
 	case *ast.IfExpression:
 		return i.ProcessIfExpression(t)
 	case *ast.FunctionCallExpression:
-		return i.ProcessFunctionCallExpression(t, allowInversePrefix)
+		return i.ProcessFunctionCallExpression(t, withCondition)
 	default:
 		return variable.Null, errors.WithStack(fmt.Errorf("Undefined expression"))
 	}
 }
 
-func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, allowInversePrefix bool) (variable.Value, error) {
-	v, err := i.ProcessExpression(exp.Right, allowInversePrefix)
+func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCondition bool) (variable.Value, error) {
+	v, err := i.ProcessExpression(exp.Right, withCondition)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
@@ -100,12 +104,13 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, allowIn
 			t.Value = !t.Value
 			return t, nil
 		case *variable.String:
-			if !allowInversePrefix {
+			// If withCondition is enabled, STRING could be convert to BOOL
+			if !withCondition {
 				return variable.Null, errors.WithStack(
 					fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
 				)
 			}
-			return &variable.Boolean{ Value: t.Value == "" }, nil
+			return &variable.Boolean{Value: t.Value == ""}, nil
 		default:
 			return variable.Null, errors.WithStack(
 				fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
@@ -169,14 +174,14 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (variable.Value
 	return i.ProcessExpression(exp.Alternative, false)
 }
 
-func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, allowInversePrefix bool) (variable.Value, error) {
+func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (variable.Value, error) {
 	fn, err := function.Exists(exp.Function.Value, i.scope)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
 	args := make([]variable.Value, len(exp.Arguments))
 	for j := range exp.Arguments {
-		a, err := i.ProcessExpression(exp.Arguments[j], allowInversePrefix)
+		a, err := i.ProcessExpression(exp.Arguments[j], withCondition)
 		if err != nil {
 			return variable.Null, errors.WithStack(err)
 		}
@@ -185,12 +190,12 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 	return fn.Call(i.ctx, args...)
 }
 
-func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, allowInversePrefix bool) (variable.Value, error) {
-	left, err := i.ProcessExpression(exp.Left, allowInversePrefix)
+func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondition bool) (variable.Value, error) {
+	left, err := i.ProcessExpression(exp.Left, withCondition)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(exp.Right, allowInversePrefix)
+	right, err := i.ProcessExpression(exp.Right, withCondition)
 	if err != nil {
 		return variable.Null, errors.WithStack(err)
 	}
@@ -212,12 +217,13 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, allowInve
 		return i.ProcessRegexOperator(left, right)
 	case "!~":
 		return i.ProcessNotRegexOperator(left, right)
-	case "+":
-		return i.ProcessPlusOperator(left, right)
 	case "||":
-		return i.ProcessAndOperator(left, right)
+		return i.ProcessLogicalAndOperator(left, right)
 	case "&&":
-		return i.ProcessOrOperator(left, right)
+		return i.ProcessLogicalOrOperator(left, right)
+	// "+" means string concatenation
+	case "+":
+		return i.ProcessConcatOperator(left, right)
 	default:
 		return variable.Null, errors.WithStack(fmt.Errorf("Unexpected infix operator: %s", exp.Operator))
 	}

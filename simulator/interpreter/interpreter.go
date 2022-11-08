@@ -55,8 +55,7 @@ func (i *Interpreter) restart() {
 }
 
 func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
-	i.ctx.Reset(r)
-	// i.prepare(w, r)
+	i.vars = variable.PredefinedVariables()
 	i.ProcessRecv()
 	return i.err
 }
@@ -196,7 +195,7 @@ func (i *Interpreter) ProcessFetch() {
 
 	switch state {
 	case DELIVER, DELIVER_STALE:
-		i.ProcessFetch()
+		i.ProcessDeliver()
 	case PASS:
 		i.ProcessPass()
 	case ERROR:

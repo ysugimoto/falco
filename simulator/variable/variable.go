@@ -9,21 +9,19 @@ import (
 )
 
 type Variable struct {
-	Children   map[string]*Variable
-	Value      Value
-	scope      types.Scope
-	permission types.Permission
+	Children             map[string]*Variable
+	Value                Value
+	Scope                types.Scope
+	Permission           types.Permission
+	allowDynamicProperty bool
 }
 
 func New() *Variable {
 	return &Variable{
-		Children: Variables{},
+		Children:   Variables{},
+		Scope:      types.InitScope,
+		Permission: types.PermissionDeny,
 	}
-}
-
-func (v *Variable) meta(s types.Scope, p types.Permission) {
-	v.scope = s
-	v.permission = p
 }
 
 func (v *Variable) Set(value Value) {
@@ -31,16 +29,19 @@ func (v *Variable) Set(value Value) {
 }
 
 func (v *Variable) String() string {
-	return v.Value.String()
+	if v.Value != nil {
+		return v.Value.String()
+	}
+	return "NULL"
 }
 
 func (v *Variable) Exists(s types.Scope, p types.Permission) error {
-	if (v.scope & s) == 0 {
+	if (v.Scope & s) == 0 {
 		return errors.WithStack(
 			fmt.Errorf("Variable does not exist in %s scope", s.String()),
 		)
 	}
-	if (v.permission & p) == 0 {
+	if (v.Permission & p) == 0 {
 		return errors.WithStack(
 			fmt.Errorf("Variable does not have permission to %s", p.String()),
 		)
@@ -49,6 +50,49 @@ func (v *Variable) Exists(s types.Scope, p types.Permission) error {
 }
 
 type Variables map[string]*Variable
+
+// Debug method
+func (vs Variables) Dump() {
+	vs.dump("", vs)
+}
+
+func (vs Variables) dump(prefix string, items map[string]*Variable) {
+	for k, v := range items {
+		fmt.Printf("%s%s: %v\n", prefix, k, v.Value)
+		if len(v.Children) > 0 {
+			vs.dump(prefix+"  ", v.Children)
+		}
+	}
+}
+
+func (vs Variables) Predefined(name string, s types.Scope, p types.Permission, enableDynamic bool) {
+	first, remains := splitName(name)
+	if first == "" {
+		return
+	}
+
+	var root *Variable
+	var ok bool
+
+	root, ok = vs[first]
+	if !ok {
+		root = New()
+		vs[first] = root
+	}
+
+	for _, n := range remains {
+		v, ok := root.Children[n]
+		if !ok {
+			v = New()
+			root.Children[n] = v
+		}
+		root = v
+	}
+
+	root.Scope = s
+	root.Permission = p
+	root.allowDynamicProperty = enableDynamic
+}
 
 func (vs Variables) Get(name string) *Variable {
 	first, remains := splitName(name)
@@ -67,17 +111,26 @@ func (vs Variables) Get(name string) *Variable {
 	for _, n := range remains {
 		v, ok := root.Children[n]
 		if !ok {
-			return nil
+			if root.allowDynamicProperty {
+				v = New()
+				v.Scope = root.Scope
+				v.Permission = root.Permission
+				v.Value = &String{}
+				root.Children[n] = v
+			} else {
+				return nil
+			}
 		}
 		root = v
 	}
+
 	return root
 }
 
-func (vs Variables) Set(name string, value Value) *Variable {
+func (vs Variables) Set(name string, value Value) (*Variable, error) {
 	first, remains := splitName(name)
 	if first == "" {
-		return nil
+		return nil, errors.WithStack(fmt.Errorf("Invalid variable name: %s", name))
 	}
 
 	var root *Variable
@@ -97,8 +150,9 @@ func (vs Variables) Set(name string, value Value) *Variable {
 		}
 		root = v
 	}
+
 	root.Set(value)
-	return root
+	return root, nil
 }
 
 func (vs Variables) Delete(name string, s types.Scope) {

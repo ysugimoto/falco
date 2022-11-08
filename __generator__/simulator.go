@@ -57,15 +57,17 @@ func (s *Simulator) generatePredefined() error {
 		v := defs[key]
 		keys := strings.Split(key, ".")
 		var filtered []string
+		var isAny bool
 		for _, k := range keys {
 			if k == "%any%" {
+				isAny = true
 				continue
 			}
 			filtered = append(filtered, k)
 		}
 		scope := generateScopeString(v.On)
 		perm := generatePermissionString(v)
-		buf.WriteString(fmt.Sprintf("vs.Get(\"%s\").meta(%s, %s)\n", strings.Join(filtered, "."), scope, perm))
+		buf.WriteString(fmt.Sprintf("vs.Predefined(\"%s\", %s, %s, %t)\n", strings.Join(filtered, "."), scope, perm, isAny))
 	}
 
 	out := new(bytes.Buffer)

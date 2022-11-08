@@ -231,8 +231,7 @@ func TestProcessLeftRotation(t *testing.T) {
 
 		for i, tt := range tests {
 			ip := New(nil)
-			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}},
-			}
+			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}}}
 			err := ip.ProcessLeftRotateAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
@@ -550,8 +549,7 @@ func TestProcessRightRotation(t *testing.T) {
 
 		for i, tt := range tests {
 			ip := New(nil)
-			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}},
-			}
+			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}}}
 			err := ip.ProcessRightRotateAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {
@@ -646,4 +644,3 @@ func TestProcessRightRotation(t *testing.T) {
 		}
 	})
 }
-

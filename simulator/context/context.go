@@ -2,10 +2,8 @@ package context
 
 import (
 	"fmt"
-	"net/http"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/simulator/variable"
 )
 
 var fastlyReservedSubroutine = map[string]struct{}{
@@ -32,11 +30,6 @@ type Context struct {
 	Ratecounters        map[string]*ast.RatecounterDeclaration
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
-	PreDefinedVariables variable.Variables
-}
-
-func (c *Context) Reset(r *http.Request) {
-	c.PreDefinedVariables = variable.PredefinedVariables()
 }
 
 func New(vcl *ast.VCL) (*Context, error) {

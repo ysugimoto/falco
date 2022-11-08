@@ -231,8 +231,7 @@ func TestProcessAddition(t *testing.T) {
 
 		for i, tt := range tests {
 			ip := New(nil)
-			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}},
-			}
+			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}}}
 			err := ip.ProcessAdditionAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {

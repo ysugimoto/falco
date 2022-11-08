@@ -18,19 +18,19 @@ func TestProcessRemainder(t *testing.T) {
 			expect  int64
 			isError bool
 		}{
-			{left: 1002,  right: &variable.Integer{Value: 100}, expect: 2},
-			{left: 1002,  right: &variable.Integer{Value: 100, Literal: true}, expect: 2},
-			{left: 1002,  right: &variable.Float{Value: 50.0}, expect: 2},
-			{left: 1002,  right: &variable.Float{Value: 50.0, Literal: true}, isError: true},
-			{left: 1002,  right: &variable.String{Value: "example"}, isError: true},
-			{left: 1002,  right: &variable.String{Value: "example", Literal: true}, isError: true},
-			{left: 1002,  right: &variable.RTime{Value: 100 * time.Second}, isError: true},
-			{left: 1002,  right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: 1002,  right: &variable.Time{Value: now}, isError: true},
-			{left: 1002,  right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: 1002,  right: &variable.Boolean{Value: true}, isError: true},
-			{left: 1002,  right: &variable.Boolean{Value: false, Literal: true}, isError: true},
-			{left: 1002,  right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: 1002, right: &variable.Integer{Value: 100}, expect: 2},
+			{left: 1002, right: &variable.Integer{Value: 100, Literal: true}, expect: 2},
+			{left: 1002, right: &variable.Float{Value: 50.0}, expect: 2},
+			{left: 1002, right: &variable.Float{Value: 50.0, Literal: true}, isError: true},
+			{left: 1002, right: &variable.String{Value: "example"}, isError: true},
+			{left: 1002, right: &variable.String{Value: "example", Literal: true}, isError: true},
+			{left: 1002, right: &variable.RTime{Value: 100 * time.Second}, isError: true},
+			{left: 1002, right: &variable.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: 1002, right: &variable.Time{Value: now}, isError: true},
+			{left: 1002, right: &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
+			{left: 1002, right: &variable.Boolean{Value: true}, isError: true},
+			{left: 1002, right: &variable.Boolean{Value: false, Literal: true}, isError: true},
+			{left: 1002, right: &variable.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 		}
 
 		for i, tt := range tests {
@@ -231,8 +231,7 @@ func TestProcessRemainder(t *testing.T) {
 
 		for i, tt := range tests {
 			ip := New(nil)
-			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}},
-			}
+			left := &variable.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}}}
 			err := ip.ProcessRemainderAssignment(left, tt.right)
 			if tt.isError {
 				if err == nil {

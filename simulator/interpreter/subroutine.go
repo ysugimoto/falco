@@ -28,6 +28,8 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 	// Store the current variables and restore after subroutine has ended
 	storedVars := i.vars["var"]
 	storedRe := i.vars["re"]
+	delete(i.vars, "var")
+	delete(i.vars, "re")
 	defer func() {
 		i.vars["var"] = storedVars
 		i.vars["re"] = storedRe

@@ -42,12 +42,11 @@ type Value interface {
 
 type null struct{}
 
-func (v *null) String() string  { return "NULL" }
+func (v *null) String() string  { return "" }
 func (v *null) value()          {}
 func (v *null) Type() Type      { return NullType }
 func (v *null) IsLiteral() bool { return false }
-func (v *null) Copy() Value { return v }
-
+func (v *null) Copy() Value     { return v }
 
 var Null = &null{}
 
@@ -60,7 +59,7 @@ func (v *Ident) String() string  { return v.Value }
 func (v *Ident) value()          {}
 func (v *Ident) Type() Type      { return IdentType }
 func (v *Ident) IsLiteral() bool { return v.Literal }
-func (v *Ident) Copy() Value { return &Ident{ Value: v.Value } }
+func (v *Ident) Copy() Value     { return &Ident{Value: v.Value} }
 
 type String struct {
 	Value   string
@@ -71,29 +70,34 @@ func (v *String) String() string  { return v.Value }
 func (v *String) value()          {}
 func (v *String) Type() Type      { return StringType }
 func (v *String) IsLiteral() bool { return v.Literal }
-func (v *String) Copy() Value { return &String{ Value: v.Value } }
+func (v *String) Copy() Value     { return &String{Value: v.Value} }
 
 type IP struct {
 	Value   net.IP
 	Literal bool
 }
 
-func (v *IP) String() string  { return string(v.Value) }
+func (v *IP) String() string  { return v.Value.String() }
 func (v *IP) value()          {}
 func (v *IP) Type() Type      { return IpType }
 func (v *IP) IsLiteral() bool { return v.Literal }
-func (v *IP) Copy() Value { return &IP{ Value: v.Value } }
+func (v *IP) Copy() Value     { return &IP{Value: v.Value} }
 
 type Boolean struct {
 	Value   bool
 	Literal bool
 }
 
-func (v *Boolean) String() string  { return fmt.Sprintf("%t", v.Value) }
+func (v *Boolean) String() string  {
+	if v.Value {
+		return "1"
+	}
+	return "0"
+}
 func (v *Boolean) value()          {}
 func (v *Boolean) Type() Type      { return BooleanType }
 func (v *Boolean) IsLiteral() bool { return v.Literal }
-func (v *Boolean) Copy() Value { return &Boolean{ Value: v.Value } }
+func (v *Boolean) Copy() Value     { return &Boolean{Value: v.Value} }
 
 type Integer struct {
 	Value   int64
@@ -104,7 +108,7 @@ func (v *Integer) String() string  { return fmt.Sprint(v.Value) }
 func (v *Integer) value()          {}
 func (v *Integer) Type() Type      { return IntegerType }
 func (v *Integer) IsLiteral() bool { return v.Literal }
-func (v *Integer) Copy() Value { return &Integer{ Value: v.Value } }
+func (v *Integer) Copy() Value     { return &Integer{Value: v.Value} }
 
 type Float struct {
 	Value   float64
@@ -115,7 +119,7 @@ func (v *Float) String() string  { return strconv.FormatFloat(v.Value, 'f', 3, 6
 func (v *Float) value()          {}
 func (v *Float) Type() Type      { return FloatType }
 func (v *Float) IsLiteral() bool { return v.Literal }
-func (v *Float) Copy() Value { return &Float{ Value: v.Value } }
+func (v *Float) Copy() Value     { return &Float{Value: v.Value} }
 
 type RTime struct {
 	Value   time.Duration
@@ -128,7 +132,7 @@ func (v *RTime) String() string {
 func (v *RTime) value()          {}
 func (v *RTime) Type() Type      { return RTimeType }
 func (v *RTime) IsLiteral() bool { return v.Literal }
-func (v *RTime) Copy() Value { return &RTime{ Value: v.Value } }
+func (v *RTime) Copy() Value     { return &RTime{Value: v.Value} }
 
 type Time struct {
 	Value time.Time
@@ -138,24 +142,26 @@ func (v *Time) String() string  { return v.Value.Format(time.RFC1123) }
 func (v *Time) value()          {}
 func (v *Time) Type() Type      { return TimeType }
 func (v *Time) IsLiteral() bool { return false }
-func (v *Time) Copy() Value { return &Time{ Value: v.Value } }
+func (v *Time) Copy() Value     { return &Time{Value: v.Value} }
 
 type Backend struct {
 	Value *ast.BackendDeclaration
+	Literal bool
 }
 
 func (v *Backend) String() string  { return v.Value.Name.Value }
 func (v *Backend) value()          {}
 func (v *Backend) Type() Type      { return BackendType }
-func (v *Backend) IsLiteral() bool { return false }
-func (v *Backend) Copy() Value { return &Backend{ Value: v.Value } }
+func (v *Backend) IsLiteral() bool { return v.Literal }
+func (v *Backend) Copy() Value     { return &Backend{Value: v.Value} }
 
 type Acl struct {
 	Value *ast.AclDeclaration
+	Literal bool
 }
 
 func (v *Acl) String() string  { return v.Value.Name.Value }
 func (v *Acl) value()          {}
 func (v *Acl) Type() Type      { return AclType }
-func (v *Acl) IsLiteral() bool { return false }
-func (v *Acl) Copy() Value { return &Acl{ Value: v.Value } }
+func (v *Acl) IsLiteral() bool { return v.Literal }
+func (v *Acl) Copy() Value     { return &Acl{Value: v.Value} }
