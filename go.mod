@@ -3,6 +3,7 @@ module github.com/ysugimoto/falco
 go 1.18
 
 require (
+	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/fatih/color v1.12.0
 	github.com/goccy/go-yaml v1.8.9
 	github.com/google/go-cmp v0.5.6
@@ -10,6 +11,7 @@ require (
 	github.com/kyokomi/emoji v1.5.1
 	github.com/mattn/go-colorable v0.1.8
 	github.com/pkg/errors v0.9.1
+	github.com/rs/xid v1.4.0
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 )
 

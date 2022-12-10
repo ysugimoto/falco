@@ -38,6 +38,7 @@ func New(ctx *context.Context) *Interpreter {
 	return &Interpreter{
 		ctx:   ctx,
 		scope: types.InitScope,
+		vars: variable.Variables{},
 	}
 }
 

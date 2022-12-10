@@ -24,20 +24,17 @@ var typeToType = map[string]string{
 }
 
 func main() {
-	// l := newLinter()
-	// if err := l.generatePredefined(); err != nil {
-	// 	panic(err)
-	// }
-
-	// if err := l.generateBuiltInFunction(); err != nil {
-	// 	panic(err)
-	// }
-
-	s := newSimulator()
-	if err := s.generatePredefined(); err != nil {
+	l := newLinter()
+	if err := l.generatePredefined(); err != nil {
 		panic(err)
 	}
-	if err := s.generateBuiltInFunction(); err != nil {
+
+	if err := l.generateBuiltInFunction(); err != nil {
+		panic(err)
+	}
+
+	i := newInterpreter()
+	if err := i.generateBuiltInFunction(); err != nil {
 		panic(err)
 	}
 }

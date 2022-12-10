@@ -14,6 +14,7 @@ type Variable struct {
 	Scope                types.Scope
 	Permission           types.Permission
 	allowDynamicProperty bool
+	Added []Value
 }
 
 func New() *Variable {
@@ -21,11 +22,17 @@ func New() *Variable {
 		Children:   Variables{},
 		Scope:      types.InitScope,
 		Permission: types.PermissionDeny,
+		Added: []Value{},
 	}
 }
 
 func (v *Variable) Set(value Value) {
 	v.Value = value
+	v.Added = []Value{}
+}
+
+func (v *Variable) Add(value Value) {
+	v.Added = append(v.Added , value)
 }
 
 func (v *Variable) String() string {

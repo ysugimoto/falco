@@ -12,12 +12,8 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) State {
 	i.flows = append(i.flows, sub.Name.Value)
 	defer func() {
 		// reset all local variables and regex capture variables
-		if _, ok := i.vars["var"]; ok {
-			delete(i.vars, "var")
-		}
-		if _, ok := i.vars["re"]; ok {
-			delete(i.vars, "re")
-		}
+		delete(i.vars, "var")
+		delete(i.vars, "re")
 	}()
 
 	return i.ProcessBlockStatement(sub.Block.Statements)

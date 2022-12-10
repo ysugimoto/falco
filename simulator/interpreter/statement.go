@@ -34,11 +34,13 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
 			err = i.ProcessSyntheticBase64Statement(t)
+
+		// TODO: implement
 		// case *ast.GotoStatement:
 		// 	err = i.ProcessGotoStatement(t)
 		// case *ast.GotoDestinationStatement:
-
 		// 	err = i.ProcessGotoDesticationStatement(t)
+
 		// Probably change status statements
 		case *ast.FunctionCallStatement:
 			var state State
@@ -84,28 +86,29 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
-	val := i.vars.Get(stmt.Name.Value)
+	var val variable.Value
 	switch stmt.ValueType.Value {
 	case "INTEGER":
-		val.Set(&variable.Integer{})
+		val = &variable.Integer{}
 	case "FLOAT":
-		val.Set(&variable.Float{})
+		val = &variable.Float{}
 	case "BOOL":
-		val.Set(&variable.Boolean{})
-	case "ACL":
-		val.Set(&variable.Acl{})
+		val = &variable.Boolean{}
 	case "BACKEND":
-		val.Set(&variable.Backend{})
+		val = &variable.Backend{}
 	case "IP":
-		val.Set(&variable.IP{})
+		val = &variable.IP{}
 	case "STRING":
-		val.Set(&variable.String{})
+		val = &variable.String{}
 	case "RTIME":
-		val.Set(&variable.RTime{})
+		val = &variable.RTime{}
 	case "TIME":
-		val.Set(&variable.Time{})
+		val = &variable.Time{}
 	default:
 		return errors.WithStack(fmt.Errorf("Unexpected value type: %s", stmt.ValueType.Value))
+	}
+	if _, err := i.vars.Set(stmt.Name.Value, val); err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -182,9 +185,8 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		return errors.WithStack(err)
 	}
 
-	lv := variable.Unwrap[*variable.String](left.Value)
 	rv := variable.Unwrap[*variable.String](right)
-	lv.Value += "; " + rv.Value
+	left.Add(rv)
 	return nil
 }
 
@@ -198,7 +200,13 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 
 func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, error) {
 	name := stmt.Subroutine.Value
-	if sub, ok := i.ctx.Subroutines[name]; ok {
+	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
+		_, state, err := i.ProcessFunctionSubroutine(sub)
+		if err != nil {
+			return NONE, i.err
+		}
+		return state, nil
+	} else if sub, ok := i.ctx.Subroutines[name]; ok {
 		state := i.ProcessSubroutine(sub)
 		if i.err != nil {
 			return NONE, i.err
@@ -212,8 +220,8 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) {
 	code, _ := i.ProcessExpression(stmt.Code, false)
 	arg, _ := i.ProcessExpression(stmt.Argument, false)
 
-	i.vars.Get("obj.status").Set(code)
-	i.vars.Get("obj.response").Set(arg)
+	i.vars.Set("obj.status", code)
+	i.vars.Set("obj.response", arg)
 }
 
 func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
@@ -221,8 +229,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	v := variable.Unwrap[*variable.String](log)
-	i.logs = append(i.logs, v.Value)
+	i.logs = append(i.logs, log.String())
 	return nil
 }
 
@@ -232,7 +239,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 		return errors.WithStack(err)
 	}
 
-	i.vars.Get("obj.response").Set(value)
+	i.vars.Set("obj.response", value)
 	return nil
 }
 
@@ -242,14 +249,16 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 		return errors.WithStack(err)
 	}
 
-	i.vars.Get("obj.response").Set(value)
+	i.vars.Set("obj.response", value)
 	return nil
 }
 
 func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement) (State, error) {
 	if sub, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
 		if len(stmt.Arguments) > 0 {
-			return NONE, errors.WithStack(fmt.Errorf("Function subroutine %s could not accept any arguments", stmt.Function.Value))
+			return NONE, errors.WithStack(
+				fmt.Errorf("Function subroutine %s could not accept any arguments", stmt.Function.Value),
+			)
 		}
 		// Functional subroutine may change status
 		_, s, err := i.ProcessFunctionSubroutine(sub)
@@ -259,7 +268,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 		return s, nil
 	}
 
-	// Builtin function normaly does not change any state
+	// Builtin function will not change any state
 	fn, err := function.Exists(stmt.Function.Value, i.scope)
 	if err != nil {
 		return NONE, errors.WithStack(err)

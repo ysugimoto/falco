@@ -149,7 +149,12 @@ type Backend struct {
 	Literal bool
 }
 
-func (v *Backend) String() string  { return v.Value.Name.Value }
+func (v *Backend) String() string  {
+	if v.Value == nil {
+		return ""
+	}
+	return v.Value.Name.Value
+}
 func (v *Backend) value()          {}
 func (v *Backend) Type() Type      { return BackendType }
 func (v *Backend) IsLiteral() bool { return v.Literal }
@@ -160,7 +165,12 @@ type Acl struct {
 	Literal bool
 }
 
-func (v *Acl) String() string  { return v.Value.Name.Value }
+func (v *Acl) String() string  {
+	if v.Value == nil {
+		return ""
+	}
+	return v.Value.Name.Value
+}
 func (v *Acl) value()          {}
 func (v *Acl) Type() Type      { return AclType }
 func (v *Acl) IsLiteral() bool { return v.Literal }
