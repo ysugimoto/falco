@@ -61,7 +61,7 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value > int64(rv.Value / time.Second),
+				Value: lv.Value > int64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -97,7 +97,7 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value > float64(rv.Value / time.Second),
+				Value: lv.Value > float64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -121,7 +121,7 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Integer](right)
 
 			return &value.Boolean{
-				Value: int64(lv.Value / time.Second) > rv.Value,
+				Value: int64(lv.Value/time.Second) > rv.Value,
 			}, nil
 		case value.FloatType:
 			if right.IsLiteral() {
@@ -132,7 +132,7 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Float](right)
 
 			return &value.Boolean{
-				Value: float64(lv.Value / time.Second) > rv.Value,
+				Value: float64(lv.Value/time.Second) > rv.Value,
 			}, nil
 		case value.RTimeType:
 			rv := value.Unwrap[*value.RTime](right)
@@ -177,7 +177,7 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value < int64(rv.Value / time.Second),
+				Value: lv.Value < int64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -213,7 +213,7 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value < float64(rv.Value / time.Second),
+				Value: lv.Value < float64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -237,7 +237,7 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Integer](right)
 
 			return &value.Boolean{
-				Value: int64(lv.Value / time.Second) < rv.Value,
+				Value: int64(lv.Value/time.Second) < rv.Value,
 			}, nil
 		case value.FloatType:
 			if right.IsLiteral() {
@@ -248,7 +248,7 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Float](right)
 
 			return &value.Boolean{
-				Value: float64(lv.Value / time.Second) < rv.Value,
+				Value: float64(lv.Value/time.Second) < rv.Value,
 			}, nil
 		case value.RTimeType:
 			rv := value.Unwrap[*value.RTime](right)
@@ -293,7 +293,7 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value >= int64(rv.Value / time.Second),
+				Value: lv.Value >= int64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -329,7 +329,7 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value >= float64(rv.Value / time.Second),
+				Value: lv.Value >= float64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -353,7 +353,7 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Integer](right)
 
 			return &value.Boolean{
-				Value: int64(lv.Value / time.Second) >= rv.Value,
+				Value: int64(lv.Value/time.Second) >= rv.Value,
 			}, nil
 		case value.FloatType:
 			if right.IsLiteral() {
@@ -364,7 +364,7 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Float](right)
 
 			return &value.Boolean{
-				Value: float64(lv.Value / time.Second) >= rv.Value,
+				Value: float64(lv.Value/time.Second) >= rv.Value,
 			}, nil
 		case value.RTimeType:
 			rv := value.Unwrap[*value.RTime](right)
@@ -409,7 +409,7 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value <= int64(rv.Value / time.Second),
+				Value: lv.Value <= int64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -445,7 +445,7 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.RTime](right)
 
 			return &value.Boolean{
-				Value: lv.Value <= float64(rv.Value / time.Second),
+				Value: lv.Value <= float64(rv.Value/time.Second),
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -469,7 +469,7 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Integer](right)
 
 			return &value.Boolean{
-				Value: int64(lv.Value / time.Second) <= rv.Value,
+				Value: int64(lv.Value/time.Second) <= rv.Value,
 			}, nil
 		case value.FloatType:
 			if right.IsLiteral() {
@@ -480,7 +480,7 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Float](right)
 
 			return &value.Boolean{
-				Value: float64(lv.Value / time.Second) <= rv.Value,
+				Value: float64(lv.Value/time.Second) <= rv.Value,
 			}, nil
 		case value.RTimeType:
 			rv := value.Unwrap[*value.RTime](right)

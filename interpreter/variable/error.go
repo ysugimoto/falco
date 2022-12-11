@@ -1,9 +1,9 @@
 package variable
 
 import (
-	"time"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -224,7 +224,7 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 	}
 
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Object.Header.Set(name, val.String())
+		v.ctx.Object.Header.Set(match[1], val.String())
 		return nil
 	}
 

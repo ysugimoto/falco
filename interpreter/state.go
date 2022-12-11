@@ -45,3 +45,16 @@ func (s State) String() string {
 		return ""
 	}
 }
+
+var stateMap = map[string]State{
+	"lookup":        LOOKUP,
+	"pass":          PASS,
+	"hash":          HASH,
+	"error":         ERROR,
+	"restart":       RESTART,
+	"deliver":       DELIVER,
+	"fetch":         FETCH,
+	"deliver_stale": DELIVER_STALE,
+	"log":           LOG,
+	"end":           END,
+}

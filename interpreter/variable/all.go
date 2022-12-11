@@ -615,7 +615,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Time{Value: start}, nil
 	}
 
-	if val := v.getFromRegex(name); val == nil {
+	if val := v.getFromRegex(name); val != nil {
 		return val, nil
 	}
 
@@ -661,14 +661,14 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		// all ratecounter variable value returns 1.0 fixed value
 		switch match[1] {
 		case "rate.10s",
-		  "rate.1s",
-		  "rate.60s",
-		  "bucket.10s",
-		  "bucket.20s",
-		  "bucket.30s",
-		  "bucket.40s",
-		  "bucket.50s",
-		  "bucket.60s":
+			"rate.1s",
+			"rate.60s",
+			"bucket.10s",
+			"bucket.20s",
+			"bucket.30s",
+			"bucket.40s",
+			"bucket.50s",
+			"bucket.60s":
 			val = 1.0
 		}
 		return &value.Float{
@@ -750,7 +750,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Request.Header.Set(name, val.String())
+		v.ctx.Request.Header.Set(match[1], val.String())
 		return nil
 	}
 

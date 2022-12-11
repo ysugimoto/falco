@@ -89,7 +89,7 @@ type Boolean struct {
 	Literal bool
 }
 
-func (v *Boolean) String() string  {
+func (v *Boolean) String() string {
 	if v.Value {
 		return "1"
 	}
@@ -112,14 +112,14 @@ func (v *Integer) IsLiteral() bool { return v.Literal }
 func (v *Integer) Copy() Value     { return &Integer{Value: v.Value, Literal: v.Literal} }
 
 type Float struct {
-	Value   float64
-	Literal bool
-	IsNAN bool
+	Value         float64
+	Literal       bool
+	IsNAN         bool
 	IsNegativeInf bool
 	IsPositiveInf bool
 }
 
-func (v *Float) String() string  {
+func (v *Float) String() string {
 	if v.IsNAN {
 		return "NAN"
 	} else if v.IsNegativeInf {
@@ -132,11 +132,11 @@ func (v *Float) String() string  {
 func (v *Float) value()          {}
 func (v *Float) Type() Type      { return FloatType }
 func (v *Float) IsLiteral() bool { return v.Literal }
-func (v *Float) Copy() Value     {
+func (v *Float) Copy() Value {
 	return &Float{
-		Value: v.Value,
-		Literal: v.Literal,
-		IsNAN: v.IsNAN,
+		Value:         v.Value,
+		Literal:       v.Literal,
+		IsNAN:         v.IsNAN,
 		IsNegativeInf: v.IsNegativeInf,
 		IsPositiveInf: v.IsPositiveInf,
 	}
@@ -166,11 +166,11 @@ func (v *Time) IsLiteral() bool { return false }
 func (v *Time) Copy() Value     { return &Time{Value: v.Value} }
 
 type Backend struct {
-	Value *ast.BackendDeclaration
+	Value   *ast.BackendDeclaration
 	Literal bool
 }
 
-func (v *Backend) String() string  {
+func (v *Backend) String() string {
 	if v.Value == nil {
 		return ""
 	}
@@ -182,11 +182,11 @@ func (v *Backend) IsLiteral() bool { return v.Literal }
 func (v *Backend) Copy() Value     { return &Backend{Value: v.Value, Literal: v.Literal} }
 
 type Acl struct {
-	Value *ast.AclDeclaration
+	Value   *ast.AclDeclaration
 	Literal bool
 }
 
-func (v *Acl) String() string  {
+func (v *Acl) String() string {
 	if v.Value == nil {
 		return ""
 	}

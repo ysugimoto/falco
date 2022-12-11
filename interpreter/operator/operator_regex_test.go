@@ -1,9 +1,9 @@
 package operator
 
 import (
+	"net"
 	"testing"
 	"time"
-	"net"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -377,8 +377,8 @@ func TestRegexOperator(t *testing.T) {
 			CIDRs: []*ast.AclCidr{
 				{
 					Inverse: &ast.Boolean{Value: false},
-					IP: &ast.IP{Value: "127.0.0.0"},
-					Mask: &ast.Integer{Value: 16},
+					IP:      &ast.IP{Value: "127.0.0.0"},
+					Mask:    &ast.Integer{Value: 16},
 				},
 			},
 		}

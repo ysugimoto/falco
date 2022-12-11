@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	_ "github.com/k0kubun/pp"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
-	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/function"
+	"github.com/ysugimoto/falco/interpreter/process"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
+func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, error) {
 	var err error
 
 	for _, stmt := range statements {
@@ -46,31 +49,31 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
 			var state State
 			state, err = i.ProcessFunctionCallStatement(t)
 			if state != NONE {
-				return state
+				return state, nil
 			}
 
 		case *ast.CallStatement:
 			var state State
 			state, err = i.ProcessCallStatement(t)
 			if state != NONE {
-				return state
+				return state, nil
 			}
 		case *ast.IfStatement:
 			var state State
 			state, err = i.ProcessIfStatement(t)
 			if state != NONE {
-				return state
+				return state, nil
 			}
 		case *ast.RestartStatement:
 			// restart statement force change state to RESTART
-			return RESTART
+			return RESTART, nil
 		case *ast.ReturnStatement:
 			// When return statement is processed, return its state immediately
-			return i.ProcessReturnStatement(t)
+			return i.ProcessReturnStatement(t), nil
 		case *ast.ErrorStatement:
 			// restart statement force change state to ERROR
 			i.ProcessErrorStatement(t)
-			return ERROR
+			return ERROR, nil
 
 		// Others, no effects
 		case *ast.EsiStatement:
@@ -78,11 +81,10 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) State {
 			break
 		}
 		if err != nil {
-			i.err = errors.WithStack(err)
-			return INTERNAL_ERROR
+			return INTERNAL_ERROR, errors.WithStack(err)
 		}
 	}
-	return NONE
+	return NONE, nil
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
@@ -100,7 +102,7 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	}
 
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Set(i.scope, stmt.Ident.Value, stmt.Operator.Operator, right)
+		err = i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
 	} else {
 		err = i.vars.Set(i.scope, stmt.Ident.Value, stmt.Operator.Operator, right)
 	}
@@ -128,7 +130,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := i.vars.Add(i.scope, stmt.Ident.Value, right);err != nil {
+	if err := i.vars.Add(i.scope, stmt.Ident.Value, right); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -137,7 +139,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	var err error
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Unset(i.scope, stmt.Ident.Value)
+		err = i.localVars.Unset(stmt.Ident.Value)
 	} else {
 		err = i.vars.Unset(i.scope, stmt.Ident.Value)
 	}
@@ -152,7 +154,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	// Alias of unset
 	var err error
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Unset(i.scope, stmt.Ident.Value)
+		err = i.localVars.Unset(stmt.Ident.Value)
 	} else {
 		err = i.vars.Unset(i.scope, stmt.Ident.Value)
 	}
@@ -168,13 +170,13 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, erro
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
 		_, state, err := i.ProcessFunctionSubroutine(sub)
 		if err != nil {
-			return NONE, i.err
+			return NONE, errors.WithStack(err)
 		}
 		return state, nil
 	} else if sub, ok := i.ctx.Subroutines[name]; ok {
-		state := i.ProcessSubroutine(sub)
-		if i.err != nil {
-			return NONE, i.err
+		state, err := i.ProcessSubroutine(sub)
+		if err != nil {
+			return NONE, errors.WithStack(err)
 		}
 		return state, nil
 	}
@@ -195,7 +197,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.logs = append(i.logs, log.String())
+	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, log.String()))
 	return nil
 }
 
@@ -262,16 +264,24 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			state := i.ProcessBlockStatement(stmt.Consequence.Statements)
-			return state, i.err
+			state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+			if err != nil {
+				return NONE, errors.WithStack(err)
+			}
+			return state, nil
 		}
 	case *value.String:
 		if t.Value != "" {
-			state := i.ProcessBlockStatement(stmt.Consequence.Statements)
-			return state, i.err
+			state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+			if err != nil {
+				return NONE, errors.WithStack(err)
+			}
+			return state, nil
 		}
 	default:
-		return NONE, fmt.Errorf("If condition is not boolean")
+		if cond != value.Null {
+			return NONE, fmt.Errorf("If condition is not boolean")
+		}
 	}
 
 	// else if
@@ -284,20 +294,34 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 		switch t := cond.(type) {
 		case *value.Boolean:
 			if t.Value {
-				state := i.ProcessBlockStatement(stmt.Consequence.Statements)
-				return state, i.err
+				state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+				if err != nil {
+					return NONE, errors.WithStack(err)
+				}
+				return state, nil
 			}
 		case *value.String:
 			if t.Value != "" {
-				state := i.ProcessBlockStatement(stmt.Consequence.Statements)
-				return state, i.err
+				state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+				if err != nil {
+					return NONE, errors.WithStack(err)
+				}
+				return state, nil
 			}
 		default:
-			return NONE, fmt.Errorf("If condition is not boolean")
+			if cond != value.Null {
+				return NONE, fmt.Errorf("If condition is not boolean")
+			}
 		}
 	}
 
-	// else
-	state := i.ProcessBlockStatement(stmt.Alternative.Statements)
-	return state, i.err
+	if stmt.Alternative != nil {
+		// else
+		state, err := i.ProcessBlockStatement(stmt.Alternative.Statements)
+		if err != nil {
+			return NONE, errors.WithStack(err)
+		}
+		return state, nil
+	}
+	return NONE, nil
 }

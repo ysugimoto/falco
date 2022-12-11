@@ -117,8 +117,8 @@ type Context struct {
 	BackendResponseTTL                  *value.RTime
 	ObjectGrace                         *value.RTime
 	ObjectTTL                           *value.RTime
-	ObjectStatus *value.Integer
-	ObjectResponse *value.String
+	ObjectStatus                        *value.Integer
+	ObjectResponse                      *value.String
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
@@ -271,4 +271,3 @@ func New(vcl *ast.VCL) (*Context, error) {
 
 	return ctx, nil
 }
-

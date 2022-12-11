@@ -106,7 +106,7 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Object.Header.Set(name, val.String())
+		v.ctx.Object.Header.Set(match[1], val.String())
 		return nil
 	}
 

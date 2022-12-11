@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"io/ioutil"
 	"net/http"
@@ -308,7 +308,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 	}
 
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Response.Header.Set(name, val.String())
+		v.ctx.Response.Header.Set(match[1], val.String())
 		return nil
 	}
 

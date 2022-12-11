@@ -397,11 +397,11 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 	}
 
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		bereq.Header.Set(name, val.String())
+		bereq.Header.Set(match[1], val.String())
 		return nil
 	}
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		beresp.Header.Set(name, val.String())
+		beresp.Header.Set(match[1], val.String())
 		return nil
 	}
 

@@ -5,86 +5,85 @@ import (
 
 	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/simulator/variable"
-	"github.com/ysugimoto/falco/simulator/types"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func TestDeclareStatement(t *testing.T) {
-	tests := []struct{
-		name string
-		decl *ast.DeclareStatement
-		expect variable.Value
+	tests := []struct {
+		name    string
+		decl    *ast.DeclareStatement
+		expect  value.Value
 		isError bool
 	}{
 		{
-			name: "INTEGER variable declaration",
+			name: "INTEGER value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "INTEGER" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "INTEGER"},
 			},
-			expect: &variable.Integer{},
+			expect: &value.Integer{},
 		},
 		{
-			name: "FLOAT variable declaration",
+			name: "FLOAT value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "FLOAT" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "FLOAT"},
 			},
-			expect: &variable.Float{},
+			expect: &value.Float{},
 		},
 		{
-			name: "BOOL variable declaration",
+			name: "BOOL value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "BOOL" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "BOOL"},
 			},
-			expect: &variable.Boolean{},
+			expect: &value.Boolean{},
 		},
 		{
-			name: "BACKEND variable declaration",
+			name: "BACKEND value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "BACKEND" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "BACKEND"},
 			},
-			expect: &variable.Backend{},
+			expect: &value.Backend{},
 		},
 		{
-			name: "IP variable declaration",
+			name: "IP value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "IP" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "IP"},
 			},
-			expect: &variable.IP{},
+			expect: &value.IP{},
 		},
 		{
-			name: "STRING variable declaration",
+			name: "STRING value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "STRING" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "STRING"},
 			},
-			expect: &variable.String{},
+			expect: &value.String{},
 		},
 		{
-			name: "RTIME variable declaration",
+			name: "RTIME value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "RTIME" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "RTIME"},
 			},
-			expect: &variable.RTime{},
+			expect: &value.RTime{},
 		},
 		{
-			name: "TIME variable declaration",
+			name: "TIME value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "TIME" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "TIME"},
 			},
-			expect: &variable.Time{},
+			expect: &value.Time{},
 		},
 		{
-			name: "ACL variable declaration",
+			name: "ACL value declaration",
 			decl: &ast.DeclareStatement{
-				Name: &ast.Ident{ Value: "var.foo" },
-				ValueType: &ast.Ident{ Value: "ACL" },
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "ACL"},
 			},
 			isError: true,
 		},
@@ -92,32 +91,31 @@ func TestDeclareStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		ip := New(nil)
-		err := ip.ProcessDeclareStatement(tt.decl)
+		err := ip.localVars.Declare(tt.decl.Name.Value, tt.decl.ValueType.Value)
 		if err != nil {
 			if !tt.isError {
 				t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 			}
 			continue
 		}
-		v := ip.vars.Get(tt.decl.Name.Value)
-		if v == nil {
-			t.Errorf("%s: %s varible must be declared", tt.name, tt.decl.Name.Value)
+
+		v, err := ip.localVars.Get(tt.decl.Name.Value)
+		if err != nil {
+			t.Errorf("%s: %s varible must be declared: %s", tt.name, tt.decl.Name.Value, err)
 			continue
 		}
-		if v.Value.String() != tt.expect.String() {
-			t.Errorf("%s: declared value mismatch, expect %s, got %s", tt.name, tt.expect, v.Value)
-		}
+		assertValue(t, tt.name, tt.expect, v)
 	}
 }
 
 func TestReturnStatement(t *testing.T) {
 	var exp ast.Expression = &ast.Ident{
 		Value: "pass",
-		Meta: &ast.Meta{},
+		Meta:  &ast.Meta{},
 	}
 	tests := []struct {
-		name string
-		stmt *ast.ReturnStatement
+		name   string
+		stmt   *ast.ReturnStatement
 		expect State
 	}{
 		{
@@ -136,79 +134,4 @@ func TestReturnStatement(t *testing.T) {
 			t.Errorf("%s expects state %s, got %s", tt.name, tt.expect, s)
 		}
 	}
-}
-
-func TestSetStatement(t *testing.T) {
-
-	t.Run("Set HTTP Header", func(t *testing.T) {
-		ip := New(nil)
-		ip.scope = types.RecvScope
-		ip.vars = variable.PredefinedVariables()
-		err := ip.ProcessSetStatement(&ast.SetStatement{
-			Ident: &ast.Ident{
-				Value: "req.http.Foo",
-			},
-			Value: &ast.String{ Value: "foo" },
-		})
-		if err != nil {
-			t.Errorf("Unexpected error: %s", err)
-			return
-		}
-		v := ip.vars.Get("req.http.Foo")
-		if v == nil {
-			t.Errorf("Variable should be exists")
-			return
-		}
-		s := variable.Unwrap[*variable.String](v.Value)
-		if s.Value != "foo" {
-			t.Errorf(`set value should be "foo"`)
-		}
-	})
-
-	t.Run("Set local variable", func(t *testing.T) {
-		ip := New(nil)
-		ip.vars = variable.PredefinedVariables()
-		if err := ip.ProcessDeclareStatement(&ast.DeclareStatement{
-			Name: &ast.Ident{ Value: "var.foo" },
-			ValueType: &ast.Ident{ Value: "STRING" },
-		}); err != nil {
-			t.Errorf("Unexpected error on declaration: %s", err)
-			return
-		}
-
-		err := ip.ProcessSetStatement(&ast.SetStatement{
-			Ident: &ast.Ident{
-				Value: "var.foo",
-			},
-			Value: &ast.String{ Value: "foo" },
-		})
-		if err != nil {
-			t.Errorf("Unexpected error: %s", err)
-			return
-		}
-		v := ip.vars.Get("var.foo")
-		if v == nil {
-			t.Errorf("Variable should be exists")
-			return
-		}
-		s := variable.Unwrap[*variable.String](v.Value)
-		if s.Value != "foo" {
-			t.Errorf(`set value should be "foo"`)
-		}
-	})
-
-	t.Run("Error on undefined variable", func(t *testing.T) {
-		ip := New(nil)
-		ip.vars = variable.PredefinedVariables()
-		err := ip.ProcessSetStatement(&ast.SetStatement{
-			Ident: &ast.Ident{
-				Value: "var.foo",
-			},
-			Value: &ast.String{ Value: "foo" },
-		})
-		if err == nil {
-			t.Errorf("err should be non-nil, but got nil")
-			return
-		}
-	})
 }

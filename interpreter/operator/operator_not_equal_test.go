@@ -1,9 +1,9 @@
 package operator
 
 import (
+	"net"
 	"testing"
 	"time"
-	"net"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/value"

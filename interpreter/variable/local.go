@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -38,7 +37,7 @@ func (v LocalVariables) Declare(name, valueType string) error {
 	return nil
 }
 
-func (v LocalVariables) Get(s context.Scope, name string) (value.Value, error) {
+func (v LocalVariables) Get(name string) (value.Value, error) {
 	if val, ok := v[name]; ok {
 		return val, nil
 	}
@@ -47,7 +46,7 @@ func (v LocalVariables) Get(s context.Scope, name string) (value.Value, error) {
 	))
 }
 
-func (v LocalVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+func (v LocalVariables) Set(name, operator string, val value.Value) error {
 	left, ok := v[name]
 	if !ok {
 		return errors.WithStack(fmt.Errorf(
@@ -62,13 +61,13 @@ func (v LocalVariables) Set(s context.Scope, name, operator string, val value.Va
 	return nil
 }
 
-func (v LocalVariables) Add(s context.Scope, name string, val value.Value) error {
+func (v LocalVariables) Add(name string, val value.Value) error {
 	return errors.WithStack(fmt.Errorf(
 		"Could not add any value into local variable",
 	))
 }
 
-func (v LocalVariables) Unset(s context.Scope, name string) error {
+func (v LocalVariables) Unset(name string) error {
 	if _, ok := v[name]; !ok {
 		return errors.WithStack(fmt.Errorf(
 			"Undeclared variable %s", name,

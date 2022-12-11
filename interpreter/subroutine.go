@@ -5,12 +5,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
-func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) State {
-	i.flows = append(i.flows, sub.Name.Value)
+func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) (State, error) {
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 	// reset all local values and regex capture values
 	defer func() {
 		i.ctx.RegexMatchedValues = make(map[string]*value.String)
@@ -21,7 +22,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) State {
 }
 
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) (value.Value, State, error) {
-	i.flows = append(i.flows, sub.Name.Value)
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -86,6 +87,9 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 			var val value.Value
 			var state State
 			val, state, err = i.ProcessFunctionReturnStatement(t)
+			if err != nil {
+				return val, state, errors.WithStack(err)
+			}
 			// Functional subroutine can return state
 			// https://developer.fastly.com/reference/vcl/subroutines/#returning-a-state
 			if state != NONE {
@@ -111,13 +115,12 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 			break
 		}
 		if err != nil {
-			i.err = errors.WithStack(err)
-			return value.Null, INTERNAL_ERROR, err
+			return value.Null, INTERNAL_ERROR, errors.WithStack(err)
 		}
 	}
 
 	return value.Null, NONE, errors.WithStack(fmt.Errorf(
-		"Functioncal subroutine %s may not return any values", sub.Name.Value,
+		"Functioncal subroutine %s did not return any values", sub.Name.Value,
 	))
 }
 
@@ -131,5 +134,16 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 			"Functioncal subroutine only can return value only accepts a literal value",
 		))
 	}
-	return val, NONE, nil
+
+	switch t := val.(type) {
+	case *value.Ident:
+		if v, ok := stateMap[t.Value]; ok {
+			return value.Null, v, nil
+		}
+		return value.Null, NONE, errors.WithStack(fmt.Errorf(
+			"Unexpected return state value: %s", t.Value,
+		))
+	default:
+		return val, NONE, nil
+	}
 }

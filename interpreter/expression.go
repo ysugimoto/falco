@@ -6,14 +6,15 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/function"
 )
 
-func (i *Interpreter) IdentValue(val string) (value.Value, error) {
+func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
 	if v, ok := i.ctx.Backends[val]; ok {
 		return &value.Backend{Value: v, Literal: true}, nil
 	} else if v, ok := i.ctx.Acls[val]; ok {
@@ -27,13 +28,17 @@ func (i *Interpreter) IdentValue(val string) (value.Value, error) {
 	} else if _, ok := i.ctx.Ratecounters[val]; ok {
 		return &value.Ident{Value: val, Literal: true}, nil
 	} else if strings.HasPrefix(val, "var.") {
-		if v, err := i.localVars.Get(i.scope, val); err != nil {
+		if v, err := i.localVars.Get(val); err != nil {
 			return value.Null, errors.WithStack(err)
 		} else {
-			return  v, nil
+			return v, nil
 		}
 	} else if v, err := i.vars.Get(i.scope, val); err != nil {
-		return value.Null, errors.WithStack(err)
+		if withCondition {
+			return value.Null, nil
+		} else {
+			return value.Null, errors.WithStack(err)
+		}
 	} else {
 		return v, nil
 	}
@@ -50,7 +55,7 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
 	case *ast.Ident:
-		return i.IdentValue(t.Value)
+		return i.IdentValue(t.Value, withCondition)
 	case *ast.IP:
 		return &value.IP{Value: net.ParseIP(t.Value), Literal: true}, nil
 	case *ast.Boolean:
@@ -102,8 +107,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 	case "!":
 		switch t := v.(type) {
 		case *value.Boolean:
-			t.Value = !t.Value
-			return t, nil
+			return &value.Boolean{Value: !t.Value}, nil
 		case *value.String:
 			// If withCondition is enabled, STRING could be convert to BOOL
 			if !withCondition {
@@ -168,6 +172,9 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	default:
+		if cond == value.Null {
+			return i.ProcessExpression(exp.Alternative, false)
+		}
 		return value.Null, fmt.Errorf("If condition is not boolean")
 	}
 

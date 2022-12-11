@@ -1,12 +1,12 @@
 package interpreter
 
 import (
-	"github.com/ysugimoto/falco/simulator/variable"
+	"github.com/ysugimoto/falco/interpreter/variable"
 	"time"
 )
 
 type CacheItem struct {
-	Vars    variable.Variables
+	Vars    variable.Variable
 	Expires time.Time
 }
 

@@ -5,17 +5,18 @@ import (
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/simulator/variable"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func TestPrefixExpression(t *testing.T) {
 
 	t.Run("Bang prefix expression", func(t *testing.T) {
-		tests := []struct{
-			name string
-			expression *ast.PrefixExpression
-			expect variable.Value
-			isError bool
+		tests := []struct {
+			name          string
+			expression    *ast.PrefixExpression
+			expect        value.Value
+			isError       bool
 			withCondition bool
 		}{
 			{
@@ -26,7 +27,7 @@ func TestPrefixExpression(t *testing.T) {
 						Value: true,
 					},
 				},
-				expect: &variable.Boolean{
+				expect: &value.Boolean{
 					Value: false,
 				},
 			},
@@ -48,7 +49,7 @@ func TestPrefixExpression(t *testing.T) {
 						Value: "foo",
 					},
 				},
-				expect: &variable.Boolean{
+				expect: &value.Boolean{
 					Value: false,
 				},
 				withCondition: true,
@@ -61,7 +62,7 @@ func TestPrefixExpression(t *testing.T) {
 						Value: "",
 					},
 				},
-				expect: &variable.Boolean{
+				expect: &value.Boolean{
 					Value: true,
 				},
 				withCondition: true,
@@ -86,11 +87,11 @@ func TestPrefixExpression(t *testing.T) {
 	})
 
 	t.Run("Minus prefix expression", func(t *testing.T) {
-		tests := []struct{
-			name string
+		tests := []struct {
+			name       string
 			expression *ast.PrefixExpression
-			expect variable.Value
-			isError bool
+			expect     value.Value
+			isError    bool
 		}{
 			{
 				name: "minus integer",
@@ -100,8 +101,9 @@ func TestPrefixExpression(t *testing.T) {
 						Value: 100,
 					},
 				},
-				expect: &variable.Integer{
-					Value: -100,
+				expect: &value.Integer{
+					Value:   -100,
+					Literal: true,
 				},
 			},
 			{
@@ -112,8 +114,9 @@ func TestPrefixExpression(t *testing.T) {
 						Value: 100.0,
 					},
 				},
-				expect: &variable.Float{
-					Value: -100.0,
+				expect: &value.Float{
+					Value:   -100.0,
+					Literal: true,
 				},
 			},
 			{
@@ -124,8 +127,9 @@ func TestPrefixExpression(t *testing.T) {
 						Value: "1d",
 					},
 				},
-				expect: &variable.RTime{
-					Value: -24 * time.Hour,
+				expect: &value.RTime{
+					Value:   -24 * time.Hour,
+					Literal: true,
 				},
 			},
 			{
@@ -161,11 +165,11 @@ func TestPrefixExpression(t *testing.T) {
 func TestGroupedExpression(t *testing.T) {
 
 	t.Run("Single expression", func(t *testing.T) {
-		tests := []struct{
-			name string
+		tests := []struct {
+			name       string
 			expression *ast.GroupedExpression
-			expect variable.Value
-			isError bool
+			expect     value.Value
+			isError    bool
 		}{
 			{
 				name: "minus integer",
@@ -174,8 +178,9 @@ func TestGroupedExpression(t *testing.T) {
 						Value: 100,
 					},
 				},
-				expect: &variable.Integer{
-					Value: 100,
+				expect: &value.Integer{
+					Value:   100,
+					Literal: true,
 				},
 			},
 			{
@@ -188,7 +193,7 @@ func TestGroupedExpression(t *testing.T) {
 						},
 					},
 				},
-				expect: &variable.Boolean{
+				expect: &value.Boolean{
 					Value: true,
 				},
 			},
@@ -219,8 +224,8 @@ func TestIfExpression(t *testing.T) {
 sub vcl_recv {
 	set req.http.Foo = if(req.http.Bar, "yes", "no");
 }`
-		assertInterpreter(t, vcl, map[string]variable.Value{
-			"req.http.Foo": &variable.String{ Value: "no" },
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.Foo": &value.String{Value: "no"},
 		})
 	})
 
@@ -229,8 +234,8 @@ sub vcl_recv {
 sub vcl_recv {
 	set req.http.Foo = if(!req.http.Bar, "yes", "no");
 }`
-		assertInterpreter(t, vcl, map[string]variable.Value{
-			"req.http.Foo": &variable.String{ Value: "yes" },
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.Foo": &value.String{Value: "yes"},
 		})
 	})
 }
@@ -240,7 +245,7 @@ func TestProcessExpression(t *testing.T) {
 sub vcl_recv {
 	set req.http.Foo = "yes";
 }`
-	assertInterpreter(t, vcl, map[string]variable.Value{
-		"req.http.Foo": &variable.String{ Value: "yes" },
+	assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+		"req.http.Foo": &value.String{Value: "yes"},
 	})
 }

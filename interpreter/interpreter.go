@@ -6,83 +6,104 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
 type Interpreter struct {
-	vars  variable.Variable
+	vars      variable.Variable
 	localVars variable.LocalVariables
-	scope context.Scope
+	scope     context.Scope
 
-	ctx      *context.Context
-	flows    []string
-	logs     []string
-	restarts int
-	err      error
+	ctx     *context.Context
+	process *process.Process
 }
 
 func New(ctx *context.Context) *Interpreter {
 	return &Interpreter{
-		ctx:   ctx,
-		scope: context.InitScope,
+		ctx:       ctx,
+		scope:     context.InitScope,
 		localVars: variable.LocalVariables{},
+		process:   process.New(),
 	}
 }
 
-func (i *Interpreter) restart() {
-	i.restarts++
+func (i *Interpreter) restart() error {
+	i.process.Restarts++
 	// Requests are limited to three restarts in Fastly
 	// https://developer.fastly.com/reference/vcl/statements/restart/
-	if i.restarts == 3 {
-		i.err = errors.WithStack(
+	if i.process.Restarts == 3 {
+		return errors.WithStack(
 			fmt.Errorf("Max restart limit exceeded. Requests are limited to three restarts"),
 		)
-		return
 	}
-	i.ProcessRecv()
+	if err := i.ProcessRecv(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
-	i.ProcessRecv()
-	return i.err
+	i.ctx.Request = r
+	if err := i.ProcessRecv(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessRecv() {
+func (i *Interpreter) ProcessRecv() error {
 	i.scope = context.RecvScope
 	i.vars = variable.NewRecvScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
+	state := LOOKUP
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]; ok {
-		state := i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
 		switch state {
 		case PASS:
-			i.ProcessHash()
-			i.ProcessPass()
+			if err := i.ProcessHash(); err != nil {
+				return errors.WithStack(err)
+			}
+			err = i.ProcessPass()
 		case ERROR:
-			i.ProcessError()
+			err = i.ProcessError()
 		case RESTART:
-			i.restart()
+			err = i.restart()
 		case LOOKUP, NONE:
-			i.ProcessHash()
+			if err := i.ProcessHash(); err != nil {
+				return errors.WithStack(err)
+			}
 			if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
-				i.ProcessHit(v)
+				err = i.ProcessHit(v)
 			} else {
-				i.ProcessMiss()
+				err = i.ProcessMiss()
 			}
 		default:
-			i.err = errors.WithStack(
+			return errors.WithStack(
 				fmt.Errorf("Unexpected state %s returned in recv", state),
 			)
 		}
 	} else {
-		i.ProcessHash()
-		i.ProcessPass()
+		if err := i.ProcessHash(); err != nil {
+			return errors.WithStack(err)
+		}
+		err = i.ProcessPass()
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessHash() {
+func (i *Interpreter) ProcessHash() error {
 	i.scope = context.HashScope
 	i.vars = variable.NewHashScopeVariables(i.ctx)
 
@@ -95,19 +116,26 @@ func (i *Interpreter) ProcessHash() {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		i.ProcessSubroutine(sub)
+		if _, err := i.ProcessSubroutine(sub); err != nil {
+			return errors.WithStack(err)
+		}
 	}
+	return nil
 }
 
-func (i *Interpreter) ProcessMiss() {
+func (i *Interpreter) ProcessMiss() error {
 	i.scope = context.MissScope
 	i.vars = variable.NewMissScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := FETCH
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = FETCH
 		}
@@ -115,29 +143,37 @@ func (i *Interpreter) ProcessMiss() {
 
 	switch state {
 	case DELIVER_STALE:
-		i.ProcessDeliver()
+		err = i.ProcessDeliver()
 	case PASS:
-		i.ProcessPass()
+		err = i.ProcessPass()
 	case ERROR:
-		i.ProcessError()
+		err = i.ProcessError()
 	case FETCH:
-		i.ProcessFetch()
+		err = i.ProcessFetch()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Miss", state),
 		)
 	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessHit(c *CacheItem) {
+func (i *Interpreter) ProcessHit(c *CacheItem) error {
 	i.scope = context.HitScope
 	i.vars = variable.NewHitScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := DELIVER
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = DELIVER
 		}
@@ -145,29 +181,38 @@ func (i *Interpreter) ProcessHit(c *CacheItem) {
 
 	switch state {
 	case DELIVER:
-		i.ProcessDeliver()
+		err = i.ProcessDeliver()
 	case PASS:
-		i.ProcessPass()
+		err = i.ProcessPass()
 	case ERROR:
-		i.ProcessError()
+		err = i.ProcessError()
 	case RESTART:
-		i.restart()
+		err = i.restart()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Hit", state),
 		)
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessPass() {
+func (i *Interpreter) ProcessPass() error {
 	i.scope = context.PassScope
 	i.vars = variable.NewPassScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := FETCH
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = FETCH
 		}
@@ -175,25 +220,34 @@ func (i *Interpreter) ProcessPass() {
 
 	switch state {
 	case FETCH:
-		i.ProcessFetch()
+		err = i.ProcessFetch()
 	case ERROR:
-		i.ProcessError()
+		err = i.ProcessError()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Pass", state),
 		)
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessFetch() {
+func (i *Interpreter) ProcessFetch() error {
 	i.scope = context.FetchScope
 	i.vars = variable.NewFetchScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := DELIVER
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = DELIVER
 		}
@@ -201,29 +255,38 @@ func (i *Interpreter) ProcessFetch() {
 
 	switch state {
 	case DELIVER, DELIVER_STALE:
-		i.ProcessDeliver()
+		err = i.ProcessDeliver()
 	case PASS:
-		i.ProcessPass()
+		err = i.ProcessPass()
 	case ERROR:
-		i.ProcessError()
+		err = i.ProcessError()
 	case RESTART:
-		i.restart()
+		err = i.restart()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Fetch", state),
 		)
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessError() {
+func (i *Interpreter) ProcessError() error {
 	i.scope = context.ErrorScope
 	i.vars = variable.NewErrorScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := DELIVER
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = DELIVER
 		}
@@ -231,25 +294,34 @@ func (i *Interpreter) ProcessError() {
 
 	switch state {
 	case DELIVER:
-		i.ProcessFetch()
+		err = i.ProcessFetch()
 	case RESTART:
-		i.restart()
+		err = i.restart()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Error", state),
 		)
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessDeliver() {
+func (i *Interpreter) ProcessDeliver() error {
 	i.scope = context.DeliverScope
 	i.vars = variable.NewDeliverScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
+	var err error
 	state := LOG
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]; ok {
-		state = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if state == NONE {
 			state = LOG
 		}
@@ -257,23 +329,31 @@ func (i *Interpreter) ProcessDeliver() {
 
 	switch state {
 	case RESTART:
-		i.restart()
+		err = i.restart()
 	case LOG:
-		i.ProcessLog()
+		err = i.ProcessLog()
 	default:
-		i.err = errors.WithStack(
+		return errors.WithStack(
 			fmt.Errorf("Unexpected state %s returned in Deliver", state),
 		)
 	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (i *Interpreter) ProcessLog() {
+func (i *Interpreter) ProcessLog() error {
 	i.scope = context.LogScope
 	i.vars = variable.NewLogScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		i.ProcessSubroutine(sub)
+		if _, err := i.ProcessSubroutine(sub); err != nil {
+			return errors.WithStack(err)
+		}
 	}
+	return nil
 }
