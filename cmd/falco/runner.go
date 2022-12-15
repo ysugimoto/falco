@@ -61,8 +61,9 @@ type Fetcher interface {
 type RunMode int
 
 const (
-	RunModeLint RunMode = 0x000001
-	RunModeStat RunMode = 0x000010
+	RunModeLint     RunMode = 0x000001
+	RunModeStat     RunMode = 0x000010
+	RunModeSimulate RunMode = 0x000100
 )
 
 type Runner struct {

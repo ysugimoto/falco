@@ -7,11 +7,15 @@ import (
 	"strings"
 
 	"encoding/json"
+	"net/http"
 
 	"github.com/fatih/color"
+	"github.com/k0kubun/pp"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/interpreter"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/terraform"
 )
 
@@ -32,6 +36,7 @@ var (
 const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
+	subcommandSimulate  = "simulate"
 )
 
 type multiStringFlags []string
@@ -147,6 +152,8 @@ func main() {
 			resolvers = NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
+	case subcommandSimulate:
+		resolvers, err = NewFileResolvers(fs.Arg(1), c)
 	case subcommandLint:
 		// "lint" command provides single file of service, then resolvers size is always 1
 		resolvers, err = NewFileResolvers(fs.Arg(1), c)
@@ -174,7 +181,10 @@ func main() {
 		}
 
 		var exitErr error
-		if c.Stats {
+
+		if fs.Arg(0) == subcommandSimulate {
+			exitErr = runSimulator(runner)
+		} else if c.Stats {
 			exitErr = runStats(runner, c.Json)
 		} else {
 			exitErr = runLint(runner)
@@ -233,6 +243,47 @@ func runLint(runner *Runner) error {
 		return ErrExit
 	}
 	return nil
+}
+
+func runSimulator(runner *Runner) error {
+	main, err := runner.resolver.MainVCL()
+	if err != nil {
+		return err
+	}
+	vcl, err := runner.parseVCL(main.Name, main.Data)
+	if err != nil {
+		return err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	for _, snip := range runner.snippets {
+		s, err := runner.parseVCL(snip.Name, snip.Data)
+		if err != nil {
+			return err
+		}
+		vcl.Statements = append(s.Statements, vcl.Statements...)
+	}
+
+	vcl.Statements, err = runner.resolveStatements(vcl.Statements)
+	if err != nil {
+		return err
+	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		c, err := icontext.New(vcl)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ip := interpreter.New(c)
+		if err := ip.Process(w, r); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		pp.Println(ip.Result())
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("simulated"))
+	})
+	return http.ListenAndServe(":3124", nil)
 }
 
 func runStats(runner *Runner, printJson bool) error {

@@ -3,6 +3,7 @@ package variable
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"math"
 	"net"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/base64"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -377,7 +377,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 					"Could not read request body",
 				))
 			}
-			req.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
+			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(
@@ -397,7 +397,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 					"Could not read request body",
 				))
 			}
-			req.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
+			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(

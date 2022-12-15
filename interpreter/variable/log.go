@@ -3,12 +3,12 @@ package variable
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
 	"time"
 
-	"io/ioutil"
 	"net/http"
 	"net/netip"
 
@@ -41,7 +41,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return value.Null, errors.WithStack(err)
 		}
 		body := buf.Bytes()
-		bereq.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+		bereq.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: int64(len(body))}, nil
 
 	case "bereq.bytes_written":
@@ -147,7 +147,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		if err != nil {
 			return value.Null, errors.WithStack(err)
 		}
-		req.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+		req.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: n}, nil
 	case "req.bytes_read":
 		var readBytes int64
@@ -161,7 +161,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		if err != nil {
 			return value.Null, errors.WithStack(err)
 		}
-		req.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+		req.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		readBytes += n
 		return &value.Integer{Value: readBytes}, nil
 	// Digest ratio will return fixed value
@@ -353,7 +353,7 @@ func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Response.Body = ioutil.NopCloser(strings.NewReader(left.Value))
+		v.ctx.Response.Body = io.NopCloser(strings.NewReader(left.Value))
 		return nil
 	case "resp.status":
 		left := &value.Integer{Value: int64(v.ctx.Response.StatusCode)}

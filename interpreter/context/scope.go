@@ -44,3 +44,11 @@ func (s Scope) String() string {
 		return "UNKNOWN"
 	}
 }
+
+func (s Scope) Is(scopes ...Scope) bool {
+	var scope int
+	for _, v := range scopes {
+		scope = scope | int(v)
+	}
+	return (int(s) & scope) > 0
+}

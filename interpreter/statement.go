@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	_ "github.com/k0kubun/pp"
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,8 +36,18 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 		case *ast.LogStatement:
 			err = i.ProcessLogStatement(t)
 		case *ast.SyntheticStatement:
+			if !i.scope.Is(context.ErrorScope) {
+				return NONE, errors.WithStack(fmt.Errorf(
+					"synthetic statement is only available in ERROR scope",
+				))
+			}
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
+			if !i.scope.Is(context.ErrorScope) {
+				return NONE, errors.WithStack(fmt.Errorf(
+					"synthetic.base64 statement is only available in ERROR scope",
+				))
+			}
 			err = i.ProcessSyntheticBase64Statement(t)
 
 		// TODO: implement
@@ -51,7 +63,6 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			if state != NONE {
 				return state, nil
 			}
-
 		case *ast.CallStatement:
 			var state State
 			state, err = i.ProcessCallStatement(t)
@@ -65,19 +76,36 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 				return state, nil
 			}
 		case *ast.RestartStatement:
+			if !i.scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
+				return NONE, errors.WithStack(fmt.Errorf(
+					"restart statement is only available in RECV, HIT, FETCH, ERROR, and DELIVER scope",
+				))
+			}
+
 			// restart statement force change state to RESTART
 			return RESTART, nil
 		case *ast.ReturnStatement:
 			// When return statement is processed, return its state immediately
 			return i.ProcessReturnStatement(t), nil
 		case *ast.ErrorStatement:
+			if !i.scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
+				return NONE, errors.WithStack(fmt.Errorf(
+					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope",
+				))
+			}
+
 			// restart statement force change state to ERROR
-			i.ProcessErrorStatement(t)
+			if err := i.ProcessErrorStatement(t); err != nil {
+				return ERROR, errors.WithStack(err)
+			}
 			return ERROR, nil
 
 		// Others, no effects
 		case *ast.EsiStatement:
 			// Nothing to do, actually enable ESI in origin request
+			if err := i.ProcessEsiStatement(t); err != nil {
+				return NONE, errors.WithStack(err)
+			}
 			break
 		}
 		if err != nil {
@@ -183,13 +211,23 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, erro
 	return NONE, fmt.Errorf("Call subroutine %s is not defined", name)
 }
 
-func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) {
+func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 	code, _ := i.ProcessExpression(stmt.Code, false)
 	arg, _ := i.ProcessExpression(stmt.Argument, false)
 
 	// set obj.status and obj.response variable internally
-	assign.Assign(i.ctx.ObjectStatus, code)
-	assign.Assign(i.ctx.ObjectResponse, arg)
+	if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (i *Interpreter) ProcessEsiStatement(stmt *ast.EsiStatement) error {
+	// TODO: set flag of enabling ESI
+	return nil
 }
 
 func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
@@ -202,21 +240,31 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 }
 
 func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) error {
-	value, err := i.ProcessExpression(stmt.Value, false)
+	val, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return assign.Assign(i.ctx.ObjectResponse, value)
+	v := &value.String{}
+	if err := assign.Assign(v, val); err != nil {
+		return errors.WithStack(err)
+	}
+	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	return nil
 }
 
 func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) error {
-	value, err := i.ProcessExpression(stmt.Value, false)
+	val, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return assign.Assign(i.ctx.ObjectResponse, value)
+	v := &value.String{}
+	if err := assign.Assign(v, val); err != nil {
+		return errors.WithStack(err)
+	}
+	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	return nil
 }
 
 func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement) (State, error) {

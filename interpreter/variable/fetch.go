@@ -2,9 +2,9 @@ package variable
 
 import (
 	"bytes"
+	"io"
 	"strings"
 
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -85,7 +85,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 			return value.Null, errors.WithStack(err)
 		}
 		body := buf.Bytes()
-		bereq.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
+		bereq.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: int64(len(body))}, nil
 
 	case "bereq.bytes_written":
@@ -162,7 +162,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case "beresp.brotli":
 		return v.ctx.BackendResponseBrotli, nil
 	case "beresp.cacheable":
-		return v.ctx.BackendResponseCachable, nil
+		return v.ctx.BackendResponseCacheable, nil
 	case "beresp.do_esi":
 		return v.ctx.BackendResponseDoESI, nil
 	case "beresp.do_stream":

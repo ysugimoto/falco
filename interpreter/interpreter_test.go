@@ -5,9 +5,11 @@ import (
 
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 
 	"github.com/google/go-cmp/cmp"
 	_ "github.com/k0kubun/pp"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/lexer"
@@ -15,6 +17,19 @@ import (
 )
 
 func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	}))
+	// server.EnableHTTP2 = true
+	defer server.Close()
+
+	parsed, err := url.Parse(server.URL)
+	if err != nil {
+		t.Errorf("Test server URL parsing error: %s", err)
+		return
+	}
+
 	p, err := parser.New(lexer.NewFromString(vcl)).ParseVCL()
 	if err != nil {
 		t.Errorf("VCL parsing error: %s", err)
@@ -25,6 +40,40 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 		t.Errorf("Context creation error: %s", err)
 		return
 	}
+
+	// set default backend
+	ctx.Backend = &value.Backend{
+		Value: &ast.BackendDeclaration{
+			Name: &ast.Ident{Value: "example"},
+			Properties: []*ast.BackendProperty{
+				{
+					Key: &ast.Ident{
+						Value: "host",
+					},
+					Value: &ast.String{
+						Value: parsed.Hostname(),
+					},
+				},
+				{
+					Key: &ast.Ident{
+						Value: "ssl",
+					},
+					Value: &ast.Boolean{
+						Value: false,
+					},
+				},
+				{
+					Key: &ast.Ident{
+						Value: "port",
+					},
+					Value: &ast.String{
+						Value: parsed.Port(),
+					},
+				},
+			},
+		},
+	}
+
 	ip := New(ctx)
 	if err := ip.Process(
 		httptest.NewRecorder(),

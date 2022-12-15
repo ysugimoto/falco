@@ -1,7 +1,12 @@
 package variable
 
 import (
+	"bytes"
+	"io"
+	"strings"
 	"time"
+
+	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -43,14 +48,19 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case "obj.proto":
 		return &value.String{Value: v.ctx.BackendResponse.Proto}, nil
 	case "obj.response":
-		return v.ctx.ObjectResponse, nil
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(v.ctx.Object.Body); err != nil {
+			return value.Null, errors.WithStack(err)
+		}
+		v.ctx.Object.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+		return &value.String{Value: buf.String()}, nil
 	case "obj.stale_if_error":
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
 	case "obj.stale_while_revalidate":
 		return &value.RTime{Value: 60 * time.Second}, nil
 	case "obj.status":
-		return v.ctx.ObjectStatus, nil
+		return &value.Integer{Value: int64(v.ctx.Object.StatusCode)}, nil
 	case "obj.ttl":
 		return v.ctx.ObjectTTL, nil
 	// Digest ratio will return fixed value
@@ -89,14 +99,15 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		return nil
 	case "obj.response":
-		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
-			return errors.WithStack(err)
-		}
+		v.ctx.Object.Body = io.NopCloser(strings.NewReader(val.String()))
 		return nil
 	case "obj.status":
-		if err := doAssign(v.ctx.ObjectStatus, operator, val); err != nil {
+		i := &value.Integer{Value: 0}
+		if err := doAssign(i, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.Object.StatusCode = int(i.Value)
+		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case "obj.ttl":
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {

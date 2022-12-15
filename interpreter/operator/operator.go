@@ -571,6 +571,7 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 		)
 	}
 }
+
 func NotRegex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 	b, err := Regex(ctx, left, right)
 	if err != nil {

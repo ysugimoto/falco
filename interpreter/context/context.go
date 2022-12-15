@@ -103,7 +103,7 @@ type Context struct {
 	FirstByteTimeout                    *value.RTime
 	BackendResponseGzip                 *value.Boolean
 	BackendResponseBrotli               *value.Boolean
-	BackendResponseCachable             *value.Boolean
+	BackendResponseCacheable            *value.Boolean
 	BackendResponseDoESI                *value.Boolean
 	BackendResponseDoStream             *value.Boolean
 	BackendResponseGrace                *value.RTime
@@ -137,6 +137,8 @@ func New(vcl *ast.VCL) (*Context, error) {
 		Gotos:               make(map[string]*ast.GotoStatement),
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
 
+		State:                               "NONE",
+		Backend:                             nil,
 		MaxStaleIfError:                     &value.RTime{Value: defaultStaleDuration},
 		MaxStaleWhileRevalidate:             &value.RTime{Value: defaultStaleDuration},
 		Stale:                               &value.Boolean{},
@@ -178,7 +180,7 @@ func New(vcl *ast.VCL) (*Context, error) {
 		FirstByteTimeout:                    &value.RTime{Value: 15 * time.Second},
 		BackendResponseGzip:                 &value.Boolean{},
 		BackendResponseBrotli:               &value.Boolean{},
-		BackendResponseCachable:             &value.Boolean{},
+		BackendResponseCacheable:            &value.Boolean{},
 		BackendResponseDoESI:                &value.Boolean{},
 		BackendResponseDoStream:             &value.Boolean{},
 		BackendResponseGrace:                &value.RTime{},
@@ -192,6 +194,8 @@ func New(vcl *ast.VCL) (*Context, error) {
 		BackendResponseTTL:                  &value.RTime{},
 		ObjectGrace:                         &value.RTime{},
 		ObjectTTL:                           &value.RTime{},
+		ObjectStatus:                        &value.Integer{Value: 500},
+		ObjectResponse:                      &value.String{Value: "error"},
 
 		RegexMatchedValues: make(map[string]*value.String),
 	}
@@ -206,6 +210,9 @@ func New(vcl *ast.VCL) (*Context, error) {
 			}
 			ctx.Acls[t.Name.Value] = t
 		case *ast.BackendDeclaration:
+			if ctx.Backend == nil {
+				ctx.Backend = &value.Backend{Value: t}
+			}
 			if _, ok := ctx.Backends[t.Name.Value]; ok {
 				return nil, errors.WithStack(fmt.Errorf(
 					"Backend %s is duplicated", t.Name.Value,
