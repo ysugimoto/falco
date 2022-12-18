@@ -16,5 +16,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/
 func H2_push(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function h2.push is not impelemented"))
 }

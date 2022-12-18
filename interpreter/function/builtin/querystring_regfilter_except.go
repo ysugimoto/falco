@@ -16,5 +16,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-regfilter-except/
 func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function querystring.regfilter_except is not impelemented"))
 }

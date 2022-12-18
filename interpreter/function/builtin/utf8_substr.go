@@ -17,5 +17,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/
 func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function utf8.substr is not impelemented"))
 }

@@ -16,5 +16,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/
 func Std_count(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function std.count is not impelemented"))
 }

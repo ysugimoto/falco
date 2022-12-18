@@ -16,5 +16,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-extract-bits/
 func Addr_extract_bits(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function addr.extract_bits is not impelemented"))
 }

@@ -15,5 +15,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/tls-and-http/h3-alt-svc/
 func H3_alt_svc(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function h3.alt_svc is not impelemented"))
 }

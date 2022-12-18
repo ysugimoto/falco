@@ -16,5 +16,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version5/
 func Uuid_version5(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function uuid.version5 is not impelemented"))
 }

@@ -111,7 +111,7 @@ import (
 // Reference: {{ .Reference }}
 func {{ .Name }}(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function {{ .Original }} is not impelemented"))
 }
 
 `

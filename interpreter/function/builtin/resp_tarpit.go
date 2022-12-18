@@ -17,5 +17,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/resp-tarpit/
 func Resp_tarpit(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function resp.tarpit is not impelemented"))
 }

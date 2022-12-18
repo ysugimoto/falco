@@ -15,5 +15,5 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-x500/
 func Uuid_x500(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Need to be implemented
-	return value.Null, errors.WithStack(fmt.Errorf("Not Impelemented"))
+	return value.Null, errors.WithStack(fmt.Errorf("Builtin function uuid.x500 is not impelemented"))
 }
