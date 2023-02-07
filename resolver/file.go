@@ -1,4 +1,4 @@
-package main
+package resolver
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ type FileResolver struct {
 	includePaths []string
 }
 
-func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
+func NewFileResolvers(main string, includePaths []string) ([]Resolver, error) {
 	if main == "" {
 		return nil, ErrEmptyMain
 	}
@@ -34,20 +34,20 @@ func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
 		return nil, errors.New(fmt.Sprintf("Failed to get absolute path: %s", err.Error()))
 	}
 
-	var includePaths []string
+	var ips []string
 	// Add include paths as absolute
-	for i := range c.IncludePaths {
-		p, err := filepath.Abs(c.IncludePaths[i])
+	for i := range includePaths {
+		p, err := filepath.Abs(includePaths[i])
 		if err == nil {
-			includePaths = append(includePaths, p)
+			ips = append(ips, p)
 		}
 	}
-	includePaths = append(includePaths, filepath.Dir(abs))
+	ips = append(ips, filepath.Dir(abs))
 
 	return []Resolver{
 		&FileResolver{
 			main:         abs,
-			includePaths: includePaths,
+			includePaths: ips,
 		},
 	}, nil
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -67,7 +68,7 @@ const (
 
 type Runner struct {
 	transformers []*Transformer
-	resolver     Resolver
+	resolver     resolver.Resolver
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
 	snippets     []snippetItem
@@ -83,7 +84,7 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
+func NewRunner(rz resolver.Resolver, c *Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
 		resolver:  rz,
 		context:   context.New(),
@@ -250,7 +251,7 @@ func (r *Runner) Run() (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(v *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
 	vcl, err := r.parseVCL(v.Name, v.Data)
 	if err != nil {
 		return nil, err

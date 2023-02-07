@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
 
@@ -13,18 +14,18 @@ type mockResolver struct {
 	main       string
 }
 
-func (m *mockResolver) MainVCL() (*VCL, error) {
-	return &VCL{
+func (m *mockResolver) MainVCL() (*resolver.VCL, error) {
+	return &resolver.VCL{
 		Name: "main.vcl",
 		Data: m.main,
 	}, nil
 }
 
-func (m *mockResolver) Resolve(module string) (*VCL, error) {
+func (m *mockResolver) Resolve(module string) (*resolver.VCL, error) {
 	if v, ok := m.dependency[module]; !ok {
 		return nil, errors.New(module + " is not defined")
 	} else {
-		return &VCL{
+		return &resolver.VCL{
 			Name: module + ".vcl",
 			Data: v,
 		}, nil
@@ -35,7 +36,7 @@ func (m *mockResolver) Name() string {
 	return ""
 }
 
-func loadFromTfJson(fileName string, t *testing.T) ([]Resolver, Fetcher) {
+func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher) {
 	buf, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
@@ -46,7 +47,7 @@ func loadFromTfJson(fileName string, t *testing.T) ([]Resolver, Fetcher) {
 		t.Fatalf("Unexpected error %s unarshalling %s ", fileName, err)
 	}
 
-	rslv := NewTerraformResolver(services)
+	rslv := resolver.NewTerraformResolver(services)
 	f := terraform.NewTerraformFetcher(services)
 	return rslv, f
 }
@@ -284,7 +285,7 @@ func TestRepositoryExamples(t *testing.T) {
 	c := &Config{V: true}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resolvers, err := NewFileResolvers(tt.fileName, c)
+			resolvers, err := resolver.NewFileResolvers(tt.fileName, c.IncludePaths)
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
