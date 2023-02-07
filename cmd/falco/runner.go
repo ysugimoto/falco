@@ -71,7 +71,7 @@ type Runner struct {
 	resolver     resolver.Resolver
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
-	snippets     []snippetItem
+	snippets     *context.FastlySnippet
 
 	level Level
 
@@ -124,7 +124,7 @@ func NewRunner(rz resolver.Resolver, c *Config, f Fetcher) (*Runner, error) {
 		if err != nil {
 			writeln(red, err.Error())
 		}
-		r.snippets = append(r.snippets, snippets...)
+		r.snippets = snippets
 	}
 
 	// Check transformer exists and format to absolute path
@@ -215,25 +215,8 @@ func (r *Runner) Transform(vcl *plugin.VCL) error {
 	return nil
 }
 
-func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
-	lx := lexer.NewFromString(code, lexer.WithFile(name))
-	p := parser.New(lx)
-	vcl, err := p.ParseVCL()
-	if err != nil {
-		lx.NewLine()
-		pe, ok := errors.Cause(err).(*parser.ParseError)
-		if ok {
-			r.printParseError(lx, pe)
-		}
-		return nil, ErrParser
-	}
-	lx.NewLine()
-	r.lexers[name] = lx
-	return vcl, nil
-}
-
-func (r *Runner) Run() (*RunnerResult, error) {
-	main, err := r.resolver.MainVCL()
+func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
+	main, err := rslv.MainVCL()
 	if err != nil {
 		return nil, err
 	}
@@ -258,12 +241,14 @@ func (r *Runner) run(v *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
 	}
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
-	for _, snip := range r.snippets {
-		s, err := r.parseVCL(snip.Name, snip.Data)
-		if err != nil {
-			return nil, err
+	if r.snippets != nil {
+		for _, snip := range r.snippets.EmbedSnippets() {
+			s, err := r.parseVCL(snip.Name, snip.Data)
+			if err != nil {
+				return nil, err
+			}
+			vcl.Statements = append(s.Statements, vcl.Statements...)
 		}
-		vcl.Statements = append(s.Statements, vcl.Statements...)
 	}
 
 	vcl.Statements, err = r.resolveStatements(vcl.Statements)
@@ -293,6 +278,23 @@ func (r *Runner) run(v *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
 		File: v.Name,
 		AST:  vcl,
 	}, nil
+}
+
+func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
+	lx := lexer.NewFromString(code, lexer.WithFile(name))
+	p := parser.New(lx)
+	vcl, err := p.ParseVCL()
+	if err != nil {
+		lx.NewLine()
+		pe, ok := errors.Cause(err).(*parser.ParseError)
+		if ok {
+			r.printParseError(lx, pe)
+		}
+		return nil, ErrParser
+	}
+	lx.NewLine()
+	r.lexers[name] = lx
+	return vcl, nil
 }
 
 func (r *Runner) resolveStatements(statements []ast.Statement) ([]ast.Statement, error) {

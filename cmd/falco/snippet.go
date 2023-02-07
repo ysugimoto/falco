@@ -8,6 +8,7 @@ import (
 
 	"text/template"
 
+	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/types"
 )
@@ -51,11 +52,6 @@ func TerraformBackendNameSanitizer(name string) string {
 	return s
 }
 
-type snippetItem struct {
-	Data string
-	Name string
-}
-
 type Snippet struct {
 	fetcher Fetcher
 }
@@ -66,38 +62,36 @@ func NewSnippet(f Fetcher) *Snippet {
 	}
 }
 
-func (s *Snippet) Fetch() ([]snippetItem, error) {
-	var snippets []snippetItem
+func (s *Snippet) Fetch() (*context.FastlySnippet, error) {
+	var fs context.FastlySnippet
+	var err error
 
 	write(white, "Fetching Edge Dictionaries...")
-	dicts, err := s.fetchEdgeDictionary()
+	fs.Dictionaries, err = s.fetchEdgeDictionary()
 	if err != nil {
 		return nil, err
 	}
 	writeln(white, "Done")
-	snippets = append(snippets, dicts...)
 
 	write(white, "Fatching Access Control Lists...")
-	acls, err := s.fetchAccessControl()
+	fs.Acls, err = s.fetchAccessControl()
 	if err != nil {
 		return nil, err
 	}
 	writeln(white, "Done")
-	snippets = append(snippets, acls...)
 
 	write(white, "Fatching Backends...")
-	backends, err := s.fetchBackend()
+	fs.Backends, err = s.fetchBackend()
 	if err != nil {
 		return nil, err
 	}
 	writeln(white, "Done")
-	snippets = append(snippets, backends...)
 
-	return snippets, nil
+	return &fs, nil
 }
 
 // Fetch remote Edge dictionary items
-func (s *Snippet) fetchEdgeDictionary() ([]snippetItem, error) {
+func (s *Snippet) fetchEdgeDictionary() ([]context.FastlySnippetItem, error) {
 	dicts, err := s.fetcher.Dictionaries()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get edge dictionaries %w", err)
@@ -108,13 +102,13 @@ func (s *Snippet) fetchEdgeDictionary() ([]snippetItem, error) {
 		return nil, fmt.Errorf("Failed to compilte table template: %w", err)
 	}
 
-	var snippets []snippetItem
+	var snippets []context.FastlySnippetItem
 	for _, dict := range dicts {
 		buf := new(bytes.Buffer)
 		if err := tmpl.Execute(buf, dict); err != nil {
 			return nil, fmt.Errorf("Failed to render table template: %w", err)
 		}
-		snippets = append(snippets, snippetItem{
+		snippets = append(snippets, context.FastlySnippetItem{
 			Name: fmt.Sprintf("EdgeDictionary:%s", dict.Name),
 			Data: buf.String(),
 		})
@@ -123,7 +117,7 @@ func (s *Snippet) fetchEdgeDictionary() ([]snippetItem, error) {
 }
 
 // Fetch remote Access Control entries
-func (s *Snippet) fetchAccessControl() ([]snippetItem, error) {
+func (s *Snippet) fetchAccessControl() ([]context.FastlySnippetItem, error) {
 	acls, err := s.fetcher.Acls()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get ACLs: %w", err)
@@ -134,13 +128,13 @@ func (s *Snippet) fetchAccessControl() ([]snippetItem, error) {
 		return nil, fmt.Errorf("Failed to compile acl template: %w", err)
 	}
 
-	var snippets []snippetItem
+	var snippets []context.FastlySnippetItem
 	for _, a := range acls {
 		buf := new(bytes.Buffer)
 		if err := tmpl.Execute(buf, a); err != nil {
 			return nil, fmt.Errorf("Failed to render acl template: %w", err)
 		}
-		snippets = append(snippets, snippetItem{
+		snippets = append(snippets, context.FastlySnippetItem{
 			Name: fmt.Sprintf("ACL:%s", a.Name),
 			Data: buf.String(),
 		})
@@ -148,8 +142,8 @@ func (s *Snippet) fetchAccessControl() ([]snippetItem, error) {
 	return snippets, nil
 }
 
-func (s *Snippet) fetchBackend() ([]snippetItem, error) {
-	var snippets []snippetItem
+func (s *Snippet) fetchBackend() ([]context.FastlySnippetItem, error) {
+	var snippets []context.FastlySnippetItem
 	backends, err := s.fetcher.Backends()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get Backends: %w", err)
@@ -168,7 +162,7 @@ func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 		if err := backTmpl.Execute(buf, b); err != nil {
 			return nil, fmt.Errorf("failed to render backend template: %w", err)
 		}
-		snippets = append(snippets, snippetItem{
+		snippets = append(snippets, context.FastlySnippetItem{
 			Name: fmt.Sprintf("BACKEND:%s", b.Name),
 			Data: buf.String(),
 		})
@@ -186,7 +180,7 @@ func (s *Snippet) fetchBackend() ([]snippetItem, error) {
 	return snippets, nil
 }
 
-func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]snippetItem, error) {
+func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]context.FastlySnippetItem, error) {
 	printType := func(dtype remote.DirectorType) string {
 		switch dtype {
 		case remote.Random:
@@ -212,7 +206,7 @@ func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]snipp
 		}
 	}
 
-	var snippets []snippetItem
+	var snippets []context.FastlySnippetItem
 	// We need to pick an arbitrary backend to avoid an undeclared linter error
 	shieldBackend := "F_" + backends[0].Name
 	for sd := range shieldDirectors {
@@ -225,7 +219,7 @@ func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]snipp
 		if err := dirTmpl.Execute(buf, d); err != nil {
 			return nil, fmt.Errorf("failed to render director template: %w", err)
 		}
-		snippets = append(snippets, snippetItem{
+		snippets = append(snippets, context.FastlySnippetItem{
 			Name: fmt.Sprintf("DIRECTOR:%s", d.Name),
 			Data: buf.String(),
 		})

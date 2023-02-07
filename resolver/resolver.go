@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 )
 
 var (
@@ -17,6 +18,8 @@ type VCL struct {
 // from various sources e.g. file or JSON (terraform planned data)
 type Resolver interface {
 	MainVCL() (*VCL, error)
-	Resolve(module string) (*VCL, error)
+	Resolve(stmt *ast.IncludeStatement) (*VCL, error)
 	Name() string
+	// TODO: implement
+	// ResolveScopeSnippet(scope string) (*VCL, error)
 }

@@ -2,8 +2,10 @@ package resolver
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/terraform"
 )
 
@@ -46,12 +48,14 @@ func (s *TerraformResolver) MainVCL() (*VCL, error) {
 	return s.Main, nil
 }
 
-func (s *TerraformResolver) Resolve(module string) (*VCL, error) {
+func (s *TerraformResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
+	modulePathWithoutExtension := strings.TrimSuffix(stmt.Module.Value, ".vcl")
+
 	for i := range s.Modules {
-		if s.Modules[i].Name == module {
+		if s.Modules[i].Name == modulePathWithoutExtension {
 			return s.Modules[i], nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s.vcl", module))
+	return nil, errors.New(fmt.Sprintf("Failed to resolve include module: %s", modulePathWithoutExtension))
 }

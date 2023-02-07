@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 )
 
 // FileResolver is filesystem resolver, basically used for built vcl files
@@ -82,8 +83,8 @@ func (f *FileResolver) MainVCL() (*VCL, error) {
 	return f.getVCL(f.main)
 }
 
-func (f *FileResolver) Resolve(module string) (*VCL, error) {
-	modulePathWithExtension := module
+func (f *FileResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
+	modulePathWithExtension := stmt.Module.Value
 	if !strings.HasSuffix(modulePathWithExtension, ".vcl") {
 		modulePathWithExtension += ".vcl"
 	}
@@ -95,5 +96,5 @@ func (f *FileResolver) Resolve(module string) (*VCL, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s.vcl", module))
+	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s", modulePathWithExtension))
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -124,6 +125,7 @@ type Context struct {
 	Variables      Variables
 	RegexVariables map[string]int
 	ReturnType     *types.Type
+	Resolver       resolver.Resolver
 }
 
 func New() *Context {
