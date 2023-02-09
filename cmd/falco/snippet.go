@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"text/template"
@@ -82,6 +83,13 @@ func (s *Snippet) Fetch() (*context.FastlySnippet, error) {
 
 	write(white, "Fatching Backends...")
 	fs.Backends, err = s.fetchBackend()
+	if err != nil {
+		return nil, err
+	}
+	writeln(white, "Done")
+
+	write(white, "Fatching Snippets...")
+	fs.ScopedSnippets, fs.IncludeSnippets, err = s.fetchVCLSnippets()
 	if err != nil {
 		return nil, err
 	}
@@ -226,4 +234,43 @@ func (s *Snippet) renderBackendShields(backends []*types.RemoteBackend) ([]conte
 	}
 
 	return snippets, nil
+}
+
+func (s *Snippet) fetchVCLSnippets() (
+	map[string][]context.FastlySnippetItem,
+	map[string]context.FastlySnippetItem,
+	error,
+) {
+	snippets, err := s.fetcher.Snippets()
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to get VCL snippets: %w", err)
+	}
+
+	// Sort by priority
+	sort.Slice(snippets, func(i, j int) bool {
+		return snippets[i].Priority > snippets[j].Priority
+	})
+
+	scoped := make(map[string][]context.FastlySnippetItem)
+	include := make(map[string]context.FastlySnippetItem)
+	for _, snip := range snippets {
+		// "none" type means that user could include the snippet arbitrary
+		if snip.Type == "none" {
+			include[snip.Name] = context.FastlySnippetItem{
+				Name: snip.Name,
+				Data: snip.Content,
+			}
+			continue
+		}
+		// Otherwise, factory with type (phase) name
+		if _, ok := scoped[snip.Type]; !ok {
+			scoped[snip.Type] = []context.FastlySnippetItem{}
+		}
+		scoped[snip.Type] = append(scoped[snip.Type], context.FastlySnippetItem{
+			Name: snip.Name,
+			Data: snip.Content,
+		})
+	}
+
+	return scoped, include, nil
 }

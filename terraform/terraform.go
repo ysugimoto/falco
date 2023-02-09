@@ -28,6 +28,13 @@ type TerraformDictionary struct {
 	Name string
 }
 
+type TerraformSnippet struct {
+	Name     string
+	Type     string
+	Content  string
+	Priority int64
+}
+
 // TODO(davinci26): We can unmarshall all the properties from the TF file
 // and lint them to make sure they have sane values.
 type TerraformBackend struct {
@@ -41,6 +48,7 @@ type FastlyService struct {
 	Backends     []*TerraformBackend
 	Acls         []*TerraformAcl
 	Dictionaries []*TerraformDictionary
+	Snippets     []*TerraformSnippet
 }
 
 type TerraformPlannedResource struct {
@@ -52,6 +60,7 @@ type TerraformPlannedResource struct {
 		Acl        []*TerraformAcl        `json:"acl"`
 		Backend    []*TerraformBackend    `json:"backend"`
 		Dictionary []*TerraformDictionary `json:"dictionary"`
+		Snippets   []*TerraformSnippet    `json:"snippet"`
 	} `json:"values"`
 }
 
@@ -95,6 +104,7 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 				Acls:         v.Values.Acl,
 				Backends:     v.Values.Backend,
 				Dictionaries: v.Values.Dictionary,
+				Snippets:     v.Values.Snippets,
 			})
 		}
 	}
@@ -112,6 +122,7 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 				Acls:         v.Values.Acl,
 				Backends:     v.Values.Backend,
 				Dictionaries: v.Values.Dictionary,
+				Snippets:     v.Values.Snippets,
 			})
 		}
 	}

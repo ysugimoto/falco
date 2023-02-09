@@ -209,3 +209,80 @@ func (p *Parser) parse() (ast.Statement, error) {
 	p.nextToken()
 	return stmt, nil
 }
+
+// ParseSnippetVCL is used for snippet parsing.
+// VCL snippet is a piece of vcl code so we should parse like BlockStatement inside,
+// and returns slice of statement.
+func (p *Parser) ParseSnippetVCL() ([]ast.Statement, error) {
+	var statements []ast.Statement
+
+	for !p.peekTokenIs(token.EOF) {
+		var stmt ast.Statement
+		var err error
+
+		switch p.curToken.Token.Type {
+		// https://github.com/ysugimoto/falco/issues/17
+		// VCL accepts block syntax:
+		// ```
+		// sub vcl_recv {
+		//   {
+		//      log "recv";
+		//   }
+		// }
+		// ```
+		case token.LEFT_BRACE:
+			stmt, err = p.parseBlockStatement()
+		case token.SET:
+			stmt, err = p.parseSetStatement()
+		case token.UNSET:
+			stmt, err = p.parseUnsetStatement()
+		case token.REMOVE:
+			stmt, err = p.parseRemoveStatement()
+		case token.ADD:
+			stmt, err = p.parseAddStatement()
+		case token.CALL:
+			stmt, err = p.parseCallStatement()
+		case token.DECLARE:
+			stmt, err = p.parseDeclareStatement()
+		case token.ERROR:
+			stmt, err = p.parseErrorStatement()
+		case token.ESI:
+			stmt, err = p.parseEsiStatement()
+		case token.LOG:
+			stmt, err = p.parseLogStatement()
+		case token.RESTART:
+			stmt, err = p.parseRestartStatement()
+		case token.RETURN:
+			stmt, err = p.parseReturnStatement()
+		case token.SYNTHETIC:
+			stmt, err = p.parseSyntheticStatement()
+		case token.SYNTHETIC_BASE64:
+			stmt, err = p.parseSyntheticBase64Statement()
+		case token.IF:
+			stmt, err = p.parseIfStatement()
+		case token.GOTO:
+			stmt, err = p.parseGotoStatement()
+		case token.INCLUDE:
+			stmt, err = p.parseIncludeStatement()
+		case token.IDENT:
+			// Check if the current ident is a function call
+			if p.peekTokenIs(token.LEFT_PAREN) {
+				stmt, err = p.parseFunctionCall()
+			} else {
+				// Could be a goto destination
+				stmt, err = p.parseGotoDestination()
+			}
+		default:
+			err = UnexpectedToken(p.peekToken)
+		}
+
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		statements = append(statements, stmt)
+		p.nextToken() // point to statement
+	}
+
+	p.nextToken() // point to EOF
+	return statements, nil
+}

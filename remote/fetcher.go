@@ -1,9 +1,11 @@
 package remote
 
 import (
+	"context"
 	_context "context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -102,4 +104,35 @@ func (f *FastlyApiFetcher) getVersion(c _context.Context) (int64, error) {
 	}
 	f.version = v
 	return v, nil
+}
+
+func (f *FastlyApiFetcher) Snippets() ([]*types.RemoteVCL, error) {
+	c, timeout := context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
+
+	version, err := f.getVersion(c)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get latest version %w", err)
+	}
+
+	fastlyVcls, err := f.client.ListSnippets(c, version)
+	if err != nil {
+		return nil, err
+	}
+
+	var r []*types.RemoteVCL
+	for _, v := range fastlyVcls {
+		p, err := strconv.ParseInt(v.Priority, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert VCL snippet priority to int: %w", err)
+		}
+
+		r = append(r, &types.RemoteVCL{
+			Name:     v.Name,
+			Type:     v.Type,
+			Content:  *v.Content,
+			Priority: p,
+		})
+	}
+	return r, nil
 }
