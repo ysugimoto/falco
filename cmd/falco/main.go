@@ -168,7 +168,7 @@ func main() {
 			writeln(white, strings.Repeat("=", 18+len(name)))
 		}
 
-		runner, err := NewRunner(v, c, fetcher)
+		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
 			os.Exit(1)
@@ -176,9 +176,9 @@ func main() {
 
 		var exitErr error
 		if c.Stats {
-			exitErr = runStats(runner, c.Json)
+			exitErr = runStats(runner, v, c.Json)
 		} else {
-			exitErr = runLint(runner)
+			exitErr = runLint(runner, v)
 		}
 		if exitErr == ErrExit {
 			shouldExit = true
@@ -190,8 +190,8 @@ func main() {
 	}
 }
 
-func runLint(runner *Runner) error {
-	result, err := runner.Run()
+func runLint(runner *Runner, rslv resolver.Resolver) error {
+	result, err := runner.Run(rslv)
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())
@@ -236,8 +236,8 @@ func runLint(runner *Runner) error {
 	return nil
 }
 
-func runStats(runner *Runner, printJson bool) error {
-	stats, err := runner.Stats()
+func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
+	stats, err := runner.Stats(rslv)
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())

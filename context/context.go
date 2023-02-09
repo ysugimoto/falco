@@ -125,11 +125,12 @@ type Context struct {
 	Variables      Variables
 	RegexVariables map[string]int
 	ReturnType     *types.Type
-	Resolver       resolver.Resolver
+	resolver       resolver.Resolver
+	fastlySnippets *FastlySnippet
 }
 
-func New() *Context {
-	return &Context{
+func New(opts ...Option) *Context {
+	c := &Context{
 		curMode:        RECV,
 		curName:        "vcl_recv",
 		Acls:           make(map[string]*types.Acl),
@@ -145,10 +146,29 @@ func New() *Context {
 		Variables:      predefinedVariables(),
 		RegexVariables: newRegexMatchedValues(),
 	}
+
+	for i := range opts {
+		opts[i](c)
+	}
+	return c
 }
 
 func (c *Context) Mode() int {
 	return c.curMode
+}
+
+func (c *Context) Resolver() resolver.Resolver {
+	if c.resolver == nil {
+		c.resolver = &resolver.EmptyResolver{}
+	}
+	return c.resolver
+}
+
+func (c *Context) Snippets() *FastlySnippet {
+	if c.fastlySnippets == nil {
+		c.fastlySnippets = &FastlySnippet{}
+	}
+	return c.fastlySnippets
 }
 
 func (c *Context) CurrentFunction() string {
