@@ -68,7 +68,6 @@ const (
 
 type Runner struct {
 	transformers []*Transformer
-	resolver     resolver.Resolver
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
 	snippets     *context.FastlySnippet

@@ -287,7 +287,6 @@ func (l *Linter) resolveIncludeStatements(statements []ast.Statement, ctx *conte
 		// Check snippet inclusion
 		if strings.HasPrefix(include.Module.Value, "snippet::") {
 			// TODO: implement fastly managed snippet inclusion
-			resolved = append(resolved, stmt)
 			continue
 		}
 
