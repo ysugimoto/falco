@@ -45,6 +45,7 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 	return i, nil
 }
 
+// nolint: dupl
 func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	// Note: block statement is used for declaration/statement inside like subroutine, if, elseif, else
 	// on start this statement, current token must point start of LEFT_BRACE

@@ -331,6 +331,7 @@ func (l *Linter) resolveSnippetInclusion(
 	ctx *context.Context,
 	isRoot bool, // if true, vcl would be included on root parsing
 ) []ast.Statement {
+
 	var statements []ast.Statement
 	snippets := ctx.Snippets().IncludeSnippets
 	snip, ok := snippets[strings.TrimPrefix(include.Module.Value, "snippet::")]
@@ -360,6 +361,7 @@ func (l *Linter) resolveFileInclusion(
 	ctx *context.Context,
 	isRoot bool, // if true, vcl would be included on root parsing
 ) []ast.Statement {
+
 	var statements []ast.Statement
 	module, err := ctx.Restore().Resolver().Resolve(include)
 	if err != nil {

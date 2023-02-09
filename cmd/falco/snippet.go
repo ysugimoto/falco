@@ -241,6 +241,7 @@ func (s *Snippet) fetchVCLSnippets() (
 	map[string]context.FastlySnippetItem,
 	error,
 ) {
+
 	snippets, err := s.fetcher.Snippets()
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to get VCL snippets: %w", err)
