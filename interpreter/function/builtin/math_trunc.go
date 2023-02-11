@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_trunc_Name = "math.trunc"
+
 var Math_trunc_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_trunc_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.trunc", 1, args)
+		return errors.ArgumentNotEnough(Math_trunc_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_trunc_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.trunc", i+1, Math_trunc_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_trunc_Name, i+1, Math_trunc_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

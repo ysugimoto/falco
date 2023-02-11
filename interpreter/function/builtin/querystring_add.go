@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Querystring_add_Name = "querystring.add"
+
 var Querystring_add_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Querystring_add_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("querystring.add", 3, args)
+		return errors.ArgumentNotEnough(Querystring_add_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Querystring_add_ArgumentTypes[i] {
-			return errors.TypeMismatch("querystring.add", i+1, Querystring_add_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Querystring_add_Name, i+1, Querystring_add_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

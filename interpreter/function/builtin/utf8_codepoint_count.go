@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Utf8_codepoint_count_Name = "utf8.codepoint_count"
+
 var Utf8_codepoint_count_ArgumentTypes = []value.Type{value.StringType}
 
 func Utf8_codepoint_count_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("utf8.codepoint_count", 1, args)
+		return errors.ArgumentNotEnough(Utf8_codepoint_count_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Utf8_codepoint_count_ArgumentTypes[i] {
-			return errors.TypeMismatch("utf8.codepoint_count", i+1, Utf8_codepoint_count_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Utf8_codepoint_count_Name, i+1, Utf8_codepoint_count_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

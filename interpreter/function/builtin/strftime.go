@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Strftime_Name = "strftime"
+
 var Strftime_ArgumentTypes = []value.Type{value.StringType, value.TimeType}
 
 func Strftime_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("strftime", 2, args)
+		return errors.ArgumentNotEnough(Strftime_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Strftime_ArgumentTypes[i] {
-			return errors.TypeMismatch("strftime", i+1, Strftime_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Strftime_Name, i+1, Strftime_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

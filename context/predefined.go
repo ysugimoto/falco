@@ -53,7 +53,7 @@ func builtinFunctions() Functions {
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.StringType, types.StringType, types.StringType, types.StringType},
+							[]types.Type{types.StringType, types.StringType, types.StringType, types.IntegerType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-filter-basic/",

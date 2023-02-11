@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_secure_is_equal_Name = "digest.secure_is_equal"
+
 var Digest_secure_is_equal_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Digest_secure_is_equal_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("digest.secure_is_equal", 2, args)
+		return errors.ArgumentNotEnough(Digest_secure_is_equal_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_secure_is_equal_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.secure_is_equal", i+1, Digest_secure_is_equal_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_secure_is_equal_Name, i+1, Digest_secure_is_equal_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

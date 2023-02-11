@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_sin_Name = "math.sin"
+
 var Math_sin_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_sin_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.sin", 1, args)
+		return errors.ArgumentNotEnough(Math_sin_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_sin_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.sin", i+1, Math_sin_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_sin_Name, i+1, Math_sin_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

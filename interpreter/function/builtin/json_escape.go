@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Json_escape_Name = "json.escape"
+
 var Json_escape_ArgumentTypes = []value.Type{value.StringType}
 
 func Json_escape_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("json.escape", 1, args)
+		return errors.ArgumentNotEnough(Json_escape_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Json_escape_ArgumentTypes[i] {
-			return errors.TypeMismatch("json.escape", i+1, Json_escape_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Json_escape_Name, i+1, Json_escape_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

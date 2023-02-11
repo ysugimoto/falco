@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const H2_disable_header_compression_Name = "h2.disable_header_compression"
+
 var H2_disable_header_compression_ArgumentTypes = []value.Type{}
 
 func H2_disable_header_compression_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("h2.disable_header_compression", 1, args)
+		return errors.ArgumentNotEnough(H2_disable_header_compression_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != H2_disable_header_compression_ArgumentTypes[i] {
-			return errors.TypeMismatch("h2.disable_header_compression", i+1, H2_disable_header_compression_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(H2_disable_header_compression_Name, i+1, H2_disable_header_compression_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

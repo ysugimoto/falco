@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_strtol_Name = "std.strtol"
+
 var Std_strtol_ArgumentTypes = []value.Type{value.StringType, value.IntegerType}
 
 func Std_strtol_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("std.strtol", 2, args)
+		return errors.ArgumentNotEnough(Std_strtol_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_strtol_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.strtol", i+1, Std_strtol_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_strtol_Name, i+1, Std_strtol_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

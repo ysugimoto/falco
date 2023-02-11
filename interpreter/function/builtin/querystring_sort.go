@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Querystring_sort_Name = "querystring.sort"
+
 var Querystring_sort_ArgumentTypes = []value.Type{value.StringType}
 
 func Querystring_sort_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("querystring.sort", 1, args)
+		return errors.ArgumentNotEnough(Querystring_sort_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Querystring_sort_ArgumentTypes[i] {
-			return errors.TypeMismatch("querystring.sort", i+1, Querystring_sort_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Querystring_sort_Name, i+1, Querystring_sort_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

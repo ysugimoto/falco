@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_exp2_Name = "math.exp2"
+
 var Math_exp2_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_exp2_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.exp2", 1, args)
+		return errors.ArgumentNotEnough(Math_exp2_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_exp2_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.exp2", i+1, Math_exp2_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_exp2_Name, i+1, Math_exp2_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

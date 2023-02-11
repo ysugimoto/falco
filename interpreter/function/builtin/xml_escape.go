@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Xml_escape_Name = "xml_escape"
+
 var Xml_escape_ArgumentTypes = []value.Type{value.StringType}
 
 func Xml_escape_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("xml_escape", 1, args)
+		return errors.ArgumentNotEnough(Xml_escape_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Xml_escape_ArgumentTypes[i] {
-			return errors.TypeMismatch("xml_escape", i+1, Xml_escape_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Xml_escape_Name, i+1, Xml_escape_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

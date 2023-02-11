@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Setcookie_delete_by_name_Name = "setcookie.delete_by_name"
+
 var Setcookie_delete_by_name_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Setcookie_delete_by_name_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("setcookie.delete_by_name", 2, args)
+		return errors.ArgumentNotEnough(Setcookie_delete_by_name_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Setcookie_delete_by_name_ArgumentTypes[i] {
-			return errors.TypeMismatch("setcookie.delete_by_name", i+1, Setcookie_delete_by_name_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Setcookie_delete_by_name_Name, i+1, Setcookie_delete_by_name_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

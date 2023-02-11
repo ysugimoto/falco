@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_hmac_md5_base64_Name = "digest.hmac_md5_base64"
+
 var Digest_hmac_md5_base64_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Digest_hmac_md5_base64_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("digest.hmac_md5_base64", 2, args)
+		return errors.ArgumentNotEnough(Digest_hmac_md5_base64_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_hmac_md5_base64_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.hmac_md5_base64", i+1, Digest_hmac_md5_base64_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_hmac_md5_base64_Name, i+1, Digest_hmac_md5_base64_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

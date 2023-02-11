@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_atof_Name = "std.atof"
+
 var Std_atof_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_atof_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.atof", 1, args)
+		return errors.ArgumentNotEnough(Std_atof_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_atof_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.atof", i+1, Std_atof_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_atof_Name, i+1, Std_atof_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

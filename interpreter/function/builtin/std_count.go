@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_count_Name = "std.count"
+
 var Std_count_ArgumentTypes = []value.Type{value.IdentType}
 
 func Std_count_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.count", 1, args)
+		return errors.ArgumentNotEnough(Std_count_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_count_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.count", i+1, Std_count_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_count_Name, i+1, Std_count_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

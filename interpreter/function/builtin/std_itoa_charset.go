@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_itoa_charset_Name = "std.itoa_charset"
+
 var Std_itoa_charset_ArgumentTypes = []value.Type{value.IntegerType, value.StringType}
 
 func Std_itoa_charset_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("std.itoa_charset", 2, args)
+		return errors.ArgumentNotEnough(Std_itoa_charset_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_itoa_charset_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.itoa_charset", i+1, Std_itoa_charset_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_itoa_charset_Name, i+1, Std_itoa_charset_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

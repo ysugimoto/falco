@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Table_lookup_bool_Name = "table.lookup_bool"
+
 var Table_lookup_bool_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Table_lookup_bool_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("table.lookup_bool", 2, 3, args)
+		return errors.ArgumentNotInRange(Table_lookup_bool_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_bool_ArgumentTypes[i] {
-			return errors.TypeMismatch("table.lookup_bool", i+1, Table_lookup_bool_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Table_lookup_bool_Name, i+1, Table_lookup_bool_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

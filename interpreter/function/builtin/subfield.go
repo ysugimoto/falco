@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Subfield_Name = "subfield"
+
 var Subfield_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Subfield_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("subfield", 2, 3, args)
+		return errors.ArgumentNotInRange(Subfield_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Subfield_ArgumentTypes[i] {
-			return errors.TypeMismatch("subfield", i+1, Subfield_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Subfield_Name, i+1, Subfield_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

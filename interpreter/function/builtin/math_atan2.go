@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_atan2_Name = "math.atan2"
+
 var Math_atan2_ArgumentTypes = []value.Type{value.FloatType, value.FloatType}
 
 func Math_atan2_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("math.atan2", 2, args)
+		return errors.ArgumentNotEnough(Math_atan2_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_atan2_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.atan2", i+1, Math_atan2_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_atan2_Name, i+1, Math_atan2_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

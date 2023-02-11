@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_prefixof_Name = "std.prefixof"
+
 var Std_prefixof_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Std_prefixof_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("std.prefixof", 2, args)
+		return errors.ArgumentNotEnough(Std_prefixof_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_prefixof_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.prefixof", i+1, Std_prefixof_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_prefixof_Name, i+1, Std_prefixof_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

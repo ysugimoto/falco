@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_basename_Name = "std.basename"
+
 var Std_basename_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_basename_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.basename", 1, args)
+		return errors.ArgumentNotEnough(Std_basename_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_basename_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.basename", i+1, Std_basename_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_basename_Name, i+1, Std_basename_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

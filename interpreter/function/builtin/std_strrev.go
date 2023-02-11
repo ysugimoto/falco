@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_strrev_Name = "std.strrev"
+
 var Std_strrev_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_strrev_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.strrev", 1, args)
+		return errors.ArgumentNotEnough(Std_strrev_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_strrev_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.strrev", i+1, Std_strrev_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_strrev_Name, i+1, Std_strrev_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

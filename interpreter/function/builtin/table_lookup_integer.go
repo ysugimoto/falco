@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Table_lookup_integer_Name = "table.lookup_integer"
+
 var Table_lookup_integer_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.IntegerType}
 
 func Table_lookup_integer_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("table.lookup_integer", 2, 3, args)
+		return errors.ArgumentNotInRange(Table_lookup_integer_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_integer_ArgumentTypes[i] {
-			return errors.TypeMismatch("table.lookup_integer", i+1, Table_lookup_integer_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Table_lookup_integer_Name, i+1, Table_lookup_integer_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

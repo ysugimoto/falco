@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_suffixof_Name = "std.suffixof"
+
 var Std_suffixof_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Std_suffixof_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("std.suffixof", 2, args)
+		return errors.ArgumentNotEnough(Std_suffixof_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_suffixof_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.suffixof", i+1, Std_suffixof_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_suffixof_Name, i+1, Std_suffixof_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

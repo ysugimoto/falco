@@ -10,15 +10,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Accept_encoding_lookup_Name = "accept.encoding_lookup"
+
 var Accept_encoding_lookup_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Accept_encoding_lookup_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("accept.encoding_lookup", 3, args)
+		return errors.ArgumentNotEnough(Accept_encoding_lookup_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Accept_encoding_lookup_ArgumentTypes[i] {
-			return errors.TypeMismatch("accept.encoding_lookup", i+1, Accept_encoding_lookup_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Accept_encoding_lookup_Name, i+1, Accept_encoding_lookup_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -45,7 +47,6 @@ func Accept_encoding_lookup(ctx *context.Context, args ...value.Value) (value.Va
 
 	index := len(encodings)
 	for _, v := range strings.Split(encoding.Value, ",") {
-		// normalize charset
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

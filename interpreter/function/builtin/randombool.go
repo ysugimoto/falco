@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Randombool_Name = "randombool"
+
 var Randombool_ArgumentTypes = []value.Type{value.IntegerType, value.IntegerType}
 
 func Randombool_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("randombool", 2, args)
+		return errors.ArgumentNotEnough(Randombool_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Randombool_ArgumentTypes[i] {
-			return errors.TypeMismatch("randombool", i+1, Randombool_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Randombool_Name, i+1, Randombool_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Http_status_matches_Name = "http_status_matches"
+
 var Http_status_matches_ArgumentTypes = []value.Type{value.IntegerType, value.StringType}
 
 func Http_status_matches_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("http_status_matches", 2, args)
+		return errors.ArgumentNotEnough(Http_status_matches_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Http_status_matches_ArgumentTypes[i] {
-			return errors.TypeMismatch("http_status_matches", i+1, Http_status_matches_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Http_status_matches_Name, i+1, Http_status_matches_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

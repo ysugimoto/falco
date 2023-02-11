@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Regsub_Name = "regsub"
+
 var Regsub_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Regsub_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("regsub", 3, args)
+		return errors.ArgumentNotEnough(Regsub_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Regsub_ArgumentTypes[i] {
-			return errors.TypeMismatch("regsub", i+1, Regsub_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Regsub_Name, i+1, Regsub_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

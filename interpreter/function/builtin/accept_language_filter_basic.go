@@ -11,15 +11,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Accept_language_filter_basic_Name = "accept.language_filter_basic"
+
 var Accept_language_filter_basic_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType, value.IntegerType}
 
 func Accept_language_filter_basic_Validate(args []value.Value) error {
 	if len(args) != 4 {
-		return errors.ArgumentNotEnough("accept.language_filter_basic", 4, args)
+		return errors.ArgumentNotEnough(Accept_language_filter_basic_Name, 4, args)
 	}
 	for i := range args {
 		if args[i].Type() != Accept_language_filter_basic_ArgumentTypes[i] {
-			return errors.TypeMismatch("accept.language_filter_basic", i+1, Accept_language_filter_basic_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Accept_language_filter_basic_Name, i+1, Accept_language_filter_basic_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -47,7 +49,6 @@ func Accept_language_filter_basic(ctx *context.Context, args ...value.Value) (va
 
 	var matches []int
 	for _, v := range strings.Split(language.Value, ",") {
-		// normalize charset
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

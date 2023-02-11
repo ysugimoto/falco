@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Uuid_version3_Name = "uuid.version3"
+
 var Uuid_version3_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Uuid_version3_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("uuid.version3", 2, args)
+		return errors.ArgumentNotEnough(Uuid_version3_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Uuid_version3_ArgumentTypes[i] {
-			return errors.TypeMismatch("uuid.version3", i+1, Uuid_version3_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Uuid_version3_Name, i+1, Uuid_version3_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

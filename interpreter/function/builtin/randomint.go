@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Randomint_Name = "randomint"
+
 var Randomint_ArgumentTypes = []value.Type{value.IntegerType, value.IntegerType}
 
 func Randomint_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("randomint", 2, args)
+		return errors.ArgumentNotEnough(Randomint_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Randomint_ArgumentTypes[i] {
-			return errors.TypeMismatch("randomint", i+1, Randomint_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Randomint_Name, i+1, Randomint_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

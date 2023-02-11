@@ -8,11 +8,13 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Uuid_dns_Name = "uuid.dns"
+
 var Uuid_dns_ArgumentTypes = []value.Type{}
 
 func Uuid_dns_Validate(args []value.Value) error {
 	if len(args) > 0 {
-		return errors.ArgumentMustEmpty("uuid.dns", args)
+		return errors.ArgumentMustEmpty(Uuid_dns_Name, args)
 	}
 	return nil
 }

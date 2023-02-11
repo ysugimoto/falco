@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Boltsort_sort_Name = "boltsort.sort"
+
 var Boltsort_sort_ArgumentTypes = []value.Type{value.StringType}
 
 func Boltsort_sort_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("boltsort.sort", 1, args)
+		return errors.ArgumentNotEnough(Boltsort_sort_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Boltsort_sort_ArgumentTypes[i] {
-			return errors.TypeMismatch("boltsort.sort", i+1, Boltsort_sort_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Boltsort_sort_Name, i+1, Boltsort_sort_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

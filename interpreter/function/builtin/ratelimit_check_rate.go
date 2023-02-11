@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Ratelimit_check_rate_Name = "ratelimit.check_rate"
+
 var Ratelimit_check_rate_ArgumentTypes = []value.Type{value.StringType, value.IdentType, value.IntegerType, value.IntegerType, value.IntegerType, value.IdentType, value.RTimeType}
 
 func Ratelimit_check_rate_Validate(args []value.Value) error {
 	if len(args) != 7 {
-		return errors.ArgumentNotEnough("ratelimit.check_rate", 7, args)
+		return errors.ArgumentNotEnough(Ratelimit_check_rate_Name, 7, args)
 	}
 	for i := range args {
 		if args[i].Type() != Ratelimit_check_rate_ArgumentTypes[i] {
-			return errors.TypeMismatch("ratelimit.check_rate", i+1, Ratelimit_check_rate_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Ratelimit_check_rate_Name, i+1, Ratelimit_check_rate_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_strlen_Name = "std.strlen"
+
 var Std_strlen_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_strlen_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.strlen", 1, args)
+		return errors.ArgumentNotEnough(Std_strlen_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_strlen_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.strlen", i+1, Std_strlen_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_strlen_Name, i+1, Std_strlen_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

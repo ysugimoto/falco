@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_roundhalfdown_Name = "math.roundhalfdown"
+
 var Math_roundhalfdown_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_roundhalfdown_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.roundhalfdown", 1, args)
+		return errors.ArgumentNotEnough(Math_roundhalfdown_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_roundhalfdown_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.roundhalfdown", i+1, Math_roundhalfdown_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_roundhalfdown_Name, i+1, Math_roundhalfdown_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Utf8_substr_Name = "utf8.substr"
+
 var Utf8_substr_ArgumentTypes = []value.Type{value.StringType, value.IntegerType, value.IntegerType}
 
 func Utf8_substr_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("utf8.substr", 2, 3, args)
+		return errors.ArgumentNotInRange(Utf8_substr_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Utf8_substr_ArgumentTypes[i] {
-			return errors.TypeMismatch("utf8.substr", i+1, Utf8_substr_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Utf8_substr_Name, i+1, Utf8_substr_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

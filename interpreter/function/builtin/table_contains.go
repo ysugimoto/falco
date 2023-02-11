@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Table_contains_Name = "table.contains"
+
 var Table_contains_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Table_contains_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("table.contains", 2, args)
+		return errors.ArgumentNotEnough(Table_contains_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_contains_ArgumentTypes[i] {
-			return errors.TypeMismatch("table.contains", i+1, Table_contains_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Table_contains_Name, i+1, Table_contains_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

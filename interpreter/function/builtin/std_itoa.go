@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_itoa_Name = "std.itoa"
+
 var Std_itoa_ArgumentTypes = []value.Type{value.IntegerType, value.IntegerType}
 
 func Std_itoa_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
-		return errors.ArgumentNotInRange("std.itoa", 1, 2, args)
+		return errors.ArgumentNotInRange(Std_itoa_Name, 1, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_itoa_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.itoa", i+1, Std_itoa_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_itoa_Name, i+1, Std_itoa_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

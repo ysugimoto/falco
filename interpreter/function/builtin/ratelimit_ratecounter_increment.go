@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Ratelimit_ratecounter_increment_Name = "ratelimit.ratecounter_increment"
+
 var Ratelimit_ratecounter_increment_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.IntegerType}
 
 func Ratelimit_ratecounter_increment_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("ratelimit.ratecounter_increment", 3, args)
+		return errors.ArgumentNotEnough(Ratelimit_ratecounter_increment_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Ratelimit_ratecounter_increment_ArgumentTypes[i] {
-			return errors.TypeMismatch("ratelimit.ratecounter_increment", i+1, Ratelimit_ratecounter_increment_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Ratelimit_ratecounter_increment_Name, i+1, Ratelimit_ratecounter_increment_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

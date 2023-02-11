@@ -8,11 +8,13 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const H3_alt_svc_Name = "h3.alt_svc"
+
 var H3_alt_svc_ArgumentTypes = []value.Type{}
 
 func H3_alt_svc_Validate(args []value.Value) error {
 	if len(args) > 0 {
-		return errors.ArgumentMustEmpty("h3.alt_svc", args)
+		return errors.ArgumentMustEmpty(H3_alt_svc_Name, args)
 	}
 	return nil
 }

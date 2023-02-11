@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_ip2str_Name = "std.ip2str"
+
 var Std_ip2str_ArgumentTypes = []value.Type{value.IpType}
 
 func Std_ip2str_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.ip2str", 1, args)
+		return errors.ArgumentNotEnough(Std_ip2str_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_ip2str_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.ip2str", i+1, Std_ip2str_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_ip2str_Name, i+1, Std_ip2str_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

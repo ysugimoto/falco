@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_strpad_Name = "std.strpad"
+
 var Std_strpad_ArgumentTypes = []value.Type{value.StringType, value.IntegerType, value.StringType}
 
 func Std_strpad_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("std.strpad", 3, args)
+		return errors.ArgumentNotEnough(Std_strpad_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_strpad_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.strpad", i+1, Std_strpad_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_strpad_Name, i+1, Std_strpad_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

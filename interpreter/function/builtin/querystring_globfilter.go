@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Querystring_globfilter_Name = "querystring.globfilter"
+
 var Querystring_globfilter_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func Querystring_globfilter_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("querystring.globfilter", 2, args)
+		return errors.ArgumentNotEnough(Querystring_globfilter_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Querystring_globfilter_ArgumentTypes[i] {
-			return errors.TypeMismatch("querystring.globfilter", i+1, Querystring_globfilter_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Querystring_globfilter_Name, i+1, Querystring_globfilter_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

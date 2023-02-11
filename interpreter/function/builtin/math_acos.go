@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_acos_Name = "math.acos"
+
 var Math_acos_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_acos_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.acos", 1, args)
+		return errors.ArgumentNotEnough(Math_acos_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_acos_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.acos", i+1, Math_acos_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_acos_Name, i+1, Math_acos_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

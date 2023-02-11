@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_roundeven_Name = "math.roundeven"
+
 var Math_roundeven_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_roundeven_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.roundeven", 1, args)
+		return errors.ArgumentNotEnough(Math_roundeven_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_roundeven_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.roundeven", i+1, Math_roundeven_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_roundeven_Name, i+1, Math_roundeven_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

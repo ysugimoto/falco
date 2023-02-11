@@ -8,11 +8,13 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Querystring_filtersep_Name = "querystring.filtersep"
+
 var Querystring_filtersep_ArgumentTypes = []value.Type{}
 
 func Querystring_filtersep_Validate(args []value.Value) error {
 	if len(args) > 0 {
-		return errors.ArgumentMustEmpty("querystring.filtersep", args)
+		return errors.ArgumentMustEmpty(Querystring_filtersep_Name, args)
 	}
 	return nil
 }

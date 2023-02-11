@@ -3,20 +3,24 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Accept_language_lookup_Name = "accept.language_lookup"
+
 var Accept_language_lookup_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Accept_language_lookup_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("accept.language_lookup", 3, args)
+		return errors.ArgumentNotEnough(Accept_language_lookup_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Accept_language_lookup_ArgumentTypes[i] {
-			return errors.TypeMismatch("accept.language_lookup", i+1, Accept_language_lookup_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Accept_language_lookup_Name, i+1, Accept_language_lookup_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -32,6 +36,32 @@ func Accept_language_lookup(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("accept.language_lookup")
+	lookup := value.Unwrap[*value.String](args[0])
+	defaultValue := value.Unwrap[*value.String](args[1])
+	language := value.Unwrap[*value.String](args[2])
+
+	var languages []string
+	for _, v := range strings.Split(lookup.Value, ":") {
+		languages = append(languages, v)
+	}
+
+	index := len(languages)
+	for _, v := range strings.Split(language.Value, ",") {
+		v = strings.TrimSpace(v)
+		if idx := strings.Index(v, ";"); idx != -1 {
+			v = v[0:idx]
+		}
+		for i := range languages {
+			if languages[i] == v {
+				if i < index {
+					index = i
+				}
+			}
+		}
+	}
+
+	if index < len(languages) {
+		return &value.String{Value: languages[index]}, nil
+	}
+	return defaultValue, nil
 }

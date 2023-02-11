@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Table_lookup_acl_Name = "table.lookup_acl"
+
 var Table_lookup_acl_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.AclType}
 
 func Table_lookup_acl_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("table.lookup_acl", 2, 3, args)
+		return errors.ArgumentNotInRange(Table_lookup_acl_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_acl_ArgumentTypes[i] {
-			return errors.TypeMismatch("table.lookup_acl", i+1, Table_lookup_acl_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Table_lookup_acl_Name, i+1, Table_lookup_acl_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

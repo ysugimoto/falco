@@ -3,20 +3,24 @@
 package builtin
 
 import (
+	"net/netip"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Addr_is_ipv4_Name = "addr.is_ipv4"
+
 var Addr_is_ipv4_ArgumentTypes = []value.Type{value.IpType}
 
 func Addr_is_ipv4_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("addr.is_ipv4", 1, args)
+		return errors.ArgumentNotEnough(Addr_is_ipv4_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Addr_is_ipv4_ArgumentTypes[i] {
-			return errors.TypeMismatch("addr.is_ipv4", i+1, Addr_is_ipv4_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Addr_is_ipv4_Name, i+1, Addr_is_ipv4_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -32,6 +36,10 @@ func Addr_is_ipv4(ctx *context.Context, args ...value.Value) (value.Value, error
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("addr.is_ipv4")
+	ip := value.Unwrap[*value.IP](args[0])
+	addr, err := netip.ParseAddr(ip.Value.String())
+	if err != nil {
+		return value.Null, errors.New(Addr_is_ipv4_Name, "Failed to parse IP address %s, %s", ip.Value.String(), err)
+	}
+	return &value.Boolean{Value: addr.Is4()}, nil
 }

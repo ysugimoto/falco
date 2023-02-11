@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Querystring_remove_Name = "querystring.remove"
+
 var Querystring_remove_ArgumentTypes = []value.Type{value.StringType}
 
 func Querystring_remove_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("querystring.remove", 1, args)
+		return errors.ArgumentNotEnough(Querystring_remove_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Querystring_remove_ArgumentTypes[i] {
-			return errors.TypeMismatch("querystring.remove", i+1, Querystring_remove_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Querystring_remove_Name, i+1, Querystring_remove_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Randombool_seeded_Name = "randombool_seeded"
+
 var Randombool_seeded_ArgumentTypes = []value.Type{value.IntegerType, value.IntegerType, value.IntegerType}
 
 func Randombool_seeded_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("randombool_seeded", 3, args)
+		return errors.ArgumentNotEnough(Randombool_seeded_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Randombool_seeded_ArgumentTypes[i] {
-			return errors.TypeMismatch("randombool_seeded", i+1, Randombool_seeded_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Randombool_seeded_Name, i+1, Randombool_seeded_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

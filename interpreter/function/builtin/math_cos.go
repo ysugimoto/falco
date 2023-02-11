@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_cos_Name = "math.cos"
+
 var Math_cos_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_cos_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.cos", 1, args)
+		return errors.ArgumentNotEnough(Math_cos_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_cos_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.cos", i+1, Math_cos_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_cos_Name, i+1, Math_cos_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Resp_tarpit_Name = "resp.tarpit"
+
 var Resp_tarpit_ArgumentTypes = []value.Type{value.IntegerType, value.IntegerType}
 
 func Resp_tarpit_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
-		return errors.ArgumentNotInRange("resp.tarpit", 1, 2, args)
+		return errors.ArgumentNotInRange(Resp_tarpit_Name, 1, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Resp_tarpit_ArgumentTypes[i] {
-			return errors.TypeMismatch("resp.tarpit", i+1, Resp_tarpit_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Resp_tarpit_Name, i+1, Resp_tarpit_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

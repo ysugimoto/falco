@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_toupper_Name = "std.toupper"
+
 var Std_toupper_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_toupper_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.toupper", 1, args)
+		return errors.ArgumentNotEnough(Std_toupper_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_toupper_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.toupper", i+1, Std_toupper_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_toupper_Name, i+1, Std_toupper_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_is_normal_Name = "math.is_normal"
+
 var Math_is_normal_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_is_normal_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.is_normal", 1, args)
+		return errors.ArgumentNotEnough(Math_is_normal_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_is_normal_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.is_normal", i+1, Math_is_normal_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_is_normal_Name, i+1, Math_is_normal_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

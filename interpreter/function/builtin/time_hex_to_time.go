@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Time_hex_to_time_Name = "time.hex_to_time"
+
 var Time_hex_to_time_ArgumentTypes = []value.Type{value.IntegerType, value.StringType}
 
 func Time_hex_to_time_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("time.hex_to_time", 2, args)
+		return errors.ArgumentNotEnough(Time_hex_to_time_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Time_hex_to_time_ArgumentTypes[i] {
-			return errors.TypeMismatch("time.hex_to_time", i+1, Time_hex_to_time_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Time_hex_to_time_Name, i+1, Time_hex_to_time_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

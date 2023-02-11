@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_atoi_Name = "std.atoi"
+
 var Std_atoi_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_atoi_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.atoi", 1, args)
+		return errors.ArgumentNotEnough(Std_atoi_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_atoi_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.atoi", i+1, Std_atoi_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_atoi_Name, i+1, Std_atoi_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

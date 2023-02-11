@@ -3,20 +3,26 @@
 package builtin
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Bin_base64_to_hex_Name = "bin.base64_to_hex"
+
 var Bin_base64_to_hex_ArgumentTypes = []value.Type{value.StringType}
 
 func Bin_base64_to_hex_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("bin.base64_to_hex", 1, args)
+		return errors.ArgumentNotEnough(Bin_base64_to_hex_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Bin_base64_to_hex_ArgumentTypes[i] {
-			return errors.TypeMismatch("bin.base64_to_hex", i+1, Bin_base64_to_hex_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Bin_base64_to_hex_Name, i+1, Bin_base64_to_hex_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -32,6 +38,21 @@ func Bin_base64_to_hex(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("bin.base64_to_hex")
+	input := value.Unwrap[*value.String](args[0])
+
+	// If input value is empty, return empty string
+	if input.Value == "" {
+		return &value.String{Value: ""}, nil
+	}
+
+	dec, err := base64.StdEncoding.DecodeString(input.Value)
+	if err != nil {
+		// If the Base64-encoded string s is not valid Base64, then fastly.error will be set to EINVAL.
+		ctx.FastlyError = &value.String{Value: "EINVAL"}
+		return &value.String{Value: ""}, nil
+	}
+
+	return &value.String{
+		Value: strings.ToUpper(fmt.Sprintf("%x", string(dec))),
+	}, nil
 }

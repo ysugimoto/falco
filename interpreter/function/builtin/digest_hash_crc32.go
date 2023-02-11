@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_hash_crc32_Name = "digest.hash_crc32"
+
 var Digest_hash_crc32_ArgumentTypes = []value.Type{value.StringType}
 
 func Digest_hash_crc32_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("digest.hash_crc32", 1, args)
+		return errors.ArgumentNotEnough(Digest_hash_crc32_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_hash_crc32_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.hash_crc32", i+1, Digest_hash_crc32_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_hash_crc32_Name, i+1, Digest_hash_crc32_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

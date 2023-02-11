@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Time_is_after_Name = "time.is_after"
+
 var Time_is_after_ArgumentTypes = []value.Type{value.TimeType, value.TimeType}
 
 func Time_is_after_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("time.is_after", 2, args)
+		return errors.ArgumentNotEnough(Time_is_after_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Time_is_after_ArgumentTypes[i] {
-			return errors.TypeMismatch("time.is_after", i+1, Time_is_after_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Time_is_after_Name, i+1, Time_is_after_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

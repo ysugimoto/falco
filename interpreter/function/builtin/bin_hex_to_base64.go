@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Bin_hex_to_base64_Name = "bin.hex_to_base64"
+
 var Bin_hex_to_base64_ArgumentTypes = []value.Type{value.StringType}
 
 func Bin_hex_to_base64_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("bin.hex_to_base64", 1, args)
+		return errors.ArgumentNotEnough(Bin_hex_to_base64_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Bin_hex_to_base64_ArgumentTypes[i] {
-			return errors.TypeMismatch("bin.hex_to_base64", i+1, Bin_hex_to_base64_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Bin_hex_to_base64_Name, i+1, Bin_hex_to_base64_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

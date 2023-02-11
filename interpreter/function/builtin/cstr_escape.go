@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Cstr_escape_Name = "cstr_escape"
+
 var Cstr_escape_ArgumentTypes = []value.Type{value.StringType}
 
 func Cstr_escape_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("cstr_escape", 1, args)
+		return errors.ArgumentNotEnough(Cstr_escape_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Cstr_escape_ArgumentTypes[i] {
-			return errors.TypeMismatch("cstr_escape", i+1, Cstr_escape_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Cstr_escape_Name, i+1, Cstr_escape_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

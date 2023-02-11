@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Crypto_encrypt_hex_Name = "crypto.encrypt_hex"
+
 var Crypto_encrypt_hex_ArgumentTypes = []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType}
 
 func Crypto_encrypt_hex_Validate(args []value.Value) error {
 	if len(args) != 6 {
-		return errors.ArgumentNotEnough("crypto.encrypt_hex", 6, args)
+		return errors.ArgumentNotEnough(Crypto_encrypt_hex_Name, 6, args)
 	}
 	for i := range args {
 		if args[i].Type() != Crypto_encrypt_hex_ArgumentTypes[i] {
-			return errors.TypeMismatch("crypto.encrypt_hex", i+1, Crypto_encrypt_hex_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Crypto_encrypt_hex_Name, i+1, Crypto_encrypt_hex_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

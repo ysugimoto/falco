@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_is_finite_Name = "math.is_finite"
+
 var Math_is_finite_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_is_finite_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.is_finite", 1, args)
+		return errors.ArgumentNotEnough(Math_is_finite_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_is_finite_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.is_finite", i+1, Math_is_finite_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_is_finite_Name, i+1, Math_is_finite_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

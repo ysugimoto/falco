@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Ratelimit_penaltybox_has_Name = "ratelimit.penaltybox_has"
+
 var Ratelimit_penaltybox_has_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Ratelimit_penaltybox_has_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("ratelimit.penaltybox_has", 2, args)
+		return errors.ArgumentNotEnough(Ratelimit_penaltybox_has_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Ratelimit_penaltybox_has_ArgumentTypes[i] {
-			return errors.TypeMismatch("ratelimit.penaltybox_has", i+1, Ratelimit_penaltybox_has_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Ratelimit_penaltybox_has_Name, i+1, Ratelimit_penaltybox_has_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

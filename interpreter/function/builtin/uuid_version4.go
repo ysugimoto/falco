@@ -8,11 +8,13 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Uuid_version4_Name = "uuid.version4"
+
 var Uuid_version4_ArgumentTypes = []value.Type{}
 
 func Uuid_version4_Validate(args []value.Value) error {
 	if len(args) > 0 {
-		return errors.ArgumentMustEmpty("uuid.version4", args)
+		return errors.ArgumentMustEmpty(Uuid_version4_Name, args)
 	}
 	return nil
 }

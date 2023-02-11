@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_floor_Name = "math.floor"
+
 var Math_floor_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_floor_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.floor", 1, args)
+		return errors.ArgumentNotEnough(Math_floor_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_floor_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.floor", i+1, Math_floor_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_floor_Name, i+1, Math_floor_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

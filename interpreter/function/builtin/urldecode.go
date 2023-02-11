@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Urldecode_Name = "urldecode"
+
 var Urldecode_ArgumentTypes = []value.Type{value.StringType}
 
 func Urldecode_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("urldecode", 1, args)
+		return errors.ArgumentNotEnough(Urldecode_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Urldecode_ArgumentTypes[i] {
-			return errors.TypeMismatch("urldecode", i+1, Urldecode_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Urldecode_Name, i+1, Urldecode_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

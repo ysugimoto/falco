@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_replace_Name = "std.replace"
+
 var Std_replace_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Std_replace_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("std.replace", 3, args)
+		return errors.ArgumentNotEnough(Std_replace_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_replace_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.replace", i+1, Std_replace_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_replace_Name, i+1, Std_replace_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_replace_suffix_Name = "std.replace_suffix"
+
 var Std_replace_suffix_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Std_replace_suffix_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("std.replace_suffix", 3, args)
+		return errors.ArgumentNotEnough(Std_replace_suffix_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_replace_suffix_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.replace_suffix", i+1, Std_replace_suffix_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_replace_suffix_Name, i+1, Std_replace_suffix_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

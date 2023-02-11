@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_ceil_Name = "math.ceil"
+
 var Math_ceil_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_ceil_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.ceil", 1, args)
+		return errors.ArgumentNotEnough(Math_ceil_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_ceil_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.ceil", i+1, Math_ceil_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_ceil_Name, i+1, Math_ceil_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

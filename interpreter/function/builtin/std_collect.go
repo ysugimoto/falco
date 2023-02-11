@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_collect_Name = "std.collect"
+
 var Std_collect_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Std_collect_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
-		return errors.ArgumentNotInRange("std.collect", 1, 2, args)
+		return errors.ArgumentNotInRange(Std_collect_Name, 1, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_collect_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.collect", i+1, Std_collect_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_collect_Name, i+1, Std_collect_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const H2_push_Name = "h2.push"
+
 var H2_push_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
 func H2_push_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("h2.push", 2, args)
+		return errors.ArgumentNotEnough(H2_push_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != H2_push_ArgumentTypes[i] {
-			return errors.TypeMismatch("h2.push", i+1, H2_push_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(H2_push_Name, i+1, H2_push_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

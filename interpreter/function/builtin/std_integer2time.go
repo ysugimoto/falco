@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_integer2time_Name = "std.integer2time"
+
 var Std_integer2time_ArgumentTypes = []value.Type{value.IntegerType}
 
 func Std_integer2time_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.integer2time", 1, args)
+		return errors.ArgumentNotEnough(Std_integer2time_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_integer2time_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.integer2time", i+1, Std_integer2time_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_integer2time_Name, i+1, Std_integer2time_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

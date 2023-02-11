@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Substr_Name = "substr"
+
 var Substr_ArgumentTypes = []value.Type{value.StringType, value.IntegerType, value.IntegerType}
 
 func Substr_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange("substr", 2, 3, args)
+		return errors.ArgumentNotInRange(Substr_Name, 2, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Substr_ArgumentTypes[i] {
-			return errors.TypeMismatch("substr", i+1, Substr_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Substr_Name, i+1, Substr_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

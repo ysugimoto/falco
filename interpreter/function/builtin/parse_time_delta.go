@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Parse_time_delta_Name = "parse_time_delta"
+
 var Parse_time_delta_ArgumentTypes = []value.Type{value.StringType}
 
 func Parse_time_delta_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("parse_time_delta", 1, args)
+		return errors.ArgumentNotEnough(Parse_time_delta_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Parse_time_delta_ArgumentTypes[i] {
-			return errors.TypeMismatch("parse_time_delta", i+1, Parse_time_delta_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Parse_time_delta_Name, i+1, Parse_time_delta_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

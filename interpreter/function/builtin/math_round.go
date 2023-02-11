@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Math_round_Name = "math.round"
+
 var Math_round_ArgumentTypes = []value.Type{value.FloatType}
 
 func Math_round_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("math.round", 1, args)
+		return errors.ArgumentNotEnough(Math_round_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Math_round_ArgumentTypes[i] {
-			return errors.TypeMismatch("math.round", i+1, Math_round_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Math_round_Name, i+1, Math_round_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Time_units_Name = "time.units"
+
 var Time_units_ArgumentTypes = []value.Type{value.StringType, value.TimeType}
 
 func Time_units_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough("time.units", 2, args)
+		return errors.ArgumentNotEnough(Time_units_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Time_units_ArgumentTypes[i] {
-			return errors.TypeMismatch("time.units", i+1, Time_units_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Time_units_Name, i+1, Time_units_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

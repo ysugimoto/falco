@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Crypto_decrypt_base64_Name = "crypto.decrypt_base64"
+
 var Crypto_decrypt_base64_ArgumentTypes = []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType}
 
 func Crypto_decrypt_base64_Validate(args []value.Value) error {
 	if len(args) != 6 {
-		return errors.ArgumentNotEnough("crypto.decrypt_base64", 6, args)
+		return errors.ArgumentNotEnough(Crypto_decrypt_base64_Name, 6, args)
 	}
 	for i := range args {
 		if args[i].Type() != Crypto_decrypt_base64_ArgumentTypes[i] {
-			return errors.TypeMismatch("crypto.decrypt_base64", i+1, Crypto_decrypt_base64_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Crypto_decrypt_base64_Name, i+1, Crypto_decrypt_base64_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_awsv4_hmac_Name = "digest.awsv4_hmac"
+
 var Digest_awsv4_hmac_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType, value.StringType, value.StringType}
 
 func Digest_awsv4_hmac_Validate(args []value.Value) error {
 	if len(args) != 5 {
-		return errors.ArgumentNotEnough("digest.awsv4_hmac", 5, args)
+		return errors.ArgumentNotEnough(Digest_awsv4_hmac_Name, 5, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_awsv4_hmac_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.awsv4_hmac", i+1, Digest_awsv4_hmac_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_awsv4_hmac_Name, i+1, Digest_awsv4_hmac_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

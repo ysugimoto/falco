@@ -101,27 +101,28 @@ import (
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 )
 
+const {{ .Name }}_Name = "{{ .Original }}"
 var {{ .Name }}_ArgumentTypes = {{ .ArgumentTypes }}
 
 func {{ .Name }}_Validate(args []value.Value) error {
 	{{ if .NoArgument -}}
 	if len(args) > 0 {
-		return errors.ArgumentMustEmpty("{{ .Original }}", args)
+		return errors.ArgumentMustEmpty({{ .Name }}_Name, args)
 	}
 	{{ else if eq .MinArgs .MaxArgs -}}
 	if len(args) != {{ .MinArgs }} {
-		return errors.ArgumentNotEnough("{{ .Original }}", {{ .MinArgs }}, args)
+		return errors.ArgumentNotEnough({{ .Name }}_Name, {{ .MinArgs }}, args)
 	}
 	{{ else -}}
 	if len(args) < {{ .MinArgs }} || len(args) > {{ .MaxArgs }} {
-		return errors.ArgumentNotInRange("{{ .Original }}", {{ .MinArgs }}, {{ .MaxArgs }}, args)
+		return errors.ArgumentNotInRange({{ .Name }}_Name, {{ .MinArgs }}, {{ .MaxArgs }}, args)
 	}
 	{{ end -}}
 
 	{{ if not .NoArgument -}}
 	for i := range args {
 		if args[i].Type() != {{ .Name }}_ArgumentTypes[i] {
-			return errors.TypeMismatch("{{ .Original }}", i+1, {{ .Name }}_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch({{ .Name }}_Name, i+1, {{ .Name }}_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	{{ end -}}

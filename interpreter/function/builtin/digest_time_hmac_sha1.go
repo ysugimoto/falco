@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_time_hmac_sha1_Name = "digest.time_hmac_sha1"
+
 var Digest_time_hmac_sha1_ArgumentTypes = []value.Type{value.StringType, value.IntegerType, value.IntegerType}
 
 func Digest_time_hmac_sha1_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("digest.time_hmac_sha1", 3, args)
+		return errors.ArgumentNotEnough(Digest_time_hmac_sha1_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_time_hmac_sha1_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.time_hmac_sha1", i+1, Digest_time_hmac_sha1_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_time_hmac_sha1_Name, i+1, Digest_time_hmac_sha1_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

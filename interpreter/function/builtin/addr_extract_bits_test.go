@@ -3,9 +3,11 @@
 package builtin
 
 import (
+	"net"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of addr.extract_bits
@@ -13,5 +15,21 @@ import (
 // - IP, INTEGER, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/addr-extract-bits/
 func Test_Addr_extract_bits(t *testing.T) {
-	t.Skip("Test Builtin function addr.extract_bits should be impelemented")
+
+	ret, err := Addr_extract_bits(
+		&context.Context{},
+		&value.IP{Value: net.ParseIP("151.101.2.217")},
+		&value.Integer{Value: 0, Literal: true},
+		&value.Integer{Value: 8, Literal: true},
+	)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.IntegerType {
+		t.Errorf("Unexpected type returned, expect=%s, got=%s", value.IntegerType, ret.Type())
+	}
+	v := value.Unwrap[*value.Integer](ret)
+	if v.Value != 217 {
+		t.Errorf("Unexpected value returned, expect=217, got=%d", v.Value)
+	}
 }

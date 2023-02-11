@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Fastly_hash_Name = "fastly.hash"
+
 var Fastly_hash_ArgumentTypes = []value.Type{value.StringType, value.IntegerType, value.IntegerType, value.IntegerType}
 
 func Fastly_hash_Validate(args []value.Value) error {
 	if len(args) != 4 {
-		return errors.ArgumentNotEnough("fastly.hash", 4, args)
+		return errors.ArgumentNotEnough(Fastly_hash_Name, 4, args)
 	}
 	for i := range args {
 		if args[i].Type() != Fastly_hash_ArgumentTypes[i] {
-			return errors.TypeMismatch("fastly.hash", i+1, Fastly_hash_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Fastly_hash_Name, i+1, Fastly_hash_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

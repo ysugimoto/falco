@@ -10,15 +10,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Accept_charset_lookup_Name = "accept.charset_lookup"
+
 var Accept_charset_lookup_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
 func Accept_charset_lookup_Validate(args []value.Value) error {
 	if len(args) != 3 {
-		return errors.ArgumentNotEnough("accept.charset_lookup", 3, args)
+		return errors.ArgumentNotEnough(Accept_charset_lookup_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Accept_charset_lookup_ArgumentTypes[i] {
-			return errors.TypeMismatch("accept.charset_lookup", i+1, Accept_charset_lookup_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Accept_charset_lookup_Name, i+1, Accept_charset_lookup_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
@@ -45,7 +47,6 @@ func Accept_charset_lookup(ctx *context.Context, args ...value.Value) (value.Val
 
 	index := len(charsets)
 	for _, v := range strings.Split(accept.Value, ",") {
-		// normalize charset
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Std_dirname_Name = "std.dirname"
+
 var Std_dirname_ArgumentTypes = []value.Type{value.StringType}
 
 func Std_dirname_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough("std.dirname", 1, args)
+		return errors.ArgumentNotEnough(Std_dirname_Name, 1, args)
 	}
 	for i := range args {
 		if args[i].Type() != Std_dirname_ArgumentTypes[i] {
-			return errors.TypeMismatch("std.dirname", i+1, Std_dirname_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Std_dirname_Name, i+1, Std_dirname_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

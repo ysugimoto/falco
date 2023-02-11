@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Randomstr_Name = "randomstr"
+
 var Randomstr_ArgumentTypes = []value.Type{value.IntegerType, value.StringType}
 
 func Randomstr_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
-		return errors.ArgumentNotInRange("randomstr", 1, 2, args)
+		return errors.ArgumentNotInRange(Randomstr_Name, 1, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Randomstr_ArgumentTypes[i] {
-			return errors.TypeMismatch("randomstr", i+1, Randomstr_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Randomstr_Name, i+1, Randomstr_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil

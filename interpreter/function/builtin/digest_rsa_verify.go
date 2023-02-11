@@ -8,15 +8,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const Digest_rsa_verify_Name = "digest.rsa_verify"
+
 var Digest_rsa_verify_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.StringType, value.StringType, value.IdentType}
 
 func Digest_rsa_verify_Validate(args []value.Value) error {
 	if len(args) < 4 || len(args) > 5 {
-		return errors.ArgumentNotInRange("digest.rsa_verify", 4, 5, args)
+		return errors.ArgumentNotInRange(Digest_rsa_verify_Name, 4, 5, args)
 	}
 	for i := range args {
 		if args[i].Type() != Digest_rsa_verify_ArgumentTypes[i] {
-			return errors.TypeMismatch("digest.rsa_verify", i+1, Digest_rsa_verify_ArgumentTypes[i], args[i].Type())
+			return errors.TypeMismatch(Digest_rsa_verify_Name, i+1, Digest_rsa_verify_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
