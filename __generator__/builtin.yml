@@ -16,7 +16,7 @@ accept.language_filter_basic:
   reference: "https://developer.fastly.com/reference/vcl/functions/content-negotiation/accept-language-filter-basic/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
-    - [STRING, STRING, STRING, STRING]
+    - [STRING, STRING, STRING, INTEGER]
   return: STRING
 
 accept.language_lookup:

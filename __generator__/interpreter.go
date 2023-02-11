@@ -63,6 +63,9 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		if err := i.generateBuiltInFunctionFile(key, v); err != nil {
 			return err
 		}
+		if err := i.generateBuiltInFunctionTestFile(key, v); err != nil {
+			return err
+		}
 		signature := fmt.Sprintf(
 			"Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) { return builtin.%s(ctx, args...) }",
 			ucFirst(strings.ReplaceAll(key, ".", "_")),
@@ -115,7 +118,56 @@ func (i *Interpreter) generateBuiltInFunctionFile(name string, fn *FunctionSpec)
 	}
 
 	out := new(bytes.Buffer)
-	tpl := template.Must(template.New("interpreter.function").Parse(interpreterFunctionImplementation))
+	tpl := template.Must(
+		template.New("interpreter.function").
+			Parse(interpreterFunctionImplementation),
+	)
+	if err := tpl.Execute(out, map[string]interface{}{
+		"Name":          ucFirst(strings.ReplaceAll(name, ".", "_")),
+		"Original":      name,
+		"Reference":     fn.Ref,
+		"Arguments":     args,
+		"Return":        fn.Return,
+		"MinArgs":       minArgs(fn.Arguments),
+		"MaxArgs":       maxArgs(fn.Arguments),
+		"ArgumentTypes": argumentTypes(fn.Arguments),
+		"NoArgument":    len(fn.Arguments) == 0,
+	}); err != nil {
+		return err
+	}
+
+	ret, err := format.Source(out.Bytes())
+	if err != nil {
+		fmt.Println(out.String())
+		return err
+	}
+	if _, err := fp.Write(ret); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *Interpreter) generateBuiltInFunctionTestFile(name string, fn *FunctionSpec) error {
+	filename := fmt.Sprintf("%s_test.go", strings.ReplaceAll(name, ".", "_"))
+	path := filepath.Join("../interpreter/function/builtin", filename)
+
+	if _, err := os.Stat(path); err == nil {
+		// already generated
+		return nil
+	}
+	fp, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	var args []string
+	for j := range fn.Arguments {
+		args = append(args, strings.Join(fn.Arguments[j], ", "))
+	}
+
+	out := new(bytes.Buffer)
+	tpl := template.Must(template.New("interpreter.function").Parse(interpreterFunctionTestImplementation))
 	if err := tpl.Execute(out, map[string]interface{}{
 		"Name":      ucFirst(strings.ReplaceAll(name, ".", "_")),
 		"Original":  name,
@@ -163,4 +215,56 @@ func generatePermissionString(v *Definition) string {
 		out = append(out, "types.PermissionUnset")
 	}
 	return strings.Join(out, "|")
+}
+
+func minArgs(args [][]string) int {
+	if len(args) == 0 {
+		return 0
+	}
+	size := len(args[0])
+	for i := 1; i < len(args); i++ {
+		if len(args[i]) < size {
+			size = len(args[i])
+		}
+	}
+	return size
+}
+
+func maxArgs(args [][]string) int {
+	size := 0
+	for i := 0; i < len(args); i++ {
+		if len(args[i]) > size {
+			size = len(args[i])
+		}
+	}
+	return size
+}
+
+// Type map builtin definition corresponds to value.Type string
+var typeMap = map[string]string{
+	"ID":      "value.IdentType",
+	"TABLE":   "value.IdentType",
+	"STRING":  "value.StringType",
+	"IP":      "value.IpType",
+	"BOOLEAN": "value.BooleanType",
+	"INTEGER": "value.IntegerType",
+	"FLOAT":   "value.FloatType",
+	"RTIME":   "value.RTimeType",
+	"TIME":    "value.TimeType",
+	"BACKEND": "value.BackendType",
+	"ACL":     "value.AclType",
+}
+
+func argumentTypes(args [][]string) string {
+	var maxArgs []string
+	for i := 0; i < len(args); i++ {
+		if len(args[i]) > len(maxArgs) {
+			maxArgs = args[i]
+		}
+	}
+	types := make([]string, len(maxArgs))
+	for i := range maxArgs {
+		types[i] = typeMap[maxArgs[i]]
+	}
+	return fmt.Sprintf("[]value.Type{%s}", strings.Join(types, ", "))
 }
