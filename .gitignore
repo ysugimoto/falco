@@ -16,6 +16,7 @@
 ./falco
 dist/*
 playground
+tools
 
 .vscode
 
