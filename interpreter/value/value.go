@@ -26,7 +26,7 @@ const (
 )
 
 type ValueTypes interface {
-	*String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl
+	*Ident | *String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl
 }
 
 func Unwrap[T ValueTypes](v Value) T {

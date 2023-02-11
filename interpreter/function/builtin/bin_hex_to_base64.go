@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"encoding/base64"
+	"encoding/hex"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,16 @@ func Bin_hex_to_base64(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("bin.hex_to_base64")
+	input := value.Unwrap[*value.String](args[0])
+
+	dec, err := hex.DecodeString(input.Value)
+	if err != nil {
+		// If the hex string s is not valid, then fastly.error will be set to EINVAL.
+		ctx.FastlyError = &value.String{Value: "EINVAL"}
+		return &value.String{Value: ""}, nil
+	}
+
+	return &value.String{
+		Value: base64.StdEncoding.EncodeToString(dec),
+	}, nil
 }

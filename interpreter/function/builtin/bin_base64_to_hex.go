@@ -4,7 +4,7 @@ package builtin
 
 import (
 	"encoding/base64"
-	"fmt"
+	"encoding/hex"
 	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -53,6 +53,6 @@ func Bin_base64_to_hex(ctx *context.Context, args ...value.Value) (value.Value, 
 	}
 
 	return &value.String{
-		Value: strings.ToUpper(fmt.Sprintf("%x", string(dec))),
+		Value: strings.ToUpper(hex.EncodeToString(dec)),
 	}, nil
 }

@@ -3,6 +3,11 @@
 package builtin
 
 import (
+	"fmt"
+	"net/url"
+	"sort"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +39,32 @@ func Boltsort_sort(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("boltsort.sort")
+	input := value.Unwrap[*value.String](args[0])
+	parsed, err := url.ParseRequestURI(input.Value)
+	if err != nil {
+		// ignoring error
+		return &value.String{Value: input.Value}, nil
+	}
+	query := parsed.Query()
+	var sorted []string
+	for k := range query {
+		sorted = append(sorted, k)
+	}
+	sort.Strings(sorted)
+
+	// Build RawQuery by sorted order
+	var rawQuery []string
+	for i := range sorted {
+		qs := query[sorted[i]]
+		sort.Strings(qs)
+		for j := range qs {
+			rawQuery = append(rawQuery, fmt.Sprintf(
+				"%s=%s",
+				url.QueryEscape(sorted[i]), url.QueryEscape(qs[j]),
+			))
+		}
+	}
+	parsed.RawQuery = strings.Join(rawQuery, "&")
+
+	return &value.String{Value: parsed.String()}, nil
 }

@@ -3,8 +3,11 @@
 package builtin
 
 import (
+	"encoding/base64"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +37,32 @@ func Crypto_encrypt_base64(ctx *context.Context, args ...value.Value) (value.Val
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("crypto.encrypt_base64")
+	cipherId := value.Unwrap[*value.Ident](args[0])
+	mode := value.Unwrap[*value.Ident](args[1])
+	padding := value.Unwrap[*value.Ident](args[2])
+	key := value.Unwrap[*value.String](args[3])
+	iv := value.Unwrap[*value.String](args[4])
+	text := value.Unwrap[*value.String](args[5])
+
+	buf, err := base64.StdEncoding.DecodeString(text.Value)
+	if err != nil {
+		return value.Null, errors.New("Failed to decode base64 encoded string: %s", text.Value)
+	}
+
+	codec, err := shared.NewCryptoCodec(
+		Crypto_encrypt_base64_Name,
+		cipherId.Value, mode.Value, padding.Value,
+	)
+	if err != nil {
+		return value.Null, err
+	}
+
+	encrypted, err := codec.Encrypt(key.Value, iv.Value, buf)
+	if err != nil {
+		return value.Null, err
+	}
+
+	return &value.String{
+		Value: base64.StdEncoding.EncodeToString(encrypted),
+	}, nil
 }
