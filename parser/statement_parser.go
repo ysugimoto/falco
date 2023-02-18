@@ -101,6 +101,8 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 			stmt, err = p.parseIfStatement()
 		case token.GOTO:
 			stmt, err = p.parseGotoStatement()
+		case token.INCLUDE:
+			stmt, err = p.parseIncludeStatement()
 		case token.IDENT:
 			// Check if the current ident is a function call
 			if p.peekTokenIs(token.LEFT_PAREN) {

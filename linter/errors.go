@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
@@ -346,4 +347,9 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 		Token:    m.Token,
 		Message:  fmt.Sprintf("%s HTTP header could not be modified in VCL", name),
 	}
+}
+
+type FatalError struct {
+	Lexer *lexer.Lexer
+	Error error
 }
