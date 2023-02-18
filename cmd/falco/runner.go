@@ -266,6 +266,14 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		return nil, nil
 	}
 
+	// Checking Fatal error, it means parse error occurs on included submodule
+	if lt.FatalError != nil {
+		if pe, ok := lt.FatalError.Error.(*parser.ParseError); ok {
+			r.printParseError(lt.FatalError.Lexer, pe)
+		}
+		return nil, ErrParser
+	}
+
 	if len(lt.Errors) > 0 {
 		for _, err := range lt.Errors {
 			le, ok := err.(*linter.LintError)
@@ -338,6 +346,7 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
 		lx = r.lexers[err.Token.File]
+		fmt.Println(err.Token.File, lx)
 	}
 
 	// check severity with overrides
