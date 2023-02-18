@@ -6,9 +6,11 @@ type FastlySnippetItem struct {
 }
 
 type FastlySnippet struct {
-	Dictionaries []FastlySnippetItem
-	Acls         []FastlySnippetItem
-	Backends     []FastlySnippetItem
+	Dictionaries    []FastlySnippetItem
+	Acls            []FastlySnippetItem
+	Backends        []FastlySnippetItem
+	ScopedSnippets  map[string][]FastlySnippetItem
+	IncludeSnippets map[string]FastlySnippetItem
 }
 
 func (f *FastlySnippet) EmbedSnippets() []FastlySnippetItem {

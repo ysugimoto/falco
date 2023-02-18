@@ -1,10 +1,10 @@
 package linter
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
@@ -25,6 +25,9 @@ func assertNoError(t *testing.T, input string, opts ...context.Option) {
 	if len(l.Errors) > 0 {
 		t.Errorf("Lint error: %s", l.Errors)
 	}
+	if l.FatalError != nil {
+		t.Errorf("Fatal error: %s", l.FatalError.Error)
+	}
 }
 
 func assertError(t *testing.T, input string, opts ...context.Option) {
@@ -38,6 +41,9 @@ func assertError(t *testing.T, input string, opts ...context.Option) {
 	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
+	}
+	if l.FatalError != nil {
+		t.Errorf("Fatal error: %s", l.FatalError.Error)
 	}
 }
 func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts ...context.Option) {
@@ -2487,4 +2493,45 @@ sub vcl_recv {
 }
 		`
 	assertNoError(t, input, context.WithResolver(mock))
+}
+
+func TestFastlyScopedSnippetInclusion(t *testing.T) {
+	snippets := &context.FastlySnippet{
+		ScopedSnippets: map[string][]context.FastlySnippetItem{
+			"recv": {
+				{
+					Name: "recv_injection",
+					Data: `set req.http.InjectedViaMacro = 1;`,
+				},
+			},
+		},
+	}
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+
+   return (pass);
+}
+`
+	assertError(t, input, context.WithFastlySnippets(snippets))
+}
+
+func TestFastlySnippetInclusion(t *testing.T) {
+	snippets := &context.FastlySnippet{
+		IncludeSnippets: map[string]context.FastlySnippetItem{
+			"recv_injection": {
+				Name: "recv_injection",
+				Data: `set req.http.InjectedViaMacro = 1;`,
+			},
+		},
+	}
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   if (req.http.Some-Truthy) {
+	  include "snippet::recv_injection";
+   }
+}
+`
+	assertError(t, input, context.WithFastlySnippets(snippets))
 }

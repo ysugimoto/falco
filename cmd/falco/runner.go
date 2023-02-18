@@ -57,6 +57,7 @@ type Fetcher interface {
 	Backends() ([]*types.RemoteBackend, error)
 	Dictionaries() ([]*types.RemoteDictionary, error)
 	Acls() ([]*types.RemoteAcl, error)
+	Snippets() ([]*types.RemoteVCL, error)
 }
 
 type RunMode int

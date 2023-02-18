@@ -52,7 +52,41 @@ Currently not supported.
 
 ### VCL snippets
 
-Currently not supported.
+Prefetch [VCL Snippets](https://docs.fastly.com/en/guides/about-vcl-snippets) from Fastly and parse as `VCL`.
+falco support both of regular snippets and dynamic snippets, and could lint each scope snippets and `none` snippets that include manually.
+
+
+#### Root inclusion example
+
+You can use VCL Snippets in root of Custom VCL:
+
+```
+include "snippet::example_snippet";
+```
+
+#### Include in block statement
+
+You can include VCL Snippets in some of block statements (e.g sburoutine, if block, etc):
+
+```
+sub vcl_recv {
+  ...
+  include "snippet::example_snippet";
+  ...
+}
+```
+
+#### Fastly boilerplate macro extraction
+
+For example, if you create VCL Snippets and set type to `recv`, falco will extract it in place that boilerplate macro found:
+
+```
+
+sub vcl_recv {
+  #FASTLY RECV  <= falco find this and extract VCL Snippets here
+  ...
+}
+```
 
 ### Access Control Lists
 
