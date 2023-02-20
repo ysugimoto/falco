@@ -46,3 +46,12 @@ type Director struct {
 	Type     DirectorType `json:"type"`
 	Backends []string     `json:"backends"`
 }
+
+type VCLSnippet struct {
+	Id       string  `json:"id"`
+	Name     string  `json:"name"`
+	Dynamic  string  `json:"dynamic"`
+	Type     string  `json:"type"`
+	Priority string  `json:"priority"`
+	Content  *string `json:"content"`
+}

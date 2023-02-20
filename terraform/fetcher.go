@@ -50,3 +50,18 @@ func (f *TerraformFetcher) Acls() ([]*types.RemoteAcl, error) {
 	}
 	return a, nil
 }
+
+func (f *TerraformFetcher) Snippets() ([]*types.RemoteVCL, error) {
+	var v []*types.RemoteVCL
+	for _, s := range f.services {
+		for _, vcl := range s.Snippets {
+			v = append(v, &types.RemoteVCL{
+				Name:     vcl.Name,
+				Type:     vcl.Type,
+				Content:  vcl.Content,
+				Priority: vcl.Priority,
+			})
+		}
+	}
+	return v, nil
+}

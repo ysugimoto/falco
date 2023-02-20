@@ -1,4 +1,4 @@
-package main
+package resolver
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 )
 
 // FileResolver is filesystem resolver, basically used for built vcl files
@@ -17,7 +18,7 @@ type FileResolver struct {
 	includePaths []string
 }
 
-func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
+func NewFileResolvers(main string, includePaths []string) ([]Resolver, error) {
 	if main == "" {
 		return nil, ErrEmptyMain
 	}
@@ -34,20 +35,20 @@ func NewFileResolvers(main string, c *Config) ([]Resolver, error) {
 		return nil, errors.New(fmt.Sprintf("Failed to get absolute path: %s", err.Error()))
 	}
 
-	var includePaths []string
+	var ips []string
 	// Add include paths as absolute
-	for i := range c.IncludePaths {
-		p, err := filepath.Abs(c.IncludePaths[i])
+	for i := range includePaths {
+		p, err := filepath.Abs(includePaths[i])
 		if err == nil {
-			includePaths = append(includePaths, p)
+			ips = append(ips, p)
 		}
 	}
-	includePaths = append(includePaths, filepath.Dir(abs))
+	ips = append(ips, filepath.Dir(abs))
 
 	return []Resolver{
 		&FileResolver{
 			main:         abs,
-			includePaths: includePaths,
+			includePaths: ips,
 		},
 	}, nil
 }
@@ -82,8 +83,8 @@ func (f *FileResolver) MainVCL() (*VCL, error) {
 	return f.getVCL(f.main)
 }
 
-func (f *FileResolver) Resolve(module string) (*VCL, error) {
-	modulePathWithExtension := module
+func (f *FileResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
+	modulePathWithExtension := stmt.Module.Value
 	if !strings.HasSuffix(modulePathWithExtension, ".vcl") {
 		modulePathWithExtension += ".vcl"
 	}
@@ -95,5 +96,5 @@ func (f *FileResolver) Resolve(module string) (*VCL, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s.vcl", module))
+	return nil, errors.New(fmt.Sprintf("Failed to resolve include file: %s", modulePathWithExtension))
 }

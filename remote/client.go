@@ -168,3 +168,56 @@ func (c *FastlyClient) ListBackends(ctx context.Context, version int64) ([]*Back
 
 	return backends, nil
 }
+
+func (c *FastlyClient) ListSnippets(ctx context.Context, version int64) ([]*VCLSnippet, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/snippet", c.serviceId, version)
+	var snippets []*VCLSnippet
+	if err := c.request(ctx, endpoint, &snippets); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Dynamic snippet contents is nil for this API, we need to call more API to get snippet content
+	var wg sync.WaitGroup
+	var once sync.Once
+	errch := make(chan error)
+	for _, s := range snippets {
+		wg.Add(1)
+		go func(s *VCLSnippet) {
+			defer wg.Done()
+			if s.Dynamic == "0" {
+				return
+			}
+			var err error
+			if s.Content, err = c.getDynamicSnippetContent(ctx, s.Id); err != nil {
+				once.Do(func() {
+					errch <- err
+				})
+			}
+		}(s)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return snippets, nil
+	case err := <-errch:
+		return nil, err
+	}
+}
+
+func (c *FastlyClient) getDynamicSnippetContent(ctx context.Context, snippetId string) (*string, error) {
+	endpoint := fmt.Sprintf("/service/%s/snippet/%s", c.serviceId, snippetId)
+	var snippet struct {
+		Content string `json:"content"`
+	}
+	if err := c.request(ctx, endpoint, &snippet); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &snippet.Content, nil
+}

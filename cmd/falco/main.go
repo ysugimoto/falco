@@ -10,12 +10,10 @@ import (
 	"net/http"
 
 	"github.com/fatih/color"
-	"github.com/k0kubun/pp"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
 
@@ -144,22 +142,22 @@ func main() {
 
 	var fetcher Fetcher
 	// falco could lint multiple services so resolver should be a slice
-	var resolvers []Resolver
+	var resolvers []resolver.Resolver
 	switch fs.Arg(0) {
 	case subcommandTerraform:
 		fastlyServices, err := ParseStdin()
 		if err == nil {
-			resolvers = NewTerraformResolver(fastlyServices)
+			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
 	case subcommandSimulate:
-		resolvers, err = NewFileResolvers(fs.Arg(1), c)
+		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
 	case subcommandLint:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = NewFileResolvers(fs.Arg(1), c)
+		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = NewFileResolvers(fs.Arg(0), c)
+		resolvers, err = resolver.NewFileResolvers(fs.Arg(0), c.IncludePaths)
 	}
 
 	if err != nil {
@@ -174,20 +172,19 @@ func main() {
 			writeln(white, strings.Repeat("=", 18+len(name)))
 		}
 
-		runner, err := NewRunner(v, c, fetcher)
+		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
 			os.Exit(1)
 		}
 
 		var exitErr error
-
 		if fs.Arg(0) == subcommandSimulate {
-			exitErr = runSimulator(runner)
+			exitErr = runSimulator(runner, v)
 		} else if c.Stats {
-			exitErr = runStats(runner, c.Json)
+			exitErr = runStats(runner, v, c.Json)
 		} else {
-			exitErr = runLint(runner)
+			exitErr = runLint(runner, v)
 		}
 		if exitErr == ErrExit {
 			shouldExit = true
@@ -199,8 +196,8 @@ func main() {
 	}
 }
 
-func runLint(runner *Runner) error {
-	result, err := runner.Run()
+func runLint(runner *Runner, rslv resolver.Resolver) error {
+	result, err := runner.Run(rslv)
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())
@@ -245,49 +242,19 @@ func runLint(runner *Runner) error {
 	return nil
 }
 
-func runSimulator(runner *Runner) error {
-	main, err := runner.resolver.MainVCL()
-	if err != nil {
-		return err
-	}
-	vcl, err := runner.parseVCL(main.Name, main.Data)
+func runSimulator(runner *Runner, rslv resolver.Resolver) error {
+	handler, err := runner.Simulator(rslv)
 	if err != nil {
 		return err
 	}
 
-	// If remote snippets exists, prepare parse and prepend to main VCL
-	for _, snip := range runner.snippets {
-		s, err := runner.parseVCL(snip.Name, snip.Data)
-		if err != nil {
-			return err
-		}
-		vcl.Statements = append(s.Statements, vcl.Statements...)
-	}
-
-	vcl.Statements, err = runner.resolveStatements(vcl.Statements)
-	if err != nil {
-		return err
-	}
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		c, err := icontext.New(vcl)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		ip := interpreter.New(c)
-		if err := ip.Process(w, r); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		pp.Println(ip.Result())
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("simulated"))
-	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler)
 	return http.ListenAndServe(":3124", nil)
 }
 
-func runStats(runner *Runner, printJson bool) error {
-	stats, err := runner.Stats()
+func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
+	stats, err := runner.Stats(rslv)
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())

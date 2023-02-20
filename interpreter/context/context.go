@@ -7,7 +7,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/resolver"
 )
 
 // Reserved vcl names in Fastly
@@ -40,6 +42,8 @@ var (
 )
 
 type Context struct {
+	Resolver            resolver.Resolver
+	FastlySnippets      *context.FastlySnippet
 	Acls                map[string]*ast.AclDeclaration
 	Backends            map[string]*ast.BackendDeclaration
 	Tables              map[string]*ast.TableDeclaration
@@ -125,7 +129,7 @@ type Context struct {
 	RegexMatchedValues map[string]*value.String
 }
 
-func New(vcl *ast.VCL) (*Context, error) {
+func New(vcl *ast.VCL, options ...Option) (*Context, error) {
 	ctx := &Context{
 		Acls:                make(map[string]*ast.AclDeclaration),
 		Backends:            make(map[string]*ast.BackendDeclaration),
@@ -198,6 +202,11 @@ func New(vcl *ast.VCL) (*Context, error) {
 		ObjectResponse:                      &value.String{Value: "error"},
 
 		RegexMatchedValues: make(map[string]*value.String),
+	}
+
+	// collect options
+	for i := range options {
+		options[i](ctx)
 	}
 
 	for _, stmt := range vcl.Statements {

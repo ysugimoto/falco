@@ -13,6 +13,7 @@ type Token struct {
 	Position int
 	Offset   int    // for print problem
 	File     string // for print problem
+	Snippet  bool
 }
 
 func (t Token) String() string {

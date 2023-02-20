@@ -1,16 +1,19 @@
 package linter
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/types"
 )
 
-func assertNoError(t *testing.T, input string) {
+func assertNoError(t *testing.T, input string, opts ...context.Option) {
 	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
 	if err != nil {
 		t.Errorf("unexpected parser error: %s", err)
@@ -18,13 +21,16 @@ func assertNoError(t *testing.T, input string) {
 	}
 
 	l := New()
-	l.lint(vcl, context.New())
+	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) > 0 {
 		t.Errorf("Lint error: %s", l.Errors)
 	}
+	if l.FatalError != nil {
+		t.Errorf("Fatal error: %s", l.FatalError.Error)
+	}
 }
 
-func assertError(t *testing.T, input string) {
+func assertError(t *testing.T, input string, opts ...context.Option) {
 	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
 	if err != nil {
 		t.Errorf("unexpected parser error: %s", err)
@@ -32,12 +38,15 @@ func assertError(t *testing.T, input string) {
 	}
 
 	l := New()
-	l.lint(vcl, context.New())
+	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
 	}
+	if l.FatalError != nil {
+		t.Errorf("Fatal error: %s", l.FatalError.Error)
+	}
 }
-func assertErrorWithSeverity(t *testing.T, input string, severity Severity) {
+func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts ...context.Option) {
 	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
 	if err != nil {
 		t.Errorf("unexpected parser error: %s", err)
@@ -45,7 +54,7 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity) {
 	}
 
 	l := New()
-	l.lint(vcl, context.New())
+	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
 	}
@@ -2353,4 +2362,176 @@ func TestLintProtectedHTTPHeaders(t *testing.T) {
 			assertError(t, input)
 		})
 	}
+}
+
+// statement resolve tests
+
+type mockResolver struct {
+	dependency map[string]string
+	main       string
+}
+
+func (m *mockResolver) MainVCL() (*resolver.VCL, error) {
+	return &resolver.VCL{
+		Name: "main.vcl",
+		Data: m.main,
+	}, nil
+}
+
+func (m *mockResolver) Resolve(stmt *ast.IncludeStatement) (*resolver.VCL, error) {
+	if v, ok := m.dependency[stmt.Module.Value]; !ok {
+		return nil, errors.New(stmt.Module.Value + " is not defined")
+	} else {
+		return &resolver.VCL{
+			Name: stmt.Module.Value + ".vcl",
+			Data: v,
+		}, nil
+	}
+}
+
+func (m *mockResolver) Name() string {
+	return ""
+}
+
+func TestResolveRootIncludeStatement(t *testing.T) {
+	mock := &mockResolver{
+		dependency: map[string]string{
+			"deps01": `
+sub foo {
+	set req.backend = httpbin_org;
+}
+
+sub bar {
+	set req.http.Foo = "bar";
+}
+			`,
+		},
+	}
+	input := `
+backend httpbin_org {
+  .connect_timeout = 1s;
+  .dynamic = true;
+  .port = "443";
+  .host = "httpbin.org";
+  .first_byte_timeout = 20s;
+  .max_connections = 500;
+  .between_bytes_timeout = 20s;
+  .share_key = "xei5lohleex3Joh5ie5uy7du";
+  .ssl = true;
+  .ssl_sni_hostname = "httpbin.org";
+  .ssl_cert_hostname = "httpbin.org";
+  .ssl_check_cert = always;
+  .min_tls_version = "1.2";
+  .max_tls_version = "1.2";
+}
+
+include "deps01";
+
+sub vcl_recv {
+   #FASTLY RECV
+   call foo;
+}
+		`
+	assertNoError(t, input, context.WithResolver(mock))
+}
+
+func TestResolveNestedIncludeStatement(t *testing.T) {
+	mock := &mockResolver{
+		dependency: map[string]string{
+			"deps01": `
+include "deps02";
+			`,
+			"deps02": `
+sub foo {
+	set req.backend = httpbin_org;
+}
+			`,
+		},
+	}
+	input := `
+backend httpbin_org {
+  .connect_timeout = 1s;
+  .dynamic = true;
+  .port = "443";
+  .host = "httpbin.org";
+  .first_byte_timeout = 20s;
+  .max_connections = 500;
+  .between_bytes_timeout = 20s;
+  .share_key = "xei5lohleex3Joh5ie5uy7du";
+  .ssl = true;
+  .ssl_sni_hostname = "httpbin.org";
+  .ssl_cert_hostname = "httpbin.org";
+  .ssl_check_cert = always;
+  .min_tls_version = "1.2";
+  .max_tls_version = "1.2";
+}
+
+include "deps01";
+
+sub vcl_recv {
+   #FASTLY RECV
+   call foo;
+}
+		`
+	assertNoError(t, input, context.WithResolver(mock))
+}
+
+func TestResolveIncludeStateInIfStatement(t *testing.T) {
+	mock := &mockResolver{
+		dependency: map[string]string{
+			"deps01": `
+set req.http.Foo = "bar";
+			`,
+		},
+	}
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   if (req.http.Is-Some-Truthy) {
+		include "deps01";
+   }
+}
+		`
+	assertNoError(t, input, context.WithResolver(mock))
+}
+
+func TestFastlyScopedSnippetInclusion(t *testing.T) {
+	snippets := &context.FastlySnippet{
+		ScopedSnippets: map[string][]context.FastlySnippetItem{
+			"recv": {
+				{
+					Name: "recv_injection",
+					Data: `set req.http.InjectedViaMacro = 1;`,
+				},
+			},
+		},
+	}
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+
+   return (pass);
+}
+`
+	assertError(t, input, context.WithFastlySnippets(snippets))
+}
+
+func TestFastlySnippetInclusion(t *testing.T) {
+	snippets := &context.FastlySnippet{
+		IncludeSnippets: map[string]context.FastlySnippetItem{
+			"recv_injection": {
+				Name: "recv_injection",
+				Data: `set req.http.InjectedViaMacro = 1;`,
+			},
+		},
+	}
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   if (req.http.Some-Truthy) {
+	  include "snippet::recv_injection";
+   }
+}
+`
+	assertError(t, input, context.WithFastlySnippets(snippets))
 }

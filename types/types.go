@@ -297,3 +297,10 @@ type RemoteBackend struct {
 	Name   string
 	Shield *string
 }
+
+type RemoteVCL struct {
+	Name     string
+	Type     string
+	Content  string
+	Priority int64
+}

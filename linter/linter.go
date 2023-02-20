@@ -5,19 +5,30 @@ import (
 	"net"
 	"strings"
 
+	"github.com/pkg/errors"
 	regexp "github.com/shadialtarsha/go-pcre"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
 
 type Linter struct {
-	Errors []error
+	Errors         []error
+	FatalError     *FatalError
+	includexLexers map[string]*lexer.Lexer
 }
 
 func New() *Linter {
-	return &Linter{}
+	return &Linter{
+		includexLexers: make(map[string]*lexer.Lexer),
+	}
+}
+
+func (l *Linter) Lexers() map[string]*lexer.Lexer {
+	return l.includexLexers
 }
 
 func (l *Linter) Error(err error) {
@@ -246,9 +257,12 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 }
 
 func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
+	// Resolve module, snippet inclusion
+	statements := l.resolveIncludeStatements(vcl.Statements, ctx, true)
+
 	// https://github.com/ysugimoto/falco/issues/50
 	// To support subroutine hoisting, add root statements to context firstly and lint each statements after that.
-	statements := l.factoryRootStatements(vcl, ctx)
+	statements = l.factoryRootDeclarations(statements, ctx)
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
@@ -258,10 +272,118 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 	return types.NeverType
 }
 
-//nolint:gocognit,funlen
-func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast.Statement {
+func (l *Linter) loadSnippetVCL(file, content string) []ast.Statement {
+	lx := lexer.NewFromString(content, lexer.WithFile(file))
+	l.includexLexers[file] = lx
+	statements, err := parser.New(lx).ParseSnippetVCL()
+	if err != nil {
+		lx.NewLine()
+		l.FatalError = &FatalError{
+			Lexer: lx,
+			Error: errors.Cause(err),
+		}
+		return []ast.Statement{}
+	}
+	return statements
+}
+
+func (l *Linter) loadVCL(file, content string) []ast.Statement {
+	lx := lexer.NewFromString(content, lexer.WithFile(file))
+	l.includexLexers[file] = lx
+	vcl, err := parser.New(lx).ParseVCL()
+	if err != nil {
+		lx.NewLine()
+		l.FatalError = &FatalError{
+			Lexer: lx,
+			Error: errors.Cause(err),
+		}
+		return []ast.Statement{}
+	}
+	return vcl.Statements
+}
+
+func (l *Linter) resolveIncludeStatements(statements []ast.Statement, ctx *context.Context, isRoot bool) []ast.Statement {
+	var resolved []ast.Statement
+
+	for _, stmt := range statements {
+		include, ok := stmt.(*ast.IncludeStatement)
+		if !ok {
+			resolved = append(resolved, stmt)
+			continue
+		}
+
+		// Check snippet inclusion
+		if strings.HasPrefix(include.Module.Value, "snippet::") {
+			resolved = append(resolved, l.resolveSnippetInclusion(include, ctx, isRoot)...)
+			continue
+		}
+		resolved = append(resolved, l.resolveFileInclusion(include, ctx, isRoot)...)
+	}
+
+	return resolved
+}
+
+// Fastly managed snippet inclusion
+func (l *Linter) resolveSnippetInclusion(
+	include *ast.IncludeStatement,
+	ctx *context.Context,
+	isRoot bool, // if true, vcl would be included on root parsing
+) []ast.Statement {
+
 	var statements []ast.Statement
-	for _, stmt := range vcl.Statements {
+	snippets := ctx.Snippets().IncludeSnippets
+	snip, ok := snippets[strings.TrimPrefix(include.Module.Value, "snippet::")]
+	if !ok {
+		e := &LintError{
+			Severity: ERROR,
+			Token:    include.GetMeta().Token,
+			Message: fmt.Sprintf(
+				"Snippet %s is not found on fastly managed snippets",
+				include.Module.Value,
+			),
+		}
+		l.Error(e.Match(INCLUDE_STATEMENT_MODULE_NOT_FOUND))
+		return statements
+	}
+
+	// snippet could not have nested include statement
+	if isRoot {
+		return l.loadVCL(include.Module.Value, snip.Data)
+	}
+	return l.loadSnippetVCL(include.Module.Value, snip.Data)
+}
+
+// Module (file) inclusion
+func (l *Linter) resolveFileInclusion(
+	include *ast.IncludeStatement,
+	ctx *context.Context,
+	isRoot bool, // if true, vcl would be included on root parsing
+) []ast.Statement {
+
+	var statements []ast.Statement
+	module, err := ctx.Restore().Resolver().Resolve(include)
+	if err != nil {
+		e := &LintError{
+			Severity: ERROR,
+			Token:    include.GetMeta().Token,
+			Message:  err.Error(),
+		}
+		l.Error(e.Match(INCLUDE_STATEMENT_MODULE_LOAD_FAILED))
+		return statements
+	}
+
+	if isRoot {
+		statements = l.loadVCL(module.Name, module.Data)
+	} else {
+		statements = l.loadSnippetVCL(module.Name, module.Data)
+	}
+	return l.resolveIncludeStatements(statements, ctx, isRoot)
+}
+
+//nolint:gocognit,funlen
+func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *context.Context) []ast.Statement {
+	var factory []ast.Statement
+	for _, stmt := range statements {
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
 			if err := ctx.AddAcl(t.Name.Value, &types.Acl{Decl: t}); err != nil {
@@ -272,7 +394,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(ACL_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.BackendDeclaration:
 			if err := ctx.AddBackend(t.Name.Value, &types.Backend{BackendDecl: t}); err != nil {
 				e := &LintError{
@@ -282,10 +404,9 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(BACKEND_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.ImportStatement:
-			continue
-		case *ast.IncludeStatement:
+			// @ysugimoto skipped. import statement no longer used?
 			continue
 		case *ast.DirectorDeclaration:
 			if err := ctx.AddDirector(t.Name.Value, &types.Director{Decl: t}); err != nil {
@@ -296,7 +417,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(DIRECTOR_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.TableDeclaration:
 			table := &types.Table{
 				Decl:       t,
@@ -326,7 +447,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(TABLE_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.SubroutineDeclaration:
 			if t.ReturnType != nil {
 				if context.IsFastlySubroutine(t.Name.Value) {
@@ -367,7 +488,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 					l.Error(e.Match(SUBROUTINE_DUPLICATED))
 				}
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.PenaltyboxDeclaration:
 			if err := ctx.AddPenaltybox(t.Name.Value, &types.Penaltybox{Decl: t}); err != nil {
 				e := &LintError{
@@ -377,7 +498,7 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(PENALTYBOX_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		case *ast.RatecounterDeclaration:
 			if err := ctx.AddRatecounter(t.Name.Value, &types.Ratecounter{Decl: t}); err != nil {
 				e := &LintError{
@@ -387,12 +508,12 @@ func (l *Linter) factoryRootStatements(vcl *ast.VCL, ctx *context.Context) []ast
 				}
 				l.Error(e.Match(SUBROUTINE_DUPLICATED))
 			}
-			statements = append(statements, stmt)
+			factory = append(factory, stmt)
 		default:
 			l.Error(fmt.Errorf("unexpected statement declaration found: %s", t.String()))
 		}
 	}
-	return statements
+	return factory
 }
 
 func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration) types.Type {
@@ -690,16 +811,18 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		l.lintUnusedVariables(ctx)
 		cc.Restore()
 	}()
-	l.lint(decl.Block, cc)
-	// We are done linting inside the previous scope so
-	// we dont need the return type anymore
-	cc.ReturnType = nil
 
 	// If fastly reserved subroutine name (e.g vcl_recv, vcl_fetch, etc),
 	// validate fastly specific boilerplate macro is embedded like "FASTLY recv"
 	if scope := getFastlySubroutineScope(decl.Name.Value); scope != "" {
-		l.lintFastlyBoilerPlateMacro(decl, strings.ToUpper("FASTLY "+scope))
+		l.lintFastlyBoilerPlateMacro(decl, ctx, scope)
 	}
+
+	l.lint(decl.Block, cc)
+
+	// We are done linting inside the previous scope so
+	// we dont need the return type anymore
+	cc.ReturnType = nil
 
 	return types.NeverType
 }
@@ -764,15 +887,41 @@ func (l *Linter) lintRatecounterDeclaration(decl *ast.RatecounterDeclaration) ty
 	return types.NeverType
 }
 
-func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phrase string) {
+func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx *context.Context, scope string) {
+	phrase := strings.ToUpper("FASTLY " + scope)
+
+	// prepare scoped snippets
+	snippets, ok := ctx.Snippets().ScopedSnippets[scope]
+	if !ok {
+		snippets = []context.FastlySnippetItem{}
+	}
+
+	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
 	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
+		for _, s := range snippets {
+			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
+		}
+		sub.Block.Statements = append(resolved, sub.Block.Statements...)
 		return
 	}
+
+	var found bool
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) {
-			return
+		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) && !found {
+			// Macro found but embedding snippets should do only once
+			for _, s := range snippets {
+				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
+			}
+			found = true
 		}
+		resolved = append(resolved, stmt)
+	}
+	// assign resolved statements to subroutine block
+	sub.Block.Statements = resolved
+
+	if found {
+		return
 	}
 
 	// Macro not found
@@ -787,7 +936,8 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, phra
 }
 
 func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Context) types.Type {
-	for _, stmt := range block.Statements {
+	statements := l.resolveIncludeStatements(block.Statements, ctx, false)
+	for _, stmt := range statements {
 		l.lint(stmt, ctx)
 	}
 

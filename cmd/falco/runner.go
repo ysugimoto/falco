@@ -7,17 +7,22 @@ import (
 	"strings"
 	"time"
 
+	"net/http"
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/interpreter"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/remote"
+	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -56,6 +61,7 @@ type Fetcher interface {
 	Backends() ([]*types.RemoteBackend, error)
 	Dictionaries() ([]*types.RemoteDictionary, error)
 	Acls() ([]*types.RemoteAcl, error)
+	Snippets() ([]*types.RemoteVCL, error)
 }
 
 type RunMode int
@@ -68,15 +74,11 @@ const (
 
 type Runner struct {
 	transformers []*Transformer
-	resolver     Resolver
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
-	snippets     []snippetItem
+	snippets     *context.FastlySnippet
 
 	level Level
-
-	// Note: this context is not Go context, our parsing context :)
-	context *context.Context
 
 	// runner result fields
 	infos    int
@@ -84,10 +86,8 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
+func NewRunner(c *Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
-		resolver:  rz,
-		context:   context.New(),
 		level:     LevelError,
 		overrides: make(map[string]linter.Severity),
 		lexers:    make(map[string]*lexer.Lexer),
@@ -124,7 +124,7 @@ func NewRunner(rz Resolver, c *Config, f Fetcher) (*Runner, error) {
 		if err != nil {
 			writeln(red, err.Error())
 		}
-		r.snippets = append(r.snippets, snippets...)
+		r.snippets = snippets
 	}
 
 	// Check transformer exists and format to absolute path
@@ -215,6 +215,86 @@ func (r *Runner) Transform(vcl *plugin.VCL) error {
 	return nil
 }
 
+func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
+	options := []context.Option{context.WithResolver(rslv)}
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if r.snippets != nil {
+		options = append(options, context.WithFastlySnippets(r.snippets))
+	}
+
+	main, err := rslv.MainVCL()
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: this context is not Go context, our parsing context :)
+	ctx := context.New(options...)
+	vcl, err := r.run(ctx, main, RunModeLint)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RunnerResult{
+		Infos:    r.infos,
+		Warnings: r.warnings,
+		Errors:   r.errors,
+		Vcl:      vcl,
+	}, nil
+}
+
+func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
+	vcl, err := r.parseVCL(main.Name, main.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if r.snippets != nil {
+		for _, snip := range r.snippets.EmbedSnippets() {
+			s, err := r.parseVCL(snip.Name, snip.Data)
+			if err != nil {
+				return nil, err
+			}
+			vcl.Statements = append(s.Statements, vcl.Statements...)
+		}
+	}
+
+	lt := linter.New()
+	lt.Lint(vcl, ctx)
+
+	for k, v := range lt.Lexers() {
+		r.lexers[k] = v
+	}
+
+	// If runner is running as stat mode, prevent to output lint result
+	if mode&RunModeStat > 0 {
+		return nil, nil
+	}
+
+	// Checking Fatal error, it means parse error occurs on included submodule
+	if lt.FatalError != nil {
+		if pe, ok := lt.FatalError.Error.(*parser.ParseError); ok {
+			r.printParseError(lt.FatalError.Lexer, pe)
+		}
+		return nil, ErrParser
+	}
+
+	if len(lt.Errors) > 0 {
+		for _, err := range lt.Errors {
+			le, ok := err.(*linter.LintError)
+			if !ok {
+				continue
+			}
+			r.printLinterError(r.lexers[main.Name], le)
+		}
+	}
+
+	return &plugin.VCL{
+		File: main.Name,
+		AST:  vcl,
+	}, nil
+}
+
 func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 	lx := lexer.NewFromString(code, lexer.WithFile(name))
 	p := parser.New(lx)
@@ -230,135 +310,6 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 	lx.NewLine()
 	r.lexers[name] = lx
 	return vcl, nil
-}
-
-func (r *Runner) Run() (*RunnerResult, error) {
-	main, err := r.resolver.MainVCL()
-	if err != nil {
-		return nil, err
-	}
-
-	vcl, err := r.run(main, RunModeLint)
-	if err != nil {
-		return nil, err
-	}
-
-	return &RunnerResult{
-		Infos:    r.infos,
-		Warnings: r.warnings,
-		Errors:   r.errors,
-		Vcl:      vcl,
-	}, nil
-}
-
-func (r *Runner) run(v *VCL, mode RunMode) (*plugin.VCL, error) {
-	vcl, err := r.parseVCL(v.Name, v.Data)
-	if err != nil {
-		return nil, err
-	}
-
-	// If remote snippets exists, prepare parse and prepend to main VCL
-	for _, snip := range r.snippets {
-		s, err := r.parseVCL(snip.Name, snip.Data)
-		if err != nil {
-			return nil, err
-		}
-		vcl.Statements = append(s.Statements, vcl.Statements...)
-	}
-
-	vcl.Statements, err = r.resolveStatements(vcl.Statements)
-	if err != nil {
-		return nil, err
-	}
-
-	lt := linter.New()
-	lt.Lint(vcl, r.context)
-
-	// If runner is running as stat mode, prevent to output lint result
-	if mode&RunModeStat > 0 {
-		return nil, nil
-	}
-
-	if len(lt.Errors) > 0 {
-		for _, err := range lt.Errors {
-			le, ok := err.(*linter.LintError)
-			if !ok {
-				continue
-			}
-			r.printLinterError(r.lexers[v.Name], le)
-		}
-	}
-
-	return &plugin.VCL{
-		File: v.Name,
-		AST:  vcl,
-	}, nil
-}
-
-func (r *Runner) resolveStatements(statements []ast.Statement) ([]ast.Statement, error) {
-	var resolved []ast.Statement
-
-	for _, stmt := range statements {
-		switch t := stmt.(type) {
-		case *ast.IncludeStatement:
-			module, err := r.resolver.Resolve(t.Module.Value)
-			if err != nil {
-				return nil, err
-			}
-
-			vcl, err := r.parseVCL(module.Name, module.Data)
-			if err != nil {
-				return nil, err
-			}
-
-			vcl.Statements, err = r.resolveStatements(vcl.Statements)
-			if err != nil {
-				return nil, err
-			}
-			resolved = append(resolved, vcl.Statements...)
-		case *ast.IfStatement:
-			if err := r.resolveIfStatement(t); err != nil {
-				return nil, err
-			}
-			resolved = append(resolved, t)
-		case *ast.SubroutineDeclaration:
-			ss, err := r.resolveStatements(t.Block.Statements)
-			if err != nil {
-				return nil, err
-			}
-			t.Block.Statements = ss
-			resolved = append(resolved, t)
-		default:
-			resolved = append(resolved, t)
-		}
-	}
-	return resolved, nil
-}
-
-func (r *Runner) resolveIfStatement(s *ast.IfStatement) error {
-	if s.Consequence != nil {
-		ss, err := r.resolveStatements(s.Consequence.Statements)
-		if err != nil {
-			return err
-		}
-		s.Consequence.Statements = ss
-	}
-
-	for _, a := range s.Another {
-		if err := r.resolveIfStatement(a); err != nil {
-			return err
-		}
-	}
-
-	if s.Alternative != nil {
-		ss, err := r.resolveStatements(s.Alternative.Statements)
-		if err != nil {
-			return err
-		}
-		s.Alternative.Statements = ss
-	}
-
-	return nil
 }
 
 func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
@@ -400,6 +351,7 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
 		lx = r.lexers[err.Token.File]
+		fmt.Println(err.Token.File, lx)
 	}
 
 	// check severity with overrides
@@ -456,23 +408,32 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	writeln(white, "")
 }
 
-func (r *Runner) Stats() (*StatsResult, error) {
-	main, err := r.resolver.MainVCL()
+func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
+	options := []context.Option{context.WithResolver(rslv)}
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if r.snippets != nil {
+		options = append(options, context.WithFastlySnippets(r.snippets))
+	}
+
+	main, err := rslv.MainVCL()
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := r.run(main, RunModeStat); err != nil {
+	// Note: this context is not Go context, our parsing context :)
+	ctx := context.New(options...)
+
+	if _, err := r.run(ctx, main, RunModeStat); err != nil {
 		return nil, err
 	}
 
 	stats := &StatsResult{
 		Main:        main.Name,
-		Subroutines: len(r.context.Subroutines),
-		Tables:      len(r.context.Tables),
-		Backends:    len(r.context.Backends),
-		Acls:        len(r.context.Acls),
-		Directors:   len(r.context.Directors),
+		Subroutines: len(ctx.Subroutines),
+		Tables:      len(ctx.Tables),
+		Backends:    len(ctx.Backends),
+		Acls:        len(ctx.Acls),
+		Directors:   len(ctx.Directors),
 	}
 
 	for _, lx := range r.lexers {
@@ -481,4 +442,47 @@ func (r *Runner) Stats() (*StatsResult, error) {
 	}
 
 	return stats, nil
+}
+
+func (r *Runner) Simulator(rslv resolver.Resolver) (http.HandlerFunc, error) {
+	main, err := rslv.MainVCL()
+	if err != nil {
+		return nil, err
+	}
+	vcl, err := r.parseVCL(main.Name, main.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if r.snippets != nil {
+		for _, snip := range r.snippets.EmbedSnippets() {
+			s, err := r.parseVCL(snip.Name, snip.Data)
+			if err != nil {
+				return nil, err
+			}
+			vcl.Statements = append(s.Statements, vcl.Statements...)
+		}
+	}
+	options := []context.Option{context.WithResolver(rslv)}
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if r.snippets != nil {
+		options = append(options, context.WithFastlySnippets(r.snippets))
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := icontext.New(vcl)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ip := interpreter.New(c)
+		if err := ip.Process(w, r); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		pp.Println(ip.Result())
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("simulated"))
+	}, nil
 }
