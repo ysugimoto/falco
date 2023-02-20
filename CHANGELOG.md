@@ -1,3 +1,9 @@
+## v0.19.0
+
+- Lint include statement on its place [#119](https://github.com/ysugimoto/falco/pull/119) (@ysugimoto)
+- Implement fastly managed snippets linting [#120](https://github.com/ysugimoto/falco/pull/120) (@ysugimoto)
+- fix fourth argument type of accept.language_filter_basic [#121](https://github.com/ysugimoto/falco/pull/121) (@ysugimoto)
+
 ## v0.18.0
 
 - Add support for PCRE [#90](https://github.com/ysugimoto/falco/pull/90) (@shadialtarsha)
