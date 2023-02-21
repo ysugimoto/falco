@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of digest.hash_crc32b
@@ -13,5 +14,20 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-crc32b/
 func Test_Digest_hash_crc32b(t *testing.T) {
-	t.Skip("Test Builtin function digest.hash_crc32b should be impelemented")
+	ret, err := Digest_hash_crc32b(
+		&context.Context{},
+		&value.String{Value: "123456789"},
+	)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.StringType {
+		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+	}
+	v := value.Unwrap[*value.String](ret)
+	expect := "2639f4cb"
+	if v.Value != expect {
+		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+	}
 }

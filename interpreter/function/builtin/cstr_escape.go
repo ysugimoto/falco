@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"fmt"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,6 +26,16 @@ func Cstr_escape_Validate(args []value.Value) error {
 	return nil
 }
 
+var Cstr_escape_CharacterMap = map[byte][]byte{
+	0x22: []byte("\""),
+	0x5C: []byte("\\"),
+	0x08: []byte("\\b"),
+	0x09: []byte("\\t"),
+	0x0A: []byte("\\n"),
+	0x0B: []byte("\\v"),
+	0x0D: []byte("\\r"),
+}
+
 // Fastly built-in function implementation of cstr_escape
 // Arguments may be:
 // - STRING
@@ -34,6 +46,21 @@ func Cstr_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("cstr_escape")
+	str := value.Unwrap[*value.String](args[0])
+	var escaped []byte
+	for _, b := range []byte(str.Value) {
+		if v, ok := Cstr_escape_CharacterMap[b]; ok {
+			escaped = append(escaped, v...)
+			continue
+		}
+		if b < 0x1F || 0x7F < b {
+			escaped = append(escaped, []byte(fmt.Sprintf("\\x%x", b))...)
+			continue
+		}
+		escaped = append(escaped, b)
+	}
+
+	return &value.String{
+		Value: string(escaped),
+	}, nil
 }

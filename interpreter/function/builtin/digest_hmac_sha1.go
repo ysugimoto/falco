@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,12 @@ func Digest_hmac_sha1(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.hmac_sha1")
+	key := value.Unwrap[*value.String](args[0])
+	input := value.Unwrap[*value.String](args[1])
+	mac := hmac.New(sha1.New, []byte(key.Value))
+	mac.Write([]byte(input.Value))
+
+	return &value.String{
+		Value: hex.EncodeToString(mac.Sum(nil)),
+	}, nil
 }

@@ -3,6 +3,13 @@
 package builtin
 
 import (
+	"crypto/sha512"
+	"encoding/base32"
+	"encoding/base64"
+	"time"
+
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +41,36 @@ func Digest_time_hmac_sha512(ctx *context.Context, args ...value.Value) (value.V
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.time_hmac_sha512")
+	secret := value.Unwrap[*value.String](args[0])
+	interval := value.Unwrap[*value.Integer](args[1])
+	offset := value.Unwrap[*value.Integer](args[2])
+	return digest_time_hmac_sha512(time.Now(), secret, interval, offset)
+}
+
+func digest_time_hmac_sha512(baseTime time.Time, secret *value.String, interval, offset *value.Integer) (value.Value, error) {
+	dec, err := base64.StdEncoding.DecodeString(secret.Value)
+	if err != nil {
+		return value.Null, errors.New("digest.time_hmac_sha512", "Failed to base64 decode secret string")
+	}
+
+	var skew uint
+	if offset.Value >= 0 {
+		skew = uint(offset.Value)
+	}
+
+	key := base32.StdEncoding.EncodeToString(dec)
+	pass, err := totp.GenerateCodeCustom(key, baseTime, totp.ValidateOpts{
+		Period:    uint(interval.Value),
+		Digits:    otp.DigitsSix,
+		Algorithm: otp.AlgorithmSHA512,
+		Skew:      skew,
+	})
+	if err != nil {
+		return value.Null, errors.New("digest.time_hmac_sha512", "Failed to generate TOTP password")
+	}
+
+	enc := sha512.Sum512([]byte(pass))
+	return &value.String{
+		Value: base64.StdEncoding.EncodeToString(enc[:]),
+	}, nil
 }

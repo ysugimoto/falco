@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,10 @@ func Digest_hash_sha256(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.hash_sha256")
+	input := value.Unwrap[*value.String](args[0])
+	enc := sha256.Sum256([]byte(input.Value))
+
+	return &value.String{
+		Value: hex.EncodeToString(enc[:]),
+	}, nil
 }

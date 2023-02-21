@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"encoding/binary"
+	"fmt"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,25 @@ func Digest_hash_crc32b(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.hash_crc32b")
+	input := value.Unwrap[*value.String](args[0])
+
+	// https://github.com/whik/crc-lib-c/blob/master/crcLib.c#L527
+	var crc uint32 = 0xffffffff
+	for _, c := range []byte(input.Value) {
+		crc = crc ^ (uint32)(c)
+		for i := 0; i < 8; i++ {
+			if crc&0x1 != 0 {
+				crc = (crc >> 1) ^ 0xEDB88320
+			} else {
+				crc = (crc >> 1)
+			}
+		}
+	}
+	crc = 0xffffffff ^ crc
+	buf := []byte{0, 0, 0, 0}
+	binary.LittleEndian.PutUint32(buf, crc)
+
+	return &value.String{
+		Value: fmt.Sprintf("%08x", buf),
+	}, nil
 }

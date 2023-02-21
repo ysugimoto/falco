@@ -34,6 +34,18 @@ func Digest_secure_is_equal(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.secure_is_equal")
+	s1 := []rune(value.Unwrap[*value.String](args[0]).Value)
+	s2 := []rune(value.Unwrap[*value.String](args[1]).Value)
+
+	if len(s1) != len(s2) {
+		return &value.Boolean{Value: false}, nil
+	}
+
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return &value.Boolean{Value: false}, nil
+		}
+	}
+
+	return &value.Boolean{Value: true}, nil
 }

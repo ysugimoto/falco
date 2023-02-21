@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of digest.hash_md5
@@ -13,5 +14,20 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-md5/
 func Test_Digest_hash_md5(t *testing.T) {
-	t.Skip("Test Builtin function digest.hash_md5 should be impelemented")
+	ret, err := Digest_hash_md5(
+		&context.Context{},
+		&value.String{Value: "123456789"},
+	)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.StringType {
+		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+	}
+	v := value.Unwrap[*value.String](ret)
+	expect := "25f9e794323b453885f5181f1b624d0b"
+	if v.Value != expect {
+		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+	}
 }

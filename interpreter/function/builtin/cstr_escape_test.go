@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of cstr_escape
@@ -13,5 +14,56 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/cstr-escape/
 func Test_Cstr_escape(t *testing.T) {
-	t.Skip("Test Builtin function cstr_escape should be impelemented")
+
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{
+			input:  `"`,
+			expect: "\"",
+		},
+		{
+			input:  string([]byte{0x08}),
+			expect: "\\b",
+		},
+		{
+			input:  string([]byte{0x09}),
+			expect: "\\t",
+		},
+		{
+			input:  string([]byte{0x0A}),
+			expect: "\\n",
+		},
+		{
+			input:  string([]byte{0x0B}),
+			expect: "\\v",
+		},
+		{
+			input:  string([]byte{0x0D}),
+			expect: "\\r",
+		},
+		{
+			input:  string([]byte{0x10}),
+			expect: "\\x10",
+		},
+		{
+			input:  "abc",
+			expect: "abc",
+		},
+	}
+
+	for _, tt := range tests {
+		ret, err := Cstr_escape(&context.Context{}, &value.String{Value: tt.input})
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if v.Value != tt.expect {
+			t.Errorf("Return value unmatch, expect=%s, got=%s", tt.expect, v.Value)
+		}
+	}
 }

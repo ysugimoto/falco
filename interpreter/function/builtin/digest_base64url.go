@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"encoding/base64"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,9 @@ func Digest_base64url(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.base64url")
+	s := value.Unwrap[*value.String](args[0])
+
+	return &value.String{
+		Value: base64.URLEncoding.EncodeToString([]byte(s.Value)),
+	}, nil
 }

@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"crypto/hmac"
+	"crypto/md5"
+	"encoding/base64"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,12 @@ func Digest_hmac_md5_base64(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.hmac_md5_base64")
+	key := value.Unwrap[*value.String](args[0])
+	input := value.Unwrap[*value.String](args[1])
+	mac := hmac.New(md5.New, []byte(key.Value))
+	mac.Write([]byte(input.Value))
+
+	return &value.String{
+		Value: base64.StdEncoding.EncodeToString(mac.Sum(nil)),
+	}, nil
 }

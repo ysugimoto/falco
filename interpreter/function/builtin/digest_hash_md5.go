@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,10 @@ func Digest_hash_md5(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.hash_md5")
+	input := value.Unwrap[*value.String](args[0])
+	enc := md5.Sum([]byte(input.Value))
+
+	return &value.String{
+		Value: hex.EncodeToString(enc[:]),
+	}, nil
 }

@@ -3,6 +3,11 @@
 package builtin
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +39,21 @@ func Digest_awsv4_hmac(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("digest.awsv4_hmac")
+	key := value.Unwrap[*value.String](args[0])
+	dateStamp := value.Unwrap[*value.String](args[1])
+	region := value.Unwrap[*value.String](args[2])
+	service := value.Unwrap[*value.String](args[3])
+	stringToSign := value.Unwrap[*value.String](args[4])
+
+	signature := []byte("AWS4" + key.Value)
+	hashes := []string{dateStamp.Value, region.Value, service.Value, "aws4_request", stringToSign.Value}
+	for i := range hashes {
+		mac := hmac.New(sha256.New, signature)
+		mac.Write([]byte(hashes[i]))
+		signature = mac.Sum(nil)
+	}
+
+	return &value.String{
+		Value: strings.ToLower(hex.EncodeToString(signature)),
+	}, nil
 }
