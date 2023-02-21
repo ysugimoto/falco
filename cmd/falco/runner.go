@@ -351,7 +351,6 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
 		lx = r.lexers[err.Token.File]
-		fmt.Println(err.Token.File, lx)
 	}
 
 	// check severity with overrides

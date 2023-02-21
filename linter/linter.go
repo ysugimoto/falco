@@ -50,6 +50,8 @@ func (l *Linter) Lint(node ast.Node, ctx *context.Context) types.Type {
 		ctx = context.New()
 	}
 
+	l.lint(node, ctx)
+
 	// After whole VCLs have been linted in main VCL, check all definitions are exactly used.
 	l.lintUnusedTables(ctx)
 	l.lintUnusedAcls(ctx)
@@ -791,6 +793,7 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 }
 
 func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx *context.Context) types.Type {
+
 	// validate subroutine name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
