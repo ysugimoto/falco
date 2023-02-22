@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"fmt"
+	"unicode/utf8"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,6 +27,24 @@ func Json_escape_Validate(args []value.Value) error {
 	return nil
 }
 
+var Json_escape_CharacterMap = map[rune][]rune{
+	0x22: []rune("\""),
+	0x5C: []rune("\\"),
+	0x08: []rune("\\b"),
+	0x09: []rune("\\t"),
+	0x0A: []rune("\\n"),
+	0x0C: []rune("\\f"),
+	0x0D: []rune("\\r"),
+}
+
+// ref: http://www5d.biglobe.ne.jp/~noocyte/Programming/CharCode.html (JP)
+func Json_escape_toUTF16SurrogatePair(r rune) []rune {
+	r -= 0x10000
+	upper := ((r >> 10) & 0x03FF) + 0xD800
+	lower := (r & 0x03FF) + 0xDC00
+	return []rune(fmt.Sprintf("\\u%04X\\u%04X", upper, lower))
+}
+
 // Fastly built-in function implementation of json.escape
 // Arguments may be:
 // - STRING
@@ -34,6 +55,29 @@ func Json_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("json.escape")
+	str := value.Unwrap[*value.String](args[0])
+	var escaped []rune
+	for _, r := range []rune(str.Value) {
+		if v, ok := Json_escape_CharacterMap[r]; ok {
+			escaped = append(escaped, v...)
+			continue
+		}
+		if r < 0x1F || r == 0x7F || r == 0x2028 || r == 0x2029 {
+			escaped = append(escaped, []rune(fmt.Sprintf("\\u%04x", r))...)
+			continue
+		}
+		if r > 0xFFFF {
+			escaped = append(escaped, Json_escape_toUTF16SurrogatePair(r)...)
+			continue
+		}
+		if !utf8.ValidRune(r) {
+			return &value.String{Value: ""}, errors.New(Json_escape_Name, "Invalid UTF-8 sequence found, rune is %s", string(r))
+		}
+
+		escaped = append(escaped, r)
+	}
+
+	return &value.String{
+		Value: string(escaped),
+	}, nil
 }

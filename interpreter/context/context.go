@@ -127,6 +127,11 @@ type Context struct {
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
 	RegexMatchedValues map[string]*value.String
+
+	// Modify states from builtin functions
+	DisableCompressionHeaders []string // modified via "h2.disable_header_compression"
+	PushResources             []string // modified via "h2.push"
+	H3AltSvc                  bool     // modified via "h3.alt_svc"
 }
 
 func New(vcl *ast.VCL, options ...Option) (*Context, error) {

@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of fastly.hash
@@ -13,5 +14,25 @@ import (
 // - STRING, INTEGER, INTEGER, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/
 func Test_Fastly_hash(t *testing.T) {
-	t.Skip("Test Builtin function fastly.hash should be impelemented")
+
+	// This is hashing test, continue to several times
+	for i := 0; i < 1000; i++ {
+		ret, err := Fastly_hash(
+			&context.Context{},
+			&value.String{Value: "example"},
+			&value.Integer{Value: 0},
+			&value.Integer{Value: 10},
+			&value.Integer{Value: 100},
+		)
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+		if ret.Type() != value.IntegerType {
+			t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value < 10 || v.Value > 100 {
+			t.Errorf("return value is not in expected range, got=%d", v.Value)
+		}
+	}
 }

@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of http_status_matches
@@ -13,5 +14,33 @@ import (
 // - INTEGER, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/http-status-matches/
 func Test_Http_status_matches(t *testing.T) {
-	t.Skip("Test Builtin function http_status_matches should be impelemented")
+
+	tests := []struct {
+		status int64
+		format string
+		expect bool
+	}{
+		{status: 200, format: "200,302,500", expect: true},
+		{status: 200, format: "!200,302,500", expect: false},
+		{status: 400, format: "200,302,500", expect: false},
+		{status: 400, format: "!200,302,500", expect: true},
+	}
+
+	for _, tt := range tests {
+		ret, err := Http_status_matches(
+			&context.Context{},
+			&value.Integer{Value: tt.status},
+			&value.String{Value: tt.format},
+		)
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+		if ret.Type() != value.BooleanType {
+			t.Errorf("Unexpected return type, expect=BOOL, got=%s", ret.Type())
+		}
+		v := value.Unwrap[*value.Boolean](ret)
+		if v.Value != tt.expect {
+			t.Errorf("return value is unmatch, %d, %s, expect=%t, got=%t", tt.status, tt.format, tt.expect, v.Value)
+		}
+	}
 }

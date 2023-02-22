@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,30 @@ func Http_status_matches(ctx *context.Context, args ...value.Value) (value.Value
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("http_status_matches")
+	status := fmt.Sprint(value.Unwrap[*value.Integer](args[0]).Value)
+	format := value.Unwrap[*value.String](args[1]).Value
+
+	var inverse bool
+	if format[0] == 0x21 { // prefixed with "!"
+		inverse = true
+		format = format[1:]
+	}
+
+	for _, code := range strings.Split(format, ",") {
+		if status != strings.TrimSpace(code) {
+			continue
+		}
+
+		// Matches, but consider inverse result
+		if inverse {
+			return &value.Boolean{Value: false}, nil
+		}
+		return &value.Boolean{Value: true}, nil
+	}
+
+	// No matches
+	if inverse {
+		return &value.Boolean{Value: true}, nil
+	}
+	return &value.Boolean{Value: false}, nil
 }

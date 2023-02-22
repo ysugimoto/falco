@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of h2.disable_header_compression
@@ -13,5 +14,29 @@ import (
 // - STRING_LIST
 // Reference: https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-disable-header-compression/
 func Test_H2_disable_header_compression(t *testing.T) {
-	t.Skip("Test Builtin function h2.disable_header_compression should be impelemented")
+
+	ctx := &context.Context{}
+	ret, err := H2_disable_header_compression(
+		ctx,
+		&value.String{Value: "Authorization"},
+		&value.String{Value: "Secret"},
+	)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret != nil {
+		t.Errorf("Return type must be nil")
+	}
+
+	// compare stacked result
+	headers := ctx.DisableCompressionHeaders
+	if len(headers) != 2 {
+		t.Errorf("Disabled heaers count must be 2, got %d", len(headers))
+		return
+	}
+	for i, v := range []string{"Authorization", "Secret"} {
+		if headers[i] != v {
+			t.Errorf("%d header value must be %s, got=%s", i, v, headers[i])
+		}
+	}
 }

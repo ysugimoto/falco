@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of json.escape
@@ -13,5 +14,64 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/json-escape/
 func Test_Json_escape(t *testing.T) {
-	t.Skip("Test Builtin function json.escape should be impelemented")
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{
+			input:  `abc123`,
+			expect: "abc123",
+		},
+		{
+			input:  "/foo/bar",
+			expect: "/foo/bar",
+		},
+		{
+			input:  "?p=q&x=y",
+			expect: "?p=q&x=y",
+		},
+		{
+			input:  `"`,
+			expect: "\"",
+		},
+		{
+			input:  "\n",
+			expect: "\\n",
+		},
+		{
+			input: "	",
+			expect: "\\t",
+		},
+		{
+			input:  "αβγ",
+			expect: "αβγ",
+		},
+		// TODO: pass test for invalid UTF-8 sequence
+		// {
+		// 	input:  string([]byte{0xFF}),
+		// 	expect: "",
+		// },
+		// {
+		// 	input:  string([]byte{0x61, 0x20, 0x2B, 0x20, 0xCC}),
+		// 	expect: "",
+		// },
+		{
+			input:  "😁",
+			expect: "\\uD83D\\uDE01",
+		},
+	}
+
+	for _, tt := range tests {
+		ret, err := Json_escape(&context.Context{}, &value.String{Value: tt.input})
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if v.Value != tt.expect {
+			t.Errorf("Return value unmatch, expect=%s, got=%s", tt.expect, v.Value)
+		}
+	}
 }

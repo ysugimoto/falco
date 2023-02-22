@@ -28,6 +28,6 @@ func H3_alt_svc(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("h3.alt_svc")
+	ctx.H3AltSvc = true
+	return nil, nil
 }

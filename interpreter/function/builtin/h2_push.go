@@ -10,15 +10,13 @@ import (
 
 const H2_push_Name = "h2.push"
 
-var H2_push_ArgumentTypes = []value.Type{value.StringType, value.StringType}
-
 func H2_push_Validate(args []value.Value) error {
-	if len(args) != 2 {
-		return errors.ArgumentNotEnough(H2_push_Name, 2, args)
+	if len(args) < 1 {
+		return errors.ArgumentNotEnough(H2_push_Name, 1, args)
 	}
 	for i := range args {
-		if args[i].Type() != H2_push_ArgumentTypes[i] {
-			return errors.TypeMismatch(H2_push_Name, i+1, H2_push_ArgumentTypes[i], args[i].Type())
+		if args[i].Type() != value.StringType {
+			return errors.TypeMismatch(H2_push_Name, i+1, value.StringType, args[i].Type())
 		}
 	}
 	return nil
@@ -34,6 +32,9 @@ func H2_push(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("h2.push")
+	resource := value.Unwrap[*value.String](args[0])
+	// Fastly document does not say about "as" variadic argument, so we ignore them for now.
+	ctx.PushResources = append(ctx.PushResources, resource.Value)
+
+	return nil, nil
 }

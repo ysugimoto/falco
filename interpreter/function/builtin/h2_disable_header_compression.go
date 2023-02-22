@@ -10,15 +10,14 @@ import (
 
 const H2_disable_header_compression_Name = "h2.disable_header_compression"
 
-var H2_disable_header_compression_ArgumentTypes = []value.Type{}
-
 func H2_disable_header_compression_Validate(args []value.Value) error {
-	if len(args) != 1 {
-		return errors.ArgumentNotEnough(H2_disable_header_compression_Name, 1, args)
+	// Note: this function accepts variadic arguments
+	if len(args) == 0 {
+		return errors.New(H2_disable_header_compression_Name, "At least 1 arguments")
 	}
 	for i := range args {
-		if args[i].Type() != H2_disable_header_compression_ArgumentTypes[i] {
-			return errors.TypeMismatch(H2_disable_header_compression_Name, i+1, H2_disable_header_compression_ArgumentTypes[i], args[i].Type())
+		if args[i].Type() != value.StringType {
+			return errors.TypeMismatch(H2_disable_header_compression_Name, i+1, value.StringType, args[i].Type())
 		}
 	}
 	return nil
@@ -34,6 +33,11 @@ func H2_disable_header_compression(ctx *context.Context, args ...value.Value) (v
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("h2.disable_header_compression")
+	for i := range args {
+		v := value.Unwrap[*value.String](args[i])
+		ctx.DisableCompressionHeaders = append(ctx.DisableCompressionHeaders, v.Value)
+	}
+
+	// nil means VOID type
+	return nil, nil
 }
