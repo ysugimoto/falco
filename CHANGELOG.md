@@ -1,3 +1,7 @@
+## v0.19.1
+
+- supress output [#123](https://github.com/ysugimoto/falco/pull/123) (@ysugimoto)
+
 ## v0.19.0
 
 - Lint include statement on its place [#119](https://github.com/ysugimoto/falco/pull/119) (@ysugimoto)
