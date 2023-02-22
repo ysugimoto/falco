@@ -70,7 +70,7 @@ func Json_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 			escaped = append(escaped, Json_escape_toUTF16SurrogatePair(r)...)
 			continue
 		}
-		if !utf8.ValidRune(r) {
+		if !utf8.Valid([]byte{byte(r)}) {
 			return &value.String{Value: ""}, errors.New(Json_escape_Name, "Invalid UTF-8 sequence found, rune is %s", string(r))
 		}
 

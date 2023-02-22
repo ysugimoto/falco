@@ -46,15 +46,14 @@ func Test_Json_escape(t *testing.T) {
 			input:  "αβγ",
 			expect: "αβγ",
 		},
-		// TODO: pass test for invalid UTF-8 sequence
-		// {
-		// 	input:  string([]byte{0xFF}),
-		// 	expect: "",
-		// },
-		// {
-		// 	input:  string([]byte{0x61, 0x20, 0x2B, 0x20, 0xCC}),
-		// 	expect: "",
-		// },
+		{
+			input:  string([]rune{0xFF}),
+			expect: "",
+		},
+		{
+			input:  string([]rune{0x61, 0x20, 0x2B, 0x20, 0xCC}),
+			expect: "",
+		},
 		{
 			input:  "😁",
 			expect: "\\uD83D\\uDE01",
