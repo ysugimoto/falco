@@ -3,6 +3,12 @@
 package builtin
 
 import (
+	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/binary"
+	"math/big"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +40,25 @@ func Fastly_hash(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("fastly.hash")
+	key := value.Unwrap[*value.String](args[0])
+	seed := value.Unwrap[*value.Integer](args[1])
+	from := value.Unwrap[*value.Integer](args[2])
+	to := value.Unwrap[*value.Integer](args[3])
+
+	// Note: fastly.hash internal algorithm is not public.
+	// So we implement hashing function as our own way:
+	// sha256 hash algorithm
+	// concatnation with key string and seed, and get random int between from and to
+	enc := sha256.Sum256([]byte(key.Value))
+	sb := make([]byte, 64)
+	n := binary.PutVarint(sb, seed.Value)
+	hash := append(enc[:], sb[:n]...)
+	v, err := rand.Int(bytes.NewReader(hash), big.NewInt(from.Value+to.Value))
+	if err != nil {
+		return value.Null, errors.New("fastly.hash", "Failed to generate random hash: %s", err)
+	}
+
+	return &value.Integer{
+		Value: v.Int64() - from.Value,
+	}, nil
 }
