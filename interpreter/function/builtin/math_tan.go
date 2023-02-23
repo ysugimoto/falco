@@ -3,8 +3,11 @@
 package builtin
 
 import (
+	"math"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +37,28 @@ func Math_tan(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.tan")
+	x := value.Unwrap[*value.Float](args[0])
+	switch {
+	case x.IsNAN:
+		return &value.Float{IsNAN: true}, nil
+	case x.IsNegativeInf || x.IsPositiveInf:
+		ctx.FastlyError = &value.String{Value: "EDOM"}
+		return &value.Float{IsNAN: true}, nil
+	case x.Value == 0:
+		return &value.Float{Value: x.Value}, nil
+	case shared.IsSubnormalFloat64(x.Value):
+		ctx.FastlyError = &value.String{Value: "ERANGE"}
+		return &value.Float{Value: x.Value}, nil
+	default:
+		v := math.Tan(x.Value)
+		if v >= math.Inf(1) {
+			ctx.FastlyError = &value.String{Value: "ERANGE"}
+			if x.Value > 0 {
+				return &value.Float{IsPositiveInf: true}, nil
+			} else {
+				return &value.Float{IsNegativeInf: true}, nil
+			}
+		}
+		return &value.Float{Value: v}, nil
+	}
 }

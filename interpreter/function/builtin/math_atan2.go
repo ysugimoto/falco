@@ -3,8 +3,11 @@
 package builtin
 
 import (
+	"math"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +37,45 @@ func Math_atan2(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.atan2")
+	y := value.Unwrap[*value.Float](args[0])
+	x := value.Unwrap[*value.Float](args[1])
+	switch {
+	case y.IsNAN || x.IsNAN:
+		return &value.Float{IsNAN: true}, nil
+	case y.IsPositiveInf || y.IsNegativeInf:
+		switch {
+		case x.IsNegativeInf:
+			return &value.Float{Value: 3 * (math.Pi / 4)}, nil
+		case x.IsPositiveInf:
+			return &value.Float{Value: math.Pi / 4}, nil
+		default:
+			return &value.Float{Value: math.Pi}, nil
+		}
+	case math.Abs(y.Value) > 0 && x.IsNegativeInf:
+		return &value.Float{Value: math.Pi}, nil
+	case math.Abs(y.Value) > 0 && x.IsPositiveInf:
+		return &value.Float{Value: 0}, nil
+	case y.Value == 0 && x.Value < 0:
+		return &value.Float{Value: math.Pi}, nil
+	case y.Value == 0 && x.Value > 0:
+		return &value.Float{Value: 0}, nil
+	case y.Value < 0 && x.Value == 0:
+		return &value.Float{Value: -(math.Pi / 2)}, nil
+	case y.Value > 0 && x.Value == 0:
+		return &value.Float{Value: math.Pi / 2}, nil
+	case y.Value == 0 && shared.IsPositiveZero(x.Value):
+		// pole error will not occur.
+		return &value.Float{Value: 0}, nil
+	case y.Value == 0 && x.Value == 0:
+		ctx.FastlyError = &value.String{Value: "EDOM"}
+		return &value.Float{Value: 0}, nil
+	default:
+		v := math.Atan2(y.Value, x.Value)
+		// underflow
+		if v < math.Inf(-1) {
+			ctx.FastlyError = &value.String{Value: "EDOM"}
+			return &value.Float{Value: y.Value / x.Value}, nil
+		}
+		return &value.Float{Value: v}, nil
+	}
 }

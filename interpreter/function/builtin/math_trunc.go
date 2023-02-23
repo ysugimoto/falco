@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"math"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,17 @@ func Math_trunc(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.trunc")
+	x := value.Unwrap[*value.Float](args[0])
+	switch {
+	case x.IsNAN:
+		return &value.Float{IsNAN: true}, nil
+	case x.IsNegativeInf:
+		return &value.Float{IsNegativeInf: true}, nil
+	case x.IsPositiveInf:
+		return &value.Float{IsPositiveInf: true}, nil
+	case x.Value == 0:
+		return &value.Float{Value: x.Value}, nil
+	default:
+		return &value.Float{Value: math.Trunc(x.Value)}, nil
+	}
 }

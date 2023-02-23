@@ -2,6 +2,7 @@ package assign
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"strconv"
 	"time"
@@ -441,12 +442,22 @@ func Multiplication(left, right value.Value) error {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value *= rv.Value
+			if float64(lv.Value) >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if float64(lv.Value) <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		case value.FloatType:
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not multiple to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value *= int64(rv.Value)
+			if float64(lv.Value) >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if float64(lv.Value) <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid multiplication INTEGER type, got %s", right.Type()))
 		}
@@ -456,9 +467,19 @@ func Multiplication(left, right value.Value) error {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value *= float64(rv.Value)
+			if lv.Value >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if lv.Value <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value *= rv.Value
+			if lv.Value >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if lv.Value <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid multiplication FLOAT type, got %s", right.Type()))
 		}
@@ -487,13 +508,31 @@ func Division(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.Value == 0 {
+				lv.IsNAN = true
+				return errors.WithStack(fmt.Errorf("Division by zero"))
+			}
 			lv.Value /= rv.Value
+			if float64(lv.Value) >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if float64(lv.Value) <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		case value.FloatType:
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not divide to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
+			if rv.Value == 0 {
+				lv.IsNAN = true
+				return errors.WithStack(fmt.Errorf("Division by zero"))
+			}
 			lv.Value /= int64(rv.Value)
+			if float64(lv.Value) >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if float64(lv.Value) <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid division INTEGER type, got %s", right.Type()))
 		}
@@ -502,10 +541,28 @@ func Division(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.Value == 0 {
+				lv.IsNAN = true
+				return errors.WithStack(fmt.Errorf("Division by zero"))
+			}
 			lv.Value /= float64(rv.Value)
+			if lv.Value >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if lv.Value <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			if rv.Value == 0 {
+				lv.IsNAN = true
+				return errors.WithStack(fmt.Errorf("Division by zero"))
+			}
 			lv.Value /= rv.Value
+			if lv.Value >= math.Inf(1) {
+				lv.IsPositiveInf = true
+			} else if lv.Value <= math.Inf(-1) {
+				lv.IsNegativeInf = true
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid division FLOAT type, got %s", right.Type()))
 		}
@@ -586,6 +643,11 @@ func BitwiseOR(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value |= rv.Value
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -601,6 +663,11 @@ func BitwiseAND(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value &= rv.Value
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -616,6 +683,11 @@ func BitwiseXOR(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value ^= rv.Value
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -631,6 +703,11 @@ func LeftShift(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value <<= rv.Value
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -646,6 +723,11 @@ func RightShift(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value >>= rv.Value
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -661,6 +743,11 @@ func LeftRotate(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value = (lv.Value << rv.Value) | (lv.Value >> (64 - rv.Value))
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 
@@ -676,6 +763,11 @@ func RightRotate(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value = (lv.Value >> rv.Value) | (lv.Value << (64 - rv.Value))
+	if float64(lv.Value) >= math.Inf(1) {
+		lv.IsPositiveInf = true
+	} else if float64(lv.Value) <= math.Inf(-1) {
+		lv.IsNegativeInf = true
+	}
 	return nil
 }
 

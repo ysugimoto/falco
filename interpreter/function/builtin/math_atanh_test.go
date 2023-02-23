@@ -3,9 +3,13 @@
 package builtin
 
 import (
+	"math"
+	"math/rand"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of math.atanh
@@ -13,5 +17,34 @@ import (
 // - FLOAT
 // Reference: https://developer.fastly.com/reference/vcl/functions/math-trig/math-atanh/
 func Test_Math_atanh(t *testing.T) {
-	t.Skip("Test Builtin function math.atanh should be impelemented")
+	subnormalValue := math.Float64frombits(0x0000000000000001 | (rand.Uint64() & 0x000fffffffffffff))
+	tests := []struct {
+		input  *value.Float
+		expect *value.Float
+		err    *value.String
+	}{
+		{input: &value.Float{IsNAN: true}, expect: &value.Float{IsNAN: true}, err: nil},
+		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{IsPositiveInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{Value: subnormalValue}, expect: &value.Float{Value: subnormalValue}, err: &value.String{Value: "ERANGE"}},
+		{input: &value.Float{Value: 1.1}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{Value: -1.1}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{Value: 1}, expect: &value.Float{IsPositiveInf: true}, err: &value.String{Value: "EPOLE"}},
+		{input: &value.Float{Value: -1}, expect: &value.Float{IsNegativeInf: true}, err: &value.String{Value: "EPOLE"}},
+		{input: &value.Float{Value: 0.5}, expect: &value.Float{Value: 0.5493061443340548}, err: nil},
+	}
+
+	for i, tt := range tests {
+		ret, err := Math_atanh(&context.Context{}, tt.input)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.FloatType {
+			t.Errorf("[%d] Unexpected return type, expect=FLOAT, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Float](ret)
+		if diff := cmp.Diff(v, tt.expect); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
+		}
+	}
 }

@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"math"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,21 @@ func Math_roundhalfup(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.roundhalfup")
+	x := value.Unwrap[*value.Float](args[0])
+	switch {
+	case x.IsNAN:
+		return &value.Float{IsNAN: true}, nil
+	case x.IsNegativeInf:
+		return &value.Float{IsNegativeInf: true}, nil
+	case x.IsPositiveInf:
+		return &value.Float{IsPositiveInf: true}, nil
+	case x.Value == 0:
+		return &value.Float{Value: x.Value}, nil
+	default:
+		t := math.Trunc(x.Value)
+		if d := math.Abs(x.Value - t); d >= 0.5 {
+			return &value.Float{Value: t + math.Copysign(1, x.Value)}, nil
+		}
+		return &value.Float{Value: t}, nil
+	}
 }

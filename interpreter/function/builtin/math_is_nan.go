@@ -34,6 +34,6 @@ func Math_is_nan(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.is_nan")
+	x := value.Unwrap[*value.Float](args[0])
+	return &value.Boolean{Value: x.IsNAN}, nil
 }

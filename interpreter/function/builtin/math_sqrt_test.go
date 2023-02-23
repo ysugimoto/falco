@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of math.sqrt
@@ -13,5 +15,30 @@ import (
 // - FLOAT
 // Reference: https://developer.fastly.com/reference/vcl/functions/math-trig/math-sqrt/
 func Test_Math_sqrt(t *testing.T) {
-	t.Skip("Test Builtin function math.sqrt should be impelemented")
+	tests := []struct {
+		input  *value.Float
+		expect *value.Float
+		err    *value.String
+	}{
+		{input: &value.Float{IsNAN: true}, expect: &value.Float{IsNAN: true}, err: nil},
+		{input: &value.Float{IsPositiveInf: true}, expect: &value.Float{IsPositiveInf: true}, err: nil},
+		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{Value: 0}, expect: &value.Float{Value: 0}, err: nil},
+		{input: &value.Float{Value: -1}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
+		{input: &value.Float{Value: 0.5}, expect: &value.Float{Value: 0.7071067811865476}, err: nil},
+	}
+
+	for i, tt := range tests {
+		ret, err := Math_sqrt(&context.Context{}, tt.input)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.FloatType {
+			t.Errorf("[%d] Unexpected return type, expect=FLOAT, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Float](ret)
+		if diff := cmp.Diff(v, tt.expect); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
+		}
+	}
 }

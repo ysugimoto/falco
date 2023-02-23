@@ -5,6 +5,7 @@ package builtin
 import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +35,9 @@ func Math_is_normal(ctx *context.Context, args ...value.Value) (value.Value, err
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.is_normal")
+	x := value.Unwrap[*value.Float](args[0])
+	if x.IsNAN || x.IsNegativeInf || x.IsPositiveInf {
+		return &value.Boolean{Value: true}, nil
+	}
+	return &value.Boolean{Value: !shared.IsSubnormalFloat64(x.Value)}, nil
 }

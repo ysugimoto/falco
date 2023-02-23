@@ -101,11 +101,23 @@ func (v *Boolean) IsLiteral() bool { return v.Literal }
 func (v *Boolean) Copy() Value     { return &Boolean{Value: v.Value, Literal: v.Literal} }
 
 type Integer struct {
-	Value   int64
-	Literal bool
+	Value         int64
+	Literal       bool
+	IsNAN         bool
+	IsNegativeInf bool
+	IsPositiveInf bool
 }
 
-func (v *Integer) String() string  { return fmt.Sprint(v.Value) }
+func (v *Integer) String() string {
+	if v.IsNAN {
+		return "NAN"
+	} else if v.IsNegativeInf {
+		return "-inf"
+	} else if v.IsPositiveInf {
+		return "inf"
+	}
+	return fmt.Sprint(v.Value)
+}
 func (v *Integer) value()          {}
 func (v *Integer) Type() Type      { return IntegerType }
 func (v *Integer) IsLiteral() bool { return v.Literal }

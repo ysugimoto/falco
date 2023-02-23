@@ -45,6 +45,15 @@ func Json_escape_toUTF16SurrogatePair(r rune) []rune {
 	return []rune(fmt.Sprintf("\\u%04X\\u%04X", upper, lower))
 }
 
+func Json_escape_IsValidUTF8Sequence(r rune) bool {
+	if r <= 0xFF {
+		return utf8.Valid([]byte{uint8(r)})
+	}
+	buf := make([]byte, utf8.RuneLen(r))
+	utf8.EncodeRune(buf, r)
+	return utf8.Valid(buf)
+}
+
 // Fastly built-in function implementation of json.escape
 // Arguments may be:
 // - STRING
@@ -70,10 +79,9 @@ func Json_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 			escaped = append(escaped, Json_escape_toUTF16SurrogatePair(r)...)
 			continue
 		}
-		if !utf8.Valid([]byte{byte(r)}) {
-			return &value.String{Value: ""}, errors.New(Json_escape_Name, "Invalid UTF-8 sequence found, rune is %s", string(r))
+		if !Json_escape_IsValidUTF8Sequence(r) {
+			return &value.String{Value: ""}, nil
 		}
-
 		escaped = append(escaped, r)
 	}
 

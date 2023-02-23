@@ -34,6 +34,6 @@ func Math_is_infinite(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("math.is_infinite")
+	x := value.Unwrap[*value.Float](args[0])
+	return &value.Boolean{Value: x.IsNegativeInf || x.IsPositiveInf}, nil
 }
