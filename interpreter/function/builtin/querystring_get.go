@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,27 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.get")
+	v := value.Unwrap[*value.String](args[0])
+	name := value.Unwrap[*value.String](args[1])
+
+	var qs string
+	if idx := strings.Index(v.Value, "?"); idx != -1 {
+		qs = v.Value[idx+1:]
+	}
+
+	// url.Value could not treat not set query value:
+	// ?name  => should return empty string, but returns empty string
+	// ?name= => should return not set, but returns empty string
+	// so we try to parse from RawQuery string, not using url.Value
+	for _, query := range strings.Split(qs, "&") {
+		sp := strings.Split(query, "=")
+		if len(sp) < 2 || sp[0] == "" {
+			continue
+		}
+		if sp[0] == name.Value {
+			return &value.String{Value: sp[1]}, nil
+		}
+	}
+	// includes not set value
+	return &value.String{IsNotSet: true}, nil
 }

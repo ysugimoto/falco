@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,21 @@ func Querystring_add(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.add")
+	query := value.Unwrap[*value.String](args[0])
+	k := value.Unwrap[*value.String](args[1])
+	v := value.Unwrap[*value.String](args[2])
+
+	add := fmt.Sprintf("%s=%s", url.QueryEscape(k.Value), url.QueryEscape(v.Value))
+	var sign string
+	if strings.Index(query.Value, "?") == -1 {
+		// If query sign is not present add query with "?"
+		sign = "?"
+	} else {
+		// Otherwize add query with "&"
+		sign = "&"
+	}
+
+	return &value.String{
+		Value: query.Value + sign + add,
+	}, nil
 }

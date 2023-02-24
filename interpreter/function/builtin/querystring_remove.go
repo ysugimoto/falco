@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,11 @@ func Querystring_remove(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.remove")
+	v := value.Unwrap[*value.String](args[0])
+	path := v.Value
+	if idx := strings.Index(path, "?"); idx != -1 {
+		path = path[0:idx]
+	}
+
+	return &value.String{Value: path}, nil
 }

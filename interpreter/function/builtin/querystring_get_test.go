@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of querystring.get
@@ -13,5 +15,30 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-get/
 func Test_Querystring_get(t *testing.T) {
-	t.Skip("Test Builtin function querystring.get should be impelemented")
+	tests := []struct {
+		input  *value.String
+		second *value.String
+		expect *value.String
+	}{
+		{input: &value.String{Value: "/?foo="}, second: &value.String{Value: "foo"}, expect: &value.String{Value: ""}},
+		{input: &value.String{Value: ""}, second: &value.String{Value: ""}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?foo=&foo=bar"}, second: &value.String{Value: "foo"}, expect: &value.String{Value: ""}},
+		{input: &value.String{Value: "/?a=1"}, second: &value.String{Value: "b"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?foo"}, second: &value.String{Value: "foo"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?a=1&b=2&c=3&d=4&b=5"}, second: &value.String{Value: "b"}, expect: &value.String{Value: "2"}},
+	}
+
+	for i, tt := range tests {
+		ret, err := Querystring_get(&context.Context{}, tt.input, tt.second)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != tt.expect.Type() {
+			t.Errorf("[%d] Unexpected return type, expect=%s, got=%s", i, tt.expect.Type(), ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(v, tt.expect); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
+		}
+	}
 }

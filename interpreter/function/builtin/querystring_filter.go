@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"bytes"
+	"net/url"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,39 @@ func Querystring_filter(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.filter")
+	v := value.Unwrap[*value.String](args[0])
+	names := value.Unwrap[*value.String](args[1])
+
+	parsed, err := url.Parse(v.Value)
+	if err != nil {
+		if err != nil {
+			return value.Null, errors.New(
+				Querystring_filter_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
+			)
+		}
+	}
+	filterMap := make(map[string]struct{})
+	for _, f := range bytes.Split([]byte(names.Value), Querystring_filtersep_Sign) {
+		filterMap[string(f)] = struct{}{}
+	}
+
+	filtered := url.Values{}
+	for k, v := range parsed.Query() {
+		if _, ok := filterMap[k]; ok {
+			continue
+		}
+		filtered[k] = v
+	}
+
+	var sign string
+	if len(filtered) > 0 {
+		sign = "?"
+	}
+
+	path := v.Value
+	if idx := strings.Index(path, "?"); idx != -1 {
+		path = path[0:idx]
+	}
+
+	return &value.String{Value: path + sign + filtered.Encode()}, nil
 }

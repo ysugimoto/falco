@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strconv"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,44 @@ func Parse_time_delta(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("parse_time_delta")
+	specifier := value.Unwrap[*value.String](args[0])
+	var delta int64
+	var stack []byte
+
+	// Golang's time.ParseDuration does not recognize "d" and "D", date duration so we need to parse manually
+	for _, s := range []byte(specifier.Value) {
+		switch s {
+		case 0x64, 0x44: // "d" or "D"
+			v, err := strconv.ParseInt(string(stack), 10, 64)
+			if err != nil {
+				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse dates as int: %s", string(stack))
+			}
+			delta += v * 24 * 60 * 60
+		case 0x68, 0x48: // "h" or "H"
+			v, err := strconv.ParseInt(string(stack), 10, 64)
+			if err != nil {
+				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse hours as int: %s", string(stack))
+			}
+			delta += v * 60 * 60
+		case 0x6D, 0x4D: // "m" or "M"
+			v, err := strconv.ParseInt(string(stack), 10, 64)
+			if err != nil {
+				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse minutes as int: %s", string(stack))
+			}
+			delta += v * 60
+		case 0x73, 0x53: // "s" or "S"
+			v, err := strconv.ParseInt(string(stack), 10, 64)
+			if err != nil {
+				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse seconds as int: %s", string(stack))
+			}
+			delta += v
+		default:
+			if s < 0x30 || s > 0x39 {
+				return value.Null, errors.New(Parse_time_delta_Name, "Invalid character found: %s", string([]byte{s}))
+			}
+			stack = append(stack, s)
+		}
+	}
+
+	return &value.Integer{Value: delta}, nil
 }

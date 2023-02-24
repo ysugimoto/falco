@@ -19,6 +19,8 @@ func Querystring_filtersep_Validate(args []value.Value) error {
 	return nil
 }
 
+var Querystring_filtersep_Sign = []byte{0xFF}
+
 // Fastly built-in function implementation of querystring.filtersep
 // Arguments may be:
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-filtersep/
@@ -28,6 +30,5 @@ func Querystring_filtersep(ctx *context.Context, args ...value.Value) (value.Val
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.filtersep")
+	return &value.String{Value: string(Querystring_filtersep_Sign)}, nil
 }

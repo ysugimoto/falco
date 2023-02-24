@@ -63,22 +63,34 @@ func (v *Ident) IsLiteral() bool { return v.Literal }
 func (v *Ident) Copy() Value     { return &Ident{Value: v.Value, Literal: v.Literal} }
 
 type String struct {
-	Value   string
-	Literal bool
+	Value    string
+	Literal  bool
+	IsNotSet bool
 }
 
-func (v *String) String() string  { return v.Value }
+func (v *String) String() string {
+	if v.IsNotSet {
+		return "[not set]"
+	}
+	return v.Value
+}
 func (v *String) value()          {}
 func (v *String) Type() Type      { return StringType }
 func (v *String) IsLiteral() bool { return v.Literal }
 func (v *String) Copy() Value     { return &String{Value: v.Value, Literal: v.Literal} }
 
 type IP struct {
-	Value   net.IP
-	Literal bool
+	Value    net.IP
+	Literal  bool
+	IsNotSet bool
 }
 
-func (v *IP) String() string  { return v.Value.String() }
+func (v *IP) String() string {
+	if v.IsNotSet {
+		return "[not set]"
+	}
+	return v.Value.String()
+}
 func (v *IP) value()          {}
 func (v *IP) Type() Type      { return IpType }
 func (v *IP) IsLiteral() bool { return v.Literal }

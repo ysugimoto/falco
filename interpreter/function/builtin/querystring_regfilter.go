@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"net/url"
+	"regexp"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,39 @@ func Querystring_regfilter(ctx *context.Context, args ...value.Value) (value.Val
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.regfilter")
+	v := value.Unwrap[*value.String](args[0])
+	name := value.Unwrap[*value.String](args[1])
+
+	parsed, err := url.Parse(v.Value)
+	if err != nil {
+		if err != nil {
+			return value.Null, errors.New(
+				Querystring_regfilter_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
+			)
+		}
+	}
+
+	filtered := url.Values{}
+	for k, v := range parsed.Query() {
+		if matched, err := regexp.MatchString(name.Value, k); err != nil {
+			return value.Null, errors.New(
+				Querystring_regfilter_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
+			)
+		} else if matched {
+			continue
+		}
+		filtered[k] = v
+	}
+
+	var sign string
+	if len(filtered) > 0 {
+		sign = "?"
+	}
+
+	path := v.Value
+	if idx := strings.Index(path, "?"); idx != -1 {
+		path = path[0:idx]
+	}
+
+	return &value.String{Value: path + sign + filtered.Encode()}, nil
 }

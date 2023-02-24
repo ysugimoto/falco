@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of querystring.remove
@@ -13,5 +15,25 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-remove/
 func Test_Querystring_remove(t *testing.T) {
-	t.Skip("Test Builtin function querystring.remove should be impelemented")
+	tests := []struct {
+		input  *value.String
+		expect *value.String
+	}{
+		{input: &value.String{Value: "/?foo="}, expect: &value.String{Value: "/"}},
+		{input: &value.String{Value: "/path?a=b"}, expect: &value.String{Value: "/path"}},
+	}
+
+	for i, tt := range tests {
+		ret, err := Querystring_remove(&context.Context{}, tt.input)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != tt.expect.Type() {
+			t.Errorf("[%d] Unexpected return type, expect=%s, got=%s", i, tt.expect.Type(), ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(v, tt.expect); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
+		}
+	}
 }

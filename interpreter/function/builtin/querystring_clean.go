@@ -3,6 +3,11 @@
 package builtin
 
 import (
+	"fmt"
+	"net/url"
+	"sort"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +39,48 @@ func Querystring_clean(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.clean")
+	v := value.Unwrap[*value.String](args[0])
+	parsed, err := url.Parse(v.Value)
+	if err != nil {
+		return value.Null, errors.New(
+			Querystring_clean_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
+		)
+	}
+
+	// Sort query names to fix fragile tests (correct map order)
+	queries := parsed.Query()
+	var keys []string
+	for k := range queries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var cleaned []string
+	for _, k := range keys {
+		if k == "" {
+			continue
+		}
+
+		val := queries[k]
+		name := url.QueryEscape(k)
+		for i := range val {
+			if val[i] == "" {
+				cleaned = append(cleaned, name)
+				continue
+			}
+			cleaned = append(cleaned, fmt.Sprintf("%s=%s", name, url.QueryEscape(val[i])))
+		}
+	}
+
+	var sign string
+	if len(cleaned) > 0 {
+		sign = "?"
+	}
+
+	path := v.Value
+	if idx := strings.Index(path, "?"); idx != -1 {
+		path = path[0:idx]
+	}
+
+	return &value.String{Value: path + sign + strings.Join(cleaned, "&")}, nil
 }
