@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.integer2time
@@ -13,5 +15,28 @@ import (
 // - INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/date-and-time/std-integer2time/
 func Test_Std_integer2time(t *testing.T) {
-	t.Skip("Test Builtin function std.integer2time should be impelemented")
+	tests := []struct {
+		input  int64
+		expect string
+	}{
+		{input: 1136239445, expect: "Mon, 02 Jan 2006 22:04:05 GMT"},
+		{input: 1677350800, expect: "Sat, 25 Feb 2023 18:46:40 GMT"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_integer2time(
+			&context.Context{},
+			&value.Integer{Value: tt.input},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.TimeType {
+			t.Errorf("[%d] Unexpected return type, expect=TIME, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Time](ret)
+		if diff := cmp.Diff(tt.expect, v.String()); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

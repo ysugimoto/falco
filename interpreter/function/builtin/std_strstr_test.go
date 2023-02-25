@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.strstr
@@ -13,5 +15,30 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-strstr/
 func Test_Std_strstr(t *testing.T) {
-	t.Skip("Test Builtin function std.strstr should be impelemented")
+	tests := []struct {
+		input  string
+		needle string
+		expect string
+	}{
+		{input: "/foo?a=b", needle: "?", expect: "?a=b"},
+		{input: "/foo?a=b", needle: "o?", expect: "o?a=b"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_strstr(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.String{Value: tt.needle},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

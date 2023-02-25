@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"regexp"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,19 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("regsuball")
+	input := value.Unwrap[*value.String](args[0])
+	pattern := value.Unwrap[*value.String](args[1])
+	replacement := value.Unwrap[*value.String](args[2])
+
+	re, err := regexp.Compile(pattern.Value)
+	if err != nil {
+		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
+		return &value.String{Value: input.Value}, errors.New(
+			Regsub_Name, "Invalid regular expression pattern: %s", pattern.Value,
+		)
+	}
+
+	return &value.String{
+		Value: re.ReplaceAllString(input.Value, replacement.Value),
+	}, nil
 }

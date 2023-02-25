@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"net"
+	"net/netip"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,21 @@ func Std_ip(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.ip")
+	addr, err := netip.ParseAddr(value.Unwrap[*value.String](args[0]).Value)
+	if err != nil {
+		addr, err = netip.ParseAddr(value.Unwrap[*value.String](args[1]).Value)
+		if err != nil {
+			return value.Null, errors.New(Std_ip_Name, "Failed to parse IP: %s", err.Error())
+		}
+	}
+
+	if addr.Is6() {
+		v := addr.As16()
+		return &value.IP{Value: net.IP(v[:])}, nil
+	} else if addr.Is4() {
+		v := addr.As4()
+		return &value.IP{Value: net.IP(v[:])}, nil
+	} else {
+		return value.Null, errors.New(Std_ip_Name, "Unexpected IP string: %s", addr.String())
+	}
 }

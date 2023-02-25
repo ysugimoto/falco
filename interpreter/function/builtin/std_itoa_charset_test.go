@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.itoa_charset
@@ -13,5 +15,32 @@ import (
 // - INTEGER, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-itoa-charset/
 func Test_Std_itoa_charset(t *testing.T) {
-	t.Skip("Test Builtin function std.itoa_charset should be impelemented")
+	tests := []struct {
+		input   int64
+		charset string
+		expect  string
+	}{
+		{input: 8, charset: "ab", expect: "baaa"},
+		{input: 0xdeadbeef, charset: "0123456789ABCDEF", expect: "DEADBEEF"},
+		{input: 0xdeadbeef, charset: "0123456789ABCDE", expect: "16CEB1BDE"},
+		{input: 4825434263756878946, charset: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", expect: "5KsxueeBfd8"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_itoa_charset(
+			&context.Context{},
+			&value.Integer{Value: tt.input},
+			&value.String{Value: tt.charset},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

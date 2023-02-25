@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,18 @@ func Std_atoi(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.atoi")
+	s := value.Unwrap[*value.String](args[0])
+
+	// In std.atoi spec, float string is rounded into int, not a raise error
+	input := s.Value
+	if idx := strings.Index(input, "."); idx != -1 {
+		input = input[0:idx]
+	}
+	i, err := strconv.ParseInt(input, 10, 64)
+	if err != nil {
+		return &value.Integer{Value: 0}, errors.New(
+			Std_atoi_Name, "Failed to parse int value: %s, %s", s.Value, err.Error(),
+		)
+	}
+	return &value.Integer{Value: i}, nil
 }

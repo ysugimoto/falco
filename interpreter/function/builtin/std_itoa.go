@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strconv"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -35,6 +37,17 @@ func Std_itoa(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.itoa")
+	input := value.Unwrap[*value.Integer](args[0])
+	var base int64 = 10
+	if len(args) == 2 {
+		base = value.Unwrap[*value.Integer](args[1]).Value
+		if base < 2 || base > 36 {
+			ctx.FastlyError = &value.String{Value: "EINVAL"}
+			return value.Null, errors.New(Std_itoa_Name, "Invalid base value: %d", base)
+		}
+	}
+
+	return &value.String{
+		Value: strconv.FormatInt(input.Value, int(base)),
+	}, nil
 }

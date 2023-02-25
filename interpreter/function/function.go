@@ -9,8 +9,10 @@ import (
 )
 
 type Function struct {
-	Scope context.Scope
-	Call  func(ctx *context.Context, args ...value.Value) (value.Value, error)
+	Scope            context.Scope
+	Call             func(ctx *context.Context, args ...value.Value) (value.Value, error)
+	CanStatementCall bool
+	IsIdentArgument  func(i int) bool
 }
 
 func Exists(scope context.Scope, name string) (*Function, error) {

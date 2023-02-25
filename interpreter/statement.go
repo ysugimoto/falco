@@ -36,14 +36,14 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 		case *ast.LogStatement:
 			err = i.ProcessLogStatement(t)
 		case *ast.SyntheticStatement:
-			if !i.scope.Is(context.ErrorScope) {
+			if !i.ctx.Scope.Is(context.ErrorScope) {
 				return NONE, errors.WithStack(fmt.Errorf(
 					"synthetic statement is only available in ERROR scope",
 				))
 			}
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
-			if !i.scope.Is(context.ErrorScope) {
+			if !i.ctx.Scope.Is(context.ErrorScope) {
 				return NONE, errors.WithStack(fmt.Errorf(
 					"synthetic.base64 statement is only available in ERROR scope",
 				))
@@ -76,7 +76,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 				return state, nil
 			}
 		case *ast.RestartStatement:
-			if !i.scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
+			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
 				return NONE, errors.WithStack(fmt.Errorf(
 					"restart statement is only available in RECV, HIT, FETCH, ERROR, and DELIVER scope",
 				))
@@ -88,7 +88,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			// When return statement is processed, return its state immediately
 			return i.ProcessReturnStatement(t), nil
 		case *ast.ErrorStatement:
-			if !i.scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
+			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
 				return NONE, errors.WithStack(fmt.Errorf(
 					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope",
 				))
@@ -132,7 +132,7 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
 		err = i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
 	} else {
-		err = i.vars.Set(i.scope, stmt.Ident.Value, stmt.Operator.Operator, right)
+		err = i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right)
 	}
 	if err != nil {
 		return errors.WithStack(err)
@@ -158,7 +158,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := i.vars.Add(i.scope, stmt.Ident.Value, right); err != nil {
+	if err := i.vars.Add(i.ctx.Scope, stmt.Ident.Value, right); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -169,7 +169,7 @@ func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
 		err = i.localVars.Unset(stmt.Ident.Value)
 	} else {
-		err = i.vars.Unset(i.scope, stmt.Ident.Value)
+		err = i.vars.Unset(i.ctx.Scope, stmt.Ident.Value)
 	}
 
 	if err != nil {
@@ -184,7 +184,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
 		err = i.localVars.Unset(stmt.Ident.Value)
 	} else {
-		err = i.vars.Unset(i.scope, stmt.Ident.Value)
+		err = i.vars.Unset(i.ctx.Scope, stmt.Ident.Value)
 	}
 
 	if err != nil {
@@ -283,18 +283,39 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	}
 
 	// Builtin function will not change any state
-	fn, err := function.Exists(i.scope, stmt.Function.Value)
+	fn, err := function.Exists(i.ctx.Scope, stmt.Function.Value)
 	if err != nil {
 		return NONE, errors.WithStack(err)
+	}
+	// Check the function can call in statement (means a function that returns VOID type can call)
+	if !fn.CanStatementCall {
+		return NONE, errors.WithStack(
+			fmt.Errorf("Function %s cannot call in statement, function will return some value", stmt.Function.Value),
+		)
 	}
 
 	args := make([]value.Value, len(stmt.Arguments))
 	for j := range stmt.Arguments {
-		a, err := i.ProcessExpression(stmt.Arguments[j], false)
-		if err != nil {
-			return NONE, errors.WithStack(err)
+		if fn.IsIdentArgument(j) {
+			// If function accepts ID type, pass the string as Ident value without processing expression.
+			// This is because some function uses collection value like req.http.Cookie as ID type,
+			// But the processor passes *value.String as primitive value normally.
+			// In order to treat collection value inside, enthruse with the function logic how value is treated as correspond types.
+			if ident, ok := stmt.Arguments[j].(*ast.Ident); !ok {
+				args[j] = &value.Ident{Value: ident.Value}
+			} else {
+				return NONE, errors.WithStack(
+					fmt.Errorf("Function %s of %d argument must be an Ident", stmt.Function.Value, j),
+				)
+			}
+		} else {
+			// Otherwize, make value by processing expression
+			a, err := i.ProcessExpression(stmt.Arguments[j], false)
+			if err != nil {
+				return NONE, errors.WithStack(err)
+			}
+			args[j] = a
 		}
-		args[j] = a
 	}
 	if _, err := fn.Call(i.ctx, args...); err != nil {
 		return NONE, errors.WithStack(err)

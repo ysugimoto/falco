@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,13 @@ func Std_replace_prefix(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.replace_prefix")
+	s := value.Unwrap[*value.String](args[0]).Value
+	target := value.Unwrap[*value.String](args[1]).Value
+	replacement := value.Unwrap[*value.String](args[2]).Value
+
+	if strings.HasPrefix(s, target) {
+		s = replacement + strings.TrimPrefix(s, target)
+	}
+
+	return &value.String{Value: s}, nil
 }

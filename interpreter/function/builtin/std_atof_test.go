@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.atof
@@ -13,5 +15,28 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-atof/
 func Test_Std_atof(t *testing.T) {
-	t.Skip("Test Builtin function std.atof should be impelemented")
+	tests := []struct {
+		input  string
+		expect float64
+	}{
+		{input: "21.95", expect: 21.95},
+		{input: "0", expect: 0},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_atof(
+			&context.Context{},
+			&value.String{Value: tt.input},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.FloatType {
+			t.Errorf("[%d] Unexpected return type, expect=FLOAT, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Float](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strconv"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,12 @@ func Std_atof(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.atof")
+	s := value.Unwrap[*value.String](args[0])
+	f, err := strconv.ParseFloat(s.Value, 64)
+	if err != nil {
+		return &value.Float{Value: 0}, errors.New(
+			Std_atof_Name, "Failed to parse float value: %s, %s", s.Value, err.Error(),
+		)
+	}
+	return &value.Float{Value: f}, nil
 }

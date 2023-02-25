@@ -17,7 +17,7 @@ import (
 type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
-	scope     context.Scope
+	// scope     context.Scope
 
 	ctx     *context.Context
 	process *process.Process
@@ -26,7 +26,6 @@ type Interpreter struct {
 func New(ctx *context.Context) *Interpreter {
 	return &Interpreter{
 		ctx:       ctx,
-		scope:     context.InitScope,
 		localVars: variable.LocalVariables{},
 		process:   process.New(),
 	}
@@ -62,7 +61,7 @@ func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (i *Interpreter) ProcessRecv() error {
-	i.scope = context.RecvScope
+	i.ctx.Scope = context.RecvScope
 	i.vars = variable.NewRecvScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
@@ -117,7 +116,7 @@ func (i *Interpreter) ProcessRecv() error {
 }
 
 func (i *Interpreter) ProcessHash() error {
-	i.scope = context.HashScope
+	i.ctx.Scope = context.HashScope
 	i.vars = variable.NewHashScopeVariables(i.ctx)
 
 	// Make default VCL hash string
@@ -144,7 +143,7 @@ func (i *Interpreter) ProcessHash() error {
 }
 
 func (i *Interpreter) ProcessMiss() error {
-	i.scope = context.MissScope
+	i.ctx.Scope = context.MissScope
 	i.vars = variable.NewMissScopeVariables(i.ctx)
 
 	if i.ctx.Backend == nil {
@@ -193,7 +192,7 @@ func (i *Interpreter) ProcessMiss() error {
 }
 
 func (i *Interpreter) ProcessHit() error {
-	i.scope = context.HitScope
+	i.ctx.Scope = context.HitScope
 	i.vars = variable.NewHitScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
@@ -232,7 +231,7 @@ func (i *Interpreter) ProcessHit() error {
 }
 
 func (i *Interpreter) ProcessPass() error {
-	i.scope = context.PassScope
+	i.ctx.Scope = context.PassScope
 	i.vars = variable.NewPassScopeVariables(i.ctx)
 
 	var err error
@@ -274,7 +273,7 @@ func (i *Interpreter) ProcessPass() error {
 }
 
 func (i *Interpreter) ProcessFetch() error {
-	i.scope = context.FetchScope
+	i.ctx.Scope = context.FetchScope
 	i.vars = variable.NewFetchScopeVariables(i.ctx)
 
 	if i.ctx.Backend == nil {
@@ -348,7 +347,7 @@ func (i *Interpreter) ProcessFetch() error {
 }
 
 func (i *Interpreter) ProcessError() error {
-	i.scope = context.ErrorScope
+	i.ctx.Scope = context.ErrorScope
 	i.vars = variable.NewErrorScopeVariables(i.ctx)
 
 	if i.ctx.Object == nil {
@@ -408,7 +407,7 @@ func (i *Interpreter) ProcessError() error {
 }
 
 func (i *Interpreter) ProcessDeliver() error {
-	i.scope = context.DeliverScope
+	i.ctx.Scope = context.DeliverScope
 	i.vars = variable.NewDeliverScopeVariables(i.ctx)
 
 	if i.ctx.Response == nil {
@@ -453,7 +452,7 @@ func (i *Interpreter) ProcessDeliver() error {
 }
 
 func (i *Interpreter) ProcessLog() error {
-	i.scope = context.LogScope
+	i.ctx.Scope = context.LogScope
 	i.vars = variable.NewLogScopeVariables(i.ctx)
 
 	if i.ctx.Response == nil {

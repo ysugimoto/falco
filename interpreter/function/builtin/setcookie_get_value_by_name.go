@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"net/http"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,44 @@ func Setcookie_get_value_by_name(ctx *context.Context, args ...value.Value) (val
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("setcookie.get_value_by_name")
+	where := value.Unwrap[*value.Ident](args[0])
+	name := value.Unwrap[*value.String](args[1])
+
+	var resp *http.Response
+	switch where.Value {
+	case "beresp":
+		if !ctx.Scope.Is(context.FetchScope) {
+			return value.Null, errors.New(
+				Setcookie_get_value_by_name_Name, "beresp is not accessible in %s scope", ctx.Scope,
+			)
+		}
+		resp = ctx.BackendResponse
+	case "resp":
+		if !ctx.Scope.Is(context.DeliverScope, context.LogScope) {
+			return value.Null, errors.New(
+				Setcookie_get_value_by_name_Name, "resp is not accessible in %s scope", ctx.Scope,
+			)
+		}
+		resp = ctx.Response
+	default:
+		return value.Null, errors.New(
+			Setcookie_get_value_by_name_Name, "Invalid ident: %s", where.Value,
+		)
+	}
+
+	var found bool
+	var cookie string
+	for _, c := range resp.Cookies() {
+		// Consider multiple cookies.
+		// From the function spec, function should return the last matched one
+		if c.Name == name.Value {
+			found = true
+			cookie = c.Value
+		}
+	}
+
+	if !found {
+		return &value.String{IsNotSet: true}, nil
+	}
+	return &value.String{Value: cookie}, nil
 }

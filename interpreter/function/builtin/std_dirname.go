@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,14 @@ func Std_dirname(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.dirname")
+	s := value.Unwrap[*value.String](args[0])
+	switch s.Value {
+	case ".", "", "..":
+		return &value.String{Value: "."}, nil
+	case "/":
+		return &value.String{Value: "/"}, nil
+	default:
+		dir := filepath.Dir(strings.TrimSuffix(s.Value, "/"))
+		return &value.String{Value: dir}, nil
+	}
 }

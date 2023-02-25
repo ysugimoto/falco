@@ -14,11 +14,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Accept_charset_lookup(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"accept.encoding_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Accept_encoding_lookup(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"accept.language_filter_basic": {
@@ -26,11 +34,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Accept_language_filter_basic(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"accept.language_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Accept_language_lookup(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"accept.media_lookup": {
@@ -38,11 +54,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Accept_media_lookup(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"addr.extract_bits": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Addr_extract_bits(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"addr.is_ipv4": {
@@ -50,11 +74,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Addr_is_ipv4(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"addr.is_ipv6": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Addr_is_ipv6(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"bin.base64_to_hex": {
@@ -62,11 +94,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Bin_base64_to_hex(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"bin.hex_to_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Bin_hex_to_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"boltsort.sort": {
@@ -74,11 +114,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Boltsort_sort(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"crypto.decrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Crypto_decrypt_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0 || i == 1 || i == 2
 		},
 	},
 	"crypto.decrypt_hex": {
@@ -86,11 +134,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Crypto_decrypt_hex(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0 || i == 1 || i == 2
+		},
 	},
 	"crypto.encrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Crypto_encrypt_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0 || i == 1 || i == 2
 		},
 	},
 	"crypto.encrypt_hex": {
@@ -98,11 +154,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Crypto_encrypt_hex(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0 || i == 1 || i == 2
+		},
 	},
 	"cstr_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Cstr_escape(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.awsv4_hmac": {
@@ -110,11 +174,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_awsv4_hmac(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.base64_decode": {
@@ -122,11 +194,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64_decode(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.base64url": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64url(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.base64url_decode": {
@@ -134,11 +214,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64url_decode(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.base64url_nopad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64url_nopad(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.base64url_nopad_decode": {
@@ -146,11 +234,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_base64url_nopad_decode(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_crc32": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_crc32(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hash_crc32b": {
@@ -158,11 +254,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_crc32b(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_md5(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hash_sha1": {
@@ -170,11 +274,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha1(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_sha1_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha1_from_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hash_sha224": {
@@ -182,11 +294,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha224(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha256(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hash_sha256_from_base64": {
@@ -194,11 +314,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha256_from_base64(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_sha384": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha384(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hash_sha512": {
@@ -206,11 +334,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha512(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hash_sha512_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hash_sha512_from_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hmac_md5": {
@@ -218,11 +354,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_md5(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hmac_md5_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_md5_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hmac_sha1": {
@@ -230,11 +374,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha1(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hmac_sha1_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha1_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hmac_sha256": {
@@ -242,11 +394,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha256(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hmac_sha256_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha256_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.hmac_sha512": {
@@ -254,11 +414,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha512(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.hmac_sha512_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_hmac_sha512_base64(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.rsa_verify": {
@@ -266,11 +434,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_rsa_verify(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0 || i == 4
+		},
 	},
 	"digest.secure_is_equal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_secure_is_equal(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.time_hmac_md5": {
@@ -278,11 +454,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_time_hmac_md5(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.time_hmac_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_time_hmac_sha1(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"digest.time_hmac_sha256": {
@@ -290,11 +474,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_time_hmac_sha256(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"digest.time_hmac_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Digest_time_hmac_sha512(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"fastly.hash": {
@@ -302,11 +494,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Fastly_hash(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"h2.disable_header_compression": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.H2_disable_header_compression(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"h2.push": {
@@ -314,11 +514,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.H2_push(ctx, args...)
 		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"h3.alt_svc": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.H3_alt_svc(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"http_status_matches": {
@@ -326,11 +534,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Http_status_matches(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"json.escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Json_escape(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.acos": {
@@ -338,11 +554,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_acos(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.acosh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_acosh(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.asin": {
@@ -350,11 +574,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_asin(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.asinh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_asinh(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.atan": {
@@ -362,11 +594,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_atan(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.atan2": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_atan2(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.atanh": {
@@ -374,11 +614,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_atanh(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.ceil": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_ceil(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.cos": {
@@ -386,11 +634,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_cos(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.cosh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_cosh(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.exp": {
@@ -398,11 +654,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_exp(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.exp2": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_exp2(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.floor": {
@@ -410,11 +674,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_floor(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.is_finite": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_is_finite(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.is_infinite": {
@@ -422,11 +694,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_is_infinite(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.is_nan": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_is_nan(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.is_normal": {
@@ -434,11 +714,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_is_normal(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.is_subnormal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_is_subnormal(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.log": {
@@ -446,11 +734,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_log(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.log10": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_log10(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.log2": {
@@ -458,11 +754,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_log2(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.round": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_round(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.roundeven": {
@@ -470,11 +774,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_roundeven(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.roundhalfdown": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_roundhalfdown(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.roundhalfup": {
@@ -482,11 +794,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_roundhalfup(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.sin": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_sin(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.sinh": {
@@ -494,11 +814,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_sinh(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.sqrt": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_sqrt(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.tan": {
@@ -506,11 +834,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_tan(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"math.tanh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_tanh(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"math.trunc": {
@@ -518,11 +854,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Math_trunc(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"parse_time_delta": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Parse_time_delta(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.add": {
@@ -530,11 +874,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_add(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.clean": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_clean(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.filter": {
@@ -542,11 +894,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_filter(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.filter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_filter_except(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.filtersep": {
@@ -554,11 +914,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_filtersep(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.get": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_get(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.globfilter": {
@@ -566,11 +934,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_globfilter(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.globfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_globfilter_except(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.regfilter": {
@@ -578,11 +954,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_regfilter(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.regfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_regfilter_except(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.remove": {
@@ -590,11 +974,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_remove(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"querystring.set": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_set(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"querystring.sort": {
@@ -602,11 +994,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Querystring_sort(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"randombool": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Randombool(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"randombool_seeded": {
@@ -614,11 +1014,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Randombool_seeded(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"randomint": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Randomint(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"randomint_seeded": {
@@ -626,11 +1034,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Randomint_seeded(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"randomstr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Randomstr(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"ratelimit.check_rate": {
@@ -638,11 +1054,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Ratelimit_check_rate(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 1 || i == 5
+		},
 	},
 	"ratelimit.check_rates": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Ratelimit_check_rates(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 1 || i == 5 || i == 9
 		},
 	},
 	"ratelimit.penaltybox_add": {
@@ -650,11 +1074,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Ratelimit_penaltybox_add(ctx, args...)
 		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
 	},
 	"ratelimit.penaltybox_has": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Ratelimit_penaltybox_has(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
 		},
 	},
 	"ratelimit.ratecounter_increment": {
@@ -662,11 +1094,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Ratelimit_ratecounter_increment(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
 	},
 	"regsub": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Regsub(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"regsuball": {
@@ -674,11 +1114,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Regsuball(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"resp.tarpit": {
 		Scope: context.DeliverScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Resp_tarpit(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"setcookie.delete_by_name": {
@@ -686,11 +1134,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Setcookie_delete_by_name(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
 	},
 	"setcookie.get_value_by_name": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Setcookie_get_value_by_name(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
 		},
 	},
 	"std.anystr2ip": {
@@ -698,11 +1154,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_anystr2ip(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.atof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_atof(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.atoi": {
@@ -710,11 +1174,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_atoi(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.basename": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_basename(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.collect": {
@@ -722,11 +1194,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_collect(ctx, args...)
 		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
 	},
 	"std.count": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_count(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
 		},
 	},
 	"std.dirname": {
@@ -734,11 +1214,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_dirname(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.integer2time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_integer2time(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.ip": {
@@ -746,11 +1234,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_ip(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.ip2str": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_ip2str(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.itoa": {
@@ -758,11 +1254,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_itoa(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.itoa_charset": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_itoa_charset(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.prefixof": {
@@ -770,11 +1274,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_prefixof(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.replace": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_replace(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.replace_prefix": {
@@ -782,11 +1294,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_replace_prefix(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.replace_suffix": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_replace_suffix(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.replaceall": {
@@ -794,11 +1314,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_replaceall(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.str2ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_str2ip(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.strlen": {
@@ -806,11 +1334,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strlen(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strpad(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.strrep": {
@@ -818,11 +1354,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strrep(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.strrev": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strrev(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.strstr": {
@@ -830,11 +1374,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strstr(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.strtof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strtof(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.strtol": {
@@ -842,11 +1394,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_strtol(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.suffixof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_suffixof(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.time": {
@@ -854,11 +1414,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_time(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"std.tolower": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_tolower(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"std.toupper": {
@@ -866,11 +1434,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Std_toupper(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"strftime": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Strftime(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"subfield": {
@@ -878,11 +1454,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Subfield(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"substr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Substr(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"table.contains": {
@@ -890,11 +1474,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_contains(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"table.lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"table.lookup_acl": {
@@ -902,11 +1494,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_acl(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"table.lookup_backend": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_backend(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"table.lookup_bool": {
@@ -914,11 +1514,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_bool(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"table.lookup_float": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_float(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"table.lookup_integer": {
@@ -926,11 +1534,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_integer(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"table.lookup_ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_ip(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"table.lookup_rtime": {
@@ -938,11 +1554,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Table_lookup_rtime(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"time.add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_add(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"time.hex_to_time": {
@@ -950,11 +1574,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_hex_to_time(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"time.is_after": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_is_after(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"time.runits": {
@@ -962,11 +1594,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_runits(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"time.sub": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_sub(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"time.units": {
@@ -974,11 +1614,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Time_units(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"urldecode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Urldecode(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"urlencode": {
@@ -986,11 +1634,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Urlencode(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"utf8.codepoint_count": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Utf8_codepoint_count(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"utf8.is_valid": {
@@ -998,11 +1654,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Utf8_is_valid(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"utf8.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Utf8_strpad(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"utf8.substr": {
@@ -1010,11 +1674,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Utf8_substr(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.dns": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_dns(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"uuid.is_valid": {
@@ -1022,11 +1694,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_is_valid(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.is_version3": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_is_version3(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"uuid.is_version4": {
@@ -1034,11 +1714,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_is_version4(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.is_version5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_is_version5(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"uuid.oid": {
@@ -1046,11 +1734,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_oid(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.url": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_url(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"uuid.version3": {
@@ -1058,11 +1754,19 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_version3(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.version4": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_version4(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 	"uuid.version5": {
@@ -1070,17 +1774,29 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_version5(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"uuid.x500": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Uuid_x500(ctx, args...)
 		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
 	},
 	"xml_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Xml_escape(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
 		},
 	},
 }

@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,7 @@ func Std_integer2time(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.integer2time")
+	t := value.Unwrap[*value.Integer](args[0])
+
+	return &value.Time{Value: time.Unix(t.Value, 0).UTC()}, nil
 }

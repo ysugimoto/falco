@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,6 +28,28 @@ func Std_strtof_Validate(args []value.Value) error {
 	return nil
 }
 
+func Std_strtof_Decimal(s string) (value.Value, error) {
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return value.Null, errors.New(Std_strtof_Name, "Failed to parse string to decimal float: %s", s)
+	}
+	return &value.Float{Value: f}, nil
+}
+
+var hexMantissaSuffix = regexp.MustCompile(`p[+-][0-9]+$`)
+
+func Std_strtof_Hex(s string) (value.Value, error) {
+	// To convert hex float string correctly in Golang, mantissa suffix is needed
+	if !hexMantissaSuffix.MatchString(s) {
+		s += "p0"
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return value.Null, errors.New(Std_strtof_Name, "Failed to parse string to hex float: %s", s)
+	}
+	return &value.Float{Value: f}, nil
+}
+
 // Fastly built-in function implementation of std.strtof
 // Arguments may be:
 // - STRING, INTEGER
@@ -34,6 +60,29 @@ func Std_strtof(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.strtof")
+	s := value.Unwrap[*value.String](args[0]).Value
+	base := value.Unwrap[*value.Integer](args[1]).Value
+
+	switch base {
+	case 0:
+		if strings.HasPrefix(s, "0x") {
+			return Std_strtof_Hex(s)
+		}
+		return Std_strtof_Decimal(s)
+	case 10:
+		if strings.HasPrefix(s, "0x") {
+			ctx.FastlyError = &value.String{Value: "EPARSENUM"}
+			return value.Null, errors.New(Std_strtof_Name, "string must not have 0x prefix of when base number is 10")
+		}
+		return Std_strtof_Decimal(s)
+	case 16:
+		if !strings.HasPrefix(s, "0x") {
+			ctx.FastlyError = &value.String{Value: "EPARSENUM"}
+			return value.Null, errors.New(Std_strtof_Name, "string must have 0x prefix of when base number is 16")
+		}
+		return Std_strtof_Hex(s)
+	default:
+		ctx.FastlyError = &value.String{Value: "EPARSENUM"}
+		return value.Null, errors.New(Std_strtof_Name, "Base number accepts only 0, 10 and 16")
+	}
 }

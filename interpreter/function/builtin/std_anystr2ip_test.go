@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.anystr2ip
@@ -13,5 +15,43 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/
 func Test_Std_anystr2ip(t *testing.T) {
-	t.Skip("Test Builtin function std.anystr2ip should be impelemented")
+	tests := []struct {
+		input    string
+		fallback string
+		expect   string
+	}{
+		{
+			input:    "0x8.010.2056",
+			fallback: "10.0.0.0",
+			expect:   "8.8.8.8",
+		},
+		{
+			input:    "0x8.010.foo",
+			fallback: "10.0.0.0",
+			expect:   "10.0.0.0",
+		},
+		{
+			input:    "0xc0.0.01001",
+			fallback: "10.0.0.0",
+			expect:   "192.0.2.1",
+		},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_anystr2ip(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.String{Value: tt.fallback},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.IpType {
+			t.Errorf("[%d] Unexpected return type, expect=IP, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.IP](ret)
+		if diff := cmp.Diff(tt.expect, v.String()); diff != "" {
+			t.Errorf("[%d] Remaining set-cookie value unmatch, diff=%s", i, diff)
+		}
+	}
 }

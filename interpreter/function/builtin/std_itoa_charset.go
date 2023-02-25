@@ -34,6 +34,22 @@ func Std_itoa_charset(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.itoa_charset")
+	input := value.Unwrap[*value.Integer](args[0]).Value
+	charsets := []byte(value.Unwrap[*value.String](args[1]).Value)
+
+	// ref: strconv.FormatInt implementation of general case
+	base := int64(len(charsets))
+	var encoded []byte
+	for input >= base {
+		v := input / base
+		encoded = append(encoded, charsets[input-(v*base)])
+		input = v
+	}
+	encoded = append(encoded, charsets[input])
+	reversed := make([]byte, len(encoded))
+	for i := 0; i < len(encoded); i++ {
+		reversed[len(encoded)-1-i] = encoded[i]
+	}
+
+	return &value.String{Value: string(reversed)}, nil
 }

@@ -34,6 +34,6 @@ func Std_ip2str(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.ip2str")
+	ip := value.Unwrap[*value.IP](args[0])
+	return &value.String{Value: ip.Value.String()}, nil
 }

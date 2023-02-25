@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.replaceall
@@ -13,5 +15,32 @@ import (
 // - STRING, STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-replaceall/
 func Test_Std_replaceall(t *testing.T) {
-	t.Skip("Test Builtin function std.replaceall should be impelemented")
+	tests := []struct {
+		input   string
+		target  string
+		replace string
+		expect  string
+	}{
+		{input: "abcabc", target: "b", replace: "", expect: "acac"},
+		{input: "/foo+bar/a+b", target: "+", replace: "%2520", expect: "/foo%2520bar/a%2520b"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_replaceall(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.String{Value: tt.target},
+			&value.String{Value: tt.replace},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

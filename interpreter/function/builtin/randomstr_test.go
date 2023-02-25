@@ -25,21 +25,23 @@ func Test_Randomstr(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		ret, err := Randomstr(
-			&context.Context{},
-			&value.Integer{Value: tt.length},
-			&value.String{Value: tt.characters},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.StringType {
-			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.String](ret)
-		for _, s := range v.Value {
-			if !strings.Contains(tt.characters, string(s)) {
-				t.Errorf("[%d] Unexpected return value, character %s should be once of %s", i, string(s), tt.characters)
+		for j := 0; j < 10000; j++ {
+			ret, err := Randomstr(
+				&context.Context{},
+				&value.Integer{Value: tt.length},
+				&value.String{Value: tt.characters},
+			)
+			if err != nil {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			if ret.Type() != value.StringType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			}
+			v := value.Unwrap[*value.String](ret)
+			for _, s := range v.Value {
+				if !strings.Contains(tt.characters, string(s)) {
+					t.Errorf("[%d] Unexpected return value, character %s should be once of %s", i, string(s), tt.characters)
+				}
 			}
 		}
 	}

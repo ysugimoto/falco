@@ -3,6 +3,7 @@ package value
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -63,9 +64,10 @@ func (v *Ident) IsLiteral() bool { return v.Literal }
 func (v *Ident) Copy() Value     { return &Ident{Value: v.Value, Literal: v.Literal} }
 
 type String struct {
-	Value    string
-	Literal  bool
-	IsNotSet bool
+	Value      string
+	Literal    bool
+	IsNotSet   bool
+	Collection []string // collection is used for multiple header values. e.g Cookie
 }
 
 func (v *String) String() string {
@@ -183,7 +185,7 @@ type Time struct {
 	Value time.Time
 }
 
-func (v *Time) String() string  { return v.Value.Format(time.RFC1123) }
+func (v *Time) String() string  { return v.Value.Format(http.TimeFormat) }
 func (v *Time) value()          {}
 func (v *Time) Type() Type      { return TimeType }
 func (v *Time) IsLiteral() bool { return false }

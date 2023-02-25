@@ -34,6 +34,7 @@ func Std_strlen(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.strlen")
+	s := value.Unwrap[*value.String](args[0]).Value
+	// Note: Fastly does not consider multibyte, so "日本語" in Japanese treat as 15 byte (3bytes per 1 word)
+	return &value.Integer{Value: int64(len(s))}, nil
 }

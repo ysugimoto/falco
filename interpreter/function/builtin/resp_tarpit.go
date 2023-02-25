@@ -35,6 +35,8 @@ func Resp_tarpit(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("resp.tarpit")
+	// @TODO: currently we do not support tarpitting, so this function has no effect
+	// see: https://en.wikipedia.org/wiki/Tarpit_(networking)
+	return value.Null, nil
+
 }

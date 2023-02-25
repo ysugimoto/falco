@@ -24,21 +24,23 @@ func Test_Randomint_seeded(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		ret, err := Randomint_seeded(
-			&context.Context{},
-			&value.Integer{Value: tt.from},
-			&value.Integer{Value: tt.to},
-			&value.Integer{Value: tt.seed},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.IntegerType {
-			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.Integer](ret)
-		if v.Value < tt.from || v.Value > tt.to {
-			t.Errorf("[%d] Unexpected return value, value is not in range from %d to %d", i, tt.from, tt.to)
+		for j := 0; j < 10000; j++ {
+			ret, err := Randomint_seeded(
+				&context.Context{},
+				&value.Integer{Value: tt.from},
+				&value.Integer{Value: tt.to},
+				&value.Integer{Value: tt.seed},
+			)
+			if err != nil {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			if ret.Type() != value.IntegerType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			}
+			v := value.Unwrap[*value.Integer](ret)
+			if v.Value < tt.from || v.Value > tt.to {
+				t.Errorf("[%d] Unexpected return value, value is not in range from %d to %d", i, tt.from, tt.to)
+			}
 		}
 	}
 }

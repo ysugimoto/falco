@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.strtof
@@ -13,5 +15,36 @@ import (
 // - STRING, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-strtof/
 func Test_Std_strtof(t *testing.T) {
-	t.Skip("Test Builtin function std.strtof should be impelemented")
+	tests := []struct {
+		input  string
+		base   int64
+		expect string
+	}{
+		{input: "1.2", base: 10, expect: "1.200"},
+		{input: "1.2", base: 0, expect: "1.200"},
+		{input: "-1.2e-3", base: 10, expect: "-0.001"},
+		{input: "-1.2e-3", base: 0, expect: "-0.001"},
+		{input: "0xA.B", base: 16, expect: "10.688"},
+		{input: "0xA.B", base: 0, expect: "10.688"},
+		{input: "0xA.Bp-3", base: 16, expect: "1.336"},
+		{input: "0xA.Bp-3", base: 0, expect: "1.336"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_strtof(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.Integer{Value: tt.base},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.FloatType {
+			t.Errorf("[%d] Unexpected return type, expect=FLOAT, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Float](ret)
+		if diff := cmp.Diff(tt.expect, v.String()); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

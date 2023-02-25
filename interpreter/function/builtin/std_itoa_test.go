@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.itoa
@@ -14,5 +16,30 @@ import (
 // - INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-itoa/
 func Test_Std_itoa(t *testing.T) {
-	t.Skip("Test Builtin function std.itoa should be impelemented")
+	tests := []struct {
+		input  int64
+		base   int64
+		expect string
+	}{
+		{input: -10, expect: "-10"},
+		{input: 42, base: 16, expect: "2a"},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{&value.Integer{Value: tt.input}}
+		if tt.base > 0 {
+			args = append(args, &value.Integer{Value: tt.base})
+		}
+		ret, err := Std_itoa(&context.Context{}, args...)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

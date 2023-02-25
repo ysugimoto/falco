@@ -34,6 +34,16 @@ func Std_strrev(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.strrev")
+	s := value.Unwrap[*value.String](args[0]).Value
+	// Note: Fastly does not consider multibyte. When string includes multibyte, return empty string
+	// To check it, compare byte slice and rune slice length are same. It means strings are all byte representation
+	if len([]byte(s)) != len([]rune(s)) {
+		return &value.String{IsNotSet: true}, nil
+	}
+	b := []byte(s)
+	for i := 0; i < len(b)/2; i++ {
+		b[i], b[len(b)-i-1] = b[len(b)-i-1], b[i]
+	}
+
+	return &value.String{Value: string(b)}, nil
 }

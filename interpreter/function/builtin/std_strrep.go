@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,13 @@ func Std_strrep(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.strrep")
+	s := value.Unwrap[*value.String](args[0]).Value
+	count := value.Unwrap[*value.Integer](args[1]).Value
+	if count < 0 {
+		count = 0
+	}
+
+	return &value.String{
+		Value: strings.Repeat(s, int(count)),
+	}, nil
 }

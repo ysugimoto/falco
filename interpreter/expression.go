@@ -33,7 +33,7 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 		} else {
 			return v, nil
 		}
-	} else if v, err := i.vars.Get(i.scope, val); err != nil {
+	} else if v, err := i.vars.Get(i.ctx.Scope, val); err != nil {
 		if withCondition {
 			return value.Null, nil
 		} else {
@@ -183,17 +183,31 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 }
 
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
-	fn, err := function.Exists(i.scope, exp.Function.Value)
+	fn, err := function.Exists(i.ctx.Scope, exp.Function.Value)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
 	args := make([]value.Value, len(exp.Arguments))
 	for j := range exp.Arguments {
-		a, err := i.ProcessExpression(exp.Arguments[j], withCondition)
-		if err != nil {
-			return value.Null, errors.WithStack(err)
+		if fn.IsIdentArgument(j) {
+			// If function accepts ID type, pass the string as Ident value without processing expression.
+			// This is because some function uses collection value like req.http.Cookie as ID type,
+			// But the processor passes *value.String as primitive value normally.
+			// In order to treat collection value inside, enthruse with the function logic how value is treated as correspond types.
+			if ident, ok := exp.Arguments[j].(*ast.Ident); !ok {
+				args[j] = &value.Ident{Value: ident.Value}
+			} else {
+				return value.Null, errors.WithStack(
+					fmt.Errorf("Function %s of %d argument must be an Ident", exp.Function.Value, j),
+				)
+			}
+		} else {
+			a, err := i.ProcessExpression(exp.Arguments[j], withCondition)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			args[j] = a
 		}
-		args[j] = a
 	}
 	return fn.Call(i.ctx, args...)
 }

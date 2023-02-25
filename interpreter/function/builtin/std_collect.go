@@ -35,6 +35,31 @@ func Std_collect(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.collect")
+	// TODO: std.collection has no effect because Golang's HTTP header is automatically collected
+	// ident := value.Unwrap[*value.Ident](args[0])
+	// sep := ","
+	// if len(args) > 1 {
+	// 	sep = value.Unwrap[*value.String](args[1]).Value
+	// }
+	//
+	// switch {
+	// case strings.HasPrefix(ident.Value, "req.http."):
+	// 	name := strings.TrimPrefix(ident.Value, "req.http.")
+	// 	value := ctx.Request.Header.Values(name)
+	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
+	// case strings.HasPrefix(ident.Value, "bereq.http"):
+	// 	name := strings.TrimPrefix(ident.Value, "bereq.http.")
+	// 	value := ctx.BackendRequest.Header.Values(name)
+	// 	ctx.BackendRequest.Header.Set(name, strings.Join(value, sep))
+	// case strings.HasPrefix(ident.Value, "beresp.http"):
+	// 	name := strings.TrimPrefix(ident.Value, "beresp.http.")
+	// 	value := ctx.BackendResponse.Header.Values(name)
+	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
+	// case strings.HasPrefix(ident.Value, "resp.http"):
+	// 	name := strings.TrimPrefix(ident.Value, "resp.http.")
+	// 	value := ctx.BackendResponse.Header.Values(name)
+	// 	ctx.BackendResponse.Header.Set(name, strings.Join(value, sep))
+	// }
+
+	return value.Null, nil
 }

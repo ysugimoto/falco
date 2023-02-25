@@ -71,6 +71,10 @@ func (i *Interpreter) generateBuiltInFunction() error {
 			ucFirst(strings.ReplaceAll(key, ".", "_")),
 		)
 		buf.WriteString(signature + ",\n")
+		buf.WriteString(fmt.Sprintf("CanStatementCall: %t,\n", v.Return == ""))
+		buf.WriteString("IsIdentArgument: func(i int) bool {\n")
+		buf.WriteString(fmt.Sprintf("return %s\n", i.createFunctionIdentArguments(v.Arguments)))
+		buf.WriteString("},\n")
 		buf.WriteString("},\n")
 	}
 
@@ -96,6 +100,29 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		return err
 	}
 	return nil
+}
+
+func (i *Interpreter) createFunctionIdentArguments(arguments [][]string) string {
+	// Find max length of arguments
+	var maxArgs []string
+	for _, args := range arguments {
+		if len(args) > len(maxArgs) {
+			maxArgs = args
+		}
+	}
+
+	var codes []string
+	// Find ID type argument position
+	for i, arg := range maxArgs {
+		if arg == "ID" {
+			codes = append(codes, fmt.Sprintf("i == %d", i))
+		}
+	}
+
+	if len(codes) == 0 {
+		return "false"
+	}
+	return strings.Join(codes, " || ")
 }
 
 func (i *Interpreter) generateBuiltInFunctionFile(name string, fn *FunctionSpec) error {
