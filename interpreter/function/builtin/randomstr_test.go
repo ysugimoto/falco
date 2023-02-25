@@ -3,9 +3,11 @@
 package builtin
 
 import (
+	"strings"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of randomstr
@@ -14,5 +16,31 @@ import (
 // - INTEGER, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/randomness/randomstr/
 func Test_Randomstr(t *testing.T) {
-	t.Skip("Test Builtin function randomstr should be impelemented")
+	tests := []struct {
+		length     int64
+		characters string
+	}{
+		{length: 10, characters: "1234567890abcdef"},
+		{length: 5, characters: "abcdef"},
+	}
+
+	for i, tt := range tests {
+		ret, err := Randomstr(
+			&context.Context{},
+			&value.Integer{Value: tt.length},
+			&value.String{Value: tt.characters},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		for _, s := range v.Value {
+			if !strings.Contains(tt.characters, string(s)) {
+				t.Errorf("[%d] Unexpected return value, character %s should be once of %s", i, string(s), tt.characters)
+			}
+		}
+	}
 }

@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -35,6 +38,15 @@ func Randomstr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("randomstr")
+	length := value.Unwrap[*value.Integer](args[0])
+	characters := []rune(value.Unwrap[*value.String](args[1]).Value)
+
+	rand.Seed(time.Now().UnixNano())
+	ret := make([]rune, int(length.Value))
+
+	for i := 0; i < int(length.Value); i++ {
+		ret[i] = characters[rand.Intn(len(characters)-1)]
+	}
+
+	return &value.String{Value: string(ret)}, nil
 }

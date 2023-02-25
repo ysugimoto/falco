@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"math/rand"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,14 @@ func Randomint_seeded(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("randomint_seeded")
+	from := value.Unwrap[*value.Integer](args[0])
+	to := value.Unwrap[*value.Integer](args[1])
+	seed := value.Unwrap[*value.Integer](args[2])
+
+	rand.Seed(seed.Value)
+	r := rand.Int63n(to.Value - from.Value)
+
+	return &value.Integer{
+		Value: r + from.Value,
+	}, nil
 }

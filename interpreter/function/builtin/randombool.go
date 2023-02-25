@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"math"
+	"math/rand"
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +38,13 @@ func Randombool(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("randombool")
+	numerator := value.Unwrap[*value.Integer](args[0])
+	denominator := value.Unwrap[*value.Integer](args[1])
+
+	rand.Seed(time.Now().UnixNano())
+	r := rand.Int63n(math.MaxInt64)
+
+	return &value.Boolean{
+		Value: r/math.MaxInt64 < numerator.Value/denominator.Value,
+	}, nil
 }

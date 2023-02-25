@@ -4,8 +4,9 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of randomint
@@ -13,5 +14,32 @@ import (
 // - INTEGER, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/randomness/randomint/
 func Test_Randomint(t *testing.T) {
-	t.Skip("Test Builtin function randomint should be impelemented")
+	tests := []struct {
+		from int64
+		to   int64
+	}{
+		{from: 0, to: 99},
+		{from: -1, to: 0},
+	}
+
+	for i, tt := range tests {
+		// for randomize tests, try enough large loop
+		for j := 0; j < 10000; j++ {
+			ret, err := Randomint(
+				&context.Context{},
+				&value.Integer{Value: tt.from},
+				&value.Integer{Value: tt.to},
+			)
+			if err != nil {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			if ret.Type() != value.IntegerType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			}
+			v := value.Unwrap[*value.Integer](ret)
+			if v.Value < tt.from || v.Value > tt.to {
+				t.Errorf("[%d] Unexpected return value %d value is not in range from %d to %d", i, v.Value, tt.from, tt.to)
+			}
+		}
+	}
 }
