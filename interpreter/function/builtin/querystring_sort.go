@@ -5,6 +5,7 @@ package builtin
 import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +35,14 @@ func Querystring_sort(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.sort")
+	u := value.Unwrap[*value.String](args[0])
+	query, err := shared.ParseQuery(u.Value)
+	if err != nil {
+		return value.Null, errors.New(
+			Querystring_sort_Name, "Failed to parse urquery: %s, error: %s", u.Value, err.Error(),
+		)
+	}
+
+	query.Sort(shared.SortAsc)
+	return &value.String{Value: query.String()}, nil
 }

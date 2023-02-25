@@ -3,12 +3,11 @@
 package builtin
 
 import (
-	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -41,35 +40,26 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	parsed, err := url.Parse(v.Value)
+	query, err := shared.ParseQuery(v.Value)
 	if err != nil {
-		if err != nil {
-			return value.Null, errors.New(
-				Querystring_regfilter_except_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
-			)
-		}
+		return value.Null, errors.New(
+			Querystring_regfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
+		)
 	}
 
-	filtered := url.Values{}
-	for k, v := range parsed.Query() {
-		if matched, err := regexp.MatchString(name.Value, k); err != nil {
-			return value.Null, errors.New(
+	var matchErr error
+	query.Filter(func(key string) bool {
+		matched, err := regexp.MatchString(name.Value, key)
+		if err != nil {
+			matchErr = errors.New(
 				Querystring_regfilter_except_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
 			)
-		} else if matched {
-			filtered[k] = v
 		}
-	}
+		return matched
+	})
 
-	var sign string
-	if len(filtered) > 0 {
-		sign = "?"
+	if matchErr != nil {
+		return value.Null, matchErr
 	}
-
-	path := v.Value
-	if idx := strings.Index(path, "?"); idx != -1 {
-		path = path[0:idx]
-	}
-
-	return &value.String{Value: path + sign + filtered.Encode()}, nil
+	return &value.String{Value: query.String()}, nil
 }

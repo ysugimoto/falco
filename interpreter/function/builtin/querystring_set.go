@@ -5,6 +5,7 @@ package builtin
 import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -34,6 +35,17 @@ func Querystring_set(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("querystring.set")
+	u := value.Unwrap[*value.String](args[0])
+	name := value.Unwrap[*value.String](args[1])
+	val := value.Unwrap[*value.String](args[2])
+
+	query, err := shared.ParseQuery(u.Value)
+	if err != nil {
+		return value.Null, errors.New(
+			Querystring_set_Name, "Failed to parse urquery: %s, error: %s", u.Value, err.Error(),
+		)
+	}
+
+	query.Set(name.Value, val.Value)
+	return &value.String{Value: query.String()}, nil
 }

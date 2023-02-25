@@ -3,12 +3,9 @@
 package builtin
 
 import (
-	"fmt"
-	"net/url"
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -38,21 +35,17 @@ func Querystring_add(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	query := value.Unwrap[*value.String](args[0])
-	k := value.Unwrap[*value.String](args[1])
-	v := value.Unwrap[*value.String](args[2])
+	u := value.Unwrap[*value.String](args[0])
+	name := value.Unwrap[*value.String](args[1])
+	val := value.Unwrap[*value.String](args[2])
 
-	add := fmt.Sprintf("%s=%s", url.QueryEscape(k.Value), url.QueryEscape(v.Value))
-	var sign string
-	if strings.Index(query.Value, "?") == -1 {
-		// If query sign is not present add query with "?"
-		sign = "?"
-	} else {
-		// Otherwize add query with "&"
-		sign = "&"
+	query, err := shared.ParseQuery(u.Value)
+	if err != nil {
+		return value.Null, errors.New(
+			Querystring_add_Name, "Failed to parse querystring: %s, error: %s", u.Value, err.Error(),
+		)
 	}
 
-	return &value.String{
-		Value: query.Value + sign + add,
-	}, nil
+	query.Add(name.Value, val.Value)
+	return &value.String{Value: query.String()}, nil
 }

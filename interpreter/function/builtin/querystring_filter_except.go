@@ -4,11 +4,10 @@ package builtin
 
 import (
 	"bytes"
-	"net/url"
-	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -41,36 +40,21 @@ func Querystring_filter_except(ctx *context.Context, args ...value.Value) (value
 	v := value.Unwrap[*value.String](args[0])
 	names := value.Unwrap[*value.String](args[1])
 
-	parsed, err := url.Parse(v.Value)
+	query, err := shared.ParseQuery(v.Value)
 	if err != nil {
-		if err != nil {
-			return value.Null, errors.New(
-				Querystring_filter_except_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
-			)
-		}
+		return value.Null, errors.New(
+			Querystring_filter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
+		)
 	}
 	filterMap := make(map[string]struct{})
 	for _, f := range bytes.Split([]byte(names.Value), Querystring_filtersep_Sign) {
 		filterMap[string(f)] = struct{}{}
 	}
 
-	filtered := url.Values{}
-	for k, v := range parsed.Query() {
-		if _, ok := filterMap[k]; !ok {
-			continue
-		}
-		filtered[k] = v
-	}
+	query.Filter(func(name string) bool {
+		_, ok := filterMap[name]
+		return ok
+	})
 
-	var sign string
-	if len(filtered) > 0 {
-		sign = "?"
-	}
-
-	path := v.Value
-	if idx := strings.Index(path, "?"); idx != -1 {
-		path = path[0:idx]
-	}
-
-	return &value.String{Value: path + sign + filtered.Encode()}, nil
+	return &value.String{Value: query.String()}, nil
 }

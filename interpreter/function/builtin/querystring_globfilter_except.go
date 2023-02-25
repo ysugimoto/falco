@@ -3,12 +3,10 @@
 package builtin
 
 import (
-	"net/url"
-	"strings"
-
 	"github.com/ryanuber/go-glob"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -41,31 +39,15 @@ func Querystring_globfilter_except(ctx *context.Context, args ...value.Value) (v
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	parsed, err := url.Parse(v.Value)
+	query, err := shared.ParseQuery(v.Value)
 	if err != nil {
-		if err != nil {
-			return value.Null, errors.New(
-				Querystring_globfilter_except_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
-			)
-		}
+		return value.Null, errors.New(
+			Querystring_globfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
+		)
 	}
 
-	filtered := url.Values{}
-	for k, v := range parsed.Query() {
-		if glob.Glob(name.Value, k) {
-			filtered[k] = v
-		}
-	}
-
-	var sign string
-	if len(filtered) > 0 {
-		sign = "?"
-	}
-
-	path := v.Value
-	if idx := strings.Index(path, "?"); idx != -1 {
-		path = path[0:idx]
-	}
-
-	return &value.String{Value: path + sign + filtered.Encode()}, nil
+	query.Filter(func(v string) bool {
+		return glob.Glob(name.Value, v)
+	})
+	return &value.String{Value: query.String()}, nil
 }

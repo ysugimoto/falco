@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -53,7 +54,11 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 		if len(sp) < 2 || sp[0] == "" {
 			continue
 		}
-		if sp[0] == name.Value {
+		n, err := url.QueryUnescape(sp[0])
+		if err != nil {
+			continue
+		}
+		if n == name.Value {
 			return &value.String{Value: sp[1]}, nil
 		}
 	}
