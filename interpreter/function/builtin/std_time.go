@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,6 +28,14 @@ func Std_time_Validate(args []value.Value) error {
 	return nil
 }
 
+var Std_time_SupportFormats = []string{
+	time.RFC1123,
+	time.RFC822,
+	time.RFC850,
+	time.ANSIC,
+	"2006-01-02 15:04:05", // ISO 8601 subset
+}
+
 // Fastly built-in function implementation of std.time
 // Arguments may be:
 // - STRING, TIME
@@ -34,6 +46,32 @@ func Std_time(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.time")
+	s := value.Unwrap[*value.String](args[0]).Value
+	fallback := value.Unwrap[*value.Time](args[1]).Value
+
+	var t time.Time
+	var err error
+	for _, format := range Std_time_SupportFormats {
+		t, err = time.Parse(format, s)
+		if err == nil {
+			return &value.Time{Value: t}, nil
+		}
+	}
+
+	// If all formats are invalid, try to parse from unix epoch seconds
+	ss := s
+	if idx := strings.Index(s, "."); idx != -1 {
+		ss = s[0:idx]
+	}
+	ts, err := strconv.ParseInt(ss, 10, 64)
+	if err != nil {
+		t = fallback.Add(0)
+	} else {
+		t = time.Unix(ts, 0)
+	}
+
+	if t.Unix() < 0 {
+		return &value.Time{OutOfBounds: true}, nil
+	}
+	return &value.Time{Value: t}, nil
 }

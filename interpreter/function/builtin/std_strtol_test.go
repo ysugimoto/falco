@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.strtol
@@ -13,5 +15,36 @@ import (
 // - STRING, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-strtol/
 func Test_Std_strtol(t *testing.T) {
-	t.Skip("Test Builtin function std.strtol should be impelemented")
+	tests := []struct {
+		input  string
+		base   int64
+		expect int64
+	}{
+		{input: "123", base: 0, expect: 123},
+		{input: "123", base: 10, expect: 123},
+		{input: "0123", base: 0, expect: 83},
+		{input: "0123", base: 8, expect: 83},
+		{input: "0xABC", base: 0, expect: 2748},
+		{input: "0xABC", base: 16, expect: 2748},
+		{input: "0xABC", base: 24, expect: 6036},
+		{input: "0xABC", base: 36, expect: 1553016},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_strtol(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.Integer{Value: tt.base},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.IntegerType {
+			t.Errorf("[%d] Unexpected return type, expect=INTEGER, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

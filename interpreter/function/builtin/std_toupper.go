@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,8 @@ func Std_toupper(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.toupper")
+	s := value.Unwrap[*value.String](args[0])
+	return &value.String{
+		Value: strings.ToUpper(s.Value),
+	}, nil
 }

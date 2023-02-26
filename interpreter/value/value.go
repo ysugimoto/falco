@@ -182,10 +182,16 @@ func (v *RTime) IsLiteral() bool { return v.Literal }
 func (v *RTime) Copy() Value     { return &RTime{Value: v.Value, Literal: v.Literal} }
 
 type Time struct {
-	Value time.Time
+	Value       time.Time
+	OutOfBounds bool
 }
 
-func (v *Time) String() string  { return v.Value.Format(http.TimeFormat) }
+func (v *Time) String() string {
+	if v.OutOfBounds {
+		return "[out of bounds]"
+	}
+	return v.Value.Format(http.TimeFormat)
+}
 func (v *Time) value()          {}
 func (v *Time) Type() Type      { return TimeType }
 func (v *Time) IsLiteral() bool { return false }

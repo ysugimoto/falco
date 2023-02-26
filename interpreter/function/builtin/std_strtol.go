@@ -3,6 +3,10 @@
 package builtin
 
 import (
+	"math"
+	"strconv"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,6 +28,51 @@ func Std_strtol_Validate(args []value.Value) error {
 	return nil
 }
 
+func Std_strtol_Hex(s string) (int64, error) {
+	i, err := strconv.ParseInt(strings.TrimPrefix(s, "0x"), 16, 64)
+	if err != nil {
+		return 0, errors.New(Std_strtol_Name, "Failed to parse string with base 16: %s", err.Error())
+	}
+	return i, nil
+}
+
+func Std_strtol_Octet(s string) (int64, error) {
+	i, err := strconv.ParseInt(s, 8, 64)
+	if err != nil {
+		return 0, errors.New(Std_strtol_Name, "Failed to parse string with base 8: %s", err.Error())
+	}
+	return i, nil
+}
+
+func Std_strtol_Decimal(s string) (int64, error) {
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, errors.New(Std_strtol_Name, "Failed to parse string with base 10: %s", err.Error())
+	}
+	return i, nil
+}
+
+// Special case: base 36 number could present "x" as number.
+// So hex string like "0xABC" should treat as "xABC"
+func Std_strtol_36(s string) (int64, error) {
+	if s == "0" {
+		return 0, nil
+	}
+	i, err := strconv.ParseInt(strings.TrimPrefix(s, "0"), 36, 64)
+	if err != nil {
+		return 0, errors.New(Std_strtol_Name, "Failed to parse string with base 36: %s", err.Error())
+	}
+	return i, nil
+}
+
+func Std_strtol_Other(s string, base int64) (int64, error) {
+	i, err := strconv.ParseInt(strings.TrimPrefix(s, "0x"), int(base), 64)
+	if err != nil {
+		return 0, errors.New(Std_strtol_Name, "Failed to parse string with base %d: %s", base, err.Error())
+	}
+	return i, nil
+}
+
 // Fastly built-in function implementation of std.strtol
 // Arguments may be:
 // - STRING, INTEGER
@@ -34,6 +83,44 @@ func Std_strtol(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("std.strtol")
+	s := value.Unwrap[*value.String](args[0]).Value
+	base := value.Unwrap[*value.Integer](args[1]).Value
+
+	var i int64
+	var err error
+	switch base {
+	case 0: // auto detection
+		switch {
+		case strings.HasPrefix(s, "0x"):
+			i, err = Std_strtol_Hex(s)
+		case strings.HasPrefix(s, "0"):
+			i, err = Std_strtol_Octet(s)
+		default:
+			i, err = Std_strtol_Decimal(s)
+		}
+	case 8: // octet conversion
+		i, err = Std_strtol_Octet(s)
+	case 16: // hex conversion
+		i, err = Std_strtol_Hex(s)
+	case 36: // special case conversion
+		i, err = Std_strtol_36(s)
+	default: // hex conversion
+		if base > 36 {
+			err = errors.New(Std_strtol_Name, "Invalid base int. base must be from 0 to 36")
+		} else {
+			i, err = Std_strtol_Other(s, base)
+		}
+	}
+
+	if err != nil {
+		ctx.FastlyError = &value.String{Value: "EPARSENUM"}
+		return value.Null, err
+	}
+
+	if i > int64(math.Inf(1)) || i < int64(math.Inf(-1)) {
+		ctx.FastlyError = &value.String{Value: "ERANGE"}
+		return value.Null, errors.New(Std_strtol_Name, "Value overflow")
+	}
+
+	return &value.Integer{Value: i}, nil
 }

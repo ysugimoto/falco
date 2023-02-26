@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.suffixof
@@ -13,5 +15,30 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-suffixof/
 func Test_Std_suffixof(t *testing.T) {
-	t.Skip("Test Builtin function std.suffixof should be impelemented")
+	tests := []struct {
+		input  string
+		suffix string
+		expect bool
+	}{
+		{input: "greenhouse", suffix: "house", expect: true},
+		{input: "greenhousa", suffix: "house", expect: false},
+	}
+
+	for i, tt := range tests {
+		ret, err := Std_suffixof(
+			&context.Context{},
+			&value.String{Value: tt.input},
+			&value.String{Value: tt.suffix},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.BooleanType {
+			t.Errorf("[%d] Unexpected return type, expect=BOOL, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Boolean](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }
