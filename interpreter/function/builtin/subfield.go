@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -35,6 +37,27 @@ func Subfield(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("subfield")
+	subject := value.Unwrap[*value.String](args[0]).Value
+	field := value.Unwrap[*value.String](args[1]).Value
+	separator := ","
+	if len(args) == 3 {
+		separator = value.Unwrap[*value.String](args[2]).Value
+		if len(separator) > 1 {
+			return &value.String{Value: ""}, errors.New(
+				Subfield_Name, "Invalid separator %s provided. Character must be an one-character", separator,
+			)
+		}
+	}
+
+	for _, v := range strings.Split(subject, separator) {
+		kv := strings.SplitN(v, "=", 2)
+		if kv[0] != field {
+			continue
+		}
+		if len(kv) > 1 {
+			return &value.String{Value: kv[1]}, nil
+		}
+		return &value.String{Value: ""}, nil
+	}
+	return &value.String{Value: ""}, nil
 }

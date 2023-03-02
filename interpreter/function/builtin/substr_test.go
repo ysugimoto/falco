@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of substr
@@ -14,5 +16,45 @@ import (
 // - STRING, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/substr/
 func Test_Substr(t *testing.T) {
-	t.Skip("Test Builtin function substr should be impelemented")
+	tests := []struct {
+		input   string
+		offset  int64
+		length  int64
+		expect  string
+		isError bool
+	}{
+		{input: "abcdefg", offset: 3, length: 0, expect: "defg"},
+		{input: "abcdefg", offset: 0, length: 2, expect: "abc"},
+		{input: "abcdefg", offset: 5, length: 3, expect: "fg"},
+		{input: "abc", offset: 4, length: 2, expect: "", isError: true},
+		{input: "abc", offset: 3, length: 2, expect: ""},
+		{input: "abcdefg", offset: -3, length: 2, expect: "ef"},
+		{input: "abcdefg", offset: 1, length: -3, expect: "bcd"},
+		{input: "abcdefg", offset: -4, length: -3, expect: "de"},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.String{Value: tt.input},
+			&value.Integer{Value: tt.offset},
+		}
+		if tt.length != 0 {
+			args = append(args, &value.Integer{Value: tt.length})
+		}
+
+		ret, err := Substr(&context.Context{}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

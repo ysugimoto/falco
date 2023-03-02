@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of subfield
@@ -14,5 +16,36 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/subfield/
 func Test_Subfield(t *testing.T) {
-	t.Skip("Test Builtin function subfield should be impelemented")
+	tests := []struct {
+		input  string
+		field  string
+		sep    string
+		expect string
+	}{
+		{input: "foo=bar,lorem=ipsum", field: "foo", expect: "bar"},
+		{input: "foo=bar&lorem=ipsum", field: "foo", sep: "&", expect: "bar"},
+		{input: "foo=bar&lorem=ipsum", field: "foo", sep: "%", expect: "bar&lorem=ipsum"},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.String{Value: tt.input},
+			&value.String{Value: tt.field},
+		}
+		if tt.sep != "" {
+			args = append(args, &value.String{Value: tt.sep})
+		}
+
+		ret, err := Subfield(&context.Context{}, args...)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }
