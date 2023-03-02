@@ -4,8 +4,12 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/token"
 )
 
 // Fastly built-in function testing implementation of table.lookup
@@ -14,5 +18,57 @@ import (
 // - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup/
 func Test_Table_lookup(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup should be impelemented")
+	table := map[string]*ast.TableDeclaration{
+		"example": {
+			Properties: []*ast.TableProperty{
+				{
+					Key: &ast.String{Value: "foo"},
+					Value: &ast.String{
+						Value: "bar",
+						Meta: &ast.Meta{
+							Token: token.Token{Offset: 0},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		input        string
+		key          string
+		defaultValue string
+		expect       string
+		isError      bool
+	}{
+		{input: "doesnotexist", key: "foo", expect: "", isError: true},
+		{input: "doesnotexist", key: "foo", defaultValue: "fallback", expect: "fallback", isError: true},
+		{input: "example", key: "foo", expect: "bar"},
+		{input: "example", key: "other", defaultValue: "fallback", expect: "fallback"},
+		{input: "example", key: "lorem", expect: ""},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.Ident{Value: tt.input},
+			&value.String{Value: tt.key},
+		}
+		if tt.defaultValue != "" {
+			args = append(args, &value.String{Value: tt.defaultValue})
+		}
+		ret, err := Table_lookup(&context.Context{Tables: table}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -13,8 +14,8 @@ const Table_lookup_float_Name = "table.lookup_float"
 var Table_lookup_float_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.FloatType}
 
 func Table_lookup_float_Validate(args []value.Value) error {
-	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange(Table_lookup_float_Name, 2, 3, args)
+	if len(args) != 3 {
+		return errors.ArgumentNotEnough(Table_lookup_float_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_float_ArgumentTypes[i] {
@@ -27,7 +28,6 @@ func Table_lookup_float_Validate(args []value.Value) error {
 // Fastly built-in function implementation of table.lookup_float
 // Arguments may be:
 // - TABLE, STRING, FLOAT
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/
 func Table_lookup_float(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
@@ -35,6 +35,32 @@ func Table_lookup_float(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.lookup_float")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+	defaultValue := value.Unwrap[*value.Float](args[2]).Value
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
+			"table %d does not exist", id,
+		)
+	}
+	if table.ValueType == nil || table.ValueType.Value != "FLOAT" {
+		return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
+			"table %d value type is not FLOAT", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			v, ok := prop.Value.(*ast.Float)
+			if !ok {
+				return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
+					"table %s value could not cast to FLOAT type", id,
+				)
+			}
+			return &value.Float{Value: v.Value}, nil
+		}
+	}
+	return &value.Float{Value: defaultValue}, nil
 }

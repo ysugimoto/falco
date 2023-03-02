@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -13,8 +14,8 @@ const Table_lookup_integer_Name = "table.lookup_integer"
 var Table_lookup_integer_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.IntegerType}
 
 func Table_lookup_integer_Validate(args []value.Value) error {
-	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange(Table_lookup_integer_Name, 2, 3, args)
+	if len(args) != 3 {
+		return errors.ArgumentNotEnough(Table_lookup_integer_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_integer_ArgumentTypes[i] {
@@ -27,7 +28,6 @@ func Table_lookup_integer_Validate(args []value.Value) error {
 // Fastly built-in function implementation of table.lookup_integer
 // Arguments may be:
 // - TABLE, STRING, INTEGER
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/
 func Table_lookup_integer(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
@@ -35,6 +35,32 @@ func Table_lookup_integer(ctx *context.Context, args ...value.Value) (value.Valu
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.lookup_integer")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+	defaultValue := value.Unwrap[*value.Integer](args[2]).Value
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
+			"table %d does not exist", id,
+		)
+	}
+	if table.ValueType == nil || table.ValueType.Value != "INTEGER" {
+		return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
+			"table %d value type is not INTEGER", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			v, ok := prop.Value.(*ast.Integer)
+			if !ok {
+				return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
+					"table %s value could not cast to INTEGER type", id,
+				)
+			}
+			return &value.Integer{Value: v.Value}, nil
+		}
+	}
+	return &value.Integer{Value: defaultValue}, nil
 }

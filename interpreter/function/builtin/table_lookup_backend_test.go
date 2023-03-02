@@ -11,8 +11,7 @@ import (
 // Fastly built-in function testing implementation of table.lookup_backend
 // Arguments may be:
 // - TABLE, STRING, BACKEND
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/
 func Test_Table_lookup_backend(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup_backend should be impelemented")
+	t.Skip("table.lookup_backend only has difference for table value type")
 }

@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -10,11 +11,11 @@ import (
 
 const Table_lookup_bool_Name = "table.lookup_bool"
 
-var Table_lookup_bool_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
+var Table_lookup_bool_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.BooleanType}
 
 func Table_lookup_bool_Validate(args []value.Value) error {
-	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange(Table_lookup_bool_Name, 2, 3, args)
+	if len(args) != 3 {
+		return errors.ArgumentNotEnough(Table_lookup_bool_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_bool_ArgumentTypes[i] {
@@ -27,7 +28,6 @@ func Table_lookup_bool_Validate(args []value.Value) error {
 // Fastly built-in function implementation of table.lookup_bool
 // Arguments may be:
 // - TABLE, STRING, BOOL
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/
 func Table_lookup_bool(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
@@ -35,6 +35,32 @@ func Table_lookup_bool(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.lookup_bool")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+	defaultValue := value.Unwrap[*value.Boolean](args[2]).Value
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
+			"table %d does not exist", id,
+		)
+	}
+	if table.ValueType == nil || table.ValueType.Value != "BOOL" {
+		return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
+			"table %d value type is not BOOL", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			v, ok := prop.Value.(*ast.Boolean)
+			if !ok {
+				return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
+					"table %s value could not cast to BOOL type", id,
+				)
+			}
+			return &value.Boolean{Value: v.Value}, nil
+		}
+	}
+	return &value.Boolean{Value: defaultValue}, nil
 }

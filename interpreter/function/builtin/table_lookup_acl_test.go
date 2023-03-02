@@ -11,8 +11,7 @@ import (
 // Fastly built-in function testing implementation of table.lookup_acl
 // Arguments may be:
 // - TABLE, STRING, ACL
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/
 func Test_Table_lookup_acl(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup_acl should be impelemented")
+	t.Skip("table.lookup_acl only has difference for table value type")
 }

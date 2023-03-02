@@ -34,6 +34,20 @@ func Table_contains(ctx *context.Context, args ...value.Value) (value.Value, err
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.contains")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.Boolean{Value: false}, errors.New(Table_contains_Name,
+			"table %d does not exist", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			return &value.Boolean{Value: true}, nil
+		}
+	}
+	return &value.Boolean{Value: false}, nil
 }

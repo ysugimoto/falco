@@ -11,8 +11,7 @@ import (
 // Fastly built-in function testing implementation of table.lookup_integer
 // Arguments may be:
 // - TABLE, STRING, INTEGER
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/
 func Test_Table_lookup_integer(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup_integer should be impelemented")
+	t.Skip("table.lookup_integer only has difference for table value type")
 }

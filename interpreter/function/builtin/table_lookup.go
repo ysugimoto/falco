@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -35,6 +36,32 @@ func Table_lookup(ctx *context.Context, args ...value.Value) (value.Value, error
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.lookup")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+	defaultValue := &value.String{IsNotSet: true}
+	if len(args) > 2 {
+		// explicit clone value
+		v := value.Unwrap[*value.String](args[2]).Value
+		defaultValue = &value.String{Value: v}
+	}
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.String{IsNotSet: true}, errors.New(Table_lookup_Name,
+			"table %d does not exist", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			v, ok := prop.Value.(*ast.String)
+			if !ok {
+				return &value.String{IsNotSet: true}, errors.New(Table_lookup_Name,
+					"table %s value could not cast to STRING type", id,
+				)
+			}
+			return &value.String{Value: v.Value}, nil
+		}
+	}
+	return defaultValue, nil
 }

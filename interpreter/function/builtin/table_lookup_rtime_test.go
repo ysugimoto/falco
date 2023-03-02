@@ -11,8 +11,7 @@ import (
 // Fastly built-in function testing implementation of table.lookup_rtime
 // Arguments may be:
 // - TABLE, STRING, RTIME
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/
 func Test_Table_lookup_rtime(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup_rtime should be impelemented")
+	t.Skip("table.lookup_rtime only has difference for table value type")
 }

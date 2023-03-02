@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -13,8 +14,8 @@ const Table_lookup_acl_Name = "table.lookup_acl"
 var Table_lookup_acl_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.AclType}
 
 func Table_lookup_acl_Validate(args []value.Value) error {
-	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange(Table_lookup_acl_Name, 2, 3, args)
+	if len(args) != 3 {
+		return errors.ArgumentNotEnough(Table_lookup_acl_Name, 3, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_acl_ArgumentTypes[i] {
@@ -27,7 +28,6 @@ func Table_lookup_acl_Validate(args []value.Value) error {
 // Fastly built-in function implementation of table.lookup_acl
 // Arguments may be:
 // - TABLE, STRING, ACL
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/
 func Table_lookup_acl(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
@@ -35,6 +35,32 @@ func Table_lookup_acl(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("table.lookup_acl")
+	id := value.Unwrap[*value.Ident](args[0]).Value
+	key := value.Unwrap[*value.String](args[1]).Value
+	defaultAcl := value.Unwrap[*value.Acl](args[2]).Value
+
+	table, ok := ctx.Tables[id]
+	if !ok {
+		return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
+			"table %d does not exist", id,
+		)
+	}
+	if table.ValueType == nil || table.ValueType.Value != "ACL" {
+		return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
+			"table %d value type is not ACL", id,
+		)
+	}
+
+	for _, prop := range table.Properties {
+		if prop.Key.Value == key {
+			v, ok := prop.Value.(*ast.AclDeclaration)
+			if !ok {
+				return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
+					"table %s value could not cast to ACL type", id,
+				)
+			}
+			return &value.Acl{Value: v}, nil
+		}
+	}
+	return &value.Acl{Value: defaultAcl}, nil
 }

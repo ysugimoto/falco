@@ -11,8 +11,7 @@ import (
 // Fastly built-in function testing implementation of table.lookup_float
 // Arguments may be:
 // - TABLE, STRING, FLOAT
-// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/
 func Test_Table_lookup_float(t *testing.T) {
-	t.Skip("Test Builtin function table.lookup_float should be impelemented")
+	t.Skip("table.lookup_float only has difference for table value type")
 }

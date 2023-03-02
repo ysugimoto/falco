@@ -1722,7 +1722,6 @@ func builtinFunctions() Functions {
 						Return: types.AclType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.AclType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1735,7 +1734,6 @@ func builtinFunctions() Functions {
 						Return: types.BackendType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BackendType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1748,7 +1746,6 @@ func builtinFunctions() Functions {
 						Return: types.BoolType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BoolType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1761,7 +1758,6 @@ func builtinFunctions() Functions {
 						Return: types.FloatType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.FloatType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1774,7 +1770,6 @@ func builtinFunctions() Functions {
 						Return: types.IntegerType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IntegerType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1787,7 +1782,6 @@ func builtinFunctions() Functions {
 						Return: types.IPType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IPType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -1800,7 +1794,6 @@ func builtinFunctions() Functions {
 						Return: types.RTimeType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.RTimeType},
-							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
