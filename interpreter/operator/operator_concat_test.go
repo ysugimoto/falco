@@ -2,6 +2,7 @@ package operator
 
 import (
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Integer{Value: 10}, right: &value.String{Value: "example", Literal: true}, expect: "10example"},
 			{left: &value.Integer{Value: 10}, right: &value.RTime{Value: 100 * time.Second}, expect: "10100.000"},
 			{left: &value.Integer{Value: 10}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: &value.Integer{Value: 10}, right: &value.Time{Value: now}, expect: "10" + now.Format(time.RFC1123)},
+			{left: &value.Integer{Value: 10}, right: &value.Time{Value: now}, expect: "10" + now.Format(http.TimeFormat)},
 			{left: &value.Integer{Value: 10}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "10foo"},
 			{left: &value.Integer{Value: 10}, right: &value.Boolean{Value: true}, expect: "101"},
 			{left: &value.Integer{Value: 10}, right: &value.Boolean{Value: false, Literal: true}, expect: "100"},
@@ -74,7 +75,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Float{Value: 10.0}, right: &value.String{Value: "example", Literal: true}, expect: "10.000example"},
 			{left: &value.Float{Value: 10.0}, right: &value.RTime{Value: 100 * time.Second}, expect: "10.000100.000"},
 			{left: &value.Float{Value: 10.0}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: &value.Float{Value: 10.0}, right: &value.Time{Value: now}, expect: "10.000" + now.Format(time.RFC1123)},
+			{left: &value.Float{Value: 10.0}, right: &value.Time{Value: now}, expect: "10.000" + now.Format(http.TimeFormat)},
 			{left: &value.Float{Value: 10.0}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "10.000foo"},
 			{left: &value.Float{Value: 10.0}, right: &value.Boolean{Value: true}, expect: "10.0001"},
 			{left: &value.Float{Value: 10.0}, right: &value.Boolean{Value: false, Literal: true}, expect: "10.0000"},
@@ -122,7 +123,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example", Literal: true}, expect: "exampleexample"},
 			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, expect: "example100.000"},
 			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, expect: "example" + now.Format(time.RFC1123)},
+			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, expect: "example" + now.Format(http.TimeFormat)},
 			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "examplefoo"},
 			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, expect: "example1"},
 			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: false, Literal: true}, expect: "example0"},
@@ -170,7 +171,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.RTime{Value: time.Second}, right: &value.String{Value: "example", Literal: true}, expect: "1.000example"},
 			{left: &value.RTime{Value: time.Second}, right: &value.RTime{Value: time.Second}, expect: "1.0001.000"},
 			{left: &value.RTime{Value: time.Second}, right: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{left: &value.RTime{Value: time.Second}, right: &value.Time{Value: now}, expect: "1.000" + now.Format(time.RFC1123)},
+			{left: &value.RTime{Value: time.Second}, right: &value.Time{Value: now}, expect: "1.000" + now.Format(http.TimeFormat)},
 			{left: &value.RTime{Value: time.Second}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "1.000foo"},
 			{left: &value.RTime{Value: time.Second}, right: &value.Boolean{Value: true}, expect: "1.0001"},
 			{left: &value.RTime{Value: time.Second}, right: &value.Boolean{Value: false, Literal: true}, expect: "1.0000"},
@@ -204,7 +205,7 @@ func TestConcatOperator(t *testing.T) {
 
 	t.Run("left is TIME", func(t *testing.T) {
 		now := time.Now()
-		f := now.Format(time.RFC1123)
+		f := now.Format(http.TimeFormat)
 		tests := []struct {
 			left    value.Value
 			right   value.Value
@@ -266,7 +267,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Backend{Value: backend}, right: &value.String{Value: "example", Literal: true}, expect: "fooexample"},
 			{left: &value.Backend{Value: backend}, right: &value.RTime{Value: time.Second}, expect: "foo1.000"},
 			{left: &value.Backend{Value: backend}, right: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{left: &value.Backend{Value: backend}, right: &value.Time{Value: now}, expect: "foo" + now.Format(time.RFC1123)},
+			{left: &value.Backend{Value: backend}, right: &value.Time{Value: now}, expect: "foo" + now.Format(http.TimeFormat)},
 			{left: &value.Backend{Value: backend}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foofoo"},
 			{left: &value.Backend{Value: backend}, right: &value.Boolean{Value: true}, expect: "foo1"},
 			{left: &value.Backend{Value: backend}, right: &value.Boolean{Value: false, Literal: true}, expect: "foo0"},
@@ -314,7 +315,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Boolean{Value: true}, right: &value.String{Value: "example", Literal: true}, expect: "1example"},
 			{left: &value.Boolean{Value: true}, right: &value.RTime{Value: time.Second}, expect: "11.000"},
 			{left: &value.Boolean{Value: true}, right: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{left: &value.Boolean{Value: true}, right: &value.Time{Value: now}, expect: "1" + now.Format(time.RFC1123)},
+			{left: &value.Boolean{Value: true}, right: &value.Time{Value: now}, expect: "1" + now.Format(http.TimeFormat)},
 			{left: &value.Boolean{Value: true}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "1foo"},
 			{left: &value.Boolean{Value: true}, right: &value.Boolean{Value: true}, expect: "11"},
 			{left: &value.Boolean{Value: true}, right: &value.Boolean{Value: false, Literal: true}, expect: "10"},
@@ -363,7 +364,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.IP{Value: v}, right: &value.String{Value: "example", Literal: true}, expect: "127.0.0.1example"},
 			{left: &value.IP{Value: v}, right: &value.RTime{Value: time.Second}, expect: "127.0.0.11.000"},
 			{left: &value.IP{Value: v}, right: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{left: &value.IP{Value: v}, right: &value.Time{Value: now}, expect: "127.0.0.1" + now.Format(time.RFC1123)},
+			{left: &value.IP{Value: v}, right: &value.Time{Value: now}, expect: "127.0.0.1" + now.Format(http.TimeFormat)},
 			{left: &value.IP{Value: v}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "127.0.0.1foo"},
 			{left: &value.IP{Value: v}, right: &value.Boolean{Value: true}, expect: "127.0.0.11"},
 			{left: &value.IP{Value: v}, right: &value.Boolean{Value: false, Literal: true}, expect: "127.0.0.10"},
