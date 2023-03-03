@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"fmt"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,30 @@ func Time_units(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("time.units")
+	unit := value.Unwrap[*value.String](args[0]).Value
+	t := value.Unwrap[*value.Time](args[1]).Value
+
+	switch unit {
+	case "s":
+		return &value.String{
+			Value: fmt.Sprintf("%ds", t.Unix()),
+		}, nil
+	case "ms":
+		return &value.String{
+			Value: fmt.Sprintf("%dms", t.UnixMilli()),
+		}, nil
+	case "us":
+		return &value.String{
+			Value: fmt.Sprintf("%dus", t.UnixMicro()),
+		}, nil
+	case "ns":
+		return &value.String{
+			Value: fmt.Sprintf("%dns", t.UnixNano()),
+		}, nil
+	default:
+		ctx.FastlyError = &value.String{Value: "EINVAL"}
+		return &value.String{IsNotSet: true}, errors.New(Time_units_Name,
+			"Invalid unit string %s, allow either of s, ms, us and ns", unit,
+		)
+	}
 }

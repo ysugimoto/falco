@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -18,7 +20,14 @@ func Time_sub_Validate(args []value.Value) error {
 	}
 	for i := range args {
 		if args[i].Type() != Time_sub_ArgumentTypes[i] {
-			return errors.TypeMismatch(Time_sub_Name, i+1, Time_sub_ArgumentTypes[i], args[i].Type())
+			if i != 1 {
+				return errors.TypeMismatch(Time_sub_Name, i+1, Time_sub_ArgumentTypes[i], args[i].Type())
+			}
+			// Second argument allows to pass bot of TIME and RTIME time
+			// https://fiddle.fastly.dev/fiddle/f0098e7e
+			if args[i].Type() != value.TimeType {
+				return errors.TypeMismatch(Time_add_Name, i+1, value.TimeType, args[i].Type())
+			}
 		}
 	}
 	return nil
@@ -34,6 +43,20 @@ func Time_sub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("time.sub")
+	t1 := value.Unwrap[*value.Time](args[0]).Value
+	switch args[1].Type() {
+	case value.TimeType:
+		t2 := value.Unwrap[*value.Time](args[1]).Value
+		return &value.Time{
+			Value: t1.Add(-(time.Second * time.Duration(t2.Second()))),
+		}, nil
+	case value.RTimeType:
+		t2 := value.Unwrap[*value.RTime](args[1]).Value
+		return &value.Time{
+			Value: t1.Add(-t2),
+		}, nil
+	default:
+		// unreached, but need for linting
+		return value.Null, errors.New(Time_sub_Name, "Unexpected type of second argument: %s", args[1].Type())
+	}
 }

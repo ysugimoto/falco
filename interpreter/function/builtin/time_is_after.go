@@ -34,6 +34,8 @@ func Time_is_after(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("time.is_after")
+	t1 := value.Unwrap[*value.Time](args[0]).Value
+	t2 := value.Unwrap[*value.Time](args[1]).Value
+
+	return &value.Boolean{Value: t1.After(t2)}, nil
 }

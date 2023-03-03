@@ -4,8 +4,11 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of time.is_after
@@ -13,5 +16,30 @@ import (
 // - TIME, TIME
 // Reference: https://developer.fastly.com/reference/vcl/functions/date-and-time/time-is-after/
 func Test_Time_is_after(t *testing.T) {
-	t.Skip("Test Builtin function time.is_after should be impelemented")
+	now := time.Now()
+	tests := []struct {
+		t2     time.Time
+		expect bool
+	}{
+		{t2: now.Add(-time.Second), expect: true},
+		{t2: now.Add(time.Second), expect: false},
+	}
+
+	for i, tt := range tests {
+		ret, err := Time_is_after(
+			&context.Context{},
+			&value.Time{Value: now},
+			&value.Time{Value: tt.t2},
+		)
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.BooleanType {
+			t.Errorf("[%d] Unexpected return type, expect=BOOL, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Boolean](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

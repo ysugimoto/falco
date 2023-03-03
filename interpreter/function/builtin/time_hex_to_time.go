@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,21 @@ func Time_hex_to_time(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("time.hex_to_time")
+	divisor := value.Unwrap[*value.Integer](args[0]).Value
+	dividend := value.Unwrap[*value.String](args[1]).Value
+
+	if divisor == 0 {
+		return &value.Time{Value: time.Time{}}, errors.New(Time_hex_to_time_Name, "Could not divide by zero")
+	}
+
+	ts, err := strconv.ParseInt(dividend, 16, 64)
+	if err != nil {
+		return &value.Time{Value: time.Time{}}, errors.New(
+			Time_hex_to_time_Name, "Failed to decode hex string to inteter: %s", err,
+		)
+	}
+
+	return &value.Time{
+		Value: time.Unix(int64(ts/divisor), 0),
+	}, nil
 }
