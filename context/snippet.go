@@ -23,7 +23,7 @@ func (f *FastlySnippet) EmbedSnippets() []FastlySnippetItem {
 	// Embed Backends
 	snippets = append(snippets, f.Backends...)
 
-	// And also we need to embed VCL snippets which is registerd as "init" type
+	// And also we need to embed VCL snippets which is registered as "init" type
 	if scoped, ok := f.ScopedSnippets["init"]; ok {
 		snippets = append(snippets, scoped...)
 	}
