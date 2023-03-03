@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of utf8.codepoint_count
@@ -13,5 +15,25 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/
 func Test_Utf8_codepoint_count(t *testing.T) {
-	t.Skip("Test Builtin function utf8.codepoint_count should be impelemented")
+	tests := []struct {
+		input  string
+		expect int64
+	}{
+		{input: "hello, 世界", expect: 9},
+		{input: "hello, world", expect: 12},
+	}
+
+	for i, tt := range tests {
+		ret, err := Utf8_codepoint_count(&context.Context{}, &value.String{Value: tt.input})
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.IntegerType {
+			t.Errorf("[%d] Unexpected return type, expect=INTEGER, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

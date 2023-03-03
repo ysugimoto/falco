@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/google/uuid"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +35,11 @@ func Uuid_is_version3(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("uuid.is_version3")
+	input := value.Unwrap[*value.String](args[0]).Value
+	if id, err := uuid.Parse(input); err != nil {
+		return &value.Boolean{Value: false}, nil
+	} else if id.Version() != 3 {
+		return &value.Boolean{Value: false}, nil
+	}
+	return &value.Boolean{Value: true}, nil
 }

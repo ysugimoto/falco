@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/google/uuid"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +35,17 @@ func Uuid_version5(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("uuid.version5")
+	namespace := value.Unwrap[*value.String](args[0]).Value
+	name := value.Unwrap[*value.String](args[1]).Value
+
+	space, err := uuid.Parse(namespace)
+	if err != nil {
+		return &value.String{IsNotSet: true}, errors.New(Uuid_version5_Name,
+			"Failed to parse namespace of %s", namespace,
+		)
+	}
+
+	return &value.String{
+		Value: uuid.NewSHA1(space, []byte(name)).String(),
+	}, nil
 }

@@ -34,6 +34,25 @@ func Xml_escape(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("xml_escape")
+	input := value.Unwrap[*value.String](args[0]).Value
+
+	var escaped []byte
+	for _, b := range []byte(input) {
+		switch b {
+		case 0x26: // "&"
+			escaped = append(escaped, []byte("&amp;")...)
+		case 0x3C: // "<"
+			escaped = append(escaped, []byte("&lt;")...)
+		case 0x3E: // ">"
+			escaped = append(escaped, []byte("&gt;")...)
+		case 0x27: // "'"
+			escaped = append(escaped, []byte("&apos;")...)
+		case 0x22: // '"'
+			escaped = append(escaped, []byte("&quot;")...)
+		default:
+			escaped = append(escaped, b)
+		}
+	}
+
+	return &value.String{Value: string(escaped)}, nil
 }

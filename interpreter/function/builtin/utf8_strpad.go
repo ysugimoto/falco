@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"math"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +37,18 @@ func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("utf8.strpad")
+	s := value.Unwrap[*value.String](args[0]).Value
+	width := value.Unwrap[*value.Integer](args[1]).Value
+	pad := value.Unwrap[*value.String](args[2]).Value
+
+	w := int(math.Abs(float64(width)))
+	if len(s) >= w {
+		return &value.String{Value: s}, nil
+	}
+
+	p := []rune(strings.Repeat(pad, w-len(s)))
+	if width < 0 {
+		return &value.String{Value: s + string(p[0:w-len(s)])}, nil
+	}
+	return &value.String{Value: string(p[0:w-len(s)]) + s}, nil
 }

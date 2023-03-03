@@ -25,6 +25,7 @@ func Test_Std_strpad(t *testing.T) {
 		{input: "abc", width: 10, pad: "-=", expect: "-=-=-=-abc"},
 		{input: "abcdefghijklmn", width: 10, pad: "-=", expect: "abcdefghijklmn"},
 		{input: "abcdefghij", width: 10, pad: "-=", expect: "abcdefghij"},
+		{input: "abc", width: 7, pad: "🌸🌼", expect: "🌸abc"},
 	}
 
 	for i, tt := range tests {

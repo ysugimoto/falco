@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/google/uuid"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +35,9 @@ func Uuid_is_valid(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("uuid.is_valid")
+	input := value.Unwrap[*value.String](args[0]).Value
+	if _, err := uuid.Parse(input); err != nil {
+		return &value.Boolean{Value: false}, nil
+	}
+	return &value.Boolean{Value: true}, nil
 }

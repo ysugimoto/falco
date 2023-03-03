@@ -4,8 +4,10 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of uuid.is_valid
@@ -13,5 +15,25 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-valid/
 func Test_Uuid_is_valid(t *testing.T) {
-	t.Skip("Test Builtin function uuid.is_valid should be impelemented")
+	tests := []struct {
+		input  string
+		expect bool
+	}{
+		{input: "6ba7b810-9dad-11d1-80b4-00c04fd430c8", expect: true},
+		{input: "ba7b810-9dad-11d1-80b4-00c04fd430c8", expect: false},
+	}
+
+	for i, tt := range tests {
+		ret, err := Uuid_is_valid(&context.Context{}, &value.String{Value: tt.input})
+		if err != nil {
+			t.Errorf("[%d] Unexpected error: %s", i, err)
+		}
+		if ret.Type() != value.BooleanType {
+			t.Errorf("[%d] Unexpected return type, expect=BOOL, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Boolean](ret)
+		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

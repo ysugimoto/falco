@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"unicode/utf8"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,8 @@ func Utf8_codepoint_count(ctx *context.Context, args ...value.Value) (value.Valu
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("utf8.codepoint_count")
+	input := value.Unwrap[*value.String](args[0]).Value
+	return &value.Integer{
+		Value: int64(utf8.RuneCountInString(input)),
+	}, nil
 }

@@ -12,5 +12,5 @@ import (
 // Arguments may be:
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version4/
 func Test_Uuid_version4(t *testing.T) {
-	t.Skip("Test Builtin function uuid.version4 should be impelemented")
+	t.Skip("uuid.version4 is randomized string, we trust uuid library")
 }

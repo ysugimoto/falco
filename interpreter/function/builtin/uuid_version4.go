@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/google/uuid"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -28,6 +29,10 @@ func Uuid_version4(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("uuid.version4")
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return &value.String{IsNotSet: true}, errors.New(Uuid_version4_Name, "Failed to create random")
+	}
+
+	return &value.String{Value: id.String()}, nil
 }

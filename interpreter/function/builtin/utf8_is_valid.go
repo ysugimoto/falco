@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"unicode/utf8"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -34,6 +36,8 @@ func Utf8_is_valid(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("utf8.is_valid")
+	input := value.Unwrap[*value.String](args[0]).Value
+	return &value.Boolean{
+		Value: utf8.ValidString(input),
+	}, nil
 }

@@ -47,11 +47,11 @@ func Test_Json_escape(t *testing.T) {
 			expect: "αβγ",
 		},
 		{
-			input:  string([]rune{0xFF}),
+			input:  string([]byte{0xFF}),
 			expect: "",
 		},
 		{
-			input:  string([]rune{0x61, 0x20, 0x2B, 0x20, 0xCC}),
+			input:  string([]byte{0x61, 0x20, 0x2B, 0x20, 0xCC}),
 			expect: "",
 		},
 		{

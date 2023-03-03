@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"github.com/google/uuid"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -28,6 +29,6 @@ func Uuid_dns(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("uuid.dns")
+	// DNS namespace, namely constant string
+	return &value.String{Value: uuid.NameSpaceDNS.String()}, nil
 }

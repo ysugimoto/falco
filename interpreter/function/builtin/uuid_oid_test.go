@@ -4,13 +4,25 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of uuid.oid
 // Arguments may be:
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-oid/
 func Test_Uuid_oid(t *testing.T) {
-	t.Skip("Test Builtin function uuid.oid should be impelemented")
+	ret, err := Uuid_oid(&context.Context{})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.StringType {
+		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+	}
+	v := value.Unwrap[*value.String](ret)
+	if diff := cmp.Diff("6ba7b812-9dad-11d1-80b4-00c04fd430c8", v.Value); diff != "" {
+		t.Errorf("Return value unmatch, diff=%s", diff)
+	}
 }
