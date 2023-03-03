@@ -14,8 +14,19 @@ type FastlySnippet struct {
 }
 
 func (f *FastlySnippet) EmbedSnippets() []FastlySnippetItem {
-	return append(
-		f.Dictionaries,
-		append(f.Acls, f.Backends...)...,
-	)
+	var snippets []FastlySnippetItem
+
+	// Embed Dictionaries
+	snippets = append(snippets, f.Dictionaries...)
+	// Embed Acls
+	snippets = append(snippets, f.Acls...)
+	// Embed Backends
+	snippets = append(snippets, f.Backends...)
+
+	// And also we need to embed VCL snippets which is registered as "init" type
+	if scoped, ok := f.ScopedSnippets["init"]; ok {
+		snippets = append(snippets, scoped...)
+	}
+
+	return snippets
 }
