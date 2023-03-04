@@ -2,6 +2,7 @@ package assign
 
 import (
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -98,9 +99,9 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "left", right: &value.Integer{Value: 100, Literal: true}, expect: "", isError: true},
 			{left: "left", right: &value.Float{Value: 50.0}, expect: "50.000"},
 			{left: "left", right: &value.Float{Value: 50.0, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "0.100"},
+			{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "100.000"},
 			{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &value.Time{Value: now}, expect: now.Format(time.RFC1123)},
+			{left: "left", right: &value.Time{Value: now}, expect: now.Format(http.TimeFormat)},
 			{left: "left", right: &value.String{Value: "example"}, expect: "example"},
 			{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "example"},
 			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foo"},

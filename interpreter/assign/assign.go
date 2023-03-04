@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"strconv"
+	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
@@ -23,98 +23,125 @@ func Assign(left, right value.Value) error {
 	case value.IntegerType:
 		lv := value.Unwrap[*value.Integer](left)
 		switch right.Type() {
-		case value.IntegerType:
+		case value.IntegerType: // INTERGR = INTEGER
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = rv.Value
-		case value.FloatType:
+			lv.IsNAN = rv.IsNAN
+			lv.IsNegativeInf = rv.IsNegativeInf
+			lv.IsPositiveInf = rv.IsPositiveInf
+		case value.FloatType: // INTEGER = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = int64(rv.Value)
-		case value.RTimeType:
+			lv.IsNAN = rv.IsNAN
+			lv.IsNegativeInf = rv.IsNegativeInf
+			lv.IsPositiveInf = rv.IsPositiveInf
+		case value.RTimeType: // INTEGER = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to INTEGER"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = int64(rv.Value.Seconds())
-		case value.TimeType:
+			if math.IsInf(rv.Value.Seconds(), 1) {
+				lv.Value = 0
+				lv.IsPositiveInf = true
+			} else {
+				lv.Value = int64(rv.Value.Seconds())
+			}
+		case value.TimeType: // INTEGER = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			lv.Value = rv.Value.Unix()
+			if rv.OutOfBounds {
+				lv.Value = 0
+			} else {
+				lv.Value = rv.Value.Unix()
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
 		switch right.Type() {
-		case value.IntegerType:
+		case value.IntegerType: // FLOAT = INTEGER
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = float64(rv.Value)
-		case value.FloatType:
+			lv.IsNAN = rv.IsNAN
+			lv.IsNegativeInf = rv.IsNegativeInf
+			lv.IsPositiveInf = rv.IsPositiveInf
+		case value.FloatType: // FLOAT = FLOAT
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = rv.Value
-		case value.RTimeType:
+			lv.IsNAN = rv.IsNAN
+			lv.IsNegativeInf = rv.IsNegativeInf
+			lv.IsPositiveInf = rv.IsPositiveInf
+		case value.RTimeType: // FLOAT = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to FLOAT"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = rv.Value.Seconds()
-		case value.TimeType:
+			if math.IsInf(rv.Value.Seconds(), 1) {
+				lv.Value = 0
+				lv.IsPositiveInf = true
+			} else {
+				lv.Value = rv.Value.Seconds()
+			}
+		case value.TimeType: // FLOAT = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to FLOAT"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			lv.Value = float64(rv.Value.Unix())
+			if rv.OutOfBounds {
+				lv.Value = 0
+			} else {
+				lv.Value = float64(rv.Value.Unix())
+			}
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for INTEGER type, got %s", right.Type()))
 		}
 	case value.StringType:
 		lv := value.Unwrap[*value.String](left)
 		switch right.Type() {
-		case value.StringType:
+		case value.StringType: // STRING = STRING
 			rv := value.Unwrap[*value.String](right)
 			lv.Value = rv.Value
-		case value.IntegerType:
+			lv.IsNotSet = rv.IsNotSet
+		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
-			lv.Value = fmt.Sprint(rv.Value)
-		case value.FloatType:
+			lv.Value = rv.String()
+		case value.FloatType: // STRING = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Float](right)
-			lv.Value = strconv.FormatFloat(rv.Value, 'f', 3, 64)
-		case value.RTimeType:
+			lv.Value = rv.String()
+		case value.RTimeType: // STRING = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = strconv.FormatFloat(rv.Value.Seconds()/1000, 'f', 3, 64)
-		case value.TimeType:
+			lv.Value = rv.String()
+		case value.TimeType: // STRING = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			lv.Value = rv.Value.Format(time.RFC1123)
-		case value.BackendType:
+			lv.Value = rv.Value.Format(http.TimeFormat)
+		case value.BackendType: // STRING = BACKEND
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.Value.Name.Value
-		case value.BooleanType:
+		case value.BooleanType: // STRING = BOOL
 			rv := value.Unwrap[*value.Boolean](right)
-			if rv.Value {
-				lv.Value = "1"
-			} else {
-				lv.Value = "0"
-			}
-		case value.IpType:
+			lv.Value = rv.String()
+		case value.IpType: // STRING = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value.String()
 		default:
@@ -123,25 +150,25 @@ func Assign(left, right value.Value) error {
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
 		switch right.Type() {
-		case value.IntegerType:
+		case value.IntegerType: // RTIME = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to RTIME"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = time.Duration(rv.Value) * time.Second
-		case value.FloatType:
+		case value.FloatType: // RTIME = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to RTIME"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = time.Duration(rv.Value)
-		case value.RTimeType:
+		case value.RTimeType: // RTIME = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to RTIME"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = rv.Value
-		case value.TimeType:
+		case value.TimeType: // RTIME = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to RTIME"))
 			}
@@ -153,37 +180,37 @@ func Assign(left, right value.Value) error {
 	case value.TimeType:
 		lv := value.Unwrap[*value.Time](left)
 		switch right.Type() {
-		case value.IntegerType:
+		case value.IntegerType: // TIME = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = time.Unix(rv.Value, 0)
-		case value.FloatType:
+		case value.FloatType: // TIME = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = time.Unix(int64(rv.Value), 0)
-		case value.RTimeType:
+		case value.RTimeType: // TIME = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = time.Unix(int64(rv.Value.Seconds()), 0)
-		case value.TimeType:
+		case value.TimeType: // TIME = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			lv.Value = rv.Value
+			lv.Value = rv.Value.Add(0) // explicit clone
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for TIME type, got %s", right.Type()))
 		}
 	case value.BackendType:
 		lv := value.Unwrap[*value.Backend](left)
 		switch right.Type() {
-		case value.BackendType:
+		case value.BackendType: // BACKEND = BACKEND
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.Value
 		default:
@@ -192,7 +219,7 @@ func Assign(left, right value.Value) error {
 	case value.BooleanType:
 		lv := value.Unwrap[*value.Boolean](left)
 		switch right.Type() {
-		case value.BooleanType:
+		case value.BooleanType: // BOOL = BOOL
 			rv := value.Unwrap[*value.Boolean](right)
 			lv.Value = rv.Value
 		default:
@@ -201,14 +228,14 @@ func Assign(left, right value.Value) error {
 	case value.IpType:
 		lv := value.Unwrap[*value.IP](left)
 		switch right.Type() {
-		case value.StringType:
+		case value.StringType: // IP = STRING
 			rv := value.Unwrap[*value.String](right)
 			if ip := net.ParseIP(rv.Value); ip == nil {
 				return errors.WithStack(fmt.Errorf("Invalid IP format, got %s", rv.Value))
 			} else {
 				lv.Value = ip
 			}
-		case value.IpType:
+		case value.IpType: // IP = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value
 		default:
@@ -217,586 +244,5 @@ func Assign(left, right value.Value) error {
 	default:
 		return errors.WithStack(fmt.Errorf("Could not use assingment for type %s", left.Type()))
 	}
-	return nil
-}
-
-func Addition(left, right value.Value) error {
-	switch left.Type() {
-	case value.IntegerType:
-		lv := value.Unwrap[*value.Integer](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value += rv.Value
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not add to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value += int64(rv.Value)
-		case value.RTimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not add to INTEGER"))
-			}
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value += int64(rv.Value.Seconds())
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not add to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value += rv.Value.Unix()
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition INTEGER type, got %s", right.Type()))
-		}
-	case value.FloatType:
-		lv := value.Unwrap[*value.Float](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value += float64(rv.Value)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value += rv.Value
-		case value.RTimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not add to FLOAT"))
-			}
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value += float64(rv.Value.Seconds())
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not add to FLOAT"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value += float64(rv.Value.Unix())
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition FLOAT type, got %s", right.Type()))
-		}
-	case value.RTimeType:
-		lv := value.Unwrap[*value.RTime](left)
-		switch right.Type() {
-		case value.IntegerType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("INTEGER literal could not add to RTIME"))
-			}
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value += time.Duration(rv.Value) * time.Second
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not add to RTIME"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value += time.Duration(rv.Value) * time.Second
-		case value.RTimeType:
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value += rv.Value
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not add to RTIME"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value += time.Duration(rv.Value.Unix())
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition RTIME type, got %s", right.Type()))
-		}
-	case value.TimeType:
-		lv := value.Unwrap[*value.Time](left)
-		switch right.Type() {
-		case value.IntegerType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("INTEGER literal could not add to TIME"))
-			}
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value = lv.Value.Add(time.Duration(rv.Value) * time.Second)
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not add to TIME"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value = lv.Value.Add(time.Duration(rv.Value) * time.Second)
-		case value.RTimeType:
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = lv.Value.Add(rv.Value)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition TIME type, got %s", right.Type()))
-		}
-	default:
-		return errors.WithStack(fmt.Errorf("Could not use addition assingment for type %s", left.Type()))
-	}
-	return nil
-}
-
-func Subtraction(left, right value.Value) error {
-	switch left.Type() {
-	case value.IntegerType:
-		lv := value.Unwrap[*value.Integer](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value -= rv.Value
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not sub to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value -= int64(rv.Value)
-		case value.RTimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not sub to INTEGER"))
-			}
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value -= int64(rv.Value.Seconds())
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not sub to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value -= rv.Value.Unix()
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction INTEGER type, got %s", right.Type()))
-		}
-	case value.FloatType:
-		lv := value.Unwrap[*value.Float](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value -= float64(rv.Value)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value -= rv.Value
-		case value.RTimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not sub to FLOAT"))
-			}
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value -= float64(rv.Value.Seconds())
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not sub to FLOAT"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value -= float64(rv.Value.Unix())
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction FLOAT type, got %s", right.Type()))
-		}
-	case value.RTimeType:
-		lv := value.Unwrap[*value.RTime](left)
-		switch right.Type() {
-		case value.IntegerType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("INTEGER literal could not sub to RTIME"))
-			}
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value -= time.Duration(rv.Value) * time.Second
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not sub to RTIME"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value -= time.Duration(rv.Value) * time.Second
-		case value.RTimeType:
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value -= rv.Value
-		case value.TimeType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not sub to RTIME"))
-			}
-			rv := value.Unwrap[*value.Time](right)
-			lv.Value -= time.Duration(rv.Value.Unix())
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction RTIME type, got %s", right.Type()))
-		}
-	case value.TimeType:
-		lv := value.Unwrap[*value.Time](left)
-		switch right.Type() {
-		case value.IntegerType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("INTEGER literal could not sub to TIME"))
-			}
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value = lv.Value.Add(-(time.Duration(rv.Value) * time.Second))
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not sub to TIME"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value = lv.Value.Add(-(time.Duration(rv.Value) * time.Second))
-		case value.RTimeType:
-			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = lv.Value.Add(-rv.Value)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction TIME type, got %s", right.Type()))
-		}
-	default:
-		return errors.WithStack(fmt.Errorf("Could not use subtraction assingment for type %s", left.Type()))
-	}
-	return nil
-}
-
-func Multiplication(left, right value.Value) error {
-	switch left.Type() {
-	case value.IntegerType:
-		lv := value.Unwrap[*value.Integer](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value *= rv.Value
-			if float64(lv.Value) >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if float64(lv.Value) <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not multiple to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value *= int64(rv.Value)
-			if float64(lv.Value) >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if float64(lv.Value) <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication INTEGER type, got %s", right.Type()))
-		}
-	case value.FloatType:
-		lv := value.Unwrap[*value.Float](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value *= float64(rv.Value)
-			if lv.Value >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if lv.Value <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value *= rv.Value
-			if lv.Value >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if lv.Value <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication FLOAT type, got %s", right.Type()))
-		}
-	case value.RTimeType:
-		lv := value.Unwrap[*value.RTime](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value *= time.Duration(rv.Value)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value *= time.Duration(rv.Value)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication RTIME type, got %s", right.Type()))
-		}
-	default:
-		return errors.WithStack(fmt.Errorf("Could not use multiplication assingment for type %s", left.Type()))
-	}
-	return nil
-}
-
-func Division(left, right value.Value) error {
-	switch left.Type() {
-	case value.IntegerType:
-		lv := value.Unwrap[*value.Integer](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			if rv.Value == 0 {
-				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
-			}
-			lv.Value /= rv.Value
-			if float64(lv.Value) >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if float64(lv.Value) <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not divide to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			if rv.Value == 0 {
-				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
-			}
-			lv.Value /= int64(rv.Value)
-			if float64(lv.Value) >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if float64(lv.Value) <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid division INTEGER type, got %s", right.Type()))
-		}
-	case value.FloatType:
-		lv := value.Unwrap[*value.Float](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			if rv.Value == 0 {
-				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
-			}
-			lv.Value /= float64(rv.Value)
-			if lv.Value >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if lv.Value <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			if rv.Value == 0 {
-				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
-			}
-			lv.Value /= rv.Value
-			if lv.Value >= math.Inf(1) {
-				lv.IsPositiveInf = true
-			} else if lv.Value <= math.Inf(-1) {
-				lv.IsNegativeInf = true
-			}
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid division FLOAT type, got %s", right.Type()))
-		}
-	case value.RTimeType:
-		lv := value.Unwrap[*value.RTime](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value /= time.Duration(rv.Value)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value /= time.Duration(rv.Value)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
-		}
-	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assingment for type %s", left.Type()))
-	}
-	return nil
-}
-
-func Remainder(left, right value.Value) error {
-	switch left.Type() {
-	case value.IntegerType:
-		lv := value.Unwrap[*value.Integer](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value %= rv.Value
-		case value.FloatType:
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not remainder to INTEGER"))
-			}
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value %= int64(rv.Value)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid remainder INTEGER type, got %s", right.Type()))
-		}
-	case value.FloatType:
-		lv := value.Unwrap[*value.Float](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value = float64(int64(lv.Value) % rv.Value)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value = float64(int64(lv.Value) % int64(rv.Value))
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid remainder FLOAT type, got %s", right.Type()))
-		}
-	case value.RTimeType:
-		lv := value.Unwrap[*value.RTime](left)
-		switch right.Type() {
-		case value.IntegerType:
-			rv := value.Unwrap[*value.Integer](right)
-			lv.Value %= (time.Duration(rv.Value) * time.Second)
-		case value.FloatType:
-			rv := value.Unwrap[*value.Float](right)
-			lv.Value %= (time.Duration(rv.Value) * time.Second)
-		default:
-			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
-		}
-	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assingment for type %s", left.Type()))
-	}
-	return nil
-}
-
-func BitwiseOR(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize OR operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value |= rv.Value
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func BitwiseAND(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize OR operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value &= rv.Value
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func BitwiseXOR(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize XOR operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value ^= rv.Value
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func LeftShift(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Left Shift operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value <<= rv.Value
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func RightShift(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Right Shift operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value >>= rv.Value
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func LeftRotate(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Rotate Left operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value = (lv.Value << rv.Value) | (lv.Value >> (64 - rv.Value))
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func RightRotate(left, right value.Value) error {
-	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be INTEGER for Rotate Right operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Integer](left)
-	rv := value.Unwrap[*value.Integer](right)
-	lv.Value = (lv.Value >> rv.Value) | (lv.Value << (64 - rv.Value))
-	if float64(lv.Value) >= math.Inf(1) {
-		lv.IsPositiveInf = true
-	} else if float64(lv.Value) <= math.Inf(-1) {
-		lv.IsNegativeInf = true
-	}
-	return nil
-}
-
-func LogicalOR(left, right value.Value) error {
-	if left.Type() != value.BooleanType || right.Type() != value.BooleanType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be BOOL for Logical OR operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Boolean](left)
-	rv := value.Unwrap[*value.Boolean](right)
-	lv.Value = lv.Value || rv.Value
-	return nil
-}
-
-func LogicalAND(left, right value.Value) error {
-	if left.Type() != value.BooleanType || right.Type() != value.BooleanType {
-		return errors.WithStack(
-			fmt.Errorf(
-				"Left and Right type must be BOOL for Logical AND operator, left=%s, right=%s",
-				left.Type(), right.Type(),
-			),
-		)
-	}
-	lv := value.Unwrap[*value.Boolean](left)
-	rv := value.Unwrap[*value.Boolean](right)
-	lv.Value = lv.Value && rv.Value
 	return nil
 }

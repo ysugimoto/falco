@@ -79,7 +79,13 @@ func (v *String) String() string {
 func (v *String) value()          {}
 func (v *String) Type() Type      { return StringType }
 func (v *String) IsLiteral() bool { return v.Literal }
-func (v *String) Copy() Value     { return &String{Value: v.Value, Literal: v.Literal} }
+func (v *String) Copy() Value {
+	return &String{
+		Value:    v.Value,
+		Literal:  v.Literal,
+		IsNotSet: v.IsNotSet,
+	}
+}
 
 type IP struct {
 	Value    net.IP
@@ -96,7 +102,13 @@ func (v *IP) String() string {
 func (v *IP) value()          {}
 func (v *IP) Type() Type      { return IpType }
 func (v *IP) IsLiteral() bool { return v.Literal }
-func (v *IP) Copy() Value     { return &IP{Value: v.Value, Literal: v.Literal} }
+func (v *IP) Copy() Value {
+	return &IP{
+		Value:    v.Value,
+		Literal:  v.Literal,
+		IsNotSet: v.IsNotSet,
+	}
+}
 
 type Boolean struct {
 	Value   bool
@@ -135,7 +147,15 @@ func (v *Integer) String() string {
 func (v *Integer) value()          {}
 func (v *Integer) Type() Type      { return IntegerType }
 func (v *Integer) IsLiteral() bool { return v.Literal }
-func (v *Integer) Copy() Value     { return &Integer{Value: v.Value, Literal: v.Literal} }
+func (v *Integer) Copy() Value {
+	return &Integer{
+		Value:         v.Value,
+		Literal:       v.Literal,
+		IsNAN:         v.IsNAN,
+		IsNegativeInf: v.IsNegativeInf,
+		IsPositiveInf: v.IsPositiveInf,
+	}
+}
 
 type Float struct {
 	Value         float64
@@ -195,7 +215,12 @@ func (v *Time) String() string {
 func (v *Time) value()          {}
 func (v *Time) Type() Type      { return TimeType }
 func (v *Time) IsLiteral() bool { return false }
-func (v *Time) Copy() Value     { return &Time{Value: v.Value} }
+func (v *Time) Copy() Value {
+	return &Time{
+		Value:       v.Value,
+		OutOfBounds: v.OutOfBounds,
+	}
+}
 
 type Backend struct {
 	Value   *ast.BackendDeclaration
