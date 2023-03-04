@@ -45,7 +45,7 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 }
 
 // Evaluate expression
-// withCondition boolean is special flag for evaluating expression, used for if condition.
+// withCondition boolean is special flag for evaluating expression, used for if condition, parenthesis wrapped expression
 // On if condition, prefix expression could use "!" prefix operator for null value.
 // For example:
 //   withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
