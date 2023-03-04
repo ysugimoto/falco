@@ -12,15 +12,44 @@ import (
 )
 
 func Equal(left, right value.Value) (value.Value, error) {
+	if left.IsLiteral() {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("Could not use literal for equal operator of left hand"),
+		)
+	}
+
+	switch left.Type() {
+	case value.IntegerType:
+		if right.Type() != value.IntegerType {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+		lv := value.Unwrap[*value.Integer](left)
+		rv := value.Unwrap[*value.Integer](right)
+		if lv.IsNAN || rv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
+		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+	case value.FloatType:
+		if right.Type() != value.FloatType {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+		lv := value.Unwrap[*value.Float](left)
+		rv := value.Unwrap[*value.Float](right)
+		if lv.IsNAN || rv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
+		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 		)
-	} else if left.IsLiteral() {
-		return value.Null, errors.WithStack(
-			fmt.Errorf("Could not use literal for equal operator"),
-		)
 	}
+
 	return &value.Boolean{
 		Value: left.String() == right.String(),
 	}, nil
@@ -41,13 +70,19 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 	case value.IntegerType:
 		if left.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Left FLOAT type could not be a literal"),
+				fmt.Errorf("Left FLOAT type could not be a literal of left hand"),
 			)
 		}
 		lv := value.Unwrap[*value.Integer](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value > rv.Value,
@@ -75,15 +110,24 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Float](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value > float64(rv.Value),
 			}, nil
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value > rv.Value,
@@ -119,6 +163,9 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: int64(lv.Value/time.Second) > rv.Value,
@@ -130,6 +177,9 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: float64(lv.Value/time.Second) > rv.Value,
@@ -161,9 +211,15 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Integer](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value < rv.Value,
@@ -191,15 +247,24 @@ func LessThan(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Float](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value < float64(rv.Value),
 			}, nil
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value < rv.Value,
@@ -235,6 +300,9 @@ func LessThan(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: int64(lv.Value/time.Second) < rv.Value,
@@ -277,9 +345,15 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Integer](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value >= rv.Value,
@@ -307,15 +381,24 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Float](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value >= float64(rv.Value),
 			}, nil
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value >= rv.Value,
@@ -351,6 +434,9 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: int64(lv.Value/time.Second) >= rv.Value,
@@ -362,6 +448,9 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: float64(lv.Value/time.Second) >= rv.Value,
@@ -393,9 +482,15 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Integer](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value <= rv.Value,
@@ -423,15 +518,24 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 			)
 		}
 		lv := value.Unwrap[*value.Float](left)
+		if lv.IsNAN {
+			return &value.Boolean{Value: false}, nil
+		}
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value <= float64(rv.Value),
 			}, nil
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: lv.Value <= rv.Value,
@@ -467,6 +571,9 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Integer](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: int64(lv.Value/time.Second) <= rv.Value,
@@ -478,6 +585,9 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 				)
 			}
 			rv := value.Unwrap[*value.Float](right)
+			if rv.IsNAN {
+				return &value.Boolean{Value: false}, nil
+			}
 
 			return &value.Boolean{
 				Value: float64(lv.Value/time.Second) <= rv.Value,

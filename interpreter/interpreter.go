@@ -32,12 +32,11 @@ func New(ctx *context.Context) *Interpreter {
 }
 
 func (i *Interpreter) Result() *process.Process {
+	i.process.Restarts = i.ctx.Restarts
 	return i.process
 }
 
 func (i *Interpreter) restart() error {
-	i.process.Restarts++
-	// also need to increment restart count for req.restart accessor
 	i.ctx.Restarts++
 	// Requests are limited to three restarts in Fastly
 	// https://developer.fastly.com/reference/vcl/statements/restart/
