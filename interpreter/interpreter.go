@@ -437,6 +437,12 @@ func (i *Interpreter) ProcessDeliver() error {
 	case RESTART:
 		err = i.restart()
 	case LOG, DELIVER:
+		// When ESI is triggered in FETCH directive, execute ESI
+		if i.ctx.TriggerESI {
+			if err := i.executeESI(); err != nil {
+				return errors.WithStack(err)
+			}
+		}
 		err = i.ProcessLog()
 	default:
 		return errors.WithStack(

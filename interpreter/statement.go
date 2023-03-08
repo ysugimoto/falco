@@ -226,7 +226,15 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 }
 
 func (i *Interpreter) ProcessEsiStatement(stmt *ast.EsiStatement) error {
-	// TODO: set flag of enabling ESI
+	// Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
+	// see: https://developer.fastly.com/reference/vcl/statements/esi/
+	if !i.ctx.Scope.Is(context.FetchScope) {
+		return errors.WithStack(
+			fmt.Errorf("esi statement found but it could only be enable on FETCH directive"),
+		)
+	} else {
+		i.ctx.TriggerESI = true
+	}
 	return nil
 }
 

@@ -132,6 +132,11 @@ type Context struct {
 	DisableCompressionHeaders []string // modified via "h2.disable_header_compression"
 	PushResources             []string // modified via "h2.push"
 	H3AltSvc                  bool     // modified via "h3.alt_svc"
+
+	// Marker of ESI is triggered. This field is changed when esi statement is present.
+	// However, Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
+	// see: https://developer.fastly.com/reference/vcl/statements/esi/
+	TriggerESI bool
 }
 
 func New(vcl *ast.VCL, options ...Option) (*Context, error) {

@@ -308,7 +308,6 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 	}
 
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		fmt.Println(v.ctx.Response)
 		v.ctx.Response.Header.Set(match[1], val.String())
 		return nil
 	}

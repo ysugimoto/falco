@@ -79,6 +79,7 @@ Usage:
 Subcommands:
     terraform : Run lint from terraform planned JSON
     lint      : Run lint (default)
+    simulate  : Run simulate server with provided VCLs
 
 Flags:
     -I, --include_path : Add include path
@@ -150,10 +151,8 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandSimulate:
-		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
-	case subcommandLint:
-		// "lint" command provides single file of service, then resolvers size is always 1
+	case subcommandSimulate, subcommandLint:
+		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
@@ -250,7 +249,16 @@ func runSimulator(runner *Runner, rslv resolver.Resolver) error {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
-	return http.ListenAndServe(":3124", nil)
+
+	s := &http.Server{
+		Handler: mux,
+		Addr:    ":3124",
+	}
+	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	if err := s.ListenAndServe(); err != nil {
+		writeln(red, "Failed to start server: %s", err.Error())
+	}
+	return nil
 }
 
 func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
