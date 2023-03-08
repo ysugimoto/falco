@@ -18,7 +18,12 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) (State, 
 		i.localVars = variable.LocalVariables{}
 	}()
 
-	return i.ProcessBlockStatement(sub.Block.Statements)
+	statements, err := i.resolveIncludeStatement(sub.Block.Statements, false)
+	if err != nil {
+		return NONE, errors.WithStack(err)
+	}
+
+	return i.ProcessBlockStatement(statements)
 }
 
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) (value.Value, State, error) {

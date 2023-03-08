@@ -463,19 +463,13 @@ func (r *Runner) Simulator(rslv resolver.Resolver) (http.HandlerFunc, error) {
 			vcl.Statements = append(s.Statements, vcl.Statements...)
 		}
 	}
-	options := []context.Option{context.WithResolver(rslv)}
-	// If remote snippets exists, prepare parse and prepend to main VCL
+	options := []icontext.Option{icontext.WithResolver(rslv)}
 	if r.snippets != nil {
-		options = append(options, context.WithFastlySnippets(r.snippets))
+		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := icontext.New(vcl)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		ip := interpreter.New(c)
+		ip := interpreter.New(vcl, options...)
 		if err := ip.Process(w, r); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -17,15 +18,18 @@ import (
 type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
-	// scope     context.Scope
+
+	vcl     *ast.VCL
+	options []context.Option
 
 	ctx     *context.Context
 	process *process.Process
 }
 
-func New(ctx *context.Context) *Interpreter {
+func New(vcl *ast.VCL, options ...context.Option) *Interpreter {
 	return &Interpreter{
-		ctx:       ctx,
+		vcl:       vcl,
+		options:   options,
 		localVars: variable.LocalVariables{},
 		process:   process.New(),
 	}
@@ -52,9 +56,91 @@ func (i *Interpreter) restart() error {
 }
 
 func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
+	i.ctx = context.New(i.vcl, i.options...)
 	i.ctx.Request = r
+	if err := i.ProcessInit(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (i *Interpreter) ProcessInit() error {
+	i.ctx.Scope = context.InitScope
+
+	statements, err := i.resolveIncludeStatement(i.vcl.Statements, true)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := i.ProcessStatements(statements); err != nil {
+		return errors.WithStack(err)
+	}
 	if err := i.ProcessRecv(); err != nil {
 		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
+	// Process root declarations and statements
+	for _, stmt := range statements {
+		switch t := stmt.(type) {
+		case *ast.AclDeclaration:
+			if _, ok := i.ctx.Acls[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("ACL %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Acls[t.Name.Value] = t
+		case *ast.BackendDeclaration:
+			// Determine default backend
+			if i.ctx.Backend == nil {
+				i.ctx.Backend = &value.Backend{Value: t}
+			}
+			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("Backend %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Backends[t.Name.Value] = t
+		case *ast.DirectorDeclaration:
+			if _, ok := i.ctx.Directors[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("Director %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Directors[t.Name.Value] = t
+		case *ast.TableDeclaration:
+			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("Table %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Tables[t.Name.Value] = t
+		case *ast.SubroutineDeclaration:
+			if t.ReturnType != nil {
+				if _, ok := i.ctx.SubroutineFunctions[t.Name.Value]; ok {
+					return errors.WithStack(fmt.Errorf("Subroutine %s is duplicated", t.Name.Value))
+				}
+				i.ctx.SubroutineFunctions[t.Name.Value] = t
+				continue
+			}
+			exists, ok := i.ctx.Subroutines[t.Name.Value]
+			if !ok {
+				i.ctx.Subroutines[t.Name.Value] = t
+				continue
+			}
+
+			// Duplicated fastly reserved subroutines should be concatenated
+			// ref: https://developer.fastly.com/reference/vcl/subroutines/#concatenation
+			if _, ok := context.FastlyReservedSubroutine[t.Name.Value]; ok {
+				exists.Block.Statements = append(exists.Block.Statements, t.Block.Statements...)
+				continue
+			}
+			// Other custom user subroutine could not be duplicated
+			return errors.WithStack(fmt.Errorf("Subroutine %s is duplicated", t.Name.Value))
+		case *ast.PenaltyboxDeclaration:
+			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("Penaltybox %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Penaltyboxes[t.Name.Value] = t
+		case *ast.RatecounterDeclaration:
+			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
+				return errors.WithStack(fmt.Errorf("Ratecounter %s is duplicated", t.Name.Value))
+			}
+			i.ctx.Ratecounters[t.Name.Value] = t
+		}
 	}
 	return nil
 }
