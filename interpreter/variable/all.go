@@ -744,7 +744,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		// Update request URLs
 		v.ctx.Request.URL.Path = parsed.Path
-		v.ctx.Request.URL.RawQuery = parsed.RawPath
+		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
 		return nil
 	}

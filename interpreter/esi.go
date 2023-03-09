@@ -3,7 +3,6 @@ package interpreter
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -12,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/interpreter/exception"
 )
 
 var (
@@ -24,12 +23,12 @@ var (
 func (i *Interpreter) executeESI() error {
 	resp := i.ctx.Response
 	if resp == nil {
-		return errors.WithStack(fmt.Errorf("Client Response is nil"))
+		return exception.System("Client Response is nil")
 	}
 
 	var respBody bytes.Buffer
 	if _, err := respBody.ReadFrom(resp.Body); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	body := respBody.Bytes()
@@ -60,7 +59,7 @@ func (i *Interpreter) executeESI() error {
 			// Find </esi:remove> tag
 			index = bytes.Index(body, esiRemoveEnd)
 			if index == -1 {
-				return errors.New("Syntax error: does not seem to close </esi:remove>")
+				return exception.Runtime(nil, "Syntax error: does not seem to close </esi:remove>")
 			}
 			parsed = append(parsed, body[0:index]...)
 			body = body[index+len(esiRemoveEnd):]
@@ -74,7 +73,7 @@ func (i *Interpreter) executeESI() error {
 			body = body[index+len(esiRemoveStart):]
 			index = bytes.Index(body, esiRemoveEnd)
 			if index == -1 {
-				return fmt.Errorf("Syntax error: does not seem to close </esi:remove>")
+				return exception.Runtime(nil, "Syntax error: does not seem to close </esi:remove>")
 			}
 			body = body[index+len(esiRemoveEnd):]
 		}
@@ -93,17 +92,17 @@ func executeEsiInclude(ctx context.Context, req *http.Request, url []byte) ([]by
 	defer timeout()
 
 	if err := resolveIncludeURL(req, string(url)); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	return buf.Bytes(), nil
 }

@@ -35,6 +35,7 @@ const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
 	subcommandSimulate  = "simulate"
+	subcommandStats     = "stats"
 )
 
 type multiStringFlags []string
@@ -79,6 +80,7 @@ Usage:
 Subcommands:
     terraform : Run lint from terraform planned JSON
     lint      : Run lint (default)
+	stats     : Analyze VCL statistics
     simulate  : Run simulate server with provided VCLs
 
 Flags:
@@ -90,7 +92,6 @@ Flags:
     -v                 : Verbose warning lint result
     -vv                : Varbose all lint result
     -json              : Output statistics as JSON
-    -stats             : Analyze VCL statistics
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
@@ -122,7 +123,6 @@ func main() {
 	fs.BoolVar(&c.Version, "version", false, "Print Version")
 	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
 	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
-	fs.BoolVar(&c.Stats, "stats", false, "Analyze VCL statistics")
 	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
 	fs.Usage = printUsage
 
@@ -151,7 +151,7 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandSimulate, subcommandLint:
+	case subcommandSimulate, subcommandLint, subcommandStats:
 		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
 	default:
@@ -178,11 +178,12 @@ func main() {
 		}
 
 		var exitErr error
-		if fs.Arg(0) == subcommandSimulate {
+		switch fs.Arg(0) {
+		case subcommandSimulate:
 			exitErr = runSimulator(runner, v)
-		} else if c.Stats {
+		case subcommandStats:
 			exitErr = runStats(runner, v, c.Json)
-		} else {
+		default:
 			exitErr = runLint(runner, v)
 		}
 		if exitErr == ErrExit {
@@ -248,7 +249,7 @@ func runSimulator(runner *Runner, rslv resolver.Resolver) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
+	mux.Handle("/", handler)
 
 	s := &http.Server{
 		Handler: mux,

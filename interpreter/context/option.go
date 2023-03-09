@@ -18,3 +18,9 @@ func WithFastlySnippets(fs *context.FastlySnippet) Option {
 		c.FastlySnippets = fs
 	}
 }
+
+func WithDebug() Option {
+	return func(c *Context) {
+		c.Debug = true
+	}
+}

@@ -1,10 +1,9 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
@@ -102,11 +101,12 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 			}
 			// Check return value type is the same
 			if string(val.Type()) != sub.ReturnType.Value {
-				return val, NONE, errors.WithStack(fmt.Errorf(
+				return val, NONE, exception.Runtime(
+					&t.GetMeta().Token,
 					"Invalid return type, expects=%s, but got=%s",
 					sub.ReturnType.Value,
 					val.Type(),
-				))
+				)
 			}
 			return val, NONE, nil
 		case *ast.ErrorStatement:
@@ -124,9 +124,11 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 		}
 	}
 
-	return value.Null, NONE, errors.WithStack(fmt.Errorf(
-		"Functioncal subroutine %s did not return any values", sub.Name.Value,
-	))
+	return value.Null, NONE, exception.Runtime(
+		&sub.GetMeta().Token,
+		"Functioncal subroutine %s did not return any values",
+		sub.Name.Value,
+	)
 }
 
 func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
@@ -135,9 +137,10 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 		return value.Null, NONE, errors.WithStack(err)
 	}
 	if !val.IsLiteral() {
-		return value.Null, NONE, errors.WithStack(fmt.Errorf(
+		return value.Null, NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
 			"Functioncal subroutine only can return value only accepts a literal value",
-		))
+		)
 	}
 
 	switch t := val.(type) {
@@ -145,9 +148,10 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 		if v, ok := stateMap[t.Value]; ok {
 			return value.Null, v, nil
 		}
-		return value.Null, NONE, errors.WithStack(fmt.Errorf(
+		return value.Null, NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
 			"Unexpected return state value: %s", t.Value,
-		))
+		)
 	default:
 		return val, NONE, nil
 	}

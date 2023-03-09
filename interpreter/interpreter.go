@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
@@ -35,31 +37,41 @@ func New(vcl *ast.VCL, options ...context.Option) *Interpreter {
 	}
 }
 
+func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	i.ctx = context.New(i.vcl, i.options...)
+	i.ctx.Request = r
+
+	if err := i.ProcessInit(); err != nil {
+		// If debug is true, print with stacktrace
+		if i.ctx.Debug {
+			http.Error(w, fmt.Sprintf("%+v\n", err), http.StatusInternalServerError)
+			return
+		}
+		err = errors.Cause(err)
+		if re, ok := err.(*exception.Exception); ok {
+			http.Error(w, re.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	enc.Encode(i.Result())
+}
+
 func (i *Interpreter) Result() *process.Process {
 	i.process.Restarts = i.ctx.Restarts
+	i.process.Backend = i.ctx.Backend
 	return i.process
 }
 
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
-	// Requests are limited to three restarts in Fastly
-	// https://developer.fastly.com/reference/vcl/statements/restart/
-	if i.process.Restarts == 3 {
-		return errors.WithStack(
-			fmt.Errorf("Max restart limit exceeded. Requests are limited to three restarts"),
-		)
-	}
 	if err := i.ProcessRecv(); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-func (i *Interpreter) Process(w http.ResponseWriter, r *http.Request) error {
-	i.ctx = context.New(i.vcl, i.options...)
-	i.ctx.Request = r
-	if err := i.ProcessInit(); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }
@@ -69,13 +81,13 @@ func (i *Interpreter) ProcessInit() error {
 
 	statements, err := i.resolveIncludeStatement(i.vcl.Statements, true)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err := i.ProcessStatements(statements); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err := i.ProcessRecv(); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }
@@ -86,7 +98,7 @@ func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
 			if _, ok := i.ctx.Acls[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("ACL %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "ACL %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Acls[t.Name.Value] = t
 		case *ast.BackendDeclaration:
@@ -95,23 +107,23 @@ func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 				i.ctx.Backend = &value.Backend{Value: t}
 			}
 			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("Backend %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Backends[t.Name.Value] = t
 		case *ast.DirectorDeclaration:
 			if _, ok := i.ctx.Directors[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("Director %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "Director %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Directors[t.Name.Value] = t
 		case *ast.TableDeclaration:
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("Table %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
 		case *ast.SubroutineDeclaration:
 			if t.ReturnType != nil {
 				if _, ok := i.ctx.SubroutineFunctions[t.Name.Value]; ok {
-					return errors.WithStack(fmt.Errorf("Subroutine %s is duplicated", t.Name.Value))
+					return exception.Runtime(&t.Token, "Subroutine %s is duplicated", t.Name.Value)
 				}
 				i.ctx.SubroutineFunctions[t.Name.Value] = t
 				continue
@@ -129,15 +141,15 @@ func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 				continue
 			}
 			// Other custom user subroutine could not be duplicated
-			return errors.WithStack(fmt.Errorf("Subroutine %s is duplicated", t.Name.Value))
+			return exception.Runtime(&t.Token, "Subroutine %s is duplicated", t.Name.Value)
 		case *ast.PenaltyboxDeclaration:
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("Penaltybox %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Penaltyboxes[t.Name.Value] = t
 		case *ast.RatecounterDeclaration:
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
-				return errors.WithStack(fmt.Errorf("Ratecounter %s is duplicated", t.Name.Value))
+				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Ratecounters[t.Name.Value] = t
 		}
@@ -172,7 +184,7 @@ func (i *Interpreter) ProcessRecv() error {
 			err = i.restart()
 		case LOOKUP, NONE:
 			if err := i.ProcessHash(); err != nil {
-				return errors.WithStack(err)
+				return err
 			}
 			if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
 				i.ctx.State = "HIT"
@@ -183,8 +195,11 @@ func (i *Interpreter) ProcessRecv() error {
 				err = i.ProcessMiss()
 			}
 		default:
-			return errors.WithStack(
-				fmt.Errorf("Unexpected state %s returned in RECV", state),
+			return exception.Runtime(
+				&sub.GetMeta().Token,
+				"Subroutine %s returned unexpected state %s in RECV",
+				sub.Name.Value,
+				state,
 			)
 		}
 	} else {
@@ -219,8 +234,11 @@ func (i *Interpreter) ProcessHash() error {
 			return errors.WithStack(err)
 		}
 		if state != HASH {
-			return errors.WithStack(
-				fmt.Errorf("Unexpected state %s returned in HASH", state),
+			return exception.Runtime(
+				&sub.GetMeta().Token,
+				"Subroutine %s returned unexpected state %s in HASH",
+				sub.Name.Value,
+				state,
 			)
 		}
 	}
@@ -232,7 +250,7 @@ func (i *Interpreter) ProcessMiss() error {
 	i.vars = variable.NewMissScopeVariables(i.ctx)
 
 	if i.ctx.Backend == nil {
-		return errors.WithStack(fmt.Errorf("No backend determined"))
+		return exception.Runtime(nil, "No backend determined in MISS")
 	}
 
 	var err error
@@ -246,7 +264,8 @@ func (i *Interpreter) ProcessMiss() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	state := FETCH
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -266,8 +285,11 @@ func (i *Interpreter) ProcessMiss() error {
 	case FETCH:
 		err = i.ProcessFetch()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Miss", state),
+		return exception.Runtime(
+			&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in MiISS",
+			sub.Name.Value,
+			state,
 		)
 	}
 	if err != nil {
@@ -284,7 +306,8 @@ func (i *Interpreter) ProcessHit() error {
 	// see: https://developer.fastly.com/reference/vcl/
 	var err error
 	state := DELIVER
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -304,8 +327,11 @@ func (i *Interpreter) ProcessHit() error {
 	case RESTART:
 		err = i.restart()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Hit", state),
+		return exception.Runtime(
+			&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in HIT",
+			sub.Name.Value,
+			state,
 		)
 	}
 
@@ -319,6 +345,10 @@ func (i *Interpreter) ProcessPass() error {
 	i.ctx.Scope = context.PassScope
 	i.vars = variable.NewPassScopeVariables(i.ctx)
 
+	if i.ctx.Backend == nil {
+		return exception.Runtime(nil, "No backend determined in PASS")
+	}
+
 	var err error
 	if i.ctx.BackendRequest == nil {
 		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
@@ -330,7 +360,8 @@ func (i *Interpreter) ProcessPass() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	state := PASS
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -346,8 +377,11 @@ func (i *Interpreter) ProcessPass() error {
 	case ERROR:
 		err = i.ProcessError()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Pass", state),
+		return exception.Runtime(
+			&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in PASS",
+			sub.Name.Value,
+			state,
 		)
 	}
 
@@ -361,13 +395,13 @@ func (i *Interpreter) ProcessFetch() error {
 	i.ctx.Scope = context.FetchScope
 	i.vars = variable.NewFetchScopeVariables(i.ctx)
 
-	if i.ctx.Backend == nil {
-		return errors.WithStack(fmt.Errorf("No backend determined"))
+	if i.ctx.BackendRequest == nil {
+		return exception.System("No backend determined on FETCH")
 	}
 
 	// Send request to backend
 	var err error
-	i.ctx.BackendResponse, err = i.sendBackendRequest()
+	i.ctx.BackendResponse, err = i.sendBackendRequest(i.ctx.Backend)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -400,7 +434,8 @@ func (i *Interpreter) ProcessFetch() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	state := DELIVER
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -420,8 +455,10 @@ func (i *Interpreter) ProcessFetch() error {
 	case RESTART:
 		err = i.restart()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Fetch", state),
+		return exception.Runtime(&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in FETCH",
+			sub.Name.Value,
+			state,
 		)
 	}
 
@@ -464,7 +501,8 @@ func (i *Interpreter) ProcessError() error {
 	// see: https://developer.fastly.com/reference/vcl/
 	var err error
 	state := DELIVER
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -480,8 +518,10 @@ func (i *Interpreter) ProcessError() error {
 	case RESTART:
 		err = i.restart()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Error", state),
+		return exception.Runtime(&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in ERROR",
+			sub.Name.Value,
+			state,
 		)
 	}
 
@@ -509,7 +549,8 @@ func (i *Interpreter) ProcessDeliver() error {
 	// see: https://developer.fastly.com/reference/vcl/
 	var err error
 	state := LOG
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
@@ -531,8 +572,10 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 		err = i.ProcessLog()
 	default:
-		return errors.WithStack(
-			fmt.Errorf("Unexpected state %s returned in Deliver", state),
+		return exception.Runtime(&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in DELIVER",
+			sub.Name.Value,
+			state,
 		)
 	}
 

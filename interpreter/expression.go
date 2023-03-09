@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -9,6 +8,8 @@ import (
 	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/exception"
+	ex "github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -94,7 +95,9 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	case *ast.FunctionCallExpression:
 		return i.ProcessFunctionCallExpression(t, withCondition)
 	default:
-		return value.Null, errors.WithStack(fmt.Errorf("Undefined expression"))
+		return value.Null, errors.WithStack(
+			exception.Runtime(&exp.GetMeta().Token, "Undefined expression"),
+		)
 	}
 }
 
@@ -112,13 +115,13 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 			// If withCondition is enabled, STRING could be convert to BOOL
 			if !withCondition {
 				return value.Null, errors.WithStack(
-					fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
+					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
 				)
 			}
 			return &value.Boolean{Value: t.Value == ""}, nil
 		default:
 			return value.Null, errors.WithStack(
-				fmt.Errorf(`Unexpected "!" prefix operator for %v`, v),
+				exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
 			)
 		}
 	case "-":
@@ -134,7 +137,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 			return t, nil
 		default:
 			return value.Null, errors.WithStack(
-				fmt.Errorf(`Unexpected "-" prefix operator for %v`, v),
+				exception.Runtime(&exp.GetMeta().Token, `Unexpected "-" prefix operator for %v`, v),
 			)
 		}
 	case "+":
@@ -142,7 +145,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 		return v, nil
 	default:
 		return value.Null, errors.WithStack(
-			fmt.Errorf("Unexpected prefix operator: %s", exp.Operator),
+			exception.Runtime(&exp.GetMeta().Token, "Unexpected prefix operator: %s", exp.Operator),
 		)
 	}
 }
@@ -175,7 +178,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 		if cond == value.Null {
 			return i.ProcessExpression(exp.Alternative, false)
 		}
-		return value.Null, fmt.Errorf("If condition is not boolean")
+		return value.Null, ex.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
 	}
 
 	// else
@@ -198,7 +201,10 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {
 				return value.Null, errors.WithStack(
-					fmt.Errorf("Function %s of %d argument must be an Ident", exp.Function.Value, j),
+					exception.Runtime(
+						&exp.Arguments[j].GetMeta().Token,
+						"Function %s of %d argument must be an Ident", exp.Function.Value, j,
+					),
 				)
 			}
 		} else {
@@ -248,7 +254,7 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 		return operator.Concat(left, right)
 	default:
 		return value.Null, errors.WithStack(
-			fmt.Errorf("Unexpected infix operator: %s", exp.Operator),
+			exception.Runtime(&exp.GetMeta().Token, "Unexpected infix operator: %s", exp.Operator),
 		)
 	}
 }

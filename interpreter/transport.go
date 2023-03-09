@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"crypto/tls"
 	"net/http"
@@ -12,10 +14,32 @@ import (
 	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const headerOverflowMaxSize = 69 * 1024 // 69KB
+
+// Important: Fastly raises "Header Overflow" error withtout any logs
+// if request header bytes are greater than 69KB.
+func isHeaderOverflow(headers http.Header) bool {
+	var size int
+	for key, values := range headers {
+		size += len([]byte(
+			fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", ")),
+		))
+		if size >= headerOverflowMaxSize {
+			return true
+		}
+	}
+	return false
+}
+
 func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Request, error) {
+	if isHeaderOverflow(i.ctx.Request.Header) {
+		return nil, exception.Runtime(nil, "Header Overflow, the request header must be less than 69 KB")
+	}
+
 	var port string
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
@@ -32,6 +56,11 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		}
 	}
 	host, err := i.getBackendProperty(backend.Value.Properties, "host")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	alwaysHost, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -56,21 +85,41 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		url += "?" + v
 	}
 
-	req, err := http.NewRequestWithContext(
-		i.ctx.Request.Context(),
+	req, err := http.NewRequest(
 		i.ctx.Request.Method,
 		url,
 		i.ctx.Request.Body,
 	)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
 	req.Header = i.ctx.Request.Header.Clone()
+
+	alwaysUserHostHeader := false
+	if alwaysHost != nil {
+		alwaysUserHostHeader = value.Unwrap[*value.Boolean](alwaysHost).Value
+	}
+	if alwaysUserHostHeader {
+		req.Header.Set("Host", value.Unwrap[*value.String](host).Value)
+	}
 	return req, nil
 }
 
-func (i *Interpreter) sendBackendRequest() (*http.Response, error) {
-	req := i.ctx.BackendRequest
+func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response, error) {
+	fbt, err := i.getBackendProperty(backend.Value.Properties, "first_byte_timeout")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	firstByteTimeout := 15 * time.Second
+	if fbt != nil {
+		firstByteTimeout = value.Unwrap[*value.RTime](fbt).Value
+	}
+
+	ctx, timeout := context.WithTimeout(i.ctx.Request.Context(), firstByteTimeout)
+	defer timeout()
+
+	req := i.ctx.BackendRequest.Clone(ctx)
 	client := http.DefaultClient
 	if req.URL.Scheme == "https" {
 		client = &http.Client{
@@ -83,7 +132,7 @@ func (i *Interpreter) sendBackendRequest() (*http.Response, error) {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
 
 	// read all response body to supress memory leak

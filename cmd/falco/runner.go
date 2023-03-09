@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
@@ -443,7 +442,7 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	return stats, nil
 }
 
-func (r *Runner) Simulator(rslv resolver.Resolver) (http.HandlerFunc, error) {
+func (r *Runner) Simulator(rslv resolver.Resolver) (http.Handler, error) {
 	main, err := rslv.MainVCL()
 	if err != nil {
 		return nil, err
@@ -468,14 +467,5 @@ func (r *Runner) Simulator(rslv resolver.Resolver) (http.HandlerFunc, error) {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		ip := interpreter.New(vcl, options...)
-		if err := ip.Process(w, r); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		pp.Println(ip.Result())
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("simulated"))
-	}, nil
+	return interpreter.New(vcl, options...), nil
 }

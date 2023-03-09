@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/exception"
+	ex "github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
 )
@@ -16,14 +17,14 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 		if include, ok := stmt.(*ast.IncludeStatement); ok {
 			if strings.HasPrefix(include.Module.Value, "snippet::") {
 				if included, err := i.includeSnippet(include, isRoot); err != nil {
-					return nil, errors.WithStack(err)
+					return nil, ex.Runtime(&stmt.GetMeta().Token, err.Error())
 				} else {
 					resolved = append(resolved, included...)
 				}
 				continue
 			}
 			if included, err := i.includeFile(include, isRoot); err != nil {
-				return nil, errors.WithStack(err)
+				return nil, ex.Runtime(&stmt.GetMeta().Token, err.Error())
 			} else {
 				resolved = append(resolved, included...)
 			}
@@ -37,12 +38,14 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 
 func (i *Interpreter) includeSnippet(include *ast.IncludeStatement, isRoot bool) ([]ast.Statement, error) {
 	if i.ctx.FastlySnippets == nil {
-		return nil, errors.WithStack(fmt.Errorf("Remote snippet is not found. Did you run with '-r' option?"))
+		return nil, exception.Runtime(
+			&include.GetMeta().Token, "Remote snippet is not found. Did you run with '-r' option?",
+		)
 	}
 	snippets := i.ctx.FastlySnippets.IncludeSnippets
 	snip, ok := snippets[strings.TrimPrefix(include.Module.Value, "snippet::")]
 	if !ok {
-		return nil, errors.WithStack(fmt.Errorf("Failed to include VCL snippets '%s'", include.Module.Value))
+		return nil, fmt.Errorf("Failed to include VCL snippets '%s'", include.Module.Value)
 	}
 	if isRoot {
 		return loadRootVCL(include.Module.Value, snip.Data)
@@ -53,7 +56,7 @@ func (i *Interpreter) includeSnippet(include *ast.IncludeStatement, isRoot bool)
 func (i *Interpreter) includeFile(include *ast.IncludeStatement, isRoot bool) ([]ast.Statement, error) {
 	module, err := i.ctx.Resolver.Resolve(include)
 	if err != nil {
-		return nil, errors.WithStack(fmt.Errorf("Failed to include VCL module '%s'", include.Module.Value))
+		return nil, fmt.Errorf("Failed to include VCL module '%s'", include.Module.Value)
 	}
 
 	if isRoot {
@@ -66,7 +69,7 @@ func loadRootVCL(name string, content string) ([]ast.Statement, error) {
 	lx := lexer.NewFromString(content, lexer.WithFile(name))
 	vcl, err := parser.New(lx).ParseVCL()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	return vcl.Statements, nil
 }
@@ -75,7 +78,7 @@ func loadStatementVCL(name string, content string) ([]ast.Statement, error) {
 	lx := lexer.NewFromString(content, lexer.WithFile(name))
 	vcl, err := parser.New(lx).ParseSnippetVCL()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	return vcl, nil
 }

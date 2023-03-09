@@ -1,61 +1,43 @@
 package process
 
 import (
-	"context"
+	"encoding/json"
 
-	"net/http"
-
-	"github.com/ysugimoto/falco/ast"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
-
-type Log struct {
-	Meta    *ast.Meta
-	Message string
-}
-
-func NewLog(l *ast.LogStatement, message string) *Log {
-	return &Log{
-		Meta:    l.GetMeta(),
-		Message: message,
-	}
-
-}
-
-type Flow struct {
-	Meta           *ast.Meta
-	Name           string
-	Request        *http.Request
-	BackendRequest *http.Request
-}
-
-func NewFlow(ctx *icontext.Context, sub *ast.SubroutineDeclaration) *Flow {
-	c := context.Background()
-
-	f := &Flow{
-		Meta: sub.GetMeta(),
-		Name: sub.Name.Value,
-	}
-	if ctx.Request != nil {
-		f.Request = ctx.Request.Clone(c)
-	}
-	if ctx.BackendRequest != nil {
-		f.BackendRequest = ctx.BackendRequest.Clone(c)
-	}
-	return f
-}
 
 type Process struct {
 	Flows    []*Flow
 	Logs     []*Log
 	Restarts int
-	Errors   []error
+	Backend  *value.Backend
+	Cached   bool
 }
 
 func New() *Process {
 	return &Process{
-		Flows:  []*Flow{},
-		Logs:   []*Log{},
-		Errors: []error{},
+		Flows: []*Flow{},
+		Logs:  []*Log{},
 	}
+}
+
+func (p *Process) MarshalJSON() ([]byte, error) {
+	var backend string
+	if p.Backend != nil {
+		backend = p.Backend.Value.Name.Value
+	}
+
+	return json.Marshal(struct {
+		Flows    []*Flow `json:"flows"`
+		Logs     []*Log  `json:"logs"`
+		Restarts int     `json:"restarts"`
+		Backend  string  `json:"backend"`
+		Cached   bool    `json:"cached"`
+	}{
+		Flows:    p.Flows,
+		Logs:     p.Logs,
+		Restarts: p.Restarts,
+		Backend:  backend,
+		Cached:   false,
+	})
 }

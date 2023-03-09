@@ -1,16 +1,14 @@
 package interpreter
 
 import (
-	"fmt"
 	"io"
 	"strings"
-
-	_ "github.com/k0kubun/pp"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -37,16 +35,12 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			err = i.ProcessLogStatement(t)
 		case *ast.SyntheticStatement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, errors.WithStack(fmt.Errorf(
-					"synthetic statement is only available in ERROR scope",
-				))
+				return NONE, exception.Runtime(&t.Token, "synthetic statement is only available in ERROR scope")
 			}
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, errors.WithStack(fmt.Errorf(
-					"synthetic.base64 statement is only available in ERROR scope",
-				))
+				return NONE, exception.Runtime(&t.Token, "synthetic.base64 statement is only available in ERROR scope")
 			}
 			err = i.ProcessSyntheticBase64Statement(t)
 
@@ -77,9 +71,19 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			}
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
-				return NONE, errors.WithStack(fmt.Errorf(
+				return NONE, exception.Runtime(
+					&t.Token,
 					"restart statement is only available in RECV, HIT, FETCH, ERROR, and DELIVER scope",
-				))
+				)
+			}
+
+			// Requests are limited to three restarts in Fastly
+			// https://developer.fastly.com/reference/vcl/statements/restart/
+			if i.ctx.Restarts+1 == 3 {
+				return NONE, exception.Runtime(
+					&t.Token,
+					"Max restart limit exceeded. Requests are limited to three restarts",
+				)
 			}
 
 			// restart statement force change state to RESTART
@@ -89,9 +93,9 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			return i.ProcessReturnStatement(t), nil
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
-				return NONE, errors.WithStack(fmt.Errorf(
-					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope",
-				))
+				return NONE, exception.Runtime(
+					&t.Token,
+					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope")
 			}
 
 			// restart statement force change state to ERROR
@@ -109,7 +113,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			break
 		}
 		if err != nil {
-			return INTERNAL_ERROR, errors.WithStack(err)
+			return INTERNAL_ERROR, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %w", err.Error())
 		}
 	}
 	return NONE, nil
@@ -149,8 +153,10 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		!strings.Contains(stmt.Ident.Value, "obj.http.") &&
 		!strings.Contains(stmt.Ident.Value, "resp.http.") {
 
-		return errors.WithStack(
-			fmt.Errorf("Add statement could not use for %s", stmt.Ident.Value),
+		return exception.Runtime(
+			&stmt.GetMeta().Token,
+			"Add statement could not use for %s",
+			stmt.Ident.Value,
 		)
 	}
 
@@ -159,7 +165,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		return errors.WithStack(err)
 	}
 	if err := i.vars.Add(i.ctx.Scope, stmt.Ident.Value, right); err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	return nil
 }
@@ -173,7 +179,7 @@ func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	}
 
 	if err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	return nil
 }
@@ -188,7 +194,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	}
 
 	if err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	return nil
 }
@@ -208,7 +214,12 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, erro
 		}
 		return state, nil
 	}
-	return NONE, fmt.Errorf("Call subroutine %s is not defined", name)
+
+	return NONE, exception.Runtime(
+		&stmt.GetMeta().Token,
+		"Calling subroutine %s is not defined",
+		name,
+	)
 }
 
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
@@ -217,10 +228,10 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 
 	// set obj.status and obj.response variable internally
 	if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	return nil
 }
@@ -229,8 +240,9 @@ func (i *Interpreter) ProcessEsiStatement(stmt *ast.EsiStatement) error {
 	// Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
 	// see: https://developer.fastly.com/reference/vcl/statements/esi/
 	if !i.ctx.Scope.Is(context.FetchScope) {
-		return errors.WithStack(
-			fmt.Errorf("esi statement found but it could only be enable on FETCH directive"),
+		return exception.Runtime(
+			&stmt.GetMeta().Token,
+			"esi statement found but it could only be enable on FETCH directive",
 		)
 	} else {
 		i.ctx.TriggerESI = true
@@ -243,7 +255,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, log.String()))
+	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, log.String()))
 	return nil
 }
 
@@ -255,7 +267,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
 	return nil
@@ -269,7 +281,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return errors.WithStack(err)
+		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
 	return nil
@@ -278,8 +290,10 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement) (State, error) {
 	if sub, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
 		if len(stmt.Arguments) > 0 {
-			return NONE, errors.WithStack(
-				fmt.Errorf("Function subroutine %s could not accept any arguments", stmt.Function.Value),
+			return NONE, exception.Runtime(
+				&stmt.GetMeta().Token,
+				"Function subroutine %s could not accept any arguments",
+				stmt.Function.Value,
 			)
 		}
 		// Functional subroutine may change status
@@ -293,12 +307,14 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	// Builtin function will not change any state
 	fn, err := function.Exists(i.ctx.Scope, stmt.Function.Value)
 	if err != nil {
-		return NONE, errors.WithStack(err)
+		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	// Check the function can call in statement (means a function that returns VOID type can call)
 	if !fn.CanStatementCall {
-		return NONE, errors.WithStack(
-			fmt.Errorf("Function %s cannot call in statement, function will return some value", stmt.Function.Value),
+		return NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
+			"Function %s cannot call in statement, function will return some value",
+			stmt.Function.Value,
 		)
 	}
 
@@ -312,8 +328,11 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			if ident, ok := stmt.Arguments[j].(*ast.Ident); !ok {
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {
-				return NONE, errors.WithStack(
-					fmt.Errorf("Function %s of %d argument must be an Ident", stmt.Function.Value, j),
+				return NONE, exception.Runtime(
+					&stmt.GetMeta().Token,
+					"Function %s of %d argument must be an Ident",
+					stmt.Function.Value,
+					j,
 				)
 			}
 		} else {
@@ -326,7 +345,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 		}
 	}
 	if _, err := fn.Call(i.ctx, args...); err != nil {
-		return NONE, errors.WithStack(err)
+		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
 	return NONE, nil
 }
@@ -357,7 +376,7 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 		}
 	default:
 		if cond != value.Null {
-			return NONE, fmt.Errorf("If condition is not boolean")
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, "If condition is not boolean")
 		}
 	}
 
@@ -387,7 +406,7 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 			}
 		default:
 			if cond != value.Null {
-				return NONE, fmt.Errorf("If condition is not boolean")
+				return NONE, exception.Runtime(&stmt.GetMeta().Token, "If condition is not boolean")
 			}
 		}
 	}
