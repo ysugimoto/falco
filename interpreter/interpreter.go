@@ -1,11 +1,10 @@
 package interpreter
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -21,51 +20,17 @@ type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
 
-	vcl     *ast.VCL
 	options []context.Option
 
 	ctx     *context.Context
 	process *process.Process
 }
 
-func New(vcl *ast.VCL, options ...context.Option) *Interpreter {
+func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
-		vcl:       vcl,
 		options:   options,
 		localVars: variable.LocalVariables{},
 	}
-}
-
-func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	i.ctx = context.New(i.vcl, i.options...)
-	i.ctx.Request = r
-	i.process = process.New()
-
-	if err := i.ProcessInit(); err != nil {
-		// If debug is true, print with stacktrace
-		if i.ctx.Debug {
-			http.Error(w, fmt.Sprintf("%+v\n", err), http.StatusInternalServerError)
-			return
-		}
-		err = errors.Cause(err)
-		if re, ok := err.(*exception.Exception); ok {
-			http.Error(w, re.Error(), http.StatusInternalServerError)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	enc.Encode(i.Result())
-}
-
-func (i *Interpreter) Result() *process.Process {
-	i.process.Restarts = i.ctx.Restarts
-	i.process.Backend = i.ctx.Backend
-	return i.process
 }
 
 func (i *Interpreter) restart() error {
@@ -76,10 +41,10 @@ func (i *Interpreter) restart() error {
 	return nil
 }
 
-func (i *Interpreter) ProcessInit() error {
+func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
 	i.ctx.Scope = context.InitScope
 
-	statements, err := i.resolveIncludeStatement(i.vcl.Statements, true)
+	statements, err := i.resolveIncludeStatement(vcl, true)
 	if err != nil {
 		return err
 	}
@@ -100,21 +65,28 @@ func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 			if _, ok := i.ctx.Acls[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "ACL %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Acls[t.Name.Value] = t
+			i.ctx.Acls[t.Name.Value] = &value.Acl{Value: t, Literal: true}
 		case *ast.BackendDeclaration:
+			h := &atomic.Bool{}
+			h.Store(true)
 			// Determine default backend
 			if i.ctx.Backend == nil {
-				i.ctx.Backend = &value.Backend{Value: t}
+				i.ctx.Backend = &value.Backend{Value: t, Literal: true, Healthy: h}
 			}
 			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Backends[t.Name.Value] = t
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Value: t, Literal: true, Healthy: h}
 		case *ast.DirectorDeclaration:
-			if _, ok := i.ctx.Directors[t.Name.Value]; ok {
-				return exception.Runtime(&t.Token, "Director %s is duplicated", t.Name.Value)
+			// Director should treat as backend
+			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
+				return exception.Runtime(&t.Token, "Director %s is duplicated in backend definition", t.Name.Value)
 			}
-			i.ctx.Directors[t.Name.Value] = t
+			dc, err := i.getDirectorConfig(t)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
 		case *ast.TableDeclaration:
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
@@ -165,53 +137,52 @@ func (i *Interpreter) ProcessRecv() error {
 	// see: https://developer.fastly.com/reference/vcl/
 	var err error
 	state := LOOKUP
-	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]; ok {
+	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
+	if ok {
 		state, err = i.ProcessSubroutine(sub)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
-		switch state {
-		case PASS:
-			i.ctx.State = "PASS"
-			if err := i.ProcessHash(); err != nil {
-				return errors.WithStack(err)
-			}
-			err = i.ProcessPass()
-		case ERROR:
-			err = i.ProcessError()
-		case RESTART:
-			err = i.restart()
-		case LOOKUP, NONE:
-			if err := i.ProcessHash(); err != nil {
-				return err
-			}
-			if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
-				i.ctx.State = "HIT"
-				i.ctx.Object = i.cloneResponse(v)
-				err = i.ProcessHit()
-			} else {
-				i.ctx.State = "MISS"
-				err = i.ProcessMiss()
-			}
-		default:
-			return exception.Runtime(
-				&sub.GetMeta().Token,
-				"Subroutine %s returned unexpected state %s in RECV",
-				sub.Name.Value,
-				state,
-			)
-		}
 	} else {
-		if err := i.ProcessHash(); err != nil {
+		state = PASS
+	}
+
+	switch state {
+	case PASS:
+		i.ctx.State = "PASS"
+		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
 		err = i.ProcessPass()
+	case ERROR:
+		err = i.ProcessError()
+	case RESTART:
+		err = i.restart()
+	case LOOKUP, NONE:
+		if err = i.ProcessHash(); err != nil {
+			return errors.WithStack(err)
+		}
+		if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
+			i.ctx.State = "HIT"
+			i.ctx.Object = i.cloneResponse(v)
+			err = i.ProcessHit()
+		} else {
+			i.ctx.State = "MISS"
+			err = i.ProcessMiss()
+		}
+	default:
+		return exception.Runtime(
+			&sub.GetMeta().Token,
+			"Subroutine %s returned unexpected state %s in RECV",
+			sub.Name.Value,
+			state,
+		)
 	}
 
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	return nil
 }
 
@@ -255,7 +226,11 @@ func (i *Interpreter) ProcessMiss() error {
 
 	var err error
 	if i.ctx.BackendRequest == nil {
-		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+		if i.ctx.Backend.Director != nil {
+			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx.Backend.Director)
+		} else {
+			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+		}
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -351,7 +326,11 @@ func (i *Interpreter) ProcessPass() error {
 
 	var err error
 	if i.ctx.BackendRequest == nil {
-		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+		if i.ctx.Backend.Director != nil {
+			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx.Backend.Director)
+		} else {
+			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+		}
 		if err != nil {
 			return errors.WithStack(err)
 		}

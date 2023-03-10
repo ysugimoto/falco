@@ -443,29 +443,10 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 }
 
 func (r *Runner) Simulator(rslv resolver.Resolver) (http.Handler, error) {
-	main, err := rslv.MainVCL()
-	if err != nil {
-		return nil, err
-	}
-	vcl, err := r.parseVCL(main.Name, main.Data)
-	if err != nil {
-		return nil, err
-	}
-
-	// If remote snippets exists, prepare parse and prepend to main VCL
-	if r.snippets != nil {
-		for _, snip := range r.snippets.EmbedSnippets() {
-			s, err := r.parseVCL(snip.Name, snip.Data)
-			if err != nil {
-				return nil, err
-			}
-			vcl.Statements = append(s.Statements, vcl.Statements...)
-		}
-	}
 	options := []icontext.Option{icontext.WithResolver(rslv)}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
 
-	return interpreter.New(vcl, options...), nil
+	return interpreter.New(options...), nil
 }

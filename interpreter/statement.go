@@ -113,7 +113,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			break
 		}
 		if err != nil {
-			return INTERNAL_ERROR, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %w", err.Error())
+			return INTERNAL_ERROR, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %s", err.Error())
 		}
 	}
 	return NONE, nil

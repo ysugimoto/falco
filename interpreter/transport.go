@@ -11,7 +11,6 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/exception"

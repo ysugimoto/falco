@@ -1,8 +1,11 @@
 package interpreter
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -16,6 +19,11 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) (State, 
 		i.ctx.RegexMatchedValues = make(map[string]*value.String)
 		i.localVars = variable.LocalVariables{}
 	}()
+
+	// Try to extract fastly reserved subroutine macro
+	if err := i.extractBoilerplateMacro(sub); err != nil {
+		return NONE, errors.WithStack(err)
+	}
 
 	statements, err := i.resolveIncludeStatement(sub.Block.Statements, false)
 	if err != nil {
@@ -110,13 +118,13 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 			}
 			return val, NONE, nil
 		case *ast.ErrorStatement:
-			// restart statement force change state to ERROR
+			// error statement force change state to ERROR
 			i.ProcessErrorStatement(t)
 			return value.Null, ERROR, nil
-
-		// Others, no effects
 		case *ast.EsiStatement:
-			// Nothing to do, actually enable ESI in origin request
+			if err := i.ProcessEsiStatement(t); err != nil {
+				return value.Null, ERROR, nil
+			}
 			break
 		}
 		if err != nil {
@@ -155,4 +163,65 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 	default:
 		return val, NONE, nil
 	}
+}
+
+func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) error {
+	if i.ctx.FastlySnippets == nil {
+		return nil
+	}
+
+	// If subroutine name is fastly subroutine, find and extract boilerplate macro
+	macro, ok := icontext.FastlyReservedSubroutine[sub.Name.Value]
+	if !ok {
+		return nil
+	}
+	snippets, ok := i.ctx.FastlySnippets.ScopedSnippets[macro]
+	if !ok || len(snippets) == 0 {
+		return nil
+	}
+
+	macroName := strings.ToUpper("fastly " + macro)
+
+	var resolved []ast.Statement
+	// Find "FASTLY [macro]" comment and extract in infix comment of block statement
+	if hasFastlyBoilerplateMacro(sub.Block.InfixComment(), macroName) {
+		for _, s := range snippets {
+			statements, err := loadStatementVCL(s.Name, s.Data)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			resolved = append(resolved, statements...)
+		}
+		// Prevent to block statements
+		sub.Block.Statements = append(resolved, sub.Block.Statements...)
+		return nil
+	}
+
+	// Find "FASTLY [macro]" comment and extract inside block statement
+	var found bool // guard flag, embedding macro should do only once
+	for _, stmt := range sub.Block.Statements {
+		if hasFastlyBoilerplateMacro(stmt.LeadingComment(), macroName) && !found {
+			for _, s := range snippets {
+				statements, err := loadStatementVCL(s.Name, s.Data)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+				resolved = append(resolved, statements...)
+			}
+			found = true // guard for only once
+		}
+		resolved = append(resolved, stmt) // don't forget to append original statement
+	}
+	sub.Block.Statements = resolved
+	return nil
+}
+
+func hasFastlyBoilerplateMacro(commentText, macroName string) bool {
+	for _, c := range strings.Split(commentText, "\n") {
+		c = strings.TrimLeft(c, " */#")
+		if strings.HasPrefix(strings.ToUpper(c), macroName) {
+			return true
+		}
+	}
+	return false
 }

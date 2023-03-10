@@ -12,8 +12,7 @@ import (
 	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/resolver"
 )
 
 func defaultBackend(url *url.URL) string {
@@ -42,19 +41,13 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 	}
 
 	vcl = defaultBackend(parsed) + "\n" + vcl
-	p, err := parser.New(lexer.NewFromString(vcl)).ParseVCL()
-	if err != nil {
-		t.Errorf("VCL parsing error: %s", err)
-		return
-	}
-	ip := New(p)
-	if err := ip.Process(
+	ip := New(context.WithResolver(
+		resolver.NewStaticResolver("main", vcl),
+	))
+	ip.ServeHTTP(
 		httptest.NewRecorder(),
 		httptest.NewRequest(http.MethodGet, "http://localhost", nil),
-	); err != nil {
-		t.Errorf("Interpreter process error: %s", err)
-		return
-	}
+	)
 
 	for name, val := range assertions {
 		v, err := ip.vars.Get(scope, name)

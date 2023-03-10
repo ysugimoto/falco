@@ -23,16 +23,16 @@ const (
 	FastlyVclNameLog     = "vcl_log"
 )
 
-var FastlyReservedSubroutine = map[string]struct{}{
-	FastlyVclNameRecv:    {},
-	FastlyVclNameHash:    {},
-	FastlyVclNameHit:     {},
-	FastlyVclNameMiss:    {},
-	FastlyVclNamePass:    {},
-	FastlyVclNameFetch:   {},
-	FastlyVclNameError:   {},
-	FastlyVclNameDeliver: {},
-	FastlyVclNameLog:     {},
+var FastlyReservedSubroutine = map[string]string{
+	FastlyVclNameRecv:    "recv",
+	FastlyVclNameHash:    "hash",
+	FastlyVclNameHit:     "hit",
+	FastlyVclNameMiss:    "miss",
+	FastlyVclNamePass:    "pass",
+	FastlyVclNameFetch:   "fetch",
+	FastlyVclNameError:   "error",
+	FastlyVclNameDeliver: "deliver",
+	FastlyVclNameLog:     "log",
 }
 
 var (
@@ -43,15 +43,15 @@ type Context struct {
 	Debug               bool
 	Resolver            resolver.Resolver
 	FastlySnippets      *context.FastlySnippet
-	Acls                map[string]*ast.AclDeclaration
-	Backends            map[string]*ast.BackendDeclaration
+	Acls                map[string]*value.Acl
+	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration
-	Directors           map[string]*ast.DirectorDeclaration
 	Subroutines         map[string]*ast.SubroutineDeclaration
 	Penaltyboxes        map[string]*ast.PenaltyboxDeclaration
 	Ratecounters        map[string]*ast.RatecounterDeclaration
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
+	// Directors           map[string]*ast.DirectorDeclaration
 
 	Request         *http.Request
 	BackendRequest  *http.Request
@@ -132,23 +132,23 @@ type Context struct {
 	PushResources             []string // modified via "h2.push"
 	H3AltSvc                  bool     // modified via "h3.alt_svc"
 
-	// Marker of ESI is triggered. This field is changed when esi statement is present.
+	// Marker that ESI is triggered. This field will be changed when esi statement is present.
 	// However, Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
 	// see: https://developer.fastly.com/reference/vcl/statements/esi/
 	TriggerESI bool
 }
 
-func New(vcl *ast.VCL, options ...Option) *Context {
+func New(options ...Option) *Context {
 	ctx := &Context{
-		Acls:                make(map[string]*ast.AclDeclaration),
-		Backends:            make(map[string]*ast.BackendDeclaration),
+		Acls:                make(map[string]*value.Acl),
+		Backends:            make(map[string]*value.Backend),
 		Tables:              make(map[string]*ast.TableDeclaration),
-		Directors:           make(map[string]*ast.DirectorDeclaration),
 		Subroutines:         make(map[string]*ast.SubroutineDeclaration),
 		Penaltyboxes:        make(map[string]*ast.PenaltyboxDeclaration),
 		Ratecounters:        make(map[string]*ast.RatecounterDeclaration),
 		Gotos:               make(map[string]*ast.GotoStatement),
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
+		// Directors:           make(map[string]*ast.DirectorDeclaration),
 
 		State:                               "NONE",
 		Backend:                             nil,

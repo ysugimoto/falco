@@ -17,9 +17,9 @@ import (
 
 func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
 	if v, ok := i.ctx.Backends[val]; ok {
-		return &value.Backend{Value: v, Literal: true}, nil
+		return v, nil
 	} else if v, ok := i.ctx.Acls[val]; ok {
-		return &value.Acl{Value: v, Literal: true}, nil
+		return v, nil
 	} else if _, ok := i.ctx.Tables[val]; ok {
 		return &value.Ident{Value: val, Literal: true}, nil
 	} else if _, ok := i.ctx.Gotos[val]; ok {

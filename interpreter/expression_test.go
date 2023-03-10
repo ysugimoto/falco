@@ -7,6 +7,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/token"
 )
 
 func TestPrefixExpression(t *testing.T) {
@@ -26,6 +27,9 @@ func TestPrefixExpression(t *testing.T) {
 					Right: &ast.Boolean{
 						Value: true,
 					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.NOT},
+					},
 				},
 				expect: &value.Boolean{
 					Value: false,
@@ -38,6 +42,9 @@ func TestPrefixExpression(t *testing.T) {
 					Right: &ast.String{
 						Value: "foo",
 					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.NOT},
+					},
 				},
 				isError: true,
 			},
@@ -47,6 +54,9 @@ func TestPrefixExpression(t *testing.T) {
 					Operator: "!",
 					Right: &ast.String{
 						Value: "foo",
+					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.NOT},
 					},
 				},
 				expect: &value.Boolean{
@@ -60,6 +70,9 @@ func TestPrefixExpression(t *testing.T) {
 					Operator: "!",
 					Right: &ast.String{
 						Value: "",
+					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.NOT},
 					},
 				},
 				expect: &value.Boolean{
@@ -100,6 +113,9 @@ func TestPrefixExpression(t *testing.T) {
 					Right: &ast.Integer{
 						Value: 100,
 					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.MINUS},
+					},
 				},
 				expect: &value.Integer{
 					Value:   -100,
@@ -112,6 +128,9 @@ func TestPrefixExpression(t *testing.T) {
 					Operator: "-",
 					Right: &ast.Float{
 						Value: 100.0,
+					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.MINUS},
 					},
 				},
 				expect: &value.Float{
@@ -126,6 +145,9 @@ func TestPrefixExpression(t *testing.T) {
 					Right: &ast.RTime{
 						Value: "1d",
 					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.MINUS},
+					},
 				},
 				expect: &value.RTime{
 					Value:   -24 * time.Hour,
@@ -138,6 +160,9 @@ func TestPrefixExpression(t *testing.T) {
 					Operator: "-",
 					Right: &ast.Boolean{
 						Value: true,
+					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.MINUS},
 					},
 				},
 				isError: true,

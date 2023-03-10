@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
+
 	"strconv"
 	"time"
 
@@ -223,20 +225,27 @@ func (v *Time) Copy() Value {
 }
 
 type Backend struct {
-	Value   *ast.BackendDeclaration
-	Literal bool
+	Value    *ast.BackendDeclaration
+	Director *DirectorConfig // wrap director as Backend
+	Literal  bool
+	Healthy  *atomic.Bool
 }
 
 func (v *Backend) String() string {
-	if v.Value == nil {
-		return ""
+	if v.Director != nil {
+		return v.Director.Name
 	}
-	return v.Value.Name.Value
+	if v.Value != nil {
+		return v.Value.Name.Value
+	}
+	return ""
 }
 func (v *Backend) value()          {}
 func (v *Backend) Type() Type      { return BackendType }
 func (v *Backend) IsLiteral() bool { return v.Literal }
-func (v *Backend) Copy() Value     { return &Backend{Value: v.Value, Literal: v.Literal} }
+func (v *Backend) Copy() Value {
+	return &Backend{Value: v.Value, Director: v.Director, Literal: v.Literal}
+}
 
 type Acl struct {
 	Value   *ast.AclDeclaration
