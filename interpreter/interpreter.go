@@ -33,13 +33,13 @@ func New(vcl *ast.VCL, options ...context.Option) *Interpreter {
 		vcl:       vcl,
 		options:   options,
 		localVars: variable.LocalVariables{},
-		process:   process.New(),
 	}
 }
 
 func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	i.ctx = context.New(i.vcl, i.options...)
 	i.ctx.Request = r
+	i.process = process.New()
 
 	if err := i.ProcessInit(); err != nil {
 		// If debug is true, print with stacktrace
