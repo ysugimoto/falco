@@ -98,13 +98,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return v.ctx.ObjectTTL, nil
 
 	case "req.is_ipv6":
-		addr, ok := v.ctx.Request.Context().Value(context.ClientAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get client connection info",
-			))
-		}
-		parsed, err := netip.ParseAddr(addr.IP.String())
+		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
 				"Could not parse remote address",

@@ -163,6 +163,7 @@ func (i *Interpreter) ProcessRecv() error {
 			return errors.WithStack(err)
 		}
 		if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
+			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.Object = i.cloneResponse(v)
 			err = i.ProcessHit()
@@ -384,6 +385,9 @@ func (i *Interpreter) ProcessFetch() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	// Mark request process has ended
+	i.ctx.RequestEndTime = time.Now()
 
 	// Set cacheable strategy
 	isCacheable := i.isCacheableResponse(i.ctx.BackendResponse)

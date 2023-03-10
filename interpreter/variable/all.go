@@ -7,6 +7,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -191,13 +192,18 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: false}, nil
 
 	case "client.port":
-		addr, ok := req.Context().Value(context.ClientAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get client port",
-			))
+		idx := strings.LastIndex(req.RemoteAddr, ":")
+		if idx == -1 {
+			return &value.Integer{Value: 0}, nil
 		}
-		return &value.Integer{Value: int64(addr.Port)}, nil
+		port := req.RemoteAddr[idx+1:]
+		if num, err := strconv.ParseInt(port, 10, 64); err != nil {
+			return value.Null, errors.WithStack(fmt.Errorf(
+				"Failed to convert port number from string",
+			))
+		} else {
+			return &value.Integer{Value: num}, nil
+		}
 
 	// Client requests always returns 1, means new connection is coming
 	case "client.requests":
@@ -253,13 +259,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 1}, nil
 
 	case "server.port":
-		addr, ok := req.Context().Value(context.ServerAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get server port",
-			))
-		}
-		return &value.Integer{Value: int64(addr.Port)}, nil
+		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
 
 	// workspace related values respects Fastly fiddle one
 	case "workspace.bytes_free":
@@ -271,13 +271,27 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case "beresp.backend.src_ip":
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case "server.ip":
-		addr, ok := req.Context().Value(context.ServerAddrKey).(*net.TCPAddr)
-		if !ok {
+		addrs, err := net.InterfaceAddrs()
+		if err != nil {
+			return value.Null, errors.WithStack(err)
+		}
+		var addr net.IP
+		for _, a := range addrs {
+			if ip, ok := a.(*net.IPNet); !ok {
+				continue
+			} else if ip.IP.IsLoopback() {
+				continue
+			} else if ip.IP.To4() != nil || ip.IP.To16() != nil {
+				addr = ip.IP
+				break
+			}
+		}
+		if addr == nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get server port",
+				"Failed to get local server IP address",
 			))
 		}
-		return &value.IP{Value: addr.IP}, nil
+		return &value.IP{Value: addr}, nil
 
 	case "req.backend":
 		return v.ctx.Backend, nil
@@ -335,21 +349,23 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case "client.geo.region.utf8":
 
 	case "client.identity":
-		addr, ok := req.Context().Value(context.ClientAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get client addr",
-			))
+		if v.ctx.ClientIdentity == nil {
+			// default as client.ip
+			idx := strings.LastIndex(req.RemoteAddr, ":")
+			if idx == -1 {
+				return &value.String{Value: req.RemoteAddr}, nil
+			}
+			return &value.String{Value: req.RemoteAddr[:idx]}, nil
 		}
-		return &value.String{Value: addr.IP.String()}, nil
+		return v.ctx.ClientIdentity, nil
+
 	case "client.ip":
-		addr, ok := req.Context().Value(context.ClientAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get client addr",
-			))
+		idx := strings.LastIndex(req.RemoteAddr, ":")
+		if idx == -1 {
+			return &value.IP{Value: net.ParseIP(req.RemoteAddr)}, nil
 		}
-		return &value.String{Value: addr.IP.String()}, nil
+		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
+
 	case "client.os.name":
 		return &value.String{Value: ua.OS.Name.String()}, nil
 	case "client.os.version":
@@ -680,6 +696,14 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	switch strings.ToLower(name) {
+	case "client.identity":
+		if v.ctx.ClientIdentity == nil {
+			v.ctx.ClientIdentity = &value.String{Value: ""}
+		}
+		if err := doAssign(v.ctx.ClientIdentity, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
 	case "resp.stale":
 		if err := doAssign(v.ctx.Stale, operator, val); err != nil {
 			return errors.WithStack(err)

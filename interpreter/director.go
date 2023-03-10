@@ -1,8 +1,13 @@
 package interpreter
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
+	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +25,8 @@ var (
 
 func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.DirectorConfig, error) {
 	conf := &value.DirectorConfig{
-		Name: d.Name.Value,
+		Name:          d.Name.Value,
+		VNodesPerNode: 256,
 	}
 
 	// Validate director type
@@ -97,6 +103,12 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 		case *ast.DirectorProperty:
 			switch t.Key.Value {
 			case "quorum":
+				if conf.Type == "fallback" {
+					return nil, exception.Runtime(
+						&t.GetMeta().Token,
+						".quorum field must not be present in fallback director type",
+					)
+				}
 				if v, ok := t.Value.(*ast.String); !ok {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
@@ -105,27 +117,68 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 				} else if n, err := strconv.Atoi(strings.TrimSuffix(v.Value, "%")); err != nil {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
-						"Invalid quorum value '%s' found. Value must be percentage string like '50%'",
+						"Invalid quorum value '%s' found. Value must be percentage string like '50%%'",
 						v.Value,
 					)
 				} else {
 					conf.Quorum = n
 				}
 			case "retries":
-				if v, ok := t.Value.(*ast.Integer); !ok {
+				if conf.Type != "random" {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
-						"retries value must be integer",
+						".retries field must be present only in random director type",
 					)
+				}
+				if v, ok := t.Value.(*ast.Integer); !ok {
+					return nil, exception.Runtime(&t.GetMeta().Token, "retries value must be integer")
 				} else {
 					conf.Retries = int(v.Value)
 				}
+			case "key":
+				if conf.Type != "chash" {
+					return nil, exception.Runtime(
+						&t.GetMeta().Token,
+						".key field must be present only in chash director type",
+					)
+				}
+				if v, ok := t.Value.(*ast.Ident); !ok {
+					return nil, exception.Runtime(&t.GetMeta().Token, ".key value must be integer")
+				} else if v.Value != "object" && v.Value != "client" {
+					return nil, exception.Runtime(&t.GetMeta().Token, ".key value must be either of object or client")
+				} else {
+					conf.Key = v.Value
+				}
+			case "seed":
+				if conf.Type != "chash" {
+					return nil, exception.Runtime(
+						&t.GetMeta().Token,
+						".seed field must be present only in chash director type",
+					)
+				}
+				if v, ok := t.Value.(*ast.Integer); !ok {
+					return nil, exception.Runtime(&t.GetMeta().Token, ".seed value must be integer")
+				} else {
+					conf.Seed = uint32(v.Value)
+				}
+			case "vnodes_per_node":
+				if conf.Type != "chash" {
+					return nil, exception.Runtime(
+						&t.GetMeta().Token,
+						".vnodes_per_node field must be present only in chash director type",
+					)
+				}
+				if v, ok := t.Value.(*ast.Integer); !ok {
+					return nil, exception.Runtime(&t.GetMeta().Token, ".vnodes_per_node value must be integer")
+				} else if v.Value > 8_388_608 {
+					// vnodes_per_node value is limted under 8,388,608
+					// see: https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing
+					return nil, exception.Runtime(&t.GetMeta().Token, ".vnodes_per_node value is limited under 8388608")
+				} else {
+					conf.VNodesPerNode = int(v.Value)
+				}
 			default:
-				return nil, exception.Runtime(
-					&t.GetMeta().Token,
-					"Unexpected director property '%s' found",
-					t.Key.Value,
-				)
+				return nil, exception.Runtime(&t.GetMeta().Token, "Unexpected director property '%s' found", t.Key.Value)
 			}
 		default:
 			return nil, exception.Runtime(
@@ -196,7 +249,11 @@ func (i *Interpreter) directorBackendRandom(dc *value.DirectorConfig) (*value.Ba
 			}
 		}
 
-		// Check quorum percentage
+		// Check healthy backend or healthy backends are less than quorum percentage
+		if healthyBackends == 0 {
+			return nil, ErrAllBackendsFailed
+		}
+
 		if healthyBackends/len(dc.Backends) < dc.Quorum {
 			// @SPEC: random director waits 10ms until retry backend detection
 			time.Sleep(10 * time.Millisecond)
@@ -225,14 +282,127 @@ func (i *Interpreter) directorBackendFallback(dc *value.DirectorConfig) (*value.
 	return nil, ErrAllBackendsFailed
 }
 
+// Content director
+// https://developer.fastly.com/reference/vcl/declarations/director/#content
 func (i *Interpreter) directorBackendHash(dc *value.DirectorConfig) (*value.Backend, error) {
-	return nil, nil
+	// Hash should be calauclated based on request hash, means the same as cache object key
+	hash := sha256.Sum256([]byte(i.ctx.RequestHash.Value))
+
+	return i.getBackendByHash(dc, hash[:])
 }
 
+// Client director
+// https://developer.fastly.com/reference/vcl/declarations/director/#client
 func (i *Interpreter) directorBackendClient(dc *value.DirectorConfig) (*value.Backend, error) {
-	return nil, nil
+	var identity string
+	if i.ctx.ClientIdentity != nil {
+		identity = i.ctx.ClientIdentity.Value
+	} else {
+		identity = i.ctx.Request.RemoteAddr
+		if idx := strings.LastIndex(identity, ":"); idx != -1 {
+			identity = identity[:idx]
+		}
+	}
+	hash := sha256.Sum256([]byte(identity))
+
+	return i.getBackendByHash(dc, hash[:])
 }
 
+// Consistent Hashing director
+// https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing
 func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*value.Backend, error) {
-	return nil, nil
+	var circles []uint32
+	hashTable := make(map[uint32]*value.Backend)
+
+	var healthyBackends int
+	max := uint32(math.Pow(10, 4)) // max 10000
+	// Put backends to the circles
+	for _, v := range dc.Backends {
+		if !v.Backend.Healthy.Load() {
+			continue
+		}
+		healthyBackends++
+		// typically loop three times in order to find suitable ring position
+		for i := 0; i < 3; i++ {
+			buf := make([]byte, 4)
+			binary.BigEndian.PutUint32(buf, dc.Seed)
+			hash := sha256.New() // TODO: consider to user hash/fnv for getting performance guarantee
+			hash.Write(buf)
+			hash.Write([]byte(v.Backend.Value.Name.Value))
+			hash.Write([]byte(fmt.Sprint(i)))
+			h := hash.Sum(nil)
+			num := binary.BigEndian.Uint32(h[:8]) % max
+			hashTable[num] = v.Backend
+			circles = append(circles, num)
+		}
+	}
+
+	if healthyBackends == 0 {
+		return nil, ErrAllBackendsFailed
+	}
+	if healthyBackends/len(dc.Backends) < dc.Quorum {
+		return nil, ErrQuorumWeightNotReached
+	}
+
+	// Sort slice for binary search
+	sort.Slice(circles, func(i, j int) bool {
+		return circles[i] < circles[j]
+	})
+
+	var hashKey [32]byte
+	switch dc.Key {
+	case "object":
+		hashKey = sha256.Sum256([]byte(i.ctx.RequestHash.Value))
+	default: // same as client
+		var identity string
+		if i.ctx.ClientIdentity != nil {
+			identity = i.ctx.ClientIdentity.Value
+		} else {
+			identity = i.ctx.Request.RemoteAddr
+			if idx := strings.LastIndex(identity, ":"); idx != -1 {
+				identity = identity[:idx]
+			}
+		}
+		hashKey = sha256.Sum256([]byte(identity))
+	}
+
+	key := binary.BigEndian.Uint32(hashKey[:8]) % max
+	index := sort.Search(len(circles), func(i int) bool {
+		return circles[i] >= key
+	})
+	if index == len(circles) {
+		index = 0
+	}
+
+	return hashTable[circles[index]], nil
+}
+
+func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*value.Backend, error) {
+	max := uint64(math.Pow(10, 4)) // max 10000
+	num := binary.BigEndian.Uint64(hash[:8]) % max
+
+	var healthyBackends int
+	var target *value.Backend
+	for _, v := range dc.Backends {
+		// Skip if backend is unhealthy
+		if !v.Backend.Healthy.Load() {
+			continue
+		}
+		healthyBackends++
+		bh := sha256.Sum256([]byte(v.Backend.Value.Name.Value))
+		b := binary.BigEndian.Uint64(bh[:8])
+		if b%(max*10) >= num && b%(max*10) < num+max {
+			target = v.Backend
+			break
+		}
+	}
+
+	// There is no healthy backend or healthyBackends is less than quorum
+	if target == nil || healthyBackends == 0 {
+		return nil, ErrAllBackendsFailed
+	}
+	if healthyBackends/len(dc.Backends) < dc.Quorum {
+		return nil, ErrQuorumWeightNotReached
+	}
+	return target, nil
 }

@@ -98,19 +98,14 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case "req.esi_level":
 		return v.ctx.ESILevel, nil
 	case "req.is_ipv6":
-		addr, ok := v.ctx.Request.Context().Value(context.ClientAddrKey).(*net.TCPAddr)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get client connection info",
-			))
-		}
-		parsed, err := netip.ParseAddr(addr.IP.String())
+		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
 				"Could not parse remote address",
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
+
 	case "req.is_purge":
 		return &value.Boolean{Value: v.ctx.Request.Method == "PURGE"}, nil
 

@@ -53,13 +53,14 @@ type Context struct {
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	// Directors           map[string]*ast.DirectorDeclaration
 
-	Request         *http.Request
-	BackendRequest  *http.Request
-	BackendResponse *http.Response
-	Object          *http.Response
-	Response        *http.Response
-	Scope           Scope
-	RequestEndTime  time.Time
+	Request          *http.Request
+	BackendRequest   *http.Request
+	BackendResponse  *http.Response
+	Object           *http.Response
+	Response         *http.Response
+	Scope            Scope
+	RequestEndTime   time.Time
+	RequestStartTime time.Time
 
 	// Interpreter states, following variables could be set in each subroutine directives
 	Restarts                            int
@@ -73,6 +74,7 @@ type Context struct {
 	StaleIsRevalidating                 *value.Boolean
 	StaleContents                       *value.String
 	FastlyError                         *value.String
+	ClientIdentity                      *value.String
 	ClientGeoIpOverride                 *value.Boolean
 	ClientSocketCongestionAlgorithm     *value.String
 	ClientSocketCwnd                    *value.Integer
@@ -150,8 +152,10 @@ func New(options ...Option) *Context {
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
 		// Directors:           make(map[string]*ast.DirectorDeclaration),
 
+		RequestStartTime:                    time.Now(),
 		State:                               "NONE",
 		Backend:                             nil,
+		ClientIdentity:                      nil,
 		MaxStaleIfError:                     &value.RTime{Value: defaultStaleDuration},
 		MaxStaleWhileRevalidate:             &value.RTime{Value: defaultStaleDuration},
 		Stale:                               &value.Boolean{},
