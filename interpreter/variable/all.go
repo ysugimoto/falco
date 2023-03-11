@@ -306,13 +306,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return v.ctx.MaxStaleWhileRevalidate, nil
 
 	case TIME_ELAPSED:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
-		return &value.RTime{Value: time.Since(start)}, nil
+		return &value.RTime{Value: time.Since(v.ctx.RequestStartTime)}, nil
 	case CLIENT_BOT_NAME:
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
@@ -521,115 +515,49 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case STALE_EXISTS:
 		return v.ctx.StaleContents, nil
 	case TIME_ELAPSED_MSEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(time.Since(start).Milliseconds()),
+			Value: fmt.Sprint(time.Since(v.ctx.RequestStartTime).Milliseconds()),
 		}, nil
 	case TIME_ELAPSED_MSEC_FRAC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprintf("%03d", time.Since(start).Milliseconds()),
+			Value: fmt.Sprintf("%03d", time.Since(v.ctx.RequestStartTime).Milliseconds()),
 		}, nil
 	case TIME_ELAPSED_SEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(int64(time.Since(start).Seconds())),
+			Value: fmt.Sprint(int64(time.Since(v.ctx.RequestStartTime).Seconds())),
 		}, nil
 	case TIME_ELAPSED_USEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(time.Since(start).Microseconds()),
+			Value: fmt.Sprint(time.Since(v.ctx.RequestStartTime).Microseconds()),
 		}, nil
 	case TIME_ELAPSED_USEC_FRAC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprintf("%06d", time.Since(start).Microseconds()),
+			Value: fmt.Sprintf("%06d", time.Since(v.ctx.RequestStartTime).Microseconds()),
 		}, nil
 	case TIME_START_MSEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(start.UnixMilli()),
+			Value: fmt.Sprint(v.ctx.RequestStartTime.UnixMilli()),
 		}, nil
 	case TIME_START_MSEC_FRAC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(start.UnixMilli() % 1000),
+			Value: fmt.Sprint(v.ctx.RequestStartTime.UnixMilli() % 1000),
 		}, nil
 	case TIME_START_SEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(start.Unix()),
+			Value: fmt.Sprint(v.ctx.RequestStartTime.Unix()),
 		}, nil
 	case TIME_START_USEC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(start.UnixMicro()),
+			Value: fmt.Sprint(v.ctx.RequestStartTime.UnixMicro()),
 		}, nil
 	case TIME_START_USEC_FRAC:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
 		return &value.String{
-			Value: fmt.Sprint(start.UnixMicro() % 1000000),
+			Value: fmt.Sprint(v.ctx.RequestStartTime.UnixMicro() % 1000000),
 		}, nil
 	case NOW:
 		return &value.Time{Value: time.Now()}, nil
 	case TIME_START:
-		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
-		if !ok {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not get request start time",
-			))
-		}
-		return &value.Time{Value: start}, nil
+		return &value.Time{Value: v.ctx.RequestStartTime}, nil
 	}
 
 	if val := v.getFromRegex(name); val != nil {

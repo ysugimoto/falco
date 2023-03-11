@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -47,6 +48,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
 	i.process = process.New()
