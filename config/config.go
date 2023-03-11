@@ -56,6 +56,7 @@ func New(args []string) (*Config, error) {
 	if err := twist.Mix(&c, options...); err != nil {
 		return nil, errors.WithStack(err)
 	}
+
 	return &c, nil
 }
 

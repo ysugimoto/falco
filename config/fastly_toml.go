@@ -10,19 +10,8 @@ type Config struct {
 	LocalServer     LocalServer `toml:"local_server"`
 	Scripts         Scripts     `toml:"scripts"`
 
-	// falco extended fields
+	// falco extend field
 	Falco FalcoConfig `toml:"falco"`
-}
-
-type FalcoConfig struct {
-	Version      bool      `cli:"v,version"`
-	Linter       Linter    `toml:"linter"`
-	Simulator    Simulator `toml:"simulator"`
-	Stats        Stats     `toml:"stats"`
-	ApiKey       string    `env:"FASTLY_API_KEY"`
-	Help         bool      `cli:"h,help"`
-	IncludePaths []string  `toml:"include_paths" cli:"I,include_path"`
-	EnableRemote bool      `toml:"remote"`
 }
 
 type LocalServer struct {
@@ -54,32 +43,4 @@ type Dictionary struct {
 type Scripts struct {
 	Build     string `toml:"build"`
 	PostBuild string `toml:"post_build"` // no use in falco
-}
-
-// falco only
-type VerboseLevel string
-
-const (
-	VerboseLevelDefault = "error"
-	VerboseLevelInfo    = "info"
-	VerboseLevelWarning = "warning"
-)
-
-// falco only
-type Linter struct {
-	Verbose VerboseLevel      `toml:"verbose"`
-	Info    bool              `cli:"vv"`
-	Warning bool              `cli:"v"`
-	Rules   map[string]string `toml:"rules_override"`
-}
-
-// falco only
-type Simulator struct {
-	Debug      bool   `toml:"debug" env:"FALCO_DEBUG"`
-	ServerPort string `toml:"server_port" defaut:"3124"`
-}
-
-// falco only
-type Stats struct {
-	OutputJSON bool `toml:"json" cli:"j,json"`
 }

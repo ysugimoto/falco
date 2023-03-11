@@ -260,13 +260,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 1}, nil
 
 	case SERVER_PORT:
-		port, err := strconv.ParseInt(v.ctx.Config.ServerPort, 10, 64)
-		if err != nil {
-			return value.Null, errors.WithStack(fmt.Errorf(
-				"Failed to convert to integer",
-			))
-		}
-		return &value.Integer{Value: port}, nil
+		return &value.Integer{Value: int64(v.ctx.Config.ServerPort)}, nil
 
 	// workspace related values respects Fastly fiddle one
 	case WORKSPACE_BYTES_FREE:

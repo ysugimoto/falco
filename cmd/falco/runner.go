@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
+	_context "context"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -161,6 +164,32 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	}
 
 	return r, nil
+}
+
+func (r *Runner) preBuild() error {
+	if r.config.Scripts.Build == "" {
+		return nil
+	}
+	// run build script
+	ctx, timeout := _context.WithTimeout(_context.Background(), 10*time.Second)
+	defer timeout()
+
+	commands := strings.Split(r.config.Scripts.Build, " ")
+	var args []string
+	if len(commands) > 1 {
+		args = commands[1:]
+	}
+	writeln(green, "Run build command:\n%s", r.config.Scripts.Build)
+	cmd := exec.CommandContext(ctx, commands[0], args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Runner) Transform(vcl *plugin.VCL) error {

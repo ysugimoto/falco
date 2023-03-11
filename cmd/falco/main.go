@@ -142,6 +142,11 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err := runner.preBuild(); err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
+		}
+
 		var exitErr error
 		switch cmd.At(0) {
 		case subcommandSimulate:
@@ -214,9 +219,9 @@ func runSimulator(runner *Runner, rslv resolver.Resolver) {
 
 	s := &http.Server{
 		Handler: mux,
-		Addr:    ":" + port,
+		Addr:    fmt.Sprintf(":%d", port),
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:%s", port)
+	writeln(green, "Simulator server starts on 0.0.0.0:%d", port)
 	if err := s.ListenAndServe(); err != nil {
 		writeln(red, "Failed to start server: %s", err.Error())
 	}
