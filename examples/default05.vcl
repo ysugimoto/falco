@@ -31,11 +31,15 @@ sub vcl_recv {
 
   #Fastly recv
   set req.backend = httpbin_org;
+  ## Let's enable below on remote testing
+  ##include "snippet::explicit_include_snippet";
 
   if (req.http.Some-Truthy-Header) {
-    #include "default05_include02";
+    include "default05_include02";
   }
 
   return (pass);
 }
+
+sub vcl_fetch {}
 
