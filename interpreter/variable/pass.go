@@ -41,14 +41,14 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	case "bereq.request":
 		return v.Get(s, "bereq.method")
 	case "bereq.url":
-		url := bereq.URL.Path
+		u := bereq.URL.Path
 		if v := bereq.URL.RawQuery; v != "" {
-			url += "?" + v
+			u += "?" + v
 		}
 		if v := bereq.URL.RawFragment; v != "" {
-			url += "#" + v
+			u += "#" + v
 		}
-		return &value.String{Value: url}, nil
+		return &value.String{Value: u}, nil
 	case "bereq.url.basename":
 		return &value.String{
 			Value: filepath.Base(bereq.URL.Path),
@@ -102,7 +102,7 @@ func (v *PassScopeVariables) getFromRegex(name string) value.Value {
 			}
 		}
 		spl := strings.SplitN(name, ":", 2)
-		if strings.ToLower(spl[0]) != "cookie" {
+		if !strings.EqualFold(spl[0], "cookie") {
 			return &value.String{
 				Value: v.ctx.Request.Header.Get(match[1]),
 			}

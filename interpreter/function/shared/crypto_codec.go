@@ -15,9 +15,17 @@ var BlockSizeMap = map[string]int{
 	"aes256": 32,
 }
 
+// Ident values constants
+const (
+	NOPAD = "nopad"
+	CBC   = "cbc"
+	CTR   = "ctr"
+	PKCS7 = "pkcs7"
+)
+
 // CryptoCodec is common cryptographic for Fastly builtin function
 type CryptoCodec struct {
-	// builtin fucntion name
+	// builtin function name
 	name string
 
 	// constrant values
@@ -33,16 +41,17 @@ func NewCryptoCodec(
 	name string,
 	cipherId, mode, padding string,
 ) (*CryptoCodec, error) {
+
 	size, ok := BlockSizeMap[cipherId]
 	if !ok {
 		return nil, errors.New(name, `Invalid cipher. Valid cipher ident is "aes128", "aes192" or "aes256"`)
 	}
-	if mode != "cbc" && mode != "ctr" {
+	if mode != CBC && mode != CTR {
 		return nil, errors.New(name, `Invalid mode. Valid mode ident is "cbc" or "ctr"`)
 	}
-	if padding != "pkcs7" && padding != "nopad" {
+	if padding != PKCS7 && padding != NOPAD {
 		return nil, errors.New(name, `Invalid padding. Valid padding ident is "pkcs7" or "nopad"`)
-	} else if mode == "ctr" && padding != "nopad" {
+	} else if mode == CTR && padding != NOPAD {
 		return nil, errors.New(name, `When mode is ctr, padding must be "nopad"`)
 	}
 
@@ -86,7 +95,7 @@ func (c *CryptoCodec) Encrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return nil, err
 	}
 
-	if c.mode == "cbc" {
+	if c.mode == CBC {
 		return c.encryptCBC(block, iv, text), nil
 	}
 	return c.encryptCTR(block, iv, text), nil
@@ -96,7 +105,7 @@ func (c *CryptoCodec) encryptCBC(block cipher.Block, iv, text []byte) []byte {
 	enc := cipher.NewCBCEncrypter(block, iv)
 
 	padded := text
-	if c.padding != "nopad" {
+	if c.padding != NOPAD {
 		padSize := aes.BlockSize - (len(text) & aes.BlockSize)
 		padding := bytes.Repeat([]byte{byte(padSize)}, padSize)
 		padded = append(padded, padding...)
@@ -120,7 +129,7 @@ func (c *CryptoCodec) Decrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return nil, err
 	}
 
-	if c.mode == "cbc" {
+	if c.mode == CBC {
 		return c.decryptCBC(block, iv, text), nil
 	}
 	return c.decryptCTR(block, iv, text), nil
@@ -132,7 +141,7 @@ func (c *CryptoCodec) decryptCBC(block cipher.Block, iv, text []byte) []byte {
 	decrypted := make([]byte, len(text))
 	dec.CryptBlocks(decrypted, text)
 
-	if c.padding != "nopad" {
+	if c.padding != NOPAD {
 		// unpadding
 		padSize := int(decrypted[len(decrypted)-1])
 		decrypted = decrypted[:len(decrypted)-padSize]

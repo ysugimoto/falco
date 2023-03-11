@@ -30,6 +30,7 @@ func NewDeliverScopeVariables(ctx *context.Context) *DeliverScopeVariables {
 	}
 }
 
+// nolint: funlen,gocognit,gocyclo
 func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	bereq := v.ctx.BackendRequest
 	req := v.ctx.Request
@@ -173,7 +174,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		// TODO: this logic is only calculate response - request time.
 		// It means that is not correct RTIME value because TFB is the first byte from response.
 		return &value.RTime{
-			Value: time.Now().Sub(v.ctx.RequestEndTime),
+			Value: time.Since(v.ctx.RequestEndTime),
 		}, nil
 
 	case "time.end":

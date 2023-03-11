@@ -18,6 +18,7 @@ import (
 // We investigated type comparison and summarized.
 // See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 
+// nolint: funlen,gocognit,gocyclo
 func Assign(left, right value.Value) error {
 	switch left.Type() {
 	case value.IntegerType:
@@ -242,7 +243,7 @@ func Assign(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid assignment for IP type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use assignment for type %s", left.Type()))
 	}
 	return nil
 }

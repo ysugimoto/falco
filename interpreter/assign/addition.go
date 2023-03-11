@@ -9,6 +9,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+// nolint: funlen,gocognit,gocyclo
 func Addition(left, right value.Value) error {
 	switch left.Type() {
 	case value.IntegerType:
@@ -16,10 +17,11 @@ func Addition(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // INTEGER += INTEGER
 			rv := value.Unwrap[*value.Integer](right)
-			if rv.IsPositiveInf || math.IsInf(float64(lv.Value+rv.Value), 1) {
+			// nolint: gocritic
+			if rv.IsPositiveInf || lv.Value+rv.Value > int64(math.MaxInt64) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
-			} else if rv.IsNegativeInf || math.IsInf(float64(lv.Value+rv.Value), -1) {
+			} else if rv.IsNegativeInf {
 				lv.Value = math.MinInt64
 				lv.IsNegativeInf = true
 			} else {
@@ -30,6 +32,7 @@ func Addition(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not add to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value)+rv.Value, 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -55,7 +58,7 @@ func Addition(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("TIME literal could not add to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			if math.IsInf(float64(lv.Value+rv.Value.Unix()), 1) {
+			if lv.Value+rv.Value.Unix() >= int64(math.MaxInt64) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
 			} else {
@@ -69,6 +72,7 @@ func Addition(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // FLOAT += INTEGER
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value+float64(rv.Value), 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -80,6 +84,7 @@ func Addition(left, right value.Value) error {
 			}
 		case value.FloatType: // FLOAT += FLOAT
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value+rv.Value, 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -149,7 +154,7 @@ func Addition(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not add to TIME"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
-			if math.IsInf(float64(lv.Value.Unix()+rv.Value), 1) {
+			if lv.Value.Unix()+rv.Value > int64(math.MaxInt64) {
 				lv.OutOfBounds = true
 			} else {
 				lv.Value = lv.Value.Add(time.Duration(rv.Value) * time.Second)
@@ -171,7 +176,7 @@ func Addition(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid addition TIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use addition assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use addition assignment for type %s", left.Type()))
 	}
 	return nil
 }

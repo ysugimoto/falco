@@ -27,7 +27,6 @@ func NewHitScopeVariables(ctx *context.Context) *HitScopeVariables {
 }
 
 func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
-
 	switch name {
 	case "obj.age":
 		// fixed value
@@ -91,7 +90,6 @@ func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
-
 	switch name {
 	case "obj.grace":
 		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
@@ -126,7 +124,6 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 }
 
 func (v *HitScopeVariables) Add(s context.Scope, name string, val value.Value) error {
-
 	// Add statement could be use only for HTTP header
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {

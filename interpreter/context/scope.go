@@ -48,7 +48,7 @@ func (s Scope) String() string {
 func (s Scope) Is(scopes ...Scope) bool {
 	var scope int
 	for _, v := range scopes {
-		scope = scope | int(v)
+		scope |= int(v)
 	}
 	return (int(s) & scope) > 0
 }

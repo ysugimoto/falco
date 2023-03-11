@@ -49,9 +49,10 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 // withCondition boolean is special flag for evaluating expression, used for if condition, parenthesis wrapped expression
 // On if condition, prefix expression could use "!" prefix operator for null value.
 // For example:
-//   withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
-//   withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
-//   withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
+//
+//	withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
+//	withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
+//	withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
 func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) (value.Value, error) {
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
@@ -69,17 +70,27 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 		return &value.Float{Value: t.Value, Literal: true}, nil
 	case *ast.RTime:
 		var val time.Duration
+		var err error
 		switch {
 		case strings.HasSuffix(t.Value, "d"):
 			num := strings.TrimSuffix(t.Value, "d")
-			val, _ = time.ParseDuration(num + "h")
+			val, err = time.ParseDuration(num + "h")
+			if err != nil {
+				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
+			}
 			val *= 24
 		case strings.HasSuffix(t.Value, "y"):
 			num := strings.TrimSuffix(t.Value, "y")
-			val, _ = time.ParseDuration(num + "h")
+			val, err = time.ParseDuration(num + "h")
+			if err != nil {
+				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
+			}
 			val *= 24 * 365
 		default:
-			val, _ = time.ParseDuration(t.Value)
+			val, err = time.ParseDuration(t.Value)
+			if err != nil {
+				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
+			}
 		}
 		return &value.RTime{Value: val, Literal: true}, nil
 
@@ -95,9 +106,7 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	case *ast.FunctionCallExpression:
 		return i.ProcessFunctionCallExpression(t, withCondition)
 	default:
-		return value.Null, errors.WithStack(
-			exception.Runtime(&exp.GetMeta().Token, "Undefined expression"),
-		)
+		return value.Null, exception.Runtime(&exp.GetMeta().Token, "Undefined expression found")
 	}
 }
 

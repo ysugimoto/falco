@@ -31,7 +31,6 @@ func newFlowRequest(req *http.Request) *HttpFlow {
 	}
 
 	return flow
-
 }
 
 func newFlowResponse(resp *http.Response) *HttpFlow {

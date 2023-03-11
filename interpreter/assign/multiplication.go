@@ -16,6 +16,7 @@ func Multiplication(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // INTEGER *= INTEGER
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value*rv.Value), 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -30,6 +31,7 @@ func Multiplication(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not multiple to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value)*rv.Value, 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -47,6 +49,7 @@ func Multiplication(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // FLOAT *= INTEGER
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value*float64(rv.Value), 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -58,6 +61,7 @@ func Multiplication(left, right value.Value) error {
 			}
 		case value.FloatType: // FLOAT *= FLOAT
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value*rv.Value, 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -83,7 +87,7 @@ func Multiplication(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid multiplication RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use multiplication assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use multiplication assignment for type %s", left.Type()))
 	}
 	return nil
 }

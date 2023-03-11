@@ -30,6 +30,7 @@ func NewLogScopeVariables(ctx *context.Context) *LogScopeVariables {
 	}
 }
 
+// nolint: funlen,gocognit,gocyclo
 func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	bereq := v.ctx.BackendRequest
 	req := v.ctx.Request
@@ -206,7 +207,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		// TODO: this logic is only calculate response - request time.
 		// It means that is not correct RTIME value because TFB is the first byte from response.
 		return &value.RTime{
-			Value: time.Now().Sub(v.ctx.RequestEndTime),
+			Value: time.Since(v.ctx.RequestEndTime),
 		}, nil
 
 	// FIXME: segmented_caching related variables is just fake value

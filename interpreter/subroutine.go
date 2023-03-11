@@ -51,7 +51,6 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 
 	for _, stmt := range sub.Block.Statements {
 		switch t := stmt.(type) {
-
 		// Common logic statements (nothing to change state)
 		case *ast.DeclareStatement:
 			err = i.ProcessDeclareStatement(t)
@@ -119,13 +118,14 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 			return val, NONE, nil
 		case *ast.ErrorStatement:
 			// error statement force change state to ERROR
-			i.ProcessErrorStatement(t)
-			return value.Null, ERROR, nil
+			err = i.ProcessErrorStatement(t)
+			if err == nil {
+				return value.Null, ERROR, nil
+			}
 		case *ast.EsiStatement:
 			if err := i.ProcessEsiStatement(t); err != nil {
 				return value.Null, ERROR, nil
 			}
-			break
 		}
 		if err != nil {
 			return value.Null, INTERNAL_ERROR, errors.WithStack(err)

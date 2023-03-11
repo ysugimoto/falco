@@ -45,7 +45,9 @@ func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) e
 		return errors.WithStack(err)
 	} else if resp.StatusCode != http.StatusOK {
 		var buf bytes.Buffer
-		buf.ReadFrom(resp.Body)
+		if _, err := buf.ReadFrom(resp.Body); err != nil {
+			return errors.WithStack(err)
+		}
 		return fmt.Errorf("API respond not 200 code: %d\nBody: %s", resp.StatusCode, buf.String())
 	}
 	defer resp.Body.Close()

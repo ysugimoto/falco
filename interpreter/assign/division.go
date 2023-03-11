@@ -20,6 +20,7 @@ func Division(left, right value.Value) error {
 				lv.IsNAN = true
 				return errors.WithStack(fmt.Errorf("Division by zero"))
 			}
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value/rv.Value), 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -38,6 +39,7 @@ func Division(left, right value.Value) error {
 				lv.IsNAN = true
 				return errors.WithStack(fmt.Errorf("Division by zero"))
 			}
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value)/rv.Value, 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -59,6 +61,7 @@ func Division(left, right value.Value) error {
 				lv.IsNAN = true
 				return errors.WithStack(fmt.Errorf("Division by zero"))
 			}
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value/float64(rv.Value), 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -74,6 +77,7 @@ func Division(left, right value.Value) error {
 				lv.IsNAN = true
 				return errors.WithStack(fmt.Errorf("Division by zero"))
 			}
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value/rv.Value, 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -99,7 +103,7 @@ func Division(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use division assignment for type %s", left.Type()))
 	}
 	return nil
 }

@@ -66,8 +66,7 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 }
 
 func (v *HashScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
-	switch name {
-	case "req.hash":
+	if name == "req.hash" {
 		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

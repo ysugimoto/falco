@@ -9,6 +9,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+// nolint: funlen,gocognit,gocyclo
 func Subtraction(left, right value.Value) error {
 	switch left.Type() {
 	case value.IntegerType:
@@ -16,6 +17,7 @@ func Subtraction(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value+rv.Value), 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -30,6 +32,7 @@ func Subtraction(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not sub to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value)+rv.Value, 1) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
@@ -69,6 +72,7 @@ func Subtraction(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value+float64(rv.Value), 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -80,6 +84,7 @@ func Subtraction(left, right value.Value) error {
 			}
 		case value.FloatType:
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value+rv.Value, 1) {
 				lv.Value = math.MaxFloat64
 				lv.IsPositiveInf = true
@@ -171,7 +176,7 @@ func Subtraction(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid subtraction TIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use subtraction assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use subtraction assignment for type %s", left.Type()))
 	}
 	return nil
 }

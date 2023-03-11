@@ -34,6 +34,9 @@ func main() {
 	}
 
 	i := newInterpreter()
+	if err := i.generatePredefined(); err != nil {
+		panic(err)
+	}
 	if err := i.generateBuiltInFunction(); err != nil {
 		panic(err)
 	}

@@ -27,7 +27,6 @@ func NewRecvScopeVariables(ctx *context.Context) *RecvScopeVariables {
 }
 
 func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
-
 	// Look up this scope values
 	switch name {
 	case "client.socket.congestion_algorithm":

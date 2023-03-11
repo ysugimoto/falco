@@ -180,7 +180,7 @@ func main() {
 		var exitErr error
 		switch fs.Arg(0) {
 		case subcommandSimulate:
-			exitErr = runSimulator(runner, v)
+			runSimulator(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v, c.Json)
 		default:
@@ -242,14 +242,9 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func runSimulator(runner *Runner, rslv resolver.Resolver) error {
-	handler, err := runner.Simulator(rslv)
-	if err != nil {
-		return err
-	}
-
+func runSimulator(runner *Runner, rslv resolver.Resolver) {
 	mux := http.NewServeMux()
-	mux.Handle("/", handler)
+	mux.Handle("/", runner.Simulator(rslv))
 
 	s := &http.Server{
 		Handler: mux,
@@ -259,7 +254,6 @@ func runSimulator(runner *Runner, rslv resolver.Resolver) error {
 	if err := s.ListenAndServe(); err != nil {
 		writeln(red, "Failed to start server: %s", err.Error())
 	}
-	return nil
 }
 
 func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {

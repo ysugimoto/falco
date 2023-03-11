@@ -15,6 +15,7 @@ func Remainder(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // INTEGER %= INTEGER
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if lv.IsPositiveInf || rv.IsPositiveInf {
 				lv.Value = 0
 				lv.IsPositiveInf = true
@@ -29,6 +30,7 @@ func Remainder(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not remainder to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if lv.IsPositiveInf || rv.IsPositiveInf {
 				lv.Value = 0
 				lv.IsPositiveInf = true
@@ -46,6 +48,7 @@ func Remainder(left, right value.Value) error {
 		switch right.Type() {
 		case value.IntegerType: // FLOAT %= INTEGER
 			rv := value.Unwrap[*value.Integer](right)
+			// nolint: gocritic
 			if lv.IsPositiveInf || rv.IsPositiveInf {
 				lv.Value = 0
 				lv.IsPositiveInf = true
@@ -57,6 +60,7 @@ func Remainder(left, right value.Value) error {
 			}
 		case value.FloatType: // FLOAT %= FLOAT
 			rv := value.Unwrap[*value.Float](right)
+			// nolint: gocritic
 			if lv.IsPositiveInf || rv.IsPositiveInf {
 				lv.Value = 0
 				lv.IsPositiveInf = true
@@ -82,7 +86,7 @@ func Remainder(left, right value.Value) error {
 			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assingment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("Could not use division assignment for type %s", left.Type()))
 	}
 	return nil
 }

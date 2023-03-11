@@ -136,7 +136,7 @@ func (i *Interpreter) ProcessRecv() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	var err error
-	state := LOOKUP
+	var state State
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
 		state, err = i.ProcessSubroutine(sub)
@@ -199,13 +199,10 @@ func (i *Interpreter) ProcessHash() error {
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
-	var state = HASH
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		var err error
-		if state, err = i.ProcessSubroutine(sub); err != nil {
+		if state, err := i.ProcessSubroutine(sub); err != nil {
 			return errors.WithStack(err)
-		}
-		if state != HASH {
+		} else if state != HASH {
 			return exception.Runtime(
 				&sub.GetMeta().Token,
 				"Subroutine %s returned unexpected state %s in HASH",

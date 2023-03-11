@@ -134,7 +134,7 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
 
-	// read all response body to supress memory leak
+	// read all response body to suppress memory leak
 	var buf bytes.Buffer
 	if _, err = buf.ReadFrom(resp.Body); err != nil {
 		return nil, errors.WithStack(err)
@@ -166,7 +166,7 @@ func (i *Interpreter) getBackendProperty(props []*ast.BackendProperty, key strin
 
 func (i *Interpreter) cloneResponse(resp *http.Response) *http.Response {
 	var buf bytes.Buffer
-	buf.ReadFrom(resp.Body)
+	buf.ReadFrom(resp.Body) // nolint: errcheck
 	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 
 	return &http.Response{

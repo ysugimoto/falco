@@ -38,6 +38,7 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	}
 }
 
+// nolint: funlen,gocognit,gocyclo
 func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	req := v.ctx.Request
 	ua := uasurfer.Parse(req.Header.Get("User-Agent"))
@@ -311,7 +312,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 				"Could not get request start time",
 			))
 		}
-		return &value.RTime{Value: time.Now().Sub(start)}, nil
+		return &value.RTime{Value: time.Since(start)}, nil
 	case "client.bot.name":
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
@@ -453,24 +454,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			id = "falco-virtual-service-id"
 		}
 		return &value.String{Value: id}, nil
-	case "req.topurl":
-		url := req.URL.Path
+	case "req.topurl": // FIXME: what is the difference of req.url ?
+		u := req.URL.Path
 		if v := req.URL.RawQuery; v != "" {
-			url += "?" + v
+			u += "?" + v
 		}
 		if v := req.URL.RawFragment; v != "" {
-			url += "#" + v
+			u += "#" + v
 		}
-		return &value.String{Value: url}, nil
+		return &value.String{Value: u}, nil
 	case "req.url":
-		url := req.URL.Path
+		u := req.URL.Path
 		if v := req.URL.RawQuery; v != "" {
-			url += "?" + v
+			u += "?" + v
 		}
 		if v := req.URL.RawFragment; v != "" {
-			url += "#" + v
+			u += "#" + v
 		}
-		return &value.String{Value: url}, nil
+		return &value.String{Value: u}, nil
 	case "req.url.basename":
 		return &value.String{
 			Value: filepath.Base(req.URL.Path),
@@ -527,7 +528,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.String{
-			Value: fmt.Sprint(time.Now().Sub(start).Milliseconds()),
+			Value: fmt.Sprint(time.Since(start).Milliseconds()),
 		}, nil
 	case "time.elapsed.msec_frac":
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
@@ -537,7 +538,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.String{
-			Value: fmt.Sprintf("%03d", time.Now().Sub(start).Milliseconds()),
+			Value: fmt.Sprintf("%03d", time.Since(start).Milliseconds()),
 		}, nil
 	case "time.elapsed.sec":
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
@@ -547,7 +548,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.String{
-			Value: fmt.Sprint(int64(time.Now().Sub(start).Seconds())),
+			Value: fmt.Sprint(int64(time.Since(start).Seconds())),
 		}, nil
 	case "time.elapsed.usec":
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
@@ -557,7 +558,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.String{
-			Value: fmt.Sprint(time.Now().Sub(start).Microseconds()),
+			Value: fmt.Sprint(time.Since(start).Microseconds()),
 		}, nil
 	case "time.elapsed.usec_frac":
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
@@ -567,7 +568,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.String{
-			Value: fmt.Sprintf("%06d", time.Now().Sub(start).Microseconds()),
+			Value: fmt.Sprintf("%06d", time.Since(start).Microseconds()),
 		}, nil
 	case "time.start.msec":
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
@@ -657,7 +658,7 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 			}
 		}
 		spl := strings.SplitN(name, ":", 2)
-		if strings.ToLower(spl[0]) != "cookie" {
+		if !strings.EqualFold(spl[0], "cookie") {
 			return &value.String{
 				Value: v.ctx.Request.Header.Get(match[1]),
 			}

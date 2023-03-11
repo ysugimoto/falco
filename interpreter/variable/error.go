@@ -28,7 +28,6 @@ func NewErrorScopeVariables(ctx *context.Context) *ErrorScopeVariables {
 }
 
 func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
-
 	switch name {
 	case "client.socket.congestion_algorithm":
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
@@ -115,7 +114,7 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case "req.digest.ratio":
 		return &value.Float{Value: 0.4}, nil
 
-	// Limited waf related vairables could get
+	// Limited waf related variables could get
 	case "waf.blocked":
 		return v.ctx.WafBlocked, nil
 	case "waf.executed":
@@ -158,7 +157,6 @@ func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
-
 	switch name {
 	case "client.socket.congestion_algorithm":
 		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
@@ -243,7 +241,6 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 }
 
 func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value) error {
-
 	// Add statement could be use only for HTTP header
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {

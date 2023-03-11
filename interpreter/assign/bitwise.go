@@ -20,6 +20,7 @@ func BitwiseOR(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	v := lv.Value | rv.Value
+	// nolint: gocritic
 	if math.IsInf(float64(v), 1) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
@@ -44,6 +45,7 @@ func BitwiseAND(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	lv.Value &= rv.Value
+	// nolint: gocritic
 	if float64(lv.Value) >= math.Inf(1) {
 		lv.IsPositiveInf = true
 	} else if float64(lv.Value) <= math.Inf(-1) {
@@ -64,6 +66,7 @@ func BitwiseXOR(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	v := lv.Value ^ rv.Value
+	// nolint: gocritic
 	if math.IsInf(float64(v), 1) {
 		lv.Value = 0
 		lv.IsPositiveInf = true

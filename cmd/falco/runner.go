@@ -66,9 +66,8 @@ type Fetcher interface {
 type RunMode int
 
 const (
-	RunModeLint     RunMode = 0x000001
-	RunModeStat     RunMode = 0x000010
-	RunModeSimulate RunMode = 0x000100
+	RunModeLint RunMode = 0x000001
+	RunModeStat RunMode = 0x000010
 )
 
 type Runner struct {
@@ -442,11 +441,11 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	return stats, nil
 }
 
-func (r *Runner) Simulator(rslv resolver.Resolver) (http.Handler, error) {
+func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
 	options := []icontext.Option{icontext.WithResolver(rslv)}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
 
-	return interpreter.New(options...), nil
+	return interpreter.New(options...)
 }

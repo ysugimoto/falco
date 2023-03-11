@@ -22,5 +22,4 @@ func NewLog(l *ast.LogStatement, scope context.Scope, message string) *Log {
 		Position: token.Position,
 		Message:  message,
 	}
-
 }

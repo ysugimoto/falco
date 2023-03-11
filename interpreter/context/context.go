@@ -36,7 +36,7 @@ var FastlyReservedSubroutine = map[string]string{
 }
 
 var (
-	defaultStaleDuration, _ = time.ParseDuration("9223372036854ms")
+	defaultStaleDuration, _ = time.ParseDuration("9223372036854ms") // nolint: errcheck
 )
 
 type Context struct {

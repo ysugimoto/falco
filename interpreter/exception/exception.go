@@ -44,10 +44,10 @@ func (e *Exception) Error() string {
 	return out
 }
 
-func Runtime(token *token.Token, format string, args ...interface{}) *Exception {
+func Runtime(t *token.Token, format string, args ...interface{}) *Exception {
 	return &Exception{
 		Type:    RuntimeType,
-		Token:   token,
+		Token:   t,
 		Message: fmt.Sprintf(format, args...),
 	}
 }

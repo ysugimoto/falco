@@ -74,5 +74,5 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	enc.Encode(i.process)
+	enc.Encode(i.process) // nolint: errcheck
 }

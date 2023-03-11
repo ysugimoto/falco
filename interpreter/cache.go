@@ -67,7 +67,7 @@ func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 	}
 	if v := resp.Header.Get("Expires"); v != "" {
 		if d, err := time.Parse(expiresValueLayout, v); err == nil {
-			return d.Sub(time.Now())
+			return time.Until(d)
 		}
 	}
 	return time.Duration(2 * time.Minute)

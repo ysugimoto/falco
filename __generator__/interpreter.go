@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"go/format"
@@ -28,15 +29,71 @@ var scopeMap = map[string]string{
 const packagePath = "github.com/ysugimoto/falco/interpreter/function/"
 
 type Interpreter struct {
-	builtinInput  string
-	builtinOutput string
+	builtinInput     string
+	builtinOutput    string
+	predefinedInput  string
+	predefinedOutput string
 }
 
 func newInterpreter() *Interpreter {
 	return &Interpreter{
-		builtinInput:  "./builtin.yml",
-		builtinOutput: "../interpreter/function/builtin_functions.go",
+		builtinInput:     "./builtin.yml",
+		builtinOutput:    "../interpreter/function/builtin_functions.go",
+		predefinedInput:  "./predefined.yml",
+		predefinedOutput: "../interpreter/variable/predfined.go",
 	}
+}
+
+func (i *Interpreter) generatePredefined() error {
+	fp, err := os.Open(i.predefinedInput)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	defs := map[string]*Definition{}
+	if err := yaml.NewDecoder(fp).Decode(&defs); err != nil {
+		return err
+	}
+
+	// Interpreter only wants variable names as constant
+	var variables []string
+	for key := range defs {
+		if strings.Contains(key, "%") {
+			continue
+		}
+		variables = append(variables, key)
+	}
+
+	sort.Strings(variables)
+
+	var buf bytes.Buffer
+	for _, v := range variables {
+		buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", strings.ToUpper(strings.ReplaceAll(v, ".", "_")), v))
+	}
+
+	out := new(bytes.Buffer)
+	tpl := template.Must(template.New("interpreter.predefined").Parse(interpreterPredefinedVariables))
+	if err := tpl.Execute(out, map[string]interface{}{
+		"Variables": buf.String(),
+	}); err != nil {
+		return err
+	}
+
+	ret, err := format.Source(out.Bytes())
+	if err != nil {
+		fmt.Println(buf.String())
+		return err
+	}
+	f, err := os.OpenFile(i.predefinedOutput, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.Write(ret); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (i *Interpreter) generateBuiltInFunction() error {

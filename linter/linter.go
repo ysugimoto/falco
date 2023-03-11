@@ -793,7 +793,6 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 }
 
 func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx *context.Context) types.Type {
-
 	// validate subroutine name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))

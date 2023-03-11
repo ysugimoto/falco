@@ -19,6 +19,7 @@ func LeftShift(left, right value.Value) error {
 	}
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
+	// nolint: gocritic
 	if math.IsInf(float64(lv.Value<<rv.Value), 1) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
@@ -42,6 +43,7 @@ func RightShift(left, right value.Value) error {
 	}
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
+	// nolint: gocritic
 	if math.IsInf(float64(lv.Value>>rv.Value), 1) {
 		lv.Value = 0
 		lv.IsPositiveInf = true

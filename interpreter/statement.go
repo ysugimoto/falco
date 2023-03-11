@@ -19,7 +19,6 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 
 	for _, stmt := range statements {
 		switch t := stmt.(type) {
-
 		// Common logic statements (nothing to change state)
 		case *ast.DeclareStatement:
 			err = i.ProcessDeclareStatement(t)
@@ -110,7 +109,6 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			if err := i.ProcessEsiStatement(t); err != nil {
 				return NONE, errors.WithStack(err)
 			}
-			break
 		}
 		if err != nil {
 			return INTERNAL_ERROR, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %s", err.Error())
@@ -223,8 +221,14 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, erro
 }
 
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
-	code, _ := i.ProcessExpression(stmt.Code, false)
-	arg, _ := i.ProcessExpression(stmt.Argument, false)
+	code, err := i.ProcessExpression(stmt.Code, false)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	arg, err := i.ProcessExpression(stmt.Argument, false)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	// set obj.status and obj.response variable internally
 	if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
@@ -278,7 +282,6 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())

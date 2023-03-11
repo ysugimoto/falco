@@ -23,6 +23,125 @@ var (
 	ErrAllBackendsFailed      = errors.New("All backend failed")
 )
 
+func (i *Interpreter) getDirectorConfigBackend(o *ast.DirectorBackendObject) (*value.DirectorConfigBackend, error) {
+	backend := &value.DirectorConfigBackend{}
+	for _, p := range o.Values {
+		switch p.Key.Value {
+		case "backend":
+			if v, ok := p.Value.(*ast.Ident); !ok {
+				return nil, exception.Runtime(
+					&p.GetMeta().Token,
+					"backend value must be percentage prefixed value",
+				)
+			} else if b, ok := i.ctx.Backends[v.Value]; !ok {
+				return nil, exception.Runtime(&p.GetMeta().Token, "backend '%s' is not found", v.Value)
+			} else {
+				backend.Backend = b
+			}
+		case "id":
+			if v, ok := p.Value.(*ast.String); !ok {
+				return nil, exception.Runtime(&p.GetMeta().Token, "id value must be a string")
+			} else {
+				backend.Id = v.Value
+			}
+		case "weight":
+			if v, ok := p.Value.(*ast.Integer); !ok {
+				return nil, exception.Runtime(&p.GetMeta().Token, "weight value must be an integer")
+			} else {
+				backend.Weight = int(v.Value)
+			}
+		default:
+			return nil, exception.Runtime(
+				&p.GetMeta().Token,
+				"Unexpected director backend property '%s' found",
+				p.Key.Value,
+			)
+		}
+	}
+	return backend, nil
+}
+
+func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop *ast.DirectorProperty) error {
+	switch prop.Key.Value {
+	case "quorum":
+		if conf.Type == "fallback" {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				".quorum field must not be present in fallback director type",
+			)
+		}
+		if v, ok := prop.Value.(*ast.String); !ok {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				"quorum value must be percentage prefixed value",
+			)
+		} else if n, err := strconv.Atoi(strings.TrimSuffix(v.Value, "%")); err != nil {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				"Invalid quorum value '%s' found. Value must be percentage string like '50%%'",
+				v.Value,
+			)
+		} else {
+			conf.Quorum = n
+		}
+	case "retries":
+		if conf.Type != "random" {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				".retries field must be present only in random director type",
+			)
+		}
+		if v, ok := prop.Value.(*ast.Integer); !ok {
+			return exception.Runtime(&prop.GetMeta().Token, "retries value must be integer")
+		} else {
+			conf.Retries = int(v.Value)
+		}
+	case "key":
+		if conf.Type != "chash" {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				".key field must be present only in chash director type",
+			)
+		}
+		if v, ok := prop.Value.(*ast.Ident); !ok {
+			return exception.Runtime(&prop.GetMeta().Token, ".key value must be integer")
+		} else if v.Value != "object" && v.Value != "client" {
+			return exception.Runtime(&prop.GetMeta().Token, ".key value must be either of object or client")
+		} else {
+			conf.Key = v.Value
+		}
+	case "seed":
+		if conf.Type != "chash" {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				".seed field must be present only in chash director type",
+			)
+		}
+		if v, ok := prop.Value.(*ast.Integer); !ok {
+			return exception.Runtime(&prop.GetMeta().Token, ".seed value must be integer")
+		} else {
+			conf.Seed = uint32(v.Value)
+		}
+	case "vnodes_per_node":
+		if conf.Type != "chash" {
+			return exception.Runtime(
+				&prop.GetMeta().Token,
+				".vnodes_per_node field must be present only in chash director type",
+			)
+		}
+		if v, ok := prop.Value.(*ast.Integer); !ok {
+			return exception.Runtime(&prop.GetMeta().Token, ".vnodes_per_node value must be integer")
+		} else if v.Value > 8_388_608 {
+			// vnodes_per_node value is limted under 8,388,608
+			// see: https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing
+			return exception.Runtime(&prop.GetMeta().Token, ".vnodes_per_node value is limited under 8388608")
+		} else {
+			conf.VNodesPerNode = int(v.Value)
+		}
+	}
+	return exception.Runtime(&prop.GetMeta().Token, "Unexpected director property '%s' found", prop.Key.Value)
+}
+
 func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.DirectorConfig, error) {
 	conf := &value.DirectorConfig{
 		Name:          d.Name.Value,
@@ -45,41 +164,10 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 	for _, prop := range d.Properties {
 		switch t := prop.(type) {
 		case *ast.DirectorBackendObject:
-			backend := &value.DirectorConfigBackend{}
-			for _, p := range t.Values {
-				switch p.Key.Value {
-				case "backend":
-					if v, ok := p.Value.(*ast.Ident); !ok {
-						return nil, exception.Runtime(
-							&p.GetMeta().Token,
-							"backend value must be percentage prefixed value",
-						)
-					} else if b, ok := i.ctx.Backends[v.Value]; !ok {
-						return nil, exception.Runtime(&p.GetMeta().Token, "backend '%s' is not found", v.Value)
-					} else {
-						backend.Backend = b
-					}
-				case "id":
-					if v, ok := p.Value.(*ast.String); !ok {
-						return nil, exception.Runtime(&p.GetMeta().Token, "id value must be a string")
-					} else {
-						backend.Id = v.Value
-					}
-				case "weight":
-					if v, ok := p.Value.(*ast.Integer); !ok {
-						return nil, exception.Runtime(&p.GetMeta().Token, "weight value must be an integer")
-					} else {
-						backend.Weight = int(v.Value)
-					}
-				default:
-					return nil, exception.Runtime(
-						&p.GetMeta().Token,
-						"Unexpected director backend property '%s' found",
-						p.Key.Value,
-					)
-				}
+			backend, err := i.getDirectorConfigBackend(t)
+			if err != nil {
+				return nil, errors.WithStack(err)
 			}
-
 			// Validate reqired properties
 			switch conf.Type {
 			case "random", "fallback", "hash", "client":
@@ -101,84 +189,8 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 			}
 			conf.Backends = append(conf.Backends, backend)
 		case *ast.DirectorProperty:
-			switch t.Key.Value {
-			case "quorum":
-				if conf.Type == "fallback" {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						".quorum field must not be present in fallback director type",
-					)
-				}
-				if v, ok := t.Value.(*ast.String); !ok {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						"quorum value must be percentage prefixed value",
-					)
-				} else if n, err := strconv.Atoi(strings.TrimSuffix(v.Value, "%")); err != nil {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						"Invalid quorum value '%s' found. Value must be percentage string like '50%%'",
-						v.Value,
-					)
-				} else {
-					conf.Quorum = n
-				}
-			case "retries":
-				if conf.Type != "random" {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						".retries field must be present only in random director type",
-					)
-				}
-				if v, ok := t.Value.(*ast.Integer); !ok {
-					return nil, exception.Runtime(&t.GetMeta().Token, "retries value must be integer")
-				} else {
-					conf.Retries = int(v.Value)
-				}
-			case "key":
-				if conf.Type != "chash" {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						".key field must be present only in chash director type",
-					)
-				}
-				if v, ok := t.Value.(*ast.Ident); !ok {
-					return nil, exception.Runtime(&t.GetMeta().Token, ".key value must be integer")
-				} else if v.Value != "object" && v.Value != "client" {
-					return nil, exception.Runtime(&t.GetMeta().Token, ".key value must be either of object or client")
-				} else {
-					conf.Key = v.Value
-				}
-			case "seed":
-				if conf.Type != "chash" {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						".seed field must be present only in chash director type",
-					)
-				}
-				if v, ok := t.Value.(*ast.Integer); !ok {
-					return nil, exception.Runtime(&t.GetMeta().Token, ".seed value must be integer")
-				} else {
-					conf.Seed = uint32(v.Value)
-				}
-			case "vnodes_per_node":
-				if conf.Type != "chash" {
-					return nil, exception.Runtime(
-						&t.GetMeta().Token,
-						".vnodes_per_node field must be present only in chash director type",
-					)
-				}
-				if v, ok := t.Value.(*ast.Integer); !ok {
-					return nil, exception.Runtime(&t.GetMeta().Token, ".vnodes_per_node value must be integer")
-				} else if v.Value > 8_388_608 {
-					// vnodes_per_node value is limted under 8,388,608
-					// see: https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing
-					return nil, exception.Runtime(&t.GetMeta().Token, ".vnodes_per_node value is limited under 8388608")
-				} else {
-					conf.VNodesPerNode = int(v.Value)
-				}
-			default:
-				return nil, exception.Runtime(&t.GetMeta().Token, "Unexpected director property '%s' found", t.Key.Value)
+			if err := i.setDirectorConfigProperty(conf, t); err != nil {
+				return nil, errors.WithStack(err)
 			}
 		default:
 			return nil, exception.Runtime(
@@ -260,7 +272,7 @@ func (i *Interpreter) directorBackendRandom(dc *value.DirectorConfig) (*value.Ba
 			continue
 		}
 
-		rand.Seed(time.Now().Unix())
+		rand.New(rand.NewSource(time.Now().Unix()))
 		lottery = lottery[0:current]
 		item := dc.Backends[lottery[rand.Intn(current)]]
 

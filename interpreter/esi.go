@@ -3,7 +3,7 @@ package interpreter
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -65,7 +65,7 @@ func (i *Interpreter) executeESI() error {
 			body = body[index+len(esiRemoveEnd):]
 		} else {
 			parsed = append(parsed, partial...)
-			// If ESI inclusion suceeded, find <esi:remove>...</esi:remove> tag and remove it
+			// If ESI inclusion succeeded, find <esi:remove>...</esi:remove> tag and remove it
 			index := bytes.Index(body, esiRemoveStart)
 			if index == -1 {
 				continue
@@ -83,19 +83,19 @@ func (i *Interpreter) executeESI() error {
 	if len(body) > 0 {
 		parsed = append(parsed, body...)
 	}
-	resp.Body = ioutil.NopCloser(bytes.NewReader(parsed))
+	resp.Body = io.NopCloser(bytes.NewReader(parsed))
 	return nil
 }
 
-func executeEsiInclude(ctx context.Context, req *http.Request, url []byte) ([]byte, error) {
+func executeEsiInclude(ctx context.Context, req *http.Request, includeUrl []byte) ([]byte, error) {
 	ctx, timeout := context.WithTimeout(ctx, 10*time.Second)
 	defer timeout()
 
-	if err := resolveIncludeURL(req, string(url)); err != nil {
+	if err := resolveIncludeURL(req, string(includeUrl)); err != nil {
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (i *Interpreter) includeFile(include *ast.IncludeStatement, isRoot bool) ([
 	return loadStatementVCL(include.Module.Value, module.Data)
 }
 
-func loadRootVCL(name string, content string) ([]ast.Statement, error) {
+func loadRootVCL(name, content string) ([]ast.Statement, error) {
 	lx := lexer.NewFromString(content, lexer.WithFile(name))
 	vcl, err := parser.New(lx).ParseVCL()
 	if err != nil {
@@ -74,7 +74,7 @@ func loadRootVCL(name string, content string) ([]ast.Statement, error) {
 	return vcl.Statements, nil
 }
 
-func loadStatementVCL(name string, content string) ([]ast.Statement, error) {
+func loadStatementVCL(name, content string) ([]ast.Statement, error) {
 	lx := lexer.NewFromString(content, lexer.WithFile(name))
 	vcl, err := parser.New(lx).ParseSnippetVCL()
 	if err != nil {
