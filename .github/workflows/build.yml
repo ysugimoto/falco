@@ -2,9 +2,11 @@ name: build
 
 on:
   push:
-    branches: [ main, develop ]
     tags-ignore:
       - 'v*.*.*'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
