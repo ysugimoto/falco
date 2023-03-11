@@ -2,7 +2,9 @@ name: test and lint pullrequest changes
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - develop
 
 jobs:
   build:
