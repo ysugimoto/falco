@@ -117,7 +117,7 @@ func Std_strtol(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	if i > int64(math.Inf(1)) || i < int64(math.Inf(-1)) {
+	if i > int64(math.MaxInt64) || i < int64(math.MinInt64) {
 		ctx.FastlyError = &value.String{Value: "ERANGE"}
 		return value.Null, errors.New(Std_strtol_Name, "Value overflow")
 	}
