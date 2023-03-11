@@ -7,15 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"net/http"
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
-	"github.com/ysugimoto/falco/interpreter"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
@@ -439,13 +436,4 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	}
 
 	return stats, nil
-}
-
-func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
-	options := []icontext.Option{icontext.WithResolver(rslv)}
-	if r.snippets != nil {
-		options = append(options, icontext.WithFastlySnippets(r.snippets))
-	}
-
-	return interpreter.New(options...)
 }

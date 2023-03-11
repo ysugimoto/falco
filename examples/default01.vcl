@@ -35,7 +35,6 @@ sub vcl_recv {
 
   #Fastly recv
   set req.backend = httpbin_org;
-  set req.url = querystring.add(req.url, "lorem", "ipsum");
   call custom_logger;
   return (pass);
 }

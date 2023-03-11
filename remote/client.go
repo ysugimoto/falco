@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"sync"
@@ -44,11 +43,7 @@ func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) e
 	if err != nil {
 		return errors.WithStack(err)
 	} else if resp.StatusCode != http.StatusOK {
-		var buf bytes.Buffer
-		if _, err := buf.ReadFrom(resp.Body); err != nil {
-			return errors.WithStack(err)
-		}
-		return fmt.Errorf("API respond not 200 code: %d\nBody: %s", resp.StatusCode, buf.String())
+		return fmt.Errorf("API respond not 200 code: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {

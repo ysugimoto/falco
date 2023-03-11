@@ -32,7 +32,6 @@ func builtinIdentifiers() map[string]struct{} {
 		"sha256":  {},
 		"sha384":  {},
 		"sha512":  {},
-		"sha1":    {},
 
 		// use for digest.rsa_verify function base64_method argument
 		// https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-rsa-verify/

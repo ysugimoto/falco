@@ -2066,10 +2066,12 @@ waf.php_injection_score:
   reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/"
   on: [PASS, MISS, DELIVER, LOG]
   get: INTEGER
+  get: INTEGER
 
 waf.rce_score:
   reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/"
   on: [PASS, MISS, DELIVER, LOG]
+  get: INTEGER
   get: INTEGER
 
 waf.rfi_score:
