@@ -31,19 +31,19 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	}
 
 	switch name {
-	case "bereq.between_bytes_timeout":
+	case BEREQ_BETWEEN_BYTES_TIMEOUT:
 		return v.ctx.BetweenBytesTimeout, nil
-	case "bereq.connect_timeout":
+	case BEREQ_CONNECT_TIMEOUT:
 		return v.ctx.ConnectTimeout, nil
-	case "bereq.first_byte_timeout":
+	case BEREQ_FIRST_BYTE_TIMEOUT:
 		return v.ctx.FirstByteTimeout, nil
-	case "bereq.method":
+	case BEREQ_METHOD:
 		return &value.String{Value: bereq.Method}, nil
-	case "bereq.proto":
+	case BEREQ_PROTO:
 		return &value.String{Value: bereq.Proto}, nil
-	case "bereq.request":
+	case BEREQ_REQUEST:
 		return v.Get(s, "bereq.method")
-	case "bereq.url":
+	case BEREQ_URL:
 		u := bereq.URL.Path
 		if v := bereq.URL.RawQuery; v != "" {
 			u += "?" + v
@@ -52,36 +52,36 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 			u += "#" + v
 		}
 		return &value.String{Value: u}, nil
-	case "bereq.url.basename":
+	case BEREQ_URL_BASENAME:
 		return &value.String{
 			Value: filepath.Base(bereq.URL.Path),
 		}, nil
-	case "bereq.url.dirname":
+	case BEREQ_URL_DIRNAME:
 		return &value.String{
 			Value: filepath.Dir(bereq.URL.Path),
 		}, nil
-	case "bereq.url.ext":
+	case BEREQ_URL_EXT:
 		ext := filepath.Ext(bereq.URL.Path)
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
-	case "bereq.url.path":
+	case BEREQ_URL_PATH:
 		return &value.String{Value: bereq.URL.Path}, nil
-	case "bereq.url.qs":
+	case BEREQ_URL_QS:
 		return &value.String{Value: bereq.URL.RawQuery}, nil
 
 	// Always 1 because simulator could not simulate pop behavior
-	case "fastly.ff.visits_this_pop_this_service":
+	case FASTLY_FF_VISITS_THIS_POP_THIS_SERVICE:
 		return &value.Integer{Value: 1}, nil
 	// Always false because simulator could not simulate origin-shielding
-	case "fastly_info.is_cluster_shield":
+	case FASTLY_INFO_IS_CLUSTER_SHIELD:
 		return &value.Boolean{Value: false}, nil
 
 	// We simulate request is always pass to the origin, not consider shielding
-	case "req.backend.is_origin":
+	case REQ_BACKEND_IS_ORIGIN:
 		return &value.Boolean{Value: true}, nil
 	// Digest ratio will return fixed value
-	case "req.digest.ratio":
+	case REQ_DIGEST_RATIO:
 		return &value.Float{Value: 0.4}, nil
 	}
 
@@ -133,31 +133,31 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 	bereq := v.ctx.BackendRequest
 
 	switch name {
-	case "bereq.between_bytes_timeout":
+	case BEREQ_BETWEEN_BYTES_TIMEOUT:
 		if err := doAssign(v.ctx.BetweenBytesTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "bereq.connect_timeout":
+	case BEREQ_CONNECT_TIMEOUT:
 		if err := doAssign(v.ctx.ConnectTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "bereq.first_byte_timeout":
+	case BEREQ_FIRST_BYTE_TIMEOUT:
 		if err := doAssign(v.ctx.FirstByteTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "bereq.method":
+	case BEREQ_METHOD:
 		left := &value.String{Value: bereq.Method}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		bereq.Method = left.Value
 		return nil
-	case "bereq.request":
+	case BEREQ_REQUEST:
 		return v.Set(s, "bereq.method", operator, val)
-	case "bereq.url":
+	case BEREQ_URL:
 		u := bereq.URL.Path
 		if query := bereq.URL.RawQuery; query != "" {
 			u += "?" + query

@@ -29,34 +29,34 @@ func NewRecvScopeVariables(ctx *context.Context) *RecvScopeVariables {
 func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	// Look up this scope values
 	switch name {
-	case "client.socket.congestion_algorithm":
+	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
-	case "client.socket.nexthop":
+	case CLIENT_SOCKET_NEXTHOP:
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
-	case "client.socket.pace":
+	case CLIENT_SOCKET_PACE:
 		return &value.Integer{Value: 0}, nil
-	case "client.socket.ploss":
+	case CLIENT_SOCKET_PLOSS:
 		return &value.Float{Value: 0}, nil
 
-	case "esi.allow_inside_cdata":
+	case ESI_ALLOW_INSIDE_CDATA:
 		return v.ctx.EsiAllowInsideCData, nil
 
-	case "req.enable_range_on_pass":
+	case REQ_ENABLE_RANGE_ON_PASS:
 		return v.ctx.EnableRangeOnPass, nil
-	case "req.enable_segmented_caching":
+	case REQ_ENABLE_SEGMENTED_CACHING:
 		return v.ctx.EnableSegmentedCaching, nil
-	case "req.esi":
+	case REQ_ESI:
 		return v.ctx.EnableSSI, nil
-	case "req.esi_level":
+	case REQ_ESI_LEVEL:
 		return v.ctx.ESILevel, nil
-	case "req.hash_always_miss":
+	case REQ_HASH_ALWAYS_MISS:
 		return v.ctx.HashAlwaysMiss, nil
-	case "req.hash_ignore_busy":
+	case REQ_HASH_IGNORE_BUSY:
 		return v.ctx.HashIgnoreBusy, nil
-	case "req.is_ipv6":
+	case REQ_IS_IPV6:
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -64,9 +64,9 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
-	case "req.is_purge":
+	case REQ_IS_PURGE:
 		return &value.Boolean{Value: v.ctx.Request.Method == "PURGE"}, nil
-	case "segmented_caching.block_size":
+	case SEGMENTED_CACHING_BLOCK_SIZE:
 		return v.ctx.SegmentedCacheingBlockSize, nil
 	}
 
@@ -102,52 +102,52 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 
 func (v *RecvScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	switch name {
-	case "client.socket.congestion_algorithm":
+	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.socket.pace":
+	case CLIENT_SOCKET_PACE:
 		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "esi.allow_inside_cdata":
+	case ESI_ALLOW_INSIDE_CDATA:
 		if err := doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.enable_range_on_pass":
+	case REQ_ENABLE_RANGE_ON_PASS:
 		if err := doAssign(v.ctx.EnableRangeOnPass, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.enable_segmented_caching":
+	case REQ_ENABLE_SEGMENTED_CACHING:
 		if err := doAssign(v.ctx.EnableSegmentedCaching, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.esi":
+	case REQ_ESI:
 		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.hash_always_miss":
+	case REQ_HASH_ALWAYS_MISS:
 		if err := doAssign(v.ctx.HashAlwaysMiss, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.hash_ignore_busy":
+	case REQ_HASH_IGNORE_BUSY:
 		if err := doAssign(v.ctx.HashIgnoreBusy, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "segmented_caching.block_size":
+	case SEGMENTED_CACHING_BLOCK_SIZE:
 		if err := doAssign(v.ctx.SegmentedCacheingBlockSize, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+// nolint: gocognit
 func Division(left, right value.Value) error {
 	switch left.Type() {
 	case value.IntegerType:
@@ -21,10 +22,10 @@ func Division(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("Division by zero"))
 			}
 			// nolint: gocritic
-			if rv.IsPositiveInf || math.IsInf(float64(lv.Value/rv.Value), 1) {
+			if rv.IsPositiveInf || lv.Value/rv.Value > int64(math.MaxInt64) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
-			} else if rv.IsNegativeInf || math.IsInf(float64(lv.Value/rv.Value), -1) {
+			} else if rv.IsNegativeInf || lv.Value/rv.Value < int64(math.MinInt64) {
 				lv.Value = math.MinInt64
 				lv.IsNegativeInf = true
 			} else {

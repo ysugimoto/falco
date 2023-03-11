@@ -28,42 +28,42 @@ func NewHitScopeVariables(ctx *context.Context) *HitScopeVariables {
 
 func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	switch name {
-	case "obj.age":
+	case OBJ_AGE:
 		// fixed value
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.cacheable":
+	case OBJ_CACHEABLE:
 		// always true
 		return &value.Boolean{Value: true}, nil
-	case "obj.entered":
+	case OBJ_ENTERED:
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.grace":
+	case OBJ_GRACE:
 		return v.ctx.ObjectGrace, nil
-	case "obj.hits":
+	case OBJ_HITS:
 		return &value.Integer{Value: 1}, nil
-	case "obj.is_pci":
+	case OBJ_IS_PCI:
 		return &value.Boolean{Value: false}, nil
-	case "obj.lastuse":
+	case OBJ_LASTUSE:
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.proto":
+	case OBJ_PROTO:
 		return &value.String{Value: v.ctx.BackendResponse.Proto}, nil
-	case "obj.response":
+	case OBJ_RESPONSE:
 		var buf bytes.Buffer
 		if _, err := buf.ReadFrom(v.ctx.Object.Body); err != nil {
 			return value.Null, errors.WithStack(err)
 		}
 		v.ctx.Object.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.String{Value: buf.String()}, nil
-	case "obj.stale_if_error":
+	case OBJ_STALE_IF_ERROR:
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
-	case "obj.stale_while_revalidate":
+	case OBJ_STALE_WHILE_REVALIDATE:
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.status":
+	case OBJ_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Object.StatusCode)}, nil
-	case "obj.ttl":
+	case OBJ_TTL:
 		return v.ctx.ObjectTTL, nil
 	// Digest ratio will return fixed value
-	case "req.digest.ratio":
+	case REQ_DIGEST_RATIO:
 		return &value.Float{Value: 0.4}, nil
 	}
 
@@ -91,15 +91,15 @@ func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 
 func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	switch name {
-	case "obj.grace":
+	case OBJ_GRACE:
 		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "obj.response":
+	case OBJ_RESPONSE:
 		v.ctx.Object.Body = io.NopCloser(strings.NewReader(val.String()))
 		return nil
-	case "obj.status":
+	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
 		if err := doAssign(i, operator, val); err != nil {
 			return errors.WithStack(err)
@@ -107,7 +107,7 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		v.ctx.Object.StatusCode = int(i.Value)
 		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
-	case "obj.ttl":
+	case OBJ_TTL:
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

@@ -4,6 +4,13 @@ import (
 	"crypto/tls"
 )
 
+// Frequent occurrences string constant
+const (
+	PORT                     = "port"
+	PURGE                    = "purge"
+	FALCO_VIRTUAL_SERVICE_ID = "falco-virtual-service-id"
+)
+
 // Mapping from tls package ciphersuite name (IANA) to OpenSSL name
 // see: src/crypto/tls/cipher_suites.go
 // see: https://testssl.sh/openssl-iana.mapping.html

@@ -20,7 +20,7 @@ func LeftRotate(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	v := (lv.Value << rv.Value) | (lv.Value >> (64 - rv.Value))
-	if v > math.MaxInt64 {
+	if int64(v) > int64(math.MaxInt64) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
 	} else {
@@ -41,7 +41,7 @@ func RightRotate(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	v := (lv.Value >> rv.Value) | (lv.Value << (64 - rv.Value))
-	if v > math.MaxInt64 {
+	if int64(v) > int64(math.MaxInt64) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
 	} else {

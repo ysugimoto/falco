@@ -20,10 +20,10 @@ func LeftShift(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	// nolint: gocritic
-	if math.IsInf(float64(lv.Value<<rv.Value), 1) {
+	if int64(lv.Value<<rv.Value) > int64(math.MaxInt64) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
-	} else if math.IsInf(float64(lv.Value<<rv.Value), -1) {
+	} else if int64(lv.Value<<rv.Value) < int64(math.MinInt64) {
 		lv.Value = 0
 		lv.IsNegativeInf = true
 	} else {
@@ -44,10 +44,10 @@ func RightShift(left, right value.Value) error {
 	lv := value.Unwrap[*value.Integer](left)
 	rv := value.Unwrap[*value.Integer](right)
 	// nolint: gocritic
-	if math.IsInf(float64(lv.Value>>rv.Value), 1) {
+	if int64(lv.Value>>rv.Value) > int64(math.MaxInt64) {
 		lv.Value = 0
 		lv.IsPositiveInf = true
-	} else if math.IsInf(float64(lv.Value>>rv.Value), -1) {
+	} else if int64(lv.Value>>rv.Value) < int64(math.MinInt64) {
 		lv.Value = 0
 		lv.IsNegativeInf = true
 	} else {

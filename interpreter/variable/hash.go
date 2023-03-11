@@ -25,9 +25,9 @@ func NewHashScopeVariables(ctx *context.Context) *HashScopeVariables {
 
 func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	switch name {
-	case "req.hash":
+	case REQ_HASH:
 		return v.ctx.RequestHash, nil
-	case "req.is_ipv6":
+	case REQ_IS_IPV6:
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -36,8 +36,8 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
 
-	case "req.is_purge":
-		return &value.Boolean{Value: v.ctx.Request.Method == "PURGE"}, nil
+	case REQ_IS_PURGE:
+		return &value.Boolean{Value: v.ctx.Request.Method == PURGE}, nil
 	}
 
 	// Look up shared variables

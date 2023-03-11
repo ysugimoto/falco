@@ -18,6 +18,14 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+const (
+	DIRECTORTYPE_RANDOM   = "random"
+	DIRECTORTYPE_FALLBACK = "fallback"
+	DIRECTORTYPE_HASH     = "hash"
+	DIRECTORTYPE_CLIENT   = "client"
+	DIRECTORTYPE_CHASH    = "chash"
+)
+
 var (
 	ErrQuorumWeightNotReached = errors.New("Quorum weight not reached")
 	ErrAllBackendsFailed      = errors.New("All backend failed")
@@ -64,7 +72,7 @@ func (i *Interpreter) getDirectorConfigBackend(o *ast.DirectorBackendObject) (*v
 func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop *ast.DirectorProperty) error {
 	switch prop.Key.Value {
 	case "quorum":
-		if conf.Type == "fallback" {
+		if conf.Type == DIRECTORTYPE_FALLBACK {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".quorum field must not be present in fallback director type",
@@ -85,7 +93,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 			conf.Quorum = n
 		}
 	case "retries":
-		if conf.Type != "random" {
+		if conf.Type != DIRECTORTYPE_RANDOM {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".retries field must be present only in random director type",
@@ -97,7 +105,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 			conf.Retries = int(v.Value)
 		}
 	case "key":
-		if conf.Type != "chash" {
+		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".key field must be present only in chash director type",
@@ -111,7 +119,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 			conf.Key = v.Value
 		}
 	case "seed":
-		if conf.Type != "chash" {
+		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".seed field must be present only in chash director type",
@@ -123,7 +131,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 			conf.Seed = uint32(v.Value)
 		}
 	case "vnodes_per_node":
-		if conf.Type != "chash" {
+		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".vnodes_per_node field must be present only in chash director type",
@@ -150,7 +158,11 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 
 	// Validate director type
 	switch d.DirectorType.Value {
-	case "random", "fallback", "hash", "client", "chash":
+	case DIRECTORTYPE_RANDOM,
+		DIRECTORTYPE_FALLBACK,
+		DIRECTORTYPE_HASH,
+		DIRECTORTYPE_CLIENT,
+		DIRECTORTYPE_CHASH:
 		conf.Type = d.DirectorType.Value
 	default:
 		return nil, exception.Runtime(
@@ -170,7 +182,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 			}
 			// Validate reqired properties
 			switch conf.Type {
-			case "random", "fallback", "hash", "client":
+			case DIRECTORTYPE_RANDOM, DIRECTORTYPE_FALLBACK, DIRECTORTYPE_HASH, DIRECTORTYPE_CLIENT:
 				if backend.Weight == 0 {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
@@ -217,15 +229,15 @@ func (i *Interpreter) createDirectorRequest(dc *value.DirectorConfig) (*http.Req
 	var err error
 
 	switch dc.Type {
-	case "random":
+	case DIRECTORTYPE_RANDOM:
 		backend, err = i.directorBackendRandom(dc)
-	case "fallback":
+	case DIRECTORTYPE_FALLBACK:
 		backend, err = i.directorBackendFallback(dc)
-	case "hash":
+	case DIRECTORTYPE_HASH:
 		backend, err = i.directorBackendHash(dc)
-	case "client":
+	case DIRECTORTYPE_CLIENT:
 		backend, err = i.directorBackendClient(dc)
-	case "chash":
+	case DIRECTORTYPE_CHASH:
 		backend, err = i.directorBackendConsistentHash(dc)
 	default:
 		return nil, exception.System("Unexpected director type '%s' provided", dc.Type)

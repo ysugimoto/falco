@@ -36,7 +36,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	req := v.ctx.Request
 
 	switch name {
-	case "bereq.body_bytes_written":
+	case BEREQ_BODY_BYTES_WRITTEN:
 		var buf bytes.Buffer
 		if _, err := buf.ReadFrom(bereq.Body); err != nil {
 			return value.Null, errors.WithStack(err)
@@ -45,12 +45,12 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		bereq.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: int64(len(body))}, nil
 
-	case "bereq.bytes_written":
+	case BEREQ_BYTES_WRITTEN:
 		// TODO: we need to implement backend communication without net/http package
 		// because we have to know more raw socket informations
 		return &value.Integer{Value: 0}, nil
 
-	case "bereq.header_bytes_written":
+	case BEREQ_HEADER_BYTES_WRITTEN:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
 		for k, v := range bereq.Header {
@@ -59,46 +59,46 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		}
 		return &value.Integer{Value: headerBytes}, nil
 
-	case "client.socket.congestion_algorithm":
+	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
-	case "client.socket.nexthop":
+	case CLIENT_SOCKET_NEXTHOP:
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
-	case "client.socket.pace":
+	case CLIENT_SOCKET_PACE:
 		return &value.Integer{Value: 0}, nil
-	case "client.socket.ploss":
+	case CLIENT_SOCKET_PLOSS:
 		return &value.Float{Value: 0}, nil
 
-	case "esi.allow_inside_cdata":
+	case ESI_ALLOW_INSIDE_CDATA:
 		return v.ctx.EsiAllowInsideCData, nil
 
-	case "fastly_info.is_cluster_edge":
+	case FASTLY_INFO_IS_CLUSTER_EDGE:
 		return &value.Boolean{Value: false}, nil
 
-	case "obj.age":
+	case OBJ_AGE:
 		// fixed value
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.cacheable":
+	case OBJ_CACHEABLE:
 		// always true
 		return &value.Boolean{Value: true}, nil
-	case "obj.entered":
+	case OBJ_ENTERED:
 		return &value.RTime{Value: 60 * time.Second}, nil
-	case "obj.grace":
+	case OBJ_GRACE:
 		return v.ctx.ObjectGrace, nil
-	case "obj.hits":
+	case OBJ_HITS:
 		return &value.Integer{Value: 1}, nil
-	case "obj.is_pci":
+	case OBJ_IS_PCI:
 		return &value.Boolean{Value: false}, nil
-	case "obj.lastuse":
+	case OBJ_LASTUSE:
 		return &value.RTime{Value: 60 * time.Second}, nil
 
-	case "req.esi":
+	case REQ_ESI:
 		return v.ctx.EnableSSI, nil
-	case "req.esi_level":
+	case REQ_ESI_LEVEL:
 		return v.ctx.ESILevel, nil
-	case "req.is_ipv6":
+	case REQ_IS_IPV6:
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -107,26 +107,26 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
 
-	case "req.is_purge":
-		return &value.Boolean{Value: v.ctx.Request.Method == "PURGE"}, nil
+	case REQ_IS_PURGE:
+		return &value.Boolean{Value: v.ctx.Request.Method == PURGE}, nil
 
-	case "req.backend.ip":
+	case REQ_BACKEND_IP:
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
-	case "req.backend.is_cluster":
+	case REQ_BACKEND_IS_CLUSTER:
 		return &value.Boolean{Value: false}, nil
-	case "req.backend.name":
+	case REQ_BACKEND_NAME:
 		var name string
 		if v.ctx.Backend != nil {
 			name = v.ctx.Backend.Value.Name.Value
 		}
 		return &value.String{Value: name}, nil
-	case "req.backend.port":
+	case REQ_BACKEND_PORT:
 		if v.ctx.Backend == nil {
 			return &value.Integer{Value: 0}, nil
 		}
 		var port int64
 		for _, p := range v.ctx.Backend.Value.Properties {
-			if p.Key.Value != "port" {
+			if p.Key.Value != PORT {
 				continue
 			}
 			n, err := strconv.ParseInt(p.Value.String(), 10, 64)
@@ -137,7 +137,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 			break
 		}
 		return &value.Integer{Value: port}, nil
-	case "req.body_bytes_read":
+	case REQ_BODY_BYTES_READ:
 		var buf bytes.Buffer
 		n, err := buf.ReadFrom(req.Body)
 		if err != nil {
@@ -145,7 +145,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		}
 		req.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: n}, nil
-	case "req.bytes_read":
+	case REQ_BYTES_READ:
 		var readBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
 		for k, v := range req.Header {
@@ -162,46 +162,46 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		return &value.Integer{Value: readBytes}, nil
 
 	// FIXME: We need to send actual request to the backend
-	case "resp.is_locally_generated":
+	case RESP_IS_LOCALLY_GENERATED:
 		return &value.Boolean{Value: false}, nil
-	case "resp.proto":
+	case RESP_PROTO:
 		return &value.String{Value: "HTTP/1.1"}, nil
-	case "resp.response":
+	case RESP_RESPONSE:
 		return &value.String{Value: "Fake Response"}, nil
-	case "resp.status":
+	case RESP_STATUS:
 		return &value.Integer{Value: 200}, nil
-	case "time.to_first_byte":
+	case TIME_TO_FIRST_BYTE:
 		// TODO: this logic is only calculate response - request time.
 		// It means that is not correct RTIME value because TFB is the first byte from response.
 		return &value.RTime{
 			Value: time.Since(v.ctx.RequestEndTime),
 		}, nil
 
-	case "time.end":
+	case TIME_END:
 		return &value.Time{Value: v.ctx.RequestEndTime}, nil
-	case "time.end.msec":
+	case TIME_END_MSEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMilli()),
 		}, nil
-	case "time.end.msec_frac":
+	case TIME_END_MSEC_FRAC:
 		return &value.String{
 			Value: fmt.Sprintf("%03d", v.ctx.RequestEndTime.UnixMilli()),
 		}, nil
-	case "time.end.sec":
+	case TIME_END_SEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.Unix()),
 		}, nil
-	case "time.end.usec":
+	case TIME_END_USEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMicro()),
 		}, nil
-	case "time.end.usec_frac":
+	case TIME_END_USEC_FRAC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMicro()),
 		}, nil
 
 	// Digest ratio will return fixed value
-	case "req.digest.ratio":
+	case REQ_DIGEST_RATIO:
 		return &value.Float{Value: 0.4}, nil
 	}
 
@@ -256,27 +256,27 @@ func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	switch name {
-	case "client.socket.congestion_algorithm":
+	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.socket.pace":
+	case CLIENT_SOCKET_PACE:
 		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.esi":
+	case REQ_ESI:
 		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "resp.response":
+	case RESP_RESPONSE:
 		var buf bytes.Buffer
 		if _, err := buf.ReadFrom(v.ctx.Response.Body); err != nil {
 			return errors.WithStack(err)
@@ -287,7 +287,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 		}
 		v.ctx.Response.Body = io.NopCloser(strings.NewReader(left.Value))
 		return nil
-	case "resp.status":
+	case RESP_STATUS:
 		left := &value.Integer{Value: int64(v.ctx.Response.StatusCode)}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)

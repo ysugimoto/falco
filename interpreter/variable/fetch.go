@@ -34,7 +34,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	beresp := v.ctx.BackendResponse
 
 	switch name {
-	case "backend.conn.is_tls":
+	case BACKEND_CONN_IS_TLS:
 		var isTLS bool
 		for _, p := range v.ctx.Backend.Value.Properties {
 			if p.Key.Value != "ssl" {
@@ -46,13 +46,13 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 			}
 		}
 		return &value.Boolean{Value: isTLS}, nil
-	case "backend.conn.tls_protocol":
+	case BACKEND_CONN_TLS_PROTOCOL:
 		return &value.String{Value: "TLSv1.2"}, nil
-	case "backend.socket.congestion_algorithm":
+	case BACKEND_SOCKET_CONGESTION_ALGORITHM:
 		return &value.String{Value: "cubic"}, nil
-	case "backend.socket.cwnd":
+	case BACKEND_SOCKET_CWND:
 		return &value.Integer{Value: 60}, nil
-	case "backend.socket.tcpi_advmss",
+	case BACKEND_SOCKET_TCPI_ADVMSS,
 		"backend.socket.tcpi_bytes_acked",
 		"backend.socket.tcpi_bytes_received",
 		"backend.socket.tcpi_data_segs_in",
@@ -80,7 +80,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		"backend.socket.tcpi_total_retrans":
 		return &value.Integer{Value: 0}, nil
 
-	case "bereq.body_bytes_written":
+	case BEREQ_BODY_BYTES_WRITTEN:
 		var buf bytes.Buffer
 		if _, err := buf.ReadFrom(bereq.Body); err != nil {
 			return value.Null, errors.WithStack(err)
@@ -89,12 +89,12 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		bereq.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		return &value.Integer{Value: int64(len(body))}, nil
 
-	case "bereq.bytes_written":
+	case BEREQ_BYTES_WRITTEN:
 		// TODO: we need to implement backend communication without net/http package
 		// because we have to know more raw socket informations
 		return &value.Integer{Value: 0}, nil
 
-	case "bereq.header_bytes_written":
+	case BEREQ_HEADER_BYTES_WRITTEN:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
 		for k, v := range bereq.Header {
@@ -103,18 +103,18 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		}
 		return &value.Integer{Value: headerBytes}, nil
 
-	case "beresp.handshake_time_to_origin_ms":
+	case BERESP_HANDSHAKE_TIME_TO_ORIGIN_MS:
 		// TODO: we need to implement backend communication without net/http package
 		// because we have to know more raw socket informations
 		return &value.Integer{Value: 100}, nil
 
-	case "bereq.method":
+	case BEREQ_METHOD:
 		return &value.String{Value: bereq.Method}, nil
-	case "bereq.proto":
+	case BEREQ_PROTO:
 		return &value.String{Value: bereq.Proto}, nil
-	case "bereq.request":
+	case BEREQ_REQUEST:
 		return v.Get(s, "bereq.method")
-	case "bereq.url":
+	case BEREQ_URL:
 		u := bereq.URL.Path
 		if v := bereq.URL.RawQuery; v != "" {
 			u += "?" + v
@@ -123,31 +123,31 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 			u += "#" + v
 		}
 		return &value.String{Value: u}, nil
-	case "bereq.url.basename":
+	case BEREQ_URL_BASENAME:
 		return &value.String{
 			Value: filepath.Base(bereq.URL.Path),
 		}, nil
-	case "bereq.url.dirname":
+	case BEREQ_URL_DIRNAME:
 		return &value.String{
 			Value: filepath.Dir(bereq.URL.Path),
 		}, nil
-	case "bereq.url.ext":
+	case BEREQ_URL_EXT:
 		ext := filepath.Ext(bereq.URL.Path)
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
-	case "bereq.url.path":
+	case BEREQ_URL_PATH:
 		return &value.String{Value: bereq.URL.Path}, nil
-	case "bereq.url.qs":
+	case BEREQ_URL_QS:
 		return &value.String{Value: bereq.URL.RawQuery}, nil
 
-	case "beresp.backend.alternate_ips":
+	case BERESP_BACKEND_ALTERNATE_IPS:
 		return &value.String{Value: ""}, nil
-	case "beresp.backend.ip":
+	case BERESP_BACKEND_IP:
 		return &value.String{Value: ""}, nil
-	case "beresp.backend.name":
+	case BERESP_BACKEND_NAME:
 		return &value.String{Value: v.ctx.Backend.Value.Name.Value}, nil
-	case "beresp.backend.port":
+	case BERESP_BACKEND_PORT:
 		for _, p := range v.ctx.Backend.Value.Properties {
 			if p.Key.Value != "port" {
 				continue
@@ -157,68 +157,68 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 			}
 		}
 		return &value.String{Value: ""}, nil
-	case "beresp.backend.requests":
+	case BERESP_BACKEND_REQUESTS:
 		return &value.Integer{Value: 1}, nil
 
-	case "beresp.brotli":
+	case BERESP_BROTLI:
 		return v.ctx.BackendResponseBrotli, nil
-	case "beresp.cacheable":
+	case BERESP_CACHEABLE:
 		return v.ctx.BackendResponseCacheable, nil
-	case "beresp.do_esi":
+	case BERESP_DO_ESI:
 		return v.ctx.BackendResponseDoESI, nil
-	case "beresp.do_stream":
+	case BERESP_DO_STREAM:
 		return v.ctx.BackendResponseDoStream, nil
-	case "beresp.grace":
+	case BERESP_GRACE:
 		return v.ctx.BackendResponseGrace, nil
-	case "beresp.gzip":
+	case BERESP_GZIP:
 		return v.ctx.BackendResponseGzip, nil
 
-	case "beresp.hipaa":
+	case BERESP_HIPAA:
 		return v.ctx.BackendResponseHipaa, nil
-	case "beresp.pci":
+	case BERESP_PCI:
 		return v.ctx.BackendResponsePCI, nil
 
-	case "beresp.proto":
+	case BERESP_PROTO:
 		return &value.String{Value: "TLSv1.2"}, nil
 
-	case "beresp.response":
+	case BERESP_RESPONSE:
 		return v.ctx.BackendResponseResponse, nil
-	case "beresp.saintmode":
+	case BERESP_SAINTMODE:
 		return v.ctx.BackendResponseSaintMode, nil
-	case "beresp.stale_if_error":
+	case BERESP_STALE_IF_ERROR:
 		return v.ctx.BackendResponseStaleIfError, nil
-	case "beresp.stale_while_revalidate":
+	case BERESP_STALE_WHILE_REVALIDATE:
 		return v.ctx.BackendResponseStaleWhileRevalidate, nil
-	case "beresp.status":
+	case BERESP_STATUS:
 		return &value.Integer{Value: int64(beresp.StatusCode)}, nil
-	case "beresp.ttl":
+	case BERESP_TTL:
 		return v.ctx.BackendResponseGzip, nil
 
-	case "beresp.used_alternate_path_to_origin":
+	case BERESP_USED_ALTERNATE_PATH_TO_ORIGIN:
 		// https://docs.fastly.com/en/guides/precision-path
 		return &value.Boolean{Value: false}, nil
 
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		return v.ctx.ClientSocketCwnd, nil
 
-	case "client.socket.tcpi_snd_cwnd":
+	case CLIENT_SOCKET_TCPI_SND_CWND:
 		return &value.Integer{Value: 0}, nil
 
-	case "esi.allow_inside_cdata":
+	case ESI_ALLOW_INSIDE_CDATA:
 		return v.ctx.EsiAllowInsideCData, nil
 
 	// Always false because simulator could not simulate origin-shielding
-	case "fastly_info.is_cluster_shield":
+	case FASTLY_INFO_IS_CLUSTER_SHIELD:
 		return &value.Boolean{Value: false}, nil
 
 	// Always true because simulator could not simulate origin-shielding
-	case "req.backend.is_origin":
+	case REQ_BACKEND_IS_ORIGIN:
 		return &value.Boolean{Value: true}, nil
 	// Digest ratio will return fixed value
-	case "req.digest.ratio":
+	case REQ_DIGEST_RATIO:
 		return &value.Float{Value: 0.4}, nil
 
-	case "req.esi":
+	case REQ_ESI:
 		return v.ctx.EnableSSI, nil
 	}
 
@@ -272,16 +272,16 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 	beresp := v.ctx.BackendResponse
 
 	switch name {
-	case "bereq.method":
+	case BEREQ_METHOD:
 		left := &value.String{Value: bereq.Method}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		bereq.Method = left.Value
 		return nil
-	case "bereq.request":
+	case BEREQ_REQUEST:
 		return v.Set(s, "bereq.method", operator, val)
-	case "bereq.url":
+	case BEREQ_URL:
 		u := bereq.URL.Path
 		if query := bereq.URL.RawQuery; query != "" {
 			u += "?" + query
@@ -302,7 +302,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		bereq.URL.RawQuery = parsed.RawPath
 		bereq.URL.RawFragment = parsed.RawFragment
 		return nil
-	case "beresp.brotli":
+	case BERESP_BROTLI:
 		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
@@ -310,27 +310,27 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 			v.ctx.BackendResponseGzip.Value = false
 		}
 		return nil
-	case "beresp.cacheable":
+	case BERESP_CACHEABLE:
 		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.do_esi":
+	case BERESP_DO_ESI:
 		if err := doAssign(v.ctx.BackendResponseDoESI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.do_stream":
+	case BERESP_DO_STREAM:
 		if err := doAssign(v.ctx.BackendResponseDoStream, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.grace":
+	case BERESP_GRACE:
 		if err := doAssign(v.ctx.BackendResponseGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.gzip":
+	case BERESP_GZIP:
 		if err := doAssign(v.ctx.BackendResponseGzip, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
@@ -338,37 +338,37 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 			v.ctx.BackendResponseBrotli.Value = false
 		}
 		return nil
-	case "beresp.hipaa":
+	case BERESP_HIPAA:
 		if err := doAssign(v.ctx.BackendResponseHipaa, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.pci":
+	case BERESP_PCI:
 		if err := doAssign(v.ctx.BackendResponsePCI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.response":
+	case BERESP_RESPONSE:
 		if err := doAssign(v.ctx.BackendResponseResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.saintmode":
+	case BERESP_SAINTMODE:
 		if err := doAssign(v.ctx.BackendResponseSaintMode, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.stale_if_error":
+	case BERESP_STALE_IF_ERROR:
 		if err := doAssign(v.ctx.BackendResponseStaleIfError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.stale_while_revalidate":
+	case BERESP_STALE_WHILE_REVALIDATE:
 		if err := doAssign(v.ctx.BackendResponseStaleWhileRevalidate, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "beresp.status":
+	case BERESP_STATUS:
 		left := &value.Integer{}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
@@ -376,22 +376,22 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		beresp.StatusCode = int(left.Value)
 		beresp.Status = http.StatusText(int(left.Value))
 		return nil
-	case "beresp.ttl":
+	case BERESP_TTL:
 		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.socket.cwnd":
+	case CLIENT_SOCKET_CWND:
 		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "esi.allow_inside_cdata":
+	case ESI_ALLOW_INSIDE_CDATA:
 		if err := doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.esi":
+	case REQ_ESI:
 		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

@@ -18,10 +18,10 @@ func Subtraction(left, right value.Value) error {
 		case value.IntegerType:
 			rv := value.Unwrap[*value.Integer](right)
 			// nolint: gocritic
-			if rv.IsPositiveInf || math.IsInf(float64(lv.Value+rv.Value), 1) {
+			if rv.IsPositiveInf || (lv.Value+rv.Value) > int64(math.MaxInt64) {
 				lv.Value = math.MaxInt64
 				lv.IsPositiveInf = true
-			} else if rv.IsNegativeInf || math.IsInf(float64(lv.Value+rv.Value), -1) {
+			} else if rv.IsNegativeInf || (lv.Value+rv.Value) < int64(math.MinInt64) {
 				lv.Value = math.MinInt64
 				lv.IsNegativeInf = true
 			} else {
@@ -58,7 +58,7 @@ func Subtraction(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("TIME literal could not sub to INTEGER"))
 			}
 			rv := value.Unwrap[*value.Time](right)
-			if math.IsInf(float64(lv.Value-rv.Value.Unix()), -1) {
+			if (lv.Value - rv.Value.Unix()) < int64(math.MinInt64) {
 				lv.Value = math.MinInt64
 				lv.IsNegativeInf = true
 			} else {
@@ -154,7 +154,7 @@ func Subtraction(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not sub to TIME"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
-			if math.IsInf(float64(lv.Value.Unix()-rv.Value), -1) {
+			if (lv.Value.Unix() - rv.Value) < int64(math.MinInt64) {
 				lv.OutOfBounds = true
 			} else {
 				lv.Value = lv.Value.Add(-(time.Duration(rv.Value) * time.Second))

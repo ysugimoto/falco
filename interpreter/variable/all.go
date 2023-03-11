@@ -44,155 +44,155 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 
 	switch name {
-	case "bereq.is_clustering":
+	case BEREQ_IS_CLUSTERING:
 		return &value.Boolean{Value: false}, nil
-	case "client.class.bot":
+	case CLIENT_CLASS_BOT:
 		return &value.Boolean{Value: ua.IsBot()}, nil
-	case "client.class.browser":
+	case CLIENT_CLASS_BROWSER:
 		return &value.Boolean{Value: ua.Browser.Name > 0}, nil
 
 	// Following values are always false in interpreter
 	// because they seem to be able to set in Fastly edge architecture
 	// Or not be publicly its spec
-	case "client.class.checker",
-		"client.class.downloader",
-		"client.class.feedreader",
-		"client.class.filter",
-		"client.class.masquerading",
-		"client.class.spam",
-		"client.platform.mediaplayer",
-		"req.backend.is_shield",
-		"req.is_background_fetch",
-		"req.is_clustering",
-		"req.is_esi_subreq",
-		"resp.stale",
-		"resp.stale.is_error",
-		"resp.stale.is_revalidating",
-		"workspace.overflowed":
+	case CLIENT_CLASS_CHECKER,
+		CLIENT_CLASS_DOWNLOADER,
+		CLIENT_CLASS_FEEDREADER,
+		CLIENT_CLASS_FILTER,
+		CLIENT_CLASS_MASQUERADING,
+		CLIENT_CLASS_SPAM,
+		CLIENT_PLATFORM_MEDIAPLAYER,
+		REQ_BACKEND_IS_SHIELD,
+		REQ_IS_BACKGROUND_FETCH,
+		REQ_IS_CLUSTERING,
+		REQ_IS_ESI_SUBREQ,
+		RESP_STALE,
+		RESP_STALE_IS_ERROR,
+		RESP_STALE_IS_REVALIDATING,
+		WORKSPACE_OVERFLOWED:
 		return &value.Boolean{Value: false}, nil
 
-	case "client.display.touchscreen":
+	case CLIENT_DISPLAY_TOUCHSCREEN:
 		isTouch := ua.DeviceType == uasurfer.DevicePhone ||
 			ua.DeviceType == uasurfer.DeviceTablet ||
 			ua.DeviceType == uasurfer.DeviceWearable
 		return &value.Boolean{Value: isTouch}, nil
-	case "client.platform.ereader":
+	case CLIENT_PLATFORM_EREADER:
 		return &value.Boolean{Value: ua.OS.Name == uasurfer.OSKindle}, nil
-	case "client.platform.gameconsole":
+	case CLIENT_PLATFORM_GAMECONSOLE:
 		isGame := ua.OS.Name == uasurfer.OSPlaystation ||
 			ua.OS.Name == uasurfer.OSXbox ||
 			ua.OS.Name == uasurfer.OSNintendo
 		return &value.Boolean{Value: isGame}, nil
-	case "client.platform.mobile":
+	case CLIENT_PLATFORM_MOBILE:
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DevicePhone}, nil
-	case "client.platform.smarttv":
+	case CLIENT_PLATFORM_SMARTTV:
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
-	case "client.platform.tablet":
+	case CLIENT_PLATFORM_TABLET:
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTablet}, nil
-	case "client.platform.tvplayer":
+	case CLIENT_PLATFORM_TVPLAYER:
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
-	case "fastly_info.edge.is_tls":
+	case FASTLY_INFO_EDGE_IS_TLS:
 		return &value.Boolean{Value: req.TLS != nil}, nil
-	case "fastly_info.is_h2":
+	case FASTLY_INFO_IS_H2:
 		return &value.Boolean{Value: req.ProtoMajor == 2}, nil
-	case "fastly_info.is_h3":
+	case FASTLY_INFO_IS_H3:
 		return &value.Boolean{Value: req.ProtoMajor == 3}, nil
 
 	// Backend is always healthy on simulator
-	case "req.backend.healthy":
+	case REQ_BACKEND_HEALTHY:
 		return &value.Boolean{Value: true}, nil
 
-	case "req.is_ssl":
+	case REQ_IS_SSL:
 		return &value.Boolean{Value: req.TLS != nil}, nil
-	case "req.protocol":
+	case REQ_PROTOCOL:
 		protocol := "http"
 		if req.TLS != nil {
 			protocol = "https"
 		}
 		return &value.String{Value: protocol}, nil
-	case "client.geo.latitude":
+	case CLIENT_GEO_LATITUDE:
 		return &value.Float{Value: 35.688681}, nil
-	case "client.geo.longitude":
+	case CLIENT_GEO_LONGITUDE:
 		return &value.Float{Value: 139.762253}, nil
-	case "fastly.error":
+	case FASTLY_ERROR:
 		return &value.String{Value: ""}, nil
-	case "math.1_PI":
+	case MATH_1_PI:
 		return &value.Float{Value: 1 / math.Pi}, nil
-	case "math.2_PI":
+	case MATH_2_PI:
 		return &value.Float{Value: 2 / math.Pi}, nil
-	case "math.2_SQRTPI":
+	case MATH_2_SQRTPI:
 		return &value.Float{Value: 2 / math.SqrtPi}, nil
-	case "math.2PI":
+	case MATH_2PI:
 		return &value.Float{Value: 2 * math.Pi}, nil
-	case "math.E":
+	case MATH_E:
 		return &value.Float{Value: math.E}, nil
-	case "math.FLOAT_EPSILON":
+	case MATH_FLOAT_EPSILON:
 		return &value.Float{Value: math.Pow(2, -52)}, nil
-	case "math.FLOAT_MAX":
+	case MATH_FLOAT_MAX:
 		return &value.Float{Value: math.MaxFloat64}, nil
-	case "math.FLOAT_MIN":
+	case MATH_FLOAT_MIN:
 		return &value.Float{Value: math.SmallestNonzeroFloat64}, nil
-	case "math.LN10":
+	case MATH_LN10:
 		return &value.Float{Value: math.Ln10}, nil
-	case "math.LN2":
+	case MATH_LN2:
 		return &value.Float{Value: math.Ln2}, nil
-	case "math.LOG10E":
+	case MATH_LOG10E:
 		return &value.Float{Value: math.Log10E}, nil
-	case "math.LOG2E":
+	case MATH_LOG2E:
 		return &value.Float{Value: math.Log2E}, nil
-	case "math.NAN":
+	case MATH_NAN:
 		return &value.Float{IsNAN: true}, nil
-	case "math.NEG_HUGE_VAL":
+	case MATH_NEG_HUGE_VAL:
 		return &value.Float{IsNegativeInf: true}, nil
-	case "math.NEG_INFINITY":
+	case MATH_NEG_INFINITY:
 		return &value.Float{IsNegativeInf: true}, nil
-	case "math.PHI":
+	case MATH_PHI:
 		return &value.Float{Value: math.Phi}, nil
-	case "math.PI":
+	case MATH_PI:
 		return &value.Float{Value: math.Pi}, nil
-	case "math.PI_2":
+	case MATH_PI_2:
 		return &value.Float{Value: math.Pi / 2}, nil
-	case "math.PI_4":
+	case MATH_PI_4:
 		return &value.Float{Value: math.Pi / 4}, nil
-	case "math.POS_HUGE_VAL":
+	case MATH_POS_HUGE_VAL:
 		return &value.Float{IsPositiveInf: true}, nil
-	case "math.POS_INFINITY":
+	case MATH_POS_INFINITY:
 		return &value.Float{IsPositiveInf: true}, nil
-	case "math.SQRT1_2":
+	case MATH_SQRT1_2:
 		return &value.Float{Value: 1 / math.Sqrt2}, nil
-	case "math.SQRT2":
+	case MATH_SQRT2:
 		return &value.Float{Value: math.Sqrt2}, nil
-	case "math.TAU":
+	case MATH_TAU:
 		return &value.Float{Value: math.Pi * 2}, nil
 
 	// AS Number always indicates "Reserved" defined by RFC7300
 	// see: https://datatracker.ietf.org/doc/html/rfc7300
-	case "client.as.number":
+	case CLIENT_AS_NUMBER:
 		return &value.Integer{Value: 4294967294}, nil
-	case "client.as.name":
+	case CLIENT_AS_NAME:
 		return &value.String{Value: "Reserved"}, nil
 
 	// Client display infos are unknown. Always returns -1
-	case "client.display.height",
-		"client.display.ppi",
-		"client.display.width":
+	case CLIENT_DISPLAY_HEIGHT,
+		CLIENT_DISPLAY_PPI,
+		CLIENT_DISPLAY_WIDTH:
 		return &value.Integer{Value: -1}, nil
 
 	// Client geo values always return 0
-	case "client.geo.area_code",
-		"client.geo.metro_code",
-		"client.geo.utc_offset":
+	case CLIENT_GEO_AREA_CODE,
+		CLIENT_GEO_METRO_CODE,
+		CLIENT_GEO_UTC_OFFSET:
 		return &value.Integer{Value: 0}, nil
 
 	// Alias of client.geo.utc_offset
-	case "client.geo.gmt_offset":
+	case CLIENT_GEO_GMT_OFFSET:
 		return v.Get(s, "client.geo.utc_offset")
 
 	// Client could not fully identified so returns false
-	case "client.identified":
+	case CLIENT_IDENTIFIED:
 		return &value.Boolean{Value: false}, nil
 
-	case "client.port":
+	case CLIENT_PORT:
 		idx := strings.LastIndex(req.RemoteAddr, ":")
 		if idx == -1 {
 			return &value.Integer{Value: 0}, nil
@@ -207,12 +207,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 
 	// Client requests always returns 1, means new connection is coming
-	case "client.requests":
+	case CLIENT_REQUESTS:
 		return &value.Integer{Value: 1}, nil
 
 	// Returns common value -- do not consider of clustering
 	// see: https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/
-	case "fastly.ff.visits_this_service":
+	case FASTLY_FF_VISITS_THIS_SERVICE:
 		switch s {
 		case context.MissScope, context.HitScope, context.FetchScope:
 			return &value.Integer{Value: 1}, nil
@@ -221,28 +221,28 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 
 	// Returns fixed value which is presented on Fastly fiddle
-	case "math.FLOAT_DIG":
+	case MATH_FLOAT_DIG:
 		return &value.Integer{Value: 15}, nil
-	case "math.FLOAT_MANT_DIG":
+	case MATH_FLOAT_MANT_DIG:
 		return &value.Integer{Value: 53}, nil
-	case "math.FLOAT_MAX_10_EXP":
+	case MATH_FLOAT_MAX_10_EXP:
 		return &value.Integer{Value: 308}, nil
-	case "math.FLOAT_MAX_EXP":
+	case MATH_FLOAT_MAX_EXP:
 		return &value.Integer{Value: 1024}, nil
-	case "math.FLOAT_MIN_10_EXP":
+	case MATH_FLOAT_MIN_10_EXP:
 		return &value.Integer{Value: -307}, nil
-	case "math.FLOAT_MIN_EXP":
+	case MATH_FLOAT_MIN_EXP:
 		return &value.Integer{Value: -1021}, nil
-	case "math.FLOAT_RADIX":
+	case MATH_FLOAT_RADIX:
 		return &value.Integer{Value: 2}, nil
-	case "math.INTEGER_BIT":
+	case MATH_INTEGER_BIT:
 		return &value.Integer{Value: 64}, nil
-	case "math.INTEGER_MAX":
+	case MATH_INTEGER_MAX:
 		return &value.Integer{Value: 9223372036854775807}, nil
-	case "math.INTEGER_MIN":
+	case MATH_INTEGER_MIN:
 		return &value.Integer{Value: -9223372036854775808}, nil
 
-	case "req.header_bytes_read":
+	case REQ_HEADER_BYTES_READ:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
 		for k, v := range req.Header {
@@ -250,28 +250,28 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			headerBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
 		return &value.Integer{Value: headerBytes}, nil
-	case "req.restarts":
+	case REQ_RESTARTS:
 		return &value.Integer{Value: int64(v.ctx.Restarts)}, nil
 
 	// Returns always 1 because VCL is generated locally
-	case "req.vcl.generation":
+	case REQ_VCL_GENERATION:
 		return &value.Integer{Value: 1}, nil
-	case "req.vcl.version":
+	case REQ_VCL_VERSION:
 		return &value.Integer{Value: 1}, nil
 
-	case "server.port":
+	case SERVER_PORT:
 		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
 
 	// workspace related values respects Fastly fiddle one
-	case "workspace.bytes_free":
+	case WORKSPACE_BYTES_FREE:
 		return &value.Integer{Value: 125008}, nil
-	case "workspace.bytes_total":
+	case WORKSPACE_BYTES_TOTAL:
 		return &value.Integer{Value: 139392}, nil
 
 	// backend.src_ip always incicates this server, means localhost
-	case "beresp.backend.src_ip":
+	case BERESP_BACKEND_SRC_IP:
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
-	case "server.ip":
+	case SERVER_IP:
 		addrs, err := net.InterfaceAddrs()
 		if err != nil {
 			return value.Null, errors.WithStack(err)
@@ -294,18 +294,18 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.IP{Value: addr}, nil
 
-	case "req.backend":
+	case REQ_BACKEND:
 		return v.ctx.Backend, nil
-	case "req.grace":
+	case REQ_GRACE:
 		return v.Get(s, "req.max_stale_if_error")
 
 	// Return current state
-	case "req.max_stale_if_error":
+	case REQ_MAX_STALE_IF_ERROR:
 		return v.ctx.MaxStaleIfError, nil
-	case "req.max_stale_while_revalidate":
+	case REQ_MAX_STALE_WHILE_REVALIDATE:
 		return v.ctx.MaxStaleWhileRevalidate, nil
 
-	case "time.elapsed":
+	case TIME_ELAPSED:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -313,43 +313,43 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			))
 		}
 		return &value.RTime{Value: time.Since(start)}, nil
-	case "client.bot.name":
+	case CLIENT_BOT_NAME:
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
-	case "client.browser.name":
+	case CLIENT_BROWSER_NAME:
 		return &value.String{Value: ua.Browser.Name.String()}, nil
-	case "client.browser.version":
+	case CLIENT_BROWSER_VERSION:
 		v := ua.Browser.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
 		}, nil
 
 	// TODO: respect artbitrary request
-	case "client.geo.city":
-	case "client.geo.city.ascii":
-	case "client.geo.city.latin1":
-	case "client.geo.city.utf8":
-	case "client.geo.conn_speed":
-	case "client.geo.conn_type":
-	case "client.geo.continent_code":
-	case "client.geo.country_code":
-	case "client.geo.country_code3":
-	case "client.geo.country_name":
-	case "client.geo.country_name.ascii":
-	case "client.geo.country_name.latin1":
-	case "client.geo.country_name.utf8":
-	case "client.geo.ip_override":
-	case "client.geo.postal_code":
-	case "client.geo.proxy_description":
-	case "client.geo.proxy_type":
-	case "client.geo.region":
-	case "client.geo.region.ascii":
-	case "client.geo.region.latin1":
-	case "client.geo.region.utf8":
+	case CLIENT_GEO_CITY:
+	case CLIENT_GEO_CITY_ASCII:
+	case CLIENT_GEO_CITY_LATIN1:
+	case CLIENT_GEO_CITY_UTF8:
+	case CLIENT_GEO_CONN_SPEED:
+	case CLIENT_GEO_CONN_TYPE:
+	case CLIENT_GEO_CONTINENT_CODE:
+	case CLIENT_GEO_COUNTRY_CODE:
+	case CLIENT_GEO_COUNTRY_CODE3:
+	case CLIENT_GEO_COUNTRY_NAME:
+	case CLIENT_GEO_COUNTRY_NAME_ASCII:
+	case CLIENT_GEO_COUNTRY_NAME_LATIN1:
+	case CLIENT_GEO_COUNTRY_NAME_UTF8:
+	case CLIENT_GEO_IP_OVERRIDE:
+	case CLIENT_GEO_POSTAL_CODE:
+	case CLIENT_GEO_PROXY_DESCRIPTION:
+	case CLIENT_GEO_PROXY_TYPE:
+	case CLIENT_GEO_REGION:
+	case CLIENT_GEO_REGION_ASCII:
+	case CLIENT_GEO_REGION_LATIN1:
+	case CLIENT_GEO_REGION_UTF8:
 
-	case "client.identity":
+	case CLIENT_IDENTITY:
 		if v.ctx.ClientIdentity == nil {
 			// default as client.ip
 			idx := strings.LastIndex(req.RemoteAddr, ":")
@@ -360,32 +360,32 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return v.ctx.ClientIdentity, nil
 
-	case "client.ip":
+	case CLIENT_IP:
 		idx := strings.LastIndex(req.RemoteAddr, ":")
 		if idx == -1 {
 			return &value.IP{Value: net.ParseIP(req.RemoteAddr)}, nil
 		}
 		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
 
-	case "client.os.name":
+	case CLIENT_OS_NAME:
 		return &value.String{Value: ua.OS.Name.String()}, nil
-	case "client.os.version":
+	case CLIENT_OS_VERSION:
 		v := ua.OS.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
 		}, nil
 
 	// Always empty string
-	case "client.platform.hwtype":
+	case CLIENT_PLATFORM_HWTYPE:
 		return &value.String{Value: ""}, nil
 
-	case "fastly_info.state":
+	case FASTLY_INFO_STATE:
 		return &value.String{Value: v.ctx.State}, nil
-	case "LF":
+	case LF:
 		return &value.String{Value: "\n"}, nil
-	case "now.sec":
+	case NOW_SEC:
 		return &value.String{Value: fmt.Sprint(time.Now().Unix())}, nil
-	case "req.body":
+	case REQ_BODY:
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
 			var b bytes.Buffer
@@ -405,7 +405,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		default:
 			return &value.String{Value: ""}, nil
 		}
-	case "req.body.base64":
+	case REQ_BODY_BASE64:
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
 			var b bytes.Buffer
@@ -427,7 +427,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		default:
 			return &value.String{Value: ""}, nil
 		}
-	case "req.digest":
+	case REQ_DIGEST:
 		if v.ctx.RequestHash.Value == "" {
 			return &value.String{
 				Value: strings.Repeat("0", 64),
@@ -440,21 +440,21 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 				fmt.Sprintf("%x", sha256.Sum256([]byte(v.ctx.RequestHash.Value))),
 			),
 		}, nil
-	case "req.method":
+	case REQ_METHOD:
 		return &value.String{Value: req.Method}, nil
-	case "req.postbody":
+	case REQ_POSTBODY:
 		return v.Get(s, "req.body")
-	case "req.proto":
+	case REQ_PROTO:
 		return &value.String{Value: req.Proto}, nil
-	case "req.request":
+	case REQ_REQUEST:
 		return v.Get(s, "req.method")
-	case "req.service_id":
+	case REQ_SERVICE_ID:
 		id := os.Getenv("FASYLY_SERVICE_ID")
 		if id == "" {
-			id = "falco-virtual-service-id"
+			id = FALCO_VIRTUAL_SERVICE_ID
 		}
 		return &value.String{Value: id}, nil
-	case "req.topurl": // FIXME: what is the difference of req.url ?
+	case REQ_TOPURL: // FIXME: what is the difference of req.url ?
 		u := req.URL.Path
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
@@ -463,7 +463,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			u += "#" + v
 		}
 		return &value.String{Value: u}, nil
-	case "req.url":
+	case REQ_URL:
 		u := req.URL.Path
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
@@ -472,55 +472,55 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			u += "#" + v
 		}
 		return &value.String{Value: u}, nil
-	case "req.url.basename":
+	case REQ_URL_BASENAME:
 		return &value.String{
 			Value: filepath.Base(req.URL.Path),
 		}, nil
-	case "req.url.dirname":
+	case REQ_URL_DIRNAME:
 		return &value.String{
 			Value: filepath.Dir(req.URL.Path),
 		}, nil
-	case "req.url.ext":
+	case REQ_URL_EXT:
 		ext := filepath.Ext(req.URL.Path)
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
-	case "req.url.path":
+	case REQ_URL_PATH:
 		return &value.String{Value: req.URL.Path}, nil
-	case "req.url.qs":
+	case REQ_URL_QS:
 		return &value.String{Value: req.URL.RawQuery}, nil
-	case "req.vcl":
+	case REQ_VCL:
 		id := os.Getenv("FASYLY_SERVICE_ID")
 		if id == "" {
-			id = "falco-virtual-service-id"
+			id = FALCO_VIRTUAL_SERVICE_ID
 		}
 		return &value.String{
 			Value: fmt.Sprintf("%s.%d_%d-%s", id, 1, 0, strings.Repeat("0", 32)),
 		}, nil
-	case "req.vcl.md5":
+	case REQ_VCL_MD5:
 		id := os.Getenv("FASYLY_SERVICE_ID")
 		if id == "" {
-			id = "falco-virtual-service-id"
+			id = FALCO_VIRTUAL_SERVICE_ID
 		}
 		vcl := fmt.Sprintf("%s.%d_%d-%s", id, 1, 0, strings.Repeat("0", 32))
 		return &value.String{
 			Value: fmt.Sprintf("%x", md5.Sum([]byte(vcl))),
 		}, nil
-	case "req.xid":
+	case REQ_XID:
 		return &value.String{Value: xid.New().String()}, nil
 
 	// Fixed values
-	case "server.datacenter":
+	case SERVER_DATACENTER:
 		return &value.String{Value: "NRT"}, nil
-	case "server.hostname":
+	case SERVER_HOSTNAME:
 		return &value.String{Value: "cache-nrt-knrt7000001"}, nil
-	case "server.identity":
+	case SERVER_IDENTITY:
 		return &value.String{Value: "cache-nrt-knrt7000001"}, nil
-	case "server.region":
+	case SERVER_REGION:
 		return &value.String{Value: "Asia"}, nil
-	case "stale.exists":
+	case STALE_EXISTS:
 		return v.ctx.StaleContents, nil
-	case "time.elapsed.msec":
+	case TIME_ELAPSED_MSEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -530,7 +530,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(time.Since(start).Milliseconds()),
 		}, nil
-	case "time.elapsed.msec_frac":
+	case TIME_ELAPSED_MSEC_FRAC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -540,7 +540,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprintf("%03d", time.Since(start).Milliseconds()),
 		}, nil
-	case "time.elapsed.sec":
+	case TIME_ELAPSED_SEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -550,7 +550,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(int64(time.Since(start).Seconds())),
 		}, nil
-	case "time.elapsed.usec":
+	case TIME_ELAPSED_USEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -560,7 +560,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(time.Since(start).Microseconds()),
 		}, nil
-	case "time.elapsed.usec_frac":
+	case TIME_ELAPSED_USEC_FRAC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -570,7 +570,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprintf("%06d", time.Since(start).Microseconds()),
 		}, nil
-	case "time.start.msec":
+	case TIME_START_MSEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -580,7 +580,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(start.UnixMilli()),
 		}, nil
-	case "time.start.msec_frac":
+	case TIME_START_MSEC_FRAC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -590,7 +590,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(start.UnixMilli() % 1000),
 		}, nil
-	case "time.start.sec":
+	case TIME_START_SEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -600,7 +600,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(start.Unix()),
 		}, nil
-	case "time.start.usec":
+	case TIME_START_USEC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -610,7 +610,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(start.UnixMicro()),
 		}, nil
-	case "time.start.usec_frac":
+	case TIME_START_USEC_FRAC:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -620,9 +620,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{
 			Value: fmt.Sprint(start.UnixMicro() % 1000000),
 		}, nil
-	case "now":
+	case NOW:
 		return &value.Time{Value: time.Now()}, nil
-	case "time.start":
+	case TIME_START:
 		start, ok := req.Context().Value(context.RequestStartKey).(time.Time)
 		if !ok {
 			return value.Null, errors.WithStack(fmt.Errorf(
@@ -677,8 +677,8 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		var val float64
 		// all ratecounter variable value returns 1.0 fixed value
 		switch match[1] {
-		case "rate.10s",
-			"rate.1s",
+		case "rate_10s",
+			"rate_1s",
 			"rate.60s",
 			"bucket.10s",
 			"bucket.20s",
@@ -697,7 +697,7 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	switch strings.ToLower(name) {
-	case "client.identity":
+	case CLIENT_IDENTITY:
 		if v.ctx.ClientIdentity == nil {
 			v.ctx.ClientIdentity = &value.String{Value: ""}
 		}
@@ -705,53 +705,53 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		return nil
-	case "resp.stale":
+	case RESP_STALE:
 		if err := doAssign(v.ctx.Stale, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "resp.stale.is_error":
+	case RESP_STALE_IS_ERROR:
 		if err := doAssign(v.ctx.StaleIsError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "resp.stale.is_revalidating":
+	case RESP_STALE_IS_REVALIDATING:
 		if err := doAssign(v.ctx.StaleIsRevalidating, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.backend":
+	case REQ_BACKEND:
 		if err := doAssign(v.ctx.Backend, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.grace":
+	case REQ_GRACE:
 		return v.Set(s, "req.max_stale_if_error", operator, val)
-	case "req.max_stale_if_error":
+	case REQ_MAX_STALE_IF_ERROR:
 		if err := doAssign(v.ctx.MaxStaleIfError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.max_stale_while_revalidate":
+	case REQ_MAX_STALE_WHILE_REVALIDATE:
 		if err := doAssign(v.ctx.MaxStaleWhileRevalidate, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "client.geo.ip_override":
+	case CLIENT_GEO_IP_OVERRIDE:
 		if err := doAssign(v.ctx.ClientGeoIpOverride, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "req.method":
+	case REQ_METHOD:
 		left := &value.String{Value: v.ctx.Request.Method}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Request.Method = left.Value
 		return nil
-	case "req.request":
+	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
-	case "req.url":
+	case REQ_URL:
 		u := v.ctx.Request.URL.Path
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
