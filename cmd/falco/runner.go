@@ -3,16 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"net/http"
-	"path/filepath"
 
-	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
@@ -75,6 +73,7 @@ type Runner struct {
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
 	snippets     *context.FastlySnippet
+	config       *config.Config
 
 	level Level
 
@@ -84,14 +83,15 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(c *Config, f Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:     LevelError,
 		overrides: make(map[string]linter.Severity),
 		lexers:    make(map[string]*lexer.Lexer),
+		config:    c,
 	}
 
-	if c.Remote {
+	if c.Falco.EnableRemote {
 		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
 		// If remote flag is provided, fetch predefined data from Fastly.
 		// Currently, we only support Edge Dictionary.
@@ -99,15 +99,15 @@ func NewRunner(c *Config, f Fetcher) (*Runner, error) {
 		// We communicate Fastly API with service id and api key,
 		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
 		// So user needs to set them with "-r" argument.
-		serviceId := os.Getenv("FASTLY_SERVICE_ID")
-		apiKey := os.Getenv("FASTLY_API_KEY")
-		if serviceId == "" || apiKey == "" {
-			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
+		if c.ServiceId == "" || c.Falco.ApiKey == "" {
+			return nil, errors.New(
+				"Fastly Service Id and Fasrlty Api Key must be specified in configuration file of environment variables",
+			)
 		}
 		func() {
 			// Remote communication is optional so we keep processing even if remote communication is failed
 			// We allow each API call to take up to to 5 seconds
-			f := remote.NewFastlyApiFetcher(serviceId, apiKey, 5*time.Second)
+			f := remote.NewFastlyApiFetcher(c.ServiceId, c.Falco.ApiKey, 5*time.Second)
 			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
 				writeln(red, err.Error())
@@ -128,60 +128,24 @@ func NewRunner(c *Config, f Fetcher) (*Runner, error) {
 	// Check transformer exists and format to absolute path
 	// Transformer is provided as independent binary, named "falco-transform-[name]"
 	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
-		}
-		r.transformers = append(r.transformers, tf)
-	}
+	// TODO: currently disabled
+	// for i := range c.Transforms {
+	// 	tf, err := NewTransformer(c.Transforms[i])
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	r.transformers = append(r.transformers, tf)
+	// }
 
 	// Set verbose level
-	if c.VV {
+	if c.Falco.Linter.Info {
 		r.level = LevelInfo
-	} else if c.V {
+	} else if c.Falco.Linter.Warning {
 		r.level = LevelWarning
 	}
 
-	// Make overriding error level setting from rc file
-	r.initOverrides()
-
-	return r, nil
-}
-
-func (r *Runner) initOverrides() {
-	// find up rc file
-	cwd, err := os.Getwd()
-	if err != nil {
-		return
-	}
-	var rcFile string
-	for {
-		rcFile = filepath.Join(cwd, DotfileName)
-		if _, err := os.Stat(rcFile); err == nil {
-			break
-		}
-		cwd = filepath.Dir(cwd)
-		if cwd == "/" {
-			// find up to root directory, stop it
-			return
-		}
-	}
-
-	fp, err := os.Open(rcFile)
-	if err != nil {
-		writeln(yellow, "Configuration file found at %s but could not open", rcFile)
-		return
-	}
-	defer fp.Close()
-	o := make(map[string]string)
-	if err := yaml.NewDecoder(fp).Decode(&o); err != nil {
-		writeln(yellow, "Failed to decode configuration file at %s: %s", rcFile, err)
-		return
-	}
-
-	// validate configuration file
-	for k, v := range o {
+	// Make overriding error level setting from configurations
+	for k, v := range c.Falco.Linter.Rules {
 		switch strings.ToUpper(v) {
 		case "ERROR":
 			r.overrides[k] = linter.ERROR
@@ -193,9 +157,10 @@ func (r *Runner) initOverrides() {
 			r.overrides[k] = linter.IGNORE
 		default:
 			writeln(yellow, "level for rule %s has invalid value %s, skip it.", k, v)
-			return
 		}
 	}
+
+	return r, nil
 }
 
 func (r *Runner) Transform(vcl *plugin.VCL) error {
@@ -442,12 +407,12 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 }
 
 func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
-	options := []icontext.Option{icontext.WithResolver(rslv)}
+	options := []icontext.Option{
+		icontext.WithConfig(r.config.Falco.Simulator),
+		icontext.WithResolver(rslv),
+	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
-	}
-	if v := os.Getenv("FALCO_DEBUG"); v != "" {
-		options = append(options, icontext.WithDebug())
 	}
 
 	return interpreter.New(options...)

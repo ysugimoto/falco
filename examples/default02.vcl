@@ -21,7 +21,7 @@ backend httpbin_org {
     .timeout = 5s;
     .initial = 1;
     .expected_response = 200;
-    .interval = 10s # mission semicolon X(
+    .interval = 10s # missing semicolon X(
   }
 }
 

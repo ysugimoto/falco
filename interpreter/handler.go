@@ -55,7 +55,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := i.ProcessInit(vcl.Statements); err != nil {
 		// If debug is true, print with stacktrace
-		if i.ctx.Debug {
+		if ctx.Config.Debug {
 			fmt.Fprintf(os.Stderr, "%+v\n", err)
 			i.process.Error = err
 		} else if re, ok := errors.Cause(err).(*exception.Exception); ok {

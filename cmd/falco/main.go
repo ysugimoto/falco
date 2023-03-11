@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
@@ -114,42 +114,25 @@ Linting with terraform:
 }
 
 func main() {
-	c := &Config{}
-	fs := flag.NewFlagSet("app", flag.ExitOnError)
-	fs.Var(&c.IncludePaths, "I", "Add include paths (short)")
-	fs.Var(&c.IncludePaths, "include_path", "Add include paths (long)")
-	fs.Var(&c.Transforms, "t", "Add VCL transformer (short)")
-	fs.Var(&c.Transforms, "transformer", "Add VCL transformer (long)")
-	fs.BoolVar(&c.Help, "h", false, "Show Usage")
-	fs.BoolVar(&c.Help, "help", false, "Show Usage")
-	fs.BoolVar(&c.V, "v", false, "Verbose warning")
-	fs.BoolVar(&c.VV, "vv", false, "Verbose info")
-	fs.BoolVar(&c.Version, "V", false, "Print Version")
-	fs.BoolVar(&c.Version, "version", false, "Print Version")
-	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
-	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
-	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
-	fs.Usage = printUsage
-
-	var err error
-	if err = fs.Parse(os.Args[1:]); err != nil {
-		if err == flag.ErrHelp {
-			printUsage()
-		}
+	c, err := config.New(os.Args[1:])
+	if err != nil {
+		printUsage()
 		os.Exit(1)
 	}
 
-	if c.Help {
+	if c.Falco.Help {
 		printUsage()
-	} else if c.Version {
+	} else if c.Falco.Version {
 		writeln(white, version)
 		os.Exit(1)
 	}
 
+	cmd := config.SubCommands(os.Args[1:])
+
 	var fetcher Fetcher
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver
-	switch fs.Arg(0) {
+	switch cmd.At(0) {
 	case subcommandTerraform:
 		fastlyServices, err := ParseStdin()
 		if err == nil {
@@ -158,10 +141,10 @@ func main() {
 		}
 	case subcommandSimulate, subcommandLint, subcommandStats:
 		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
+		resolvers, err = resolver.NewFileResolvers(cmd.At(1), c.Falco.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(fs.Arg(0), c.IncludePaths)
+		resolvers, err = resolver.NewFileResolvers(cmd.At(0), c.Falco.IncludePaths)
 	}
 
 	if err != nil {
@@ -183,11 +166,11 @@ func main() {
 		}
 
 		var exitErr error
-		switch fs.Arg(0) {
+		switch cmd.At(0) {
 		case subcommandSimulate:
 			runSimulator(runner, v)
 		case subcommandStats:
-			exitErr = runStats(runner, v, c.Json)
+			exitErr = runStats(runner, v)
 		default:
 			exitErr = runLint(runner, v)
 		}
@@ -250,18 +233,19 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 func runSimulator(runner *Runner, rslv resolver.Resolver) {
 	mux := http.NewServeMux()
 	mux.Handle("/", runner.Simulator(rslv))
+	port := runner.config.Falco.Simulator.ServerPort
 
 	s := &http.Server{
 		Handler: mux,
-		Addr:    ":3124",
+		Addr:    ":" + port,
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	writeln(green, "Simulator server starts on 0.0.0.0:%s", port)
 	if err := s.ListenAndServe(); err != nil {
 		writeln(red, "Failed to start server: %s", err.Error())
 	}
 }
 
-func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
+func runStats(runner *Runner, rslv resolver.Resolver) error {
 	stats, err := runner.Stats(rslv)
 	if err != nil {
 		if err != ErrParser {
@@ -270,7 +254,7 @@ func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
 		return ErrExit
 	}
 
-	if printJson {
+	if runner.config.Falco.Stats.OutputJSON {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
@@ -40,7 +41,7 @@ var (
 )
 
 type Context struct {
-	Debug               bool
+	Config              config.Simulator
 	Resolver            resolver.Resolver
 	FastlySnippets      *context.FastlySnippet
 	Acls                map[string]*value.Acl

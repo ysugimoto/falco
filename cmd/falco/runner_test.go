@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
@@ -24,10 +25,18 @@ func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher
 	return rslv, f
 }
 
+var testConfig = &config.Config{
+	Falco: config.FalcoConfig{
+		Linter: config.Linter{
+			Warning: true,
+		},
+	},
+}
+
 func TestResolveExternalWithExternalProperties(t *testing.T) {
 	for _, fileName := range []string{"../../terraform/data/terraform-valid.json", "../../terraform/data/terraform-valid-weird-name.json"} {
 		rslv, f := loadFromTfJson(fileName, t)
-		r, err := NewRunner(&Config{V: true}, f)
+		r, err := NewRunner(testConfig, f)
 		if err != nil {
 			t.Fatalf("Unexpected runner creation error: %s", err)
 			return
@@ -51,7 +60,7 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 	fileName := "../../terraform/data/terraform-empty.json"
 	rslv, f := loadFromTfJson(fileName, t)
-	r, err := NewRunner(&Config{V: true}, f)
+	r, err := NewRunner(testConfig, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 		return
@@ -74,7 +83,7 @@ func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 func TestResolveWithDuplicateDeclarations(t *testing.T) {
 	fileName := "../../terraform/data/terraform-duplicate.json"
 	rslv, f := loadFromTfJson(fileName, t)
-	r, err := NewRunner(&Config{V: true}, f)
+	r, err := NewRunner(testConfig, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 	}
@@ -136,7 +145,7 @@ func TestRepositoryExamples(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(&Config{V: true}, nil)
+			r, err := NewRunner(testConfig, nil)
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return

@@ -180,7 +180,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			// Validate reqired properties
+			// Validate required properties
 			switch conf.Type {
 			case DIRECTORTYPE_RANDOM, DIRECTORTYPE_FALLBACK, DIRECTORTYPE_HASH, DIRECTORTYPE_CLIENT:
 				if backend.Weight == 0 {

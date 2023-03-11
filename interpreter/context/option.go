@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/resolver"
 )
@@ -19,8 +20,8 @@ func WithFastlySnippets(fs *context.FastlySnippet) Option {
 	}
 }
 
-func WithDebug() Option {
+func WithConfig(cfg config.Simulator) Option {
 	return func(c *Context) {
-		c.Debug = true
+		c.Config = cfg
 	}
 }
