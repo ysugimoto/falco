@@ -238,9 +238,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case MATH_INTEGER_BIT:
 		return &value.Integer{Value: 64}, nil
 	case MATH_INTEGER_MAX:
-		return &value.Integer{Value: 9223372036854775807}, nil
+		return &value.Integer{Value: int64(math.MaxInt64)}, nil
 	case MATH_INTEGER_MIN:
-		return &value.Integer{Value: -9223372036854775808}, nil
+		return &value.Integer{Value: int64(math.MinInt64)}, nil
 
 	case REQ_HEADER_BYTES_READ:
 		var headerBytes int64
@@ -260,7 +260,13 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 1}, nil
 
 	case SERVER_PORT:
-		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
+		port, err := strconv.ParseInt(v.ctx.Config.ServerPort, 10, 64)
+		if err != nil {
+			return value.Null, errors.WithStack(fmt.Errorf(
+				"Failed to convert to integer",
+			))
+		}
+		return &value.Integer{Value: port}, nil
 
 	// workspace related values respects Fastly fiddle one
 	case WORKSPACE_BYTES_FREE:

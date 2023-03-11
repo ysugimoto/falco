@@ -38,29 +38,6 @@ const (
 	subcommandStats     = "stats"
 )
 
-type multiStringFlags []string
-
-func (m *multiStringFlags) Set(v string) error {
-	*m = append(*m, v)
-	return nil
-}
-
-func (m *multiStringFlags) String() string {
-	return fmt.Sprintf("%v", *m)
-}
-
-type Config struct {
-	Transforms   multiStringFlags
-	IncludePaths multiStringFlags
-	Help         bool
-	V            bool
-	VV           bool
-	Version      bool
-	Remote       bool
-	Stats        bool
-	Json         bool
-}
-
 func write(c *color.Color, format string, args ...interface{}) {
 	c.Fprint(output, emoji.Sprintf(format, args...))
 }

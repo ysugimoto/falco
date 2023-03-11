@@ -137,10 +137,9 @@ func TestRepositoryExamples(t *testing.T) {
 		},
 	}
 
-	c := &Config{V: true}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resolvers, err := resolver.NewFileResolvers(tt.fileName, c.IncludePaths)
+			resolvers, err := resolver.NewFileResolvers(tt.fileName, []string{})
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
