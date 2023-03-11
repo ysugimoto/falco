@@ -2,9 +2,7 @@ name: test and lint pullrequest changes
 
 on:
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main ]
 
 jobs:
   build:
@@ -14,13 +12,13 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.20.2
+        go-version: 1.17.5
     - name: Run tests
       run: make test
     - name: Lint programs
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.51.2
+        version: v1.42
         skip-pkg-cache: true
         skip-build-cache: true
         skip-go-installation: true

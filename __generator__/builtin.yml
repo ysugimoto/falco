@@ -1096,6 +1096,7 @@ table.lookup_acl:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, ACL]
+    - [TABLE, STRING]
   return: ACL
   extra: LOOKUP_TABLE
 
@@ -1104,6 +1105,7 @@ table.lookup_backend:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, BACKEND]
+    - [TABLE, STRING]
   return: BACKEND
   extra: LOOKUP_TABLE
 
@@ -1112,6 +1114,7 @@ table.lookup_bool:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, BOOL]
+    - [TABLE, STRING]
   return: BOOL
   extra: LOOKUP_TABLE
 
@@ -1120,6 +1123,7 @@ table.lookup_float:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, FLOAT]
+    - [TABLE, STRING]
   return: FLOAT
   extra: LOOKUP_TABLE
 
@@ -1128,6 +1132,7 @@ table.lookup_integer:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, INTEGER]
+    - [TABLE, STRING]
   return: INTEGER
   extra: LOOKUP_TABLE
 
@@ -1136,6 +1141,7 @@ table.lookup_ip:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, IP]
+    - [TABLE, STRING]
   return: IP
   extra: LOOKUP_TABLE
 
@@ -1144,6 +1150,7 @@ table.lookup_rtime:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [TABLE, STRING, RTIME]
+    - [TABLE, STRING]
   return: RTIME
   extra: LOOKUP_TABLE
 

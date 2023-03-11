@@ -17,10 +17,10 @@ linters:
     - staticcheck
     - unused
     - gosimple
-      #- structcheck
-      #- varcheck
+    - structcheck
+    - varcheck
     - ineffassign
-      #- deadcode
+    - deadcode
     - dogsled
       #- dupl disable, because parser and lexer may have similer logic
     - funlen
@@ -45,10 +45,10 @@ linters-settings:
     check-type-assertions: true
     check-blank: true
   funlen:
-    lines: 200
-    statements: 100
+    lines: 120
+    statements: 90
   gocognit:
-    min-complexity: 50
+    min-complexity: 35
   goconst:
     min-len: 3
     min-occurrences: 3
@@ -71,7 +71,8 @@ linters-settings:
       - captLocal
       - caseOrder
       - commentFormatting
-      #- commentedOutCode
+      - commentedOutCode
+      - commentedOutimport
       - defaultCaseOrder
       - dupArg
       - dupBranchBody
