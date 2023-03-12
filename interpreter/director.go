@@ -92,6 +92,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		} else {
 			conf.Quorum = n
 		}
+		return nil
 	case "retries":
 		if conf.Type != DIRECTORTYPE_RANDOM {
 			return exception.Runtime(
@@ -104,6 +105,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		} else {
 			conf.Retries = int(v.Value)
 		}
+		return nil
 	case "key":
 		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
@@ -118,6 +120,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		} else {
 			conf.Key = v.Value
 		}
+		return nil
 	case "seed":
 		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
@@ -130,6 +133,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		} else {
 			conf.Seed = uint32(v.Value)
 		}
+		return nil
 	case "vnodes_per_node":
 		if conf.Type != DIRECTORTYPE_CHASH {
 			return exception.Runtime(
@@ -146,14 +150,14 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		} else {
 			conf.VNodesPerNode = int(v.Value)
 		}
+		return nil
 	}
 	return exception.Runtime(&prop.GetMeta().Token, "Unexpected director property '%s' found", prop.Key.Value)
 }
 
 func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.DirectorConfig, error) {
 	conf := &value.DirectorConfig{
-		Name:          d.Name.Value,
-		VNodesPerNode: 256,
+		Name: d.Name.Value,
 	}
 
 	// Validate director type
@@ -182,7 +186,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 			}
 			// Validate reqired properties
 			switch conf.Type {
-			case DIRECTORTYPE_RANDOM, DIRECTORTYPE_FALLBACK, DIRECTORTYPE_HASH, DIRECTORTYPE_CLIENT:
+			case DIRECTORTYPE_RANDOM, DIRECTORTYPE_HASH, DIRECTORTYPE_CLIENT:
 				if backend.Weight == 0 {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
@@ -278,7 +282,7 @@ func (i *Interpreter) directorBackendRandom(dc *value.DirectorConfig) (*value.Ba
 			return nil, ErrAllBackendsFailed
 		}
 
-		if healthyBackends/len(dc.Backends) < dc.Quorum {
+		if int((float64(healthyBackends)/float64(len(dc.Backends)))*100) < dc.Quorum {
 			// @SPEC: random director waits 10ms until retry backend detection
 			time.Sleep(10 * time.Millisecond)
 			continue
