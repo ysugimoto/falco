@@ -253,6 +253,25 @@ func (i *Interpreter) createDirectorRequest(dc *value.DirectorConfig) (*http.Req
 	return i.createBackendRequest(backend)
 }
 
+func (i *Interpreter) canDetermineBackend(dc *value.DirectorConfig) error {
+	// Check healthy backends and quorum wight is not reached
+	var healthyBackends int
+	for _, v := range dc.Backends {
+		if !v.Backend.Healthy.Load() {
+			continue
+		}
+		healthyBackends++
+	}
+	// There is no healthy backend or healthyBackends is less than quorum
+	if healthyBackends == 0 {
+		return ErrAllBackendsFailed
+	}
+	if int((float64(healthyBackends)/float64(len(dc.Backends)))*100) < dc.Quorum {
+		return ErrQuorumWeightNotReached
+	}
+	return nil
+}
+
 // Random director
 // https://developer.fastly.com/reference/vcl/declarations/director/#random
 func (i *Interpreter) directorBackendRandom(dc *value.DirectorConfig) (*value.Backend, error) {
@@ -263,29 +282,24 @@ func (i *Interpreter) directorBackendRandom(dc *value.DirectorConfig) (*value.Ba
 	}
 
 	for retry := 0; retry < maxRetry; retry++ {
+		// Check backens are enough healthy to determine
+		if err := i.canDetermineBackend(dc); err != nil {
+			// @SPEC: random director waits 10ms until retry backend detection
+			time.Sleep(10 * time.Millisecond)
+			continue
+		}
+
 		lottery := make([]int, 1000)
-		var current, healthyBackends int
+		var current int
 		for index, v := range dc.Backends {
 			// Skip if backend is unhealthy
 			if !v.Backend.Healthy.Load() {
 				continue
 			}
-			healthyBackends++
 			for i := 0; i < v.Weight; i++ {
 				lottery[current] = index
 				current++
 			}
-		}
-
-		// Check healthy backend or healthy backends are less than quorum percentage
-		if healthyBackends == 0 {
-			return nil, ErrAllBackendsFailed
-		}
-
-		if int((float64(healthyBackends)/float64(len(dc.Backends)))*100) < dc.Quorum {
-			// @SPEC: random director waits 10ms until retry backend detection
-			time.Sleep(10 * time.Millisecond)
-			continue
 		}
 
 		rand.New(rand.NewSource(time.Now().Unix()))
@@ -339,6 +353,10 @@ func (i *Interpreter) directorBackendClient(dc *value.DirectorConfig) (*value.Ba
 // Consistent Hashing director
 // https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing
 func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*value.Backend, error) {
+	if err := i.canDetermineBackend(dc); err != nil {
+		return nil, err
+	}
+
 	var circles []uint32
 	hashTable := make(map[uint32]*value.Backend)
 
@@ -363,13 +381,6 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 			hashTable[num] = v.Backend
 			circles = append(circles, num)
 		}
-	}
-
-	if healthyBackends == 0 {
-		return nil, ErrAllBackendsFailed
-	}
-	if healthyBackends/len(dc.Backends) < dc.Quorum {
-		return nil, ErrQuorumWeightNotReached
 	}
 
 	// Sort slice for binary search
@@ -406,31 +417,37 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 }
 
 func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*value.Backend, error) {
-	max := uint64(math.Pow(10, 4)) // max 10000
-	num := binary.BigEndian.Uint64(hash[:8]) % max
+	if err := i.canDetermineBackend(dc); err != nil {
+		return nil, err
+	}
 
-	var healthyBackends int
 	var target *value.Backend
-	for _, v := range dc.Backends {
-		// Skip if backend is unhealthy
-		if !v.Backend.Healthy.Load() {
-			continue
-		}
-		healthyBackends++
-		bh := sha256.Sum256([]byte(v.Backend.Value.Name.Value))
-		b := binary.BigEndian.Uint64(bh[:8])
-		if b%(max*10) >= num && b%(max*10) < num+max {
-			target = v.Backend
-			break
-		}
-	}
+	for m := 4; m <= 32; m += 2 {
+		max := uint64(math.Pow(10, float64(m)))
+		num := binary.BigEndian.Uint64(hash[:8]) % max
 
-	// There is no healthy backend or healthyBackends is less than quorum
-	if target == nil || healthyBackends == 0 {
-		return nil, ErrAllBackendsFailed
+		for _, v := range dc.Backends {
+			if !v.Backend.Healthy.Load() {
+				continue
+			}
+			bh := sha256.Sum256([]byte(v.Backend.Value.String()))
+			b := binary.BigEndian.Uint64(bh[:8])
+			if b%(max*10) >= num && b%(max*10) < num+max {
+				target = v.Backend
+				goto DETERMINED
+			}
+		}
 	}
-	if healthyBackends/len(dc.Backends) < dc.Quorum {
-		return nil, ErrQuorumWeightNotReached
+DETERMINED:
+
+	// When target is not determined, use first healthy backend
+	if target == nil {
+		for _, v := range dc.Backends {
+			if !v.Backend.Healthy.Load() {
+				continue
+			}
+			return v.Backend, nil
+		}
 	}
 	return target, nil
 }
