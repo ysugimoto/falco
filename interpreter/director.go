@@ -422,7 +422,7 @@ func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*
 	}
 
 	var target *value.Backend
-	for m := 4; m <= 32; m += 2 {
+	for m := 4; m <= 16; m += 2 {
 		max := uint64(math.Pow(10, float64(m)))
 		num := binary.BigEndian.Uint64(hash[:8]) % max
 
