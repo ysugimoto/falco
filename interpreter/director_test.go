@@ -69,7 +69,7 @@ director test random {
 `
 	ip, err := createTestInterpreter(director)
 	if err != nil {
-		t.Errorf("Failed to create interprete: %s", err)
+		t.Errorf("Failed to create interpreter: %s", err)
 	}
 	d := ip.ctx.Backends["test"].Director
 
@@ -102,7 +102,7 @@ director test random {
 	t.Run("Expect quorum weight not reached error", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -119,7 +119,7 @@ director test random {
 	t.Run("Fair randomness", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -154,7 +154,7 @@ director test random {
 	t.Run("Only healthy backends are determined", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -200,7 +200,7 @@ director test fallback {
 	t.Run("Unhealthy backend should not determined", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -218,7 +218,7 @@ director test fallback {
 	t.Run("Return all backend failed error", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -244,7 +244,7 @@ director test hash {
 	t.Run("Expect quorum weight not reached error", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -261,7 +261,7 @@ director test hash {
 	t.Run("Determined same backend", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -306,7 +306,7 @@ director test client {
 	t.Run("Expect quorum weight not reached error", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -323,7 +323,7 @@ director test client {
 	t.Run("Determined same backend", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -380,7 +380,7 @@ director test chash {
 	t.Run("Expect quorum weight not reached error", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -397,7 +397,7 @@ director test chash {
 	t.Run("Determined same backend for object key", func(t *testing.T) {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -432,7 +432,7 @@ director test chash {
 	t.Run("Determined same backend for client key", func(t *testing.T) {
 		ip, err := createTestInterpreter(director2)
 		if err != nil {
-			t.Errorf("Failed to create interprete: %s", err)
+			t.Errorf("Failed to create interpreter: %s", err)
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
