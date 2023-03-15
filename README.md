@@ -8,8 +8,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/ysugimoto/falco.svg)](https://pkg.go.dev/github.com/ysugimoto/falco)
 ![Build](https://github.com/ysugimoto/falco/actions/workflows/build.yml/badge.svg)
 
-![falco-demo](https://user-images.githubusercontent.com/1000401/132373603-f4050ee8-945a-4cc3-9ea8-2df992f4136d.gif)
-
 
 ## Disclaimer
 
