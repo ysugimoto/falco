@@ -1,9 +1,12 @@
+<p align="center">
+<img src="https://user-images.githubusercontent.com/1000401/225396918-6490ea38-6883-434a-ac1f-e8b6188ec58b.png" width="320" />
+</p>
+<p align="center">VCL parser and linter optimized for <a href="https://www.fastly.com">Fastly</a>.</p>
+
+----
+
 [![Go Reference](https://pkg.go.dev/badge/github.com/ysugimoto/falco.svg)](https://pkg.go.dev/github.com/ysugimoto/falco)
 ![Build](https://github.com/ysugimoto/falco/actions/workflows/build.yml/badge.svg)
-
-# falco
-
-falco is VCL parser and linter optimized for [Fastly](https://www.fastly.com).
 
 ![falco-demo](https://user-images.githubusercontent.com/1000401/132373603-f4050ee8-945a-4cc3-9ea8-2df992f4136d.gif)
 
@@ -202,3 +205,7 @@ MIT License
 - [@shadialtarsha](https://github.com/shadialtarsha)
 - [@davinci26](https://github.com/davinci26)
 - [@ivomurrell](https://github.com/ivomurrell)
+
+## Credeits / Thanks
+
+Logo created by [@studimohawk](https://github.com/studiomohawk)
