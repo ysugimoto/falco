@@ -204,6 +204,6 @@ MIT License
 - [@davinci26](https://github.com/davinci26)
 - [@ivomurrell](https://github.com/ivomurrell)
 
-## Credeits / Thanks
+## Credits / Thanks
 
 Logo created by [@studimohawk](https://github.com/studiomohawk)
