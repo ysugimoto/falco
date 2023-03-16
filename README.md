@@ -206,4 +206,4 @@ MIT License
 
 ## Credits / Thanks
 
-Logo created by [@studimohawk](https://github.com/studiomohawk)
+Logo created by [@studiomohawk](https://github.com/studiomohawk)
