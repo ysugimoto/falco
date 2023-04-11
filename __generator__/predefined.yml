@@ -10,6 +10,11 @@ fastly_info.is_cluster_shield:
   on: [MISS, FETCH]
   get: BOOL
 
+fastly_info.h2.fingerprint:
+  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
 req.backend.is_cluster:
   reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
   on: [DELIVER]
