@@ -1784,6 +1784,16 @@ func predefinedVariables() Variables {
 				},
 				"h2": &Object{
 					Items: map[string]*Object{
+						"fingerprint": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+							},
+						},
 						"is_push": &Object{
 							Items: map[string]*Object{},
 							Value: &Accessor{

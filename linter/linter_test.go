@@ -2535,3 +2535,13 @@ sub vcl_recv {
 `
 	assertError(t, input, context.WithFastlySnippets(snippets))
 }
+
+func TestFastlyInfoH2FingerPrintCouldLint(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
+}
+		`
+	assertNoError(t, input)
+}
