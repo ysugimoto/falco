@@ -2541,7 +2541,48 @@ func TestFastlyInfoH2FingerPrintCouldLint(t *testing.T) {
 sub vcl_recv {
    #FASTLY RECV
    set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
+}`
+	assertNoError(t, input)
 }
-		`
+
+func TestIgnoreErrorNextLine(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   # falco-ignore-next-line
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined; // undefined but ignore
+}`
+	assertNoError(t, input)
+}
+
+func TestIgnoreErrorThisLine(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined; // falco-ignore
+}`
+	assertNoError(t, input)
+}
+
+func TestIgnoreErrorStartEnd(t *testing.T) {
+	input := `
+sub vcl_recv {
+	// falco-ignore-start
+   #FASTLY RECV
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined;
+	// falco-ignore-end
+   set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
+}`
+	assertNoError(t, input)
+}
+
+func TestIgnoreErrorStartEndWholeDeclaration(t *testing.T) {
+	input := `
+// falco-ignore-start
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined;
+   set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
+}`
 	assertNoError(t, input)
 }

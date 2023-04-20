@@ -19,11 +19,13 @@ type Linter struct {
 	Errors         []error
 	FatalError     *FatalError
 	includexLexers map[string]*lexer.Lexer
+	ignore         *ignore
 }
 
 func New() *Linter {
 	return &Linter{
 		includexLexers: make(map[string]*lexer.Lexer),
+		ignore:         &ignore{},
 	}
 }
 
@@ -33,7 +35,9 @@ func (l *Linter) Lexers() map[string]*lexer.Lexer {
 
 func (l *Linter) Error(err error) {
 	if le, ok := err.(*LintError); ok {
-		l.Errors = append(l.Errors, le)
+		if !l.ignore.IsEnable() {
+			l.Errors = append(l.Errors, le)
+		}
 	} else {
 		l.Errors = append(l.Errors, &LintError{
 			Severity: ERROR,
@@ -268,7 +272,11 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
-		l.lint(s, ctx)
+		func(v ast.Statement) {
+			l.ignore.SetupStatement(v.GetMeta())
+			defer l.ignore.TeardownStatement()
+			l.lint(v, ctx)
+		}(s)
 	}
 
 	return types.NeverType
@@ -938,9 +946,16 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 }
 
 func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Context) types.Type {
+	l.ignore.SetupBlockStatement(block.GetMeta())
+	defer l.ignore.TeardownBlockStatement(block.GetMeta())
+
 	statements := l.resolveIncludeStatements(block.Statements, ctx, false)
 	for _, stmt := range statements {
-		l.lint(stmt, ctx)
+		func(v ast.Statement) {
+			l.ignore.SetupStatement(v.GetMeta())
+			defer l.ignore.TeardownStatement()
+			l.lint(v, ctx)
+		}(stmt)
 	}
 
 	return types.NeverType
