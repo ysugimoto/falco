@@ -29,7 +29,6 @@ type ignore struct {
 // Then leading comments accept falco-ignore-next-line, falco-ignore-start, falco-ignore-end
 // trailing comments accept falco-ignore
 func (i *ignore) SetupStatement(meta *ast.Meta) {
-
 	// Find ignore signature in leading comments
 	for _, c := range meta.Leading {
 		line := strings.TrimLeft(c.String(), "#@*/ ")
@@ -60,13 +59,13 @@ func (i *ignore) TeardownStatement() {
 
 // Block statement is special, the comment placing is following:
 //
-// sub foo {
-//  // leading comments
-//  [STATEMENT]
-//  [STATEMENT]
-//  ...
-//  // trailing comments
-// }
+//	sub foo {
+//	 // leading comments
+//	 [STATEMENT]
+//	 [STATEMENT]
+//	 ...
+//	 // trailing comments
+//	}
 //
 // So we need to divide parsing leading and trailing comment by setup and teardown
 func (i *ignore) SetupBlockStatement(meta *ast.Meta) {
@@ -81,7 +80,6 @@ func (i *ignore) SetupBlockStatement(meta *ast.Meta) {
 			i.ignoreRange = false
 		}
 	}
-
 }
 func (i *ignore) TeardownBlockStatement(meta *ast.Meta) {
 	i.ignoreNextLine = false
