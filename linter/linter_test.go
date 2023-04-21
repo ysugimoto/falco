@@ -2555,6 +2555,17 @@ sub vcl_recv {
 	assertNoError(t, input)
 }
 
+func TestIgnoreErrorNextLineOnly(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   # falco-ignore-next-line
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined; // undefined but ignore
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined; // raise an error
+}`
+	assertError(t, input)
+}
+
 func TestIgnoreErrorThisLine(t *testing.T) {
 	input := `
 sub vcl_recv {
@@ -2574,6 +2585,18 @@ sub vcl_recv {
    set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
 }`
 	assertNoError(t, input)
+}
+
+func TestIgnoreErrorStartEndRangeOnly(t *testing.T) {
+	input := `
+sub vcl_recv {
+	// falco-ignore-start
+   #FASTLY RECV
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined;
+	// falco-ignore-end
+   set req.http.H2-Fingerprint = fastly_info.h2.undefined;
+}`
+	assertError(t, input)
 }
 
 func TestIgnoreErrorStartEndWholeDeclaration(t *testing.T) {
