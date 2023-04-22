@@ -272,11 +272,11 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
-		func(v ast.Statement) {
+		func(v ast.Statement, c *context.Context) {
 			l.ignore.SetupStatement(v.GetMeta())
 			defer l.ignore.TeardownStatement()
-			l.lint(v, ctx)
-		}(s)
+			l.lint(v, c)
+		}(s, ctx)
 	}
 
 	return types.NeverType
@@ -951,11 +951,11 @@ func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Cont
 
 	statements := l.resolveIncludeStatements(block.Statements, ctx, false)
 	for _, stmt := range statements {
-		func(v ast.Statement) {
+		func(v ast.Statement, c *context.Context) {
 			l.ignore.SetupStatement(v.GetMeta())
 			defer l.ignore.TeardownStatement()
-			l.lint(v, ctx)
-		}(stmt)
+			l.lint(v, c)
+		}(stmt, ctx)
 	}
 
 	return types.NeverType
