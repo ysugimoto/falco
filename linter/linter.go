@@ -272,14 +272,17 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
-		func(v ast.Statement, c *context.Context) {
-			l.ignore.SetupStatement(v.GetMeta())
-			defer l.ignore.TeardownStatement()
-			l.lint(v, c)
-		}(s, ctx)
+		l.lintStatement(s, ctx)
 	}
 
 	return types.NeverType
+}
+
+func (l *Linter) lintStatement(s ast.Statement, ctx *context.Context) {
+	// Any statements may have ignoring comments so we do setup and teardown
+	l.ignore.SetupStatement(s.GetMeta())
+	defer l.ignore.TeardownStatement()
+	l.lint(s, ctx)
 }
 
 func (l *Linter) loadSnippetVCL(file, content string) []ast.Statement {
