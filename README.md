@@ -147,6 +147,53 @@ Partially supports fetching Fastly managed VCL snippets. See [remote.md](https:/
 
 `falco` has built in lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints with strict type checks, disallows implicit type conversions even VCL is fuzzy typed language.
 
+## Ignoring errors
+
+Fastly also accepts some syntax and function which comes from Varnish (e.g `map()` function) but falco reports error for it. Then, you can put leading/trailing comemnts for each statements, falco will ignore the error.
+
+The comment syntax is similar to eslint, but very simplified.
+Note that this feature only ignores linting error, the parser erorr will be reported.
+
+### Next Line
+
+Put `// falco-ignore-next-line` comment on the statement, ignoring errors for next statement.
+
+```vcl
+sub vcl_recv {
+  # FASTLY RECV
+
+  // falco-ignore-next-line
+  set req.http.Example = some.undefined.variable;
+}
+```
+
+### Current statement
+
+Put `// falco-ignore` comment on the trailing, ignoring errors for current statement.
+
+```vcl
+sub vcl_recv {
+  # FASTLY RECV
+
+  set req.http.Example = some.undefined.variable; // falco-ignore
+}
+```
+
+### Range ignoring
+
+falco recognizes `// falco-ignore-start` and `// falco-ignore-end` comment, ignore the errors between this range.
+
+```vcl
+sub vcl_recv {
+  # FASTLY RECV
+
+  // falco-ignore-start
+  set req.http.Example = some.undefined.variable;
+  // falco-igore-end
+
+}
+```
+
 ## Overriding Severity
 
 To avoid them, you can override severity levels by putting a configuration file named `.falcorc` on working directory. the configuration file contents format is following:
