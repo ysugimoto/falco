@@ -28,7 +28,7 @@ jobs:
         id: version
         run: |
           VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
-          echo ::set-output name=version::$VERSION
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Build platform binaries
         run: VERSION=${{ steps.version.outputs.version }} make all
       - name: Create Release
