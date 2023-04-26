@@ -1,3 +1,7 @@
+## v0.20.0
+
+- implement ignoring feature [#124](https://github.com/ysugimoto/falco/pull/124) (@ysugimoto)
+
 ## v0.19.1
 
 - supress output [#123](https://github.com/ysugimoto/falco/pull/123) (@ysugimoto)
