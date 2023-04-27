@@ -5,9 +5,10 @@ type Version struct {
 }
 
 type EdgeDictionary struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Items []*EdgeDictionaryItem
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	WriteOnly bool   `json:"write_only"`
+	Items     []*EdgeDictionaryItem
 }
 
 type EdgeDictionaryItem struct {

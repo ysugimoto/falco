@@ -76,6 +76,15 @@ func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) 
 	var once sync.Once
 	errch := make(chan error)
 	for _, d := range dicts {
+		// If WriteOnly field is true, the dictionary is private.
+		// The private dictionary could not access its items so we should prevent to fetch items.
+		// Then dictionary items are empty but it's OK for linting
+		if d.WriteOnly {
+			// Explicit empty items
+			d.Items = []*EdgeDictionaryItem{}
+			continue
+		}
+
 		wg.Add(1)
 		go func(d *EdgeDictionary) {
 			defer wg.Done()
