@@ -1,3 +1,7 @@
+## v0.20.1
+
+- support private edge dictionary [#144](https://github.com/ysugimoto/falco/pull/144) (@ysugimoto)
+
 ## v0.20.0
 
 - implement ignoring feature [#124](https://github.com/ysugimoto/falco/pull/124) (@ysugimoto)
