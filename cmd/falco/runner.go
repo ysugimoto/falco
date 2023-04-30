@@ -437,3 +437,18 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 
 	return stats, nil
 }
+<<<<<<< HEAD
+=======
+
+func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
+	options := []icontext.Option{icontext.WithResolver(rslv)}
+	if r.snippets != nil {
+		options = append(options, icontext.WithFastlySnippets(r.snippets))
+	}
+	if v := os.Getenv("FALCO_DEBUG"); v != "" {
+		options = append(options, icontext.WithDebug())
+	}
+
+	return interpreter.New(options...)
+}
+>>>>>>> d37b8f8 (add banner, debug mode)

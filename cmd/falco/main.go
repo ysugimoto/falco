@@ -68,15 +68,25 @@ func writeln(c *color.Color, format string, args ...interface{}) {
 
 func printUsage() {
 	usage := `
-=======================================
-  falco: Fastly VCL parser / linter
-=======================================
+=========================================================
+    ____        __
+   / __/______ / /_____ ____ 
+  / /_ / __ ` + ` // //  __// __ \
+ / __// /_/ // // /__ / /_/ /
+/_/   \____//_/ \___/ \____/  Fastly VCL parser / linter
+
+=========================================================
 Usage:
     falco [subcommand] [main vcl file]
 
 Subcommands:
     terraform : Run lint from terraform planned JSON
     lint      : Run lint (default)
+<<<<<<< HEAD
+=======
+    stats     : Analyze VCL statistics
+    simulate  : Run simulate server with provided VCLs
+>>>>>>> d37b8f8 (add banner, debug mode)
 
 Flags:
     -I, --include_path : Add include path
@@ -93,7 +103,7 @@ Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
 
 Get statistics example:
-    falco -I . -stats /path/to/vcl/main.vcl
+    falco -I . stats /path/to/vcl/main.vcl
 
 Linting with terraform:
     terraform plan -out planned.out
