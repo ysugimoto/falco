@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/interpreter"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
@@ -437,8 +440,6 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 
 	return stats, nil
 }
-<<<<<<< HEAD
-=======
 
 func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
 	options := []icontext.Option{icontext.WithResolver(rslv)}
@@ -451,4 +452,3 @@ func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
 
 	return interpreter.New(options...)
 }
->>>>>>> d37b8f8 (add banner, debug mode)
