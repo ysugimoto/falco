@@ -39,5 +39,8 @@ jobs:
             dist/falco-linux-amd64
             dist/falco-darwin-amd64
             dist/falco-darwin-arm64
+            dist/falco-linux-amd64.tar.gz
+            dist/falco-darwin-amd64.tar.gz
+            dist/falco-darwin-arm64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
