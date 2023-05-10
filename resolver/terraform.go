@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
@@ -49,13 +48,13 @@ func (s *TerraformResolver) MainVCL() (*VCL, error) {
 }
 
 func (s *TerraformResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
-	modulePathWithoutExtension := strings.TrimSuffix(stmt.Module.Value, ".vcl")
+	module := stmt.Module.Value
 
 	for i := range s.Modules {
-		if s.Modules[i].Name == modulePathWithoutExtension {
+		if s.Modules[i].Name == module {
 			return s.Modules[i], nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Failed to resolve include module: %s", modulePathWithoutExtension))
+	return nil, errors.New(fmt.Sprintf("Failed to resolve include module: %s", module))
 }
