@@ -88,8 +88,27 @@ func TestResolveWithDuplicateDeclarations(t *testing.T) {
 	}
 }
 
-func TestResolveWithMultipleModules(t *testing.T) {
-	fileName := "../../terraform/data/terraform-modules.json"
+func TestResolveModulesWithVCLExtension(t *testing.T) {
+	fileName := "../../terraform/data/terraform-modules-extension.json"
+	rslv, f := loadFromTfJson(fileName, t)
+
+	r, err := NewRunner(&Config{V: true}, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+	}
+
+	ret, err := r.Run(rslv[0])
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
+	}
+}
+
+func TestResolveModulesWithoutVCLExtension(t *testing.T) {
+	fileName := "../../terraform/data/terraform-modules-without-extension.json"
 	rslv, f := loadFromTfJson(fileName, t)
 
 	r, err := NewRunner(&Config{V: true}, f)
