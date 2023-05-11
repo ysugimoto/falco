@@ -56,7 +56,7 @@
                 "name": "module_1"
               },
               {
-                "content": "include \"module_1\" \n sub vcl_recv { \n #FASTLY RECV \n if (req.http.foo ~ foo_acl && table.contains(foo_dictionary, \"foo\")){ \n set req.backend = F_foo_backend;\n  call custom_logger;\n}\n}",
+                "content": "include \"module_1.vcl\" \n sub vcl_recv { \n #FASTLY RECV \n if (req.http.foo ~ foo_acl && table.contains(foo_dictionary, \"foo\")){ \n set req.backend = F_foo_backend;\n  call custom_logger;\n}\n}",
                 "main": true,
                 "name": "main.vcl"
               }

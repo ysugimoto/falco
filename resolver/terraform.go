@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
@@ -22,6 +23,11 @@ func NewTerraformResolver(services []*terraform.FastlyService) []Resolver {
 			ServiceName: v.Name,
 		}
 		for _, vcl := range v.Vcls {
+			// Always save module names with .vcl extension
+			if !strings.HasSuffix(vcl.Name, ".vcl") {
+				vcl.Name = fmt.Sprintf("%s.vcl", vcl.Name)
+			}
+
 			if vcl.Main {
 				s.Main = &VCL{
 					Name: vcl.Name,
