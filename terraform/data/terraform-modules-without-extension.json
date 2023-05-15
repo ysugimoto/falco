@@ -53,10 +53,10 @@
               {
                 "content": "sub custom_logger { \n log req.http.header; \n}",
                 "main": false,
-                "name": "module_1"
+                "name": "some_module"
               },
               {
-                "content": "include \"module_1.vcl\" \n sub vcl_recv { \n #FASTLY RECV \n if (req.http.foo ~ foo_acl && table.contains(foo_dictionary, \"foo\")){ \n set req.backend = F_foo_backend;\n  call custom_logger;\n}\n}",
+                "content": "include \"some_module\" \n sub vcl_recv { \n #FASTLY RECV \n if (req.http.foo ~ foo_acl && table.contains(foo_dictionary, \"foo\")){ \n set req.backend = F_foo_backend;\n  call custom_logger;\n}\n}",
                 "main": true,
                 "name": "main.vcl"
               }
