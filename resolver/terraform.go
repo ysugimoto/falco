@@ -23,6 +23,9 @@ func NewTerraformResolver(services []*terraform.FastlyService) []Resolver {
 			ServiceName: v.Name,
 		}
 		for _, vcl := range v.Vcls {
+			// Always save module names with .vcl extension
+			vcl.Name = addVCLFileExtension(vcl.Name)
+
 			if vcl.Main {
 				s.Main = &VCL{
 					Name: vcl.Name,
@@ -49,13 +52,21 @@ func (s *TerraformResolver) MainVCL() (*VCL, error) {
 }
 
 func (s *TerraformResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
-	modulePathWithoutExtension := strings.TrimSuffix(stmt.Module.Value, ".vcl")
+	module := addVCLFileExtension(stmt.Module.Value)
 
 	for i := range s.Modules {
-		if s.Modules[i].Name == modulePathWithoutExtension {
+		if s.Modules[i].Name == module {
 			return s.Modules[i], nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Failed to resolve include module: %s", modulePathWithoutExtension))
+	return nil, errors.New(fmt.Sprintf("Failed to resolve include module: %s", module))
+}
+
+// addVCLFileExtension adds .vcl extension if it doesn't exist.
+func addVCLFileExtension(name string) string {
+	if !strings.HasSuffix(name, ".vcl") {
+		name = fmt.Sprintf("%s.vcl", name)
+	}
+	return name
 }
