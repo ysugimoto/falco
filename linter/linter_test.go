@@ -225,6 +225,10 @@ backend foo {
 director bar client {
 	.quorum  = 50%;
 	{ .backend = foo; .weight = 1; }
+}
+
+director fiz chash {
+	{ .backend = foo; .id = "foo"; }
 }`
 		assertNoError(t, input)
 	})
