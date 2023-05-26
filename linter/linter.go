@@ -833,11 +833,49 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 
 	l.lint(decl.Block, cc)
 
+	// Additional linting, authenticating URL purge via API.
+	// We recommends that the URL purge should be restricted to enable able to call publicly.
+	l.lintPublicURLPurge(decl, cc)
+
 	// We are done linting inside the previous scope so
 	// we dont need the return type anymore
 	cc.ReturnType = nil
 
 	return types.NeverType
+}
+
+// Lint the VCL is not able to authenticate URL purge from public
+// see: https://docs.fastly.com/en/guides/authenticating-api-purge-requests
+func (l *Linter) lintPublicURLPurge(sub *ast.SubroutineDeclaration, ctx *context.Context) {
+	var found *ast.SetStatement
+
+	for _, s := range sub.Block.Statements {
+		set, ok := s.(*ast.SetStatement)
+		if !ok {
+			continue
+		} else if set.Ident.Value != "req.http.Fastly-Purge-Requires-Auth" {
+			continue
+		}
+		found = set
+		break
+	}
+
+	if found == nil {
+		e := &LintError{
+			Severity: INFO,
+			Token:    sub.GetMeta().Token,
+			Message:  `Faastly-Purge-Requires-Auth header should exist in vcl_recv directive`,
+		}
+		l.Error(e.Match(ALLOW_PUBLIC_URL_PURGE))
+	}
+	if v, ok := found.Value.(*ast.String); !ok || v.Value != "1" {
+		e := &LintError{
+			Severity: INFO,
+			Token:    found.GetMeta().Token,
+			Message:  `Faastly-Purge-Requires-Auth header value must be string of "1"`,
+		}
+		l.Error(e.Match(ALLOW_PUBLIC_URL_PURGE))
+	}
 }
 
 func (l *Linter) lintGotoStatement(stmt *ast.GotoStatement, ctx *context.Context) types.Type {
