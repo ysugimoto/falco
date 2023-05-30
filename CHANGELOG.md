@@ -1,3 +1,8 @@
+## v0.20.2
+
+- Accept `.backend` in chash director [#149](https://github.com/ysugimoto/falco/pull/149) (@davinci26)
+- Fix resolving Terraform Modules [#148](https://github.com/ysugimoto/falco/pull/148) (@shadialtarsha)
+
 ## v0.20.1
 
 - support private edge dictionary [#144](https://github.com/ysugimoto/falco/pull/144) (@ysugimoto)
