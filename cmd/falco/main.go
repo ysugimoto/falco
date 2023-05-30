@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 
 	"github.com/fatih/color"
-	"github.com/k0kubun/pp"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
@@ -118,7 +117,6 @@ func main() {
 		writeln(white, version)
 		os.Exit(1)
 	}
-	pp.Println(c)
 
 	var fetcher Fetcher
 	// falco could lint multiple services so resolver should be a slice
