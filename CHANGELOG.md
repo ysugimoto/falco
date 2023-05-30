@@ -1,4 +1,4 @@
-## v0.20.2
+## v0.20.3
 
 - Accept `.backend` in chash director [#149](https://github.com/ysugimoto/falco/pull/149) (@davinci26)
 - Fix resolving Terraform Modules [#148](https://github.com/ysugimoto/falco/pull/148) (@shadialtarsha)
