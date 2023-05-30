@@ -3,15 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
-	"path/filepath"
-
-	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
@@ -81,7 +78,7 @@ type Runner struct {
 	errors   int
 }
 
-func NewRunner(c *Config, f Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:     LevelError,
 		overrides: make(map[string]linter.Severity),
@@ -96,15 +93,13 @@ func NewRunner(c *Config, f Fetcher) (*Runner, error) {
 		// We communicate Fastly API with service id and api key,
 		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
 		// So user needs to set them with "-r" argument.
-		serviceId := os.Getenv("FASTLY_SERVICE_ID")
-		apiKey := os.Getenv("FASTLY_API_KEY")
-		if serviceId == "" || apiKey == "" {
+		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
 			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
 		}
 		func() {
 			// Remote communication is optional so we keep processing even if remote communication is failed
 			// We allow each API call to take up to to 5 seconds
-			f := remote.NewFastlyApiFetcher(serviceId, apiKey, 5*time.Second)
+			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
 			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
 				writeln(red, err.Error())
@@ -122,77 +117,30 @@ func NewRunner(c *Config, f Fetcher) (*Runner, error) {
 		r.snippets = snippets
 	}
 
-	// Check transformer exists and format to absolute path
-	// Transformer is provided as independent binary, named "falco-transform-[name]"
-	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
-		}
-		r.transformers = append(r.transformers, tf)
-	}
-
 	// Set verbose level
-	if c.VV {
+	if c.VerboseInfo {
 		r.level = LevelInfo
-	} else if c.V {
+	} else if c.VerboseWarning {
 		r.level = LevelWarning
 	}
 
-	// Make overriding error level setting from rc file
-	r.initOverrides()
+	// Override linter rules
+	for key, value := range c.Rules {
+		switch strings.ToUpper(value) {
+		case "ERROR":
+			r.overrides[key] = linter.ERROR
+		case "WARNING":
+			r.overrides[key] = linter.WARNING
+		case "INFO":
+			r.overrides[key] = linter.INFO
+		case "IGNORE":
+			r.overrides[key] = linter.IGNORE
+		default:
+			writeln(yellow, "level for rule %s has invalid value %s, skip it.", key, value)
+		}
+	}
 
 	return r, nil
-}
-
-func (r *Runner) initOverrides() {
-	// find up rc file
-	cwd, err := os.Getwd()
-	if err != nil {
-		return
-	}
-	var rcFile string
-	for {
-		rcFile = filepath.Join(cwd, DotfileName)
-		if _, err := os.Stat(rcFile); err == nil {
-			break
-		}
-		cwd = filepath.Dir(cwd)
-		if cwd == "/" {
-			// find up to root directory, stop it
-			return
-		}
-	}
-
-	fp, err := os.Open(rcFile)
-	if err != nil {
-		writeln(yellow, "Configuration file found at %s but could not open", rcFile)
-		return
-	}
-	defer fp.Close()
-	o := make(map[string]string)
-	if err := yaml.NewDecoder(fp).Decode(&o); err != nil {
-		writeln(yellow, "Failed to decode configuration file at %s: %s", rcFile, err)
-		return
-	}
-
-	// validate configuration file
-	for k, v := range o {
-		switch strings.ToUpper(v) {
-		case "ERROR":
-			r.overrides[k] = linter.ERROR
-		case "WARNING":
-			r.overrides[k] = linter.WARNING
-		case "INFO":
-			r.overrides[k] = linter.INFO
-		case "IGNORE":
-			r.overrides[k] = linter.IGNORE
-		default:
-			writeln(yellow, "level for rule %s has invalid value %s, skip it.", k, v)
-			return
-		}
-	}
 }
 
 func (r *Runner) Transform(vcl *plugin.VCL) error {
