@@ -15,6 +15,7 @@ const (
 type Config struct {
 	// Root configurations
 	IncludePaths   []string `cli:"I,include_path" yaml:"include_paths"`
+	Transforms     []string `cli:"t,transformer" yaml:"transformers"`
 	Help           bool     `cli:"h,help"`
 	VerboseLevel   string   `yaml:"verbose"`
 	VerboseWarning bool     `cli:"v"`

@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	ErrParser   = fmt.Errorf("parser error")
-	DotfileName = ".falcorc"
+	ErrParser = fmt.Errorf("parser error")
 )
 
 type Level int
@@ -115,6 +114,17 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 			writeln(red, err.Error())
 		}
 		r.snippets = snippets
+	}
+
+	// Check transformer exists and format to absolute path
+	// Transformer is provided as independent binary, named "falco-transform-[name]"
+	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
+	for i := range c.Transforms {
+		tf, err := NewTransformer(c.Transforms[i])
+		if err != nil {
+			return nil, err
+		}
+		r.transformers = append(r.transformers, tf)
 	}
 
 	// Set verbose level
