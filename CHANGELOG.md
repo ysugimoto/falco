@@ -1,3 +1,7 @@
+## v0.21.0
+
+- Integrate configuration to config package [#151](https://github.com/ysugimoto/falco/pull/151) (@ysugimoto)
+
 ## v0.20.3
 
 - Accept `.backend` in chash director [#149](https://github.com/ysugimoto/falco/pull/149) (@davinci26)
