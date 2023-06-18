@@ -831,6 +831,13 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		l.lintFastlyBoilerPlateMacro(decl, ctx, scope)
 	}
 
+	// Store current subroutine in order to be able to access via statements inside
+	ctx.CurrentSubroutine = decl
+	defer func() {
+		// Release it on subroutine linting has ended
+		ctx.CurrentSubroutine = nil
+	}()
+
 	l.lint(decl.Block, cc)
 
 	// We are done linting inside the previous scope so
@@ -1382,8 +1389,16 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		expects = append(expects, "deliver")
 	}
 
-	// return statement may not have arguments, then stop linting
+	// If return statement does not have arguemnt, but Fastly requires next state in state-machine method like "vcl_recv"
 	if stmt.ReturnExpression == nil {
+		if ctx.IsStateMachineMethod() {
+			err := &LintError{
+				Severity: ERROR,
+				Token:    stmt.GetMeta().Token,
+				Message:  "Empty return is disallowed in state-machine method",
+			}
+			l.Error(err.Match(DISALLOW_EMPTY_RETURN))
+		}
 		return types.NeverType
 	}
 
