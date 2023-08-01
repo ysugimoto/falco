@@ -1,3 +1,7 @@
+## v0.22.0
+
+- Add fastly_info.host_header [#155](https://github.com/ysugimoto/falco/pull/155) (@bungoume)
+
 ## v0.21.0
 
 - Integrate configuration to config package [#151](https://github.com/ysugimoto/falco/pull/151) (@ysugimoto)
