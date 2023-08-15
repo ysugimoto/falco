@@ -225,6 +225,10 @@ backend foo {
 director bar client {
 	.quorum  = 50%;
 	{ .backend = foo; .weight = 1; }
+}
+
+director fiz chash {
+	{ .backend = foo; .id = "foo"; }
 }`
 		assertNoError(t, input)
 	})
@@ -2608,4 +2612,41 @@ sub vcl_recv {
    set req.http.H2-Fingerprint = fastly_info.h2.fingerprint;
 }`
 	assertNoError(t, input)
+}
+
+func TestEmptyReturnStatement(t *testing.T) {
+	t.Run("Error on state-machine-methods", func(t *testing.T) {
+		methodWithMacros := map[string]string{
+			"vcl_recv":    "#FASTLY RECV",
+			"vcl_hash":    "#FASTLY HASH",
+			"vcl_hit":     "#FASTLY HIT",
+			"vcl_miss":    "#FASTLY MISS",
+			"vcl_pass":    "#FASTLY PASS",
+			"vcl_fetch":   "#FASTLY FETCH",
+			"vcl_error":   "#FASTLY ERROR",
+			"vcl_deliver": "#FASTLY DELIVER",
+			"vcl_log":     "#FASTLY LOG",
+		}
+		for method, macro := range methodWithMacros {
+			input := fmt.Sprintf(
+				`
+sub %s {
+	%s
+	return;
+}`, method, macro)
+			assertError(t, input)
+		}
+	})
+
+	t.Run("Pass on other subroutine", func(t *testing.T) {
+		input := `
+sub foo {
+	return;
+}
+sub vcl_recv {
+	#FASTLY RECV
+	call foo;
+}`
+		assertNoError(t, input)
+	})
 }

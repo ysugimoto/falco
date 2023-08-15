@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
@@ -37,29 +37,6 @@ const (
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 )
-
-type multiStringFlags []string
-
-func (m *multiStringFlags) Set(v string) error {
-	*m = append(*m, v)
-	return nil
-}
-
-func (m *multiStringFlags) String() string {
-	return fmt.Sprintf("%v", *m)
-}
-
-type Config struct {
-	Transforms   multiStringFlags
-	IncludePaths multiStringFlags
-	Help         bool
-	V            bool
-	VV           bool
-	Version      bool
-	Remote       bool
-	Stats        bool
-	Json         bool
-}
 
 func write(c *color.Color, format string, args ...interface{}) {
 	c.Fprint(output, emoji.Sprintf(format, args...))
@@ -97,7 +74,6 @@ Flags:
     -v                 : Verbose warning lint result
     -vv                : Varbose all lint result
     -json              : Output statistics as JSON
-    -stats             : Analyze VCL statistics
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
@@ -115,32 +91,11 @@ Linting with terraform:
 }
 
 func main() {
-	c := &Config{}
-	fs := flag.NewFlagSet("app", flag.ExitOnError)
-	fs.Var(&c.IncludePaths, "I", "Add include paths (short)")
-	fs.Var(&c.IncludePaths, "include_path", "Add include paths (long)")
-	fs.Var(&c.Transforms, "t", "Add VCL transformer (short)")
-	fs.Var(&c.Transforms, "transformer", "Add VCL transformer (long)")
-	fs.BoolVar(&c.Help, "h", false, "Show Usage")
-	fs.BoolVar(&c.Help, "help", false, "Show Usage")
-	fs.BoolVar(&c.V, "v", false, "Verbose warning")
-	fs.BoolVar(&c.VV, "vv", false, "Verbose info")
-	fs.BoolVar(&c.Version, "V", false, "Print Version")
-	fs.BoolVar(&c.Version, "version", false, "Print Version")
-	fs.BoolVar(&c.Remote, "r", false, "Use Remote")
-	fs.BoolVar(&c.Remote, "remote", false, "Use Remote")
-	fs.BoolVar(&c.Stats, "stats", false, "Analyze VCL statistics")
-	fs.BoolVar(&c.Json, "json", false, "Output statistics as JSON")
-	fs.Usage = printUsage
-
-	var err error
-	if err = fs.Parse(os.Args[1:]); err != nil {
-		if err == flag.ErrHelp {
-			printUsage()
-		}
+	c, err := config.New(os.Args[1:])
+	if err != nil {
+		writeln(red, "Failed to initialize config: %s", err)
 		os.Exit(1)
 	}
-
 	if c.Help {
 		printUsage()
 	} else if c.Version {
@@ -151,7 +106,7 @@ func main() {
 	var fetcher Fetcher
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver
-	switch fs.Arg(0) {
+	switch c.Commands.At(0) {
 	case subcommandTerraform:
 		fastlyServices, err := ParseStdin()
 		if err == nil {
@@ -160,10 +115,10 @@ func main() {
 		}
 	case subcommandSimulate, subcommandLint, subcommandStats:
 		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(fs.Arg(1), c.IncludePaths)
+		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(fs.Arg(0), c.IncludePaths)
+		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
 	}
 
 	if err != nil {
@@ -185,7 +140,7 @@ func main() {
 		}
 
 		var exitErr error
-		switch fs.Arg(0) {
+		switch c.Commands.At(0) {
 		case subcommandSimulate:
 			runSimulator(runner, v)
 		case subcommandStats:
@@ -193,6 +148,7 @@ func main() {
 		default:
 			exitErr = runLint(runner, v)
 		}
+
 		if exitErr == ErrExit {
 			shouldExit = true
 		}

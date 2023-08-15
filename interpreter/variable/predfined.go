@@ -172,6 +172,7 @@ const (
 	FASTLY_INFO_H2_FINGERPRINT                 = "fastly_info.h2.fingerprint"
 	FASTLY_INFO_H2_IS_PUSH                     = "fastly_info.h2.is_push"
 	FASTLY_INFO_H2_STREAM_ID                   = "fastly_info.h2.stream_id"
+	FASTLY_INFO_HOST_HEADER                    = "fastly_info.host_header"
 	FASTLY_INFO_IS_CLUSTER_EDGE                = "fastly_info.is_cluster_edge"
 	FASTLY_INFO_IS_CLUSTER_SHIELD              = "fastly_info.is_cluster_shield"
 	FASTLY_INFO_IS_H2                          = "fastly_info.is_h2"

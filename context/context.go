@@ -109,24 +109,28 @@ type Accessor struct {
 }
 
 type Context struct {
+	// private fields
 	curMode        int
 	prevMode       int
 	curName        string
-	Acls           map[string]*types.Acl
-	Backends       map[string]*types.Backend
-	Tables         map[string]*types.Table
-	Directors      map[string]*types.Director
-	Subroutines    map[string]*types.Subroutine
-	Penaltyboxes   map[string]*types.Penaltybox
-	Ratecounters   map[string]*types.Ratecounter
-	Gotos          map[string]*types.Goto
-	Identifiers    map[string]struct{}
 	functions      Functions
 	Variables      Variables
-	RegexVariables map[string]int
-	ReturnType     *types.Type
 	resolver       resolver.Resolver
 	fastlySnippets *FastlySnippet
+
+	// public fields
+	Acls              map[string]*types.Acl
+	Backends          map[string]*types.Backend
+	Tables            map[string]*types.Table
+	Directors         map[string]*types.Director
+	Subroutines       map[string]*types.Subroutine
+	Penaltyboxes      map[string]*types.Penaltybox
+	Ratecounters      map[string]*types.Ratecounter
+	Gotos             map[string]*types.Goto
+	Identifiers       map[string]struct{}
+	RegexVariables    map[string]int
+	ReturnType        *types.Type
+	CurrentSubroutine *ast.SubroutineDeclaration
 }
 
 func New(opts ...Option) *Context {
@@ -155,6 +159,14 @@ func New(opts ...Option) *Context {
 
 func (c *Context) Mode() int {
 	return c.curMode
+}
+
+// Returns true if statement/expression is inside state-mechine subroutine like "vcl_recv", fastly reserved one
+func (c *Context) IsStateMachineMethod() bool {
+	if c.CurrentSubroutine == nil {
+		return false
+	}
+	return IsFastlySubroutine(c.CurrentSubroutine.Name.Value)
 }
 
 func (c *Context) Resolver() resolver.Resolver {

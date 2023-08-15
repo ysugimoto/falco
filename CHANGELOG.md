@@ -1,3 +1,16 @@
+## v0.22.0
+
+- Add fastly_info.host_header [#155](https://github.com/ysugimoto/falco/pull/155) (@bungoume)
+
+## v0.21.0
+
+- Integrate configuration to config package [#151](https://github.com/ysugimoto/falco/pull/151) (@ysugimoto)
+
+## v0.20.3
+
+- Accept `.backend` in chash director [#149](https://github.com/ysugimoto/falco/pull/149) (@davinci26)
+- Fix resolving Terraform Modules [#148](https://github.com/ysugimoto/falco/pull/148) (@shadialtarsha)
+
 ## v0.20.1
 
 - support private edge dictionary [#144](https://github.com/ysugimoto/falco/pull/144) (@ysugimoto)

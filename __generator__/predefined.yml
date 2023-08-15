@@ -1026,6 +1026,11 @@ fastly_info.h2.is_push:
   on: [RECV, HASH, DELIVER, LOG]
   get: BOOL
 
+fastly_info.host_header:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-host-header/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
 req.body:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]

@@ -95,6 +95,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 			"quorum":          types.StringType,
 			"weight":          types.IntegerType,
 			"id":              types.StringType,
+			"backend":         types.BackendType,
 		},
 		Requires: []string{"id"},
 	},

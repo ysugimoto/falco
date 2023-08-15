@@ -66,6 +66,7 @@ const (
 	UNUSED_DECLARATION                   = "unused/declaration"
 	UNUSED_VARIABLE                      = "unused/variable"
 	UNUSED_GOTO                          = "unused/goto"
+	DISALLOW_EMPTY_RETURN                = "disallow-empty-return"
 )
 
 var references = map[Rule]string{
@@ -100,4 +101,5 @@ var references = map[Rule]string{
 	ERROR_STATEMENT_CODE:             "https://developer.fastly.com/reference/vcl/statements/error/#best-practices-for-using-status-codes-for-errors",
 	SYNTHETIC_STATEMENT_SCOPE:        "https://developer.fastly.com/reference/vcl/statements/synthetic/",
 	SYNTHETIC_BASE64_STATEMENT_SCOPE: "https://developer.fastly.com/reference/vcl/statements/synthetic-base64/",
+	DISALLOW_EMPTY_RETURN:            "https://developer.fastly.com/reference/vcl/subroutines#returning-a-state",
 }
