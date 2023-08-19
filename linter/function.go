@@ -32,7 +32,7 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 				Severity: ERROR,
 				Token:    calledFn.token,
 				Message: fmt.Sprintf(
-					"function %s wants no arguments but provides %d argument",
+					"function %s has 0 arity, but %d arguments provided",
 					calledFn.name, len(calledFn.arguments),
 				),
 			}
@@ -63,7 +63,7 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 				Severity: ERROR,
 				Token:    calledFn.token,
 				Message: fmt.Sprintf(
-					"function %s requires at least one argument",
+					"Function %s requires at least one argument",
 					calledFn.name,
 				),
 			}
