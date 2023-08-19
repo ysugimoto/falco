@@ -63,9 +63,9 @@ Flags:
     -h, --help         : Show this help
     -r, --remote       : Communicate with Fastly API
     -V, --version      : Display build version
-    -v                 : Verbose warning lint result
-    -vv                : Varbose all lint result
-    -json              : Output statistics as JSON
+    -v                 : Output lint warnings
+    -vv                : Output all lint results
+    -json              : Output results as JSON
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
@@ -134,7 +134,7 @@ func main() {
 		var exitErr error
 		switch c.Commands.At(0) {
 		case subcommandStat:
-			exitErr = runStats(runner, v, c.Json)
+			exitErr = runStats(runner, v)
 		default:
 			exitErr = runLint(runner, v)
 		}
@@ -154,6 +154,16 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	if err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())
+		}
+		return ErrExit
+	}
+
+	if runner.jsonMode {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(result); err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
 		}
 		return ErrExit
 	}
@@ -195,7 +205,7 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
+func runStats(runner *Runner, rslv resolver.Resolver) error {
 	stats, err := runner.Stats(rslv)
 	if err != nil {
 		if err != ErrParser {
@@ -204,7 +214,7 @@ func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
 		return ErrExit
 	}
 
-	if printJson {
+	if runner.jsonMode {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {
