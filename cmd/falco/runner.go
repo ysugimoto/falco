@@ -201,7 +201,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	// Note: this context is not Go context, our parsing context :)
 	ctx := context.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
-	if err != nil {
+	if err != nil && !r.jsonMode {
 		return nil, err
 	}
 
@@ -289,7 +289,9 @@ func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
 	var file string
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
-		r.parseErrors[err.Token.File] = err
+		if r.jsonMode {
+			r.parseErrors[err.Token.File] = err
+		}
 	}
 
 	// Nothing to print to stdout if JSON mode is enabled, exit early.
@@ -340,7 +342,7 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	}
 
 	// Store all but ignored linter errors
-	if severity != linter.IGNORE {
+	if r.jsonMode && severity != linter.IGNORE {
 		r.lintErrors[err.Token.File] = append(r.lintErrors[err.Token.File], err)
 	}
 
