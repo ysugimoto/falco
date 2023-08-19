@@ -34,6 +34,7 @@ sub custom_logger {
 sub vcl_recv {
 
   #Fastly recv
+  // @debugger
   set req.backend = httpbin_org;
   set req.http.Foo = {" foo bar baz "};
   call custom_logger;

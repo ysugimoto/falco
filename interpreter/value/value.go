@@ -46,7 +46,7 @@ type Value interface {
 
 type null struct{}
 
-func (v *null) String() string  { return "" }
+func (v *null) String() string  { return "NULL" }
 func (v *null) Type() Type      { return NullType }
 func (v *null) IsLiteral() bool { return false }
 func (v *null) Copy() Value     { return v }

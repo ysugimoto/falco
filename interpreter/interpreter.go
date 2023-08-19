@@ -22,15 +22,29 @@ type Interpreter struct {
 
 	options []context.Option
 
-	ctx     *context.Context
-	process *process.Process
+	ctx      *context.Context
+	process  *process.Process
+	Debugger DebugFunc
 }
 
 func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:   options,
 		localVars: variable.LocalVariables{},
+		Debugger:  DefaultDebugFunc,
 	}
+}
+
+func (i *Interpreter) Context() *context.Context {
+	return i.ctx
+}
+
+func (i *Interpreter) Variables() variable.Variable {
+	return i.vars
+}
+
+func (i *Interpreter) LocalVariables() variable.LocalVariables {
+	return i.localVars
 }
 
 func (i *Interpreter) restart() error {
@@ -43,6 +57,7 @@ func (i *Interpreter) restart() error {
 
 func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
 	i.ctx.Scope = context.InitScope
+	i.vars = variable.NewAllScopeVariables(i.ctx)
 
 	statements, err := i.resolveIncludeStatement(vcl, true)
 	if err != nil {
@@ -60,6 +75,9 @@ func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
 func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 	// Process root declarations and statements
 	for _, stmt := range statements {
+		// Call debugger
+		i.Debugger(DebugStepInit, stmt)
+
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
 			if _, ok := i.ctx.Acls[t.Name.Value]; ok {

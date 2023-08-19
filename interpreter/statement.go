@@ -18,6 +18,11 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 	var err error
 
 	for _, stmt := range statements {
+		// Call debugger for each steps
+		i.Debugger(DebugStepOver, stmt)
+		i.Debugger(DebugStepIn, stmt)
+		i.Debugger(DebugStepInit, stmt)
+
 		switch t := stmt.(type) {
 		// Common logic statements (nothing to change state)
 		case *ast.DeclareStatement:
