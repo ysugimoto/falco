@@ -63,9 +63,9 @@ Flags:
     -h, --help         : Show this help
     -r, --remote       : Communicate with Fastly API
     -V, --version      : Display build version
-    -v                 : Output lint warnings
-    -vv                : Output all lint results
-    -json              : Output results as JSON
+    -v                 : Output lint warnings (verbose)
+    -vv                : Output all lint results (very verbose)
+    -json              : Output results as JSON (very verbose)
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
