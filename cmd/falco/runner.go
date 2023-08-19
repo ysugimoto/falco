@@ -85,7 +85,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	}
 
 	if c.Remote {
-		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		// If remote flag is provided, fetch predefined data from Fastly.
 		// Currently, we only support Edge Dictionary.
 		//
@@ -146,7 +146,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		case "IGNORE":
 			r.overrides[key] = linter.IGNORE
 		default:
-			writeln(yellow, "level for rule %s has invalid value %s, skip it.", key, value)
+			writeln(yellow, "Level for rule %s has invalid value %s, skipping", key, value)
 		}
 	}
 
@@ -355,7 +355,7 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 	}
 
 	if err.Reference != "" {
-		writeln(white, "See document in detail: %s", err.Reference)
+		writeln(white, "See reference documentation: %s", err.Reference)
 	}
 	writeln(white, "")
 }
