@@ -257,7 +257,7 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.FunctionCallExpression:
 		return l.lintFunctionCallExpression(t, ctx)
 	default:
-		l.Error(fmt.Errorf("unexpected node: %s", node.String()))
+		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
 	}
 	return types.NeverType
 }
@@ -351,7 +351,7 @@ func (l *Linter) resolveSnippetInclusion(
 			Severity: ERROR,
 			Token:    include.GetMeta().Token,
 			Message: fmt.Sprintf(
-				"Snippet %s is not found on fastly managed snippets",
+				"Snippet %s was not found among Fastly managed snippets",
 				include.Module.Value,
 			),
 		}
@@ -467,7 +467,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 					err := &LintError{
 						Severity: ERROR,
 						Token:    t.ReturnType.GetMeta().Token,
-						Message:  fmt.Sprintf("State-machine method %s may not have a return type", t.Name.Value),
+						Message:  fmt.Sprintf("State-machine method %s can not have a return type", t.Name.Value),
 					}
 					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 				}
@@ -523,7 +523,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 			}
 			factory = append(factory, stmt)
 		default:
-			l.Error(fmt.Errorf("unexpected statement declaration found: %s", t.String()))
+			l.Error(fmt.Errorf("Unexpected statement declaration: %s", t.String()))
 		}
 	}
 	return factory
@@ -579,7 +579,7 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			err := &LintError{
 				Severity: ERROR,
 				Token:    prop.Key.GetMeta().Token,
-				Message:  fmt.Sprintf(`object definition is allowed only for "probe", disallowed for "%s"`, prop.Key.Value),
+				Message:  fmt.Sprintf(`Object definition is allowed only for "probe", disallowed for "%s"`, prop.Key.Value),
 			}
 			l.Error(err.Match(BACKEND_SYNTAX))
 		}
@@ -681,7 +681,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 						err := &LintError{
 							Severity: ERROR,
 							Token:    v.Token,
-							Message:  fmt.Sprintf("backend %s is not declared", ident.Value),
+							Message:  fmt.Sprintf("Backend %s is not declared", ident.Value),
 						}
 						l.Error(err.Match(BACKEND_NOTFOUND))
 					}
@@ -703,7 +703,7 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 						Severity: ERROR,
 						Token:    t.Token,
 						Message: fmt.Sprintf(
-							"backend property %s must be declared in %s director",
+							"Backend property %s must be declared in %s director",
 							dps.Requires[i], decl.DirectorType.Value,
 						),
 					}
@@ -750,7 +750,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 		err := &LintError{
 			Severity: WARNING,
 			Token:    decl.Name.GetMeta().Token,
-			Message:  fmt.Sprintf(`table "%s" items are limited under 1000`, decl.Name.Value),
+			Message:  fmt.Sprintf(`Table "%s" items are limited to 1000`, decl.Name.Value),
 		}
 		l.Error(err.Match(TABLE_ITEM_LIMITATION))
 	}
@@ -949,7 +949,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 		Severity: WARNING,
 		Token:    sub.GetMeta().Token,
 		Message: fmt.Sprintf(
-			`Subroutine "%s" does not have fastly boilerplate comment "%s" inside definition`, sub.Name.Value, phrase,
+			`Subroutine "%s" is missing Fastly boilerplate comment "%s" inside definition`, sub.Name.Value, phrase,
 		),
 	}
 	l.Error(err.Match(SUBROUTINE_BOILERPLATE_MACRO))
@@ -1159,7 +1159,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 		l.Error(&LintError{
 			Severity: ERROR,
 			Token:    cond.GetMeta().Token,
-			Message:  fmt.Sprintf("condition return type %s may not compare as bool", cc.String()),
+			Message:  fmt.Sprintf("Condition return type %s may not be used in boolean comparison", cc.String()),
 		})
 	}
 }
@@ -1170,7 +1170,7 @@ func (l *Linter) lintRestartStatement(stmt *ast.RestartStatement, ctx *context.C
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.GetMeta().Token,
-			Message:  fmt.Sprintf("restart statement could not use in %s scope", context.ScopeString(ctx.Mode())),
+			Message:  fmt.Sprintf("restart statement unavailable in scope %s", context.ScopeString(ctx.Mode())),
 		}
 		l.Error(err.Match(RESTART_STATEMENT_SCOPE))
 	}
@@ -1204,7 +1204,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Ident.GetMeta().Token,
-			Message:  "Add statement could not use for " + stmt.Ident.Value,
+			Message:  "Add statement may not be used for " + stmt.Ident.Value,
 		}
 		l.Error(err.Match(ADD_STATEMENT_SYNTAX))
 	}
@@ -1234,7 +1234,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Operator.Token,
-			Message:  fmt.Sprintf(`operator "%s" could not be used on add statement`, stmt.Operator.Operator),
+			Message:  fmt.Sprintf(`Operator "%s" may not be used on add statement`, stmt.Operator.Operator),
 		}
 		l.Error(err.Match(OPERATOR_ASSIGNMENT))
 	}
@@ -1262,7 +1262,7 @@ func (l *Linter) lintErrorStatement(stmt *ast.ErrorStatement, ctx *context.Conte
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.GetMeta().Token,
-			Message:  "error statement can use only in RECV, HIT, MISS, PASS and FETCH scope",
+			Message:  "error statement is available in RECV, HIT, MISS, PASS and FETCH scopes only",
 		}
 		l.Error(err.Match(ERROR_STATEMENT_SCOPE))
 	}
@@ -1301,7 +1301,7 @@ func (l *Linter) lintLogStatement(stmt *ast.LogStatement, ctx *context.Context) 
 			l.Error(&LintError{
 				Severity: ERROR,
 				Token:    stmt.GetMeta().Token,
-				Message:  "Only string literals can be passed to log directly.",
+				Message:  "Only string literals may be passed to log directly.",
 			})
 			return types.NeverType
 		}
@@ -1317,7 +1317,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			l.Error(&LintError{
 				Severity: ERROR,
 				Token:    stmt.Token,
-				Message:  fmt.Sprintf("function %s: only actions should be enclosed in ()", ctx.CurrentFunction()),
+				Message:  fmt.Sprintf("Function %s: only actions may be enclosed in ()", ctx.CurrentFunction()),
 			})
 		}
 
@@ -1325,7 +1325,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    stmt.Token,
-				Message:  fmt.Sprintf("function %s must have a return value", ctx.CurrentFunction()),
+				Message:  fmt.Sprintf("Function %s must have a return value", ctx.CurrentFunction()),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 			return types.NeverType
@@ -1348,7 +1348,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    (*stmt.ReturnExpression).GetMeta().Token,
-				Message:  fmt.Sprintf("function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
+				Message:  fmt.Sprintf("Function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 		}
@@ -1416,7 +1416,7 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.GetMeta().Token,
-			Message:  "synthetic statement can use only in ERROR scope",
+			Message:  "synthetic statement is available in ERROR scope only",
 		}
 		l.Error(err.Match(SYNTHETIC_STATEMENT_SCOPE))
 	}
@@ -1675,7 +1675,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 		l.Error(&LintError{
 			Severity: ERROR,
 			Token:    exp.Consequence.GetMeta().Token,
-			Message:  "cannot use constant literal in If expression consequence",
+			Message:  "Cannot use constant literal in If expression consequence",
 		})
 	}
 	left := l.lint(exp.Consequence, ctx)
@@ -1684,7 +1684,7 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 		l.Error(&LintError{
 			Severity: ERROR,
 			Token:    exp.Alternative.GetMeta().Token,
-			Message:  "cannot use constant literal in If expression alternative",
+			Message:  "Cannot use constant literal in If expression alternative",
 		})
 	}
 	right := l.lint(exp.Alternative, ctx)
@@ -1733,7 +1733,7 @@ func (l *Linter) lintFunctionStatement(exp *ast.FunctionCallStatement, ctx *cont
 		l.Error(&LintError{
 			Severity: ERROR,
 			Token:    exp.Function.GetMeta().Token,
-			Message:  fmt.Sprintf(`unused return type for function "%s"`, exp.Function.Value),
+			Message:  fmt.Sprintf(`Unused return type for function "%s"`, exp.Function.Value),
 		})
 		return types.NeverType
 	}
