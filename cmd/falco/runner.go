@@ -35,7 +35,11 @@ type RunnerResult struct {
 	Infos    int
 	Warnings int
 	Errors   int
-	Vcl      *plugin.VCL
+
+	LintErrors  map[string][]*linter.LintError
+	ParseErrors map[string]*parser.ParseError
+
+	Vcl *plugin.VCL
 }
 
 type StatsResult struct {
@@ -69,12 +73,16 @@ type Runner struct {
 	lexers       map[string]*lexer.Lexer
 	snippets     *context.FastlySnippet
 
-	level Level
+	level       Level
+	lintErrors  map[string][]*linter.LintError
+	parseErrors map[string]*parser.ParseError
 
 	// runner result fields
 	infos    int
 	warnings int
 	errors   int
+
+	jsonMode bool
 }
 
 func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
@@ -84,8 +92,16 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		lexers:    make(map[string]*lexer.Lexer),
 	}
 
+	if c.Json {
+		r.jsonMode = true
+		r.lintErrors = make(map[string][]*linter.LintError)
+		r.parseErrors = make(map[string]*parser.ParseError)
+	}
+
 	if c.Remote {
-		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		if !r.jsonMode {
+			writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		}
 		// If remote flag is provided, fetch predefined data from Fastly.
 		// Currently, we only support Edge Dictionary.
 		//
@@ -100,7 +116,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 			// We allow each API call to take up to to 5 seconds
 			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
 			snippets, err := NewSnippet(f).Fetch()
-			if err != nil {
+			if err != nil && !r.jsonMode {
 				writeln(red, err.Error())
 			}
 			// Stack to runner field, combime before run()
@@ -110,7 +126,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 
 	if f != nil {
 		snippets, err := NewSnippet(f).Fetch()
-		if err != nil {
+		if err != nil && !r.jsonMode {
 			writeln(red, err.Error())
 		}
 		r.snippets = snippets
@@ -146,7 +162,9 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		case "IGNORE":
 			r.overrides[key] = linter.IGNORE
 		default:
-			writeln(yellow, "level for rule %s has invalid value %s, skip it.", key, value)
+			if !r.jsonMode {
+				writeln(yellow, "level for rule %s has invalid value %s, skip it.", key, value)
+			}
 		}
 	}
 
@@ -188,10 +206,12 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}
 
 	return &RunnerResult{
-		Infos:    r.infos,
-		Warnings: r.warnings,
-		Errors:   r.errors,
-		Vcl:      vcl,
+		Infos:       r.infos,
+		Warnings:    r.warnings,
+		Errors:      r.errors,
+		LintErrors:  r.lintErrors,
+		ParseErrors: r.parseErrors,
+		Vcl:         vcl,
 	}, nil
 }
 
@@ -269,7 +289,14 @@ func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
 	var file string
 	if err.Token.File != "" {
 		file = "in " + err.Token.File + " "
+		r.parseErrors[err.Token.File] = err
 	}
+
+	// Nothing to print to stdout if JSON mode is enabled, exit early.
+	if r.jsonMode {
+		return
+	}
+
 	writeln(red, ":boom: %s\n%sat line %d, position %d", err.Message, file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
@@ -312,19 +339,27 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 		severity = v
 	}
 
+	// Store all but ignored linter errors
+	if severity != linter.IGNORE {
+		r.lintErrors[err.Token.File] = append(r.lintErrors[err.Token.File], err)
+	}
+
 	switch severity {
 	case linter.ERROR:
 		r.errors++
+		if r.jsonMode {
+			return
+		}
 		writeln(red, ":fire:[ERROR] %s%s", err.Message, rule)
 	case linter.WARNING:
 		r.warnings++
-		if r.level < LevelWarning {
+		if r.jsonMode || r.level < LevelWarning {
 			return
 		}
 		writeln(yellow, ":exclamation:[WARNING] %s%s", err.Message, rule)
 	case linter.INFO:
 		r.infos++
-		if r.level < LevelInfo {
+		if r.jsonMode || r.level < LevelInfo {
 			return
 		}
 		writeln(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
