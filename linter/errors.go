@@ -80,7 +80,7 @@ func InvalidType(m *ast.Meta, name string, expect, actual types.Type) *LintError
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("%s wants type %s but %s was assigned", name, expect.String(), actual.String()),
+		Message:  fmt.Sprintf("Type mismatch: %s requires type %s but %s was assigned", name, expect.String(), actual.String()),
 	}
 }
 
@@ -127,7 +127,7 @@ func Duplicated(m *ast.Meta, name, ident string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`%s "%s" is duplicated`, ident, name),
+		Message:  fmt.Sprintf(`Duplicated %s "%s"`, ident, name),
 	}
 }
 
@@ -285,7 +285,7 @@ func UnusedDeclaration(m *ast.Meta, name, declType string) *LintError {
 		Severity: WARNING,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			`%s "%s" is unused`,
+			`Unused %s "%s"`,
 			declType, name,
 		),
 	}
@@ -329,7 +329,7 @@ func UndefinedGotoDestination(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("goto destination %s is not defined", name),
+		Message:  fmt.Sprintf("Goto destination %s is not defined", name),
 	}
 }
 
@@ -337,7 +337,7 @@ func DuplicatedUseForGotoDestination(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("goto destination %s already in use", name),
+		Message:  fmt.Sprintf("Goto destination %s already in use", name),
 	}
 }
 
@@ -345,7 +345,7 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("%s HTTP header cannot not be modified", name),
+		Message:  fmt.Sprintf("HTTP header %s cannot not be modified", name),
 	}
 }
 

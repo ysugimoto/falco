@@ -68,7 +68,7 @@ func CanAccessVariableInScope(objScope int, objReference, name string, currentSc
 		missingScopes := (objScope & currentScope) ^ currentScope
 		message := fmt.Sprintf(`Variable "%s" could not access in scope of %s`, name, ScopesString(missingScopes))
 		if objReference != "" {
-			message += "\ndocument: " + objReference
+			message += "\nSee reference documentation: " + objReference
 		}
 		return fmt.Errorf(message)
 	}
@@ -495,7 +495,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 	if obj.Value.Get == types.NeverType {
 		message := fmt.Sprintf(`Variable "%s" could not read`, name)
 		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
+			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
 		return types.NullType, fmt.Errorf(message)
 	}
@@ -553,7 +553,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 	if obj.Value.Set == types.NeverType {
 		message := fmt.Sprintf(`Variable "%s" is read-only`, name)
 		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
+			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
 		return types.NullType, fmt.Errorf(message)
 	}
@@ -651,7 +651,7 @@ func (c *Context) Unset(name string) error {
 	if !obj.Value.Unset {
 		message := fmt.Sprintf(`Variable "%s" is read-only`, name)
 		if obj.Value.Reference != "" {
-			message += "\ndocument: " + obj.Value.Reference
+			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
 		return fmt.Errorf(message)
 	}
