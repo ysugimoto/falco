@@ -168,7 +168,7 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		case result.Warnings > 0:
 			writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
 			if runner.level < LevelWarning {
-				writeln(white, "Run command with the -v option to ouput warnings.")
+				writeln(white, "Run command with the -v option to output warnings.")
 			}
 		case result.Infos > 0:
 			writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
