@@ -45,7 +45,7 @@ func (e *LintError) Error() string {
 		rule = fmt.Sprintf(" (%s)", e.Rule)
 	}
 	if e.Reference != "" {
-		ref = "\ndocument: " + e.Reference
+		ref = "\nSee reference documentation: " + e.Reference
 	}
 	if e.Token.File != "" {
 		file = " in" + e.Token.File
