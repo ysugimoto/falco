@@ -45,7 +45,7 @@ func (e *LintError) Error() string {
 		rule = fmt.Sprintf(" (%s)", e.Rule)
 	}
 	if e.Reference != "" {
-		ref = "\ndocument: " + e.Reference
+		ref = "\nSee reference documentation: " + e.Reference
 	}
 	if e.Token.File != "" {
 		file = " in" + e.Token.File
@@ -62,7 +62,7 @@ func InvalidName(m *ast.Meta, name, ident string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`ident %s has invalid name of "%s"`, ident, name),
+		Message:  fmt.Sprintf(`Ident %s has invalid name of "%s"`, ident, name),
 	}
 }
 
@@ -70,7 +70,7 @@ func InvalidValue(m *ast.Meta, tt, val string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`invalid %s value: %s`, tt, val),
+		Message:  fmt.Sprintf(`Invalid %s value: %s`, tt, val),
 	}
 }
 
@@ -80,7 +80,7 @@ func InvalidType(m *ast.Meta, name string, expect, actual types.Type) *LintError
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("%s wants type %s but assign %s", name, expect.String(), actual.String()),
+		Message:  fmt.Sprintf("Type mismatch: %s requires type %s but %s was assigned", name, expect.String(), actual.String()),
 	}
 }
 
@@ -88,7 +88,7 @@ func UndefinedVariable(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`variable "%s" is not defined`, name),
+		Message:  fmt.Sprintf(`Variable "%s" is not defined`, name),
 	}
 }
 
@@ -96,14 +96,14 @@ func UndefinedAcl(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`acl "%s" is not defined`, name),
+		Message:  fmt.Sprintf(`ACL "%s" is not defined`, name),
 	}
 }
 func UndefinedBackend(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`backend "%s" is not defined`, name),
+		Message:  fmt.Sprintf(`Backend "%s" is not defined`, name),
 	}
 }
 
@@ -111,7 +111,7 @@ func UndefinedSubroutine(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("Subroutine %s is not defined. Did you forget to include it or have a typo in the name?", name),
+		Message:  fmt.Sprintf(`Subroutine %s is not defined`, name),
 	}
 }
 
@@ -127,7 +127,7 @@ func Duplicated(m *ast.Meta, name, ident string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`%s "%s" is duplicated`, ident, name),
+		Message:  fmt.Sprintf(`Duplicated %s "%s"`, ident, name),
 	}
 }
 
@@ -135,7 +135,7 @@ func AccessDenied(m *ast.Meta, name, scope string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("could not access %s in scope %s", name, scope),
+		Message:  fmt.Sprintf("Could not access %s in scope %s", name, scope),
 	}
 }
 
@@ -143,7 +143,7 @@ func UndefinedFunction(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("function %s is undefined", name),
+		Message:  fmt.Sprintf("Function %s is undefined", name),
 	}
 }
 
@@ -159,7 +159,7 @@ func ErrorCodeRange(m *ast.Meta, code int64) *LintError {
 	return &LintError{
 		Severity: INFO,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("code %d in error statemnt should use between 600-699", code),
+		Message:  fmt.Sprintf(`Error code %d: use a code between 600-699 instead`, code),
 	}
 }
 
@@ -168,7 +168,7 @@ func InvalidTypeOperator(m *ast.Meta, op string, left, right types.Type) *LintEr
 		Severity: ERROR,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			`invalid operator, "%s" count not use between left %s and %s right types`,
+			`Invalid operator: "%s" may not be used between left %s and %s right types`,
 			op, left, right,
 		),
 	}
@@ -178,7 +178,7 @@ func InvalidOperator(m *ast.Meta, op string, left types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`operator "%s" could not use for %s`, op, left.String()),
+		Message:  fmt.Sprintf(`Operator "%s" cannot be used for %s`, op, left.String()),
 	}
 }
 
@@ -191,7 +191,7 @@ func InvalidTypeExpression(m *ast.Meta, actual types.Type, expects ...types.Type
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("expression has type of %s but should have %s", actual.String(), strings.Join(es, " or ")),
+		Message:  fmt.Sprintf("Expression has %s type, expected %s", actual.String(), strings.Join(es, " or ")),
 	}
 }
 
@@ -199,7 +199,7 @@ func InvalidTypeComparison(m *ast.Meta, left, right types.Type) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("different type comparison between %s and %s", left.String(), right.String()),
+		Message:  fmt.Sprintf("Type mismatch between %s and %s", left.String(), right.String()),
 	}
 }
 
@@ -207,7 +207,7 @@ func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	return &LintError{
 		Severity: INFO,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("Type %s will treat as %s implicitly on string concatenation", from.String(), to.String()),
+		Message:  fmt.Sprintf("Type %s implicit conversion to %s on string concatenation", from.String(), to.String()),
 	}
 }
 
@@ -215,7 +215,7 @@ func UndefinedBackendProperty(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("undefined backend property %s specified", name),
+		Message:  fmt.Sprintf("Undefined backend property %s specified", name),
 	}
 }
 
@@ -223,7 +223,7 @@ func UndefinedDirectorProperty(m *ast.Meta, name, dt string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("undefined director property %s for director type %s specified", name, dt),
+		Message:  fmt.Sprintf("Undefined director property %s for director type %s specified", name, dt),
 	}
 }
 
@@ -231,7 +231,7 @@ func UndefinedTableType(m *ast.Meta, name, tt string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("undefined table type %s for %s", tt, name),
+		Message:  fmt.Sprintf("Undefined table type %s for %s", tt, name),
 	}
 }
 
@@ -239,7 +239,7 @@ func InvalidTypeConversion(m *ast.Meta, vclType string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("type conversion failed, need to be able to cast as %s", vclType),
+		Message:  fmt.Sprintf("Type conversion failed, must be able to cast as %s", vclType),
 	}
 }
 
@@ -247,7 +247,7 @@ func FunctionArgumentMismatch(m *ast.Meta, name string, expect, actual int) *Lin
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("function %s wants argument count %d but provides %d", name, expect, actual),
+		Message:  fmt.Sprintf("Function %s has %d arity, but %d arguments provided", name, expect, actual),
 	}
 }
 
@@ -263,7 +263,7 @@ func FunctionArgumentTypeMismatch(m *ast.Meta, name string, num int, expect, act
 		Severity: ERROR,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			"function %s wants argument %d%s as %s but applies %s",
+			"Function %s expects argument %d%s as %s but applies %s",
 			name, num, suffix, expect.String(), actual.String(),
 		),
 	}
@@ -274,7 +274,7 @@ func InvalidReturnState(m *ast.Meta, scope, state string, expects ...string) *Li
 		Severity: ERROR,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			`return statement "%s" is invalid in %s, expects %s`,
+			`Return statement "%s" is invalid in %s, expected %s`,
 			state, scope, strings.Join(expects, " or "),
 		),
 	}
@@ -285,7 +285,7 @@ func UnusedDeclaration(m *ast.Meta, name, declType string) *LintError {
 		Severity: WARNING,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			`%s "%s" is unused in VCL program`,
+			`Unused %s "%s"`,
 			declType, name,
 		),
 	}
@@ -295,7 +295,7 @@ func UnusedExternalDeclaration(name, declType string) *LintError {
 	return &LintError{
 		Severity: WARNING,
 		Message: fmt.Sprintf(
-			`Externally defined %s "%s" is unused in VCL program`,
+			`Externally defined %s "%s" is unused`,
 			declType, name,
 		),
 	}
@@ -305,7 +305,7 @@ func UnusedVariable(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: WARNING,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`variable "%s" is unused`, name),
+		Message:  fmt.Sprintf(`Variable "%s" is unused`, name),
 	}
 }
 
@@ -313,7 +313,7 @@ func NonEmptyPenaltyboxBlock(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("Penaltybox %s cannot have any properties and should be declared as an empty block", name),
+		Message:  fmt.Sprintf("Penaltybox %s cannot have any properties and must be declared as an empty block", name),
 	}
 }
 
@@ -321,7 +321,7 @@ func NonEmptyRatecounterBlock(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("Ratecounter %s cannot have any properties and should be declared as an empty block", name),
+		Message:  fmt.Sprintf("Rate counter %s cannot have any properties and must be declared as an empty block", name),
 	}
 }
 
@@ -329,7 +329,7 @@ func UndefinedGotoDestination(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("goto destination %s is not defined", name),
+		Message:  fmt.Sprintf("Goto destination %s is not defined", name),
 	}
 }
 
@@ -337,7 +337,7 @@ func DuplicatedUseForGotoDestination(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("goto destination %s has been already in use", name),
+		Message:  fmt.Sprintf("Goto destination %s already in use", name),
 	}
 }
 
@@ -345,7 +345,7 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
 		Token:    m.Token,
-		Message:  fmt.Sprintf("%s HTTP header could not be modified in VCL", name),
+		Message:  fmt.Sprintf("HTTP header %s cannot not be modified", name),
 	}
 }
 

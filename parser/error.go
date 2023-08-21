@@ -32,7 +32,7 @@ func MissingSemicolon(m *ast.Meta) *ParseError {
 }
 
 func UnexpectedToken(m *ast.Meta, expects ...string) *ParseError {
-	message := fmt.Sprintf(`Unexpected token "%s" found`, m.Token.Literal)
+	message := fmt.Sprintf(`Unexpected token "%s"`, m.Token.Literal)
 	if len(expects) > 0 {
 		message += fmt.Sprintf(`, expects %s`, strings.Join(expects, " or "))
 	}
@@ -45,13 +45,13 @@ func UnexpectedToken(m *ast.Meta, expects ...string) *ParseError {
 func UndefinedPrefix(m *ast.Meta) *ParseError {
 	return &ParseError{
 		Token:   m.Token,
-		Message: "Undefined prefix expression parse of " + m.Token.Literal,
+		Message: "Undefined prefix expression for " + m.Token.Literal,
 	}
 }
 
 func TypeConversionError(m *ast.Meta, tt string) *ParseError {
 	return &ParseError{
 		Token:   m.Token,
-		Message: fmt.Sprintf("Failed type conversion token %s to %s ", m.Token.Literal, tt),
+		Message: fmt.Sprintf("Failed type conversion for token %s to %s ", m.Token.Literal, tt),
 	}
 }

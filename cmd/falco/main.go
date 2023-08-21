@@ -61,13 +61,13 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
-    -r, --remote       : Communicate with Fastly API
+    -r, --remote       : Connect with Fastly API
     -V, --version      : Display build version
     -v                 : Output lint warnings (verbose)
     -vv                : Output all lint results (very verbose)
     -json              : Output results as JSON (very verbose)
 
-Simple Linting example:
+Simple linting example:
     falco -I . -vv /path/to/vcl/main.vcl
 
 Get statistics example:
@@ -121,7 +121,7 @@ func main() {
 	var shouldExit bool
 	for _, v := range resolvers {
 		if name := v.Name(); name != "" {
-			writeln(white, `Lint service of "%s"`, name)
+			writeln(white, `Lint service "%s"`, name)
 			writeln(white, strings.Repeat("=", 18+len(name)))
 		}
 
@@ -170,23 +170,23 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 
 	write(red, ":fire:%d errors, ", result.Errors)
 	write(yellow, ":exclamation:%d warnings, ", result.Warnings)
-	writeln(cyan, ":speaker:%d infos.", result.Infos)
+	writeln(cyan, ":speaker:%d recommendations.", result.Infos)
 
 	// Display message corresponds to runner result
 	if result.Errors == 0 {
 		switch {
 		case result.Warnings > 0:
-			writeln(white, "VCL seems having some warnings, but it should be OK :thumbsup:")
+			writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
 			if runner.level < LevelWarning {
-				writeln(white, "To see warning detail, run command with -v option.")
+				writeln(white, "Run command with the -v option to output warnings.")
 			}
 		case result.Infos > 0:
-			writeln(green, "VCL looks fine :sparkles: And we suggested some informations to vcl get more accuracy :thumbsup:")
+			writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
 			if runner.level < LevelInfo {
-				writeln(white, "To see informations detail, run command with -vv option.")
+				writeln(white, "Run command with the -vv option to output recommendations.")
 			}
 		default:
-			writeln(green, "VCL looks very nice :sparkles:")
+			writeln(green, "VCL looks great :sparkles:")
 		}
 	}
 
