@@ -1,3 +1,7 @@
+## v0.23.1
+
+- Adds copy-edits for output [#158](https://github.com/ysugimoto/falco/pull/158) (@doramatadora)
+
 ## v0.23.0
 
 - Adds JSON support for generic, terraform and lint usage [#157](https://github.com/ysugimoto/falco/pull/157) (@doramatadora)
