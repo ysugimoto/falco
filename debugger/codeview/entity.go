@@ -5,7 +5,7 @@ import (
 )
 
 const hightlightOffset = 3
-const heightOffset = 15
+const heightOffset = 20
 
 type Character struct {
 	code  string

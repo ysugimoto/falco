@@ -77,6 +77,7 @@ func New(rslv resolver.Resolver) *Console {
 		shell:   shell,
 		message: message,
 		app:     app,
+		help:    help,
 		input:   c.stateChan,
 	}
 
@@ -136,7 +137,6 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 
 func (c *Console) Run(port int) error {
 	c.app.SetInputCapture(c.keyEventHandler)
-	c.code.SetServerPort(port)
 	c.message.Append(
 		messageview.Debugger,
 		"Waiting Request on http://localhost:%d...",

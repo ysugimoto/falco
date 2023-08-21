@@ -17,9 +17,8 @@ import (
 type CodeView struct {
 	*tview.TextView
 
-	line       int
-	file       string
-	serverInfo string
+	line int
+	file string
 
 	lexerCaches map[string][]Line
 }
@@ -42,10 +41,6 @@ func New() *CodeView {
 	return c
 }
 
-func (c *CodeView) SetServerPort(port int) {
-	c.serverInfo = fmt.Sprintf(" Debug server: http://localhost:%d", port)
-}
-
 func (c *CodeView) SetFile(file string, line int) {
 	c.file = file
 	c.line = line
@@ -54,7 +49,6 @@ func (c *CodeView) SetFile(file string, line int) {
 func (c *CodeView) Draw(screen tcell.Screen) {
 	if c.file == "" {
 		c.TextView.Clear()
-		fmt.Fprintln(c.TextView, colors.Bold(colors.Green(c.serverInfo)))
 	} else {
 		c.DrawCode(screen)
 	}
@@ -89,7 +83,7 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 		}
 	} else {
 		start = line - height/2
-		end = line + height/2 + 1
+		end = line + height/2
 	}
 
 	w := c.TextView.BatchWriter()
@@ -97,8 +91,8 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 	w.Clear()
 
 	// Display server and file info
-	prefix := strings.Repeat(" ", width-len(c.file)-len(c.serverInfo)-2)
-	fmt.Fprint(w, colors.Bold(colors.Green(c.serverInfo))+prefix+colors.Blue(c.file))
+	prefix := strings.Repeat(" ", width-len(c.file)-2)
+	fmt.Fprint(w, prefix+colors.Blue(c.file))
 
 	// Calculate max line unit
 	format := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(len(lines)))+1)))

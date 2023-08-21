@@ -1,3 +1,5 @@
+include "debugger01_include";
+
 backend httpbin_org {
   .connect_timeout = 1s;
   .dynamic = true;
@@ -24,11 +26,6 @@ backend httpbin_org {
     .expected_response = 200;
     .interval = 10s;
   }
-}
-
-//@scope: recv,deliver,log
-sub custom_logger {
-  log req.http.header;
 }
 
 sub vcl_recv {

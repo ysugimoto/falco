@@ -2,10 +2,12 @@ package debugger
 
 import (
 	"strings"
+	"time"
 
 	"github.com/rivo/tview"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/debugger/codeview"
+	"github.com/ysugimoto/falco/debugger/helpview"
 	"github.com/ysugimoto/falco/debugger/messageview"
 	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
@@ -20,6 +22,7 @@ type Debugger struct {
 	code    *codeview.CodeView
 	message *messageview.MessageView
 	shell   *shellview.ShellView
+	help    *helpview.HelpView
 
 	input <-chan interpreter.DebugState
 	mode  interpreter.DebugState
@@ -52,16 +55,23 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 	// Wait for keyboard input
 	d.mode = <-d.input
 
+	time.AfterFunc(time.Duration(highlightDeplay)*time.Millisecond, func() {
+		d.help.Highlight(helpview.Default)
+		d.app.Draw()
+	})
+
 	switch d.mode {
 	case interpreter.DebugStepIn:
-		d.message.Append(messageview.Debugger, "Step In")
+		d.help.Highlight(helpview.F8)
 		return interpreter.DebugStepIn
 	case interpreter.DebugStepOver:
-		d.message.Append(messageview.Debugger, "Step Over")
+		d.help.Highlight(helpview.F9)
 		return interpreter.DebugStepOver
 	case interpreter.DebugStepOut:
-		d.message.Append(messageview.Debugger, "Step Out")
+		d.help.Highlight(helpview.F10)
 		return interpreter.DebugStepOut
+	case interpreter.DebugPass:
+		d.help.Highlight(helpview.F7)
 	}
 	return interpreter.DebugPass
 }
