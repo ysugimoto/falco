@@ -14,6 +14,7 @@ import (
 	"github.com/ysugimoto/falco/debugger/codeview"
 	"github.com/ysugimoto/falco/debugger/colors"
 	"github.com/ysugimoto/falco/debugger/helpview"
+	"github.com/ysugimoto/falco/debugger/messageview"
 	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -32,44 +33,53 @@ func init() {
 type Console struct {
 	app         *tview.Application
 	code        *codeview.CodeView
+	message     *messageview.MessageView
 	shell       *shellview.ShellView
 	help        *helpview.HelpView
 	interpreter *interpreter.Interpreter
 	isDebugging atomic.Bool
 
 	currentNode ast.Node
-	mode        interpreter.DebugState
-	stepChan    chan interpreter.DebugState
+	stateChan   chan interpreter.DebugState
 }
 
 func New(rslv resolver.Resolver) *Console {
 	code := codeview.New()
+	message := messageview.New()
 	shell := shellview.New()
 	help := helpview.New()
 
 	grid := tview.NewGrid().
-		SetRows(0, 10, 1).
+		SetRows(0, 10, 6, 1).
 		SetBorders(false).
 		SetGap(0, 0).
 		SetOffset(0, 0)
 
 	grid.AddItem(code, 0, 0, 1, 1, 0, 0, false)
-	grid.AddItem(shell, 1, 0, 1, 1, 0, 0, false)
-	grid.AddItem(help, 2, 0, 1, 1, 0, 0, false)
+	grid.AddItem(message, 1, 0, 1, 1, 0, 0, false)
+	grid.AddItem(shell, 2, 0, 1, 1, 0, 0, false)
+	grid.AddItem(help, 3, 0, 1, 1, 0, 0, false)
 	grid.SetBackgroundColor(colors.Background)
 
 	app := tview.NewApplication().SetRoot(grid, true)
 	c := &Console{
 		code:        code,
 		shell:       shell,
+		message:     message,
 		help:        help,
 		app:         app,
-		mode:        interpreter.DebugPass,
-		stepChan:    make(chan interpreter.DebugState),
+		stateChan:   make(chan interpreter.DebugState),
 		isDebugging: atomic.Bool{},
 	}
 	c.interpreter = interpreter.New(context.WithResolver(rslv))
-	c.interpreter.Debugger = c.debug
+	c.interpreter.Debugger = &Debugger{
+		code:    code,
+		shell:   shell,
+		message: message,
+		app:     app,
+		input:   c.stateChan,
+	}
+
 	return c
 }
 
@@ -85,13 +95,13 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 
 	switch evt.Key() {
 	case tcell.KeyF7:
-		c.stepChan <- interpreter.DebugPass
+		c.stateChan <- interpreter.DebugPass
 	case tcell.KeyF8:
-		c.stepChan <- interpreter.DebugStepIn
+		c.stateChan <- interpreter.DebugStepIn
 	case tcell.KeyF9:
-		c.stepChan <- interpreter.DebugStepOver
+		c.stateChan <- interpreter.DebugStepOver
 	case tcell.KeyF10:
-		c.stepChan <- interpreter.DebugStepOut
+		c.stateChan <- interpreter.DebugStepOut
 	case tcell.KeyDelete, tcell.KeyBackspace, tcell.KeyBackspace2:
 		c.shell.Remove()
 	case tcell.KeyEnter:
@@ -99,6 +109,8 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 		switch cmd {
 		case "quit":
 			c.app.Stop()
+		case "clear":
+			c.message.Clear()
 		case "":
 			break
 		default:
@@ -125,6 +137,11 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 func (c *Console) Run(port int) error {
 	c.app.SetInputCapture(c.keyEventHandler)
 	c.code.SetServerPort(port)
+	c.message.Append(
+		messageview.Debugger,
+		"Waiting Request on http://localhost:%d...",
+		port,
+	)
 	go c.startDebugServer(port)
 	return c.app.Run()
 }
@@ -132,12 +149,14 @@ func (c *Console) Run(port int) error {
 func (c *Console) activate() {
 	c.isDebugging.Store(true)
 	c.shell.Activate()
+	c.message.Append(messageview.Debugger, "Request received, start debugger session.")
 	c.app.Draw()
 }
 
 func (c *Console) deactivate() {
 	c.isDebugging.Store(false)
 	c.shell.Deactivate()
+	c.message.Append(messageview.Debugger, "Debugger ended.")
 	c.app.Draw()
 }
 

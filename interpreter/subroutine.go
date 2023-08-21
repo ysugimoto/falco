@@ -55,7 +55,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	for _, stmt := range sub.Block.Statements {
 		// Call debugger
 		if debugState != DebugStepOut {
-			debugState = i.Debugger(stmt)
+			debugState = i.Debugger.Run(stmt)
 		}
 
 		switch t := stmt.(type) {

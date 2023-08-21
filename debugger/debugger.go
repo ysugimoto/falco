@@ -2,10 +2,12 @@ package debugger
 
 import (
 	"strings"
-	"time"
 
+	"github.com/rivo/tview"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/debugger/helpview"
+	"github.com/ysugimoto/falco/debugger/codeview"
+	"github.com/ysugimoto/falco/debugger/messageview"
+	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/token"
 )
@@ -13,47 +15,53 @@ import (
 const debuggerMark = "@debugger"
 const highlightDeplay = 120
 
-func (c *Console) debug(node ast.Node) interpreter.DebugState {
-	switch c.mode {
+type Debugger struct {
+	app     *tview.Application
+	code    *codeview.CodeView
+	message *messageview.MessageView
+	shell   *shellview.ShellView
+
+	input <-chan interpreter.DebugState
+	mode  interpreter.DebugState
+}
+
+func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
+	switch d.mode {
 	case interpreter.DebugStepIn, interpreter.DebugStepOver:
-		return c.breakPoint(node.GetMeta().Token)
+		return d.breakPoint(node.GetMeta().Token)
 	case interpreter.DebugStepOut:
-		c.mode = interpreter.DebugStepOver
-		return c.breakPoint(node.GetMeta().Token)
+		d.mode = interpreter.DebugStepOver
+		return d.breakPoint(node.GetMeta().Token)
 	default:
 		meta := node.GetMeta()
 		if !strings.Contains(meta.LeadingComment(), debuggerMark) {
 			return interpreter.DebugPass
 		}
-		return c.breakPoint(meta.Token)
+		return d.breakPoint(meta.Token)
 	}
 }
 
-func (c *Console) breakPoint(t token.Token) interpreter.DebugState {
-	c.code.SetFile(t.File, t.Line)
-	c.app.Draw()
+func (d *Debugger) Message(msg string) {
+	d.message.Append(messageview.Runtime, msg)
+}
+
+func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
+	d.code.SetFile(t.File, t.Line)
+	d.app.Draw()
 
 	// Wait for keyboard input
-	c.mode = <-c.stepChan
+	d.mode = <-d.input
 
-	// Queue reset hightlight
-	time.AfterFunc(time.Duration(highlightDeplay)*time.Millisecond, func() {
-		c.help.Highlight(helpview.Default)
-		c.app.Draw()
-	})
-
-	switch c.mode {
+	switch d.mode {
 	case interpreter.DebugStepIn:
-		c.help.Highlight(helpview.F8)
+		d.message.Append(messageview.Debugger, "Step In")
 		return interpreter.DebugStepIn
 	case interpreter.DebugStepOver:
-		c.help.Highlight(helpview.F9)
+		d.message.Append(messageview.Debugger, "Step Over")
 		return interpreter.DebugStepOver
 	case interpreter.DebugStepOut:
-		c.help.Highlight(helpview.F10)
+		d.message.Append(messageview.Debugger, "Step Out")
 		return interpreter.DebugStepOut
-	case interpreter.DebugPass:
-		c.help.Highlight(helpview.F7)
 	}
 	return interpreter.DebugPass
 }

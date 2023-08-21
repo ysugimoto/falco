@@ -21,7 +21,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 	for _, stmt := range statements {
 		// Call debugger
 		if debugState != DebugStepOut {
-			debugState = i.Debugger(stmt)
+			debugState = i.Debugger.Run(stmt)
 		}
 
 		switch t := stmt.(type) {
@@ -278,6 +278,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 		return errors.WithStack(err)
 	}
 	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, log.String()))
+	i.Debugger.Message(log.String())
 	return nil
 }
 

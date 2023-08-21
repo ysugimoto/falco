@@ -85,6 +85,9 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		url += "?" + v
 	}
 
+	// Debug message
+	i.Debugger.Message(fmt.Sprintf("Fetching backend (%s) %s", backend.Value.Name.Value, url))
+
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
 		url,
@@ -134,6 +137,9 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
+
+	// Debug message
+	i.Debugger.Message(fmt.Sprintf("Backend (%s) respond status code %d", backend.Value.Name.Value, resp.StatusCode))
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer

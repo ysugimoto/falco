@@ -34,20 +34,17 @@ func New() *ShellView {
 	tv.SetBackgroundColor(colors.Background)
 	tv.SetBorder(true)
 
-	v := &ShellView{TextView: tv,
+	return &ShellView{TextView: tv,
 		history: &History{},
 	}
-	return v
 }
 
 func (s *ShellView) Activate() {
 	s.isActivated = true
-	s.buffers = append(s.buffers, "Debugger Activated.")
 }
 
 func (s *ShellView) Deactivate() {
 	s.isActivated = false
-	s.buffers = append(s.buffers, "Debugger Deactivated.")
 }
 
 func (s *ShellView) writeShell() {

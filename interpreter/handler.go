@@ -55,15 +55,14 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := i.ProcessInit(vcl.Statements); err != nil {
 		// If debug is true, print with stacktrace
+		i.process.Error = err
 		if i.ctx.Debug {
 			fmt.Fprintf(os.Stderr, "%+v\n", err)
-			i.process.Error = err
-		} else if re, ok := errors.Cause(err).(*exception.Exception); ok {
-			fmt.Fprintln(os.Stderr, re.Error())
-			i.process.Error = re
+		}
+		if re, ok := errors.Cause(err).(*exception.Exception); ok {
+			i.Debugger.Message(re.Error())
 		} else {
-			fmt.Fprintln(os.Stderr, err.Error())
-			i.process.Error = err
+			i.Debugger.Message(err.Error())
 		}
 	}
 
@@ -77,4 +76,6 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.Encode(i.process) // nolint: errcheck
+
+	i.Debugger.Message("Reuqest finished.")
 }

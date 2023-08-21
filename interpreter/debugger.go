@@ -13,9 +13,16 @@ const (
 	DebugStepOut
 )
 
-type DebugFunc func(node ast.Node) DebugState
+type Debugger interface {
+	Run(ast.Node) DebugState
+	Message(string)
+}
 
-func DefaultDebugFunc(node ast.Node) DebugState {
-	// Should be empty because do not any debug step as default
+// Default debugger
+type EmptyDebugger struct{}
+
+func (e EmptyDebugger) Run(node ast.Node) DebugState {
 	return DebugPass
+}
+func (e EmptyDebugger) Message(string) {
 }

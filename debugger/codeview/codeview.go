@@ -55,7 +55,6 @@ func (c *CodeView) Draw(screen tcell.Screen) {
 	if c.file == "" {
 		c.TextView.Clear()
 		fmt.Fprintln(c.TextView, colors.Bold(colors.Green(c.serverInfo)))
-		fmt.Fprintln(c.TextView, " Waiting Request...")
 	} else {
 		c.DrawCode(screen)
 	}
