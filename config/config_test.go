@@ -50,6 +50,7 @@ func TestConfigFromCLI(t *testing.T) {
 		Remote:         true,
 		Json:           true,
 		Commands:       Commands{"lint"},
+		Port:           3124,
 	}
 
 	if diff := cmp.Diff(c, expect, cmpopts.IgnoreFields(Config{}, "FastlyServiceID", "FastlyApiKey")); diff != "" {

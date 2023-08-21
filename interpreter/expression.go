@@ -51,6 +51,7 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 // On if condition, prefix expression could use "!" prefix operator for null value.
 //
 // For example:
+//
 //	withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
 //	withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
 //	withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression

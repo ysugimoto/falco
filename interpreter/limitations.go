@@ -3,7 +3,7 @@ package interpreter
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -121,10 +121,10 @@ func checkFastlyRequestLimit(req *http.Request) error {
 		if _, err := body.ReadFrom(req.Body); err == nil {
 			// If payload size is greater than limitation, truncate the body
 			if len(body.Bytes()) > MaxRequestBodyPayloadSize {
-				req.Body = ioutil.NopCloser(strings.NewReader(""))
+				req.Body = io.NopCloser(strings.NewReader(""))
 			} else {
 				// Rewind request body
-				req.Body = ioutil.NopCloser(bytes.NewReader(body.Bytes()))
+				req.Body = io.NopCloser(bytes.NewReader(body.Bytes()))
 			}
 		}
 	}

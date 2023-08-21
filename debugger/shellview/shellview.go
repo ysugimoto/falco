@@ -2,20 +2,11 @@ package shellview
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/ysugimoto/falco/debugger/colors"
 )
-
-var logger log.Logger
-
-func init() {
-	fp, _ := os.OpenFile("./debugger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
-	logger = *log.New(fp, "", 0)
-}
 
 const cursor = "[:white:] [:-:]"
 

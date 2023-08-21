@@ -139,7 +139,7 @@ func main() {
 		var exitErr error
 		switch c.Commands.At(0) {
 		case subcommandDebug:
-			runDebugger(runner, v)
+			exitErr = runDebugger(runner, v)
 		case subcommandSimulate:
 			runSimulator(runner, v)
 		case subcommandStats:
@@ -163,7 +163,10 @@ func main() {
 }
 
 func runDebugger(runner *Runner, rslv resolver.Resolver) error {
-	return runner.Debugger(rslv)
+	if err := runner.Debugger(rslv); err != nil {
+		return ErrExit
+	}
+	return nil
 }
 
 func runLint(runner *Runner, rslv resolver.Resolver) error {

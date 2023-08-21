@@ -56,9 +56,18 @@ func (c *CodeView) Draw(screen tcell.Screen) {
 }
 
 func (c *CodeView) DrawCode(screen tcell.Screen) {
+	w := c.TextView.BatchWriter()
+	defer w.Close()
+	w.Clear()
+
 	lines, ok := c.lexerCaches[c.file]
 	if !ok {
-		lines, _ = c.lexFile(c.file)
+		var err error
+		lines, err = c.lexFile(c.file)
+		if err != nil {
+			fmt.Fprintf(w, "Lex error: %s\n", err.Error())
+			return
+		}
 	}
 
 	var start, end int
@@ -69,26 +78,25 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 	if line > len(lines)-1 {
 		line = len(lines) - 1
 	}
-	if line-height/2 < 0 {
+
+	// Determine range to display code
+	switch {
+	case line-height/2 < 0:
 		start = 0
-		end = height
+		end = height - 1
 		if end > len(lines)-1 {
 			end = len(lines) - 1
 		}
-	} else if line+height/2+1 > len(lines)-1 {
+	case line+height/2 >= len(lines)-1:
 		end = len(lines) - 1
-		start = end - height
+		start = end - height + 1
 		if start < 0 {
 			start = 0
 		}
-	} else {
+	default:
 		start = line - height/2
-		end = line + height/2
+		end = line + height/2 - 1 // minus 1 due to display current file
 	}
-
-	w := c.TextView.BatchWriter()
-	defer w.Close()
-	w.Clear()
 
 	// Display server and file info
 	prefix := strings.Repeat(" ", width-len(c.file)-2)
@@ -102,9 +110,12 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 		line := lines[i]
 		lineNumber := fmt.Sprintf(format, i+1)
 
-		if i == end {
+		switch {
+		// If print line is the last of lines, write without line-feed
+		case i == end:
 			fmt.Fprint(w, colors.Gray(lineNumber)+" "+line.text())
-		} else if i == c.line-1 {
+		// If print line is debugging, highlight it
+		case i == c.line-1:
 			pt := line.plainText()
 			offset := width - (len(pt+lineNumber) + hightlightOffset)
 			if offset < 0 {
@@ -117,11 +128,11 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 				colors.Bold(colors.Underline("[black:silver:]"+lineNumber))+colors.Reset, // highlight line number
 				colors.Underline(" "+line.text()+suffix),                                 // with underline
 			)
-		} else {
+		// Otherwise, simply write line
+		default:
 			fmt.Fprintln(w, colors.Gray(lineNumber)+" "+line.text())
 		}
 	}
-
 }
 
 func (c *CodeView) lexFile(file string) ([]Line, error) {

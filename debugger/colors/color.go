@@ -6,19 +6,9 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-type ColorExtension string
-
 const (
 	Reset = "[-:-:-]"
 )
-
-func extensionString(exts ...ColorExtension) string {
-	var ext string
-	for i := range exts {
-		ext += string(exts[i])
-	}
-	return ext
-}
 
 var Background = tcell.GetColor("#000000")
 

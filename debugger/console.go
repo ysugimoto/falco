@@ -7,7 +7,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/debugger/codeview"
 	"github.com/ysugimoto/falco/debugger/colors"
 	"github.com/ysugimoto/falco/debugger/helpview"
@@ -25,8 +24,7 @@ type Console struct {
 	interpreter *interpreter.Interpreter
 	isDebugging atomic.Bool
 
-	currentNode ast.Node
-	stateChan   chan interpreter.DebugState
+	stateChan chan interpreter.DebugState
 }
 
 func New(i *interpreter.Interpreter) *Console {
@@ -159,5 +157,5 @@ func (c *Console) startDebugServer(port int) {
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", port),
 	}
-	s.ListenAndServe()
+	s.ListenAndServe() // nolint:errcheck
 }

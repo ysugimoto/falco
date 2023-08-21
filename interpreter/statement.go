@@ -285,8 +285,8 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 			"Overflow log line size limitation of %d",
 			MaxLogLineSize,
 		)
-
 	}
+
 	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
 	i.Debugger.Message(line)
 	return nil

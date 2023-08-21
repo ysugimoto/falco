@@ -16,7 +16,6 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const headerOverflowMaxSize = 69 * 1024 // 69KB
 const HTTPS_SCHEME = "https"
 
 func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Request, error) {

@@ -50,7 +50,7 @@ func createTestInterpreter(director string) (*Interpreter, error) {
 	ip.ctx.ClientIdentity = &value.String{
 		Value: "127.0.0.1",
 	}
-	if err := ip.ProcessStatements(vcl.Statements); err != nil {
+	if err := ip.ProcessDeclarations(vcl.Statements); err != nil {
 		return nil, fmt.Errorf("Failed to process statement: %s", err)
 	}
 
