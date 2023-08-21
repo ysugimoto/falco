@@ -1,3 +1,7 @@
+## v0.23.0
+
+- Adds JSON support for generic, terraform and lint usage [#157](https://github.com/ysugimoto/falco/pull/157) (@doramatadora)
+
 ## v0.22.0
 
 - Add fastly_info.host_header [#155](https://github.com/ysugimoto/falco/pull/155) (@bungoume)
