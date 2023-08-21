@@ -83,10 +83,10 @@ func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
-			Value: v.ctx.Request.Header.Get(match[1]),
+			Value: v.ctx.Object.Header.Get(match[1]),
 		}
 	}
-	return nil
+	return v.base.getFromRegex(name)
 }
 
 func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {

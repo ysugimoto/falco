@@ -13,6 +13,7 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/debugger"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
@@ -36,6 +37,7 @@ const (
 	subcommandTerraform = "terraform"
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
+	subcommandDebug     = "debug"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -64,6 +66,7 @@ Subcommands:
     lint      : Run lint (default)
     stats     : Analyze VCL statistics
     simulate  : Run simulate server with provided VCLs
+    debug     : Debug VCL by breakpoints
 
 Flags:
     -I, --include_path : Add include path
@@ -113,9 +116,9 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandSimulate, subcommandLint, subcommandStats:
-		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+	case subcommandSimulate, subcommandLint, subcommandStats, subcommandDebug:
+		// "lint", "simulate" and "debug" command provides single file of service, then resolvers size is always 1
+		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
@@ -124,6 +127,12 @@ func main() {
 	if err != nil {
 		writeln(red, err.Error())
 		os.Exit(1)
+	}
+
+	// debug command does not need any output
+	if c.Commands.At(0) == subcommandDebug {
+		runDebugger(resolvers[0], c.Port)
+		return
 	}
 
 	var shouldExit bool
@@ -157,6 +166,11 @@ func main() {
 	if shouldExit {
 		os.Exit(1)
 	}
+}
+
+func runDebugger(rslv resolver.Resolver, port int) error {
+	d := debugger.New(rslv)
+	return d.Run(port)
 }
 
 func runLint(runner *Runner, rslv resolver.Resolver) error {

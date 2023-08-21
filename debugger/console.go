@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 
@@ -22,10 +21,11 @@ import (
 	"github.com/ysugimoto/falco/resolver"
 )
 
+// FIXME: remains on RC channel for debug logging. Should be removed on a major release
 var logger log.Logger
 
 func init() {
-	fp, _ := os.OpenFile("./debugger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
+	fp, _ := os.OpenFile("/tmp/falco_debugger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
 	logger = *log.New(fp, "", 0)
 }
 
@@ -42,8 +42,8 @@ type Console struct {
 	stepChan    chan interpreter.DebugState
 }
 
-func New() *Console {
-	code := codeview.New("http://localhost:3124")
+func New(rslv resolver.Resolver) *Console {
+	code := codeview.New()
 	shell := shellview.New()
 	help := helpview.New()
 
@@ -68,9 +68,7 @@ func New() *Console {
 		stepChan:    make(chan interpreter.DebugState),
 		isDebugging: atomic.Bool{},
 	}
-	abs, _ := filepath.Abs("../examples/default01_debug.vcl")
-	r, _ := resolver.NewFileResolvers(abs, []string{filepath.Dir(abs)})
-	c.interpreter = interpreter.New(context.WithResolver(r[0]))
+	c.interpreter = interpreter.New(context.WithResolver(rslv))
 	c.interpreter.Debugger = c.debug
 	return c
 }
@@ -101,6 +99,8 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 		switch cmd {
 		case "quit":
 			c.app.Stop()
+		case "":
+			break
 		default:
 			c.shell.CommandResult(c.getVariable(cmd))
 		}
@@ -108,6 +108,11 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 		c.shell.HistoryUp()
 	case tcell.KeyDown:
 		c.shell.HistoryDown()
+	// TODO: implement if we need
+	// case tcell.KeyLeft:
+	// 	c.shell.CursorLeft()
+	// case tcell.KeyRight:
+	// 	c.shell.CursorRight()
 	default:
 		r := evt.Rune()
 		if r >= 0x20 && r <= 0x7E {
@@ -117,9 +122,10 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 	return evt
 }
 
-func (c *Console) Run() error {
+func (c *Console) Run(port int) error {
 	c.app.SetInputCapture(c.keyEventHandler)
-	go c.startDebugServer()
+	c.code.SetServerPort(port)
+	go c.startDebugServer(port)
 	return c.app.Run()
 }
 
@@ -135,7 +141,7 @@ func (c *Console) deactivate() {
 	c.app.Draw()
 }
 
-func (c *Console) startDebugServer() {
+func (c *Console) startDebugServer(port int) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if c.isDebugging.Load() {
@@ -151,7 +157,7 @@ func (c *Console) startDebugServer() {
 
 	s := &http.Server{
 		Handler: mux,
-		Addr:    ":3124",
+		Addr:    fmt.Sprintf(":%d", port),
 	}
 	s.ListenAndServe()
 }
@@ -166,8 +172,9 @@ func (c *Console) getVariable(name string) string {
 		return fmt.Sprintf("(%s)%s", val.Type(), val.String())
 	}
 
-	logger.Println(c.interpreter.Context().Scope)
 	vars := c.interpreter.Variables()
+	logger.Println(c.interpreter.Context().Scope)
+	logger.Printf("%#v\n", vars)
 	val, _ := vars.Get(c.interpreter.Context().Scope, name)
 	if val == value.Null {
 		return "NULL"

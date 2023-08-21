@@ -2,7 +2,6 @@ package codeview
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"strings"
@@ -15,13 +14,6 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-var logger log.Logger
-
-func init() {
-	fp, _ := os.OpenFile("./debugger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
-	logger = *log.New(fp, "", 0)
-}
-
 type CodeView struct {
 	*tview.TextView
 
@@ -32,7 +24,7 @@ type CodeView struct {
 	lexerCaches map[string][]Line
 }
 
-func New(server string) *CodeView {
+func New() *CodeView {
 	v := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetDynamicColors(true).
@@ -44,11 +36,14 @@ func New(server string) *CodeView {
 
 	c := &CodeView{
 		TextView:    v,
-		serverInfo:  " Debug server: " + server,
 		lexerCaches: make(map[string][]Line),
 	}
 
 	return c
+}
+
+func (c *CodeView) SetServerPort(port int) {
+	c.serverInfo = fmt.Sprintf(" Debug server: http://localhost:%d", port)
 }
 
 func (c *CodeView) SetFile(file string, line int) {

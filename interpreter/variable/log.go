@@ -306,10 +306,15 @@ func (v *LogScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP response header matching
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
-			Value: v.ctx.Request.Header.Get(match[1]),
+			Value: v.ctx.Response.Header.Get(match[1]),
 		}
 	}
-	return nil
+	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		return &value.String{
+			Value: v.ctx.BackendRequest.Header.Get(match[1]),
+		}
+	}
+	return v.base.getFromRegex(name)
 }
 
 func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {

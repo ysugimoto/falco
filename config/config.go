@@ -23,6 +23,7 @@ type Config struct {
 	Version        bool     `cli:"V"`
 	Remote         bool     `cli:"r,remote" yaml:"remote"`
 	Json           bool     `cli:"json"`
+	Port           int      `cli:"p,port" yaml:"port" default:"3124"`
 
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`
