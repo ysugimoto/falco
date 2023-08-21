@@ -36,18 +36,6 @@ func New(options ...context.Option) *Interpreter {
 	}
 }
 
-func (i *Interpreter) Context() *context.Context {
-	return i.ctx
-}
-
-func (i *Interpreter) Variables() variable.Variable {
-	return i.vars
-}
-
-func (i *Interpreter) LocalVariables() variable.LocalVariables {
-	return i.localVars
-}
-
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
 	i.Debugger.Message("Restarted.")
