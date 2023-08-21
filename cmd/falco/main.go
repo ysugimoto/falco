@@ -173,7 +173,7 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		case result.Infos > 0:
 			writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
 			if runner.level < LevelInfo {
-				writeln(white, "Run command with the -vv option to ouput recommendations.")
+				writeln(white, "Run command with the -vv option to output recommendations.")
 			}
 		default:
 			writeln(green, "VCL looks great :sparkles:")
