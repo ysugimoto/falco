@@ -25,6 +25,10 @@ type Config struct {
 	Json           bool     `cli:"json"`
 	Port           int      `cli:"p,port" yaml:"port" default:"3124"`
 
+	// Override resource limits
+	OverrideMaxBackends int `yaml:"override_max_backends"`
+	OverrideMaxAcls     int `yaml:"override_max_acls"`
+
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`
 	FastlyApiKey    string `env:"FASTLY_API_KEY"`

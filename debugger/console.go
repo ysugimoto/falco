@@ -14,8 +14,6 @@ import (
 	"github.com/ysugimoto/falco/debugger/messageview"
 	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/resolver"
 )
 
 type Console struct {
@@ -31,7 +29,7 @@ type Console struct {
 	stateChan   chan interpreter.DebugState
 }
 
-func New(rslv resolver.Resolver) *Console {
+func New(i *interpreter.Interpreter) *Console {
 	code := codeview.New()
 	message := messageview.New()
 	shell := shellview.New()
@@ -58,9 +56,10 @@ func New(rslv resolver.Resolver) *Console {
 		app:         app,
 		stateChan:   make(chan interpreter.DebugState),
 		isDebugging: atomic.Bool{},
+		interpreter: i,
 	}
-	c.interpreter = interpreter.New(context.WithResolver(rslv))
-	c.interpreter.Debugger = &Debugger{
+	// Attach debugger
+	i.Debugger = &Debugger{
 		code:    code,
 		shell:   shell,
 		message: message,
@@ -130,14 +129,14 @@ func (c *Console) Run(port int) error {
 
 func (c *Console) activate() {
 	c.isDebugging.Store(true)
-	c.shell.Activate()
+	c.shell.IsActivated = true
 	c.message.Append(messageview.Debugger, "Request received, start debugger session.")
 	c.app.Draw()
 }
 
 func (c *Console) deactivate() {
 	c.isDebugging.Store(false)
-	c.shell.Deactivate()
+	c.shell.IsActivated = false
 	c.message.Append(messageview.Debugger, "Debugger session has finished.")
 	c.app.Draw()
 }

@@ -51,7 +51,9 @@ type Context struct {
 	Ratecounters        map[string]*ast.RatecounterDeclaration
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
-	// Directors           map[string]*ast.DirectorDeclaration
+
+	OverrideMaxBackends int
+	OverrideMaxAcls     int
 
 	Request          *http.Request
 	BackendRequest   *http.Request

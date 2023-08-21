@@ -21,11 +21,12 @@ const cursor = "[:white:] [:-:]"
 
 type ShellView struct {
 	*tview.TextView
-	buffers     []string
-	history     *History
-	line        []rune
-	isHistory   bool
-	isActivated bool
+	buffers   []string
+	history   *History
+	line      []rune
+	isHistory bool
+
+	IsActivated bool
 }
 
 func New() *ShellView {
@@ -39,14 +40,6 @@ func New() *ShellView {
 	}
 }
 
-func (s *ShellView) Activate() {
-	s.isActivated = true
-}
-
-func (s *ShellView) Deactivate() {
-	s.isActivated = false
-}
-
 func (s *ShellView) writeShell() {
 	w := s.TextView.BatchWriter()
 	defer w.Close()
@@ -55,7 +48,7 @@ func (s *ShellView) writeShell() {
 	for i := range s.buffers {
 		fmt.Fprintln(w, s.buffers[i])
 	}
-	if s.isActivated {
+	if s.IsActivated {
 		fmt.Fprint(w, "> "+string(s.line)+cursor)
 	}
 }

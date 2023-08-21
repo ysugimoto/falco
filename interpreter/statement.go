@@ -94,12 +94,12 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 				)
 			}
 
-			// Requests are limited to three restarts in Fastly
-			// https://developer.fastly.com/reference/vcl/statements/restart/
-			if i.ctx.Restarts+1 == 3 {
+			// If next restart will exceed Fastly restart count limit, raise an exception
+			if i.ctx.Restarts+1 > MaxVarnishRestarts {
 				return NONE, DebugPass, exception.Runtime(
 					&t.Token,
-					"Max restart limit exceeded. Requests are limited to three restarts",
+					"Max restart limit exceeded. Requests are limited to %d restarts",
+					MaxVarnishRestarts,
 				)
 			}
 
@@ -277,8 +277,18 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, log.String()))
-	i.Debugger.Message(log.String())
+
+	line := log.String()
+	if len([]byte(line)) > MaxLogLineSize {
+		return exception.Runtime(
+			&stmt.GetMeta().Token,
+			"Overflow log line size limitation of %d",
+			MaxLogLineSize,
+		)
+
+	}
+	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
+	i.Debugger.Message(line)
 	return nil
 }
 

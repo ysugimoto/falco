@@ -12,6 +12,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/debugger"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
@@ -72,6 +73,7 @@ type Runner struct {
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
 	snippets     *context.FastlySnippet
+	config       *config.Config
 
 	level Level
 
@@ -86,6 +88,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		level:     LevelError,
 		overrides: make(map[string]linter.Severity),
 		lexers:    make(map[string]*lexer.Lexer),
+		config:    c,
 	}
 
 	if c.Remote {
@@ -401,7 +404,11 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 }
 
 func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
-	options := []icontext.Option{icontext.WithResolver(rslv)}
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
@@ -410,4 +417,18 @@ func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
 	}
 
 	return interpreter.New(options...)
+}
+
+func (r *Runner) Debugger(rslv resolver.Resolver) error {
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
+	if r.snippets != nil {
+		options = append(options, icontext.WithFastlySnippets(r.snippets))
+	}
+
+	d := debugger.New(interpreter.New(options...))
+	return d.Run(r.config.Port)
 }

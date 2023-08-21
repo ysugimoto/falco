@@ -21,6 +21,12 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	main, err := ctx.Resolver.MainVCL()
 	if err != nil {
+		i.Debugger.Message(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := checkFastlyVCLLimitation(main.Data); err != nil {
+		i.Debugger.Message(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -29,6 +35,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	).ParseVCL()
 	if err != nil {
 		// parse error
+		i.Debugger.Message(err.Error())
 		http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
 		return
 	}
@@ -41,6 +48,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			).ParseVCL()
 			if err != nil {
 				// parse error
+				i.Debugger.Message(err.Error())
 				http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
 				return
 			}

@@ -24,3 +24,15 @@ func WithDebug() Option {
 		c.Debug = true
 	}
 }
+
+func WithMaxBackends(max int) Option {
+	return func(c *Context) {
+		c.OverrideMaxBackends = max
+	}
+}
+
+func WithMaxAcls(max int) Option {
+	return func(c *Context) {
+		c.OverrideMaxAcls = max
+	}
+}

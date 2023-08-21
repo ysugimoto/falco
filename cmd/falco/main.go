@@ -13,7 +13,6 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/debugger"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
@@ -129,19 +128,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// debug command does not need any output
-	if c.Commands.At(0) == subcommandDebug {
-		runDebugger(resolvers[0], c.Port)
-		return
-	}
-
 	var shouldExit bool
 	for _, v := range resolvers {
-		if name := v.Name(); name != "" {
-			writeln(white, `Lint service of "%s"`, name)
-			writeln(white, strings.Repeat("=", 18+len(name)))
-		}
-
 		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
@@ -150,11 +138,17 @@ func main() {
 
 		var exitErr error
 		switch c.Commands.At(0) {
+		case subcommandDebug:
+			runDebugger(runner, v)
 		case subcommandSimulate:
 			runSimulator(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v, c.Json)
 		default:
+			if name := v.Name(); name != "" {
+				writeln(white, `Lint service of "%s"`, name)
+				writeln(white, strings.Repeat("=", 18+len(name)))
+			}
 			exitErr = runLint(runner, v)
 		}
 
@@ -168,9 +162,8 @@ func main() {
 	}
 }
 
-func runDebugger(rslv resolver.Resolver, port int) error {
-	d := debugger.New(rslv)
-	return d.Run(port)
+func runDebugger(runner *Runner, rslv resolver.Resolver) error {
+	return runner.Debugger(rslv)
 }
 
 func runLint(runner *Runner, rslv resolver.Resolver) error {
