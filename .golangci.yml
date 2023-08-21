@@ -17,10 +17,7 @@ linters:
     - staticcheck
     - unused
     - gosimple
-    - structcheck
-    - varcheck
     - ineffassign
-    - deadcode
     - dogsled
       #- dupl disable, because parser and lexer may have similer logic
     - funlen

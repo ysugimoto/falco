@@ -20,7 +20,7 @@ jobs:
     - name: Lint programs
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.42
+        version: v1.54
         skip-pkg-cache: true
         skip-build-cache: true
         skip-go-installation: true

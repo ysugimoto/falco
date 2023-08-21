@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/fatih/color v1.12.0
-	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.9
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v2.4.0+incompatible
