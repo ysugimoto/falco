@@ -159,12 +159,6 @@ func (i *Interpreter) ProcessRecv() error {
 	var err error
 	var state State
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, i.ctx.State))
-		}
-	}()
-
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
 		state, err = i.ProcessSubroutine(sub, DebugPass)
@@ -181,8 +175,10 @@ func (i *Interpreter) ProcessRecv() error {
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -194,9 +190,11 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.Object = i.cloneResponse(v)
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
 			i.ctx.State = "MISS"
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> MISS", i.ctx.Scope))
 			err = i.ProcessMiss()
 		}
 	default:
@@ -276,25 +274,23 @@ func (i *Interpreter) ProcessMiss() error {
 		}
 	}
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
-
 	switch state {
 	case DELIVER_STALE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case FETCH:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> FETCH", i.ctx.Scope))
 		err = i.ProcessFetch()
 	default:
 		return exception.Runtime(
 			&sub.GetMeta().Token,
-			"Subroutine %s returned unexpected state %s in MiISS",
+			"Subroutine %s returned unexpected state %s in MISS",
 			sub.Name.Value,
 			state,
 		)
@@ -324,18 +320,15 @@ func (i *Interpreter) ProcessHit() error {
 		}
 	}
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
-
 	switch state {
 	case DELIVER:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -388,16 +381,12 @@ func (i *Interpreter) ProcessPass() error {
 		}
 	}
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
-
 	switch state {
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> FETCH", i.ctx.Scope))
 		err = i.ProcessFetch()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	default:
 		return exception.Runtime(
@@ -471,18 +460,12 @@ func (i *Interpreter) ProcessFetch() error {
 		}
 	}
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
-
 	switch state {
 	case DELIVER, DELIVER_STALE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
-	case PASS:
-		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -545,13 +528,14 @@ func (i *Interpreter) ProcessError() error {
 	}
 
 	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
+		if err == nil {
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> %s", i.ctx.Scope, state))
 		}
 	}()
 
 	switch state {
 	case DELIVER:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case RESTART:
 		err = i.restart()
@@ -598,12 +582,6 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 	}
 
-	defer func() {
-		if err != nil {
-			i.Debugger.Message(fmt.Sprintf("State changed: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
-
 	switch state {
 	case RESTART:
 		err = i.restart()
@@ -614,6 +592,7 @@ func (i *Interpreter) ProcessDeliver() error {
 				return errors.WithStack(err)
 			}
 		}
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> LOG", i.ctx.Scope))
 		err = i.ProcessLog()
 	default:
 		return exception.Runtime(&sub.GetMeta().Token,

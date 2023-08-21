@@ -2,10 +2,7 @@ package debugger
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"strings"
 	"sync/atomic"
 
 	"github.com/gdamore/tcell/v2"
@@ -18,17 +15,8 @@ import (
 	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 )
-
-// FIXME: remains on RC channel for debug logging. Should be removed on a major release
-var logger log.Logger
-
-func init() {
-	fp, _ := os.OpenFile("/tmp/falco_debugger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
-	logger = *log.New(fp, "", 0)
-}
 
 type Console struct {
 	app         *tview.Application
@@ -106,26 +94,20 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyDelete, tcell.KeyBackspace, tcell.KeyBackspace2:
 		c.shell.Remove()
 	case tcell.KeyEnter:
-		cmd := c.shell.GetCommand()
-		switch cmd {
-		case "quit":
-			c.app.Stop()
-		case "clear":
-			c.message.Clear()
-		case "":
-			break
-		default:
-			c.shell.CommandResult(c.getVariable(cmd))
+		if line := c.shell.GetCommand(); line != "" {
+			c.repl(line)
 		}
 	case tcell.KeyUp:
 		c.shell.HistoryUp()
 	case tcell.KeyDown:
 		c.shell.HistoryDown()
+
 	// TODO: implement if we need
 	// case tcell.KeyLeft:
 	// 	c.shell.CursorLeft()
 	// case tcell.KeyRight:
 	// 	c.shell.CursorRight()
+
 	default:
 		r := evt.Rune()
 		if r >= 0x20 && r <= 0x7E {
@@ -156,7 +138,7 @@ func (c *Console) activate() {
 func (c *Console) deactivate() {
 	c.isDebugging.Store(false)
 	c.shell.Deactivate()
-	c.message.Append(messageview.Debugger, "Debugger ended.")
+	c.message.Append(messageview.Debugger, "Debugger session has finished.")
 	c.app.Draw()
 }
 
@@ -179,24 +161,4 @@ func (c *Console) startDebugServer(port int) {
 		Addr:    fmt.Sprintf(":%d", port),
 	}
 	s.ListenAndServe()
-}
-
-func (c *Console) getVariable(name string) string {
-	if strings.HasPrefix(name, "var.") {
-		locals := c.interpreter.LocalVariables()
-		val, _ := locals.Get(name)
-		if val == value.Null {
-			return "NULL"
-		}
-		return fmt.Sprintf("(%s)%s", val.Type(), val.String())
-	}
-
-	vars := c.interpreter.Variables()
-	logger.Println(c.interpreter.Context().Scope)
-	logger.Printf("%#v\n", vars)
-	val, _ := vars.Get(c.interpreter.Context().Scope, name)
-	if val == value.Null {
-		return "NULL"
-	}
-	return fmt.Sprintf("(%s)%s", val.Type(), val.String())
 }

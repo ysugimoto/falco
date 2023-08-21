@@ -101,6 +101,10 @@ func (s *ShellView) HistoryDown() {
 	s.isHistory = true
 }
 
+func (s *ShellView) CommandError(result string) {
+	s.buffers = append(s.buffers, colors.Bold(colors.Red(">> "+result)))
+}
+
 func (s *ShellView) CommandResult(result string) {
 	s.buffers = append(s.buffers, colors.Bold(colors.Yellow(">> "+result)))
 }

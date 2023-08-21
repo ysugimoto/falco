@@ -43,6 +43,11 @@ func (p *Parser) registerExpressionParsers() {
 	}
 }
 
+// Expose global function to be called externally
+func (p *Parser) ParseExpression(precedence int) (ast.Expression, error) {
+	return p.parseExpression(precedence)
+}
+
 func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	// Note: trim comment inside expression list
 	// For example:

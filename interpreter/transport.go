@@ -139,7 +139,7 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Backend (%s) respond status code %d", backend.Value.Name.Value, resp.StatusCode))
+	i.Debugger.Message(fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode))
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer
