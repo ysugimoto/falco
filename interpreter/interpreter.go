@@ -76,7 +76,7 @@ func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
 	// Process root declarations and statements
 	for _, stmt := range statements {
 		// Call debugger
-		i.Debugger(DebugStepInit, stmt)
+		i.Debugger(stmt)
 
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
@@ -157,7 +157,7 @@ func (i *Interpreter) ProcessRecv() error {
 	var state State
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -218,7 +218,7 @@ func (i *Interpreter) ProcessHash() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		if state, err := i.ProcessSubroutine(sub); err != nil {
+		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
 		} else if state != HASH {
 			return exception.Runtime(
@@ -257,7 +257,7 @@ func (i *Interpreter) ProcessMiss() error {
 	state := FETCH
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -299,7 +299,7 @@ func (i *Interpreter) ProcessHit() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -357,7 +357,7 @@ func (i *Interpreter) ProcessPass() error {
 	state := PASS
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -434,7 +434,7 @@ func (i *Interpreter) ProcessFetch() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -501,7 +501,7 @@ func (i *Interpreter) ProcessError() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -549,7 +549,7 @@ func (i *Interpreter) ProcessDeliver() error {
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -600,7 +600,7 @@ func (i *Interpreter) ProcessLog() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/reference/vcl/
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		if _, err := i.ProcessSubroutine(sub); err != nil {
+		if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
 		}
 	}

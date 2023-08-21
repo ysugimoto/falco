@@ -4,17 +4,18 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-type DebugStep int
+type DebugState int
 
 const (
-	DebugStepInit DebugStep = iota
+	DebugPass DebugState = iota
 	DebugStepIn
 	DebugStepOver
 	DebugStepOut
 )
 
-type DebugFunc func(step DebugStep, node ast.Node)
+type DebugFunc func(node ast.Node) DebugState
 
-func DefaultDebugFunc(step DebugStep, node ast.Node) {
+func DefaultDebugFunc(node ast.Node) DebugState {
 	// Should be empty because do not any debug step as default
+	return DebugPass
 }

@@ -50,9 +50,9 @@ func (h *HelpView) drawCommands() {
 	cmds := make([]string, 4)
 	for i, cmd := range []HighlightCommand{F7, F8, F9, F10} {
 		if h.active == cmd {
-			cmds[i] = "[black:silver:][" + string(cmd) + "] " + commands[cmd] + "[-:-:]"
+			cmds[i] = " [black:silver:][" + string(cmd) + "] " + commands[cmd] + "[-:-:]"
 		} else {
-			cmds[i] = "[" + string(cmd) + "] " + commands[cmd]
+			cmds[i] = " [" + string(cmd) + "] " + commands[cmd]
 		}
 	}
 	fmt.Fprint(w, colors.Bold(strings.Join(cmds, " | ")))

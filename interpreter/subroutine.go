@@ -12,7 +12,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
-func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) (State, error) {
+func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 	// reset all local values and regex capture values
 	defer func() {
@@ -30,10 +30,12 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration) (State, 
 		return NONE, errors.WithStack(err)
 	}
 
-	return i.ProcessBlockStatement(statements)
+	// Ignore debug status
+	state, _, err := i.ProcessBlockStatement(statements, ds)
+	return state, err
 }
 
-func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) (value.Value, State, error) {
+func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
 	// Store the current values and restore after subroutine has ended
@@ -48,8 +50,14 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 	}()
 
 	var err error
+	var debugState DebugState = ds
 
 	for _, stmt := range sub.Block.Statements {
+		// Call debugger
+		if debugState != DebugStepOut {
+			debugState = i.Debugger(stmt)
+		}
+
 		switch t := stmt.(type) {
 		// Common logic statements (nothing to change state)
 		case *ast.DeclareStatement:
@@ -75,22 +83,34 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration) 
 		// Probably change status statements
 		case *ast.FunctionCallStatement:
 			var state State
-			state, err = i.ProcessFunctionCallStatement(t)
+			// Enable breakpoint if current debug state is step-in
+			if debugState == DebugStepIn {
+				state, err = i.ProcessFunctionCallStatement(t, DebugStepIn)
+			} else {
+				state, err = i.ProcessFunctionCallStatement(t, DebugStepOut)
+			}
 			if state != NONE {
 				return value.Null, state, nil
 			}
 		case *ast.CallStatement:
 			var state State
-			state, err = i.ProcessCallStatement(t)
+			// Enable breakpoint if current debug state is step-in
+			if debugState == DebugStepIn {
+				state, err = i.ProcessCallStatement(t, DebugStepIn)
+			} else {
+				state, err = i.ProcessCallStatement(t, DebugStepOut)
+			}
 			if state != NONE {
 				return value.Null, state, nil
 			}
 		case *ast.IfStatement:
 			var state State
-			state, err = i.ProcessIfStatement(t)
+			var debug DebugState
+			state, debug, err = i.ProcessIfStatement(t, debugState)
 			if state != NONE {
 				return value.Null, state, nil
 			}
+			debugState = debug
 		case *ast.RestartStatement:
 			// restart statement force change state to RESTART
 			return value.Null, RESTART, nil

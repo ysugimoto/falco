@@ -38,8 +38,8 @@ type Console struct {
 	isDebugging atomic.Bool
 
 	currentNode ast.Node
-	mode        Step
-	stepChan    chan Step
+	mode        interpreter.DebugState
+	stepChan    chan interpreter.DebugState
 }
 
 func New() *Console {
@@ -64,8 +64,8 @@ func New() *Console {
 		shell:       shell,
 		help:        help,
 		app:         app,
-		mode:        StepNone,
-		stepChan:    make(chan Step),
+		mode:        interpreter.DebugPass,
+		stepChan:    make(chan interpreter.DebugState),
 		isDebugging: atomic.Bool{},
 	}
 	abs, _ := filepath.Abs("../examples/default01_debug.vcl")
@@ -87,13 +87,13 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 
 	switch evt.Key() {
 	case tcell.KeyF7:
-		c.stepChan <- StepNone
+		c.stepChan <- interpreter.DebugPass
 	case tcell.KeyF8:
-		c.stepChan <- StepIn
+		c.stepChan <- interpreter.DebugStepIn
 	case tcell.KeyF9:
-		c.stepChan <- StepOver
+		c.stepChan <- interpreter.DebugStepOver
 	case tcell.KeyF10:
-		c.stepChan <- StepOut
+		c.stepChan <- interpreter.DebugStepOut
 	case tcell.KeyDelete, tcell.KeyBackspace, tcell.KeyBackspace2:
 		c.shell.Remove()
 	case tcell.KeyEnter:
