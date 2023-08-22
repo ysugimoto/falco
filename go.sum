@@ -72,6 +72,8 @@ github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJy
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/ysugimoto/twist v0.9.0 h1:dYaDiOUMxZocTXGiRlc8AGfJsoYyXLW0spQ8brlIjuI=
 github.com/ysugimoto/twist v0.9.0/go.mod h1:mYJhzgj3Ym+/MZFn7LHA1APpI43E721dDOpFGp4Ap6o=
+github.com/ysugimoto/twist v0.10.0 h1:neVT3/RqJAy5kfmmCRv0fJGMo2FZUmOViSklXaDO+8E=
+github.com/ysugimoto/twist v0.10.0/go.mod h1:mYJhzgj3Ym+/MZFn7LHA1APpI43E721dDOpFGp4Ap6o=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=

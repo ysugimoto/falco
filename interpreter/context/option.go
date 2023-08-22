@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/resolver"
 )
@@ -34,5 +35,11 @@ func WithMaxBackends(max int) Option {
 func WithMaxAcls(max int) Option {
 	return func(c *Context) {
 		c.OverrideMaxAcls = max
+	}
+}
+
+func WithRequest(r *config.RequestConfig) Option {
+	return func(c *Context) {
+		c.OverrideRequest = r
 	}
 }

@@ -403,7 +403,7 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	return stats, nil
 }
 
-func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
+func (r *Runner) Simulator(rslv resolver.Resolver) error {
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
@@ -415,8 +415,20 @@ func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
 	if v := os.Getenv("FALCO_DEBUG"); v != "" {
 		options = append(options, icontext.WithDebug())
 	}
+	if r.config.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	}
 
-	return interpreter.New(options...)
+	i := interpreter.New(options...)
+	mux := http.NewServeMux()
+	mux.Handle("/", i)
+
+	s := &http.Server{
+		Handler: mux,
+		Addr:    ":3124",
+	}
+	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	return s.ListenAndServe()
 }
 
 func (r *Runner) Debugger(rslv resolver.Resolver) error {
@@ -427,6 +439,9 @@ func (r *Runner) Debugger(rslv resolver.Resolver) error {
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
+	}
+	if r.config.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
 	}
 
 	d := debugger.New(interpreter.New(options...))

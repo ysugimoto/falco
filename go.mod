@@ -16,7 +16,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/ysugimoto/twist v0.9.0
+	github.com/ysugimoto/twist v0.10.0
 	golang.org/x/sys v0.6.0 // indirect
 )
 

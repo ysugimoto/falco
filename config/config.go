@@ -24,10 +24,15 @@ type Config struct {
 	Remote         bool     `cli:"r,remote" yaml:"remote"`
 	Json           bool     `cli:"json"`
 	Port           int      `cli:"p,port" yaml:"port" default:"3124"`
+	Request        string   `cli:"request"`
+	Debug          bool     `cli:"debug"`
 
 	// Override resource limits
-	OverrideMaxBackends int `yaml:"override_max_backends"`
-	OverrideMaxAcls     int `yaml:"override_max_acls"`
+	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
+	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
 
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`
@@ -54,7 +59,9 @@ func New(args []string) (*Config, error) {
 	// finally, cascade config file -> environment -> cli option order
 	options = append(options, twist.WithEnv(), twist.WithCli(args))
 
-	c := &Config{}
+	c := &Config{
+		OverrideRequest: &RequestConfig{},
+	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -66,6 +73,13 @@ func New(args []string) (*Config, error) {
 		c.VerboseWarning = true
 	case "info":
 		c.VerboseInfo = true
+	}
+
+	// Load request configuration
+	if c.Request != "" {
+		if rc, err := LoadRequestConfig(c.Request); err == nil {
+			c.OverrideRequest = rc
+		}
 	}
 
 	return c, nil

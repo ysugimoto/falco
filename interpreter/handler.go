@@ -56,12 +56,17 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// If override request configration exists, set them
+	if ctx.OverrideRequest != nil {
+		ctx.OverrideRequest.SetRequest(r)
+	}
+
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
 	i.process = process.New()
 
-	if err := i.ProcessInit(vcl.Statements); err != nil {
+	handleError := func(err error) {
 		// If debug is true, print with stacktrace
 		i.process.Error = err
 		if i.ctx.Debug {
@@ -72,6 +77,14 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			i.Debugger.Message(err.Error())
 		}
+	}
+
+	if err := i.ProcessInit(vcl.Statements); err != nil {
+		handleError(err)
+	} else if err := i.ProcessRecv(); err != nil {
+		handleError(err)
+	} else if err := checkFastlyResponseLimit(i.ctx.Response); err != nil {
+		handleError(err)
 	}
 
 	i.process.Restarts = i.ctx.Restarts

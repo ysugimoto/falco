@@ -60,6 +60,7 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 	defer w.Close()
 	w.Clear()
 
+	// Look up lexer cache
 	lines, ok := c.lexerCaches[c.file]
 	if !ok {
 		var err error
@@ -68,6 +69,8 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 			fmt.Fprintf(w, "Lex error: %s\n", err.Error())
 			return
 		}
+		// Store to the lexer cache
+		c.lexerCaches[c.file] = lines
 	}
 
 	var start, end int
@@ -274,6 +277,5 @@ func (c *CodeView) lexFile(file string) ([]Line, error) {
 		lines = append(lines, line)
 	}
 
-	c.lexerCaches[file] = lines
 	return lines, nil
 }

@@ -60,12 +60,6 @@ func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
 	if err := checkFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
-	if err := i.ProcessRecv(); err != nil {
-		return err
-	}
-	if err := checkFastlyResponseLimit(i.ctx.Response); err != nil {
-		return err
-	}
 	return nil
 }
 
