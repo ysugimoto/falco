@@ -23,7 +23,7 @@ func Underline(format string, args ...any) string {
 	return fmt.Sprintf("[::u]"+format+"[::-]", args...)
 }
 
-// Text coloes
+// Text colors
 func Black(format string, args ...any) string {
 	return fmt.Sprintf("[black]"+format+"[white]", args...)
 }
