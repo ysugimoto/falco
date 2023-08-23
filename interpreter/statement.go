@@ -14,10 +14,16 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, error) {
+func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds DebugState) (State, DebugState, error) {
 	var err error
+	var debugState DebugState = ds
 
 	for _, stmt := range statements {
+		// Call debugger
+		if debugState != DebugStepOut {
+			debugState = i.Debugger.Run(stmt)
+		}
+
 		switch t := stmt.(type) {
 		// Common logic statements (nothing to change state)
 		case *ast.DeclareStatement:
@@ -34,12 +40,12 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 			err = i.ProcessLogStatement(t)
 		case *ast.SyntheticStatement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, exception.Runtime(&t.Token, "synthetic statement is only available in ERROR scope")
+				return NONE, DebugPass, exception.Runtime(&t.Token, "synthetic statement is only available in ERROR scope")
 			}
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, exception.Runtime(&t.Token, "synthetic.base64 statement is only available in ERROR scope")
+				return NONE, DebugPass, exception.Runtime(&t.Token, "synthetic.base64 statement is only available in ERROR scope")
 			}
 			err = i.ProcessSyntheticBase64Statement(t)
 
@@ -52,69 +58,81 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement) (State, 
 		// Probably change status statements
 		case *ast.FunctionCallStatement:
 			var state State
-			state, err = i.ProcessFunctionCallStatement(t)
+			// Enable breakpoint if current debug state is step-in
+			if debugState == DebugStepIn {
+				state, err = i.ProcessFunctionCallStatement(t, DebugStepIn)
+			} else {
+				state, err = i.ProcessFunctionCallStatement(t, DebugStepOut)
+			}
 			if state != NONE {
-				return state, nil
+				return state, DebugPass, nil
 			}
 		case *ast.CallStatement:
 			var state State
-			state, err = i.ProcessCallStatement(t)
+			// Enable breakpoint if current debug state is step-in
+			if debugState == DebugStepIn {
+				state, err = i.ProcessCallStatement(t, DebugStepIn)
+			} else {
+				state, err = i.ProcessCallStatement(t, DebugStepOut)
+			}
 			if state != NONE {
-				return state, nil
+				return state, DebugPass, nil
 			}
 		case *ast.IfStatement:
 			var state State
-			state, err = i.ProcessIfStatement(t)
+			var debug DebugState
+			state, debug, err = i.ProcessIfStatement(t, debugState)
 			if state != NONE {
-				return state, nil
+				return state, debug, nil
 			}
+			debugState = debug
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
-				return NONE, exception.Runtime(
+				return NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"restart statement is only available in RECV, HIT, FETCH, ERROR, and DELIVER scope",
 				)
 			}
 
-			// Requests are limited to three restarts in Fastly
-			// https://developer.fastly.com/reference/vcl/statements/restart/
-			if i.ctx.Restarts+1 == 3 {
-				return NONE, exception.Runtime(
+			// If next restart will exceed Fastly restart count limit, raise an exception
+			if i.ctx.Restarts+1 > MaxVarnishRestarts {
+				return NONE, DebugPass, exception.Runtime(
 					&t.Token,
-					"Max restart limit exceeded. Requests are limited to three restarts",
+					"Max restart limit exceeded. Requests are limited to %d restarts",
+					MaxVarnishRestarts,
 				)
 			}
 
 			// restart statement force change state to RESTART
-			return RESTART, nil
+			return RESTART, DebugPass, nil
 		case *ast.ReturnStatement:
 			// When return statement is processed, return its state immediately
-			return i.ProcessReturnStatement(t), nil
+			return i.ProcessReturnStatement(t), DebugPass, nil
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
-				return NONE, exception.Runtime(
+				return NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope")
 			}
 
 			// restart statement force change state to ERROR
 			if err := i.ProcessErrorStatement(t); err != nil {
-				return ERROR, errors.WithStack(err)
+				return ERROR, DebugPass, errors.WithStack(err)
 			}
-			return ERROR, nil
+			return ERROR, DebugPass, nil
 
 		// Others, no effects
 		case *ast.EsiStatement:
 			// Nothing to do, actually enable ESI in origin request
 			if err := i.ProcessEsiStatement(t); err != nil {
-				return NONE, errors.WithStack(err)
+				return NONE, DebugPass, errors.WithStack(err)
 			}
 		}
 		if err != nil {
-			return INTERNAL_ERROR, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %s", err.Error())
+			return INTERNAL_ERROR, DebugPass, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %s", err.Error())
 		}
 	}
-	return NONE, nil
+	return NONE, DebugPass, nil
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
@@ -197,16 +215,16 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	return nil
 }
 
-func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement) (State, error) {
+func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugState) (State, error) {
 	name := stmt.Subroutine.Value
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
-		_, state, err := i.ProcessFunctionSubroutine(sub)
+		_, state, err := i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
 		return state, nil
 	} else if sub, ok := i.ctx.Subroutines[name]; ok {
-		state, err := i.ProcessSubroutine(sub)
+		state, err := i.ProcessSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -259,7 +277,18 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, log.String()))
+
+	line := log.String()
+	if len([]byte(line)) > MaxLogLineSize {
+		return exception.Runtime(
+			&stmt.GetMeta().Token,
+			"Overflow log line size limitation of %d",
+			MaxLogLineSize,
+		)
+	}
+
+	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
+	i.Debugger.Message(line)
 	return nil
 }
 
@@ -290,7 +319,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	return nil
 }
 
-func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement) (State, error) {
+func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement, ds DebugState) (State, error) {
 	if sub, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
 		if len(stmt.Arguments) > 0 {
 			return NONE, exception.Runtime(
@@ -300,7 +329,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			)
 		}
 		// Functional subroutine may change status
-		_, s, err := i.ProcessFunctionSubroutine(sub)
+		_, s, err := i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return s, errors.WithStack(err)
 		}
@@ -353,33 +382,36 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	return NONE, nil
 }
 
-func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
+func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (State, DebugState, error) {
 	// if
 	cond, err := i.ProcessExpression(stmt.Condition, true)
 	if err != nil {
-		return NONE, errors.WithStack(err)
+		return NONE, DebugPass, errors.WithStack(err)
 	}
 
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+			state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 			if err != nil {
-				return NONE, errors.WithStack(err)
+				return NONE, debug, errors.WithStack(err)
 			}
-			return state, nil
+			return state, debug, nil
 		}
 	case *value.String:
 		if t.Value != "" {
-			state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+			state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 			if err != nil {
-				return NONE, errors.WithStack(err)
+				return NONE, debug, errors.WithStack(err)
 			}
-			return state, nil
+			return state, debug, nil
 		}
 	default:
 		if cond != value.Null {
-			return NONE, exception.Runtime(&stmt.GetMeta().Token, "If condition is not boolean")
+			return NONE, DebugPass, exception.Runtime(
+				&stmt.GetMeta().Token,
+				"If condition is not boolean",
+			)
 		}
 	}
 
@@ -387,40 +419,43 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement) (State, error) {
 	for _, ei := range stmt.Another {
 		cond, err := i.ProcessExpression(ei.Condition, true)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return NONE, DebugPass, errors.WithStack(err)
 		}
 
 		switch t := cond.(type) {
 		case *value.Boolean:
 			if t.Value {
-				state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+				state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 				if err != nil {
-					return NONE, errors.WithStack(err)
+					return NONE, debug, errors.WithStack(err)
 				}
-				return state, nil
+				return state, debug, nil
 			}
 		case *value.String:
 			if t.Value != "" {
-				state, err := i.ProcessBlockStatement(stmt.Consequence.Statements)
+				state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 				if err != nil {
-					return NONE, errors.WithStack(err)
+					return NONE, debug, errors.WithStack(err)
 				}
-				return state, nil
+				return state, debug, nil
 			}
 		default:
 			if cond != value.Null {
-				return NONE, exception.Runtime(&stmt.GetMeta().Token, "If condition is not boolean")
+				return NONE, DebugPass, exception.Runtime(
+					&stmt.GetMeta().Token,
+					"If condition is not boolean",
+				)
 			}
 		}
 	}
 
 	if stmt.Alternative != nil {
 		// else
-		state, err := i.ProcessBlockStatement(stmt.Alternative.Statements)
+		state, debug, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return NONE, debug, errors.WithStack(err)
 		}
-		return state, nil
+		return state, debug, nil
 	}
-	return NONE, nil
+	return NONE, DebugPass, nil
 }

@@ -109,13 +109,13 @@ func (v *MissScopeVariables) getFromRegex(name string) value.Value {
 		// If name is Cookie, header name can contain ":" with cookie name
 		if !strings.Contains(name, ":") {
 			return &value.String{
-				Value: v.ctx.Request.Header.Get(match[1]),
+				Value: v.ctx.BackendRequest.Header.Get(match[1]),
 			}
 		}
 		spl := strings.SplitN(name, ":", 2)
 		if !strings.EqualFold(spl[0], "cookie") {
 			return &value.String{
-				Value: v.ctx.Request.Header.Get(match[1]),
+				Value: v.ctx.BackendRequest.Header.Get(match[1]),
 			}
 		}
 
@@ -126,7 +126,7 @@ func (v *MissScopeVariables) getFromRegex(name string) value.Value {
 		}
 		return &value.String{Value: ""}
 	}
-	return nil
+	return v.base.getFromRegex(name)
 }
 
 func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {

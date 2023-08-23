@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"encoding/json"
-	"net/http"
 
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
@@ -34,7 +33,7 @@ var (
 const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
-	subcommandSimulate  = "simulate"
+	subcommandLocal     = "local"
 	subcommandStats     = "stats"
 )
 
@@ -63,7 +62,7 @@ Subcommands:
     terraform : Run lint from terraform planned JSON
     lint      : Run lint (default)
     stats     : Analyze VCL statistics
-    simulate  : Run simulate server with provided VCLs
+    local     : Run local simulate server with provided VCLs
 
 Flags:
     -I, --include_path : Add include path
@@ -74,12 +73,17 @@ Flags:
     -v                 : Verbose warning lint result
     -vv                : Varbose all lint result
     -json              : Output statistics as JSON
+    -request           : Simulate request config
+    -debug             : Debug mode for simulator
 
 Simple Linting example:
     falco -I . -vv /path/to/vcl/main.vcl
 
 Get statistics example:
     falco -I . stats /path/to/vcl/main.vcl
+
+Local server with debugger example:
+	falco -I . local -debug /path/to/vcl/main.vcl
 
 Linting with terraform:
     terraform plan -out planned.out
@@ -113,9 +117,10 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandSimulate, subcommandLint, subcommandStats:
-		// "lint" and "simulate" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+	case subcommandLocal, subcommandLint, subcommandStats:
+		// "lint", "local" and "stats" command provides single file of service,
+		// then resolvers size is always 1
+		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 	default:
 		// "lint" command provides single file of service, then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
@@ -128,11 +133,6 @@ func main() {
 
 	var shouldExit bool
 	for _, v := range resolvers {
-		if name := v.Name(); name != "" {
-			writeln(white, `Lint service of "%s"`, name)
-			writeln(white, strings.Repeat("=", 18+len(name)))
-		}
-
 		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
@@ -141,11 +141,19 @@ func main() {
 
 		var exitErr error
 		switch c.Commands.At(0) {
-		case subcommandSimulate:
-			runSimulator(runner, v)
+		case subcommandLocal:
+			if c.Debug {
+				exitErr = runDebugger(runner, v)
+			} else {
+				exitErr = runSimulator(runner, v)
+			}
 		case subcommandStats:
 			exitErr = runStats(runner, v, c.Json)
 		default:
+			if name := v.Name(); name != "" {
+				writeln(white, `Lint service of "%s"`, name)
+				writeln(white, strings.Repeat("=", 18+len(name)))
+			}
 			exitErr = runLint(runner, v)
 		}
 
@@ -205,18 +213,20 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func runSimulator(runner *Runner, rslv resolver.Resolver) {
-	mux := http.NewServeMux()
-	mux.Handle("/", runner.Simulator(rslv))
+func runDebugger(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Debugger(rslv); err != nil {
+		writeln(red, "Failed to start debugger console: %s", err.Error())
+		return ErrExit
+	}
+	return nil
+}
 
-	s := &http.Server{
-		Handler: mux,
-		Addr:    ":3124",
-	}
-	writeln(green, "Simulator server starts on 0.0.0.0:3124")
-	if err := s.ListenAndServe(); err != nil {
+func runSimulator(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Simulator(rslv); err != nil {
 		writeln(red, "Failed to start server: %s", err.Error())
+		return ErrExit
 	}
+	return nil
 }
 
 func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {

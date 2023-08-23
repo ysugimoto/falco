@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
@@ -51,7 +52,10 @@ type Context struct {
 	Ratecounters        map[string]*ast.RatecounterDeclaration
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
-	// Directors           map[string]*ast.DirectorDeclaration
+
+	OverrideMaxBackends int
+	OverrideMaxAcls     int
+	OverrideRequest     *config.RequestConfig
 
 	Request          *http.Request
 	BackendRequest   *http.Request

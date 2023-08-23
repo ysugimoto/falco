@@ -23,3 +23,7 @@ tools
 ## Additional development script should be ignored
 __generator__/check.go
 __generator__/*.csv
+
+debugger.log
+debug.log
+request.json

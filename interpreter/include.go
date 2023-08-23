@@ -60,9 +60,9 @@ func (i *Interpreter) includeFile(include *ast.IncludeStatement, isRoot bool) ([
 	}
 
 	if isRoot {
-		return loadRootVCL(include.Module.Value, module.Data)
+		return loadRootVCL(module.Name, module.Data)
 	}
-	return loadStatementVCL(include.Module.Value, module.Data)
+	return loadStatementVCL(module.Name, module.Data)
 }
 
 func loadRootVCL(name, content string) ([]ast.Statement, error) {

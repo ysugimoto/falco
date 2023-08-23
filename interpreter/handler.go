@@ -21,6 +21,12 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	main, err := ctx.Resolver.MainVCL()
 	if err != nil {
+		i.Debugger.Message(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := checkFastlyVCLLimitation(main.Data); err != nil {
+		i.Debugger.Message(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -29,6 +35,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	).ParseVCL()
 	if err != nil {
 		// parse error
+		i.Debugger.Message(err.Error())
 		http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
 		return
 	}
@@ -41,6 +48,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			).ParseVCL()
 			if err != nil {
 				// parse error
+				i.Debugger.Message(err.Error())
 				http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
 				return
 			}
@@ -48,23 +56,35 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// If override request configration exists, set them
+	if ctx.OverrideRequest != nil {
+		ctx.OverrideRequest.SetRequest(r)
+	}
+
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
 	i.process = process.New()
 
-	if err := i.ProcessInit(vcl.Statements); err != nil {
+	handleError := func(err error) {
 		// If debug is true, print with stacktrace
+		i.process.Error = err
 		if i.ctx.Debug {
 			fmt.Fprintf(os.Stderr, "%+v\n", err)
-			i.process.Error = err
-		} else if re, ok := errors.Cause(err).(*exception.Exception); ok {
-			fmt.Fprintln(os.Stderr, re.Error())
-			i.process.Error = re
-		} else {
-			fmt.Fprintln(os.Stderr, err.Error())
-			i.process.Error = err
 		}
+		if re, ok := errors.Cause(err).(*exception.Exception); ok {
+			i.Debugger.Message(re.Error())
+		} else {
+			i.Debugger.Message(err.Error())
+		}
+	}
+
+	if err := i.ProcessInit(vcl.Statements); err != nil {
+		handleError(err)
+	} else if err := i.ProcessRecv(); err != nil {
+		handleError(err)
+	} else if err := checkFastlyResponseLimit(i.ctx.Response); err != nil {
+		handleError(err)
 	}
 
 	i.process.Restarts = i.ctx.Restarts
@@ -77,4 +97,6 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.Encode(i.process) // nolint: errcheck
+
+	i.Debugger.Message("Reuqest finished.")
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/debugger"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
@@ -72,6 +73,7 @@ type Runner struct {
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
 	snippets     *context.FastlySnippet
+	config       *config.Config
 
 	level Level
 
@@ -86,6 +88,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		level:     LevelError,
 		overrides: make(map[string]linter.Severity),
 		lexers:    make(map[string]*lexer.Lexer),
+		config:    c,
 	}
 
 	if c.Remote {
@@ -400,14 +403,47 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	return stats, nil
 }
 
-func (r *Runner) Simulator(rslv resolver.Resolver) http.Handler {
-	options := []icontext.Option{icontext.WithResolver(rslv)}
+func (r *Runner) Simulator(rslv resolver.Resolver) error {
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
 	if v := os.Getenv("FALCO_DEBUG"); v != "" {
 		options = append(options, icontext.WithDebug())
 	}
+	if r.config.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	}
 
-	return interpreter.New(options...)
+	i := interpreter.New(options...)
+	mux := http.NewServeMux()
+	mux.Handle("/", i)
+
+	s := &http.Server{
+		Handler: mux,
+		Addr:    ":3124",
+	}
+	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	return s.ListenAndServe()
+}
+
+func (r *Runner) Debugger(rslv resolver.Resolver) error {
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
+	if r.snippets != nil {
+		options = append(options, icontext.WithFastlySnippets(r.snippets))
+	}
+	if r.config.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	}
+
+	d := debugger.New(interpreter.New(options...))
+	return d.Run(r.config.Port)
 }

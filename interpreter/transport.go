@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"crypto/tls"
@@ -17,29 +16,9 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const headerOverflowMaxSize = 69 * 1024 // 69KB
 const HTTPS_SCHEME = "https"
 
-// Important: Fastly raises "Header Overflow" error withtout any logs
-// if request header bytes are greater than 69KB.
-func isHeaderOverflow(headers http.Header) bool {
-	var size int
-	for key, values := range headers {
-		size += len([]byte(
-			fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", ")),
-		))
-		if size >= headerOverflowMaxSize {
-			return true
-		}
-	}
-	return false
-}
-
 func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Request, error) {
-	if isHeaderOverflow(i.ctx.Request.Header) {
-		return nil, exception.Runtime(nil, "Header Overflow, the request header must be less than 69 KB")
-	}
-
 	var port string
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
@@ -85,6 +64,9 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		url += "?" + v
 	}
 
+	// Debug message
+	i.Debugger.Message(fmt.Sprintf("Fetching backend (%s) %s", backend.Value.Name.Value, url))
+
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
 		url,
@@ -120,6 +102,12 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 	defer timeout()
 
 	req := i.ctx.BackendRequest.Clone(ctx)
+
+	// Check Fastly limitations
+	if err := checkFastlyRequestLimit(req); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	client := http.DefaultClient
 	if req.URL.Scheme == HTTPS_SCHEME {
 		client = &http.Client{
@@ -134,6 +122,9 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
+
+	// Debug message
+	i.Debugger.Message(fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode))
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer

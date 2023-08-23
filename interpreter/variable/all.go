@@ -97,6 +97,8 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: req.ProtoMajor == 2}, nil
 	case FASTLY_INFO_IS_H3:
 		return &value.Boolean{Value: req.ProtoMajor == 3}, nil
+	case FASTLY_INFO_HOST_HEADER:
+		return &value.String{Value: req.Host}, nil
 
 	// Backend is always healthy on simulator
 	case REQ_BACKEND_HEALTHY:

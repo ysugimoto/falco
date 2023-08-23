@@ -46,8 +46,10 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 }
 
 // Evaluate expression
-// withCondition boolean is special flag for evaluating expression, used for if condition, parenthesis wrapped expression
+// withCondition boolean is special flag for evaluating expression,
+// used for if condition, parenthesis wrapped expression.
 // On if condition, prefix expression could use "!" prefix operator for null value.
+//
 // For example:
 //
 //	withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
@@ -115,13 +117,14 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
+
 	switch exp.Operator {
 	case "!":
 		switch t := v.(type) {
 		case *value.Boolean:
 			return &value.Boolean{Value: !t.Value}, nil
 		case *value.String:
-			// If withCondition is enabled, STRING could be convert to BOOL
+			// If withCondition is enabled, STRING could be converted to BOOL
 			if !withCondition {
 				return value.Null, errors.WithStack(
 					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
@@ -168,7 +171,6 @@ func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (valu
 }
 
 func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, error) {
-	// if
 	cond, err := i.ProcessExpression(exp.Condition, true)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
@@ -190,7 +192,6 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 		return value.Null, ex.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
 	}
 
-	// else
 	return i.ProcessExpression(exp.Alternative, false)
 }
 

@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/resolver"
 )
@@ -22,5 +23,23 @@ func WithFastlySnippets(fs *context.FastlySnippet) Option {
 func WithDebug() Option {
 	return func(c *Context) {
 		c.Debug = true
+	}
+}
+
+func WithMaxBackends(max int) Option {
+	return func(c *Context) {
+		c.OverrideMaxBackends = max
+	}
+}
+
+func WithMaxAcls(max int) Option {
+	return func(c *Context) {
+		c.OverrideMaxAcls = max
+	}
+}
+
+func WithRequest(r *config.RequestConfig) Option {
+	return func(c *Context) {
+		c.OverrideRequest = r
 	}
 }

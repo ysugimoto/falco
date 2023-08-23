@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -22,19 +23,23 @@ type Interpreter struct {
 
 	options []context.Option
 
-	ctx     *context.Context
-	process *process.Process
+	ctx      *context.Context
+	process  *process.Process
+	Debugger Debugger
 }
 
 func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:   options,
 		localVars: variable.LocalVariables{},
+		Debugger:  EmptyDebugger{},
 	}
 }
 
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
+	i.Debugger.Message("Restarted.")
+
 	if err := i.ProcessRecv(); err != nil {
 		return err
 	}
@@ -43,23 +48,27 @@ func (i *Interpreter) restart() error {
 
 func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
 	i.ctx.Scope = context.InitScope
+	i.vars = variable.NewAllScopeVariables(i.ctx)
 
 	statements, err := i.resolveIncludeStatement(vcl, true)
 	if err != nil {
 		return err
 	}
-	if err := i.ProcessStatements(statements); err != nil {
+	if err := i.ProcessDeclarations(statements); err != nil {
 		return err
 	}
-	if err := i.ProcessRecv(); err != nil {
+	if err := checkFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *Interpreter) ProcessStatements(statements []ast.Statement) error {
+func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 	// Process root declarations and statements
 	for _, stmt := range statements {
+		// Call debugger
+		i.Debugger.Run(stmt)
+
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
 			if _, ok := i.ctx.Acls[t.Name.Value]; ok {
@@ -134,12 +143,13 @@ func (i *Interpreter) ProcessRecv() error {
 	i.vars = variable.NewRecvScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
 	var state State
+
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -153,8 +163,10 @@ func (i *Interpreter) ProcessRecv() error {
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -166,9 +178,11 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.Object = i.cloneResponse(v)
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
 			i.ctx.State = "MISS"
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> MISS", i.ctx.Scope))
 			err = i.ProcessMiss()
 		}
 	default:
@@ -198,9 +212,9 @@ func (i *Interpreter) ProcessHash() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		if state, err := i.ProcessSubroutine(sub); err != nil {
+		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
 		} else if state != HASH {
 			return exception.Runtime(
@@ -235,11 +249,11 @@ func (i *Interpreter) ProcessMiss() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	state := FETCH
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -250,17 +264,21 @@ func (i *Interpreter) ProcessMiss() error {
 
 	switch state {
 	case DELIVER_STALE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case FETCH:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> FETCH", i.ctx.Scope))
 		err = i.ProcessFetch()
 	default:
 		return exception.Runtime(
 			&sub.GetMeta().Token,
-			"Subroutine %s returned unexpected state %s in MiISS",
+			"Subroutine %s returned unexpected state %s in MISS",
 			sub.Name.Value,
 			state,
 		)
@@ -276,12 +294,12 @@ func (i *Interpreter) ProcessHit() error {
 	i.vars = variable.NewHitScopeVariables(i.ctx)
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -292,10 +310,13 @@ func (i *Interpreter) ProcessHit() error {
 
 	switch state {
 	case DELIVER:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> PASS", i.ctx.Scope))
 		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -335,11 +356,11 @@ func (i *Interpreter) ProcessPass() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	state := PASS
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -350,8 +371,10 @@ func (i *Interpreter) ProcessPass() error {
 
 	switch state {
 	case PASS:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> FETCH", i.ctx.Scope))
 		err = i.ProcessFetch()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	default:
 		return exception.Runtime(
@@ -412,11 +435,11 @@ func (i *Interpreter) ProcessFetch() error {
 	}()
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -427,10 +450,10 @@ func (i *Interpreter) ProcessFetch() error {
 
 	switch state {
 	case DELIVER, DELIVER_STALE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
-	case PASS:
-		err = i.ProcessPass()
 	case ERROR:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> ERROR", i.ctx.Scope))
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
@@ -478,12 +501,12 @@ func (i *Interpreter) ProcessError() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -492,8 +515,15 @@ func (i *Interpreter) ProcessError() error {
 		}
 	}
 
+	defer func() {
+		if err == nil {
+			i.Debugger.Message(fmt.Sprintf("Move state: %s -> %s", i.ctx.Scope, state))
+		}
+	}()
+
 	switch state {
 	case DELIVER:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case RESTART:
 		err = i.restart()
@@ -526,12 +556,12 @@ func (i *Interpreter) ProcessDeliver() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
-		state, err = i.ProcessSubroutine(sub)
+		state, err = i.ProcessSubroutine(sub, DebugPass)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -550,6 +580,7 @@ func (i *Interpreter) ProcessDeliver() error {
 				return errors.WithStack(err)
 			}
 		}
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> LOG", i.ctx.Scope))
 		err = i.ProcessLog()
 	default:
 		return exception.Runtime(&sub.GetMeta().Token,
@@ -580,9 +611,9 @@ func (i *Interpreter) ProcessLog() error {
 	}
 
 	// Simulate Fastly statement lifecycle
-	// see: https://developer.fastly.com/reference/vcl/
+	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		if _, err := i.ProcessSubroutine(sub); err != nil {
+		if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
 		}
 	}
