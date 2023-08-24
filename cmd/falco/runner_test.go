@@ -5,9 +5,51 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
 )
+
+type RepoExampleTestMetadata struct {
+	name     string
+	fileName string
+	errors   int
+	warnings int
+	infos    int
+}
+
+func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
+	return []RepoExampleTestMetadata{
+		{
+			name:     "example 1",
+			fileName: "../../examples/default01.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    0,
+		},
+		{
+			name:     "example 2",
+			fileName: "../../examples/default02.vcl",
+			errors:   1,
+			warnings: 0,
+			infos:    0,
+		},
+		{
+			name:     "example 3",
+			fileName: "../../examples/default03.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    1,
+		},
+		{
+			name:     "example 4",
+			fileName: "../../examples/default04.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    1,
+		},
+	}
+}
 
 func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher) {
 	buf, err := os.ReadFile(fileName)
@@ -127,46 +169,12 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 	}
 }
 
-// Adds a test for all the example code in the repo to make sure we don't accidentally
+// Tests for all the example code in the repo to make sure we don't accidentally
 // break those as they are the first thing someone might try on the repo.
-func TestRepositoryExamples(t *testing.T) {
-	tests := []struct {
-		name     string
-		fileName string
-		errors   int
-		warnings int
-		infos    int
-	}{
-		{
-			name:     "example 1",
-			fileName: "../../examples/default01.vcl",
-			errors:   0,
-			warnings: 0,
-			infos:    0,
-		},
-		{
-			name:     "example 2",
-			fileName: "../../examples/default02.vcl",
-			errors:   1,
-			warnings: 0,
-			infos:    0,
-		},
-		{
-			name:     "example 3",
-			fileName: "../../examples/default03.vcl",
-			errors:   0,
-			warnings: 0,
-			infos:    1,
-		},
-		{
-			name:     "example 4",
-			fileName: "../../examples/default04.vcl",
-			errors:   0,
-			warnings: 0,
-			infos:    1,
-		},
-	}
 
+// Test cases for when the command runs in stdout mode (no -json flag set)
+func TestRepositoryExamples(t *testing.T) {
+	tests := loadRepoExampleTestMetadata()
 	c := &config.Config{VerboseWarning: true}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -197,6 +205,67 @@ func TestRepositoryExamples(t *testing.T) {
 			if ret.Errors != tt.errors {
 				t.Errorf("Errors expects %d, got %d", tt.errors, ret.Errors)
 			}
+		})
+	}
+}
+
+// Test cases for JSON mode (-json flag set)
+func TestRepositoryExamplesJSONMode(t *testing.T) {
+	tests := loadRepoExampleTestMetadata()
+	c := &config.Config{VerboseWarning: true, Json: true}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resolvers, err := resolver.NewFileResolvers(tt.fileName, c.IncludePaths)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			r, err := NewRunner(c, nil)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			ret, err := r.Run(resolvers[0])
+			if tt.errors != 0 {
+				if err != nil {
+					t.Errorf("Unexpected error running Run(): %s", err)
+				}
+				return
+			}
+			if ret.Infos != tt.infos {
+				t.Errorf("Infos expects %d, got %d", tt.infos, ret.Infos)
+			}
+			if ret.Warnings != tt.warnings {
+				t.Errorf("Warning expects %d, got %d", tt.warnings, ret.Warnings)
+			}
+			if ret.Errors != tt.errors {
+				t.Errorf("Errors expects %d, got %d", tt.errors, ret.Errors)
+			}
+			if len(ret.LintErrors) != tt.infos+tt.warnings+tt.errors {
+				t.Errorf("Expected %d linting errors, got %d", tt.infos+tt.warnings+tt.errors, len(ret.LintErrors))
+			}
+
+			countLintErrorsWithSeverity := func(sev linter.Severity) int {
+				var counter int = 0
+				for result := range ret.LintErrors {
+					for _, issue := range ret.LintErrors[result] {
+						if issue.Severity == sev {
+							counter++
+						}
+					}
+				}
+				return counter
+			}
+			testIssuesWithSeverity := func(sev linter.Severity, expected int) {
+				var issueCount = countLintErrorsWithSeverity(sev)
+				if issueCount != expected {
+					t.Errorf("Expected %d linting errors with severity %s, got %d", expected, sev, issueCount)
+				}
+			}
+			testIssuesWithSeverity("Info", tt.infos)
+			testIssuesWithSeverity("Warning", tt.warnings)
+			testIssuesWithSeverity("Error", tt.errors)
 		})
 	}
 }

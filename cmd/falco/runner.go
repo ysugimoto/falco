@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
@@ -40,7 +41,11 @@ type RunnerResult struct {
 	Infos    int
 	Warnings int
 	Errors   int
-	Vcl      *plugin.VCL
+
+	LintErrors  map[string][]*linter.LintError
+	ParseErrors map[string]*parser.ParseError
+
+	Vcl *plugin.VCL
 }
 
 type StatsResult struct {
@@ -75,26 +80,42 @@ type Runner struct {
 	snippets     *context.FastlySnippet
 	config       *config.Config
 
-	level Level
+	level       Level
+	lintErrors  map[string][]*linter.LintError
+	parseErrors map[string]*parser.ParseError
 
 	// runner result fields
 	infos    int
 	warnings int
 	errors   int
+
+	jsonMode bool
+}
+
+// Wrap writeln function in order to prevent to write when json mode turns on
+func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
+	// Suppress output when JSON mode turns on
+	// This is because JSON only should display JSON string
+	// so any other messages we must not output
+	if r.config.Json {
+		return
+	}
+	writeln(c, format, args...)
 }
 
 func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	r := &Runner{
-		level:     LevelError,
-		overrides: make(map[string]linter.Severity),
-		lexers:    make(map[string]*lexer.Lexer),
-		config:    c,
+		level:       LevelError,
+		overrides:   make(map[string]linter.Severity),
+		lexers:      make(map[string]*lexer.Lexer),
+		config:      c,
+		lintErrors:  make(map[string][]*linter.LintError),
+		parseErrors: make(map[string]*parser.ParseError),
 	}
 
 	if c.Remote {
-		writeln(cyan, "Remote option supplied. Fetch snippets from Fastly.")
+		r.message(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		// If remote flag is provided, fetch predefined data from Fastly.
-		// Currently, we only support Edge Dictionary.
 		//
 		// We communicate Fastly API with service id and api key,
 		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
@@ -108,7 +129,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
 			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
-				writeln(red, err.Error())
+				r.message(red, err.Error())
 			}
 			// Stack to runner field, combime before run()
 			r.snippets = snippets
@@ -118,7 +139,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	if f != nil {
 		snippets, err := NewSnippet(f).Fetch()
 		if err != nil {
-			writeln(red, err.Error())
+			r.message(red, err.Error())
 		}
 		r.snippets = snippets
 	}
@@ -153,7 +174,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		case "IGNORE":
 			r.overrides[key] = linter.IGNORE
 		default:
-			writeln(yellow, "level for rule %s has invalid value %s, skip it.", key, value)
+			r.message(yellow, "Level for rule %s has invalid value %s, skipping.", key, value)
 		}
 	}
 
@@ -190,15 +211,17 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	// Note: this context is not Go context, our parsing context :)
 	ctx := context.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
-	if err != nil {
+	if err != nil && !r.jsonMode {
 		return nil, err
 	}
 
 	return &RunnerResult{
-		Infos:    r.infos,
-		Warnings: r.warnings,
-		Errors:   r.errors,
-		Vcl:      vcl,
+		Infos:       r.infos,
+		Warnings:    r.warnings,
+		Errors:      r.errors,
+		LintErrors:  r.lintErrors,
+		ParseErrors: r.parseErrors,
+		Vcl:         vcl,
 	}, nil
 }
 
@@ -234,7 +257,16 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 	// Checking Fatal error, it means parse error occurs on included submodule
 	if lt.FatalError != nil {
 		if pe, ok := lt.FatalError.Error.(*parser.ParseError); ok {
-			r.printParseError(lt.FatalError.Lexer, pe)
+			var file string
+			if pe.Token.File != "" {
+				file = "in " + pe.Token.File + " "
+			}
+			// Nothing to print to stdout if JSON mode is enabled, exit early.
+			if r.jsonMode {
+				r.parseErrors[pe.Token.File] = pe
+			} else {
+				r.printParseError(lt.FatalError.Lexer, file, pe)
+			}
 		}
 		return nil, ErrParser
 	}
@@ -245,7 +277,17 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 			if !ok {
 				continue
 			}
-			r.printLinterError(r.lexers[main.Name], le)
+			// check severity with overrides
+			severity := le.Severity
+			if v, ok := r.overrides[string(le.Rule)]; ok {
+				severity = v
+			}
+
+			// Store all but ignored linter errors
+			if r.jsonMode && severity != linter.IGNORE {
+				r.lintErrors[le.Token.File] = append(r.lintErrors[le.Token.File], le)
+			}
+			r.printLinterError(r.lexers[main.Name], severity, le)
 		}
 	}
 
@@ -263,21 +305,26 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 		lx.NewLine()
 		pe, ok := errors.Cause(err).(*parser.ParseError)
 		if ok {
-			r.printParseError(lx, pe)
+			var file string
+			if pe.Token.File != "" {
+				file = "in " + pe.Token.File + " "
+			}
+			// Nothing to print to stdout if JSON mode is enabled, exit early.
+			if r.jsonMode {
+				r.parseErrors[pe.Token.File] = pe
+			}
+			r.printParseError(lx, file, pe)
 		}
 		return nil, ErrParser
 	}
+
 	lx.NewLine()
 	r.lexers[name] = lx
 	return vcl, nil
 }
 
-func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
-	var file string
-	if err.Token.File != "" {
-		file = "in " + err.Token.File + " "
-	}
-	writeln(red, ":boom: %s\n%sat line %d, position %d", err.Message, file, err.Token.Line, err.Token.Position)
+func (r *Runner) printParseError(lx *lexer.Lexer, file string, err *parser.ParseError) {
+	r.message(red, ":boom: %s\n%sat line %d, position %d", err.Message, file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 5; l <= problemLine; l++ {
@@ -287,20 +334,20 @@ func (r *Runner) printParseError(lx *lexer.Lexer, err *parser.ParseError) {
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			writeln(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			writeln(white, " %s%s",
+			r.message(white, " %s%s",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			writeln(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 }
 
-func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
+func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err *linter.LintError) {
 	var rule, file string
 
 	if err.Rule != "" {
@@ -313,33 +360,27 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 		lx = r.lexers[err.Token.File]
 	}
 
-	// check severity with overrides
-	severity := err.Severity
-	if v, ok := r.overrides[string(err.Rule)]; ok {
-		severity = v
-	}
-
 	switch severity {
 	case linter.ERROR:
 		r.errors++
-		writeln(red, ":fire:[ERROR] %s%s", err.Message, rule)
+		r.message(red, ":fire:[ERROR] %s%s", err.Message, rule)
 	case linter.WARNING:
 		r.warnings++
 		if r.level < LevelWarning {
 			return
 		}
-		writeln(yellow, ":exclamation:[WARNING] %s%s", err.Message, rule)
+		r.message(yellow, ":exclamation:[WARNING] %s%s", err.Message, rule)
 	case linter.INFO:
 		r.infos++
 		if r.level < LevelInfo {
 			return
 		}
-		writeln(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
+		r.message(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
 	case linter.IGNORE:
 		return
 	}
 
-	writeln(white, "%sat line %d, position %d", file, err.Token.Line, err.Token.Position)
+	r.message(white, "%sat line %d, position %d", file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 1; l <= problemLine+1; l++ {
@@ -349,22 +390,22 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, err *linter.LintError) {
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			writeln(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			writeln(white, " %s%s",
+			r.message(white, " %s%s",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			writeln(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 
 	if err.Reference != "" {
-		writeln(white, "See document in detail: %s", err.Reference)
+		r.message(white, "See reference documentation: %s", err.Reference)
 	}
-	writeln(white, "")
+	r.message(white, "")
 }
 
 func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {

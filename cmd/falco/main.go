@@ -68,15 +68,15 @@ Flags:
     -I, --include_path : Add include path
     -t, --transformer  : Specify transformer
     -h, --help         : Show this help
-    -r, --remote       : Communicate with Fastly API
+    -r, --remote       : Connect with Fastly API
     -V, --version      : Display build version
-    -v                 : Verbose warning lint result
-    -vv                : Varbose all lint result
-    -json              : Output statistics as JSON
+    -v                 : Output lint warnings (verbose)
+    -vv                : Output all lint results (very verbose)
+    -json              : Output results as JSON (very verbose)
     -request           : Simulate request config
     -debug             : Debug mode for simulator
 
-Simple Linting example:
+Simple linting example:
     falco -I . -vv /path/to/vcl/main.vcl
 
 Get statistics example:
@@ -148,7 +148,7 @@ func main() {
 				exitErr = runSimulator(runner, v)
 			}
 		case subcommandStats:
-			exitErr = runStats(runner, v, c.Json)
+			exitErr = runStats(runner, v)
 		default:
 			if name := v.Name(); name != "" {
 				writeln(white, `Lint service of "%s"`, name)
@@ -176,25 +176,35 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
+	if runner.jsonMode {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(result); err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
+		}
+		return ErrExit
+	}
+
 	write(red, ":fire:%d errors, ", result.Errors)
 	write(yellow, ":exclamation:%d warnings, ", result.Warnings)
-	writeln(cyan, ":speaker:%d infos.", result.Infos)
+	writeln(cyan, ":speaker:%d recommendations.", result.Infos)
 
 	// Display message corresponds to runner result
 	if result.Errors == 0 {
 		switch {
 		case result.Warnings > 0:
-			writeln(white, "VCL seems having some warnings, but it should be OK :thumbsup:")
+			writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
 			if runner.level < LevelWarning {
-				writeln(white, "To see warning detail, run command with -v option.")
+				writeln(white, "Run command with the -v option to output warnings.")
 			}
 		case result.Infos > 0:
-			writeln(green, "VCL looks fine :sparkles: And we suggested some informations to vcl get more accuracy :thumbsup:")
+			writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
 			if runner.level < LevelInfo {
-				writeln(white, "To see informations detail, run command with -vv option.")
+				writeln(white, "Run command with the -vv option to output recommendations.")
 			}
 		default:
-			writeln(green, "VCL looks very nice :sparkles:")
+			writeln(green, "VCL looks great :sparkles:")
 		}
 	}
 
@@ -229,7 +239,7 @@ func runSimulator(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
+func runStats(runner *Runner, rslv resolver.Resolver) error {
 	stats, err := runner.Stats(rslv)
 	if err != nil {
 		if err != ErrParser {
@@ -238,7 +248,7 @@ func runStats(runner *Runner, rslv resolver.Resolver, printJson bool) error {
 		return ErrExit
 	}
 
-	if printJson {
+	if runner.jsonMode {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {
