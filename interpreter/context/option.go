@@ -43,3 +43,9 @@ func WithRequest(r *config.RequestConfig) Option {
 		c.OverrideRequest = r
 	}
 }
+
+func WithTesting(isTesting bool) Option {
+	return func(c *Context) {
+		c.IsTesting = isTesting
+	}
+}
