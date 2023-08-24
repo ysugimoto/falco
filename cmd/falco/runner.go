@@ -22,6 +22,7 @@ import (
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -485,4 +486,22 @@ func (r *Runner) Debugger(rslv resolver.Resolver) error {
 
 	d := debugger.New(interpreter.New(options...))
 	return d.Run(r.config.Port)
+}
+
+func (r *Runner) Test(rslv resolver.Resolver) error {
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithTesting(true),
+	}
+	if r.snippets != nil {
+		options = append(options, icontext.WithFastlySnippets(r.snippets))
+	}
+	if r.config.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	}
+
+	t := tester.New(r.config, interpreter.New(options...))
+	return t.Run()
 }

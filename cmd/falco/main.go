@@ -35,6 +35,7 @@ const (
 	subcommandTerraform = "terraform"
 	subcommandLocal     = "local"
 	subcommandStats     = "stats"
+	subcommandTest      = "test"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -63,6 +64,7 @@ Subcommands:
     lint      : Run lint (default)
     stats     : Analyze VCL statistics
     local     : Run local simulate server with provided VCLs
+    test      : Run local testing for provided VCLs
 
 Flags:
     -I, --include_path : Add include path
@@ -84,6 +86,9 @@ Get statistics example:
 
 Local server with debugger example:
 	falco -I . local -debug /path/to/vcl/main.vcl
+
+Local testing with builtin interpreter:
+	falco -I . -I ./tests test /path/to/vcl/main.vcl
 
 Linting with terraform:
     terraform plan -out planned.out
@@ -117,8 +122,8 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandLocal, subcommandLint, subcommandStats:
-		// "lint", "local" and "stats" command provides single file of service,
+	case subcommandLocal, subcommandLint, subcommandStats, subcommandTest:
+		// "lint", "local", "stats" and "test" command provides single file of service,
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 	default:
@@ -141,6 +146,8 @@ func main() {
 
 		var exitErr error
 		switch c.Commands.At(0) {
+		case subcommandTest:
+			exitErr = runTest(runner, v)
 		case subcommandLocal:
 			if c.Debug {
 				exitErr = runDebugger(runner, v)
@@ -257,6 +264,9 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		}
 		return ErrExit
 	}
+	printStats := func(format string, args ...interface{}) {
+		fmt.Fprintf(os.Stdout, format+"\n", args...)
+	}
 
 	printStats(strings.Repeat("=", 80))
 	printStats("| %-76s |", "falco VCL statistics ")
@@ -280,6 +290,11 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func printStats(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stdout, format+"\n", args...)
+func runTest(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Test(rslv); err != nil {
+		writeln(red, "Failed to run test: %s", err.Error())
+		return ErrExit
+	}
+	// TODO: print testing result
+	return nil
 }
