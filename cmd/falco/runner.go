@@ -88,8 +88,6 @@ type Runner struct {
 	infos    int
 	warnings int
 	errors   int
-
-	jsonMode bool
 }
 
 // Wrap writeln function in order to prevent to write when json mode turns on
@@ -211,7 +209,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	// Note: this context is not Go context, our parsing context :)
 	ctx := context.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
-	if err != nil && !r.jsonMode {
+	if err != nil && !r.config.Json {
 		return nil, err
 	}
 
@@ -262,7 +260,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 				file = "in " + pe.Token.File + " "
 			}
 			// Nothing to print to stdout if JSON mode is enabled, exit early.
-			if r.jsonMode {
+			if r.config.Json {
 				r.parseErrors[pe.Token.File] = pe
 			} else {
 				r.printParseError(lt.FatalError.Lexer, file, pe)
@@ -284,7 +282,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 			}
 
 			// Store all but ignored linter errors
-			if r.jsonMode && severity != linter.IGNORE {
+			if r.config.Json && severity != linter.IGNORE {
 				r.lintErrors[le.Token.File] = append(r.lintErrors[le.Token.File], le)
 			}
 			r.printLinterError(r.lexers[main.Name], severity, le)
@@ -310,7 +308,7 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 				file = "in " + pe.Token.File + " "
 			}
 			// Nothing to print to stdout if JSON mode is enabled, exit early.
-			if r.jsonMode {
+			if r.config.Json {
 				r.parseErrors[pe.Token.File] = pe
 			}
 			r.printParseError(lx, file, pe)

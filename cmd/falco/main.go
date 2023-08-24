@@ -176,7 +176,7 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
-	if runner.jsonMode {
+	if runner.config.Json {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(result); err != nil {
@@ -248,7 +248,7 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
-	if runner.jsonMode {
+	if runner.config.Json {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {
