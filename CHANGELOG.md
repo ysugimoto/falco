@@ -1,3 +1,7 @@
+## v0.23.2
+
+- fix up output methods on runne [#161](https://github.com/ysugimoto/falco/pull/161) (@ysugimoto)
+
 ## v0.23.1
 
 - Adds copy-edits for output [#158](https://github.com/ysugimoto/falco/pull/158) (@doramatadora)
