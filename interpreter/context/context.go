@@ -56,6 +56,7 @@ type Context struct {
 	OverrideMaxBackends int
 	OverrideMaxAcls     int
 	OverrideRequest     *config.RequestConfig
+	IsTesting           bool
 
 	Request          *http.Request
 	BackendRequest   *http.Request
@@ -128,6 +129,9 @@ type Context struct {
 	ObjectTTL                           *value.RTime
 	ObjectStatus                        *value.Integer
 	ObjectResponse                      *value.String
+
+	// For testing - store subroutine return state
+	ReturnState *value.String
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
@@ -217,6 +221,7 @@ func New(options ...Option) *Context {
 		ObjectTTL:                           &value.RTime{},
 		ObjectStatus:                        &value.Integer{Value: 500},
 		ObjectResponse:                      &value.String{Value: "error"},
+		ReturnState:                         &value.String{IsNotSet: true},
 
 		RegexMatchedValues: make(map[string]*value.String),
 	}

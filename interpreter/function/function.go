@@ -28,3 +28,13 @@ func Exists(scope context.Scope, name string) (*Function, error) {
 	}
 	return fn, nil
 }
+
+func TestingExists(name string) (*Function, error) {
+	fn, ok := testingFunctions[name]
+	if !ok {
+		return nil, errors.WithStack(
+			fmt.Errorf("Function %s is not defined", name),
+		)
+	}
+	return fn, nil
+}

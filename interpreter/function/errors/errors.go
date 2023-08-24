@@ -8,7 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func New(name, format string, args ...interface{}) error {
+func New(name, format string, args ...any) error {
 	return errors.WithStack(fmt.Errorf("["+name+"] "+format, args...))
 }
 
@@ -30,4 +30,33 @@ func ArgumentNotInRange(name string, min, max int, args []value.Value) error {
 
 func TypeMismatch(name string, num int, expects, actual value.Type) error {
 	return New(name, "Argument %d expects %s type but %s provided", num, expects, actual)
+}
+
+// Testing related errors
+type TestingError struct {
+	Message string
+}
+
+func NewTestingError(format string, args ...any) *TestingError {
+	return &TestingError{
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+func (e *TestingError) Error() string {
+	return e.Message
+}
+
+type AssertionError struct {
+	Message string
+}
+
+func NewAssertionError(format string, args ...any) *AssertionError {
+	return &AssertionError{
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+func (e *AssertionError) Error() string {
+	return e.Message
 }

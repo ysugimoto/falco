@@ -29,12 +29,14 @@ import (
 // see: https://docs.google.com/spreadsheets/d/1uV9yRdOpMQxyMm50VRBA1MDQIkcgg_cwPAgslhqatgw/edit#gid=258583317
 type AllScopeVariables struct {
 	Variable
-	ctx *context.Context
+	ctx     *context.Context
+	testing *TestingVariables
 }
 
 func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	return &AllScopeVariables{
-		ctx: ctx,
+		ctx:     ctx,
+		testing: NewTestingVariables(ctx),
 	}
 }
 
@@ -564,6 +566,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	if val := v.getFromRegex(name); val != nil {
 		return val, nil
+	}
+
+	if tv := v.testing.GetTestingVariable(name); tv != nil {
+		return tv, nil
 	}
 
 	return value.Null, errors.WithStack(fmt.Errorf(
