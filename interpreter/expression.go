@@ -198,6 +198,14 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
 	fn, err := function.Exists(i.ctx.Scope, exp.Function.Value)
 	if err != nil {
+		if !i.ctx.IsTesting {
+			return value.Null, errors.WithStack(err)
+		}
+		// Additional find function if enabling testing environment
+		fn, err = function.TestingExists(exp.Function.Value)
+		if err != nil {
+			return value.Null, errors.WithStack(err)
+		}
 		return value.Null, errors.WithStack(err)
 	}
 	args := make([]value.Value, len(exp.Arguments))

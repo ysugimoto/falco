@@ -339,7 +339,14 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	// Builtin function will not change any state
 	fn, err := function.Exists(i.ctx.Scope, stmt.Function.Value)
 	if err != nil {
-		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		if !i.ctx.IsTesting {
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
+		// Additional find function if enabling testing environment
+		fn, err = function.TestingExists(stmt.Function.Value)
+		if err != nil {
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
 	}
 	// Check the function can call in statement (means a function that returns VOID type can call)
 	if !fn.CanStatementCall {
