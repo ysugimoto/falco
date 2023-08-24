@@ -56,7 +56,6 @@ type Context struct {
 	OverrideMaxBackends int
 	OverrideMaxAcls     int
 	OverrideRequest     *config.RequestConfig
-	IsTesting           bool
 
 	Request          *http.Request
 	BackendRequest   *http.Request

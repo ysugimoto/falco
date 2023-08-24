@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"net"
@@ -14,7 +14,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_Assert_equal(t *testing.T) {
+func Test_Assert_not_equal(t *testing.T) {
 
 	now := time.Now()
 
@@ -28,60 +28,60 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "NULL vs NULL",
 			args:   []value.Value{value.Null, value.Null},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "NULL vs STRING",
 			args:   []value.Value{value.Null, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// INTEGER vs INTEGER
 		{
 			name:   "INTEGER vs INTEGER",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "INTEGER vs INTEGER",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// INTEGER vs STRING
 		{
 			name:   "INTEGER vs STRING",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.String{Value: "10"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "INTEGER vs STRING",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// INTEGER vs FLOAT
 		{
 			name:   "INTEGER vs FLOAT",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "INTEGER vs FLOAT",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.Float{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// INTEGER vs RTIME
 		{
 			name:   "INTEGER vs RTIME",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.RTime{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "INTEGER vs RTIME",
 			args:   []value.Value{&value.Integer{Value: 10}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// INTEGER vs OTHER
@@ -109,53 +109,53 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "FLOAT vs INTEGER",
 			args:   []value.Value{&value.Float{Value: 10}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "FLOAT vs INTEGER",
 			args:   []value.Value{&value.Float{Value: 10.0}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "FLOAT vs INTEGER",
 			args:   []value.Value{&value.Float{Value: 10}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// FLOAT vs STRING
 		{
 			name:   "FLOAT vs STRING",
 			args:   []value.Value{&value.Float{Value: 10}, &value.String{Value: "10.000"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "FLOAT vs STRING",
 			args:   []value.Value{&value.Float{Value: 10}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// FLOAT vs FLOAT
 		{
 			name:   "FLOAT vs FLOAT",
 			args:   []value.Value{&value.Float{Value: 10}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "FLOAT vs FLOAT",
 			args:   []value.Value{&value.Float{Value: 10}, &value.Float{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// FLOAT vs RTIME
 		{
 			name:   "FLOAT vs RTIME",
 			args:   []value.Value{&value.Float{Value: 10}, &value.RTime{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "FLOAT vs RTIME",
 			args:   []value.Value{&value.Float{Value: 10}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// FLOAT vs OTHER
@@ -183,83 +183,83 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "STRING vs INTEGER",
 			args:   []value.Value{&value.String{Value: "10"}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs INTEGER",
 			args:   []value.Value{&value.String{Value: "foo"}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs STRING
 		{
 			name:   "STRING vs STRING",
 			args:   []value.Value{&value.String{Value: "foo"}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs STRING",
 			args:   []value.Value{&value.String{Value: "foo"}, &value.String{Value: "bar"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs FLOAT
 		{
 			name:   "STRING vs FLOAT",
 			args:   []value.Value{&value.String{Value: "10.000"}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs FLOAT",
 			args:   []value.Value{&value.String{Value: "10"}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs BOOL
 		{
 			name:   "STRING vs BOOL",
 			args:   []value.Value{&value.String{Value: "1"}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs BOOL",
 			args:   []value.Value{&value.String{Value: "0"}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs BOOL",
 			args:   []value.Value{&value.String{Value: "1"}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		{
 			name:   "STRING vs BOOL",
 			args:   []value.Value{&value.String{Value: "0"}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs RTIME
 		{
 			name:   "STRING vs RTIME",
 			args:   []value.Value{&value.String{Value: "10.000"}, &value.RTime{Value: 10 * time.Second}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs RTIME",
 			args:   []value.Value{&value.String{Value: "10.000"}, &value.RTime{Value: 100 * time.Second}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs TIME
 		{
 			name:   "STRING vs TIME",
 			args:   []value.Value{&value.String{Value: now.Format(http.TimeFormat)}, &value.Time{Value: now}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs TIME",
 			args:   []value.Value{&value.String{Value: now.Add(time.Second).Format(http.TimeFormat)}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs BACKEND
@@ -275,7 +275,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "STRING vs BACKEND",
@@ -289,7 +289,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs ACL
@@ -305,7 +305,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "STRING vs ACL",
@@ -319,54 +319,54 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// STRING vs IP
 		{
 			name:   "STRING vs IP",
 			args:   []value.Value{&value.String{Value: "192.168.0.1"}, &value.IP{Value: net.ParseIP("192.168.0.1")}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "STRING vs IP",
 			args:   []value.Value{&value.String{Value: "192.168.0.1"}, &value.IP{Value: net.ParseIP("192.168.0.2")}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// BOOL vs BOOL
 		{
 			name:   "BOOL vs BOOL",
 			args:   []value.Value{&value.Boolean{Value: true}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "BOOL vs BOOL",
 			args:   []value.Value{&value.Boolean{Value: true}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// BOOL vs STRING
 		{
 			name:   "BOOL vs STRING",
 			args:   []value.Value{&value.Boolean{Value: true}, &value.String{Value: "1"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "BOOL vs STRING",
 			args:   []value.Value{&value.Boolean{Value: true}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		{
 			name:   "BOOL vs STRING",
 			args:   []value.Value{&value.Boolean{Value: false}, &value.String{Value: "0"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "BOOL vs STRING",
 			args:   []value.Value{&value.Boolean{Value: false}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// BOOL vs INTEGER
@@ -415,36 +415,36 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "RTIME vs STRING",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.String{Value: "10s"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "RTIME vs STRING",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.String{Value: "1d"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// RTIME vs INTEGER
 		{
 			name:   "RTIME vs INTEGER",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "RTIME vs INTEGER",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// RTIME vs FLOAT
 		{
 			name:   "RTIME vs FLOAT",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Float{Value: 10.0}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "RTIME vs FLOAT",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Float{Value: 10.1}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// RTIME vs BOOL
@@ -457,12 +457,12 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "RTIME vs RTIME",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.RTime{Value: 10 * time.Second}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "RTIME vs RTIME",
 			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.RTime{Value: 11 * time.Second}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// RTIME vs TIME
@@ -493,12 +493,12 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "TIME vs STRING",
 			args:   []value.Value{&value.Time{Value: now}, &value.String{Value: now.Format(http.TimeFormat)}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "TIME vs STRING",
 			args:   []value.Value{&value.Time{Value: now}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// TIME vs INTEGER
@@ -529,12 +529,12 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "TIME vs TIME - pass",
 			args:   []value.Value{&value.Time{Value: now}, &value.Time{Value: now}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "TIME vs TIME - fail",
 			args:   []value.Value{&value.Time{Value: now}, &value.Time{Value: now.Add(time.Second)}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// TIME vs IP
@@ -559,12 +559,12 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "IP vs STRING",
 			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.String{Value: "192.168.0.1"}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "IP vs STRING",
 			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.String{Value: "192.168.0.2"}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// IP vs INTEGER
@@ -601,12 +601,12 @@ func Test_Assert_equal(t *testing.T) {
 		{
 			name:   "IP vs IP - pass",
 			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.IP{Value: net.ParseIP("192.168.0.1")}},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name:   "IP vs IP - fail",
 			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.IP{Value: net.ParseIP("192.168.0.2")}},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// IP vs BACKEND
@@ -634,7 +634,7 @@ func Test_Assert_equal(t *testing.T) {
 				},
 				&value.String{Value: "example"},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "BACKEND vs STRING",
@@ -648,7 +648,7 @@ func Test_Assert_equal(t *testing.T) {
 				},
 				&value.String{Value: "testing"},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// BACKEND vs INTEGER
@@ -760,7 +760,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "BACKEND vs BACKEND - fail",
@@ -780,7 +780,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// BACKEND vs ACL
@@ -817,7 +817,7 @@ func Test_Assert_equal(t *testing.T) {
 				},
 				&value.String{Value: "example"},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "ACL vs STRING",
@@ -831,7 +831,7 @@ func Test_Assert_equal(t *testing.T) {
 				},
 				&value.String{Value: "testing"},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 		// ACL vs INTEGER
@@ -964,7 +964,7 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: true},
+			expect: &value.Boolean{Value: false},
 		},
 		{
 			name: "ACL vs ACL - fail",
@@ -984,13 +984,13 @@ func Test_Assert_equal(t *testing.T) {
 					},
 				},
 			},
-			expect: &value.Boolean{Value: false},
+			expect: &value.Boolean{Value: true},
 			err:    &errors.AssertionError{},
 		},
 	}
 
 	for i := range tests {
-		ret, err := Assert_equal(
+		ret, err := Assert_not_equal(
 			&context.Context{},
 			tests[i].args...,
 		)
@@ -1000,10 +1000,10 @@ func Test_Assert_equal(t *testing.T) {
 			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("Assert_equal()[%s] error: diff=%s", tests[i].name, diff)
+			t.Errorf("Assert_not_equal()[%s] error: diff=%s", tests[i].name, diff)
 		}
 		if diff := cmp.Diff(tests[i].expect, ret); diff != "" {
-			t.Errorf("Assert_equal()[%s] return value mismatch: diff=%s", tests[i].name, diff)
+			t.Errorf("Assert_not_equal()[%s] return value mismatch: diff=%s", tests[i].name, diff)
 		}
 	}
 }

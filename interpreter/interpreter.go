@@ -15,6 +15,8 @@ import (
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 )
 
 type Interpreter struct {
@@ -46,11 +48,48 @@ func (i *Interpreter) restart() error {
 	return nil
 }
 
-func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
+func (i *Interpreter) ProcessInit() error {
+	ctx := context.New(i.options...)
+
+	main, err := ctx.Resolver.MainVCL()
+	if err != nil {
+		i.Debugger.Message(err.Error())
+		return err
+	}
+	if err := checkFastlyVCLLimitation(main.Data); err != nil {
+		i.Debugger.Message(err.Error())
+		return err
+	}
+	vcl, err := parser.New(
+		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
+	).ParseVCL()
+	if err != nil {
+		// parse error
+		i.Debugger.Message(err.Error())
+		return err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if ctx.FastlySnippets != nil {
+		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
+			s, err := parser.New(
+				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
+			).ParseVCL()
+			if err != nil {
+				// parse error
+				i.Debugger.Message(err.Error())
+				return err
+			}
+			vcl.Statements = append(s.Statements, vcl.Statements...)
+		}
+	}
+	ctx.RequestStartTime = time.Now()
+	i.ctx = ctx
+	i.process = process.New()
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl, true)
+	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
 	}

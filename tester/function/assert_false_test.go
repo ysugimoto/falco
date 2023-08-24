@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_Assert_null(t *testing.T) {
+func Test_Assert_false(t *testing.T) {
 
 	tests := []struct {
 		args   []value.Value
@@ -21,31 +21,26 @@ func Test_Assert_null(t *testing.T) {
 			args: []value.Value{
 				value.Null,
 			},
-			expect: &value.Boolean{Value: true},
-		},
-		{
-			args: []value.Value{
-				&value.String{IsNotSet: true},
-			},
-			expect: &value.Boolean{Value: true},
-		},
-		{
-			args: []value.Value{
-				&value.IP{IsNotSet: true},
-			},
-			expect: &value.Boolean{Value: true},
-		},
-		{
-			args: []value.Value{
-				&value.Integer{},
-			},
 			expect: &value.Boolean{Value: false},
+			err:    &errors.TestingError{},
+		},
+		{
+			args: []value.Value{
+				&value.Boolean{Value: false},
+			},
+			expect: &value.Boolean{Value: true},
+		},
+		{
+			args: []value.Value{
+				&value.Boolean{Value: true},
+			},
 			err:    &errors.AssertionError{},
+			expect: &value.Boolean{Value: false},
 		},
 	}
 
 	for i := range tests {
-		_, err := Assert_null(
+		_, err := Assert_false(
 			&context.Context{},
 			tests[i].args...,
 		)
@@ -55,7 +50,7 @@ func Test_Assert_null(t *testing.T) {
 			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("Assert_null()[%d] error: diff=%s", i, diff)
+			t.Errorf("Assert_false()[%d] error: diff=%s", i, diff)
 		}
 	}
 }

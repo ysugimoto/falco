@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"github.com/ysugimoto/falco/interpreter/context"

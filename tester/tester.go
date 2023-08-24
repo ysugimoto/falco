@@ -6,6 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter"
+	"github.com/ysugimoto/falco/interpreter/function"
+	"github.com/ysugimoto/falco/interpreter/variable"
+	tf "github.com/ysugimoto/falco/tester/function"
+	tv "github.com/ysugimoto/falco/tester/variable"
 )
 
 type Tester struct {
@@ -20,9 +24,17 @@ func New(c *config.Config, i *interpreter.Interpreter) *Tester {
 	}
 }
 
+func (t *Tester) Init() error {
+	variable.Inject(&tv.TestingVariables{})
+	if err := function.Inject(tf.TestingFunctions); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func (t *Tester) Run() error {
 	// Find test target VCL files
-	targetFiles, err := t.listTestFiles()
+	_, err := t.listTestFiles()
 	if err != nil {
 		return errors.WithStack(err)
 	}

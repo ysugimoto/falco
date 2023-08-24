@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_Assert_match(t *testing.T) {
+func Test_Assert_starts_with(t *testing.T) {
 
 	tests := []struct {
 		args   []value.Value
@@ -20,14 +20,14 @@ func Test_Assert_match(t *testing.T) {
 		{
 			args: []value.Value{
 				&value.String{Value: "foobarbaz"},
-				&value.String{Value: ".*bar.*"},
+				&value.String{Value: "foo"},
 			},
 			expect: &value.Boolean{Value: true},
 		},
 		{
 			args: []value.Value{
 				&value.String{Value: "foobarbaz"},
-				&value.String{Value: ".*bat.*"},
+				&value.String{Value: "goo"},
 			},
 			expect: &value.Boolean{Value: false},
 			err:    &errors.AssertionError{},
@@ -43,7 +43,7 @@ func Test_Assert_match(t *testing.T) {
 		{
 			args: []value.Value{
 				&value.String{Value: "foobarbaz"},
-				&value.String{Value: ".*bat.*"},
+				&value.String{Value: "bat"},
 				&value.String{Value: "custom_message"},
 			},
 			expect: nil,
@@ -51,18 +51,10 @@ func Test_Assert_match(t *testing.T) {
 				Message: "custom_message",
 			},
 		},
-		{
-			args: []value.Value{
-				&value.String{Value: "foobarbaz"},
-				&value.String{Value: "^++a"},
-			},
-			expect: nil,
-			err:    &errors.TestingError{},
-		},
 	}
 
 	for i := range tests {
-		_, err := Assert_match(
+		_, err := Assert_starts_with(
 			&context.Context{},
 			tests[i].args...,
 		)
@@ -72,7 +64,7 @@ func Test_Assert_match(t *testing.T) {
 			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("Assert_match()[%d] error: diff=%s", i, diff)
+			t.Errorf("Assert_starts_with()[%d] error: diff=%s", i, diff)
 		}
 	}
 }

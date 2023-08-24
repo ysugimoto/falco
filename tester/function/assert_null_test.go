@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_Assert_not_contains(t *testing.T) {
+func Test_Assert_null(t *testing.T) {
 
 	tests := []struct {
 		args   []value.Value
@@ -19,42 +19,33 @@ func Test_Assert_not_contains(t *testing.T) {
 	}{
 		{
 			args: []value.Value{
-				&value.String{Value: "foobarbaz"},
-				&value.String{Value: "bat"},
+				value.Null,
 			},
 			expect: &value.Boolean{Value: true},
 		},
 		{
 			args: []value.Value{
-				&value.String{Value: "foobarbaz"},
-				&value.String{Value: "bar"},
+				&value.String{IsNotSet: true},
+			},
+			expect: &value.Boolean{Value: true},
+		},
+		{
+			args: []value.Value{
+				&value.IP{IsNotSet: true},
+			},
+			expect: &value.Boolean{Value: true},
+		},
+		{
+			args: []value.Value{
+				&value.Integer{},
 			},
 			expect: &value.Boolean{Value: false},
 			err:    &errors.AssertionError{},
 		},
-		{
-			args: []value.Value{
-				&value.String{Value: "foobarbaz"},
-				&value.Integer{Value: 0},
-			},
-			expect: nil,
-			err:    &errors.TestingError{},
-		},
-		{
-			args: []value.Value{
-				&value.String{Value: "foobarbaz"},
-				&value.String{Value: "bar"},
-				&value.String{Value: "custom_message"},
-			},
-			expect: nil,
-			err: &errors.AssertionError{
-				Message: "custom_message",
-			},
-		},
 	}
 
 	for i := range tests {
-		_, err := Assert_not_contains(
+		_, err := Assert_null(
 			&context.Context{},
 			tests[i].args...,
 		)
@@ -64,7 +55,7 @@ func Test_Assert_not_contains(t *testing.T) {
 			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("Assert_not_contains()[%d] error: diff=%s", i, diff)
+			t.Errorf("Assert_null()[%d] error: diff=%s", i, diff)
 		}
 	}
 }

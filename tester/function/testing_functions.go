@@ -2,17 +2,17 @@ package function
 
 import (
 	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/testings"
+	ifn "github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const allScope = context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope
 
-var testingFunctions = map[string]*Function{
+var TestingFunctions = map[string]*ifn.Function{
 	"assert": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert(ctx, args...)
+			return Assert(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -22,7 +22,7 @@ var testingFunctions = map[string]*Function{
 	"assert.null": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_null(ctx, args...)
+			return Assert_null(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -32,7 +32,7 @@ var testingFunctions = map[string]*Function{
 	"assert.true": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_true(ctx, args...)
+			return Assert_true(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -42,7 +42,7 @@ var testingFunctions = map[string]*Function{
 	"assert.false": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_false(ctx, args...)
+			return Assert_false(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -52,7 +52,7 @@ var testingFunctions = map[string]*Function{
 	"assert.equal": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_equal(ctx, args...)
+			return Assert_equal(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -62,7 +62,7 @@ var testingFunctions = map[string]*Function{
 	"assert.not_equal": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_not_equal(ctx, args...)
+			return Assert_not_equal(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -72,7 +72,7 @@ var testingFunctions = map[string]*Function{
 	"assert.strict_equal": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_strict_equal(ctx, args...)
+			return Assert_strict_equal(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -82,7 +82,7 @@ var testingFunctions = map[string]*Function{
 	"assert.not_strict_equal": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_not_strict_equal(ctx, args...)
+			return Assert_not_strict_equal(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -92,7 +92,7 @@ var testingFunctions = map[string]*Function{
 	"assert.match": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_match(ctx, args...)
+			return Assert_match(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -102,7 +102,7 @@ var testingFunctions = map[string]*Function{
 	"assert.not_match": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_not_match(ctx, args...)
+			return Assert_not_match(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -112,7 +112,7 @@ var testingFunctions = map[string]*Function{
 	"assert.contains": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_contains(ctx, args...)
+			return Assert_contains(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -122,7 +122,7 @@ var testingFunctions = map[string]*Function{
 	"assert.not_contains": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_not_contains(ctx, args...)
+			return Assert_not_contains(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -132,7 +132,7 @@ var testingFunctions = map[string]*Function{
 	"assert.starts_with": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_starts_with(ctx, args...)
+			return Assert_starts_with(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
@@ -142,7 +142,7 @@ var testingFunctions = map[string]*Function{
 	"assert.ends_with": {
 		Scope: allScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-			return testings.Assert_ends_with(ctx, args...)
+			return Assert_ends_with(ctx, args...)
 		},
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {

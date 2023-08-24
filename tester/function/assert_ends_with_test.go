@@ -1,4 +1,4 @@
-package testings
+package function
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_Assert_true(t *testing.T) {
+func Test_Assert_ends_with(t *testing.T) {
 
 	tests := []struct {
 		args   []value.Value
@@ -19,28 +19,42 @@ func Test_Assert_true(t *testing.T) {
 	}{
 		{
 			args: []value.Value{
-				value.Null,
-			},
-			expect: &value.Boolean{Value: false},
-			err:    &errors.TestingError{},
-		},
-		{
-			args: []value.Value{
-				&value.Boolean{Value: true},
+				&value.String{Value: "foobarbaz"},
+				&value.String{Value: "baz"},
 			},
 			expect: &value.Boolean{Value: true},
 		},
 		{
 			args: []value.Value{
-				&value.Boolean{Value: false},
+				&value.String{Value: "foobarbaz"},
+				&value.String{Value: "bat"},
 			},
-			err:    &errors.AssertionError{},
 			expect: &value.Boolean{Value: false},
+			err:    &errors.AssertionError{},
+		},
+		{
+			args: []value.Value{
+				&value.String{Value: "foobarbaz"},
+				&value.Integer{Value: 0},
+			},
+			expect: nil,
+			err:    &errors.TestingError{},
+		},
+		{
+			args: []value.Value{
+				&value.String{Value: "foobarbaz"},
+				&value.String{Value: "bat"},
+				&value.String{Value: "custom_message"},
+			},
+			expect: nil,
+			err: &errors.AssertionError{
+				Message: "custom_message",
+			},
 		},
 	}
 
 	for i := range tests {
-		_, err := Assert_true(
+		_, err := Assert_ends_with(
 			&context.Context{},
 			tests[i].args...,
 		)
@@ -50,7 +64,7 @@ func Test_Assert_true(t *testing.T) {
 			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("Assert_true()[%d] error: diff=%s", i, diff)
+			t.Errorf("Assert_ends_with()[%d] error: diff=%s", i, diff)
 		}
 	}
 }

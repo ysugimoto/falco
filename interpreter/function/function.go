@@ -29,12 +29,14 @@ func Exists(scope context.Scope, name string) (*Function, error) {
 	return fn, nil
 }
 
-func TestingExists(name string) (*Function, error) {
-	fn, ok := testingFunctions[name]
-	if !ok {
-		return nil, errors.WithStack(
-			fmt.Errorf("Function %s is not defined", name),
-		)
+func Inject(fns map[string]*Function) error {
+	for key, fn := range fns {
+		if _, ok := builtinFunctions[key]; ok {
+			return errors.WithStack(
+				fmt.Errorf("Function %s already defiend and could not override", key),
+			)
+		}
+		builtinFunctions[key] = fn
 	}
-	return fn, nil
+	return nil
 }
