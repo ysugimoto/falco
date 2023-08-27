@@ -51,7 +51,7 @@ func Assert_contains(ctx *context.Context, args ...value.Value) (value.Value, er
 			return ret, errors.NewAssertionError(message)
 		}
 		return ret, errors.NewAssertionError(
-			"%s should contain string %s",
+			`"%s" should contain string "%s"`,
 			expect.Value,
 			actual.Value,
 		)

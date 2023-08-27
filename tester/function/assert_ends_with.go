@@ -51,7 +51,7 @@ func Assert_ends_with(ctx *context.Context, args ...value.Value) (value.Value, e
 			return ret, errors.NewAssertionError(message)
 		}
 		return ret, errors.NewAssertionError(
-			"%s should end with string %s",
+			`"%s" should end with string "%s"`,
 			expect.Value,
 			actual.Value,
 		)

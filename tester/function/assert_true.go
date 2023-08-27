@@ -23,7 +23,7 @@ func Assert_true(ctx *context.Context, args ...value.Value) (value.Value, error)
 	switch args[0].Type() {
 	case value.BooleanType:
 		v := value.Unwrap[*value.Boolean](args[0])
-		return assert(v.Value, true, "")
+		return assert(v.Value, true, "Value should be true")
 	default:
 		return &value.Boolean{}, errors.NewTestingError(
 			"Assertion type mismatch, %s type is not BOOLEAN type",

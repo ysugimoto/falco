@@ -12,16 +12,10 @@ import (
 
 // Implements http.Handler
 func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := i.ProcessInit(); err != nil {
+	if err := i.ProcessInit(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// If override request configration exists, set them
-	if i.ctx.OverrideRequest != nil {
-		i.ctx.OverrideRequest.SetRequest(r)
-	}
-	i.ctx.Request = r
 
 	handleError := func(err error) {
 		// If debug is true, print with stacktrace

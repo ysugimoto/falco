@@ -51,7 +51,7 @@ func Assert_not_contains(ctx *context.Context, args ...value.Value) (value.Value
 			return ret, errors.NewAssertionError(message)
 		}
 		return ret, errors.NewAssertionError(
-			"%s should not contain string %s",
+			`"%s" should not contain string "%s"`,
 			expect.Value,
 			actual.Value,
 		)

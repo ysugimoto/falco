@@ -38,6 +38,9 @@ func Assert_equal(ctx *context.Context, args ...value.Value) (value.Value, error
 
 	// assert.equal compares fuzzy typing
 	expect, actual := args[0], args[1]
+
+	// Second argument, actual value may be a value.Ident.
+	// Then we lookup ident and uwrap as actual value
 	switch expect.Type() {
 	case value.NullType:
 		return assert(value.NullType, actual.Type(), message)

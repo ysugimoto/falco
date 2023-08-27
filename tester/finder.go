@@ -4,29 +4,12 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type finder struct {
-	root        string
-	files       []string
-	lookupCache map[string]struct{}
-}
-
-func Finder(root string) *finder {
-	abs, _ := filepath.Abs(root) // notlint:errcheck
-	return &finder{
-		root: abs,
-		lookupCache: map[string]struct{}{
-			abs: {},
-		},
-	}
-}
-func (f *finder) Find() ([]string, error) {
-	err := filepath.WalkDir(f.root, f.find)
-	if err != nil {
-		return nil, err
-	}
-	return f.files, nil
+	files []string
 }
 
 // fs.WalkDirFunc inplementation
@@ -42,4 +25,13 @@ func (f *finder) find(path string, entry fs.DirEntry, err error) error {
 	}
 	f.files = append(f.files, path)
 	return nil
+}
+
+func findTestTargetFiles(root string) ([]string, error) {
+	abs, _ := filepath.Abs(root) // notlint:errcheck
+	f := &finder{}
+	if err := filepath.WalkDir(abs, f.find); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return f.files, nil
 }

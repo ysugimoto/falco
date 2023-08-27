@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/k0kubun/pp v2.4.0+incompatible
-	github.com/kyokomi/emoji v1.5.1
+	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.8
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0

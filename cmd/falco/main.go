@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -12,8 +13,11 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	ife "github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/token"
 )
 
 var version string = ""
@@ -26,6 +30,12 @@ var (
 	green   = color.New(color.FgGreen)
 	cyan    = color.New(color.FgCyan)
 	magenta = color.New(color.FgMagenta)
+
+	// Displaying test result needs adding background colors
+	noTestColor = color.New(color.FgBlack, color.BgWhite, color.Bold)
+	passColor   = color.New(color.FgWhite, color.BgGreen, color.Bold)
+	failColor   = color.New(color.FgWhite, color.BgRed, color.Bold)
+	redBold     = color.New(color.FgRed, color.Bold)
 
 	ErrExit = errors.New("exit")
 )
@@ -149,11 +159,7 @@ func main() {
 		case subcommandTest:
 			exitErr = runTest(runner, v)
 		case subcommandLocal:
-			if c.Debug {
-				exitErr = runDebugger(runner, v)
-			} else {
-				exitErr = runSimulator(runner, v)
-			}
+			exitErr = runSimulate(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v)
 		default:
@@ -230,17 +236,9 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func runDebugger(runner *Runner, rslv resolver.Resolver) error {
-	if err := runner.Debugger(rslv); err != nil {
-		writeln(red, "Failed to start debugger console: %s", err.Error())
-		return ErrExit
-	}
-	return nil
-}
-
-func runSimulator(runner *Runner, rslv resolver.Resolver) error {
-	if err := runner.Simulator(rslv); err != nil {
-		writeln(red, "Failed to start server: %s", err.Error())
+func runSimulate(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Simulate(rslv); err != nil {
+		writeln(red, "Failed to start local simulator: %s", err.Error())
 		return ErrExit
 	}
 	return nil
@@ -291,10 +289,74 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 }
 
 func runTest(runner *Runner, rslv resolver.Resolver) error {
-	if err := runner.Test(rslv); err != nil {
+	write(white, "Running tests...")
+	results, counter, err := runner.Test(rslv)
+	if err != nil {
+		writeln(red, " Failed.")
 		writeln(red, "Failed to run test: %s", err.Error())
 		return ErrExit
 	}
-	// TODO: print testing result
+
+	// shrthand indent making
+	indent := func(level int) string {
+		return strings.Repeat(" ", level*2)
+	}
+	// print problem line
+	printCodeLine := func(lx *lexer.Lexer, tok token.Token) {
+		problemLine := tok.Line
+		lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
+		for l := problemLine - 1; l <= problemLine+1; l++ {
+			line, ok := lx.GetLine(l)
+			if !ok {
+				continue
+			}
+			color := white
+			if l == problemLine {
+				color = yellow
+			}
+			writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+		}
+	}
+
+	writeln(white, " Done.")
+	for _, r := range results {
+		if len(r.Cases) == 0 {
+			write(noTestColor, " NO TESTS ")
+			writeln(white, " "+r.Filename)
+		} else if r.IsPassed() {
+			write(passColor, " PASS ")
+			writeln(white, " "+r.Filename)
+		} else {
+			write(failColor, " FAIL ")
+			writeln(white, " "+r.Filename)
+		}
+
+		for _, c := range r.Cases {
+			if c.Error != nil {
+				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
+				writeln(red, "%s%s\n", indent(2), c.Error.Error())
+				switch e := c.Error.(type) {
+				case *ife.AssertionError:
+					printCodeLine(r.Lexer, e.Token)
+				case *ife.TestingError:
+					printCodeLine(r.Lexer, e.Token)
+				}
+				writeln(white, "")
+			} else {
+				writeln(green, "%s✓ [%s] %s", indent(1), c.Scope, c.Name)
+			}
+		}
+	}
+
+	write(green, "%d passed, ", counter.Passes)
+	if len(counter.Fails) > 0 {
+		write(red, "%d failed, ", len(counter.Fails))
+	}
+	write(white, "%d total, ", len(results))
+	write(white, "%d assertions", counter.Asserts)
+	writeln(white, ".")
+
+	// Print testing result
+
 	return nil
 }

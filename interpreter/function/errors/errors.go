@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/token"
 )
 
 func New(name, format string, args ...any) error {
@@ -34,6 +35,8 @@ func TypeMismatch(name string, num int, expects, actual value.Type) error {
 
 // Testing related errors
 type TestingError struct {
+	// Token info will be injected on interpreter
+	Token   token.Token
 	Message string
 }
 
@@ -48,6 +51,8 @@ func (e *TestingError) Error() string {
 }
 
 type AssertionError struct {
+	// Token info will be injected by interpreter
+	Token   token.Token
 	Message string
 }
 
@@ -58,5 +63,5 @@ func NewAssertionError(format string, args ...any) *AssertionError {
 }
 
 func (e *AssertionError) Error() string {
-	return e.Message
+	return "Assertion Error: " + e.Message
 }

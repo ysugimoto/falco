@@ -10,6 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/function"
+	fe "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -67,6 +68,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			if state != NONE {
 				return state, DebugPass, nil
 			}
+
 		case *ast.CallStatement:
 			var state State
 			// Enable breakpoint if current debug state is step-in
@@ -78,6 +80,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			if state != NONE {
 				return state, DebugPass, nil
 			}
+
 		case *ast.IfStatement:
 			var state State
 			var debug DebugState
@@ -86,6 +89,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 				return state, debug, nil
 			}
 			debugState = debug
+
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
 				return NONE, DebugPass, exception.Runtime(
@@ -105,9 +109,12 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 
 			// restart statement force change state to RESTART
 			return RESTART, DebugPass, nil
+
 		case *ast.ReturnStatement:
 			// When return statement is processed, return its state immediately
-			return i.ProcessReturnStatement(t), DebugPass, nil
+			state := i.ProcessReturnStatement(t)
+			return state, DebugPass, nil
+
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
 				return NONE, DebugPass, exception.Runtime(
@@ -129,7 +136,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			}
 		}
 		if err != nil {
-			return INTERNAL_ERROR, DebugPass, exception.Runtime(&stmt.GetMeta().Token, "Unexpected error: %s", err.Error())
+			return INTERNAL_ERROR, DebugPass, errors.WithStack(err)
 		}
 	}
 	return NONE, DebugPass, nil
@@ -377,7 +384,17 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 		}
 	}
 	if _, err := fn.Call(i.ctx, args...); err != nil {
-		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		// Testing related error should pass as it is
+		switch t := err.(type) {
+		case *fe.AssertionError:
+			t.Token = stmt.GetMeta().Token
+			return NONE, errors.WithStack(t)
+		case *fe.TestingError:
+			t.Token = stmt.GetMeta().Token
+			return NONE, errors.WithStack(t)
+		default:
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
 	}
 	return NONE, nil
 }

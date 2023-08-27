@@ -55,7 +55,7 @@ func Assert_not_match(ctx *context.Context, args ...value.Value) (value.Value, e
 			return ret, errors.NewAssertionError(message)
 		}
 		return ret, errors.NewAssertionError(
-			"String match: value %s should not match against %s",
+			`"%s" should not match against "%s"`,
 			expect.Value,
 			actual.Value,
 		)
