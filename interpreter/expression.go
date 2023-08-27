@@ -206,7 +206,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 			// If function accepts ID type, pass the string as Ident value without processing expression.
 			// This is because some function uses collection value like req.http.Cookie as ID type,
 			// But the processor passes *value.String as primitive value normally.
-			// In order to treat collection value inside, enthruse with the function logic how value is treated as correspond types.
+			// In order to treat collection value inside, ensure ident argument is treated as correspond types.
 			if ident, ok := exp.Arguments[j].(*ast.Ident); !ok {
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {

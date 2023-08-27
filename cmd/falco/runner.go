@@ -22,6 +22,7 @@ import (
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -442,11 +443,12 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	return stats, nil
 }
 
-func (r *Runner) Simulator(rslv resolver.Resolver) error {
+func (r *Runner) Simulate(rslv resolver.Resolver) error {
+	local := r.config.Local
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
-		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
-		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithMaxBackends(local.OverrideMaxBackends),
+		icontext.WithMaxAcls(local.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
@@ -454,35 +456,43 @@ func (r *Runner) Simulator(rslv resolver.Resolver) error {
 	if v := os.Getenv("FALCO_DEBUG"); v != "" {
 		options = append(options, icontext.WithDebug())
 	}
-	if r.config.OverrideRequest != nil {
-		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	if local.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(local.OverrideRequest))
 	}
 
 	i := interpreter.New(options...)
+
+	// If debugger flag is on, run debugger mode
+	if local.Debug {
+		return debugger.New(interpreter.New(options...)).Run(local.Port)
+	}
+
+	// Otherwise, simply start simulator server
 	mux := http.NewServeMux()
 	mux.Handle("/", i)
 
 	s := &http.Server{
 		Handler: mux,
-		Addr:    ":3124",
+		Addr:    fmt.Sprintf(":%d", local.Port),
 	}
 	writeln(green, "Simulator server starts on 0.0.0.0:3124")
 	return s.ListenAndServe()
 }
 
-func (r *Runner) Debugger(rslv resolver.Resolver) error {
+func (r *Runner) Test(rslv resolver.Resolver) ([]*tester.TestResult, *tester.TestCounter, error) {
+	testing := r.config.Testing
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
-		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
-		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithMaxBackends(testing.OverrideMaxBackends),
+		icontext.WithMaxAcls(testing.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
-	if r.config.OverrideRequest != nil {
-		options = append(options, icontext.WithRequest(r.config.OverrideRequest))
+	if r.config.Testing.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(testing.OverrideRequest))
 	}
 
-	d := debugger.New(interpreter.New(options...))
-	return d.Run(r.config.Port)
+	i := interpreter.New(options...)
+	return tester.New(testing, i).Run(r.config.Commands.At(1))
 }

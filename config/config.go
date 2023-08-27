@@ -8,9 +8,36 @@ import (
 	"github.com/ysugimoto/twist"
 )
 
-const (
-	configurationFile = ".falco.yaml"
+var (
+	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
+
+// Local simulation configuration
+type LocalConfig struct {
+	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
+	Debug        bool     `cli:"debug"`
+	IncludePaths []string // may copied from root field
+
+	// Override resource limits
+	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
+	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
+
+// Testing configuration
+type TestConfig struct {
+	Timeout      int      `cli:"timeout" yaml:"timeout"`
+	IncludePaths []string // may copied from root field
+
+	// Override resource limits
+	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
+	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
 
 type Config struct {
 	// Root configurations
@@ -23,16 +50,7 @@ type Config struct {
 	Version        bool     `cli:"V"`
 	Remote         bool     `cli:"r,remote" yaml:"remote"`
 	Json           bool     `cli:"json"`
-	Port           int      `cli:"p,port" yaml:"port" default:"3124"`
 	Request        string   `cli:"request"`
-	Debug          bool     `cli:"debug"`
-
-	// Override resource limits
-	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
-	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
-
-	// Override Request configuration
-	OverrideRequest *RequestConfig
 
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`
@@ -43,6 +61,10 @@ type Config struct {
 
 	// CLI subcommands
 	Commands Commands
+
+	// Local simulator configuration
+	Local   *LocalConfig `yaml:"local"`
+	Testing *TestConfig  `yaml:"testing"`
 }
 
 // Adding type alias in order to implement some methods
@@ -60,7 +82,12 @@ func New(args []string) (*Config, error) {
 	options = append(options, twist.WithEnv(), twist.WithCli(args))
 
 	c := &Config{
-		OverrideRequest: &RequestConfig{},
+		Local: &LocalConfig{
+			OverrideRequest: &RequestConfig{},
+		},
+		Testing: &TestConfig{
+			OverrideRequest: &RequestConfig{},
+		},
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
@@ -75,12 +102,17 @@ func New(args []string) (*Config, error) {
 		c.VerboseInfo = true
 	}
 
-	// Load request configuration
+	// Load request configuration if provided
 	if c.Request != "" {
 		if rc, err := LoadRequestConfig(c.Request); err == nil {
-			c.OverrideRequest = rc
+			c.Local.OverrideRequest = rc
+			c.Testing.OverrideRequest = rc
 		}
 	}
+
+	// Copy common fields
+	c.Local.IncludePaths = c.IncludePaths
+	c.Testing.IncludePaths = c.IncludePaths
 
 	return c, nil
 }
@@ -93,9 +125,11 @@ func findConfigFile() (string, error) {
 	}
 
 	for {
-		file := filepath.Join(cwd, configurationFile)
-		if _, err := os.Stat(file); err == nil {
-			return file, nil
+		for _, f := range configurationFiles {
+			file := filepath.Join(cwd, f)
+			if _, err := os.Stat(file); err == nil {
+				return file, nil
+			}
 		}
 
 		cwd = filepath.Dir(cwd)

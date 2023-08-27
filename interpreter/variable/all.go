@@ -566,6 +566,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return val, nil
 	}
 
+	if injectedVariable != nil {
+		if val, err := injectedVariable.Get(v.ctx, s, name); err == nil {
+			return val, nil
+		}
+	}
+
 	return value.Null, errors.WithStack(fmt.Errorf(
 		"Undefined variable %s", name,
 	))
@@ -707,6 +713,12 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		v.ctx.Request.Header.Set(match[1], val.String())
 		return nil
+	}
+
+	if injectedVariable != nil {
+		if err := injectedVariable.Set(v.ctx, s, name, operator, val); err == nil {
+			return nil
+		}
 	}
 
 	return errors.WithStack(fmt.Errorf(

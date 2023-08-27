@@ -129,6 +129,9 @@ type Context struct {
 	ObjectStatus                        *value.Integer
 	ObjectResponse                      *value.String
 
+	// For testing - store subroutine return state
+	ReturnState *value.String
+
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
 	RegexMatchedValues map[string]*value.String
@@ -217,6 +220,7 @@ func New(options ...Option) *Context {
 		ObjectTTL:                           &value.RTime{},
 		ObjectStatus:                        &value.Integer{Value: 500},
 		ObjectResponse:                      &value.String{Value: "error"},
+		ReturnState:                         &value.String{IsNotSet: true},
 
 		RegexMatchedValues: make(map[string]*value.String),
 	}

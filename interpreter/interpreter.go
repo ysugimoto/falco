@@ -15,6 +15,8 @@ import (
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 )
 
 type Interpreter struct {
@@ -36,6 +38,28 @@ func New(options ...context.Option) *Interpreter {
 	}
 }
 
+func (i *Interpreter) SetScope(scope context.Scope) {
+	i.ctx.Scope = context.RecvScope
+	switch scope {
+	case context.RecvScope:
+		i.vars = variable.NewRecvScopeVariables(i.ctx)
+	case context.HashScope:
+		i.vars = variable.NewHashScopeVariables(i.ctx)
+	case context.MissScope:
+		i.vars = variable.NewMissScopeVariables(i.ctx)
+	case context.PassScope:
+		i.vars = variable.NewPassScopeVariables(i.ctx)
+	case context.FetchScope:
+		i.vars = variable.NewFetchScopeVariables(i.ctx)
+	case context.DeliverScope:
+		i.vars = variable.NewDeliverScopeVariables(i.ctx)
+	case context.ErrorScope:
+		i.vars = variable.NewErrorScopeVariables(i.ctx)
+	case context.LogScope:
+		i.vars = variable.NewLogScopeVariables(i.ctx)
+	}
+}
+
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
 	i.Debugger.Message("Restarted.")
@@ -46,11 +70,49 @@ func (i *Interpreter) restart() error {
 	return nil
 }
 
-func (i *Interpreter) ProcessInit(vcl []ast.Statement) error {
+func (i *Interpreter) ProcessInit(r *http.Request) error {
+	ctx := context.New(i.options...)
+
+	main, err := ctx.Resolver.MainVCL()
+	if err != nil {
+		i.Debugger.Message(err.Error())
+		return err
+	}
+	if err := checkFastlyVCLLimitation(main.Data); err != nil {
+		i.Debugger.Message(err.Error())
+		return err
+	}
+	vcl, err := parser.New(
+		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
+	).ParseVCL()
+	if err != nil {
+		// parse error
+		i.Debugger.Message(err.Error())
+		return err
+	}
+
+	// If remote snippets exists, prepare parse and prepend to main VCL
+	if ctx.FastlySnippets != nil {
+		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
+			s, err := parser.New(
+				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
+			).ParseVCL()
+			if err != nil {
+				// parse error
+				i.Debugger.Message(err.Error())
+				return err
+			}
+			vcl.Statements = append(s.Statements, vcl.Statements...)
+		}
+	}
+	ctx.RequestStartTime = time.Now()
+	i.ctx = ctx
+	i.ctx.Request = r
+	i.process = process.New()
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl, true)
+	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
 	}
@@ -139,8 +201,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 }
 
 func (i *Interpreter) ProcessRecv() error {
-	i.ctx.Scope = context.RecvScope
-	i.vars = variable.NewRecvScopeVariables(i.ctx)
+	i.SetScope(context.RecvScope)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
@@ -202,8 +263,7 @@ func (i *Interpreter) ProcessRecv() error {
 }
 
 func (i *Interpreter) ProcessHash() error {
-	i.ctx.Scope = context.HashScope
-	i.vars = variable.NewHashScopeVariables(i.ctx)
+	i.SetScope(context.HashScope)
 
 	// Make default VCL hash string
 	// https://developer.fastly.com/reference/vcl/subroutines/hash/
@@ -229,8 +289,7 @@ func (i *Interpreter) ProcessHash() error {
 }
 
 func (i *Interpreter) ProcessMiss() error {
-	i.ctx.Scope = context.MissScope
-	i.vars = variable.NewMissScopeVariables(i.ctx)
+	i.SetScope(context.MissScope)
 
 	if i.ctx.Backend == nil {
 		return exception.Runtime(nil, "No backend determined in MISS")
@@ -290,8 +349,7 @@ func (i *Interpreter) ProcessMiss() error {
 }
 
 func (i *Interpreter) ProcessHit() error {
-	i.ctx.Scope = context.HitScope
-	i.vars = variable.NewHitScopeVariables(i.ctx)
+	i.SetScope(context.HitScope)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
@@ -336,8 +394,7 @@ func (i *Interpreter) ProcessHit() error {
 }
 
 func (i *Interpreter) ProcessPass() error {
-	i.ctx.Scope = context.PassScope
-	i.vars = variable.NewPassScopeVariables(i.ctx)
+	i.SetScope(context.PassScope)
 
 	if i.ctx.Backend == nil {
 		return exception.Runtime(nil, "No backend determined in PASS")
@@ -392,8 +449,7 @@ func (i *Interpreter) ProcessPass() error {
 }
 
 func (i *Interpreter) ProcessFetch() error {
-	i.ctx.Scope = context.FetchScope
-	i.vars = variable.NewFetchScopeVariables(i.ctx)
+	i.SetScope(context.FetchScope)
 
 	if i.ctx.BackendRequest == nil {
 		return exception.System("No backend determined on FETCH")
@@ -472,8 +528,7 @@ func (i *Interpreter) ProcessFetch() error {
 }
 
 func (i *Interpreter) ProcessError() error {
-	i.ctx.Scope = context.ErrorScope
-	i.vars = variable.NewErrorScopeVariables(i.ctx)
+	i.SetScope(context.ErrorScope)
 
 	if i.ctx.Object == nil {
 		if i.ctx.BackendResponse != nil {
@@ -542,8 +597,7 @@ func (i *Interpreter) ProcessError() error {
 }
 
 func (i *Interpreter) ProcessDeliver() error {
-	i.ctx.Scope = context.DeliverScope
-	i.vars = variable.NewDeliverScopeVariables(i.ctx)
+	i.SetScope(context.DeliverScope)
 
 	if i.ctx.Response == nil {
 		if i.ctx.BackendResponse != nil {
@@ -597,8 +651,7 @@ func (i *Interpreter) ProcessDeliver() error {
 }
 
 func (i *Interpreter) ProcessLog() error {
-	i.ctx.Scope = context.LogScope
-	i.vars = variable.NewLogScopeVariables(i.ctx)
+	i.SetScope(context.LogScope)
 
 	if i.ctx.Response == nil {
 		if i.ctx.BackendResponse != nil {

@@ -5,66 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/process"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
 )
 
 // Implements http.Handler
 func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(i.options...)
-
-	main, err := ctx.Resolver.MainVCL()
-	if err != nil {
-		i.Debugger.Message(err.Error())
+	if err := i.ProcessInit(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := checkFastlyVCLLimitation(main.Data); err != nil {
-		i.Debugger.Message(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	vcl, err := parser.New(
-		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
-	).ParseVCL()
-	if err != nil {
-		// parse error
-		i.Debugger.Message(err.Error())
-		http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
-		return
-	}
-
-	// If remote snippets exists, prepare parse and prepend to main VCL
-	if ctx.FastlySnippets != nil {
-		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
-			s, err := parser.New(
-				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
-			).ParseVCL()
-			if err != nil {
-				// parse error
-				i.Debugger.Message(err.Error())
-				http.Error(w, fmt.Sprintf("%+v", err), http.StatusInternalServerError)
-				return
-			}
-			vcl.Statements = append(s.Statements, vcl.Statements...)
-		}
-	}
-
-	// If override request configration exists, set them
-	if ctx.OverrideRequest != nil {
-		ctx.OverrideRequest.SetRequest(r)
-	}
-
-	ctx.RequestStartTime = time.Now()
-	i.ctx = ctx
-	i.ctx.Request = r
-	i.process = process.New()
 
 	handleError := func(err error) {
 		// If debug is true, print with stacktrace
@@ -79,9 +30,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := i.ProcessInit(vcl.Statements); err != nil {
-		handleError(err)
-	} else if err := i.ProcessRecv(); err != nil {
+	if err := i.ProcessRecv(); err != nil {
 		handleError(err)
 	} else if err := checkFastlyResponseLimit(i.ctx.Response); err != nil {
 		handleError(err)

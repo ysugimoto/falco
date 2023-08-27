@@ -5,12 +5,20 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
+
+func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
+	i.SetScope(scope)
+	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
 
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
@@ -191,7 +199,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	}
 
 	// If subroutine name is fastly subroutine, find and extract boilerplate macro
-	macro, ok := icontext.FastlyReservedSubroutine[sub.Name.Value]
+	macro, ok := context.FastlyReservedSubroutine[sub.Name.Value]
 	if !ok {
 		return nil
 	}

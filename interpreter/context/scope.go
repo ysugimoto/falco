@@ -1,20 +1,50 @@
 package context
 
+import "strings"
+
 type Scope int
 
 const (
-	InitScope    Scope = 0x000000000
-	RecvScope    Scope = 0x000000001
-	HashScope    Scope = 0x000000010
-	HitScope     Scope = 0x000000100
-	MissScope    Scope = 0x000001000
-	PassScope    Scope = 0x000010000
-	FetchScope   Scope = 0x000100000
-	ErrorScope   Scope = 0x001000000
-	DeliverScope Scope = 0x010000000
-	LogScope     Scope = 0x100000000
-	AnyScope     Scope = 0x111111111
+	UnknownScope Scope = 0x0000000000
+	InitScope    Scope = 0x0000000001
+	RecvScope    Scope = 0x0000000010
+	HashScope    Scope = 0x0000000100
+	HitScope     Scope = 0x0000001000
+	MissScope    Scope = 0x0000010000
+	PassScope    Scope = 0x0000100000
+	FetchScope   Scope = 0x0001000000
+	ErrorScope   Scope = 0x0010000000
+	DeliverScope Scope = 0x0100000000
+	LogScope     Scope = 0x1000000000
+	AnyScope     Scope = 0x1111111111
 )
+
+func ScopeByString(s string) Scope {
+	switch strings.ToUpper(s) {
+	case "INIT":
+		return InitScope
+	case "RECV":
+		return RecvScope
+	case "HASH":
+		return HashScope
+	case "HIT":
+		return HitScope
+	case "MISS":
+		return MissScope
+	case "PASS":
+		return PassScope
+	case "FETCH":
+		return FetchScope
+	case "ERROR":
+		return ErrorScope
+	case "DELIVER":
+		return DeliverScope
+	case "LOG":
+		return LogScope
+	default:
+		return UnknownScope
+	}
+}
 
 func (s Scope) String() string {
 	switch s {
