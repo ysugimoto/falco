@@ -12,7 +12,7 @@ const allScope = context.AnyScope
 
 type Counter interface {
 	Pass()
-	Fail(err error)
+	Fail()
 }
 
 // nolint: funlen,gocognit
@@ -45,7 +45,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -65,7 +65,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_null(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -85,7 +85,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_true(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -105,7 +105,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_false(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -125,7 +125,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_equal(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -145,7 +145,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_not_equal(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -165,7 +165,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_strict_equal(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -185,7 +185,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_not_strict_equal(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -205,7 +205,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_match(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -225,7 +225,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_not_match(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -245,7 +245,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_contains(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -265,7 +265,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_not_contains(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -285,7 +285,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_starts_with(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
@@ -305,7 +305,7 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				}
 				v, err := Assert_ends_with(ctx, unwrapped...)
 				if err != nil {
-					c.Fail(err)
+					c.Fail()
 				} else {
 					c.Pass()
 				}
