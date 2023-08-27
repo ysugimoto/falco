@@ -132,11 +132,13 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 			}
 			suite, scopes := t.findTestSuites(sub)
 			for _, s := range scopes {
+				start := time.Now()
 				err := t.interpreter.ProcessTestSubroutine(s, sub)
 				cases = append(cases, &TestCase{
 					Name:  suite,
 					Error: errors.Cause(err),
 					Scope: s.String(),
+					Time:  time.Since(start).Milliseconds(),
 				})
 			}
 		}

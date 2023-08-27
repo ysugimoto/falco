@@ -22,28 +22,28 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 	return []RepoExampleTestMetadata{
 		{
 			name:     "example 1",
-			fileName: "../../examples/default01.vcl",
+			fileName: "../../examples/linter/default01.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    0,
 		},
 		{
 			name:     "example 2",
-			fileName: "../../examples/default02.vcl",
+			fileName: "../../examples/linter/default02.vcl",
 			errors:   1,
 			warnings: 0,
 			infos:    0,
 		},
 		{
 			name:     "example 3",
-			fileName: "../../examples/default03.vcl",
+			fileName: "../../examples/linter/default03.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    1,
 		},
 		{
 			name:     "example 4",
-			fileName: "../../examples/default04.vcl",
+			fileName: "../../examples/linter/default04.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    1,

@@ -1,4 +1,4 @@
-include "debugger01_include";
+include "simulator_include";
 
 backend example_com {
   .connect_timeout = 1s;

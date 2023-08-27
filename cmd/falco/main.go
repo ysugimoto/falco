@@ -17,6 +17,7 @@ import (
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -289,12 +290,26 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 }
 
 func runTest(runner *Runner, rslv resolver.Resolver) error {
-	write(white, "Running tests...")
 	results, counter, err := runner.Test(rslv)
 	if err != nil {
-		writeln(red, " Failed.")
-		writeln(red, "Failed to run test: %s", err.Error())
 		return ErrExit
+	}
+
+	if runner.config.Json {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(struct {
+			Tests   []*tester.TestResult `json:"tests"`
+			Summary *tester.TestCounter  `json:"summary"`
+		}{
+			Tests:   results,
+			Summary: counter,
+		}); err != nil {
+			writeln(red, err.Error())
+			os.Exit(1)
+		}
+		return ErrExit
+
 	}
 
 	// shrthand indent making
@@ -318,7 +333,6 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		}
 	}
 
-	writeln(white, " Done.")
 	for _, r := range results {
 		switch {
 		case len(r.Cases) == 0:
@@ -353,8 +367,8 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	}
 
 	write(green, "%d passed, ", counter.Passes)
-	if len(counter.Fails) > 0 {
-		write(red, "%d failed, ", len(counter.Fails))
+	if counter.Fails > 0 {
+		write(red, "%d failed, ", counter.Fails)
 	}
 	write(white, "%d total, ", len(results))
 	writeln(white, "%d assertions", counter.Asserts)

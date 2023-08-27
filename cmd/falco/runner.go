@@ -494,5 +494,13 @@ func (r *Runner) Test(rslv resolver.Resolver) ([]*tester.TestResult, *tester.Tes
 	}
 
 	i := interpreter.New(options...)
-	return tester.New(testing, i).Run(r.config.Commands.At(1))
+	r.message(white, "Running tests...")
+	results, counter, err := tester.New(testing, i).Run(r.config.Commands.At(1))
+	if err != nil {
+		writeln(red, " Failed.")
+		writeln(red, "Failed to run test: %s", err.Error())
+		return nil, nil, err
+	}
+	r.message(white, " Done.")
+	return results, counter, nil
 }
