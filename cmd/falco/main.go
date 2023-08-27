@@ -195,9 +195,8 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(result); err != nil {
 			writeln(red, err.Error())
-			os.Exit(1)
+			return ErrExit
 		}
-		return ErrExit
 	}
 
 	write(red, ":fire:%d errors, ", result.Errors)
@@ -259,9 +258,9 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {
 			writeln(red, err.Error())
-			os.Exit(1)
+			return ErrExit
 		}
-		return ErrExit
+		return nil
 	}
 	printStats := func(format string, args ...interface{}) {
 		fmt.Fprintf(os.Stdout, format+"\n", args...)
@@ -306,10 +305,9 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			Summary: counter,
 		}); err != nil {
 			writeln(red, err.Error())
-			os.Exit(1)
+			return ErrExit
 		}
-		return ErrExit
-
+		return nil
 	}
 
 	// shrthand indent making
