@@ -357,10 +357,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		write(red, "%d failed, ", len(counter.Fails))
 	}
 	write(white, "%d total, ", len(results))
-	write(white, "%d assertions", counter.Asserts)
-	writeln(white, ".")
-
-	// Print testing result
+	writeln(white, "%d assertions", counter.Asserts)
 
 	return nil
 }
