@@ -57,59 +57,6 @@ func writeln(c *color.Color, format string, args ...interface{}) {
 	write(c, format+"\n", args...)
 }
 
-func printUsage() {
-	usage := `
-=========================================================
-    ____        __
-   / __/______ / /_____ ____ 
-  / /_ / __ ` + ` // //  __// __ \
- / __// /_/ // // /__ / /_/ /
-/_/   \____//_/ \___/ \____/  Fastly VCL parser / linter
-
-=========================================================
-Usage:
-    falco [subcommand] [main vcl file]
-
-Subcommands:
-    terraform : Run lint from terraform planned JSON
-    lint      : Run lint (default)
-    stats     : Analyze VCL statistics
-    local     : Run local simulate server with provided VCLs
-    test      : Run local testing for provided VCLs
-
-Flags:
-    -I, --include_path : Add include path
-    -t, --transformer  : Specify transformer
-    -h, --help         : Show this help
-    -r, --remote       : Connect with Fastly API
-    -V, --version      : Display build version
-    -v                 : Output lint warnings (verbose)
-    -vv                : Output all lint results (very verbose)
-    -json              : Output results as JSON (very verbose)
-    -request           : Simulate request config
-    -debug             : Debug mode for simulator
-
-Simple linting example:
-    falco -I . -vv /path/to/vcl/main.vcl
-
-Get statistics example:
-    falco -I . stats /path/to/vcl/main.vcl
-
-Local server with debugger example:
-	falco -I . local -debug /path/to/vcl/main.vcl
-
-Local testing with builtin interpreter:
-	falco -I . -I ./tests test /path/to/vcl/main.vcl
-
-Linting with terraform:
-    terraform plan -out planned.out
-    terraform show -json planned.out | falco -vv terraform
-`
-
-	fmt.Println(strings.TrimLeft(usage, "\n"))
-	os.Exit(1)
-}
-
 func main() {
 	c, err := config.New(os.Args[1:])
 	if err != nil {
@@ -117,7 +64,8 @@ func main() {
 		os.Exit(1)
 	}
 	if c.Help {
-		printUsage()
+		printHelp(c.Commands.At(0))
+		os.Exit(1)
 	} else if c.Version {
 		writeln(white, version)
 		os.Exit(1)
