@@ -18,7 +18,7 @@ type TestingVariables struct {
 }
 
 func (v *TestingVariables) Get(ctx *context.Context, scope context.Scope, name string) (value.Value, error) {
-	switch name {
+	switch name { // nolint:gocritic
 	case TESTING_STATE:
 		return ctx.ReturnState, nil
 	}

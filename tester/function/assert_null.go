@@ -23,11 +23,11 @@ func Assert_null(ctx *context.Context, args ...value.Value) (value.Value, error)
 	switch args[0].Type() {
 	case value.StringType:
 		v := value.Unwrap[*value.String](args[0])
-		return assert(v.IsNotSet, true, "value is not null")
+		return assert(v, v.IsNotSet, true, "value is not null")
 	case value.IpType:
 		v := value.Unwrap[*value.IP](args[0])
-		return assert(v.IsNotSet, true, "value is not null")
+		return assert(v, v.IsNotSet, true, "value is not null")
 	default:
-		return assert(args[0].String(), "NULL", "value is not null")
+		return assert(args[0], args[0].String(), "NULL", "value is not null")
 	}
 }

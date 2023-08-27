@@ -42,18 +42,19 @@ func Assert_ends_with(ctx *context.Context, args ...value.Value) (value.Value, e
 		message = value.Unwrap[*value.String](args[2]).Value
 	}
 
-	expect := value.Unwrap[*value.String](args[0])
-	actual := value.Unwrap[*value.String](args[1])
+	actual := value.Unwrap[*value.String](args[0])
+	expect := value.Unwrap[*value.String](args[1])
 
-	ret := &value.Boolean{Value: strings.HasSuffix(expect.Value, actual.Value)}
+	ret := &value.Boolean{Value: strings.HasSuffix(actual.Value, expect.Value)}
 	if !ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(message)
+			return ret, errors.NewAssertionError(actual, message)
 		}
 		return ret, errors.NewAssertionError(
+			actual,
 			`"%s" should end with string "%s"`,
-			expect.Value,
 			actual.Value,
+			expect.Value,
 		)
 	}
 	return ret, nil

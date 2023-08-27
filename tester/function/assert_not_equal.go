@@ -21,13 +21,10 @@ func Assert_not_equal_lookup_Validate(args []value.Value) error {
 }
 
 func Assert_not_equal(ctx *context.Context, args ...value.Value) (value.Value, error) {
-	// Inverse assert.equal result
-	ret, err := Assert_equal(ctx, args...)
-	if ret == nil {
-		return nil, err
+	if err := Assert_not_equal_lookup_Validate(args); err != nil {
+		return nil, errors.NewTestingError(err.Error())
 	}
 
-	v := value.Unwrap[*value.Boolean](ret)
-	v.Value = !v.Value
-	return v, err
+	// assert.not_equal is alias for assert.not_strict_equal
+	return assert_not_strict_equal(args...)
 }

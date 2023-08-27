@@ -53,12 +53,14 @@ func (e *TestingError) Error() string {
 type AssertionError struct {
 	// Token info will be injected by interpreter
 	Token   token.Token
+	Actual  value.Value
 	Message string
 }
 
-func NewAssertionError(format string, args ...any) *AssertionError {
+func NewAssertionError(actual value.Value, format string, args ...any) *AssertionError {
 	return &AssertionError{
 		Message: fmt.Sprintf(format, args...),
+		Actual:  actual,
 	}
 }
 

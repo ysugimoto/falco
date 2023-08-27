@@ -8,13 +8,14 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const allScope = context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope
+const allScope = context.AnyScope
 
 type Counter interface {
 	Pass()
 	Fail(err error)
 }
 
+// nolint: funlen,gocognit
 func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Function {
 	return map[string]*ifn.Function{
 		// Special testing function of "testing.call_subrouting"

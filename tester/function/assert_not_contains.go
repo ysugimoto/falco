@@ -42,18 +42,19 @@ func Assert_not_contains(ctx *context.Context, args ...value.Value) (value.Value
 		message = value.Unwrap[*value.String](args[2]).Value
 	}
 
-	expect := value.Unwrap[*value.String](args[0])
-	actual := value.Unwrap[*value.String](args[1])
+	actual := value.Unwrap[*value.String](args[0])
+	expect := value.Unwrap[*value.String](args[1])
 
-	ret := &value.Boolean{Value: !strings.Contains(expect.Value, actual.Value)}
+	ret := &value.Boolean{Value: !strings.Contains(actual.Value, expect.Value)}
 	if !ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(message)
+			return ret, errors.NewAssertionError(actual, message)
 		}
 		return ret, errors.NewAssertionError(
-			`"%s" should not contain string "%s"`,
-			expect.Value,
+			actual,
+			`"%s" should not be contained in "%s"`,
 			actual.Value,
+			expect.Value,
 		)
 	}
 	return ret, nil

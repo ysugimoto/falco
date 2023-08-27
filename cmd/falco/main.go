@@ -320,13 +320,14 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 
 	writeln(white, " Done.")
 	for _, r := range results {
-		if len(r.Cases) == 0 {
+		switch {
+		case len(r.Cases) == 0:
 			write(noTestColor, " NO TESTS ")
 			writeln(white, " "+r.Filename)
-		} else if r.IsPassed() {
+		case r.IsPassed():
 			write(passColor, " PASS ")
 			writeln(white, " "+r.Filename)
-		} else {
+		default:
 			write(failColor, " FAIL ")
 			writeln(white, " "+r.Filename)
 		}
@@ -334,11 +335,14 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		for _, c := range r.Cases {
 			if c.Error != nil {
 				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
-				writeln(red, "%s%s\n", indent(2), c.Error.Error())
+				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
+					write(white, "%sActual Value: ", indent(2))
+					writeln(red, "%s\n", e.Actual.String())
 					printCodeLine(r.Lexer, e.Token)
 				case *ife.TestingError:
+					writeln(white, "")
 					printCodeLine(r.Lexer, e.Token)
 				}
 				writeln(white, "")

@@ -2,7 +2,6 @@ package function
 
 import (
 	"net"
-	"net/http"
 	"testing"
 	"time"
 
@@ -14,996 +13,376 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+func assert_not_test(t *testing.T, v value.Value, suite testSuite, name string) {
+	ret, err := Assert_not_equal(&context.Context{}, v, suite.compare)
+	if diff := cmp.Diff(
+		suite.err,
+		err,
+		cmpopts.IgnoreFields(errors.AssertionError{}, "Message", "Actual"),
+		cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
+	); diff != "" {
+		t.Errorf("Assert_not_equal()[%s] error: diff=%s", name, diff)
+	}
+	if diff := cmp.Diff(ret, &value.Boolean{Value: suite.expect}); diff != "" {
+		t.Errorf("Assert_not_equal()[%s] return value mismatch: diff=%s", name, diff)
+	}
+}
+
 func Test_Assert_not_equal(t *testing.T) {
 
 	now := time.Now()
+	assertionError := &errors.AssertionError{}
 
-	tests := []struct {
-		name   string
-		args   []value.Value
-		err    error
-		expect value.Value
-	}{
-		// Null
-		{
-			name:   "NULL vs NULL",
-			args:   []value.Value{value.Null, value.Null},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "NULL vs STRING",
-			args:   []value.Value{value.Null, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// INTEGER vs INTEGER
-		{
-			name:   "INTEGER vs INTEGER",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "INTEGER vs INTEGER",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// INTEGER vs STRING
-		{
-			name:   "INTEGER vs STRING",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.String{Value: "10"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "INTEGER vs STRING",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// INTEGER vs FLOAT
-		{
-			name:   "INTEGER vs FLOAT",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "INTEGER vs FLOAT",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.Float{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// INTEGER vs RTIME
-		{
-			name:   "INTEGER vs RTIME",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.RTime{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "INTEGER vs RTIME",
-			args:   []value.Value{&value.Integer{Value: 10}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// INTEGER vs OTHER
-		{
-			name: "INTEGER vs IP",
-			args: []value.Value{&value.Integer{Value: 10}, &value.IP{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "INTEGER vs BOOL",
-			args: []value.Value{&value.Integer{Value: 10}, &value.Boolean{Value: true}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "INTEGER vs BACKEND",
-			args: []value.Value{&value.Integer{Value: 10}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "INTEGER vs ACL",
-			args: []value.Value{&value.Integer{Value: 10}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// FLOAT vs INTEGER
-		{
-			name:   "FLOAT vs INTEGER",
-			args:   []value.Value{&value.Float{Value: 10}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "FLOAT vs INTEGER",
-			args:   []value.Value{&value.Float{Value: 10.0}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "FLOAT vs INTEGER",
-			args:   []value.Value{&value.Float{Value: 10}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// FLOAT vs STRING
-		{
-			name:   "FLOAT vs STRING",
-			args:   []value.Value{&value.Float{Value: 10}, &value.String{Value: "10.000"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "FLOAT vs STRING",
-			args:   []value.Value{&value.Float{Value: 10}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// FLOAT vs FLOAT
-		{
-			name:   "FLOAT vs FLOAT",
-			args:   []value.Value{&value.Float{Value: 10}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "FLOAT vs FLOAT",
-			args:   []value.Value{&value.Float{Value: 10}, &value.Float{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// FLOAT vs RTIME
-		{
-			name:   "FLOAT vs RTIME",
-			args:   []value.Value{&value.Float{Value: 10}, &value.RTime{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "FLOAT vs RTIME",
-			args:   []value.Value{&value.Float{Value: 10}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// FLOAT vs OTHER
-		{
-			name: "FLOAT vs IP",
-			args: []value.Value{&value.Float{Value: 10}, &value.IP{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "FLOAT vs BOOL",
-			args: []value.Value{&value.Float{Value: 10}, &value.Boolean{Value: true}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "FLOAT vs BACKEND",
-			args: []value.Value{&value.Float{Value: 10}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		{
-			name: "FLOAT vs ACL",
-			args: []value.Value{&value.Float{Value: 10}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// STRING vs INTEGER
-		{
-			name:   "STRING vs INTEGER",
-			args:   []value.Value{&value.String{Value: "10"}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs INTEGER",
-			args:   []value.Value{&value.String{Value: "foo"}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs STRING
-		{
-			name:   "STRING vs STRING",
-			args:   []value.Value{&value.String{Value: "foo"}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs STRING",
-			args:   []value.Value{&value.String{Value: "foo"}, &value.String{Value: "bar"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs FLOAT
-		{
-			name:   "STRING vs FLOAT",
-			args:   []value.Value{&value.String{Value: "10.000"}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs FLOAT",
-			args:   []value.Value{&value.String{Value: "10"}, &value.Float{Value: 10}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs BOOL
-		{
-			name:   "STRING vs BOOL",
-			args:   []value.Value{&value.String{Value: "1"}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs BOOL",
-			args:   []value.Value{&value.String{Value: "0"}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs BOOL",
-			args:   []value.Value{&value.String{Value: "1"}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		{
-			name:   "STRING vs BOOL",
-			args:   []value.Value{&value.String{Value: "0"}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs RTIME
-		{
-			name:   "STRING vs RTIME",
-			args:   []value.Value{&value.String{Value: "10.000"}, &value.RTime{Value: 10 * time.Second}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs RTIME",
-			args:   []value.Value{&value.String{Value: "10.000"}, &value.RTime{Value: 100 * time.Second}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs TIME
-		{
-			name:   "STRING vs TIME",
-			args:   []value.Value{&value.String{Value: now.Format(http.TimeFormat)}, &value.Time{Value: now}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs TIME",
-			args:   []value.Value{&value.String{Value: now.Add(time.Second).Format(http.TimeFormat)}, &value.RTime{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs BACKEND
-		{
-			name: "STRING vs BACKEND",
-			args: []value.Value{
-				&value.String{Value: "example"},
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
+	t.Run("NULL", func(t *testing.T) {
+		v := value.Null
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
 					},
 				},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "STRING vs BACKEND",
-			args: []value.Value{
-				&value.String{Value: "example"},
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "test_backend",
-						},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
 					},
 				},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs ACL
-		{
-			name: "STRING vs ACL",
-			args: []value.Value{
-				&value.String{Value: "example"},
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "STRING vs ACL",
-			args: []value.Value{
-				&value.String{Value: "example"},
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "test_acl",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// STRING vs IP
-		{
-			name:   "STRING vs IP",
-			args:   []value.Value{&value.String{Value: "192.168.0.1"}, &value.IP{Value: net.ParseIP("192.168.0.1")}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "STRING vs IP",
-			args:   []value.Value{&value.String{Value: "192.168.0.1"}, &value.IP{Value: net.ParseIP("192.168.0.2")}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// BOOL vs BOOL
-		{
-			name:   "BOOL vs BOOL",
-			args:   []value.Value{&value.Boolean{Value: true}, &value.Boolean{Value: true}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "BOOL vs BOOL",
-			args:   []value.Value{&value.Boolean{Value: true}, &value.Boolean{Value: false}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// BOOL vs STRING
-		{
-			name:   "BOOL vs STRING",
-			args:   []value.Value{&value.Boolean{Value: true}, &value.String{Value: "1"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "BOOL vs STRING",
-			args:   []value.Value{&value.Boolean{Value: true}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		{
-			name:   "BOOL vs STRING",
-			args:   []value.Value{&value.Boolean{Value: false}, &value.String{Value: "0"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "BOOL vs STRING",
-			args:   []value.Value{&value.Boolean{Value: false}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// BOOL vs INTEGER
-		{
-			name: "BOOL vs INTEGER",
-			args: []value.Value{&value.Boolean{Value: true}, &value.Integer{Value: 1}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs FLOAT
-		{
-			name: "BOOL vs FLOAT",
-			args: []value.Value{&value.Boolean{Value: true}, &value.Float{Value: 1}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs RTIME
-		{
-			name: "BOOL vs RTIME",
-			args: []value.Value{&value.Boolean{Value: true}, &value.RTime{Value: 1}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs TIME
-		{
-			name: "BOOL vs TIME",
-			args: []value.Value{&value.Boolean{Value: true}, &value.Time{Value: now}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs IP
-		{
-			name: "BOOL vs IP",
-			args: []value.Value{&value.Boolean{Value: true}, &value.IP{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs BACKEND
-		{
-			name: "BOOL vs BACKEND",
-			args: []value.Value{&value.Boolean{Value: true}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// BOOL vs ACL
-		{
-			name: "BOOL vs ACL",
-			args: []value.Value{&value.Boolean{Value: true}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// RTIME vs STRING
-		{
-			name:   "RTIME vs STRING",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.String{Value: "10s"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "RTIME vs STRING",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.String{Value: "1d"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// RTIME vs INTEGER
-		{
-			name:   "RTIME vs INTEGER",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Integer{Value: 10}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "RTIME vs INTEGER",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Integer{Value: 100}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// RTIME vs FLOAT
-		{
-			name:   "RTIME vs FLOAT",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Float{Value: 10.0}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "RTIME vs FLOAT",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Float{Value: 10.1}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// RTIME vs BOOL
-		{
-			name: "RTIME vs BOOL",
-			args: []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Boolean{Value: false}},
-			err:  &errors.TestingError{},
-		},
-		// RTIME vs RTIME
-		{
-			name:   "RTIME vs RTIME",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.RTime{Value: 10 * time.Second}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "RTIME vs RTIME",
-			args:   []value.Value{&value.RTime{Value: 10 * time.Second}, &value.RTime{Value: 11 * time.Second}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// RTIME vs TIME
-		{
-			name: "RTIME vs TIME",
-			args: []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Time{Value: now}},
-			err:  &errors.TestingError{},
-		},
-		// RTIME vs IP
-		{
-			name: "RTIME vs IP",
-			args: []value.Value{&value.RTime{Value: 10 * time.Second}, &value.IP{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// RTIME vs BACKEND
-		{
-			name: "RTIME vs BACKEND",
-			args: []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// RTIME vs ACL
-		{
-			name: "RTIME vs ACL",
-			args: []value.Value{&value.RTime{Value: 10 * time.Second}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs STRING
-		{
-			name:   "TIME vs STRING",
-			args:   []value.Value{&value.Time{Value: now}, &value.String{Value: now.Format(http.TimeFormat)}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "TIME vs STRING",
-			args:   []value.Value{&value.Time{Value: now}, &value.String{Value: "foo"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// TIME vs INTEGER
-		{
-			name: "TIME vs INTEGER",
-			args: []value.Value{&value.Time{Value: now}, &value.Integer{Value: 10}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs FLOAT
-		{
-			name: "TIME vs FLOAT",
-			args: []value.Value{&value.Time{Value: now}, &value.Float{Value: 10.0}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs BOOL
-		{
-			name: "TIME vs BOOL",
-			args: []value.Value{&value.Time{Value: now}, &value.Boolean{Value: false}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs RTIME
-		{
-			name: "TIME vs RTIME",
-			args: []value.Value{&value.Time{Value: now}, &value.RTime{Value: 10 * time.Second}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs TIME
-		{
-			name:   "TIME vs TIME - pass",
-			args:   []value.Value{&value.Time{Value: now}, &value.Time{Value: now}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "TIME vs TIME - fail",
-			args:   []value.Value{&value.Time{Value: now}, &value.Time{Value: now.Add(time.Second)}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// TIME vs IP
-		{
-			name: "TIME vs IP",
-			args: []value.Value{&value.Time{Value: now}, &value.IP{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs BACKEND
-		{
-			name: "TIME vs BACKEND",
-			args: []value.Value{&value.Time{Value: now}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// TIME vs ACL
-		{
-			name: "TIME vs ACL",
-			args: []value.Value{&value.Time{Value: now}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs STRING
-		{
-			name:   "IP vs STRING",
-			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.String{Value: "192.168.0.1"}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "IP vs STRING",
-			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.String{Value: "192.168.0.2"}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// IP vs INTEGER
-		{
-			name: "IP vs INTEGER",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Integer{Value: 10}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs FLOAT
-		{
-			name: "IP vs FLOAT",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Float{Value: 10.0}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs BOOL
-		{
-			name: "IP vs BOOL",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Boolean{Value: false}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs RTIME
-		{
-			name: "IP vs RTIME",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.RTime{Value: time.Second}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs TIME
-		{
-			name: "IP vs TIME",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Time{Value: now}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs IP
-		{
-			name:   "IP vs IP - pass",
-			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.IP{Value: net.ParseIP("192.168.0.1")}},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name:   "IP vs IP - fail",
-			args:   []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.IP{Value: net.ParseIP("192.168.0.2")}},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// IP vs BACKEND
-		{
-			name: "IP vs BACKEND",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Backend{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// IP vs ACL
-		{
-			name: "IP vs ACL",
-			args: []value.Value{&value.IP{Value: net.ParseIP("192.168.0.1")}, &value.Acl{Value: nil}},
-			err:  &errors.TestingError{},
-		},
-		// BACKEND vs STRING
-		{
-			name: "BACKEND vs STRING",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.String{Value: "example"},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "BACKEND vs STRING",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.String{Value: "testing"},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// BACKEND vs INTEGER
-		{
-			name: "BACKEND vs INTEGER",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Integer{Value: 10},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs FLOAT
-		{
-			name: "BACKEND vs FLOAT",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Float{Value: 10},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs BOOL
-		{
-			name: "BACKEND vs BOOL",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Boolean{Value: true},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs RTIME
-		{
-			name: "BACKEND vs RTIME",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.RTime{Value: time.Second},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs TIME
-		{
-			name: "BACKEND vs TIME",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Time{Value: now},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs IP
-		{
-			name: "BACKEND vs IP",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.IP{Value: net.ParseIP("192.168.0.1")},
-			},
-			err: &errors.TestingError{},
-		},
-		// BACKEND vs BACKEND
-		{
-			name: "BACKEND vs BACKEND - pass",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "BACKEND vs BACKEND - fail",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "testing",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// BACKEND vs ACL
-		{
-			name: "BACKEND vs ACL",
-			args: []value.Value{
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs STRING
-		{
-			name: "ACL vs STRING",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.String{Value: "example"},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "ACL vs STRING",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.String{Value: "testing"},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-		// ACL vs INTEGER
-		{
-			name: "ACL vs INTEGER",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Integer{Value: 10},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs FLOAT
-		{
-			name: "ACL vs FLOAT",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Float{Value: 10},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs BOOL
-		{
-			name: "ACL vs BOOL",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Boolean{Value: true},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs RTIME
-		{
-			name: "ACL vs RTIME",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.RTime{Value: time.Second},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs TIME
-		{
-			name: "ACL vs TIME",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Time{Value: now},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs IP
-		{
-			name: "ACL vs IP",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.IP{Value: net.ParseIP("192.168.0.1")},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs BACKEND
-		{
-			name: "ACL vs BACKEND",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Backend{
-					Value: &ast.BackendDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-			},
-			err: &errors.TestingError{},
-		},
-		// ACL vs ACL
-		{
-			name: "ACL vs ACL - pass",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: false},
-		},
-		{
-			name: "ACL vs ACL - fail",
-			args: []value.Value{
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "example",
-						},
-					},
-				},
-				&value.Acl{
-					Value: &ast.AclDeclaration{
-						Name: &ast.Ident{
-							Value: "testing",
-						},
-					},
-				},
-			},
-			expect: &value.Boolean{Value: true},
-			err:    &errors.AssertionError{},
-		},
-	}
+			}, err: assertionError},
+		}
 
-	for i := range tests {
-		ret, err := Assert_not_equal(
-			&context.Context{},
-			tests[i].args...,
-		)
-		if diff := cmp.Diff(
-			tests[i].err,
-			err,
-			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
-			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
-		); diff != "" {
-			t.Errorf("Assert_not_equal()[%s] error: diff=%s", tests[i].name, diff)
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is NULL")
 		}
-		if diff := cmp.Diff(tests[i].expect, ret); diff != "" {
-			t.Errorf("Assert_not_equal()[%s] return value mismatch: diff=%s", tests[i].name, diff)
+	})
+
+	t.Run("INTEGER", func(t *testing.T) {
+		v := &value.Integer{Value: 1}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, expect: true},
+			{compare: &value.Integer{Value: 1}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
 		}
-	}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is INTEGER")
+		}
+	})
+
+	t.Run("FLOAT", func(t *testing.T) {
+		v := &value.Float{Value: 1}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, expect: true},
+			{compare: &value.Float{Value: 1}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is FLOAT")
+		}
+	})
+
+	t.Run("STRING", func(t *testing.T) {
+		v := &value.String{Value: "test"}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, expect: true},
+			{compare: &value.String{Value: "test"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is STRING")
+		}
+	})
+
+	t.Run("BOOLEAN", func(t *testing.T) {
+		v := &value.Boolean{Value: true}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, expect: true},
+			{compare: &value.Boolean{Value: true}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is BOOLEAN")
+		}
+	})
+
+	t.Run("RTIME", func(t *testing.T) {
+		v := &value.RTime{Value: time.Second}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, expect: true},
+			{compare: &value.RTime{Value: time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is RTIME")
+		}
+	})
+
+	t.Run("TIME", func(t *testing.T) {
+		v := &value.Time{Value: now}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now}, err: assertionError},
+			{compare: &value.Time{Value: now.Add(time.Second)}, expect: true},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is TIME")
+		}
+	})
+
+	t.Run("IP", func(t *testing.T) {
+		v := &value.IP{Value: net.ParseIP("192.168.0.1")}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, expect: true},
+			{compare: &value.IP{Value: net.ParseIP("192.168.0.1")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now.Add(time.Second)}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is IP")
+		}
+	})
+
+	t.Run("BACKEND", func(t *testing.T) {
+		v := &value.Backend{
+			Value: &ast.BackendDeclaration{
+				Name: &ast.Ident{
+					Value: "test",
+				},
+			},
+		}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now.Add(time.Second)}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, expect: true},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "test",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is BACKEND")
+		}
+	})
+
+	t.Run("ACL", func(t *testing.T) {
+		v := &value.Acl{
+			Value: &ast.AclDeclaration{
+				Name: &ast.Ident{
+					Value: "test",
+				},
+			},
+		}
+		tests := []testSuite{
+			{compare: value.Null, err: assertionError},
+			{compare: &value.String{Value: "string"}, err: assertionError},
+			{compare: &value.IP{Value: net.ParseIP("10.0.0.0")}, err: assertionError},
+			{compare: &value.Boolean{}, err: assertionError},
+			{compare: &value.Integer{Value: 100}, err: assertionError},
+			{compare: &value.Float{Value: 100}, err: assertionError},
+			{compare: &value.RTime{Value: 10 * time.Second}, err: assertionError},
+			{compare: &value.Time{Value: now.Add(time.Second)}, err: assertionError},
+			{compare: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name: &ast.Ident{
+						Value: "backend",
+					},
+				},
+			}, err: assertionError},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "acl",
+					},
+				},
+			}, expect: true},
+			{compare: &value.Acl{
+				Value: &ast.AclDeclaration{
+					Name: &ast.Ident{
+						Value: "test",
+					},
+				},
+			}, err: assertionError},
+		}
+
+		for i := range tests {
+			assert_not_test(t, v, tests[i], "Actual is ACL")
+		}
+	})
 }

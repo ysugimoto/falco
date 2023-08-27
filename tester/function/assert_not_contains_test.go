@@ -61,7 +61,7 @@ func Test_Assert_not_contains(t *testing.T) {
 		if diff := cmp.Diff(
 			tests[i].err,
 			err,
-			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
+			cmpopts.IgnoreFields(errors.AssertionError{}, "Message", "Actual"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
 			t.Errorf("Assert_not_contains()[%d] error: diff=%s", i, diff)

@@ -41,17 +41,24 @@ func TestConfigFromCLI(t *testing.T) {
 	}
 
 	expect := &Config{
-		IncludePaths:    []string{"."},
-		Help:            true,
-		VerboseLevel:    "",
-		VerboseWarning:  true,
-		VerboseInfo:     true,
-		Version:         true,
-		Remote:          true,
-		Json:            true,
-		Commands:        Commands{"lint"},
-		Port:            3124,
-		OverrideRequest: &RequestConfig{},
+		IncludePaths:   []string{"."},
+		Help:           true,
+		VerboseLevel:   "",
+		VerboseWarning: true,
+		VerboseInfo:    true,
+		Version:        true,
+		Remote:         true,
+		Json:           true,
+		Commands:       Commands{"lint"},
+		Local: &LocalConfig{
+			Port:            3124,
+			IncludePaths:    []string{"."},
+			OverrideRequest: &RequestConfig{},
+		},
+		Testing: &TestConfig{
+			IncludePaths:    []string{"."},
+			OverrideRequest: &RequestConfig{},
+		},
 	}
 
 	if diff := cmp.Diff(c, expect, cmpopts.IgnoreFields(Config{}, "FastlyServiceID", "FastlyApiKey")); diff != "" {

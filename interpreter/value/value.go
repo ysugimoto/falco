@@ -17,13 +17,13 @@ type Type string
 const (
 	NullType    Type = "NULL"
 	IdentType   Type = "IDENT"
-	StringType  Type = "STRING"
-	IpType      Type = "IP"
-	BooleanType Type = "BOOLEAN"
 	IntegerType Type = "INTEGER"
 	FloatType   Type = "FLOAT"
+	StringType  Type = "STRING"
+	BooleanType Type = "BOOLEAN"
 	RTimeType   Type = "RTIME"
 	TimeType    Type = "TIME"
+	IpType      Type = "IP"
 	BackendType Type = "BACKEND"
 	AclType     Type = "ACL"
 )

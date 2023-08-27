@@ -42,22 +42,26 @@ func Assert_match(ctx *context.Context, args ...value.Value) (value.Value, error
 		message = value.Unwrap[*value.String](args[2]).Value
 	}
 
-	expect := value.Unwrap[*value.String](args[0])
-	actual := value.Unwrap[*value.String](args[1])
+	actual := value.Unwrap[*value.String](args[0])
+	expect := value.Unwrap[*value.String](args[1])
 
-	re, err := regexp.Compile(actual.Value)
+	re, err := regexp.Compile(expect.Value)
 	if err != nil {
-		return nil, errors.NewTestingError("Invalid regexp string provided: %s", actual.Value)
+		return nil, errors.NewTestingError(
+			"Invalid regexp string provided: %s",
+			expect.Value,
+		)
 	}
-	ret := &value.Boolean{Value: re.MatchString(expect.Value)}
+	ret := &value.Boolean{Value: re.MatchString(actual.Value)}
 	if !ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(message)
+			return ret, errors.NewAssertionError(actual, message)
 		}
 		return ret, errors.NewAssertionError(
-			`"%s" should match against "%s"`,
-			expect.Value,
+			actual,
+			`"%s" should match against %s`,
 			actual.Value,
+			expect.Value,
 		)
 	}
 	return ret, nil

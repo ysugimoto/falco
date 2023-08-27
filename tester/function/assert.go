@@ -28,5 +28,5 @@ func Assert(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	v := value.Unwrap[*value.Boolean](args[0])
-	return assert(v.Value, true, "")
+	return assert(v, v.Value, true, "")
 }

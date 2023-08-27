@@ -12,7 +12,7 @@ type finder struct {
 	files []string
 }
 
-// fs.WalkDirFunc inplementation
+// fs.WalkDirFunc implementation
 func (f *finder) find(path string, entry fs.DirEntry, err error) error {
 	if err != nil {
 		if _, ok := err.(*fs.PathError); ok {
@@ -28,7 +28,10 @@ func (f *finder) find(path string, entry fs.DirEntry, err error) error {
 }
 
 func findTestTargetFiles(root string) ([]string, error) {
-	abs, _ := filepath.Abs(root) // notlint:errcheck
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	f := &finder{}
 	if err := filepath.WalkDir(abs, f.find); err != nil {
 		return nil, errors.WithStack(err)

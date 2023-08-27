@@ -143,7 +143,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 		finishChan <- cases
 	}(vcl)
 
-	// Aggregate asyncronous channels
+	// Aggregate asynchronous channels
 	select {
 	case err := <-errChan:
 		return nil, err

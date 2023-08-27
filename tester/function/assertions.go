@@ -5,26 +5,30 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func assert[T string | int64 | bool | float64 | value.Type](left, right T, message string) (*value.Boolean, error) {
-	ok := &value.Boolean{Value: left == right}
+type assertable interface {
+	string | int64 | bool | float64 | value.Type
+}
+
+func assert[T assertable](v value.Value, actual, expect T, message string) (*value.Boolean, error) {
+	ok := &value.Boolean{Value: actual == expect}
 	if !ok.Value {
 		if message != "" {
-			return ok, errors.NewAssertionError(message)
+			return ok, errors.NewAssertionError(v, message)
 		}
-		return ok, errors.NewAssertionError(
-			"Assertion error: expect=%v, actual=%v", left, right)
+		return ok, errors.NewAssertionError(v,
+			"Assertion error: expect=%v, actual=%v", expect, actual)
 	}
 	return ok, nil
 }
 
-func assert_not[T string | int64 | bool | float64 | value.Type](left, right T, message string) (*value.Boolean, error) {
-	ok := &value.Boolean{Value: left != right}
-	if ok.Value {
+func assert_not[T assertable](v value.Value, actual, expect T, message string) (*value.Boolean, error) {
+	ok := &value.Boolean{Value: actual != expect}
+	if !ok.Value {
 		if message != "" {
-			return ok, errors.NewAssertionError(message)
+			return ok, errors.NewAssertionError(v, message)
 		}
-		return ok, errors.NewAssertionError(
-			"Assertion error: expect=%v, actual=%v", left, right)
+		return ok, errors.NewAssertionError(v,
+			"Assertion error: expect=%v, actual=%v", expect, actual)
 	}
 	return ok, nil
 }

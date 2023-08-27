@@ -61,7 +61,7 @@ func Test_Assert_starts_with(t *testing.T) {
 		if diff := cmp.Diff(
 			tests[i].err,
 			err,
-			cmpopts.IgnoreFields(errors.AssertionError{}, "Message"),
+			cmpopts.IgnoreFields(errors.AssertionError{}, "Message", "Actual"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
 			t.Errorf("Assert_starts_with()[%d] error: diff=%s", i, diff)

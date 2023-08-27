@@ -25,23 +25,28 @@ func Assert_not_strict_equal(ctx *context.Context, args ...value.Value) (value.V
 		return nil, errors.NewTestingError(err.Error())
 	}
 
+	return assert_not_strict_equal(args...)
+}
+
+func assert_not_strict_equal(args ...value.Value) (value.Value, error) {
 	// Check custom message
 	var message string
 	if len(args) == 3 {
 		message = value.Unwrap[*value.String](args[2]).Value
 	}
 
-	expect, actual := args[0], args[1]
+	actual, expect := args[0], args[1]
 	if expect.Type() != actual.Type() {
 		if message == "" {
 			return &value.Boolean{}, errors.NewAssertionError(
+				actual,
 				"Type Mismatch: expect=%s but actual=%s",
 				expect.Type(),
 				actual.Type(),
 			)
 		}
-		return &value.Boolean{}, errors.NewAssertionError(message)
+		return &value.Boolean{}, errors.NewAssertionError(actual, message)
 	}
 
-	return assert_not(expect.String(), actual.String(), message)
+	return assert_not(actual, actual.String(), expect.String(), message)
 }
