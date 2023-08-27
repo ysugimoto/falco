@@ -220,7 +220,7 @@ func (i *Interpreter) ProcessRecv() error {
 
 	switch state {
 	case PASS:
-		i.ctx.State = "PASS"
+		i.ctx.State = "MISS"
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
@@ -478,12 +478,15 @@ func (i *Interpreter) ProcessFetch() error {
 	// Consider cache, create client response from backend response
 	defer func() {
 		resp := i.cloneResponse(i.ctx.BackendResponse)
-		// Note: compare BackendResponseCacheable value because this value will be changed by user in vcl_fetch directive
+		// Note: compare BackendResponseCacheable value
+		// because this value will be changed by user in vcl_fetch directive
 		if i.ctx.BackendResponseCacheable.Value {
 			if i.ctx.BackendResponseTTL.Value.Seconds() > 0 {
-				cache.Set(i.ctx.RequestHash.String(), CacheItem{
-					Response: resp,
-					Expires:  time.Now().Add(i.ctx.BackendResponseTTL.Value),
+				now := time.Now()
+				cache.Set(i.ctx.RequestHash.String(), &CacheItem{
+					Response:  resp,
+					Expires:   now.Add(i.ctx.BackendResponseTTL.Value),
+					EntryTime: now,
 				})
 			}
 		}
@@ -601,13 +604,15 @@ func (i *Interpreter) ProcessDeliver() error {
 
 	if i.ctx.Response == nil {
 		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Response = &v
+			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 		} else if i.ctx.Object != nil {
-			v := *i.ctx.Object
-			i.ctx.Response = &v
+			i.ctx.Response = i.cloneResponse(i.ctx.Object)
 		}
 	}
+
+	// Add Fastly related server info but values are falco's one
+	i.ctx.Response.Header.Set("X-Served-By", createCacheDCString())
+	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle

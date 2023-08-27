@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -8,25 +9,34 @@ import (
 )
 
 type CacheItem struct {
-	Response *http.Response
-	Expires  time.Time
+	Response  *http.Response
+	Expires   time.Time
+	EntryTime time.Time
+	Hits      int
 }
 
-type Cache map[string]CacheItem
+type Cache map[string]*CacheItem
 
-func (c Cache) Set(hash string, item CacheItem) {
+func (c Cache) Set(hash string, item *CacheItem) {
 	c[hash] = item
 }
 
 func (c Cache) Get(hash string) *http.Response {
-	if v, ok := c[hash]; !ok {
+	v, ok := c[hash]
+	if !ok {
 		return nil
 	} else if time.Now().After(v.Expires) {
 		delete(c, hash)
 		return nil
-	} else {
-		return v.Response
 	}
+
+	// If cache object exists, set cache related header
+	// Increment cache hits
+	v.Hits++
+	v.Response.Header.Set("X-Cache", "HIT")
+	v.Response.Header.Set("X-Cache-Hits", fmt.Sprint(v.Hits))
+	v.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(v.EntryTime).Seconds()))
+	return v.Response
 }
 
 var cache = Cache{}
@@ -71,4 +81,10 @@ func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 		}
 	}
 	return time.Duration(2 * time.Minute)
+}
+
+// Create cache datacenter string
+// This value is not important but create some string that we want to serve
+func createCacheDCString() string {
+	return "cache-localsimulator-FALCO"
 }

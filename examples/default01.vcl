@@ -37,7 +37,7 @@ sub vcl_recv {
   set req.backend = httpbin_org;
   set req.http.Foo = {" foo bar baz "};
   call custom_logger;
-  return (pass);
+  return (lookup);
 }
 
 sub vcl_deliver {
