@@ -113,9 +113,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: protocol}, nil
 	case CLIENT_GEO_LATITUDE:
-		return &value.Float{Value: 35.688681}, nil
+		return &value.Float{Value: 37.7786941}, nil
 	case CLIENT_GEO_LONGITUDE:
-		return &value.Float{Value: 139.762253}, nil
+		return &value.Float{Value: -122.3981452}, nil
 	case FASTLY_ERROR:
 		return &value.String{Value: ""}, nil
 	case MATH_1_PI:
@@ -323,27 +323,28 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}, nil
 
 	// TODO: respect artbitrary request
-	case CLIENT_GEO_CITY:
-	case CLIENT_GEO_CITY_ASCII:
-	case CLIENT_GEO_CITY_LATIN1:
-	case CLIENT_GEO_CITY_UTF8:
-	case CLIENT_GEO_CONN_SPEED:
-	case CLIENT_GEO_CONN_TYPE:
-	case CLIENT_GEO_CONTINENT_CODE:
-	case CLIENT_GEO_COUNTRY_CODE:
-	case CLIENT_GEO_COUNTRY_CODE3:
-	case CLIENT_GEO_COUNTRY_NAME:
-	case CLIENT_GEO_COUNTRY_NAME_ASCII:
-	case CLIENT_GEO_COUNTRY_NAME_LATIN1:
-	case CLIENT_GEO_COUNTRY_NAME_UTF8:
-	case CLIENT_GEO_IP_OVERRIDE:
-	case CLIENT_GEO_POSTAL_CODE:
-	case CLIENT_GEO_PROXY_DESCRIPTION:
-	case CLIENT_GEO_PROXY_TYPE:
-	case CLIENT_GEO_REGION:
-	case CLIENT_GEO_REGION_ASCII:
-	case CLIENT_GEO_REGION_LATIN1:
-	case CLIENT_GEO_REGION_UTF8:
+	case CLIENT_GEO_CITY,
+		CLIENT_GEO_CITY_ASCII,
+		CLIENT_GEO_CITY_LATIN1,
+		CLIENT_GEO_CITY_UTF8,
+		CLIENT_GEO_CONN_SPEED,
+		CLIENT_GEO_CONN_TYPE,
+		CLIENT_GEO_CONTINENT_CODE,
+		CLIENT_GEO_COUNTRY_CODE,
+		CLIENT_GEO_COUNTRY_CODE3,
+		CLIENT_GEO_COUNTRY_NAME,
+		CLIENT_GEO_COUNTRY_NAME_ASCII,
+		CLIENT_GEO_COUNTRY_NAME_LATIN1,
+		CLIENT_GEO_COUNTRY_NAME_UTF8,
+		CLIENT_GEO_IP_OVERRIDE,
+		CLIENT_GEO_POSTAL_CODE,
+		CLIENT_GEO_PROXY_DESCRIPTION,
+		CLIENT_GEO_PROXY_TYPE,
+		CLIENT_GEO_REGION,
+		CLIENT_GEO_REGION_ASCII,
+		CLIENT_GEO_REGION_LATIN1,
+		CLIENT_GEO_REGION_UTF8:
+		return &value.String{Value: "unknown"}, nil
 
 	case CLIENT_IDENTITY:
 		if v.ctx.ClientIdentity == nil {
@@ -507,13 +508,13 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Fixed values
 	case SERVER_DATACENTER:
-		return &value.String{Value: "NRT"}, nil
+		return &value.String{Value: "FALCO"}, nil
 	case SERVER_HOSTNAME:
-		return &value.String{Value: "cache-nrt-knrt7000001"}, nil
+		return &value.String{Value: "cache-localsimulator"}, nil
 	case SERVER_IDENTITY:
-		return &value.String{Value: "cache-nrt-knrt7000001"}, nil
+		return &value.String{Value: "cache-localsimulator"}, nil
 	case SERVER_REGION:
-		return &value.String{Value: "Asia"}, nil
+		return &value.String{Value: "US"}, nil
 	case STALE_EXISTS:
 		return v.ctx.StaleContents, nil
 	case TIME_ELAPSED_MSEC:

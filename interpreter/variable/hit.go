@@ -28,6 +28,7 @@ func NewHitScopeVariables(ctx *context.Context) *HitScopeVariables {
 
 func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	switch name {
+	// FIXME should be able to get from actual backend request
 	case OBJ_AGE:
 		// fixed value
 		return &value.RTime{Value: 60 * time.Second}, nil

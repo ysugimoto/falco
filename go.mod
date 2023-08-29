@@ -2,6 +2,8 @@ module github.com/ysugimoto/falco
 
 go 1.20
 
+replace github.com/ysugimoto/twist => ../twist
+
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/fatih/color v1.12.0
@@ -16,7 +18,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/ysugimoto/twist v0.10.0
+	github.com/ysugimoto/twist v0.10.1
 	golang.org/x/sys v0.6.0 // indirect
 )
 
@@ -26,10 +28,10 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/go-ini/ini v1.42.0 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/goccy/go-yaml v1.11.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect

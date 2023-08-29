@@ -23,19 +23,19 @@ func GetQuicVariable(name string) (value.Value, error) {
 	switch name {
 	// QUIC related values return zero
 	case QUIC_CC_CWND,
-		"quic.cc.ssthresh",
-		"quic.num_bytes.received",
-		"quic.num_bytes.sent",
-		"quic.num_packets.ack_received",
-		"quic.num_packets.decryption_failed",
-		"quic.num_packets.late_acked",
-		"quic.num_packets.lost",
-		"quic.num_packets.received",
-		"quic.num_packets.sent",
-		"quic.rtt.latest",
-		"quic.rtt.minimum",
-		"quic.rtt.smoothed",
-		"quic.rtt.variance":
+		QUIC_CC_SSTHRESH,
+		QUIC_NUM_BYTES_RECEIVED,
+		QUIC_NUM_BYTES_SENT,
+		QUIC_NUM_PACKETS_ACK_RECEIVED,
+		QUIC_NUM_PACKETS_DECRYPTION_FAILED,
+		QUIC_NUM_PACKETS_LATE_ACKED,
+		QUIC_NUM_PACKETS_LOST,
+		QUIC_NUM_PACKETS_RECEIVED,
+		QUIC_NUM_PACKETS_SENT,
+		QUIC_RTT_LATEST,
+		QUIC_RTT_MINIMUM,
+		QUIC_RTT_SMOOTHED,
+		QUIC_RTT_VARIANCE:
 		return &value.Integer{Value: 0}, nil
 	}
 	return nil, nil
@@ -47,39 +47,39 @@ func GetTCPInfoVariable(name string) (value.Value, error) {
 	case CLIENT_SOCKET_TCP_INFO:
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_SOCKET_TCPI_ADVMSS,
-		"client.socket.tcpi_bytes_acked",
-		"client.socket.tcpi_bytes_received",
-		"client.socket.tcpi_data_segs_in",
-		"client.socket.tcpi_data_segs_out",
-		"client.socket.tcpi_delivery_rate",
-		"client.socket.tcpi_delta_retrans",
-		"client.socket.tcpi_last_data_sent",
-		"client.socket.tcpi_max_pacing_rate",
-		"client.socket.tcpi_min_rtt",
-		"client.socket.tcpi_notsent_bytes",
-		"client.socket.tcpi_pacing_rate",
-		"client.socket.tcpi_pmtu",
-		"client.socket.tcpi_rcv_mss",
-		"client.socket.tcpi_rcv_rtt",
-		"client.socket.tcpi_rcv_space",
-		"client.socket.tcpi_rcv_ssthresh",
-		"client.socket.tcpi_reordering",
-		"client.socket.tcpi_rtt",
-		"client.socket.tcpi_rttvar",
-		"client.socket.tcpi_segs_in",
-		"client.socket.tcpi_segs_out",
-		"client.socket.tcpi_snd_cwnd",
-		"client.socket.tcpi_snd_mss",
-		"client.socket.tcpi_snd_ssthresh",
-		"client.socket.tcpi_total_retrans":
+		CLIENT_SOCKET_TCPI_BYTES_ACKED,
+		CLIENT_SOCKET_TCPI_BYTES_RECEIVED,
+		CLIENT_SOCKET_TCPI_DATA_SEGS_IN,
+		CLIENT_SOCKET_TCPI_DATA_SEGS_OUT,
+		CLIENT_SOCKET_TCPI_DELIVERY_RATE,
+		CLIENT_SOCKET_TCPI_DELTA_RETRANS,
+		CLIENT_SOCKET_TCPI_LAST_DATA_SENT,
+		CLIENT_SOCKET_TCPI_MAX_PACING_RATE,
+		CLIENT_SOCKET_TCPI_MIN_RTT,
+		CLIENT_SOCKET_TCPI_NOTSENT_BYTES,
+		CLIENT_SOCKET_TCPI_PACING_RATE,
+		CLIENT_SOCKET_TCPI_PMTU,
+		CLIENT_SOCKET_TCPI_RCV_MSS,
+		CLIENT_SOCKET_TCPI_RCV_RTT,
+		CLIENT_SOCKET_TCPI_RCV_SPACE,
+		CLIENT_SOCKET_TCPI_RCV_SSTHRESH,
+		CLIENT_SOCKET_TCPI_REORDERING,
+		CLIENT_SOCKET_TCPI_RTT,
+		CLIENT_SOCKET_TCPI_RTTVAR,
+		CLIENT_SOCKET_TCPI_SEGS_IN,
+		CLIENT_SOCKET_TCPI_SEGS_OUT,
+		CLIENT_SOCKET_TCPI_SND_CWND,
+		CLIENT_SOCKET_TCPI_SND_MSS,
+		CLIENT_SOCKET_TCPI_SND_SSTHRESH,
+		CLIENT_SOCKET_TCPI_TOTAL_RETRANS:
 		return &value.Integer{Value: 0}, nil
 	}
 
 	return nil, nil
 }
 
-// TODO: consider we need to construct TLS server manually instead of net/http server
-// Temporaly return our environment data in Fastly fiddle
+// TODO: consider weneed to construct TLS server manually instead of net/http server
+// Temporaly return ur environment data in Fastly fiddle
 func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 	switch name {
 	case TLS_CLIENT_CIPHER:

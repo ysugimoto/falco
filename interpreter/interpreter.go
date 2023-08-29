@@ -610,9 +610,22 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 	}
 
+	dc := createCacheDCString()
 	// Add Fastly related server info but values are falco's one
 	i.ctx.Response.Header.Set("X-Served-By", createCacheDCString())
 	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+
+	// When Fastly-Debug header is present, add debug header but values are fakes
+	if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
+		i.ctx.Response.Header.Set("Fastly-Debug-Path", fmt.Sprintf("(D %s 0) (F %s 0)", dc, dc))
+		cacheHit := "M"
+		if i.ctx.State == "HIT" {
+			cacheHit = "H"
+		}
+		i.ctx.Response.Header.Set("Fastly-Debug-TTL", fmt.Sprintf(
+			"(%s %s %.3f %.3f %d)", cacheHit, dc, 0.000, 0.000, 0,
+		))
+	}
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle

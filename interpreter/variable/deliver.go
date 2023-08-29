@@ -77,6 +77,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case FASTLY_INFO_IS_CLUSTER_EDGE:
 		return &value.Boolean{Value: false}, nil
 
+	// TODO: should be able to get from context after object checked
 	case OBJ_AGE:
 		// fixed value
 		return &value.RTime{Value: 60 * time.Second}, nil
@@ -161,9 +162,9 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		readBytes += n
 		return &value.Integer{Value: readBytes}, nil
 
-	// FIXME: We need to send actual request to the backend
 	case RESP_IS_LOCALLY_GENERATED:
 		return &value.Boolean{Value: false}, nil
+	// FIXME: should be able to get from response object
 	case RESP_PROTO:
 		return &value.String{Value: "HTTP/1.1"}, nil
 	case RESP_RESPONSE:

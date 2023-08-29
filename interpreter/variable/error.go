@@ -44,6 +44,7 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case ESI_ALLOW_INSIDE_CDATA:
 		return v.ctx.EsiAllowInsideCData, nil
 
+	// TODO: should be able to get from context after object checked
 	case OBJ_AGE:
 		// fixed value
 		return &value.RTime{Value: 60 * time.Second}, nil
