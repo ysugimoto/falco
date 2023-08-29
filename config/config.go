@@ -12,6 +12,11 @@ var (
 	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
 
+type OverrideBackend struct {
+	Host string `yaml:"host"`
+	SSL  bool   `yaml:"ssl"`
+}
+
 // Local simulation configuration
 type LocalConfig struct {
 	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
@@ -24,6 +29,9 @@ type LocalConfig struct {
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
+
+	// Override Origin fetching URL
+	OverrideBackends map[string]*OverrideBackend `yaml:"override_backends"`
 }
 
 // Testing configuration

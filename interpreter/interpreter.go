@@ -298,9 +298,9 @@ func (i *Interpreter) ProcessMiss() error {
 	var err error
 	if i.ctx.BackendRequest == nil {
 		if i.ctx.Backend.Director != nil {
-			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx.Backend.Director)
+			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx)
 		} else {
-			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx)
 		}
 		if err != nil {
 			return errors.WithStack(err)
