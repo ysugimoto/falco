@@ -12,13 +12,15 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const HTTPS_SCHEME = "https"
 
-func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Request, error) {
+func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
 	var port string
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
@@ -26,22 +28,44 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		port = value.Unwrap[*value.String](v).Value
 	}
 
-	scheme := "http"
-	if v, err := i.getBackendProperty(backend.Value.Properties, "ssl"); err != nil {
-		return nil, errors.WithStack(err)
-	} else if v != nil {
-		if value.Unwrap[*value.Boolean](v).Value {
-			scheme = HTTPS_SCHEME
-		}
-	}
-	host, err := i.getBackendProperty(backend.Value.Properties, "host")
-	if err != nil {
-		return nil, errors.WithStack(err)
+	var overrideBackend *config.OverrideBackend
+	if v, ok := ctx.OverrideBackends[backend.Value.Name.Value]; ok {
+		overrideBackend = v
 	}
 
-	alwaysHost, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header")
-	if err != nil {
+	// scheme may be overrided by config
+	scheme := "http"
+	if overrideBackend != nil {
+		if overrideBackend.SSL {
+			scheme = HTTPS_SCHEME
+		}
+	} else {
+		if v, err := i.getBackendProperty(backend.Value.Properties, "ssl"); err != nil {
+			return nil, errors.WithStack(err)
+		} else if v != nil {
+			if value.Unwrap[*value.Boolean](v).Value {
+				scheme = HTTPS_SCHEME
+			}
+		}
+	}
+
+	// host may be overrided by config
+	var host string
+	if overrideBackend != nil {
+		host = overrideBackend.Host
+	} else {
+		if v, err := i.getBackendProperty(backend.Value.Properties, "host"); err != nil {
+			return nil, errors.WithStack(err)
+		} else {
+			host = value.Unwrap[*value.String](v).Value
+		}
+	}
+
+	var alwaysHost bool
+	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
 		return nil, errors.WithStack(err)
+	} else if v != nil {
+		alwaysHost = value.Unwrap[*value.Boolean](v).Value
 	}
 
 	if port == "" {
@@ -52,20 +76,20 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 		}
 	}
 
-	url := fmt.Sprintf(
-		"%s://%s:%s%s",
-		scheme,
-		value.Unwrap[*value.String](host).Value,
-		port,
-		i.ctx.Request.URL.Path,
-	)
+	url := fmt.Sprintf("%s://%s:%s%s", scheme, host, port, i.ctx.Request.URL.Path)
 	query := i.ctx.Request.URL.Query()
 	if v := query.Encode(); v != "" {
 		url += "?" + v
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Fetching backend (%s) %s", backend.Value.Name.Value, url))
+	var suffix string
+	if overrideBackend != nil {
+		suffix = " (overrided by config)"
+	}
+	i.Debugger.Message(
+		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, url, suffix),
+	)
 
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
@@ -77,12 +101,8 @@ func (i *Interpreter) createBackendRequest(backend *value.Backend) (*http.Reques
 	}
 	req.Header = i.ctx.Request.Header.Clone()
 
-	alwaysUserHostHeader := false
-	if alwaysHost != nil {
-		alwaysUserHostHeader = value.Unwrap[*value.Boolean](alwaysHost).Value
-	}
-	if alwaysUserHostHeader {
-		req.Header.Set("Host", value.Unwrap[*value.String](host).Value)
+	if alwaysHost {
+		req.Header.Set("Host", host)
 	}
 	return req, nil
 }

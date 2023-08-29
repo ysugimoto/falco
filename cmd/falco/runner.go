@@ -459,6 +459,9 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	if local.OverrideRequest != nil {
 		options = append(options, icontext.WithRequest(local.OverrideRequest))
 	}
+	if local.OverrideBackends != nil {
+		options = append(options, icontext.WithOverrideBackends(local.OverrideBackends))
+	}
 
 	i := interpreter.New(options...)
 

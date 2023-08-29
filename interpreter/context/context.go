@@ -56,6 +56,7 @@ type Context struct {
 	OverrideMaxBackends int
 	OverrideMaxAcls     int
 	OverrideRequest     *config.RequestConfig
+	OverrideBackends    map[string]*config.OverrideBackend
 
 	Request          *http.Request
 	BackendRequest   *http.Request
@@ -157,7 +158,7 @@ func New(options ...Option) *Context {
 		Ratecounters:        make(map[string]*ast.RatecounterDeclaration),
 		Gotos:               make(map[string]*ast.GotoStatement),
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
-		// Directors:           make(map[string]*ast.DirectorDeclaration),
+		OverrideBackends:    make(map[string]*config.OverrideBackend),
 
 		RequestStartTime:                    time.Now(),
 		State:                               "NONE",

@@ -43,3 +43,9 @@ func WithRequest(r *config.RequestConfig) Option {
 		c.OverrideRequest = r
 	}
 }
+
+func WithOverrideBackends(ov map[string]*config.OverrideBackend) Option {
+	return func(c *Context) {
+		c.OverrideBackends = ov
+	}
+}
