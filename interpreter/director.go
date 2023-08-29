@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -228,7 +229,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 	return conf, nil
 }
 
-func (i *Interpreter) createDirectorRequest(dc *value.DirectorConfig) (*http.Request, error) {
+func (i *Interpreter) createDirectorRequest(ctx *context.Context, dc *value.DirectorConfig) (*http.Request, error) {
 	var backend *value.Backend
 	var err error
 
@@ -250,7 +251,7 @@ func (i *Interpreter) createDirectorRequest(dc *value.DirectorConfig) (*http.Req
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return i.createBackendRequest(backend)
+	return i.createBackendRequest(ctx, backend)
 }
 
 func (i *Interpreter) canDetermineBackend(dc *value.DirectorConfig) error {

@@ -18,7 +18,7 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	}
 
 	// On testing process, all request/response variables should be set initially
-	i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx.Backend)
+	i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
 	if err != nil {
 		return errors.WithStack(err)
 	}

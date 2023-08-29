@@ -20,16 +20,16 @@ import (
 
 const HTTPS_SCHEME = "https"
 
-func (i *Interpreter) createBackendRequest(ctx *icontext.Context) (*http.Request, error) {
+func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
 	var port string
-	if v, err := i.getBackendProperty(ctx.Backend.Value.Properties, "port"); err != nil {
+	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
 	} else if v != nil {
 		port = value.Unwrap[*value.String](v).Value
 	}
 
 	var overrideBackend *config.OverrideBackend
-	if v, ok := ctx.OverrideBackends[ctx.Backend.Value.Name.Value]; ok {
+	if v, ok := ctx.OverrideBackends[backend.Value.Name.Value]; ok {
 		overrideBackend = v
 	}
 
@@ -40,7 +40,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context) (*http.Request
 			scheme = HTTPS_SCHEME
 		}
 	} else {
-		if v, err := i.getBackendProperty(ctx.Backend.Value.Properties, "ssl"); err != nil {
+		if v, err := i.getBackendProperty(backend.Value.Properties, "ssl"); err != nil {
 			return nil, errors.WithStack(err)
 		} else if v != nil {
 			if value.Unwrap[*value.Boolean](v).Value {
@@ -54,7 +54,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context) (*http.Request
 	if overrideBackend != nil {
 		host = overrideBackend.Host
 	} else {
-		if v, err := i.getBackendProperty(ctx.Backend.Value.Properties, "host"); err != nil {
+		if v, err := i.getBackendProperty(backend.Value.Properties, "host"); err != nil {
 			return nil, errors.WithStack(err)
 		} else {
 			host = value.Unwrap[*value.String](v).Value
@@ -62,9 +62,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context) (*http.Request
 	}
 
 	var alwaysHost bool
-	if v, err := i.getBackendProperty(ctx.Backend.Value.Properties, "always_use_host_header"); err != nil {
+	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
 		return nil, errors.WithStack(err)
-	} else {
+	} else if v != nil {
 		alwaysHost = value.Unwrap[*value.Boolean](v).Value
 	}
 
@@ -83,7 +83,13 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context) (*http.Request
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Fetching backend (%s) %s", ctx.Backend.Value.Name.Value, url))
+	var suffix string
+	if overrideBackend != nil {
+		suffix = " (overrided by config)"
+	}
+	i.Debugger.Message(
+		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, url, suffix),
+	)
 
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
