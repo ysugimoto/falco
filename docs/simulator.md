@@ -1,14 +1,14 @@
 # Local Simulator
 
-`falco` enables to run simulate server which evaluates your VCLs like Fastly does whith our own VCL interpreter.
-You can start local simulate as following:
+`falco` has a self-implemented VCL interpreter, so it enables you to simulate your VCLs like Fastly locally as long as you trust our interpreter.
+You can start simulator as following:
 
 ```shell
 falco local /path/to/your/default.vcl
 ```
 
 Then local server starts on http://localhost:3124, you can send HTTP request via curl, browser, etc.
-The server response is JSON which indicates VCL process information, it includes:
+The server response is a JSON which indicates VCL process information, it includes:
 
 - VCL subroutine flow, what subroutine has processed with request/response information
 - Entire `log` statement output
@@ -21,8 +21,9 @@ Paticularly VCL subroutine flow is useful for debugging.
 
 ## Important Notice
 
-falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
-There are many limitations which are described below.
+**falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
+There are many limitations which are described below.**
+
 
 ## Debug mode
 
@@ -35,8 +36,8 @@ falco local -debug /path/to/your/default.vcl
 
 ### Start debugging
 
-When falco runs simulator with debugger, find `@debugger` leading annotation comment in your VCL.
-If falco finds that, stop execution on the statement, for example:
+When falco runs simulator with debugger, falco finds `@debugger` leading annotation comment in your VCL.
+If comment is found, stop execution on the statement, for example:
 
 ```vcl
 sub vcl_recv {
@@ -79,5 +80,6 @@ Limitations are following:
 - Lots of predefined variables and builtin functions returns empty or tentative value
 
 Variables that return tentative or inaccurate value describe at [variables.md]().
+
 Functions that return tentative value or unexpected bahavior describe at [functions.md]().
 
