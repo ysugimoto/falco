@@ -58,7 +58,7 @@ And the the debugger TUI accepts function keys to step execution:
 
 And you can type other keys to dump the variable in debugger shell.
 
-[screenshot]
+<img width="1128" alt="Screen Shot 2023-08-29 at 9 58 16" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
 
 ## Simulator Limitations
 
