@@ -650,7 +650,7 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 
 		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", createCacheDCString())
+		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
 		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
 
 		// Additionally set cache related headers
