@@ -1,7 +1,6 @@
 package variable
 
 import (
-	"bytes"
 	"io"
 	"net"
 	"net/http"
@@ -45,32 +44,40 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return v.ctx.EsiAllowInsideCData, nil
 
 	case OBJ_AGE:
-		// fixed value
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil // 0s
 	case OBJ_CACHEABLE:
-		// always true
-		return &value.Boolean{Value: true}, nil
+		return v.ctx.BackendResponseCacheable, nil
 	case OBJ_ENTERED:
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil
 	case OBJ_GRACE:
 		return v.ctx.ObjectGrace, nil
-	case OBJ_IS_PCI:
-		return &value.Boolean{Value: false}, nil
-	case OBJ_LASTUSE:
-		return &value.RTime{Value: 60 * time.Second}, nil
-	case OBJ_PROTO:
-		return &value.String{Value: v.ctx.BackendResponse.Proto}, nil
-	case OBJ_RESPONSE:
-		var buf bytes.Buffer
-		if _, err := buf.ReadFrom(v.ctx.Object.Body); err != nil {
-			return value.Null, errors.WithStack(err)
+	case OBJ_HITS:
+		if v.ctx.CacheHitItem != nil {
+			return &value.Integer{Value: int64(v.ctx.CacheHitItem.Hits)}, nil
 		}
-		v.ctx.Object.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-		return &value.String{Value: buf.String()}, nil
+		return &value.Integer{Value: 0}, nil
+	case OBJ_IS_PCI:
+		return &value.Boolean{Value: false}, nil // fixed value
+	case OBJ_LASTUSE:
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: v.ctx.CacheHitItem.LastUsed}, nil
+		}
+		return &value.RTime{Value: 0}, nil
+	case OBJ_PROTO:
+		return &value.String{Value: v.ctx.Object.Proto}, nil
+	case OBJ_RESPONSE:
+		return &value.String{Value: http.StatusText(v.ctx.Object.StatusCode)}, nil
 	case OBJ_STALE_IF_ERROR:
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
 	case OBJ_STALE_WHILE_REVALIDATE:
+		// Return fixed value because we don't support SWR yet
 		return &value.RTime{Value: 60 * time.Second}, nil
 	case OBJ_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Object.StatusCode)}, nil

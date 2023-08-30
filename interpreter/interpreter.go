@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
@@ -27,12 +28,14 @@ type Interpreter struct {
 
 	ctx      *context.Context
 	process  *process.Process
+	cache    *cache.Cache
 	Debugger Debugger
 }
 
 func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:   options,
+		cache:     cache.New(),
 		localVars: variable.LocalVariables{},
 		Debugger:  EmptyDebugger{},
 	}
@@ -235,10 +238,11 @@ func (i *Interpreter) ProcessRecv() error {
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
-		if v := cache.Get(i.ctx.RequestHash.Value); v != nil {
+		if v := i.cache.Get(i.ctx.RequestHash.Value); v != nil {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
-			i.ctx.Object = i.cloneResponse(v)
+			i.ctx.CacheHitItem = v
+			i.ctx.Object = i.cloneResponse(v.Response)
 			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
@@ -366,6 +370,11 @@ func (i *Interpreter) ProcessHit() error {
 		}
 	}
 
+	// Update cache lifetime because cache object statue may be changed by setting obj.ttl
+	if i.ctx.ObjectTTL.Value > 0 {
+		i.ctx.CacheHitItem.Update(i.ctx.ObjectTTL.Value)
+	}
+
 	switch state {
 	case DELIVER:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
@@ -466,7 +475,7 @@ func (i *Interpreter) ProcessFetch() error {
 	i.ctx.RequestEndTime = time.Now()
 
 	// Set cacheable strategy
-	isCacheable := i.isCacheableResponse(i.ctx.BackendResponse)
+	isCacheable := cache.IsCacheableStatusCode(i.ctx.BackendResponse.StatusCode)
 	i.ctx.BackendResponseCacheable = &value.Boolean{Value: isCacheable}
 	if isCacheable {
 		i.ctx.BackendResponseTTL = &value.RTime{
@@ -483,7 +492,7 @@ func (i *Interpreter) ProcessFetch() error {
 		if i.ctx.BackendResponseCacheable.Value {
 			if i.ctx.BackendResponseTTL.Value.Seconds() > 0 {
 				now := time.Now()
-				cache.Set(i.ctx.RequestHash.String(), &CacheItem{
+				i.cache.Set(i.ctx.RequestHash.String(), &cache.CacheItem{
 					Response:  resp,
 					Expires:   now.Add(i.ctx.BackendResponseTTL.Value),
 					EntryTime: now,
@@ -532,6 +541,10 @@ func (i *Interpreter) ProcessFetch() error {
 
 func (i *Interpreter) ProcessError() error {
 	i.SetScope(context.ErrorScope)
+
+	// If process goes through the error directive, response will be generated locally
+	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
+	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
 	if i.ctx.Object == nil {
 		if i.ctx.BackendResponse != nil {
@@ -610,10 +623,6 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 	}
 
-	// Add Fastly related server info but values are falco's one
-	i.ctx.Response.Header.Set("X-Served-By", createCacheDCString())
-	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
@@ -639,6 +648,19 @@ func (i *Interpreter) ProcessDeliver() error {
 				return errors.WithStack(err)
 			}
 		}
+
+		// Add Fastly related server info but values are falco's one
+		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
+		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+
+		// Additionally set cache related headers
+		if i.ctx.CacheHitItem != nil {
+			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
+			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+		} else {
+			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
+		}
+
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> LOG", i.ctx.Scope))
 		err = i.ProcessLog()
 	default:
@@ -676,4 +698,34 @@ func (i *Interpreter) ProcessLog() error {
 		}
 	}
 	return nil
+}
+
+var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
+
+func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
+	if v := resp.Header.Get("Surrogate-Control"); v != "" {
+		if strings.HasPrefix(v, "max-age=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+				return dur
+			}
+		}
+	}
+	if v := resp.Header.Get("Cache-Control"); v != "" {
+		if strings.HasPrefix(v, "s-maxage=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+				return dur
+			}
+		}
+		if strings.HasPrefix(v, "max-age=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+				return dur
+			}
+		}
+	}
+	if v := resp.Header.Get("Expires"); v != "" {
+		if d, err := time.Parse(expiresValueLayout, v); err == nil {
+			return time.Until(d)
+		}
+	}
+	return time.Duration(2 * time.Minute)
 }
