@@ -116,10 +116,10 @@ func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 		return &value.String{Value: TLSVersionNameMap[s.Version]}, nil
 
 	case TLS_CLIENT_SERVERNAME,
-		"tls.client.tlsexts_list",
-		"tls.client.tlsexts_list_sha",
-		"tls.client.tlsexts_list_txt",
-		"tls.client.tlsexts_sha":
+		TLS_CLIENT_TLSEXTS_LIST,
+		TLS_CLIENT_TLSEXTS_LIST_SHA,
+		TLS_CLIENT_TLSEXTS_LIST_TXT,
+		TLS_CLIENT_TLSEXTS_SHA:
 		return &value.String{Value: ""}, nil
 
 		// We could not simulate following variable, return with zero/empty

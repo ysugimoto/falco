@@ -19,7 +19,7 @@ The server response is JSON which indicates VCL process information, it includes
 
 Paticularly VCL subroutine flow is useful for debugging.
 
-## Important
+## Important Notice
 
 falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
 There are many limitations which are described below.
@@ -50,12 +50,12 @@ sub vcl_recv {
 
 And the the debugger TUI accepts function keys to step execution:
 
-- `F7`: resume execution to the next annotation comment
-- `F8`: step in
-- `F9`: step over
+- `F7` : resume execution to the next annotation comment
+- `F8` : step in
+- `F9` : step over
 - `F10`: step out
 
-And you can type other keys to investigate some variables in debugger shell.
+And you can type other keys to dump the variable in debugger shell.
 
 [screenshot]
 
@@ -78,123 +78,6 @@ Limitations are following:
 - All of backends always treats healthy
 - Lots of predefined variables and builtin functions returns empty or tentative value
 
-Unsupporeted variables, returns tentative value describes following table:
+Variables that return tentative or inaccurate value describe at [variables.md]().
+Functions that return tentative value or unexpected bahavior describe at [functions.md]().
 
-| Variable                            | Tentative Value        |
-|:===================================:|:======================:|
-| bereq.is_clustering                 | false                  |
-| client.class.checker                | false                  |
-| client.class.downloader             | false                  |
-| client.class.feedreader             | false                  |
-| client.class.filter                 | false                  |
-| client.class.masquerading           | false                  |
-| client.platform.mediaplayer         | false                  |
-| client.geo.latitude                 | 37.7786941             |
-| client.geo.longitude                | -122.3981452           |
-| client.as_number                    | 4294967294             |
-| client.as_name                      | "Reserved"             |
-| client.display.height               | -1                     |
-| client.display.ppi                  | -1                     |
-| client.display.width                | -1                     |
-| client.geo.area_code                | 0                      |
-| client.geo.metro_code               | 0                      |
-| client.geo.utc_offset               | 0                      |
-| client.identified                   | false                  |
-| client.requests                     | 1                      |
-| req.vcl.generation                  | 1                      |
-| req.vcl.version                     | 1                      |
-| workspace.bytes_free                | 125008                 |
-| workspace.bytes_total               | 139392                 |
-| workspace.overflowed                | false                  |
-| beresp.backend.src_ip               | 127.0.0.1              |
-| client.geo.city                     | "unknown"              |
-| client.geo.city.ascii               | "unknown"              |
-| client.geo.city.latin1              | "unknown"              |
-| client.geo.city.utf8                | "unknown"              |
-| client.geo.conn.speed               | "unknown"              |
-| client.geo.conn.type                | "unknown"              |
-| client.geo.continent_code           | "unknown"              |
-| client.geo.country_code             | "unknown"              |
-| client.geo.country_code3            | "unknown"              |
-| client.geo.country_name             | "unknown"              |
-| client.geo.country_name.ascii       | "unknown"              |
-| client.geo.country_name.latin1      | "unknown"              |
-| client.geo.country_name.utf8        | "unknown"              |
-| client.geo.ip_override              | "unknown"              |
-| client.geo.postal_code              | "unknown"              |
-| client.geo.proxy_description        | "unknown"              |
-| client.geo.proxy_type               | "unknown"              |
-| client.geo.region                   | "unknown"              |
-| client.geo.region.ascii             | "unknown"              |
-| client.geo.region.latin1            | "unknown"              |
-| client.geo.region.utf8              | "unknown"              |
-| client.platform.hwtype              | (empty string)         |
-| server.datacenter                   | "FALCO"                |
-| server.hostname                     | "cache-localsimulator" |
-| server.identity                     | "cache-localsimulator" |
-| server.region                       | "US"                   |
-| bereq.bytes_written                 | 0                      |
-| client.socket.cwnd                  | 60                     |
-| client.socket.nexthop               | 127.0.0.1              |
-| client.socket.pace                  | 0                      |
-| client.socket.ploss                 | 0                      |
-| client.socket.cwnd                  | 60                     |
-| fastly_info.is_clueter_edge         | false                  |
-| obj.is_pci                          | false                  |
-| req.backend.is_cluster              | false                  |
-| resp.is_locally_generated           | false                  |
-| req.digest_ratio                    | 0.4                    |
-| obj.stale_white_revalidate          | 60s                    |
-| waf.blocked                         | false                  |
-| waf.executed                        | false                  |
-| waf.failures                        | 0                      |
-| waf.logged                          | false                  |
-| waf.passed                          | false                  |
-| backend.socket.congestion_algorithm | "cubic"                |
-| backend.socket.cwnd                 | 60                     |
-| backend.socket.tcpi_advmss          | 0                      |
-| backend.socket.tcpi_bytes_acked     | 0                      |
-| backend.socket.tcpi_bytes_received  | 0                      |
-| backend.socket.tcpi_data_segs_in    | 0                      |
-| backend.socket.tcpi_data_segs_out   | 0                      |
-| backend.socket.tcpi_delivery_rate   | 0                      |
-| backend.socket.tcpi_delta_retrans   | 0                      |
-| backend.socket.tcpi_last_data_sent  | 0                      |
-| backend.socket.tcpi_max_pacing_rate | 0                      |
-| backend.socket.tcpi_min_rtt         | 0                      |
-| backend.socket.tcpi_notsent_bytes   | 0                      |
-| backend.socket.tcpi_pacing_rate     | 0                      |
-| backend.socket.tcpi_pmtu            | 0                      |
-| backend.socket.tcpi_rcv_mss         | 0                      |
-| backend.socket.tcpi_rcv_rtt         | 0                      |
-| backend.socket.tcpi_rcv_space       | 0                      |
-| backend.socket.tcpi_rcv_ssthresh    | 0                      |
-| backend.socket.tcpi_reordering      | 0                      |
-| backend.socket.tcpi_rtt             | 0                      |
-| backend.socket.tcpi_rttvar          | 0                      |
-| backend.socket.tcpi_segs_in         | 0                      |
-| backend.socket.tcpi_segs_out        | 0                      |
-| backend.socket.tcpi_snd_cwnd        | 0                      |
-| backend.socket.tcpi_snd_mss         | 0                      |
-| backend.socket.tcpi_snd_ssthresh    | 0                      |
-| backend.socket.tcpi_total_retrans   | 0                      |
-| beresp.backend.alternate_ips        | (empty string)         |
-| beresp.backend.ip                   | 0                      |
-| beresp.backend.requests             | 1                      |
-| client.socket.tcpi_snd_cwnd         | 0                      |
-| fastly_info.is_cluster_shield       | false                  |
-| req.backend.is_origin               | true                   |
-| quic.cc.cwnd                        | 0                      |
-| quic.cc.ssthresh                    | 0                      |
-| quic.num_bytes.received             | 0                      |
-| quic.num_bytes.sent                 | 0                      |
-| quic.num_packets.ack_received       | 0                      |
-| quic.num_packets.decryption_failed  | 0                      |
-| quic.num_packets.late_acked         | 0                      |
-| quic.num_packets.lost               | 0                      |
-| quic.num_packets.received           | 0                      |
-| quic.num_packets.sent               | 0                      |
-| quic.rtt.latest                     | 0                      |
-| quic.rtt.minimum                    | 0                      |
-| quic.rtt.smoothed                   | 0                      |
-| quic.rtt.variance                   | 0                      |
