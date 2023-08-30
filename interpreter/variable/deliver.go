@@ -79,21 +79,31 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 
 	// TODO: should be able to get from context after object checked
 	case OBJ_AGE:
-		// fixed value
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil // 0s
 	case OBJ_CACHEABLE:
-		// always true
-		return &value.Boolean{Value: true}, nil
+		return v.ctx.BackendResponseCacheable, nil
 	case OBJ_ENTERED:
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil
 	case OBJ_GRACE:
 		return v.ctx.ObjectGrace, nil
 	case OBJ_HITS:
-		return &value.Integer{Value: 1}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.Integer{Value: int64(v.ctx.CacheHitItem.Hits)}, nil
+		}
+		return &value.Integer{Value: 0}, nil
 	case OBJ_IS_PCI:
-		return &value.Boolean{Value: false}, nil
+		return &value.Boolean{Value: false}, nil // fixed value
 	case OBJ_LASTUSE:
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: v.ctx.CacheHitItem.LastUsed}, nil
+		}
+		return &value.RTime{Value: 0}, nil
 
 	case REQ_ESI:
 		return v.ctx.EnableSSI, nil
@@ -163,17 +173,16 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		return &value.Integer{Value: readBytes}, nil
 
 	case RESP_IS_LOCALLY_GENERATED:
-		return &value.Boolean{Value: false}, nil
-	// FIXME: should be able to get from response object
+		return v.ctx.IsLocallyGenerated, nil
 	case RESP_PROTO:
-		return &value.String{Value: "HTTP/1.1"}, nil
+		return &value.String{Value: v.ctx.Response.Proto}, nil
 	case RESP_RESPONSE:
-		return &value.String{Value: "Fake Response"}, nil
+		return &value.String{Value: http.StatusText(v.ctx.Response.StatusCode)}, nil
 	case RESP_STATUS:
-		return &value.Integer{Value: 200}, nil
+		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 	case TIME_TO_FIRST_BYTE:
 		// TODO: this logic is only calculate response - request time.
-		// It means that is not correct RTIME value because TFB is the first byte from response.
+		// It means that is not correct RTIME value because TTFB is the first byte from response.
 		return &value.RTime{
 			Value: time.Since(v.ctx.RequestEndTime),
 		}, nil
