@@ -7,6 +7,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 )
@@ -66,6 +67,7 @@ type Context struct {
 	Scope            Scope
 	RequestEndTime   time.Time
 	RequestStartTime time.Time
+	CacheHitItem     *cache.CacheItem
 
 	// Interpreter states, following variables could be set in each subroutine directives
 	Restarts                            int
@@ -129,6 +131,7 @@ type Context struct {
 	ObjectTTL                           *value.RTime
 	ObjectStatus                        *value.Integer
 	ObjectResponse                      *value.String
+	IsLocallyGenerated                  *value.Boolean
 
 	// For testing - store subroutine return state
 	ReturnState *value.String
@@ -160,6 +163,7 @@ func New(options ...Option) *Context {
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:    make(map[string]*config.OverrideBackend),
 
+		CacheHitItem:                        nil,
 		RequestStartTime:                    time.Now(),
 		State:                               "NONE",
 		Backend:                             nil,
@@ -222,6 +226,7 @@ func New(options ...Option) *Context {
 		ObjectStatus:                        &value.Integer{Value: 500},
 		ObjectResponse:                      &value.String{Value: "error"},
 		ReturnState:                         &value.String{IsNotSet: true},
+		IsLocallyGenerated:                  &value.Boolean{},
 
 		RegexMatchedValues: make(map[string]*value.String),
 	}

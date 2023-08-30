@@ -78,22 +78,36 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: false}, nil
 
 	case OBJ_AGE:
-		// fixed value
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil // 0s
+	case OBJ_CACHEABLE:
+		return v.ctx.BackendResponseCacheable, nil
 	case OBJ_ENTERED:
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
+		}
+		return &value.RTime{Value: 0}, nil
 	case OBJ_GRACE:
 		return v.ctx.ObjectGrace, nil
 	case OBJ_HITS:
-		return &value.Integer{Value: 1}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.Integer{Value: int64(v.ctx.CacheHitItem.Hits)}, nil
+		}
+		return &value.Integer{Value: 0}, nil
 	case OBJ_IS_PCI:
-		return &value.Boolean{Value: false}, nil
+		return &value.Boolean{Value: false}, nil // fixed value
 	case OBJ_LASTUSE:
-		return &value.RTime{Value: 60 * time.Second}, nil
+		if v.ctx.CacheHitItem != nil {
+			return &value.RTime{Value: v.ctx.CacheHitItem.LastUsed}, nil
+		}
+		return &value.RTime{Value: 0}, nil
 	case OBJ_STALE_IF_ERROR:
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
 	case OBJ_STALE_WHILE_REVALIDATE:
+		// Return fixed value because we don't support SWR yet
 		return &value.RTime{Value: 60 * time.Second}, nil
 	case OBJ_TTL:
 		return v.ctx.ObjectTTL, nil
@@ -173,13 +187,13 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case RESP_HEADER_BYTES_WRITTEN:
 		return &value.Integer{Value: 0}, nil
 	case RESP_IS_LOCALLY_GENERATED:
-		return &value.Boolean{Value: false}, nil
+		return v.ctx.IsLocallyGenerated, nil
 	case RESP_PROTO:
-		return &value.String{Value: "HTTP/1.1"}, nil
+		return &value.String{Value: v.ctx.Response.Proto}, nil
 	case RESP_RESPONSE:
-		return &value.String{Value: "Fake Response"}, nil
+		return &value.String{Value: http.StatusText(v.ctx.Response.StatusCode)}, nil
 	case RESP_STATUS:
-		return &value.Integer{Value: 200}, nil
+		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 
 	case TIME_END:
 		return &value.Time{Value: v.ctx.RequestEndTime}, nil
