@@ -51,9 +51,10 @@ func TestConfigFromCLI(t *testing.T) {
 		Json:           true,
 		Commands:       Commands{"lint"},
 		Local: &LocalConfig{
-			Port:            3124,
-			IncludePaths:    []string{"."},
-			OverrideRequest: &RequestConfig{},
+			Port:             3124,
+			IncludePaths:     []string{"."},
+			OverrideRequest:  &RequestConfig{},
+			OverrideBackends: make(map[string]*OverrideBackend),
 		},
 		Testing: &TestConfig{
 			IncludePaths:    []string{"."},

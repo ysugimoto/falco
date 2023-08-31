@@ -21,9 +21,9 @@ func (v LocalVariables) Declare(name, valueType string) error {
 	case "BACKEND":
 		val = &value.Backend{}
 	case "IP":
-		val = &value.IP{IsNotSet: true}
+		val = &value.IP{}
 	case "STRING":
-		val = &value.String{IsNotSet: true}
+		val = &value.String{}
 	case "RTIME":
 		val = &value.RTime{}
 	case "TIME":

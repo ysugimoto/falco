@@ -194,7 +194,6 @@ func (i *Interpreter) cloneResponse(resp *http.Response) *http.Response {
 		Close:            resp.Close,
 		Uncompressed:     resp.Uncompressed,
 		Trailer:          resp.Trailer.Clone(),
-		Request:          resp.Request.Clone(context.Background()),
 		TLS:              resp.TLS,
 	}
 }

@@ -48,7 +48,8 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
+	expand, _ := convertGoExpandString(replacement.Value)
 	return &value.String{
-		Value: re.ReplaceAllString(input.Value, replacement.Value),
+		Value: re.ReplaceAllString(input.Value, expand),
 	}, nil
 }
