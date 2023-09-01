@@ -113,12 +113,10 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 			}
 		case *ast.IfStatement:
 			var state State
-			var debug DebugState
-			state, debug, err = i.ProcessIfStatement(t, debugState)
+			state, err = i.ProcessIfStatement(t, debugState)
 			if state != NONE {
 				return value.Null, state, nil
 			}
-			debugState = debug
 		case *ast.RestartStatement:
 			// restart statement force change state to RESTART
 			return value.Null, RESTART, nil

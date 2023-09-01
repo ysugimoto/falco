@@ -39,8 +39,12 @@ func Std_atoi(ctx *context.Context, args ...value.Value) (value.Value, error) {
 
 	s := value.Unwrap[*value.String](args[0])
 
-	// In std.atoi spec, float string is rounded into int, not a raise error
 	input := s.Value
+	// If input string is empty, return 0 immediately without raising error
+	if input == "" {
+		return &value.Integer{Value: 0}, nil
+	}
+	// In std.atoi spec, float string is rounded into int, not a raise error
 	if idx := strings.Index(input, "."); idx != -1 {
 		input = input[0:idx]
 	}

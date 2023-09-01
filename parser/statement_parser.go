@@ -326,6 +326,8 @@ func (p *Parser) parseErrorStatement() (*ast.ErrorStatement, error) {
 		} else {
 			stmt.Code = p.parseIdent()
 		}
+	case token.SEMICOLON: // without code and response like "error;"
+		break
 	default:
 		err = UnexpectedToken(p.peekToken)
 	}

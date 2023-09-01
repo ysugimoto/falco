@@ -73,7 +73,7 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case OBJ_PROTO:
 		return &value.String{Value: v.ctx.Object.Proto}, nil
 	case OBJ_RESPONSE:
-		return &value.String{Value: http.StatusText(v.ctx.Object.StatusCode)}, nil
+		return v.ctx.ObjectResponse, nil
 	case OBJ_STALE_IF_ERROR:
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
@@ -192,7 +192,10 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case OBJ_RESPONSE:
-		v.ctx.Object.Body = io.NopCloser(strings.NewReader(val.String()))
+		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
+		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}

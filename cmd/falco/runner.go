@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -99,7 +98,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	if r.config.Json {
 		return
 	}
-	writeln(c, format, args...)
+	write(c, format, args...)
 }
 
 func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
@@ -113,7 +112,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	}
 
 	if c.Remote {
-		r.message(cyan, "Remote option supplied. Fetching snippets from Fastly.")
+		r.message(cyan, "Remote option supplied. Fetching snippets from Fastly.\n")
 		// If remote flag is provided, fetch predefined data from Fastly.
 		//
 		// We communicate Fastly API with service id and api key,
@@ -128,7 +127,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
 			snippets, err := NewSnippet(f).Fetch()
 			if err != nil {
-				r.message(red, err.Error())
+				r.message(red, err.Error()+"\n")
 			}
 			// Stack to runner field, combime before run()
 			r.snippets = snippets
@@ -138,7 +137,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	if f != nil {
 		snippets, err := NewSnippet(f).Fetch()
 		if err != nil {
-			r.message(red, err.Error())
+			r.message(red, err.Error()+"\n")
 		}
 		r.snippets = snippets
 	}
@@ -173,7 +172,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		case "IGNORE":
 			r.overrides[key] = linter.IGNORE
 		default:
-			r.message(yellow, "Level for rule %s has invalid value %s, skipping.", key, value)
+			r.message(yellow, "Level for rule %s has invalid value %s, skipping.\n", key, value)
 		}
 	}
 
@@ -323,7 +322,7 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 }
 
 func (r *Runner) printParseError(lx *lexer.Lexer, file string, err *parser.ParseError) {
-	r.message(red, ":boom: %s\n%sat line %d, position %d", err.Message, file, err.Token.Line, err.Token.Position)
+	r.message(red, ":boom: %s\n%sat line %d, position %d\n", err.Message, file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 5; l <= problemLine; l++ {
@@ -333,15 +332,15 @@ func (r *Runner) printParseError(lx *lexer.Lexer, file string, err *parser.Parse
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			r.message(white, " %s%s",
+			r.message(white, " %s%s\n",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 }
@@ -362,24 +361,24 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 	switch severity {
 	case linter.ERROR:
 		r.errors++
-		r.message(red, ":fire:[ERROR] %s%s", err.Message, rule)
+		r.message(red, ":fire:[ERROR] %s%s\n", err.Message, rule)
 	case linter.WARNING:
 		r.warnings++
 		if r.level < LevelWarning {
 			return
 		}
-		r.message(yellow, ":exclamation:[WARNING] %s%s", err.Message, rule)
+		r.message(yellow, ":exclamation:[WARNING] %s%s\n", err.Message, rule)
 	case linter.INFO:
 		r.infos++
 		if r.level < LevelInfo {
 			return
 		}
-		r.message(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
+		r.message(cyan, ":speaker:[INFO] %s%s\n", err.Message, rule)
 	case linter.IGNORE:
 		return
 	}
 
-	r.message(white, "%sat line %d, position %d", file, err.Token.Line, err.Token.Position)
+	r.message(white, "%sat line %d, position %d\n", file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 1; l <= problemLine+1; l++ {
@@ -389,22 +388,22 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			r.message(white, " %s%s",
+			r.message(white, " %s%s\n",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 
 	if err.Reference != "" {
-		r.message(white, "See reference documentation: %s", err.Reference)
+		r.message(white, "See reference documentation: %s\n", err.Reference)
 	}
-	r.message(white, "")
+	r.message(white, "\n")
 }
 
 func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
@@ -453,9 +452,6 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
-	if v := os.Getenv("FALCO_DEBUG"); v != "" {
-		options = append(options, icontext.WithDebug())
-	}
 	if local.OverrideRequest != nil {
 		options = append(options, icontext.WithRequest(local.OverrideRequest))
 	}
@@ -482,7 +478,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	return s.ListenAndServe()
 }
 
-func (r *Runner) Test(rslv resolver.Resolver) ([]*tester.TestResult, *tester.TestCounter, error) {
+func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	testing := r.config.Testing
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
@@ -498,12 +494,13 @@ func (r *Runner) Test(rslv resolver.Resolver) ([]*tester.TestResult, *tester.Tes
 
 	i := interpreter.New(options...)
 	r.message(white, "Running tests...")
-	results, counter, err := tester.New(testing, i).Run(r.config.Commands.At(1))
+	i.Debugger = tester.NewDebugger()
+	factory, err := tester.New(testing, i).Run(r.config.Commands.At(1))
 	if err != nil {
 		writeln(red, " Failed.")
 		writeln(red, "Failed to run test: %s", err.Error())
-		return nil, nil, err
+		return nil, err
 	}
-	r.message(white, " Done.")
-	return results, counter, nil
+	r.message(white, " Done.\n")
+	return factory, nil
 }

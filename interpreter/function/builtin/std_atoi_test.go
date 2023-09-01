@@ -22,6 +22,7 @@ func Test_Std_atoi(t *testing.T) {
 		{input: "21.95", expect: 21},
 		{input: "-100", expect: -100},
 		{input: "0", expect: 0},
+		{input: "", expect: 0},
 	}
 
 	for i, tt := range tests {

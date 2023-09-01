@@ -60,14 +60,20 @@ func checkFastlyResourceLimit(ctx *context.Context) error {
 		maxBackends = ctx.OverrideMaxBackends
 	}
 	if len(ctx.Backends) > maxBackends {
-		return exception.System("Max backend count of %d exceeded", maxBackends)
+		return exception.System(
+			"Max backend count of %d exceeded. Provide --max_backends option or add configuration file to increase",
+			maxBackends,
+		)
 	}
 	maxAcls := MaxACLCounts
 	if ctx.OverrideMaxAcls > maxAcls {
 		maxAcls = ctx.OverrideMaxAcls
 	}
 	if len(ctx.Acls) > maxAcls {
-		return exception.System("Max ACL count of %d exceeded", maxAcls)
+		return exception.System(
+			"Max ACL count of %d exceeded. Provide --max_acls option or add configuration file to increase",
+			maxAcls,
+		)
 	}
 
 	return nil

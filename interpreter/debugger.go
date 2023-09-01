@@ -1,6 +1,9 @@
 package interpreter
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/ysugimoto/falco/ast"
 )
 
@@ -18,11 +21,12 @@ type Debugger interface {
 	Message(string)
 }
 
-// Default debugger
-type EmptyDebugger struct{}
+// Default debugger, simply output message to stdout
+type DefaultDebugger struct{}
 
-func (e EmptyDebugger) Run(node ast.Node) DebugState {
+func (d DefaultDebugger) Run(node ast.Node) DebugState {
 	return DebugPass
 }
-func (e EmptyDebugger) Message(string) {
+func (d DefaultDebugger) Message(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
 }

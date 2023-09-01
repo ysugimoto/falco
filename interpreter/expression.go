@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/k0kubun/pp"
 	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/exception"
-	ex "github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -108,6 +108,7 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	case *ast.FunctionCallExpression:
 		return i.ProcessFunctionCallExpression(t, withCondition)
 	default:
+		pp.Println(exp)
 		return value.Null, exception.Runtime(&exp.GetMeta().Token, "Undefined expression found")
 	}
 }
@@ -189,7 +190,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 		if cond == value.Null {
 			return i.ProcessExpression(exp.Alternative, false)
 		}
-		return value.Null, ex.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
+		return value.Null, exception.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
 	}
 
 	return i.ProcessExpression(exp.Alternative, false)
@@ -238,33 +239,44 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 		return value.Null, errors.WithStack(err)
 	}
 
+	var result value.Value
+	var opErr error
+
 	switch exp.Operator {
 	case "==":
-		return operator.Equal(left, right)
+		result, opErr = operator.Equal(left, right)
 	case "!=":
-		return operator.NotEqual(left, right)
+		result, opErr = operator.NotEqual(left, right)
 	case ">":
-		return operator.GreaterThan(left, right)
+		result, opErr = operator.GreaterThan(left, right)
 	case "<":
-		return operator.LessThan(left, right)
+		result, opErr = operator.LessThan(left, right)
 	case ">=":
-		return operator.GreaterThanEqual(left, right)
+		result, opErr = operator.GreaterThanEqual(left, right)
 	case "<=":
-		return operator.LessThanEqual(left, right)
+		result, opErr = operator.LessThanEqual(left, right)
 	case "~":
-		return operator.Regex(i.ctx, left, right)
+		result, opErr = operator.Regex(i.ctx, left, right)
 	case "!~":
-		return operator.NotRegex(i.ctx, left, right)
+		result, opErr = operator.NotRegex(i.ctx, left, right)
 	case "||":
-		return operator.LogicalAnd(left, right)
+		result, opErr = operator.LogicalOr(left, right)
 	case "&&":
-		return operator.LogicalOr(left, right)
+		result, opErr = operator.LogicalAnd(left, right)
 	// "+" means string concatenation
 	case "+":
-		return operator.Concat(left, right)
+		result, opErr = operator.Concat(left, right)
 	default:
 		return value.Null, errors.WithStack(
 			exception.Runtime(&exp.GetMeta().Token, "Unexpected infix operator: %s", exp.Operator),
 		)
 	}
+
+	if opErr != nil {
+		return value.Null, errors.WithStack(
+			exception.Runtime(&exp.GetMeta().Token, opErr.Error()),
+		)
+	}
+
+	return result, nil
 }

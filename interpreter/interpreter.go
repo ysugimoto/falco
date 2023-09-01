@@ -37,12 +37,12 @@ func New(options ...context.Option) *Interpreter {
 		options:   options,
 		cache:     cache.New(),
 		localVars: variable.LocalVariables{},
-		Debugger:  EmptyDebugger{},
+		Debugger:  DefaultDebugger{},
 	}
 }
 
 func (i *Interpreter) SetScope(scope context.Scope) {
-	i.ctx.Scope = context.RecvScope
+	i.ctx.Scope = scope
 	switch scope {
 	case context.RecvScope:
 		i.vars = variable.NewRecvScopeVariables(i.ctx)
@@ -65,7 +65,7 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
-	i.Debugger.Message("Restarted.")
+	i.Debugger.Message(fmt.Sprintf("Restarted (%d) time", i.ctx.Restarts))
 
 	if err := i.ProcessRecv(); err != nil {
 		return err
@@ -582,12 +582,6 @@ func (i *Interpreter) ProcessError() error {
 			state = DELIVER
 		}
 	}
-
-	defer func() {
-		if err == nil {
-			i.Debugger.Message(fmt.Sprintf("Move state: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
 
 	switch state {
 	case DELIVER:
