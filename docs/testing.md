@@ -111,6 +111,38 @@ You can specify multiply by separating comma like `@scope: hit,pass`.
 
 You can specify test suite name with `@suite` annotation value. Otherwise, the suite name will set as subroutine name.
 
+### Testing preparetion
+
+When test suite runs on the specific scope like `FETCH`, you need to set up pre-condition to run target VCL.
+It means you need to set up variables which is needed until directive moves to `FETCH`, setting up before calling `testing.call_subroutine`.
+
+This is because test target subroutine (in this case, `vcl_fetch`) is called independently, so thet the other lifecycle subroutines like `vcl_recv` and `vcl_pass` are not called.
+
+For example:
+
+```vcl
+// @scope: fetch
+// @suite: all needed variables are satisfied
+sub pre_condition_test {
+
+    // You need to set up some variables before calling "vcl_fetch".
+
+    // Typically set query string might be set on vcl_recv.
+    // But vcl_recv is not called in testing process, so you need to set in here.
+    set req.url = quetystring.add(req.url, "foo", "bar")
+
+    // Override backend response before calling "vcl_fetch" for test case of 500 status code.
+    // It means here is a `hook` point before calling `vcl_fetch`.
+    set beresp.status = 500;
+
+    // call target subroutine
+    testing.call_subroutine("vcl_fetch");
+
+    // Some assertions below
+    assert.equal(beresp.ttl, 1s) // TTL should be set 1s when status code is 500
+}
+```
+
 ### Testing Variables and Functions
 
 On running tests, `falco` injects special runtime functions and variables to assert.
