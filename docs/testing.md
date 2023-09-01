@@ -2,9 +2,12 @@
 
 You can run VCL unit test on our interpreter to make sure the subroutine works as expected.
 
+Note that the test runner runs on our VCL interpreter, so please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) and its limitations before.
+
 ## Usage
 
 ```
+falco test -h
 =========================================================
     ____        __
    / __/______ / /_____ ____

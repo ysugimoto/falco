@@ -46,7 +46,7 @@ falco cascades each settings from the order of `Default Setting` -> `Configurati
 All configurations of configuration file and CLI arguemnts describe following table:
 
 | Configuration Field                | Type          | Default | CLI Argument       | Desription                                                                                                                |
-|:----------------------------------:|:-------------:|:-------:|:------------------:|:--------------------------------------------------------------------------------------------------------------------------|
+|:-----------------------------------|:-------------:|:-------:|:------------------:|:--------------------------------------------------------------------------------------------------------------------------|
 | include_paths                      | Array<String> | []      | -I, --include_path | Include VCL paths                                                                                                         |
 | remote                             | Boolean       | false   | -r, --remote       | Fetch remote resources of Fastly                                                                                          |
 | max_backends                       | Integer       | 5       | --max_backends     | Override Fastly's backend amount limitation                                                                               |
