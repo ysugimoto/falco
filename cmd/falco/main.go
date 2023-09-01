@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"encoding/json"
@@ -44,7 +45,7 @@ var (
 const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
-	subcommandLocal     = "local"
+	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
 )
@@ -72,6 +73,7 @@ func main() {
 	}
 
 	var fetcher Fetcher
+	var action string
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver
 	switch c.Commands.At(0) {
@@ -81,13 +83,20 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandLocal, subcommandLint, subcommandStats, subcommandTest:
-		// "lint", "local", "stats" and "test" command provides single file of service,
+		action = c.Commands.At(1)
+	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest:
+		// "lint", "simulate", "stats" and "test" command provides single file of service,
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
+		action = c.Commands.At(0)
 	default:
-		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
+			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
+		} else {
+			// "lint" command provides single file of service, then resolvers size is always 1
+			resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+			action = c.Commands.At(0)
+		}
 	}
 
 	if err != nil {
@@ -104,10 +113,10 @@ func main() {
 		}
 
 		var exitErr error
-		switch c.Commands.At(0) {
+		switch action {
 		case subcommandTest:
 			exitErr = runTest(runner, v)
-		case subcommandLocal:
+		case subcommandSimulate:
 			exitErr = runSimulate(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v)

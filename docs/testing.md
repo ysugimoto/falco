@@ -1,6 +1,39 @@
 # Unit Testing
 
 You can run VCL unit test on our interpreter to make sure the subroutine works as expected.
+
+## Usage
+
+```
+=========================================================
+    ____        __
+   / __/______ / /_____ ____
+  / /_ / __  // //  __// __ \
+ / __// /_/ // // /__ / /_/ /
+/_/   \____//_/ \___/ \____/  Fastly VCL developer tool
+
+=========================================================
+Usage:
+    falco test [flags]
+
+Flags:
+    -I, --include_path : Add include path
+    -h, --help         : Show this help
+    -r, --remote       : Connect with Fastly API
+    -json              : Output results as JSON
+    -request           : Override request config
+    --max_backends     : Override max backends limitation
+    --max_acls         : Override max acl limitation
+
+Local testing example:
+    falco test -I . -I ./tests /path/to/vcl/main.vcl
+```
+
+### Configuration
+
+You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+
+
 You can run testing as following:
 
 ```shell
@@ -9,7 +42,7 @@ falco test -I . /path/to/your/default.vcl
 
 ## How to write test VCL
 
-When you run testing command, falco find test target files which have `.test.vcl` suffix in the `include_paths`.
+When you run testing command, falco finds test files which have `.test.vcl` suffix in the `include_paths`.
 Normally you can put testing file at the same place of main VCL:
 
 ```shell
@@ -20,10 +53,10 @@ tree .
    ├── default.test.vcl  <= testing file
    └── default.vcl       <= main VCL
 
-falco test -I . /path/to/your/default.vcl
+falco test ./vcl/default.vcl
 ```
 
-Or, you may divide testing files at the different directory, you can place them and set more `include_paths` option on CLI:
+Or, you may place testing files at the different directory, you can place them and set more `include_paths` option on CLI:
 
 ```shell
 tree .
@@ -34,12 +67,14 @@ tree .
 └── vcl_tests
    └── default.test.vcl
 
-falco test -I vcl_tests -I . /path/to/your/default.vcl
+falco test -I vcl_tests ./vcl/default.vcl
 ```
+
+falco finds `default.test.vcl` as testing file for both case.
 
 ## Testing Subroutine
 
-You can also write unit testing as VCL subroutine, example is following:
+Unit testing file can be written as VCL subroutine, example is following:
 
 ```vcl
 // default.test.vcl
@@ -63,7 +98,7 @@ sub test_vcl_deliver {
 }
 ```
 
-You can see  many interesting syntax, The test case is controlled with annotation and assertion functions.
+You can see many interesting syntax, The test case is controlled with annotation and assertion functions.
 
 ### Scope Recognition
 
@@ -78,14 +113,14 @@ You can specify test suite name with `@suite` annotation value. Otherwise, the s
 
 ### Testing Variables and Functions
 
-On running tests, `falco` injects assertion functions and testing variables to assert the value e.g HTTP header.
+On running tests, `falco` injects special runtime functions and variables to assert.
 
 We describe them following table and examples:
 
 | Name                    | Type       | Description                                                                                  |
 |:------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state           | STRING     | Return state which is called `return` statement in a subroutine                              |
-| testing.call_subroutine | FUNCTION   | Call main VCL subroutine for testing                                                         |
+| testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |

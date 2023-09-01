@@ -154,14 +154,14 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	}
 
 	// Set verbose level
-	if c.VerboseInfo {
+	if c.Linter.VerboseInfo {
 		r.level = LevelInfo
-	} else if c.VerboseWarning {
+	} else if c.Linter.VerboseWarning {
 		r.level = LevelWarning
 	}
 
 	// Override linter rules
-	for key, value := range c.Rules {
+	for key, value := range c.Linter.Rules {
 		switch strings.ToUpper(value) {
 		case "ERROR":
 			r.overrides[key] = linter.ERROR
@@ -443,27 +443,27 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 }
 
 func (r *Runner) Simulate(rslv resolver.Resolver) error {
-	local := r.config.Local
+	sc := r.config.Simulator
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
-		icontext.WithMaxBackends(local.OverrideMaxBackends),
-		icontext.WithMaxAcls(local.OverrideMaxAcls),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
-	if local.OverrideRequest != nil {
-		options = append(options, icontext.WithRequest(local.OverrideRequest))
+	if sc.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(sc.OverrideRequest))
 	}
-	if local.OverrideBackends != nil {
-		options = append(options, icontext.WithOverrideBackends(local.OverrideBackends))
+	if r.config.OverrideBackends != nil {
+		options = append(options, icontext.WithOverrideBackends(r.config.OverrideBackends))
 	}
 
 	i := interpreter.New(options...)
 
 	// If debugger flag is on, run debugger mode
-	if local.Debug {
-		return debugger.New(interpreter.New(options...)).Run(local.Port)
+	if sc.IsDebug {
+		return debugger.New(interpreter.New(options...)).Run(sc.Port)
 	}
 
 	// Otherwise, simply start simulator server
@@ -472,30 +472,30 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 
 	s := &http.Server{
 		Handler: mux,
-		Addr:    fmt.Sprintf(":%d", local.Port),
+		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
 	writeln(green, "Simulator server starts on 0.0.0.0:3124")
 	return s.ListenAndServe()
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
-	testing := r.config.Testing
+	tc := r.config.Testing
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
-		icontext.WithMaxBackends(testing.OverrideMaxBackends),
-		icontext.WithMaxAcls(testing.OverrideMaxAcls),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithFastlySnippets(r.snippets))
 	}
-	if r.config.Testing.OverrideRequest != nil {
-		options = append(options, icontext.WithRequest(testing.OverrideRequest))
+	if tc.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(tc.OverrideRequest))
 	}
 
 	i := interpreter.New(options...)
 	r.message(white, "Running tests...")
 	i.Debugger = tester.NewDebugger()
-	factory, err := tester.New(testing, i).Run(r.config.Commands.At(1))
+	factory, err := tester.New(tc, i).Run(r.config.Commands.At(1))
 	if err != nil {
 		writeln(red, " Failed.")
 		writeln(red, "Failed to run test: %s", err.Error())

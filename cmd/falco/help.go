@@ -9,8 +9,8 @@ func printHelp(cmd string) {
 	switch cmd {
 	case subcommandTerraform:
 		printTerraformHelp()
-	case subcommandLocal:
-		printLocalHelp()
+	case subcommandSimulate:
+		printSimulateHelp()
 	case subcommandStats:
 		printStatsHelp()
 	case subcommandTest:
@@ -44,7 +44,7 @@ Subcommands:
     lint      : Run lint (default)
     terraform : Run lint from terraform planned JSON
     stats     : Analyze VCL statistics
-    local     : Run local simulate server with provided VCLs
+    simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
 
 See subcommands help with:
@@ -70,12 +70,13 @@ Usage:
     falco terraform [action] [flags]
 
 Actions:
-    lint      : Run lint (default)
-    stats     : Analyze VCL statistics
-    local     : Run local simulate server with planned JSON
-    test      : Run local testing for planned JSON
+    lint     : Run lint (default)
+    stats    : Analyze VCL statistics
+    simulate : Run simulator server with planned JSON
+    test     : Run local testing for planned JSON
 
 Flags:
+    -I, --include_path : Add include path
     -h, --help         : Show this help
     -v                 : Output lint warnings (verbose)
     -vv                : Output all lint results (very verbose)
@@ -87,26 +88,25 @@ Linting with terraform:
 	`))
 }
 
-func printLocalHelp() {
+func printSimulateHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco local [flags]
+    falco simulate [flags]
 
 Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -v                 : Output lint warnings (verbose)
-    -vv                : Output all lint results (very verbose)
-    -json              : Output results as JSON (very verbose)
     -request           : Simulate request config
     -debug             : Enable debug mode
+    --max_backends     : Override max backends limitation
+    --max_acls         : Override max acls limitation
 
 Local simulator example:
-	falco local -I . /path/to/vcl/main.vcl
+    falco simulate -I . /path/to/vcl/main.vcl
 
 Local debugger example:
-	falco local -I . -debug /path/to/vcl/main.vcl
+    falco simulate -I . -debug /path/to/vcl/main.vcl
 	`))
 }
 
@@ -135,12 +135,14 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -json              : Output results as JSON (very verbose)
-    -request           : Simulate request config
-    -debug             : Enable debug mode
+    -t, --timeout      : Set timeout to running test
+    -json              : Output results as JSON
+    -request           : Override request config
+    --max_backends     : Override max backends limitation
+    --max_acls         : Override max acls limitation
 
 Local testing example:
-	falco test -I . -I ./tests /path/to/vcl/main.vcl
+    falco test -I . -I ./tests /path/to/vcl/main.vcl
 	`))
 }
 
