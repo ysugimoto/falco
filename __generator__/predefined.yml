@@ -811,6 +811,71 @@ req.protocol:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
 
+tls.client.certificate.dn:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-dn/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.certificate.is_cert_bad:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-bad/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_cert_expired:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-expired/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_cert_missing:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-missing/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_cert_revoked:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-revoked/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_cert_unknown:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-unknown/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_unknown_ca:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-unknown-ca/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.is_verified:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-verified/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+tls.client.certificate.issuer_dn:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-issuer-dn/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.certificate.not_after:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-after/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: TIME
+
+tls.client.certificate.not_before:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-before/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: TIME
+
+tls.client.certificate.raw_certificate_b64:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-raw-certificate-b64/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
+tls.client.certificate.serial_number:
+  reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-serial-number/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
 tls.client.cipher:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-cipher/"
   on: [RECV, HASH, DELIVER, LOG]
@@ -1766,6 +1831,11 @@ fastly.error:
   get: FLOAT
   unset: true
 
+fastly.ff.visits_this_pop:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
 fastly.ff.visits_this_pop_this_service:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop-this-service/"
   on: [MISS]
@@ -1795,6 +1865,11 @@ req.backend.port:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-port/"
   on: [ERROR, DELIVER, LOG]
   get: INTEGER
+
+req.customer_id:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-customer-id/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
 
 req.service_id:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-service-id/"
@@ -1968,6 +2043,11 @@ req.restarts:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
 
+server.billing_region:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-billing-region/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
 server.datacenter:
   reference: "https://developer.fastly.com/reference/vcl/variables/server/server-datacenter/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
@@ -1987,6 +2067,11 @@ server.ip:
   reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: IP
+
+server.pop:
+  reference: "https://developer.fastly.com/reference/vcl/variables/server/server-pop/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
 
 server.port:
   reference: "https://developer.fastly.com/reference/vcl/variables/server/server-port/"

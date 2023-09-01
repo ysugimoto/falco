@@ -8,6 +8,9 @@ generate:
 test: generate
 	go test ./...
 
+check:
+	cd ./cmd/documentation-checker && go run .
+
 linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 			 -ldflags "-X main.version=$(BUILD_VERSION)" \

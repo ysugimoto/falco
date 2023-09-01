@@ -577,6 +577,16 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
+		"early_hints": &FunctionSpec{
+			Items: map[string]*FunctionSpec{},
+			Value: &BuiltinFunction{
+				Arguments: [][]types.Type{
+					[]types.Type{types.StringType, types.StringListType},
+				},
+				Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+				Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/early-hints/",
+			},
+		},
 		"fastly": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
 				"hash": &FunctionSpec{
@@ -623,6 +633,61 @@ func builtinFunctions() Functions {
 					Value: &BuiltinFunction{
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h3-alt-svc/",
+					},
+				},
+			},
+		},
+		"header": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"filter": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringListType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-filter/",
+					},
+				},
+				"filter_except": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringListType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-filter-except/",
+					},
+				},
+				"get": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-get/",
+					},
+				},
+				"set": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-set/",
+					},
+				},
+				"unset": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-unset/",
 					},
 				},
 			},

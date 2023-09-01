@@ -1742,6 +1742,16 @@ func predefinedVariables() Variables {
 				},
 				"ff": &Object{
 					Items: map[string]*Object{
+						"visits_this_pop": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop/",
+							},
+						},
 						"visits_this_pop_this_service": &Object{
 							Items: map[string]*Object{},
 							Value: &Accessor{
@@ -3008,6 +3018,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-bytes-read/",
 					},
 				},
+				"customer_id": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-customer-id/",
+					},
+				},
 				"digest": &Object{
 					Items: map[string]*Object{
 						"ratio": &Object{
@@ -3724,6 +3744,16 @@ func predefinedVariables() Variables {
 		},
 		"server": &Object{
 			Items: map[string]*Object{
+				"billing_region": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-billing-region/",
+					},
+				},
 				"datacenter": &Object{
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -3762,6 +3792,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/",
+					},
+				},
+				"pop": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-pop/",
 					},
 				},
 				"port": &Object{
@@ -4001,6 +4041,140 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"client": &Object{
 					Items: map[string]*Object{
+						"certificate": &Object{
+							Items: map[string]*Object{
+								"dn": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-dn/",
+									},
+								},
+								"is_cert_bad": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-bad/",
+									},
+								},
+								"is_cert_expired": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-expired/",
+									},
+								},
+								"is_cert_missing": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-missing/",
+									},
+								},
+								"is_cert_revoked": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-revoked/",
+									},
+								},
+								"is_cert_unknown": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-unknown/",
+									},
+								},
+								"is_unknown_ca": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-unknown-ca/",
+									},
+								},
+								"is_verified": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-verified/",
+									},
+								},
+								"issuer_dn": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-issuer-dn/",
+									},
+								},
+								"not_after": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.TimeType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-after/",
+									},
+								},
+								"not_before": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.TimeType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-before/",
+									},
+								},
+								"raw_certificate_b64": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-raw-certificate-b64/",
+									},
+								},
+								"serial_number": &Object{
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.StringType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | DELIVER | LOG,
+										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-serial-number/",
+									},
+								},
+							},
+						},
 						"cipher": &Object{
 							Items: map[string]*Object{},
 							Value: &Accessor{

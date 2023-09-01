@@ -1254,3 +1254,40 @@ ratelimit.ratecounter_increment:
   arguments:
     - [ID, STRING, INTEGER]
   return: INTEGER
+
+header.get:
+  reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-get/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING]
+  return: STRING
+
+header.filter_except:
+  reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-filter-except/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING_LIST]
+
+early_hints:
+  reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/early-hints/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING_LIST]
+
+header.set:
+  reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-set/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, STRING]
+
+header.filter:
+  reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-filter/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING_LIST]
+
+header.unset:
+  reference: "https://developer.fastly.com/reference/vcl/functions/headers/header-unset/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING]
