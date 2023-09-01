@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/cache"
@@ -617,7 +616,6 @@ func (i *Interpreter) ProcessDeliver() error {
 		if i.ctx.BackendResponse != nil {
 			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 		} else if i.ctx.Object != nil {
-			pp.Println(i.ctx.Object)
 			i.ctx.Response = i.cloneResponse(i.ctx.Object)
 		}
 	}
