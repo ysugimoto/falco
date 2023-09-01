@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 )
 
 var (
