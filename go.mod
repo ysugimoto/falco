@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/fatih/color v1.12.0
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/k0kubun/pp v2.4.0+incompatible
@@ -17,6 +18,8 @@ require (
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ysugimoto/twist v0.10.2
+	golang.org/x/net v0.14.0
+	golang.org/x/sync v0.3.0
 	golang.org/x/sys v0.6.0 // indirect
 )
 

@@ -489,6 +489,16 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"early_hints": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Early_hints(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"fastly.hash": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
@@ -527,6 +537,56 @@ var builtinFunctions = map[string]*Function{
 		CanStatementCall: true,
 		IsIdentArgument: func(i int) bool {
 			return false
+		},
+	},
+	"header.filter": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Header_filter(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
+	},
+	"header.filter_except": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Header_filter_except(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
+	},
+	"header.get": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Header_get(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
+	},
+	"header.set": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Header_set(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
+		},
+	},
+	"header.unset": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Header_unset(ctx, args...)
+		},
+		CanStatementCall: true,
+		IsIdentArgument: func(i int) bool {
+			return i == 0
 		},
 	},
 	"http_status_matches": {
