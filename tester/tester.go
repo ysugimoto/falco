@@ -61,30 +61,39 @@ func (t *Tester) listTestFiles(mainVCL string) ([]string, error) {
 }
 
 // Only expose function for running tests
-func (t *Tester) Run(main string) ([]*TestResult, *TestCounter, error) {
+func (t *Tester) Run(main string) (*TestFactory, error) {
 	// Find test target VCL files
 	targetFiles, err := t.listTestFiles(main)
 	if err != nil {
-		return nil, nil, errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	counter := NewTestCounter()
 	// Inject testing variables and functions to be enable to run tests in testing VCL files
 	variable.Inject(&tv.TestingVariables{})
 	if err := function.Inject(tf.TestingFunctions(t.interpreter, counter)); err != nil {
-		return nil, nil, errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
+
+	// Attach debugger to interpreter
+	debugger := NewDebugger()
+	t.interpreter.Debugger = debugger
 
 	// Run tests
 	var results []*TestResult
 	for i := range targetFiles {
 		result, err := t.run(targetFiles[i])
 		if err != nil {
-			continue
+			return nil, errors.WithStack(err)
 		}
 		results = append(results, result)
 	}
-	return results, counter, nil
+
+	return &TestFactory{
+		Results:    results,
+		Statistics: counter,
+		Logs:       debugger.stack,
+	}, nil
 }
 
 // Actually run testing method

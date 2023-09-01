@@ -37,12 +37,12 @@ func New(options ...context.Option) *Interpreter {
 		options:   options,
 		cache:     cache.New(),
 		localVars: variable.LocalVariables{},
-		Debugger:  EmptyDebugger{},
+		Debugger:  DefaultDebugger{},
 	}
 }
 
 func (i *Interpreter) SetScope(scope context.Scope) {
-	i.ctx.Scope = context.RecvScope
+	i.ctx.Scope = scope
 	switch scope {
 	case context.RecvScope:
 		i.vars = variable.NewRecvScopeVariables(i.ctx)
@@ -65,7 +65,7 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
-	i.Debugger.Message("Restarted.")
+	i.Debugger.Message(fmt.Sprintf("Restarted (%d) time", i.ctx.Restarts))
 
 	if err := i.ProcessRecv(); err != nil {
 		return err
@@ -548,8 +548,7 @@ func (i *Interpreter) ProcessError() error {
 
 	if i.ctx.Object == nil {
 		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Object = &v
+			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
 			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
 			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
 		} else {
@@ -564,9 +563,7 @@ func (i *Interpreter) ProcessError() error {
 				},
 				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
 				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-			}
-			if i.ctx.BackendRequest != nil {
-				i.ctx.Object.Request = i.ctx.BackendRequest
+				Request:       i.ctx.Request,
 			}
 		}
 	}
@@ -585,12 +582,6 @@ func (i *Interpreter) ProcessError() error {
 			state = DELIVER
 		}
 	}
-
-	defer func() {
-		if err == nil {
-			i.Debugger.Message(fmt.Sprintf("Move state: %s -> %s", i.ctx.Scope, state))
-		}
-	}()
 
 	switch state {
 	case DELIVER:
@@ -659,6 +650,21 @@ func (i *Interpreter) ProcessDeliver() error {
 			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
 		} else {
 			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
+		}
+		// When Fastly-Debug header is present, add debug header but values are fakes
+		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
+			i.ctx.Response.Header.Set(
+				"Fastly-Debug-Path",
+				fmt.Sprintf("(D %s 0) (F %s 0)", cache.LocalDatacenterString, cache.LocalDatacenterString),
+			)
+			cacheHit := "M"
+			if i.ctx.State == "HIT" {
+				cacheHit = "H"
+			}
+			i.ctx.Response.Header.Set(
+				"Fastly-Debug-TTL",
+				fmt.Sprintf("(%s %s %.3f %.3f %d)", cacheHit, cache.LocalDatacenterString, 0.000, 0.000, 0),
+			)
 		}
 
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> LOG", i.ctx.Scope))

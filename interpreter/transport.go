@@ -177,6 +177,7 @@ func (i *Interpreter) getBackendProperty(props []*ast.BackendProperty, key strin
 }
 
 func (i *Interpreter) cloneResponse(resp *http.Response) *http.Response {
+	// rewind body reader
 	var buf bytes.Buffer
 	buf.ReadFrom(resp.Body) // nolint: errcheck
 	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
@@ -194,7 +195,6 @@ func (i *Interpreter) cloneResponse(resp *http.Response) *http.Response {
 		Close:            resp.Close,
 		Uncompressed:     resp.Uncompressed,
 		Trailer:          resp.Trailer.Clone(),
-		Request:          resp.Request.Clone(context.Background()),
 		TLS:              resp.TLS,
 	}
 }

@@ -191,7 +191,12 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case RESP_PROTO:
 		return &value.String{Value: v.ctx.Response.Proto}, nil
 	case RESP_RESPONSE:
-		return &value.String{Value: http.StatusText(v.ctx.Response.StatusCode)}, nil
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(v.ctx.Response.Body); err != nil {
+			return value.Null, errors.WithStack(err)
+		}
+		v.ctx.Response.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+		return &value.String{Value: buf.String()}, nil
 	case RESP_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 

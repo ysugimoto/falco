@@ -109,8 +109,9 @@ func (v *IP) Copy() Value {
 }
 
 type Boolean struct {
-	Value   bool
-	Literal bool
+	Value    bool
+	Literal  bool
+	IsNotSet bool
 }
 
 func (v *Boolean) String() string {
@@ -129,6 +130,7 @@ type Integer struct {
 	IsNAN         bool
 	IsNegativeInf bool
 	IsPositiveInf bool
+	IsNotSet      bool
 }
 
 func (v *Integer) String() string {
@@ -160,6 +162,7 @@ type Float struct {
 	IsNAN         bool
 	IsNegativeInf bool
 	IsPositiveInf bool
+	IsNotSet      bool
 }
 
 func (v *Float) String() string {
@@ -186,8 +189,9 @@ func (v *Float) Copy() Value {
 }
 
 type RTime struct {
-	Value   time.Duration
-	Literal bool
+	Value    time.Duration
+	Literal  bool
+	IsNotSet bool
 }
 
 func (v *RTime) String() string {
@@ -200,6 +204,7 @@ func (v *RTime) Copy() Value     { return &RTime{Value: v.Value, Literal: v.Lite
 type Time struct {
 	Value       time.Time
 	OutOfBounds bool
+	IsNotSet    bool
 }
 
 func (v *Time) String() string {

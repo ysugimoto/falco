@@ -41,16 +41,19 @@ func TestConfigFromCLI(t *testing.T) {
 	}
 
 	expect := &Config{
-		IncludePaths:   []string{"."},
-		Help:           true,
-		VerboseLevel:   "",
-		VerboseWarning: true,
-		VerboseInfo:    true,
-		Version:        true,
-		Remote:         true,
-		Json:           true,
-		Commands:       Commands{"lint"},
-		Local: &LocalConfig{
+		IncludePaths: []string{"."},
+		Help:         true,
+
+		Version:  true,
+		Remote:   true,
+		Json:     true,
+		Commands: Commands{"lint"},
+		Linter: &LinterConfig{
+			VerboseLevel:   "",
+			VerboseWarning: true,
+			VerboseInfo:    true,
+		},
+		Simulator: &SimulatorConfig{
 			Port:            3124,
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
@@ -59,6 +62,7 @@ func TestConfigFromCLI(t *testing.T) {
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
+		OverrideBackends: make(map[string]*OverrideBackend),
 	}
 
 	if diff := cmp.Diff(c, expect, cmpopts.IgnoreFields(Config{}, "FastlyServiceID", "FastlyApiKey")); diff != "" {

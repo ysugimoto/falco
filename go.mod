@@ -16,7 +16,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/ysugimoto/twist v0.10.0
+	github.com/ysugimoto/twist v0.10.2
 	golang.org/x/sys v0.6.0 // indirect
 )
 
@@ -26,14 +26,12 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/go-ini/ini v1.42.0 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/goccy/go-yaml v1.11.0 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -41,7 +39,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

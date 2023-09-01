@@ -23,6 +23,7 @@ func Test_Regsub(t *testing.T) {
 		{input: "www.example.com", pattern: "www\\.", replacement: "", expect: "example.com"},
 		{input: "/foo/bar/", pattern: "/$", replacement: "", expect: "/foo/bar"},
 		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaa"},
+		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: "\\1bar", expect: "foobar"},
 	}
 
 	for i, tt := range tests {

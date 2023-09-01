@@ -20,12 +20,6 @@ func WithFastlySnippets(fs *context.FastlySnippet) Option {
 	}
 }
 
-func WithDebug() Option {
-	return func(c *Context) {
-		c.Debug = true
-	}
-}
-
 func WithMaxBackends(max int) Option {
 	return func(c *Context) {
 		c.OverrideMaxBackends = max

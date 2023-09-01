@@ -83,12 +83,10 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 
 		case *ast.IfStatement:
 			var state State
-			var debug DebugState
-			state, debug, err = i.ProcessIfStatement(t, debugState)
+			state, err = i.ProcessIfStatement(t, debugState)
 			if state != NONE {
-				return state, debug, nil
+				return state, DebugPass, nil
 			}
-			debugState = debug
 
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
@@ -147,6 +145,9 @@ func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error 
 }
 
 func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
+	if stmt.ReturnExpression == nil {
+		return NONE
+	}
 	return State((*stmt.ReturnExpression).String())
 }
 
@@ -246,21 +247,27 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 }
 
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
-	code, err := i.ProcessExpression(stmt.Code, false)
-	if err != nil {
-		return errors.WithStack(err)
+	// Possibility error code is not defined
+	if stmt.Code != nil {
+		code, err := i.ProcessExpression(stmt.Code, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// set obj.status and obj.response variable internally
+		if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
+			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
 	}
-	arg, err := i.ProcessExpression(stmt.Argument, false)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	// Possibility error response is not defined
+	if stmt.Argument != nil {
+		arg, err := i.ProcessExpression(stmt.Argument, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 
-	// set obj.status and obj.response variable internally
-	if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
-	}
-	if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
+			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
 	}
 	return nil
 }
@@ -399,33 +406,33 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	return NONE, nil
 }
 
-func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (State, DebugState, error) {
+func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (State, error) {
 	// if
 	cond, err := i.ProcessExpression(stmt.Condition, true)
 	if err != nil {
-		return NONE, DebugPass, errors.WithStack(err)
+		return NONE, errors.WithStack(err)
 	}
 
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+			state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 			if err != nil {
-				return NONE, debug, errors.WithStack(err)
+				return NONE, errors.WithStack(err)
 			}
-			return state, debug, nil
+			return state, nil
 		}
 	case *value.String:
 		if t.Value != "" {
-			state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+			state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 			if err != nil {
-				return NONE, debug, errors.WithStack(err)
+				return NONE, errors.WithStack(err)
 			}
-			return state, debug, nil
+			return state, nil
 		}
 	default:
 		if cond != value.Null {
-			return NONE, DebugPass, exception.Runtime(
+			return NONE, exception.Runtime(
 				&stmt.GetMeta().Token,
 				"If condition is not boolean",
 			)
@@ -434,31 +441,35 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 
 	// else if
 	for _, ei := range stmt.Another {
+		// Call debugger
+		if ds != DebugStepOut {
+			ds = i.Debugger.Run(ei)
+		}
 		cond, err := i.ProcessExpression(ei.Condition, true)
 		if err != nil {
-			return NONE, DebugPass, errors.WithStack(err)
+			return NONE, errors.WithStack(err)
 		}
 
 		switch t := cond.(type) {
 		case *value.Boolean:
 			if t.Value {
-				state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+				state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds)
 				if err != nil {
-					return NONE, debug, errors.WithStack(err)
+					return NONE, errors.WithStack(err)
 				}
-				return state, debug, nil
+				return state, nil
 			}
 		case *value.String:
 			if t.Value != "" {
-				state, debug, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+				state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds)
 				if err != nil {
-					return NONE, debug, errors.WithStack(err)
+					return NONE, errors.WithStack(err)
 				}
-				return state, debug, nil
+				return state, nil
 			}
 		default:
 			if cond != value.Null {
-				return NONE, DebugPass, exception.Runtime(
+				return NONE, exception.Runtime(
 					&stmt.GetMeta().Token,
 					"If condition is not boolean",
 				)
@@ -466,13 +477,13 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 		}
 	}
 
+	// else
 	if stmt.Alternative != nil {
-		// else
-		state, debug, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds)
+		state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds)
 		if err != nil {
-			return NONE, debug, errors.WithStack(err)
+			return NONE, errors.WithStack(err)
 		}
-		return state, debug, nil
+		return state, nil
 	}
-	return NONE, DebugPass, nil
+	return NONE, nil
 }

@@ -53,31 +53,31 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case BACKEND_SOCKET_CWND:
 		return &value.Integer{Value: 60}, nil
 	case BACKEND_SOCKET_TCPI_ADVMSS,
-		"backend.socket.tcpi_bytes_acked",
-		"backend.socket.tcpi_bytes_received",
-		"backend.socket.tcpi_data_segs_in",
-		"backend.socket.tcpi_data_segs_out",
-		"backend.socket.tcpi_delivery_rate",
-		"backend.socket.tcpi_delta_retrans",
-		"backend.socket.tcpi_last_data_sent",
-		"backend.socket.tcpi_max_pacing_rate",
-		"backend.socket.tcpi_min_rtt",
-		"backend.socket.tcpi_notsent_bytes",
-		"backend.socket.tcpi_pacing_rate",
-		"backend.socket.tcpi_pmtu",
-		"backend.socket.tcpi_rcv_mss",
-		"backend.socket.tcpi_rcv_rtt",
-		"backend.socket.tcpi_rcv_space",
-		"backend.socket.tcpi_rcv_ssthresh",
-		"backend.socket.tcpi_reordering",
-		"backend.socket.tcpi_rtt",
-		"backend.socket.tcpi_rttvar",
-		"backend.socket.tcpi_segs_in",
-		"backend.socket.tcpi_segs_out",
-		"backend.socket.tcpi_snd_cwnd",
-		"backend.socket.tcpi_snd_mss",
-		"backend.socket.tcpi_snd_ssthresh",
-		"backend.socket.tcpi_total_retrans":
+		BACKEND_SOCKET_TCPI_BYTES_ACKED,
+		BACKEND_SOCKET_TCPI_BYTES_RECEIVED,
+		BACKEND_SOCKET_TCPI_DATA_SEGS_IN,
+		BACKEND_SOCKET_TCPI_DATA_SEGS_OUT,
+		BACKEND_SOCKET_TCPI_DELIVERY_RATE,
+		BACKEND_SOCKET_TCPI_DELTA_RETRANS,
+		BACKEND_SOCKET_TCPI_LAST_DATA_SENT,
+		BACKEND_SOCKET_TCPI_MAX_PACING_RATE,
+		BACKEND_SOCKET_TCPI_MIN_RTT,
+		BACKEND_SOCKET_TCPI_NOTSENT_BYTES,
+		BACKEND_SOCKET_TCPI_PACING_RATE,
+		BACKEND_SOCKET_TCPI_PMTU,
+		BACKEND_SOCKET_TCPI_RCV_MSS,
+		BACKEND_SOCKET_TCPI_RCV_RTT,
+		BACKEND_SOCKET_TCPI_RCV_SPACE,
+		BACKEND_SOCKET_TCPI_RCV_SSTHRESH,
+		BACKEND_SOCKET_TCPI_REORDERING,
+		BACKEND_SOCKET_TCPI_RTT,
+		BACKEND_SOCKET_TCPI_RTTVAR,
+		BACKEND_SOCKET_TCPI_SEGS_IN,
+		BACKEND_SOCKET_TCPI_SEGS_OUT,
+		BACKEND_SOCKET_TCPI_SND_CWND,
+		BACKEND_SOCKET_TCPI_SND_MSS,
+		BACKEND_SOCKET_TCPI_SND_SSTHRESH,
+		BACKEND_SOCKET_TCPI_TOTAL_RETRANS:
 		return &value.Integer{Value: 0}, nil
 
 	case BEREQ_BODY_BYTES_WRITTEN:
@@ -143,6 +143,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 
 	case BERESP_BACKEND_ALTERNATE_IPS:
 		return &value.String{Value: ""}, nil
+	// FIXME should be able to get from actual backend request
 	case BERESP_BACKEND_IP:
 		return &value.String{Value: ""}, nil
 	case BERESP_BACKEND_NAME:
@@ -178,8 +179,9 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case BERESP_PCI:
 		return v.ctx.BackendResponsePCI, nil
 
+	// FIXME should be able to get from actual backend request
 	case BERESP_PROTO:
-		return &value.String{Value: "TLSv1.2"}, nil
+		return &value.String{Value: "HTTP/1.1"}, nil
 
 	case BERESP_RESPONSE:
 		return v.ctx.BackendResponseResponse, nil

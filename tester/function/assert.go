@@ -11,12 +11,13 @@ const Assert_lookup_Name = "assert"
 var Assert_lookup_ArgumentTypes = []value.Type{value.BooleanType}
 
 func Assert_lookup_Validate(args []value.Value) error {
-	if len(args) != 1 {
-		return errors.ArgumentNotEnough(Assert_lookup_Name, 1, args)
+	if len(args) < 1 || len(args) > 2 {
+		return errors.ArgumentNotInRange(Assert_lookup_Name, 1, 2, args)
 	}
-	for i := range args {
-		if args[i].Type() != Assert_lookup_ArgumentTypes[i] {
-			return errors.TypeMismatch(Assert_lookup_Name, i+1, Assert_lookup_ArgumentTypes[i], args[i].Type())
+
+	if len(args) == 2 {
+		if args[1].Type() != value.StringType {
+			return errors.TypeMismatch(Assert_lookup_Name, 2, value.StringType, args[1].Type())
 		}
 	}
 	return nil
@@ -27,6 +28,26 @@ func Assert(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return nil, errors.NewTestingError(err.Error())
 	}
 
-	v := value.Unwrap[*value.Boolean](args[0])
-	return assert(v, v.Value, true, "")
+	// Check custom message
+	var message string
+	if len(args) == 3 {
+		message = value.Unwrap[*value.String](args[2]).Value
+	} else {
+		message = "Expression value should be truthy"
+	}
+
+	switch args[0].Type() {
+	case value.StringType:
+		v := value.Unwrap[*value.String](args[0])
+		return assert_not(v, v.Value, "", message)
+	case value.BooleanType:
+		v := value.Unwrap[*value.Boolean](args[0])
+		return assert(v, v.Value, true, message)
+	default:
+		return &value.Boolean{}, errors.NewAssertionError(
+			args[0],
+			"Type Mismatch: %s could not assert as truthy value",
+			args[0].Type(),
+		)
+	}
 }

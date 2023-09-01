@@ -77,6 +77,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case FASTLY_INFO_IS_CLUSTER_EDGE:
 		return &value.Boolean{Value: false}, nil
 
+	// TODO: should be able to get from context after object checked
 	case OBJ_AGE:
 		if v.ctx.CacheHitItem != nil {
 			return &value.RTime{Value: time.Since(v.ctx.CacheHitItem.EntryTime)}, nil
@@ -176,7 +177,12 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case RESP_PROTO:
 		return &value.String{Value: v.ctx.Response.Proto}, nil
 	case RESP_RESPONSE:
-		return &value.String{Value: http.StatusText(v.ctx.Response.StatusCode)}, nil
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(v.ctx.Response.Body); err != nil {
+			return value.Null, errors.WithStack(err)
+		}
+		v.ctx.Response.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+		return &value.String{Value: buf.String()}, nil
 	case RESP_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 	case TIME_TO_FIRST_BYTE:
@@ -255,12 +261,25 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 
 func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP response header matching
-	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+	match := responseHttpHeaderRegex.FindStringSubmatch(name)
+	if match == nil {
+		return v.base.getFromRegex(name)
+	}
+	// Header name can contain ":" for object-like value
+	if !strings.Contains(name, ":") {
 		return &value.String{
 			Value: v.ctx.Response.Header.Get(match[1]),
 		}
 	}
-	return v.base.getFromRegex(name)
+
+	spl := strings.SplitN(name, ":", 2)
+	for _, hv := range v.ctx.Response.Header.Values(spl[0]) {
+		kvs := strings.SplitN(hv, "=", 2)
+		if kvs[0] == spl[1] {
+			return &value.String{Value: kvs[1]}
+		}
+	}
+	return &value.String{Value: ""}
 }
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -313,7 +332,13 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 	}
 
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Response.Header.Set(match[1], val.String())
+		if !strings.Contains(name, ":") {
+			v.ctx.Response.Header.Set(match[1], val.String())
+			return nil
+		}
+		// If name contains ":" like req.http.VARS:xxx, add with key-value format
+		spl := strings.SplitN(name, ":", 2)
+		v.ctx.Response.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
 		return nil
 	}
 
@@ -324,7 +349,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 func (v *DeliverScopeVariables) Add(s context.Scope, name string, val value.Value) error {
 	// Add statement could be use only for HTTP header
 	match := responseHttpHeaderRegex.FindStringSubmatch(name)
-	if match != nil {
+	if match == nil {
 		// Nothing values to be enable to add in PASS, pass to base
 		return v.base.Add(s, name, val)
 	}
