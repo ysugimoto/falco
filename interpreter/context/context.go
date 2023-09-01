@@ -42,7 +42,6 @@ var (
 )
 
 type Context struct {
-	Debug               bool
 	Resolver            resolver.Resolver
 	FastlySnippets      *context.FastlySnippet
 	Acls                map[string]*value.Acl

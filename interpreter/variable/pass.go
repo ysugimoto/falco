@@ -182,7 +182,7 @@ func (v *PassScopeVariables) Set(s context.Scope, name, operator string, val val
 func (v *PassScopeVariables) Add(s context.Scope, name string, val value.Value) error {
 	// Add statement could be use only for HTTP header
 	match := backendRequestHttpHeaderRegex.FindStringSubmatch(name)
-	if match != nil {
+	if match == nil {
 		// Nothing values to be enable to add in PASS, pass to base
 		return v.base.Add(s, name, val)
 	}

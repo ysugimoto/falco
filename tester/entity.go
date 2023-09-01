@@ -53,6 +53,12 @@ func (t *TestResult) IsPassed() bool {
 	return true
 }
 
+type TestFactory struct {
+	Results    []*TestResult
+	Statistics *TestCounter
+	Logs       []string
+}
+
 type TestCounter struct {
 	Asserts int `json:"asserts"`
 	Passes  int `json:"passes"`

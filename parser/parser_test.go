@@ -159,3 +159,36 @@ sub vcl_recv {
 	}
 	assert(t, vcl, expect)
 }
+
+func TestErrorStatementWithoutArgument(t *testing.T) {
+	input := `
+sub vcl_recv {
+	error;
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.ErrorStatement{
+							Meta:     ast.New(T, 1),
+							Code:     nil,
+							Argument: nil,
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}

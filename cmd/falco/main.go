@@ -237,7 +237,7 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 }
 
 func runTest(runner *Runner, rslv resolver.Resolver) error {
-	results, counter, err := runner.Test(rslv)
+	factory, err := runner.Test(rslv)
 	if err != nil {
 		return ErrExit
 	}
@@ -249,8 +249,8 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			Tests   []*tester.TestResult `json:"tests"`
 			Summary *tester.TestCounter  `json:"summary"`
 		}{
-			Tests:   results,
-			Summary: counter,
+			Tests:   factory.Results,
+			Summary: factory.Statistics,
 		}); err != nil {
 			writeln(red, err.Error())
 			return ErrExit
@@ -279,7 +279,8 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		}
 	}
 
-	for _, r := range results {
+	var passedCount, failedCount, totalCount int
+	for _, r := range factory.Results {
 		switch {
 		case len(r.Cases) == 0:
 			write(noTestColor, " NO TESTS ")
@@ -293,6 +294,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		}
 
 		for _, c := range r.Cases {
+			totalCount++
 			if c.Error != nil {
 				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
 				writeln(red, "%s%s", indent(2), c.Error.Error())
@@ -306,18 +308,26 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 					printCodeLine(r.Lexer, e.Token)
 				}
 				writeln(white, "")
+				failedCount++
 			} else {
 				writeln(green, "%s✓ [%s] %s", indent(1), c.Scope, c.Name)
+				passedCount++
 			}
 		}
 	}
 
-	write(green, "%d passed, ", counter.Passes)
-	if counter.Fails > 0 {
-		write(red, "%d failed, ", counter.Fails)
+	if passedCount > 0 {
+		write(green, "%d passed, ", passedCount)
+	} else {
+		write(white, "%d passed, ", passedCount)
 	}
-	write(white, "%d total, ", len(results))
-	writeln(white, "%d assertions", counter.Asserts)
+	if failedCount > 0 {
+		write(red, "%d failed, ", failedCount)
+	} else {
+		write(white, "%d failed, ", failedCount)
+	}
+	write(white, "%d total, ", totalCount)
+	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
 	return nil
 }

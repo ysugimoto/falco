@@ -596,9 +596,13 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		}
 		spl := strings.SplitN(name, ":", 2)
 		if !strings.EqualFold(spl[0], "cookie") {
-			return &value.String{
-				Value: v.ctx.Request.Header.Get(match[1]),
+			for _, hv := range v.ctx.Request.Header.Values(spl[0]) {
+				kvs := strings.SplitN(hv, "=", 2)
+				if kvs[0] == spl[1] {
+					return &value.String{Value: kvs[1]}
+				}
 			}
+			return &value.String{Value: ""}
 		}
 
 		for _, c := range v.ctx.Request.Cookies() {
@@ -712,7 +716,13 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		v.ctx.Request.Header.Set(match[1], val.String())
+		if !strings.Contains(name, ":") {
+			v.ctx.Request.Header.Set(match[1], val.String())
+			return nil
+		}
+		// If name contains ":" like req.http.VARS:xxx, add with key-value format
+		spl := strings.SplitN(name, ":", 2)
+		v.ctx.Request.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
 		return nil
 	}
 

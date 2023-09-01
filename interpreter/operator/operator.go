@@ -647,10 +647,12 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Acl](right)
 
 			for _, entry := range rv.Value.CIDRs {
-				cidr := entry.IP.Value
+				var mask int64 = 32
 				if entry.Mask != nil {
-					cidr = fmt.Sprintf("%s/%d", cidr, entry.Mask.Value)
+					mask = entry.Mask.Value
 				}
+
+				cidr := fmt.Sprintf("%s/%d", entry.IP.Value, mask)
 				_, ipnet, err := net.ParseCIDR(cidr)
 				if err != nil {
 					return value.Null, errors.WithStack(
@@ -693,43 +695,87 @@ func NotRegex(ctx *context.Context, left, right value.Value) (value.Value, error
 }
 
 func LogicalAnd(left, right value.Value) (value.Value, error) {
-	if left.Type() != value.BooleanType {
+	var lv, rv bool
+
+	switch left.Type() {
+	case value.BooleanType:
+		lv = value.Unwrap[*value.Boolean](left).Value
+	case value.StringType:
+		str := value.Unwrap[*value.String](left)
+		// Could not use literal string in expression
+		if str.IsLiteral() {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Logical AND operator: Could not use string literal in left expression, value is %s", str.Value),
+			)
+		}
+		lv = str.Value != ""
+	default:
 		return value.Null, errors.WithStack(
-			fmt.Errorf("Logical AND operator: left type must be BOOL, got %s", left.Type()),
-		)
-	}
-	if right.Type() != value.BooleanType {
-		return value.Null, errors.WithStack(
-			fmt.Errorf("Logical AND operator: right type must be BOOL, got %s", left.Type()),
+			fmt.Errorf("Logical AND operator: left type must be falsy type, got %s", left.Type()),
 		)
 	}
 
-	lv := value.Unwrap[*value.Boolean](left)
-	rv := value.Unwrap[*value.Boolean](right)
+	switch right.Type() {
+	case value.BooleanType:
+		rv = value.Unwrap[*value.Boolean](right).Value
+	case value.StringType:
+		str := value.Unwrap[*value.String](right)
+		// Could not use literal string in expression
+		if str.IsLiteral() {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Logical AND operator: Could not use string literal in right expression, value is %s", str.Value),
+			)
+		}
+		rv = str.Value != ""
+	default:
+		return value.Null, errors.WithStack(
+			fmt.Errorf("Logical AND operator: right type must be falsy type, got %s", right.Type()),
+		)
+	}
 
-	return &value.Boolean{
-		Value: lv.Value && rv.Value,
-	}, nil
+	return &value.Boolean{Value: lv && rv}, nil
 }
 
 func LogicalOr(left, right value.Value) (value.Value, error) {
-	if left.Type() != value.BooleanType {
+	var lv, rv bool
+
+	switch left.Type() {
+	case value.BooleanType:
+		lv = value.Unwrap[*value.Boolean](left).Value
+	case value.StringType:
+		str := value.Unwrap[*value.String](left)
+		// Could not use literal string in expression
+		if str.IsLiteral() {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Logical OR operator: Could not use string literal in left expression, value is %s", str.Value),
+			)
+		}
+		lv = str.Value != ""
+	default:
 		return value.Null, errors.WithStack(
-			fmt.Errorf("Logical AND operator: left type must be BOOL, got %s", left.Type()),
-		)
-	}
-	if right.Type() != value.BooleanType {
-		return value.Null, errors.WithStack(
-			fmt.Errorf("Logical AND operator: right type must be BOOL, got %s", left.Type()),
+			fmt.Errorf("Logical OR operator: left type must be falsy type, got %s", left.Type()),
 		)
 	}
 
-	lv := value.Unwrap[*value.Boolean](left)
-	rv := value.Unwrap[*value.Boolean](right)
+	switch right.Type() {
+	case value.BooleanType:
+		rv = value.Unwrap[*value.Boolean](right).Value
+	case value.StringType:
+		str := value.Unwrap[*value.String](right)
+		// Could not use literal string in expression
+		if str.IsLiteral() {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Logical OR operator: Could not use string literal in right expression, value is %s", str.Value),
+			)
+		}
+		rv = str.Value != ""
+	default:
+		return value.Null, errors.WithStack(
+			fmt.Errorf("Logical OR operator: right type must be falsy type, got %s", right.Type()),
+		)
+	}
 
-	return &value.Boolean{
-		Value: lv.Value || rv.Value,
-	}, nil
+	return &value.Boolean{Value: lv || rv}, nil
 }
 
 func Concat(left, right value.Value) (value.Value, error) {

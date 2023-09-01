@@ -23,11 +23,15 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 				}
 				continue
 			}
-			if included, err := i.includeFile(include, isRoot); err != nil {
+			included, err := i.includeFile(include, isRoot)
+			if err != nil {
 				return nil, ex.Runtime(&stmt.GetMeta().Token, err.Error())
-			} else {
-				resolved = append(resolved, included...)
 			}
+			recursive, err := i.resolveIncludeStatement(included, isRoot)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, recursive...)
 			continue
 		}
 		resolved = append(resolved, stmt)
