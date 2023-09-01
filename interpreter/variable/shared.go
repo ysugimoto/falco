@@ -78,8 +78,8 @@ func GetTCPInfoVariable(name string) (value.Value, error) {
 	return nil, nil
 }
 
-// TODO: consider weneed to construct TLS server manually instead of net/http server
-// Temporaly return ur environment data in Fastly fiddle
+// TODO: consider we need to construct TLS server manually instead of net/http server
+// Temporaly return tentative data found in Fastly fiddle
 func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 	switch name {
 	case TLS_CLIENT_CIPHER:
