@@ -1,8 +1,10 @@
 # Unit Testing
 
-You can run VCL unit test on our interpreter to make sure the subroutine works as expected.
+You can run VCL unit test on our interpreter to make sure the subroutine works as you expected.
 
-Note that the test runner runs on our VCL interpreter, so please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) and its limitations before.
+## Note
+
+Some variables are limited due to interpreter runs locally, so that variables that is using in your production VCL may have unexpected value, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) about limitations before.
 
 ## Usage
 
