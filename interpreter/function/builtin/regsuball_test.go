@@ -22,6 +22,7 @@ func Test_Regsuball(t *testing.T) {
 	}{
 		{input: "//foo///bar//baz", pattern: "/+", replacement: "/", expect: "/foo/bar/baz"},
 		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaaaaa"},
+		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: "\\1bar", expect: "foobar"},
 	}
 
 	for i, tt := range tests {

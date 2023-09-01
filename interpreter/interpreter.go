@@ -548,8 +548,7 @@ func (i *Interpreter) ProcessError() error {
 
 	if i.ctx.Object == nil {
 		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Object = &v
+			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
 			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
 			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
 		} else {
@@ -564,9 +563,7 @@ func (i *Interpreter) ProcessError() error {
 				},
 				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
 				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-			}
-			if i.ctx.BackendRequest != nil {
-				i.ctx.Object.Request = i.ctx.BackendRequest
+				Request:       i.ctx.Request,
 			}
 		}
 	}

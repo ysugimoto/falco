@@ -26,6 +26,40 @@ func Regsub_Validate(args []value.Value) error {
 	return nil
 }
 
+func convertGoExpandString(replacement string) (string, bool) {
+	var converted []rune
+	var found bool
+	repl := []rune(replacement)
+
+	for i := 0; i < len(repl); i++ {
+		r := repl[i]
+		if r != 0x5C { // escape sequence, "\"
+			converted = append(converted, r)
+			continue
+		}
+		// If rune is escape sequence, find next numeric character which indicates matched index like "\1"
+		var matchIndex []rune
+		for {
+			if i+1 > len(repl)-1 {
+				break
+			}
+			r = repl[i+1]
+			if r >= 0x31 && r <= 0x39 {
+				matchIndex = append(matchIndex, r)
+				i++
+				continue
+			}
+			break
+		}
+		if len(matchIndex) > 0 {
+			converted = append(converted, []rune("${"+string(matchIndex)+"}")...)
+			found = true
+		}
+	}
+
+	return string(converted), found
+}
+
 // Fastly built-in function implementation of regsub
 // Arguments may be:
 // - STRING, STRING, STRING
@@ -48,15 +82,23 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
-	// regsub should replace first match only
-	var first bool
-	ret := re.ReplaceAllStringFunc(input.Value, func(match string) string {
-		if !first {
-			first = true
-			return replacement.Value
-		}
-		return match
-	})
+	// Note: VCL's regsub uses PCRE regexp but golang is not PCRE
+	matches := re.FindStringSubmatchIndex(input.Value)
+	if matches == nil {
+		return &value.String{Value: input.Value}, nil
+	}
 
-	return &value.String{Value: ret}, nil
+	if expand, found := convertGoExpandString(replacement.Value); found {
+		replaced := re.ExpandString([]byte{}, expand, input.Value, matches)
+		return &value.String{Value: string(replaced)}, nil
+	}
+	var replaced string
+	if matches[0] > 0 {
+		replaced += input.Value[:matches[0]]
+	}
+	replaced += replacement.Value
+	if matches[1] < len(input.Value)-1 {
+		replaced += input.Value[matches[1]:]
+	}
+	return &value.String{Value: replaced}, nil
 }

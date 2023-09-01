@@ -24,8 +24,8 @@ type LocalConfig struct {
 	IncludePaths []string // may copied from root field
 
 	// Override resource limits
-	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
-	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
+	OverrideMaxBackends int `cli:"max_backends" yaml:"max_backends"`
+	OverrideMaxAcls     int `cli:"mac_acls" yaml:"max_acls"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
@@ -40,8 +40,8 @@ type TestConfig struct {
 	IncludePaths []string // may copied from root field
 
 	// Override resource limits
-	OverrideMaxBackends int `cli:"max_backend" yaml:"override_max_backends"`
-	OverrideMaxAcls     int `cli:"mac_acl" yaml:"override_max_acls"`
+	OverrideMaxBackends int `cli:"max_backends" yaml:"max_backends"`
+	OverrideMaxAcls     int `cli:"mac_acls" yaml:"max_acls"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
@@ -91,7 +91,8 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		Local: &LocalConfig{
-			OverrideRequest: &RequestConfig{},
+			OverrideRequest:  &RequestConfig{},
+			OverrideBackends: make(map[string]*OverrideBackend),
 		},
 		Testing: &TestConfig{
 			OverrideRequest: &RequestConfig{},
