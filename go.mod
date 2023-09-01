@@ -20,7 +20,7 @@ require (
 	github.com/ysugimoto/twist v0.10.2
 	golang.org/x/net v0.14.0
 	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 )
 
 require (
@@ -33,8 +33,6 @@ require (
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
-	github.com/goccy/go-yaml v1.11.0 // indirect
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -42,9 +40,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	golang.org/x/term v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/term v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	modernc.org/libc v1.17.0 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.2.0 // indirect
