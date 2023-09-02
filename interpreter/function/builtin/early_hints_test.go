@@ -13,5 +13,5 @@ import (
 // - STRING, STRING_LIST
 // Reference: https://developer.fastly.com/reference/vcl/functions/tls-and-http/early-hints/
 func Test_Early_hints(t *testing.T) {
-	t.Skip("Test Builtin function early_hints should be impelemented")
+	t.Skip("Skip test because we do not support early_hints function")
 }

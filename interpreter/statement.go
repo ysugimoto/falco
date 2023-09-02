@@ -11,6 +11,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/function"
 	fe "github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -97,11 +98,11 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			}
 
 			// If next restart will exceed Fastly restart count limit, raise an exception
-			if i.ctx.Restarts+1 > MaxVarnishRestarts {
+			if i.ctx.Restarts+1 > limitations.MaxVarnishRestarts {
 				return NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"Max restart limit exceeded. Requests are limited to %d restarts",
-					MaxVarnishRestarts,
+					limitations.MaxVarnishRestarts,
 				)
 			}
 
@@ -293,11 +294,11 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	}
 
 	line := log.String()
-	if len([]byte(line)) > MaxLogLineSize {
+	if len([]byte(line)) > limitations.MaxLogLineSize {
 		return exception.Runtime(
 			&stmt.GetMeta().Token,
 			"Overflow log line size limitation of %d",
-			MaxLogLineSize,
+			limitations.MaxLogLineSize,
 		)
 	}
 

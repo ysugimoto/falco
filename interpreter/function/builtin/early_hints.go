@@ -13,8 +13,8 @@ const Early_hints_Name = "early_hints"
 var Early_hints_ArgumentTypes = []value.Type{value.StringType}
 
 func Early_hints_Validate(args []value.Value) error {
-	if len(args) != 2 {
-		return errors.ArgumentNotEnough(Early_hints_Name, 2, args)
+	if len(args) == 0 {
+		return errors.ArgumentAtLeast(Early_hints_Name, 1)
 	}
 	for i := range args {
 		if args[i].Type() != Early_hints_ArgumentTypes[i] {
@@ -26,7 +26,7 @@ func Early_hints_Validate(args []value.Value) error {
 
 // Fastly built-in function implementation of early_hints
 // Arguments may be:
-// - STRING, STRING_LIST
+// - STRING, STRING, ...
 // Reference: https://developer.fastly.com/reference/vcl/functions/tls-and-http/early-hints/
 func Early_hints(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
@@ -34,6 +34,6 @@ func Early_hints(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("early_hints")
+	// Falco interpreter does not support early_hints
+	return value.Null, nil
 }

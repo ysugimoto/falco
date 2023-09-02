@@ -3,6 +3,7 @@ package variable
 import (
 	"crypto/tls"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -73,6 +74,26 @@ func GetTCPInfoVariable(name string) (value.Value, error) {
 		CLIENT_SOCKET_TCPI_SND_SSTHRESH,
 		CLIENT_SOCKET_TCPI_TOTAL_RETRANS:
 		return &value.Integer{Value: 0}, nil
+	case TLS_CLIENT_CERTIFICATE_DN:
+	case TLS_CLIENT_CERTIFICATE_ISSUER_DN:
+	case TLS_CLIENT_CERTIFICATE_RAW_CERTIFICATE_B64:
+	case TLS_CLIENT_CERTIFICATE_SERIAL_NUMBER:
+		return &value.String{Value: ""}, nil
+
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_BAD:
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_EXPIRED:
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_MISSING:
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_REVOKED:
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_UNKNOWN:
+	case TLS_CLIENT_CERTIFICATE_IS_UNKNOWN_CA:
+		return &value.Boolean{Value: false}, nil
+	case TLS_CLIENT_CERTIFICATE_IS_VERIFIED:
+		return &value.Boolean{Value: true}, nil
+
+	case TLS_CLIENT_CERTIFICATE_NOT_BEFORE:
+		return &value.Time{Value: time.Now().Add(-24 * time.Hour)}, nil
+	case TLS_CLIENT_CERTIFICATE_NOT_AFTER:
+		return &value.Time{Value: time.Now().Add(-24 * time.Hour).Add(24 * time.Hour * 365)}, nil
 	}
 
 	return nil, nil

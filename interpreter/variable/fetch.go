@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -401,10 +402,16 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 	}
 
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
 		bereq.Header.Set(match[1], val.String())
 		return nil
 	}
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
 		beresp.Header.Set(match[1], val.String())
 		return nil
 	}
@@ -416,8 +423,14 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 func (v *FetchScopeVariables) Add(s context.Scope, name string, val value.Value) error {
 	// Add statement could be use only for HTTP header
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
 		v.ctx.BackendRequest.Header.Add(match[1], val.String())
 	} else if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
 		v.ctx.BackendResponse.Header.Add(match[1], val.String())
 	} else {
 		return v.base.Add(s, name, val)
@@ -431,6 +444,9 @@ func (v *FetchScopeVariables) Unset(s context.Scope, name string) error {
 	if match == nil {
 		// Nothing values to be enable to unset in PASS, pass to base
 		return v.base.Unset(s, name)
+	}
+	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+		return errors.WithStack(err)
 	}
 	v.ctx.BackendRequest.Header.Del(match[1])
 	return nil

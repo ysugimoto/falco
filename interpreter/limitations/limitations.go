@@ -1,4 +1,4 @@
-package interpreter
+package limitations
 
 import (
 	"bytes"
@@ -44,7 +44,7 @@ const (
 	MaxBackendCounts = 5
 )
 
-func checkFastlyVCLLimitation(vcl string) error {
+func CheckFastlyVCLLimitation(vcl string) error {
 	if len([]byte(vcl)) > MaxCustomVCLFileSize {
 		return exception.System(
 			"Overflow custom VCL file size limitation of %d",
@@ -54,7 +54,7 @@ func checkFastlyVCLLimitation(vcl string) error {
 	return nil
 }
 
-func checkFastlyResourceLimit(ctx *context.Context) error {
+func CheckFastlyResourceLimit(ctx *context.Context) error {
 	maxBackends := MaxBackendCounts
 	if ctx.OverrideMaxBackends > maxBackends {
 		maxBackends = ctx.OverrideMaxBackends
@@ -80,7 +80,7 @@ func checkFastlyResourceLimit(ctx *context.Context) error {
 }
 
 // Validate limitation for the request
-func checkFastlyRequestLimit(req *http.Request) error {
+func CheckFastlyRequestLimit(req *http.Request) error {
 	if len([]byte(req.URL.String())) > MaxURLSize {
 		return exception.System(
 			"URL size is limited under the %d bytes",
@@ -139,7 +139,7 @@ func checkFastlyRequestLimit(req *http.Request) error {
 }
 
 // Validate limitation for the response
-func checkFastlyResponseLimit(resp *http.Response) error {
+func CheckFastlyResponseLimit(resp *http.Response) error {
 	var headerSize, headerCount int
 	for key, values := range resp.Header {
 		headerSize += len(

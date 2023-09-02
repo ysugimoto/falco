@@ -3,8 +3,14 @@
 package builtin
 
 import (
+	"net/http"
+	"strings"
+
+	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -13,15 +19,39 @@ const Header_filter_Name = "header.filter"
 var Header_filter_ArgumentTypes = []value.Type{value.IdentType}
 
 func Header_filter_Validate(args []value.Value) error {
-	if len(args) != 2 {
-		return errors.ArgumentNotEnough(Header_filter_Name, 2, args)
+	if len(args) < 2 {
+		return errors.ArgumentAtLeast(Header_filter_Name, 2)
 	}
-	for i := range args {
-		if args[i].Type() != Header_filter_ArgumentTypes[i] {
-			return errors.TypeMismatch(Header_filter_Name, i+1, Header_filter_ArgumentTypes[i], args[i].Type())
-		}
+	if args[0].Type() != Header_filter_ArgumentTypes[0] {
+		return errors.TypeMismatch(Header_filter_Name, 1, Header_filter_ArgumentTypes[0], args[0].Type())
 	}
 	return nil
+}
+
+func header_filter_delete(h http.Header, names []string) (http.Header, error) {
+	for i := range names {
+		if err := limitations.CheckProtectedHeader(names[i]); err != nil {
+			return h, err
+		}
+		if !strings.Contains(names[i], ":") {
+			h.Del(names[i])
+		}
+		spl := strings.SplitN(names[i], ":", 2)
+		var filtered []string
+		for _, v := range h.Values(spl[0]) {
+			kv := strings.SplitN(v, "=", 2)
+			if kv[0] == spl[1] {
+				continue
+			}
+			filtered = append(filtered, v)
+		}
+		if len(filtered) == 0 {
+			h.Del(spl[0])
+		} else {
+			h[spl[0]] = filtered
+		}
+	}
+	return h, nil
 }
 
 // Fastly built-in function implementation of header.filter
@@ -34,6 +64,47 @@ func Header_filter(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("header.filter")
+	where := value.Unwrap[*value.Ident](args[0])
+	var names []string
+	for i := 1; i < len(args); i++ {
+		v := &value.String{}
+		if err := assign.Assign(v, args[i]); err != nil {
+			return value.Null, errors.New(Header_filter_Name, err.Error())
+		}
+		if !shared.IsValidHeader(v.Value) {
+			return value.Null, errors.New(
+				Header_filter_Name, "Invalid header name %s is not permitted", v.Value,
+			)
+		}
+		names = append(names, v.Value)
+	}
+
+	var err error
+	switch where.Value {
+	case "req":
+		if ctx.Request != nil {
+			ctx.Request.Header, err = header_filter_delete(ctx.Request.Header, names)
+		}
+	case "resp":
+		if ctx.Response != nil {
+			ctx.Response.Header, err = header_filter_delete(ctx.Response.Header, names)
+		}
+	case "obj":
+		if ctx.Object != nil {
+			ctx.Object.Header, err = header_filter_delete(ctx.Object.Header, names)
+		}
+	case "bereq":
+		if ctx.BackendRequest != nil {
+			ctx.BackendRequest.Header, err = header_filter_delete(ctx.BackendRequest.Header, names)
+		}
+	case "beresp":
+		if ctx.BackendResponse != nil {
+			ctx.BackendResponse.Header, err = header_filter_delete(ctx.BackendResponse.Header, names)
+		}
+	}
+
+	if err != nil {
+		return value.Null, err
+	}
+	return value.Null, nil
 }

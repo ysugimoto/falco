@@ -3,25 +3,52 @@
 package builtin
 
 import (
+	"net/http"
+	"strings"
+
+	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const Header_unset_Name = "header.unset"
 
-var Header_unset_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
+var Header_unset_ArgumentTypes = []value.Type{value.IdentType}
 
 func Header_unset_Validate(args []value.Value) error {
 	if len(args) != 2 {
 		return errors.ArgumentNotEnough(Header_unset_Name, 2, args)
 	}
-	for i := range args {
+	for i := 0; i < 1; i++ {
 		if args[i].Type() != Header_unset_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_unset_Name, i+1, Header_unset_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
+}
+
+func header_unset(h http.Header, name string) {
+	if !strings.Contains(name, ":") {
+		h.Del(name)
+		return
+	}
+	spl := strings.SplitN(name, ":", 2)
+	var filtered []string
+	for _, v := range h.Values(spl[0]) {
+		kv := strings.SplitN(v, "=", 2)
+		if kv[0] == spl[1] {
+			continue
+		}
+		filtered = append(filtered, v)
+	}
+	if len(filtered) == 0 {
+		h.Del(spl[0])
+	} else {
+		h[name] = filtered
+	}
 }
 
 // Fastly built-in function implementation of header.unset
@@ -34,6 +61,41 @@ func Header_unset(ctx *context.Context, args ...value.Value) (value.Value, error
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("header.unset")
+	where := value.Unwrap[*value.Ident](args[0])
+
+	name := &value.String{}
+	if err := assign.Assign(name, args[1]); err != nil {
+		return value.Null, errors.New(Header_unset_Name, err.Error())
+	}
+	if !shared.IsValidHeader(name.Value) {
+		return value.Null, nil
+	}
+	if err := limitations.CheckProtectedHeader(name.Value); err != nil {
+		return value.Null, errors.New(Header_unset_Name, err.Error())
+	}
+
+	switch where.Value {
+	case "req":
+		if ctx.Request != nil {
+			header_unset(ctx.Request.Header, name.Value)
+		}
+	case "resp":
+		if ctx.Response != nil {
+			header_unset(ctx.Response.Header, name.Value)
+		}
+	case "obj":
+		if ctx.Object != nil {
+			header_unset(ctx.Object.Header, name.Value)
+		}
+	case "bereq":
+		if ctx.BackendRequest != nil {
+			header_unset(ctx.BackendRequest.Header, name.Value)
+		}
+	case "beresp":
+		if ctx.BackendResponse != nil {
+			header_unset(ctx.BackendResponse.Header, name.Value)
+		}
+	}
+
+	return value.Null, nil
 }
