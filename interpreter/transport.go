@@ -15,6 +15,7 @@ import (
 	"github.com/ysugimoto/falco/config"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -124,7 +125,7 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 	req := i.ctx.BackendRequest.Clone(ctx)
 
 	// Check Fastly limitations
-	if err := checkFastlyRequestLimit(req); err != nil {
+	if err := limitations.CheckFastlyRequestLimit(req); err != nil {
 		return nil, errors.WithStack(err)
 	}
 

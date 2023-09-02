@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 )
 
 // Implements http.Handler
@@ -29,7 +30,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := i.ProcessRecv(); err != nil {
 		handleError(err)
-	} else if err := checkFastlyResponseLimit(i.ctx.Response); err != nil {
+	} else if err := limitations.CheckFastlyResponseLimit(i.ctx.Response); err != nil {
 		handleError(err)
 	}
 

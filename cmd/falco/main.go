@@ -89,6 +89,9 @@ func main() {
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
+	case "":
+		printHelp("")
+		os.Exit(1)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
 			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))

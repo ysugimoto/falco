@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/goccy/go-yaml"
+	"github.com/go-yaml/yaml"
 )
 
 var scopeMap = map[string]string{

@@ -13,6 +13,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
@@ -81,7 +82,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 		i.Debugger.Message(err.Error())
 		return err
 	}
-	if err := checkFastlyVCLLimitation(main.Data); err != nil {
+	if err := limitations.CheckFastlyVCLLimitation(main.Data); err != nil {
 		i.Debugger.Message(err.Error())
 		return err
 	}
@@ -122,7 +123,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	if err := i.ProcessDeclarations(statements); err != nil {
 		return err
 	}
-	if err := checkFastlyResourceLimit(i.ctx); err != nil {
+	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
 	return nil

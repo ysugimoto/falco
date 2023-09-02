@@ -1,3 +1,7 @@
+## v0.24.0
+
+- add new predefined/builtins, implement checker [#171](https://github.com/ysugimoto/falco/pull/171) (@ysugimoto)
+
 ## v0.23.2
 
 - fix up output methods on runne [#161](https://github.com/ysugimoto/falco/pull/161) (@ysugimoto)

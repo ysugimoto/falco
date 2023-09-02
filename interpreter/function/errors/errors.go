@@ -17,6 +17,10 @@ func NotImplemented(name string) error {
 	return New(name, "Not implemented")
 }
 
+func ArgumentAtLeast(name string, least int) error {
+	return New(name, "At least %d arguments must be provided", least)
+}
+
 func ArgumentMustEmpty(name string, args []value.Value) error {
 	return New(name, "Could not accept any arguments but %d provided", len(args))
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -212,6 +213,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case CLIENT_REQUESTS:
 		return &value.Integer{Value: 1}, nil
 
+	// Returns tentative value because falco does not support Edge POP
+	case FASTLY_FF_VISITS_THIS_POP:
+		return &value.Integer{Value: 1}, nil
+
 	// Returns common value -- do not consider of clustering
 	// see: https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/
 	case FASTLY_FF_VISITS_THIS_SERVICE:
@@ -221,6 +226,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		default:
 			return &value.Integer{Value: 0}, nil
 		}
+
+	// Returns tentative value -- you may know your customer_id in the contraction :-)
+	case REQ_CUSTOMER_ID:
+		return &value.String{Value: "FalcoVirtualCustomerId"}, nil
 
 	// Returns fixed value which is presented on Fastly fiddle
 	case MATH_FLOAT_DIG:
@@ -261,8 +270,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case REQ_VCL_VERSION:
 		return &value.Integer{Value: 1}, nil
 
+	case SERVER_BILLING_REGION:
+		return &value.String{Value: "Asia"}, nil // always returns Asia
 	case SERVER_PORT:
 		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
+	case SERVER_POP:
+		return &value.String{Value: "FALCO"}, nil // Intend to set string not exists in Fastly POP certainly
 
 	// workspace related values respects Fastly fiddle one
 	case WORKSPACE_BYTES_FREE:
@@ -716,12 +729,15 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		if !strings.Contains(name, ":") {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
+		if !strings.Contains(match[1], ":") {
 			v.ctx.Request.Header.Set(match[1], val.String())
 			return nil
 		}
 		// If name contains ":" like req.http.VARS:xxx, add with key-value format
-		spl := strings.SplitN(name, ":", 2)
+		spl := strings.SplitN(match[1], ":", 2)
 		v.ctx.Request.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
 		return nil
 	}
@@ -745,6 +761,9 @@ func (v *AllScopeVariables) Add(s context.Scope, name string, val value.Value) e
 			"Variable %s is not found or could not add. Normally add statement could use for HTTP header", name,
 		))
 	}
+	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+		return errors.WithStack(err)
+	}
 
 	v.ctx.Request.Header.Add(match[1], val.String())
 	return nil
@@ -760,6 +779,9 @@ func (v *AllScopeVariables) Unset(s context.Scope, name string) error {
 		return errors.WithStack(fmt.Errorf(
 			"Variable %s is not found or could not unset", name,
 		))
+	}
+	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+		return errors.WithStack(err)
 	}
 	v.ctx.Request.Header.Del(match[1])
 	return nil

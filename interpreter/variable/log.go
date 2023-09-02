@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -396,6 +397,9 @@ func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
 		v.ctx.Response.Header.Set(match[1], val.String())
 		return nil
 	}
@@ -411,6 +415,9 @@ func (v *LogScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		// Nothing values to be enable to add in PASS, pass to base
 		return v.base.Add(s, name, val)
 	}
+	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+		return errors.WithStack(err)
+	}
 
 	v.ctx.Response.Header.Add(match[1], val.String())
 	return nil
@@ -421,6 +428,9 @@ func (v *LogScopeVariables) Unset(s context.Scope, name string) error {
 	if match == nil {
 		// Nothing values to be enable to unset in PASS, pass to base
 		return v.base.Unset(s, name)
+	}
+	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+		return errors.WithStack(err)
 	}
 	v.ctx.Response.Header.Del(match[1])
 	return nil
