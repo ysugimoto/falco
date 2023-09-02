@@ -96,7 +96,7 @@ And the the debugger TUI accepts function keys to step execution:
 
 And you can type other keys to dump the variable in debugger shell.
 
-<img width="1128" alt="Screen Shot 2023-08-29 at 9 58 16" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
+<img width="1128" alt="debugger example" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
 
 ## Simulator Limitations
 
@@ -115,6 +115,7 @@ Limitations are following:
 - ESI will not work correctly
 - Director choosing algorithm result may be different
 - All of backends always treats healthy (but explicitly be unavailable from configuration)
+- Could not lookup private edge dictionary item due to Fastly API not responds its item
 - Lots of predefined variables and builtin functions returns empty or tentative value
 
 Variables that return tentative or inaccurate value are described at [variables.md](https://github.com/ysugimoto/falco/blob/develop/docs/variables.md).
