@@ -115,7 +115,7 @@ See [testing documentation](https://github.com/ysugimoto/falco/blob/develop/docs
 
 `falco` supports to run features for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly).
 
-See [terraform.md](https://github.com/ysugimoto/falco/blob/master/docs/terraform.md) in detail.
+See [terraform.md](https://github.com/ysugimoto/falco/blob/develop/docs/terraform.md) in detail.
 
 ## Transforming
 
