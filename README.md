@@ -89,8 +89,8 @@ Simple linting example:
 ## Linter
 
 The main feature, parse and run lint your VCL locally, and report problems.
-`falco` bundles many linter rules that come from author's operation experience, Fastly recommends,
-you can improve your VCL more robustly by passing the linter.
+`falco` bundles many linter rules that come from the author's operation experience, Fastly recommends,
+that you improve your VCL more robustly by passing the linter.
 
 See [linter documentation](https://github.com/ysugimoto/falco/blob/develop/docs/linter.md) in detail.
 
@@ -119,7 +119,7 @@ See [terraform.md](https://github.com/ysugimoto/falco/blob/develop/docs/terrafor
 
 ## Transforming
 
-`falco` plans to transpile Fastly VCL to the other programming language which works on the Compute@Edge, keep you posted when there are any progress.
+`falco` plans to transpile Fastly VCL to the other programming language that works on the Compute@Edge, keep you posted when there is any progress.
 
 ## Contribution
 
