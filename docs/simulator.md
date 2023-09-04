@@ -38,24 +38,24 @@ Local debugger example:
 You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
 
 
-You can start simulator as following:
+You can start the simulator as follows:
 
 ```shell
 falco simulate /path/to/your/default.vcl
 ```
 
 Then simulator server starts on http://localhost:3124, you can send HTTP request via curl, browser, etc.
-The server response is a JSON which indicates VCL process information, including following informations:
+The server response is a JSON which indicates VCL process information, including the following information:
 
 - VCL subroutine flow, what subroutine has processed with request/response information
 - Entire `log` statement output
 - Restart count
 - Determined backend
-- Served by cached object or not
+- Served by a cached object or not
 - Processing time
 - Actual HTTP Response without body
 
-Paticularly VCL subroutine flow is useful for debugging.
+Particularly VCL subroutine flow is useful for debugging.
 
 ## Important Notice
 
@@ -66,7 +66,7 @@ There are many limitations which are described below.**
 ## Debug mode
 
 `falco` also includes TUI debugger so that you can debug VCL with step execution.
-You can run debugger with providing `-debug` option on simulator:
+You can run the debugger by providing `-debug` option on the simulator:
 
 ```
 falco local -debug /path/to/your/default.vcl
@@ -74,8 +74,8 @@ falco local -debug /path/to/your/default.vcl
 
 ### Start debugging
 
-When falco runs simulator with debugger, falco finds `@debugger` leading annotation comment in your VCL.
-If comment is found, stop execution on the statement, for example:
+When falco runs the simulator with the debugger, falco finds `@debugger` leading annotation comment in your VCL.
+If the comment is found, stop execution on the statement, for example:
 
 ```vcl
 sub vcl_recv {
@@ -87,37 +87,37 @@ sub vcl_recv {
 }
 ```
 
-And the the debugger TUI accepts function keys to step execution:
+And the debugger TUI accepts function keys to step execution:
 
 - `F7` : resume execution to the next annotation comment
 - `F8` : step in
 - `F9` : step over
 - `F10`: step out
 
-And you can type other keys to dump the variable in debugger shell.
+You can type other keys to dump the variable in the debugger shell.
 
 <img width="1128" alt="debugger example" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
 
 ## Simulator Limitations
 
-The simulator has a lot of limitations, of course Fastly edge behaivor is undocumented and it comes from local environment reason.
-As possible as we can reproduce Varnish lifecycle which is described [here](https://developer.fastly.com/learning/vcl/using/), and guess and suspect the behaivor but some of variables are set tentative value.
+The simulator has a lot of limitations, of course, Fastly Edge Behaviors is undocumented and it comes from local environmental reasons.
+As possible we can reproduce Varnish lifecycle which is described [here](https://developer.fastly.com/learning/vcl/using/), and guess and suspect the behavior but some of the variables are set tentative values.
 
-Limitations are following:
+Limitations are the following:
 
-- Even adding `Fastly-Debug` header, debug header values are fake because we could not know what DataCenter is choosed
-- Origin-Shielding and clustering, fetch related features are unsupported
-- Cache object is not stored persistently, only manages in-memory, so when process are killed, all cache objects are deleted
+- Even adding `Fastly-Debug` header, debug header values are fake because we do not know what DataCenter is chosen
+- Origin-Shielding and clustering, fetch-related features are unsupported
+- Cache object is not stored persistently, only managed in-memory, so when the process is killed, all cache objects are deleted
 - `Stale-While-Revalidate` does not work
 - Extracted VCL in Faslty boilerplate marco is different. Only extracts VCL snippets
 - May not add some of Fastly specific request/response headers
 - WAF does not work
 - ESI will not work correctly
 - Director choosing algorithm result may be different
-- All of backends always treats healthy (but explicitly be unavailable from configuration)
-- Could not lookup private edge dictionary item due to Fastly API not responds its item
-- Lots of predefined variables and builtin functions returns empty or tentative value
+- All backends always treat healthy (but explicitly be unavailable from configuration)
+- Could not look at private edge dictionary item due to Fastly API not responding to its item
+- Lots of predefined variables and builtin functions return empty or tentative value
 
-Variables that return tentative or inaccurate value are described at [variables.md](https://github.com/ysugimoto/falco/blob/develop/docs/variables.md).
-Functions that return tentative value or unexpected bahavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/develop/docs/functions.md).
+Variables that return tentative or inaccurate values are described at [variables.md](https://github.com/ysugimoto/falco/blob/develop/docs/variables.md).
+Functions that return tentative value or unexpected behavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/develop/docs/functions.md).
 
