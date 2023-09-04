@@ -1,11 +1,11 @@
 # Configuration
 
-On command start running, `falco` finds up `.falco.yml` file from current directory.
+On command start running, `falco` finds up `.falco.yml` file from the current directory.
 If the file is found, load and set to CLI configuration.
 
-## Coniguration File Structure
+## Configuration File Structure
 
-Here is full configuration file example:
+Here is a full configuration file example:
 
 ```yaml
 // .falco.yaml
@@ -42,10 +42,10 @@ override_backends:
     unhealthy: true
 ```
 
-falco cascades each settings from the order of `Default Setting` -> `Configuration File` -> `CLI Arguments` to override.
-All configurations of configuration file and CLI arguemnts describe following table:
+falco cascades each setting from the order of `Default Setting` -> `Configuration File` -> `CLI Arguments` to override.
+All configurations of configuration files and CLI arguments are described following table:
 
-| Configuration Field                | Type          | Default | CLI Argument       | Desription                                                                                                                |
+| Configuration Field                | Type          | Default | CLI Argument       | Description                                                                                                                |
 |:-----------------------------------|:-------------:|:-------:|:------------------:|:--------------------------------------------------------------------------------------------------------------------------|
 | include_paths                      | Array<String> | []      | -I, --include_path | Include VCL paths                                                                                                         |
 | remote                             | Boolean       | false   | -r, --remote       | Fetch remote resources of Fastly                                                                                          |
