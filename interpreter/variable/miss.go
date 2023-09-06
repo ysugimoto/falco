@@ -107,25 +107,7 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 func (v *MissScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		// If name is Cookie, header name can contain ":" with cookie name
-		if !strings.Contains(name, ":") {
-			return &value.String{
-				Value: v.ctx.BackendRequest.Header.Get(match[1]),
-			}
-		}
-		spl := strings.SplitN(name, ":", 2)
-		if !strings.EqualFold(spl[0], "cookie") {
-			return &value.String{
-				Value: v.ctx.BackendRequest.Header.Get(match[1]),
-			}
-		}
-
-		for _, c := range v.ctx.BackendRequest.Cookies() {
-			if c.Name == spl[1] {
-				return &value.String{Value: c.Value}
-			}
-		}
-		return &value.String{Value: ""}
+		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -215,6 +197,6 @@ func (v *MissScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.BackendRequest.Header.Del(match[1])
+	unsetRequestHeaderValue(v.ctx.BackendRequest, match[1])
 	return nil
 }

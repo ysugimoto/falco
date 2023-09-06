@@ -601,29 +601,7 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 
 	// HTTP request header matching
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		// If name is Cookie, header name can contain ":" with cookie name
-		if !strings.Contains(name, ":") {
-			return &value.String{
-				Value: v.ctx.Request.Header.Get(match[1]),
-			}
-		}
-		spl := strings.SplitN(name, ":", 2)
-		if !strings.EqualFold(spl[0], "cookie") {
-			for _, hv := range v.ctx.Request.Header.Values(spl[0]) {
-				kvs := strings.SplitN(hv, "=", 2)
-				if kvs[0] == spl[1] {
-					return &value.String{Value: kvs[1]}
-				}
-			}
-			return &value.String{Value: ""}
-		}
-
-		for _, c := range v.ctx.Request.Cookies() {
-			if c.Name == spl[1] {
-				return &value.String{Value: c.Value}
-			}
-		}
-		return &value.String{Value: ""}
+		return getRequestHeaderValue(v.ctx.Request, match[1])
 	}
 
 	// Ratecounter variable matching
@@ -732,13 +710,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		if !strings.Contains(match[1], ":") {
-			v.ctx.Request.Header.Set(match[1], val.String())
-			return nil
-		}
-		// If name contains ":" like req.http.VARS:xxx, add with key-value format
-		spl := strings.SplitN(match[1], ":", 2)
-		v.ctx.Request.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
+		setRequestHeaderValue(v.ctx.Request, match[1], val)
 		return nil
 	}
 
@@ -783,7 +755,8 @@ func (v *AllScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Request.Header.Del(match[1])
+
+	unsetRequestHeaderValue(v.ctx.Request, match[1])
 	return nil
 }
 
