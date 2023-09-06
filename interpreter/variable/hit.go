@@ -89,9 +89,7 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return &value.String{
-			Value: v.ctx.Object.Header.Get(match[1]),
-		}
+		return getResponseHeaderValue(v.ctx.Object, match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -128,7 +126,7 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Header.Set(match[1], val.String())
+		setResponseHeaderValue(v.ctx.Object, match[1], val)
 		return nil
 	}
 
@@ -160,6 +158,6 @@ func (v *HitScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Object.Header.Del(match[1])
+	unsetResponseHeaderValue(v.ctx.Object, match[1])
 	return nil
 }

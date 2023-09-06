@@ -266,21 +266,8 @@ func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
 	if match == nil {
 		return v.base.getFromRegex(name)
 	}
-	// Header name can contain ":" for object-like value
-	if !strings.Contains(name, ":") {
-		return &value.String{
-			Value: v.ctx.Response.Header.Get(match[1]),
-		}
-	}
 
-	spl := strings.SplitN(name, ":", 2)
-	for _, hv := range v.ctx.Response.Header.Values(spl[0]) {
-		kvs := strings.SplitN(hv, "=", 2)
-		if kvs[0] == spl[1] {
-			return &value.String{Value: kvs[1]}
-		}
-	}
-	return &value.String{Value: ""}
+	return getResponseHeaderValue(v.ctx.Response, match[1])
 }
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -337,13 +324,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 
-		if !strings.Contains(name, ":") {
-			v.ctx.Response.Header.Set(match[1], val.String())
-			return nil
-		}
-		// If name contains ":" like req.http.VARS:xxx, add with key-value format
-		spl := strings.SplitN(name, ":", 2)
-		v.ctx.Response.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
+		setResponseHeaderValue(v.ctx.Response, match[1], val)
 		return nil
 	}
 
@@ -355,7 +336,7 @@ func (v *DeliverScopeVariables) Add(s context.Scope, name string, val value.Valu
 	// Add statement could be use only for HTTP header
 	match := responseHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
-		// Nothing values to be enable to add in PASS, pass to base
+		// Nothing values to be enable to add in DELIVER, pass to base
 		return v.base.Add(s, name, val)
 	}
 
@@ -369,12 +350,15 @@ func (v *DeliverScopeVariables) Add(s context.Scope, name string, val value.Valu
 func (v *DeliverScopeVariables) Unset(s context.Scope, name string) error {
 	match := responseHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
-		// Nothing values to be enable to unset in PASS, pass to base
+		// Nothing values to be enable to unset in DELIVER, pass to base
 		return v.base.Unset(s, name)
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Response.Header.Del(match[1])
+
+	unsetResponseHeaderValue(v.ctx.Response, match[1])
 	return nil
 }
+
+var _ Variable = &DeliverScopeVariables{}

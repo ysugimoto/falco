@@ -240,31 +240,11 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 func (v *FetchScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		// If name is Cookie, header name can contain ":" with cookie name
-		if !strings.Contains(name, ":") {
-			return &value.String{
-				Value: v.ctx.BackendRequest.Header.Get(match[1]),
-			}
-		}
-		spl := strings.SplitN(name, ":", 2)
-		if !strings.EqualFold(spl[0], "cookie") {
-			return &value.String{
-				Value: v.ctx.BackendRequest.Header.Get(match[1]),
-			}
-		}
-
-		for _, c := range v.ctx.BackendRequest.Cookies() {
-			if c.Name == spl[1] {
-				return &value.String{Value: c.Value}
-			}
-		}
-		return &value.String{Value: ""}
+		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
 	}
 
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return &value.String{
-			Value: v.ctx.BackendResponse.Header.Get(match[1]),
-		}
+		return getResponseHeaderValue(v.ctx.BackendResponse, match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -405,14 +385,14 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		bereq.Header.Set(match[1], val.String())
+		setRequestHeaderValue(v.ctx.BackendRequest, match[1], val)
 		return nil
 	}
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		beresp.Header.Set(match[1], val.String())
+		setResponseHeaderValue(v.ctx.BackendResponse, match[1], val)
 		return nil
 	}
 
@@ -440,14 +420,24 @@ func (v *FetchScopeVariables) Add(s context.Scope, name string, val value.Value)
 }
 
 func (v *FetchScopeVariables) Unset(s context.Scope, name string) error {
-	match := backendRequestHttpHeaderRegex.FindStringSubmatch(name)
-	if match == nil {
-		// Nothing values to be enable to unset in PASS, pass to base
-		return v.base.Unset(s, name)
+	// Backend Request
+	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
+		unsetRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return nil
 	}
-	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
-		return errors.WithStack(err)
+
+	// Backend Response
+	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return errors.WithStack(err)
+		}
+		unsetResponseHeaderValue(v.ctx.BackendResponse, match[1])
+		return nil
 	}
-	v.ctx.BackendRequest.Header.Del(match[1])
-	return nil
+
+	// Nothing values to be enable to unset in FETCH, pass to base
+	return v.base.Unset(s, name)
 }

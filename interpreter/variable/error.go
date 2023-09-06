@@ -156,13 +156,13 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 }
 
 func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
-	// HTTP request header matching
-	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return &value.String{
-			Value: v.ctx.Object.Header.Get(match[1]),
-		}
+	// HTTP response header matching
+	match := objectHttpHeaderRegex.FindStringSubmatch(name)
+	if match == nil {
+		return v.base.getFromRegex(name)
 	}
-	return v.base.getFromRegex(name)
+
+	return getResponseHeaderValue(v.ctx.Object, match[1])
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -247,7 +247,7 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Header.Set(match[1], val.String())
+		setResponseHeaderValue(v.ctx.Object, match[1], val)
 		return nil
 	}
 
@@ -259,7 +259,7 @@ func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value)
 	// Add statement could be use only for HTTP header
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
-		// Nothing values to be enable to add in PASS, pass to base
+		// Nothing values to be enable to add in ERROR, pass to base
 		return v.base.Add(s, name, val)
 	}
 
@@ -273,12 +273,13 @@ func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value)
 func (v *ErrorScopeVariables) Unset(s context.Scope, name string) error {
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
-		// Nothing values to be enable to unset in PASS, pass to base
+		// Nothing values to be enable to unset in ERROR, pass to base
 		return v.base.Unset(s, name)
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Object.Header.Del(match[1])
+
+	unsetResponseHeaderValue(v.ctx.Object, match[1])
 	return nil
 }
