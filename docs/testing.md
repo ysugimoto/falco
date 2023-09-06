@@ -4,7 +4,7 @@ You can run VCL unit test on our interpreter to make sure the subroutine works a
 
 ## Note
 
-Some variables are limited due to interpreter runs locally, so that variables that is using in your production VCL may have unexpected value, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) about limitations before.
+Some variables are limited because to interpreter runs locally, so the variables that are used in your production VCL may have unexpected values, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) about limitations before.
 
 ## Usage
 
@@ -47,8 +47,8 @@ falco test -I . /path/to/your/default.vcl
 
 ## How to write test VCL
 
-When you run testing command, falco finds test files which have `.test.vcl` suffix in the `include_paths`.
-Normally you can put testing file at the same place of main VCL:
+When you run the testing command, falco finds test files that have `.test.vcl` suffix in the `include_paths`.
+Normally you can put the testing file in the same place as main VCL:
 
 ```shell
 tree .
@@ -61,7 +61,7 @@ tree .
 falco test ./vcl/default.vcl
 ```
 
-Or, you may place testing files at the different directory, you can place them and set more `include_paths` option on CLI:
+Or, you may place testing files at a different directory, can place them and set more `include_paths` options on CLI:
 
 ```shell
 tree .
@@ -79,7 +79,7 @@ falco finds `default.test.vcl` as testing file for both case.
 
 ## Testing Subroutine
 
-Unit testing file can be written as VCL subroutine, example is following:
+Unit testing file can be written as VCL subroutine, example is the following:
 
 ```vcl
 // default.test.vcl
@@ -103,25 +103,25 @@ sub test_vcl_deliver {
 }
 ```
 
-You can see many interesting syntax, The test case is controlled with annotation and assertion functions.
+You can see many interesting syntaxes, The test case is controlled with annotation and assertion functions.
 
 ### Scope Recognition
 
-falco recognize `@scope` annotation for execution scope.
+falco recognizes `@scope` annotation for execution scope.
 
 `@scope: deliver` means the testing should run on `DELIVER` scope.
-You can specify multiply by separating comma like `@scope: hit,pass`.
+You can specify multiply by separating commas like `@scope: hit,pass`.
 
 ### Suite Name
 
-You can specify test suite name with `@suite` annotation value. Otherwise, the suite name will set as subroutine name.
+You can specify the test suite name with `@suite` annotation value. Otherwise, the suite name will be set as the subroutine name.
 
-### Testing preparetion
+### Testing preparation
 
-When test suite runs on the specific scope like `FETCH`, you need to set up pre-condition to run target VCL.
-It means you need to set up variables which is needed until directive moves to `FETCH`, setting up before calling `testing.call_subroutine`.
+When the test suite runs on a specific scope like `FETCH`, you need to set up a pre-condition to run target VCL.
+It means you need to set up variables which is needed until the directive moves to `FETCH`, setting up before calling `testing.call_subroutine`.
 
-This is because test target subroutine (in this case, `vcl_fetch`) is called independently, so thet the other lifecycle subroutines like `vcl_recv` and `vcl_pass` are not called.
+This is because the test target subroutine (in this case, `vcl_fetch`) is called independently, so that the other lifecycle subroutines like `vcl_recv` and `vcl_pass` are not called.
 
 For example:
 
@@ -137,7 +137,7 @@ sub pre_condition_test {
     set req.url = quetystring.add(req.url, "foo", "bar")
 
     // Override backend response before calling "vcl_fetch" for test case of 500 status code.
-    // It means here is a `hook` point before calling `vcl_fetch`.
+    // It means there is a `hook` point before calling `vcl_fetch`.
     set beresp.status = 500;
 
     // call target subroutine
@@ -177,7 +177,7 @@ We describe them following table and examples:
 ### testing.call_subroutine(STRING subroutine)
 
 Call subroutine that is defined at main VCL and included modules.
-This function can also call Fastly reserved subroutine like `vcl_recv` for testing but ensure call with corresponds to expected scope.
+This function can also call Fastly reserved subroutine like `vcl_recv` for testing but ensure the call corresponds to the expected scope.
 
 ```vcl
 // @scope: recv
@@ -192,8 +192,8 @@ sub test_vcl {
 ### assert(ANY expr [, STRING message])
 
 Assert provided expression should be truthy.
-Note that expression result must be `BOOL` or `STRING` type to evaluate value is truthy.
-Otherwise, assertion failed with `TypeMismatch`.
+Note that the expression result must be `BOOL` or `STRING` type to evaluate value is truthy.
+Otherwise, the assertion failed with `TypeMismatch`.
 
 ```vcl
 sub test_vcl {
@@ -261,7 +261,7 @@ sub test_vcl {
 
 ### assert.strict_equal(ANY actual, ANY expect [, STRING message])
 
-Assert actual value should be equal to expected value.
+Assert actual value should be equal to the expected value.
 Note that falco asserts strict type equality so both value types must be equal too.
 
 ```vcl
@@ -287,7 +287,7 @@ sub test_vcl {
 
 ### assert.not_strict_equal(ANY actual, ANY expect [, STRING message])
 
-Assert actual value should NOT be equal to expected value.
+Assert actual value should NOT be equal to the expected value.
 
 ```vcl
 sub test_vcl {
@@ -347,7 +347,7 @@ sub test_vcl {
 
 ### assert.not_match(STRING actual, STRING expect [, STRING message])
 
-Assert actual string should NOT be matches against expected regular expression.
+Assert actual string should NOT be matched against expected regular expression.
 
 ```vcl
 sub test_vcl {
@@ -407,7 +407,7 @@ sub test_vcl {
 
 ### assert.starts_with(STRING actual, STRING expect [, STRING message])
 
-Assert actual string should start with expected string.
+Assert the actual string should start with the expected string.
 
 ```vcl
 sub test_vcl {
@@ -427,7 +427,7 @@ sub test_vcl {
 
 ### assert.ends_with(STRING actual, STRING expect [, STRING message])
 
-Assert actual string should end with expected string.
+Assert actual string should end with the expected string.
 
 ```vcl
 sub test_vcl {

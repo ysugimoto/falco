@@ -1,9 +1,9 @@
 # Function in simulator
 
-Following table describes built-in functions that will return tentative value.
+The following table describes built-in functions that will return tentative values.
 Will be updated when we find or implement a way to get accurate values.
 
-| Function                                       | Tentative Value / behavior               |
+| Function                                       | Tentative Value/behavior               |
 |:----------------------------------------------:|:----------------------------------------:|
 | *fastly.hash(key, seed, from, to)*             | returns originaly calculated hahs string |
 | *h2.push(resource [, as])*                     | Ignore variadic arguments of "as"        |
