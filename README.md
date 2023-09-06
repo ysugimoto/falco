@@ -35,11 +35,10 @@ To solve them, we made a Fastly dedicated VCL parser and linter tool to notice s
 
 ## Installation
 
-Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according to your platform and place it under the `$PATH`, or you can install via Homebrew:
+Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according to your platform and place it under the `$PATH`, or you can install via [Homebrew](https://brew.sh/):
 
 ```shell
-brew tap ysugimoto/falco
-brew install falco
+$ brew install falco
 ```
 
 You can compile project yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
