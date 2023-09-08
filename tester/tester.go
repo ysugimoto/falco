@@ -50,7 +50,7 @@ func (t *Tester) listTestFiles(mainVCL string) ([]string, error) {
 
 	var testFiles []string
 	for i := range searchDirs {
-		files, err := findTestTargetFiles(searchDirs[i])
+		files, err := findTestTargetFiles(searchDirs[i], t.config.Filter)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
