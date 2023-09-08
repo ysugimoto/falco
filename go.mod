@@ -8,7 +8,6 @@ require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/k0kubun/pp v2.4.0+incompatible
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.8
 	github.com/pkg/errors v0.9.1
@@ -33,7 +32,6 @@ require (
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
