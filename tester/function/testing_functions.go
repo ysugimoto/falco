@@ -36,6 +36,46 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				return false
 			},
 		},
+		"testing.fixed_time_unix": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Testing_fixed_time_unix(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.fixed_time": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Testing_fixed_time(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 		"assert": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

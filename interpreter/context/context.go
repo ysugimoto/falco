@@ -132,8 +132,10 @@ type Context struct {
 	ObjectResponse                      *value.String
 	IsLocallyGenerated                  *value.Boolean
 
-	// For testing - store subroutine return state
+	// For testing fields
+	// Stored subroutine return state
 	ReturnState *value.String
+	FixedTime   *time.Time
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
