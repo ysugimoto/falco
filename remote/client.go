@@ -8,6 +8,7 @@ import (
 
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -50,6 +51,20 @@ func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) e
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func (c *FastlyClient) GetServiceIdByName(ctx context.Context, serviceName string) (string, error) {
+	ctx, timeout := context.WithTimeout(ctx, 5*time.Second)
+	defer timeout()
+
+	v := url.Values{}
+	v.Add("name", serviceName)
+	endpoint := fmt.Sprintf("/service/search?%s", v.Encode())
+	var s Service
+	if err := c.request(ctx, endpoint, &s); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return s.Id, nil
 }
 
 func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {

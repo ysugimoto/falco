@@ -4,6 +4,10 @@ type Version struct {
 	Number int64 `json:"number"`
 }
 
+type Service struct {
+	Id string `json:"id"`
+}
+
 type EdgeDictionary struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
