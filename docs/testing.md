@@ -159,6 +159,7 @@ We describe them following table and examples:
 |:------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state           | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
+| testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
@@ -185,6 +186,39 @@ This function can also call Fastly reserved subroutine like `vcl_recv` for testi
 sub test_vcl {
     // call vcl_recv Fastly reserved subroutine in RECV scope
     testing.call_subroutine("vcl_recv");
+}
+```
+
+----
+
+### testing.fixed_time(INTEGER|TIME|STRING time)
+
+Use fixed time in the current test case.
+After this function is called, `now` and `now.sec` always return the fixed time value. so it is useful for time-related tests, for example, checking session cookie is live or not.
+
+The argument can accept some types:
+
+- INTEGER: unix time seconds
+- TIME: VCL time like std.integer2time() return value
+- STRING: `YYYY-mm-dd HH:MM:SS` formatted string, human readable
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Accepts INTEGER of unix time seconds
+    testing.fixed_time(1694159940);
+
+    // Accepts TIME that is made from VCL function
+    testing.fixed_time(std.integer2time(1694159940));
+
+    // Accepts STRING that has acceptable format
+    testing.fixed_time("2023-09-08 16:59:00");
+
+    // call vcl_recv Fastly reserved subroutine in RECV scope
+    testing.call_subroutine("vcl_recv");
+
+    // some time related assertions here
+    assert.true(req.http.Is-Session-Expired)
 }
 ```
 

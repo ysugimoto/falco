@@ -42,14 +42,15 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 // nolint: funlen,gocognit,gocyclo
 func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	req := v.ctx.Request
-	ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 
 	switch name {
 	case BEREQ_IS_CLUSTERING:
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_CLASS_BOT:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.IsBot()}, nil
 	case CLIENT_CLASS_BROWSER:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.Browser.Name > 0}, nil
 
 	// Following values are always false in interpreter
@@ -73,24 +74,31 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_DISPLAY_TOUCHSCREEN:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isTouch := ua.DeviceType == uasurfer.DevicePhone ||
 			ua.DeviceType == uasurfer.DeviceTablet ||
 			ua.DeviceType == uasurfer.DeviceWearable
 		return &value.Boolean{Value: isTouch}, nil
 	case CLIENT_PLATFORM_EREADER:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.OS.Name == uasurfer.OSKindle}, nil
 	case CLIENT_PLATFORM_GAMECONSOLE:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isGame := ua.OS.Name == uasurfer.OSPlaystation ||
 			ua.OS.Name == uasurfer.OSXbox ||
 			ua.OS.Name == uasurfer.OSNintendo
 		return &value.Boolean{Value: isGame}, nil
 	case CLIENT_PLATFORM_MOBILE:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DevicePhone}, nil
 	case CLIENT_PLATFORM_SMARTTV:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_PLATFORM_TABLET:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTablet}, nil
 	case CLIENT_PLATFORM_TVPLAYER:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case FASTLY_INFO_EDGE_IS_TLS:
 		return &value.Boolean{Value: req.TLS != nil}, nil
@@ -323,13 +331,16 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case TIME_ELAPSED:
 		return &value.RTime{Value: time.Since(v.ctx.RequestStartTime)}, nil
 	case CLIENT_BOT_NAME:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_NAME:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_VERSION:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.Browser.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
@@ -378,8 +389,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
 
 	case CLIENT_OS_NAME:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.OS.Name.String()}, nil
 	case CLIENT_OS_VERSION:
+		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.OS.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
@@ -394,6 +407,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case LF:
 		return &value.String{Value: "\n"}, nil
 	case NOW_SEC:
+		// For testing - if fixed time is injected, return it
+		if v.ctx.FixedTime != nil {
+			return &value.String{Value: fmt.Sprint(v.ctx.FixedTime.Unix())}, nil
+		}
 		return &value.String{Value: fmt.Sprint(time.Now().Unix())}, nil
 	case REQ_BODY:
 		switch req.Method {
@@ -571,6 +588,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			Value: fmt.Sprint(v.ctx.RequestStartTime.UnixMicro() % 1000000),
 		}, nil
 	case NOW:
+		// For testing - if fixed time is injected, return it
+		if v.ctx.FixedTime != nil {
+			return &value.Time{Value: *v.ctx.FixedTime}, nil
+		}
 		return &value.Time{Value: time.Now()}, nil
 	case TIME_START:
 		return &value.Time{Value: v.ctx.RequestStartTime}, nil
