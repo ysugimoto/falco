@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/k0kubun/pp"
-	_ "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/exception"
@@ -108,7 +106,6 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	case *ast.FunctionCallExpression:
 		return i.ProcessFunctionCallExpression(t, withCondition)
 	default:
-		pp.Println(exp)
 		return value.Null, exception.Runtime(&exp.GetMeta().Token, "Undefined expression found")
 	}
 }

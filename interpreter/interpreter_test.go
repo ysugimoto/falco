@@ -9,7 +9,6 @@ import (
 	"net/url"
 
 	"github.com/google/go-cmp/cmp"
-	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"

@@ -3,7 +3,6 @@ package interpreter
 import (
 	"testing"
 
-	_ "github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
