@@ -59,6 +59,7 @@ func TestConfigFromCLI(t *testing.T) {
 			OverrideRequest: &RequestConfig{},
 		},
 		Testing: &TestConfig{
+			Filter:          "*.test.vcl",
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
