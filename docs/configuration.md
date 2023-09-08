@@ -59,7 +59,7 @@ All configurations of configuration files and CLI arguments are described follow
 | linter.verbose                     | String        | error   | -v, -vv            | Verbose level, `warning` or `info` is valid                                                                               |
 | linter.rules                       | Object        | null    | -                  | Override linter rules                                                                                                     |
 | linter.rules.[rule_name]           | String        | -       | -                  | Override linter error level for the rule name, see [rules](https://github.com/ysugimoto/falco/blob/develop/docs/rules.md) |
-| override_backends                  | Object        | -       | -                  | Override backend settings in main VCL which correspond to the name                                                        |
+| override_backends                  | Object        | -       | -                  | Override backend settings in main VCL which correspond to the name. Key of backend name accepts glob pattern              |
 | override_backends.[name]           | Object        | -       | -                  | Backend name to override                                                                                                  |
 | override_backends.[name].host      | String        | -       | -                  | Backend host to override                                                                                                  |
 | override_backends.[name].ssl       | Boolean       | true    | -                  | Use HTTPS when set `true`                                                                                                 |
