@@ -3,7 +3,7 @@
 package builtin
 
 import (
-	"github.com/ryanuber/go-glob"
+	"github.com/gobwas/glob"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/function/shared"
@@ -46,8 +46,15 @@ func Querystring_globfilter_except(ctx *context.Context, args ...value.Value) (v
 		)
 	}
 
+	pattern, err := glob.Compile(name.Value)
+	if err != nil {
+		return value.Null, errors.New(
+			Querystring_globfilter_Name, "Invalid glob filter string: %s, error: %s", v.Value, err.Error(),
+		)
+	}
+
 	query.Filter(func(v string) bool {
-		return glob.Glob(name.Value, v)
+		return pattern.Match(v)
 	})
 	return &value.String{Value: query.String()}, nil
 }

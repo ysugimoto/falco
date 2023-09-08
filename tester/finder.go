@@ -4,13 +4,13 @@ import (
 	"io/fs"
 	"path/filepath"
 
+	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
-	"github.com/ryanuber/go-glob"
 )
 
 type finder struct {
 	files  []string
-	filter string
+	filter glob.Glob
 }
 
 // fs.WalkDirFunc implementation
@@ -21,7 +21,7 @@ func (f *finder) find(path string, entry fs.DirEntry, err error) error {
 		}
 		return err
 	}
-	if !glob.Glob(f.filter, path) {
+	if !f.filter.Match(path) {
 		return nil
 	}
 	f.files = append(f.files, path)
@@ -33,8 +33,13 @@ func findTestTargetFiles(root, filter string) ([]string, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	pattern, err := glob.Compile(filter)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	f := &finder{
-		filter: filter,
+		filter: pattern,
 	}
 	if err := filepath.WalkDir(abs, f.find); err != nil {
 		return nil, errors.WithStack(err)

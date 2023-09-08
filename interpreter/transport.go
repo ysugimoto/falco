@@ -10,8 +10,8 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
-	"github.com/ryanuber/go-glob"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
@@ -22,14 +22,18 @@ import (
 
 const HTTPS_SCHEME = "https"
 
-func getOverrideBackend(ctx *icontext.Context, backendName string) *config.OverrideBackend {
+func getOverrideBackend(ctx *icontext.Context, backendName string) (*config.OverrideBackend, error) {
 	for key, val := range ctx.OverrideBackends {
-		if !glob.Glob(key, backendName) {
+		p, err := glob.Compile(key)
+		if err != nil {
+			return nil, exception.System("Invalid glob pattern is provided: %s, %s", key, err)
+		}
+		if !p.Match(backendName) {
 			continue
 		}
-		return val
+		return val, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
@@ -41,7 +45,10 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	}
 
 	// Get override backend host from configuration
-	overrideBackend := getOverrideBackend(ctx, backend.Value.Name.Value)
+	overrideBackend, err := getOverrideBackend(ctx, backend.Value.Name.Value)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	// scheme may be overrided by config
 	scheme := "http"
