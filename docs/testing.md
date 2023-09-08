@@ -47,7 +47,8 @@ falco test -I . /path/to/your/default.vcl
 
 ## How to write test VCL
 
-When you run the testing command, falco finds test files that have `.test.vcl` suffix in the `include_paths`.
+When you run the testing command, falco finds test files that match the glob syntax of `*.test.vcl` in the `include_paths`, or you can override this by providing `-f,--filter` option to filter test target files you want.
+
 Normally you can put the testing file in the same place as main VCL:
 
 ```shell

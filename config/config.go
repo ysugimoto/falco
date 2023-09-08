@@ -30,7 +30,7 @@ type LinterConfig struct {
 type SimulatorConfig struct {
 	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
 	IsDebug      bool     `cli:"debug"` // Enable only in CLI option
-	IncludePaths []string // may copied from root field
+	IncludePaths []string // Copy from root field
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
@@ -39,7 +39,8 @@ type SimulatorConfig struct {
 // Testing configuration
 type TestConfig struct {
 	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
-	IncludePaths []string // may copied from root field
+	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
+	IncludePaths []string // Copy from root field
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig

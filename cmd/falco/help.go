@@ -136,6 +136,7 @@ Flags:
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
     -t, --timeout      : Set timeout to running test
+    -f, --filter       : Override glob filter to find test files
     -json              : Output results as JSON
     -request           : Override request config
     --max_backends     : Override max backends limitation
