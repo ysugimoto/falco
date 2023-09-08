@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/ryanuber/go-glob"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
@@ -21,6 +22,16 @@ import (
 
 const HTTPS_SCHEME = "https"
 
+func getOverrideBackend(ctx *icontext.Context, backendName string) *config.OverrideBackend {
+	for key, val := range ctx.OverrideBackends {
+		if !glob.Glob(key, backendName) {
+			continue
+		}
+		return val
+	}
+	return nil
+}
+
 func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
 	var port string
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
@@ -29,10 +40,8 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		port = value.Unwrap[*value.String](v).Value
 	}
 
-	var overrideBackend *config.OverrideBackend
-	if v, ok := ctx.OverrideBackends[backend.Value.Name.Value]; ok {
-		overrideBackend = v
-	}
+	// Get override backend host from configuration
+	overrideBackend := getOverrideBackend(ctx, backend.Value.Name.Value)
 
 	// scheme may be overrided by config
 	scheme := "http"
