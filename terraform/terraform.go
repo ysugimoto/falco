@@ -136,5 +136,5 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 
 func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
 	return r.ProviderName == fastlyTerraformProviderName &&
-		(r.Type == fastlyVCLServiceType || r.Type == fastlyVCLServiceTypeV1)
+		(r.Type == fastlyVCLServiceType || r.Type == fastlyVCLServiceTypeV1) && len(r.Values.Vcl) > 0
 }
