@@ -48,3 +48,21 @@ func TestUnmarshallInValidTfJson(t *testing.T) {
 		t.Fatalf("Expected error when unarshalling tf %s ", fileName)
 	}
 }
+
+func TestUnmarshallInWithoutVCLTfJson(t *testing.T) {
+	fileName := "./data/terraform-without-vcl.json"
+	buf, err := os.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
+	}
+
+	services, err := UnmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error when unarshalling tf %s ", fileName)
+	}
+
+	if len(services) != 1 {
+		t.Errorf("Length of services should be %d, got %d", 1, len(services))
+	}
+}
