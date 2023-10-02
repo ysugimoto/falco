@@ -27,6 +27,10 @@ func Randomstr_Validate(args []value.Value) error {
 	return nil
 }
 
+var Randomstr_default_characters = []rune(
+	"abcdedfhijklmnopqrstuvwxyzABCDEDFHIJKLMNOPQRSTUVWXYZ0123456789-_",
+)
+
 // Fastly built-in function implementation of randomstr
 // Arguments may be:
 // - INTEGER
@@ -39,7 +43,10 @@ func Randomstr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	length := value.Unwrap[*value.Integer](args[0])
-	characters := []rune(value.Unwrap[*value.String](args[1]).Value)
+	characters := Randomstr_default_characters
+	if len(args) > 1 {
+		characters = []rune(value.Unwrap[*value.String](args[1]).Value)
+	}
 
 	rand.Seed(time.Now().UnixNano())
 	ret := make([]rune, int(length.Value))
