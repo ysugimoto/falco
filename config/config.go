@@ -41,6 +41,7 @@ type TestConfig struct {
 	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
 	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
 	IncludePaths []string // Copy from root field
+	OverrideHost string   `yaml:"host"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
