@@ -491,6 +491,9 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	if tc.OverrideRequest != nil {
 		options = append(options, icontext.WithRequest(tc.OverrideRequest))
 	}
+	if tc.OverrideHost != "" {
+		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
+	}
 
 	i := interpreter.New(options...)
 	r.message(white, "Running tests...")

@@ -52,6 +52,7 @@ type Context struct {
 	Ratecounters        map[string]*ast.RatecounterDeclaration
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
+	OriginalHost        string
 
 	OverrideMaxBackends int
 	OverrideMaxAcls     int

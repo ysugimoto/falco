@@ -43,3 +43,9 @@ func WithOverrideBackends(ov map[string]*config.OverrideBackend) Option {
 		c.OverrideBackends = ov
 	}
 }
+
+func WithOverrideHost(host string) Option {
+	return func(c *Context) {
+		c.OriginalHost = host
+	}
+}
