@@ -22,10 +22,10 @@ func Test_Time_units(t *testing.T) {
 		expect  string
 		isError bool
 	}{
-		{unit: "s", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620s"},
-		{unit: "ms", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620000ms"},
-		{unit: "us", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620000000us"},
-		{unit: "ns", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620000000000ns"},
+		{unit: "s", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620"},
+		{unit: "ms", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620.000"},
+		{unit: "us", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620.000000"},
+		{unit: "ns", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "1677880620.000000000"},
 		{unit: "z", time: time.Date(2023, 3, 3, 21, 57, 0, 0, time.UTC), expect: "", isError: true},
 	}
 

@@ -22,10 +22,10 @@ func Test_Time_runits(t *testing.T) {
 		expect  string
 		isError bool
 	}{
-		{unit: "s", rtime: time.Duration(time.Second), expect: "1s"},
-		{unit: "ms", rtime: time.Duration(time.Second), expect: "1000ms"},
-		{unit: "us", rtime: time.Duration(time.Second), expect: "1000000us"},
-		{unit: "ns", rtime: time.Duration(time.Second), expect: "1000000000ns"},
+		{unit: "s", rtime: time.Duration(time.Second), expect: "1"},
+		{unit: "ms", rtime: time.Duration(time.Second), expect: "1.000"},
+		{unit: "us", rtime: time.Duration(time.Second), expect: "1.000000"},
+		{unit: "ns", rtime: time.Duration(time.Second), expect: "1.000000000"},
 		{unit: "z", rtime: time.Duration(time.Second), expect: "", isError: true},
 	}
 
