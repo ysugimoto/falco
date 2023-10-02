@@ -4,6 +4,7 @@ package builtin
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -42,19 +43,22 @@ func Time_runits(ctx *context.Context, args ...value.Value) (value.Value, error)
 	switch unit {
 	case "s":
 		return &value.String{
-			Value: fmt.Sprintf("%ds", int64(rtime.Seconds())),
+			Value: fmt.Sprintf("%d", int64(rtime.Seconds())),
 		}, nil
 	case "ms":
+		v := float64(rtime.Milliseconds()) / 1000
 		return &value.String{
-			Value: fmt.Sprintf("%dms", rtime.Milliseconds()),
+			Value: strconv.FormatFloat(v, 'f', 3, 64),
 		}, nil
 	case "us":
+		v := float64(rtime.Microseconds()) / 1000000
 		return &value.String{
-			Value: fmt.Sprintf("%dus", rtime.Microseconds()),
+			Value: strconv.FormatFloat(v, 'f', 6, 64),
 		}, nil
 	case "ns":
+		v := float64(rtime.Nanoseconds()) / 1000000000
 		return &value.String{
-			Value: fmt.Sprintf("%dns", rtime.Nanoseconds()),
+			Value: strconv.FormatFloat(v, 'f', 9, 64),
 		}, nil
 	default:
 		ctx.FastlyError = &value.String{Value: "EINVAL"}

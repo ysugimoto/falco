@@ -186,8 +186,6 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 
 	case BERESP_RESPONSE:
 		return v.ctx.BackendResponseResponse, nil
-	case BERESP_SAINTMODE:
-		return v.ctx.BackendResponseSaintMode, nil
 	case BERESP_STALE_IF_ERROR:
 		return v.ctx.BackendResponseStaleIfError, nil
 	case BERESP_STALE_WHILE_REVALIDATE:
@@ -195,7 +193,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case BERESP_STATUS:
 		return &value.Integer{Value: int64(beresp.StatusCode)}, nil
 	case BERESP_TTL:
-		return v.ctx.BackendResponseGzip, nil
+		return v.ctx.BackendResponseTTL, nil
 
 	case BERESP_USED_ALTERNATE_PATH_TO_ORIGIN:
 		// https://docs.fastly.com/en/guides/precision-path
@@ -360,7 +358,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		beresp.Status = http.StatusText(int(left.Value))
 		return nil
 	case BERESP_TTL:
-		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
+		if err := doAssign(v.ctx.BackendResponseTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
