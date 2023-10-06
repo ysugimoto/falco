@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -19,8 +18,8 @@ import (
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
-	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/types"
 )
@@ -77,7 +76,7 @@ type Runner struct {
 	transformers []*Transformer
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
-	snippets     *context.FastlySnippet
+	snippets     *snippets.Snippets
 	config       *config.Config
 
 	level       Level
@@ -101,7 +100,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -111,35 +110,13 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		parseErrors: make(map[string]*parser.ParseError),
 	}
 
-	if c.Remote {
-		r.message(cyan, "Remote option supplied. Fetching snippets from Fastly.\n")
-		// If remote flag is provided, fetch predefined data from Fastly.
-		//
-		// We communicate Fastly API with service id and api key,
-		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
-		// So user needs to set them with "-r" argument.
-		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
-			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
-		}
-		func() {
-			// Remote communication is optional so we keep processing even if remote communication is failed
-			// We allow each API call to take up to to 5 seconds
-			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
-			snippets, err := NewSnippet(f).Fetch()
-			if err != nil {
-				r.message(red, err.Error()+"\n")
-			}
-			// Stack to runner field, combime before run()
-			r.snippets = snippets
-		}()
-	}
-
-	if f != nil {
-		snippets, err := NewSnippet(f).Fetch()
+	// If fetch interface is provided, communicate with it
+	if fetcher != nil {
+		s, err := snippets.Fetch(fetcher)
 		if err != nil {
 			r.message(red, err.Error()+"\n")
 		}
-		r.snippets = snippets
+		r.snippets = s
 	}
 
 	// Check transformer exists and format to absolute path
@@ -198,7 +175,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithFastlySnippets(r.snippets))
+		options = append(options, context.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -410,7 +387,7 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithFastlySnippets(r.snippets))
+		options = append(options, context.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -450,7 +427,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
-		options = append(options, icontext.WithFastlySnippets(r.snippets))
+		options = append(options, icontext.WithSnippets(r.snippets))
 	}
 	if sc.OverrideRequest != nil {
 		options = append(options, icontext.WithRequest(sc.OverrideRequest))
@@ -486,7 +463,7 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 	}
 	if r.snippets != nil {
-		options = append(options, icontext.WithFastlySnippets(r.snippets))
+		options = append(options, icontext.WithSnippets(r.snippets))
 	}
 	if tc.OverrideRequest != nil {
 		options = append(options, icontext.WithRequest(tc.OverrideRequest))

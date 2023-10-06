@@ -6,6 +6,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -116,7 +117,7 @@ type Context struct {
 	functions      Functions
 	Variables      Variables
 	resolver       resolver.Resolver
-	fastlySnippets *FastlySnippet
+	fastlySnippets *snippets.Snippets
 
 	// public fields
 	Acls              map[string]*types.Acl
@@ -176,9 +177,9 @@ func (c *Context) Resolver() resolver.Resolver {
 	return c.resolver
 }
 
-func (c *Context) Snippets() *FastlySnippet {
+func (c *Context) Snippets() *snippets.Snippets {
 	if c.fastlySnippets == nil {
-		c.fastlySnippets = &FastlySnippet{}
+		c.fastlySnippets = &snippets.Snippets{}
 	}
 	return c.fastlySnippets
 }

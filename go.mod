@@ -2,8 +2,6 @@ module github.com/ysugimoto/falco
 
 go 1.21
 
-toolchain go1.21.1
-
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/fatih/color v1.12.0
