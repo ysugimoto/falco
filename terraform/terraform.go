@@ -35,6 +35,10 @@ type TerraformSnippet struct {
 	Priority int64
 }
 
+type TerraformLoggingEndpoint struct {
+	Name string
+}
+
 // TODO(davinci26): We can unmarshall all the properties from the TF file
 // and lint them to make sure they have sane values.
 type TerraformBackend struct {
@@ -43,12 +47,13 @@ type TerraformBackend struct {
 }
 
 type FastlyService struct {
-	Name         string
-	Vcls         []*TerraformVcl
-	Backends     []*TerraformBackend
-	Acls         []*TerraformAcl
-	Dictionaries []*TerraformDictionary
-	Snippets     []*TerraformSnippet
+	Name             string
+	Vcls             []*TerraformVcl
+	Backends         []*TerraformBackend
+	Acls             []*TerraformAcl
+	Dictionaries     []*TerraformDictionary
+	Snippets         []*TerraformSnippet
+	LoggingEndpoints []string
 }
 
 type TerraformPlannedResource struct {
@@ -61,6 +66,33 @@ type TerraformPlannedResource struct {
 		Backend    []*TerraformBackend    `json:"backend"`
 		Dictionary []*TerraformDictionary `json:"dictionary"`
 		Snippets   []*TerraformSnippet    `json:"snippet"`
+
+		// Various kinds of realtime logging endpoints
+		LoggingBigQuerty     []*TerraformLoggingEndpoint `json:"logging_bigqeury"`
+		LoggingBlobStorage   []*TerraformLoggingEndpoint `json:"logging_blobstorage"`
+		LoggingCloudFiles    []*TerraformLoggingEndpoint `json:"logging_cloudfiles"`
+		LoggingDatadog       []*TerraformLoggingEndpoint `json:"logging_datadog"`
+		LoggingDigitalOpean  []*TerraformLoggingEndpoint `json:"logging_digitalocean"`
+		LoggingElasticsearch []*TerraformLoggingEndpoint `json:"logging_elasticsearch"`
+		LoggingFtp           []*TerraformLoggingEndpoint `json:"logging_ftp"`
+		LoggingGcs           []*TerraformLoggingEndpoint `json:"logging_gcs"`
+		LoggingGooglePubSub  []*TerraformLoggingEndpoint `json:"logging_googlepubsub"`
+		LoggingHeroku        []*TerraformLoggingEndpoint `json:"logging_heroku"`
+		LoggingHttps         []*TerraformLoggingEndpoint `json:"logging_https"`
+		LoggingKafka         []*TerraformLoggingEndpoint `json:"logging_kafka"`
+		LoggingKinesis       []*TerraformLoggingEndpoint `json:"logging_kinesis"`
+		LoggingLogEntries    []*TerraformLoggingEndpoint `json:"logging_logentries"`
+		LoggingLoggly        []*TerraformLoggingEndpoint `json:"logging_loggly"`
+		LoggingLogShuttle    []*TerraformLoggingEndpoint `json:"logging_logshuttle"`
+		LoggingNewRelic      []*TerraformLoggingEndpoint `json:"logging_newrelic"`
+		LoggingOpenStack     []*TerraformLoggingEndpoint `json:"logging_openstack"`
+		LoggingPaperTrail    []*TerraformLoggingEndpoint `json:"logging_papertrail"`
+		LoggingS3            []*TerraformLoggingEndpoint `json:"logging_s3"`
+		LoggingScalyr        []*TerraformLoggingEndpoint `json:"logging_scalyr"`
+		LoggingSftp          []*TerraformLoggingEndpoint `json:"logging_sftp"`
+		LoggingSplunk        []*TerraformLoggingEndpoint `json:"logging_splunk"`
+		LoggingSumoLogic     []*TerraformLoggingEndpoint `json:"logging_sumologic"`
+		LoggingSyslog        []*TerraformLoggingEndpoint `json:"logging_syslog"`
 	} `json:"values"`
 }
 
@@ -99,12 +131,13 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 			}
 
 			services = append(services, &FastlyService{
-				Name:         v.Values.Name,
-				Vcls:         v.Values.Vcl,
-				Acls:         v.Values.Acl,
-				Backends:     v.Values.Backend,
-				Dictionaries: v.Values.Dictionary,
-				Snippets:     v.Values.Snippets,
+				Name:             v.Values.Name,
+				Vcls:             v.Values.Vcl,
+				Acls:             v.Values.Acl,
+				Backends:         v.Values.Backend,
+				Dictionaries:     v.Values.Dictionary,
+				Snippets:         v.Values.Snippets,
+				LoggingEndpoints: factoryLoggingEndpoints(v),
 			})
 		}
 	}
@@ -117,12 +150,13 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 			}
 
 			services = append(services, &FastlyService{
-				Name:         v.Values.Name,
-				Vcls:         v.Values.Vcl,
-				Acls:         v.Values.Acl,
-				Backends:     v.Values.Backend,
-				Dictionaries: v.Values.Dictionary,
-				Snippets:     v.Values.Snippets,
+				Name:             v.Values.Name,
+				Vcls:             v.Values.Vcl,
+				Acls:             v.Values.Acl,
+				Backends:         v.Values.Backend,
+				Dictionaries:     v.Values.Dictionary,
+				Snippets:         v.Values.Snippets,
+				LoggingEndpoints: factoryLoggingEndpoints(v),
 			})
 		}
 	}
@@ -137,4 +171,81 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
 	return r.ProviderName == fastlyTerraformProviderName &&
 		(r.Type == fastlyVCLServiceType || r.Type == fastlyVCLServiceTypeV1)
+}
+
+func factoryLoggingEndpoints(resource *TerraformPlannedResource) []string {
+	var endpoints []string
+	for _, v := range resource.Values.LoggingBigQuerty {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingBlobStorage {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingCloudFiles {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingDatadog {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingDigitalOpean {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingElasticsearch {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingFtp {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingGcs {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingGooglePubSub {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingHeroku {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingHttps {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingKafka {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingKinesis {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingLogEntries {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingLoggly {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingLogShuttle {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingNewRelic {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingOpenStack {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingPaperTrail {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingS3 {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingScalyr {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingSplunk {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingSumoLogic {
+		endpoints = append(endpoints, v.Name)
+	}
+	for _, v := range resource.Values.LoggingSyslog {
+		endpoints = append(endpoints, v.Name)
+	}
+	return endpoints
 }

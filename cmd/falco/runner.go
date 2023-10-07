@@ -100,7 +100,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -117,6 +117,9 @@ func NewRunner(c *config.Config, fetcher Fetcher) (*Runner, error) {
 			r.message(red, err.Error()+"\n")
 		}
 		r.snippets = s
+		if err := r.snippets.FetchLogingEndpoint(fetcher); err != nil {
+			r.message(red, err.Error()+"\n")
+		}
 	}
 
 	// Check transformer exists and format to absolute path

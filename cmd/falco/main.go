@@ -19,6 +19,7 @@ import (
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/terraform"
 	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/token"
@@ -74,7 +75,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var fetcher Fetcher
+	var fetcher snippets.Fetcher
 	var action string
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver

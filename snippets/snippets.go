@@ -31,3 +31,20 @@ func (s *Snippets) EmbedSnippets() []SnippetItem {
 
 	return snippets
 }
+
+// Fastly logging endpoints is not used on linting and interpreter,
+// but we need to be able to factory all endpoints for future works.
+// Fastly's logging endpoints API is divided for each services like BigQuery, S3, etc..
+// It means we need to make many API calls so implement as Snippets pointer method.
+func (s *Snippets) FetchLogingEndpoint(fetcher Fetcher) error {
+	endpoints, err := fetcher.LoggingEndpoints()
+	if err != nil {
+		return err
+	}
+
+	// Convert map to key access
+	for i := range endpoints {
+		s.LoggingEndpoints[endpoints[i]] = struct{}{}
+	}
+	return nil
+}

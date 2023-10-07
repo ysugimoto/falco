@@ -82,3 +82,11 @@ func (f *TerraformFetcher) Snippets() ([]*types.RemoteVCL, error) {
 	}
 	return v, nil
 }
+
+func (f *TerraformFetcher) LoggingEndpoints() ([]string, error) {
+	var v []string
+	for _, s := range f.filterService() {
+		v = append(v, s.LoggingEndpoints...)
+	}
+	return v, nil
+}

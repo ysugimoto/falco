@@ -51,7 +51,7 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 	}
 }
 
-func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher) {
+func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, *terraform.TerraformFetcher) {
 	buf, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)

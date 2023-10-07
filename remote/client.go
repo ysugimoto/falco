@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -235,4 +236,65 @@ func (c *FastlyClient) getDynamicSnippetContent(ctx context.Context, snippetId s
 	}
 
 	return &snippet.Content, nil
+}
+
+var fastlyRealtimeLoggingTypes = []string{
+	"bigquery",
+	"cloudfiles",
+	"datadog",
+	"digitalocean",
+	"elasticsearch",
+	"ftp",
+	"gcs",
+	"pubsub",
+	"https",
+	"heroku",
+	"honeycomb",
+	"kafka",
+	"kinesis",
+	"logshuttle",
+	"loggly",
+	"azureblob",
+	"newrelic",
+	"newrelicotlp",
+	"openstack",
+	"papertrail",
+	"s3",
+	"sftp",
+	"scalyr",
+	"splunk",
+	"sumologic",
+	"syslog",
+}
+
+type listLoggingEndpointResponse struct {
+	Name string `json:"name"`
+}
+
+func (c *FastlyClient) ListLoggingEndpoints(ctx context.Context, version int64) ([]string, error) {
+	var endpoints []string
+	var eg errgroup.Group
+
+	basePath := fmt.Sprintf("/service/%s/version/%d/logging", c.serviceId, version)
+	for i := range fastlyRealtimeLoggingTypes {
+		eg.Go(c.listLoggingEndpoint(ctx, endpoints, basePath+"/"+fastlyRealtimeLoggingTypes[i]))
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+	return endpoints, nil
+}
+
+func (c *FastlyClient) listLoggingEndpoint(ctx context.Context, endpoints []string, path string) func() error {
+	return func() error {
+		var resp []listLoggingEndpointResponse
+		if err := c.request(ctx, path, &resp); err != nil {
+			return err
+		}
+		for i := range resp {
+			endpoints = append(endpoints, resp[i].Name)
+		}
+		return nil
+	}
 }

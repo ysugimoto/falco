@@ -17,6 +17,7 @@ type Fetcher interface {
 	Dictionaries() ([]*types.RemoteDictionary, error)
 	Acls() ([]*types.RemoteAcl, error)
 	Snippets() ([]*types.RemoteVCL, error)
+	LoggingEndpoints() ([]string, error)
 }
 
 func Fetch(fetcher Fetcher) (*Snippets, error) {
