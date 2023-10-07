@@ -136,3 +136,15 @@ func (f *FastlyApiFetcher) Snippets() ([]*types.RemoteVCL, error) {
 	}
 	return r, nil
 }
+
+func (f *FastlyApiFetcher) LoggingEndpoints() ([]string, error) {
+	c, timeout := context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
+
+	version, err := f.getVersion(c)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get latest version %w", err)
+	}
+
+	return f.client.ListLoggingEndpoints(c, version)
+}

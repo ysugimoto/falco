@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"encoding/json"
 
@@ -16,7 +17,9 @@ import (
 	"github.com/ysugimoto/falco/config"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/terraform"
 	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/token"
@@ -72,7 +75,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var fetcher Fetcher
+	var fetcher snippets.Fetcher
 	var action string
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver
@@ -102,6 +105,23 @@ func main() {
 		}
 	}
 
+	if c.Remote {
+		if !c.Json {
+			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
+		}
+		// If remote flag is provided, fetch predefined data from Fastly.
+		//
+		// We communicate Fastly API with service id and api key,
+		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
+		// So user needs to set them with "-r" argument.
+		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
+			writeln(red, "Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
+			os.Exit(1)
+		}
+		// Create remote fetcher
+		fetcher = remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
+	}
+
 	if err != nil {
 		writeln(red, err.Error())
 		os.Exit(1)
@@ -109,6 +129,17 @@ func main() {
 
 	var shouldExit bool
 	for _, v := range resolvers {
+		if name := v.Name(); name != "" {
+			writeln(white, `Lint service of "%s"`, name)
+			writeln(white, strings.Repeat("=", 18+len(name)))
+
+			// If fetcher is instance of TerraformFetcher, set name to filter service
+			if fetcher != nil {
+				if t, ok := fetcher.(*terraform.TerraformFetcher); ok {
+					t.SetName(name)
+				}
+			}
+		}
 		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
@@ -124,10 +155,6 @@ func main() {
 		case subcommandStats:
 			exitErr = runStats(runner, v)
 		default:
-			if name := v.Name(); name != "" {
-				writeln(white, `Lint service of "%s"`, name)
-				writeln(white, strings.Repeat("=", 18+len(name)))
-			}
 			exitErr = runLint(runner, v)
 		}
 

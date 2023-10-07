@@ -6,10 +6,10 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 )
 
 // Reserved vcl names in Fastly
@@ -43,7 +43,7 @@ var (
 
 type Context struct {
 	Resolver            resolver.Resolver
-	FastlySnippets      *context.FastlySnippet
+	FastlySnippets      *snippets.Snippets
 	Acls                map[string]*value.Acl
 	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration
