@@ -277,7 +277,7 @@ func (c *FastlyClient) ListLoggingEndpoints(ctx context.Context, version int64) 
 
 	basePath := fmt.Sprintf("/service/%s/version/%d/logging", c.serviceId, version)
 	for i := range fastlyRealtimeLoggingTypes {
-		eg.Go(c.listLoggingEndpoint(ctx, endpoints, basePath+"/"+fastlyRealtimeLoggingTypes[i]))
+		eg.Go(c.listLoggingEndpoint(ctx, &endpoints, basePath+"/"+fastlyRealtimeLoggingTypes[i]))
 	}
 
 	if err := eg.Wait(); err != nil {
@@ -286,14 +286,14 @@ func (c *FastlyClient) ListLoggingEndpoints(ctx context.Context, version int64) 
 	return endpoints, nil
 }
 
-func (c *FastlyClient) listLoggingEndpoint(ctx context.Context, endpoints []string, path string) func() error {
+func (c *FastlyClient) listLoggingEndpoint(ctx context.Context, endpoints *[]string, path string) func() error {
 	return func() error {
 		var resp []listLoggingEndpointResponse
 		if err := c.request(ctx, path, &resp); err != nil {
 			return err
 		}
 		for i := range resp {
-			endpoints = append(endpoints, resp[i].Name)
+			*endpoints = append(*endpoints, resp[i].Name)
 		}
 		return nil
 	}

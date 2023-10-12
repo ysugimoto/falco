@@ -117,7 +117,7 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 			r.message(red, err.Error()+"\n")
 		}
 		r.snippets = s
-		if err := r.snippets.FetchLogingEndpoint(fetcher); err != nil {
+		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
 			r.message(red, err.Error()+"\n")
 		}
 	}
