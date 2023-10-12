@@ -62,7 +62,7 @@ func fetchEdgeDictionary(fetcher Fetcher) ([]SnippetItem, error) {
 
 	tmpl, err := template.New("table").Parse(tableTemplate)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to compilte table template: %w", err)
+		return nil, fmt.Errorf("Failed to compile table template: %w", err)
 	}
 
 	var snippets []SnippetItem
