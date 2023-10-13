@@ -47,6 +47,14 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Transform configuration
+type TransformConfig struct {
+	IncludePaths []string // Copy from root filed
+	Package      string   `cli:"package" yaml:"package" default:"main"`
+	Output       string   `cli:"o,output" yaml:"output" default:"compute.go"`
+	Overwrite    bool     `cli:"overwrite" yaml:"overwrite"`
+}
+
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
@@ -77,6 +85,8 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Transform configuration
+	Transform *TransformConfig `yaml:"transform"`
 }
 
 func New(args []string) (*Config, error) {
@@ -92,12 +102,6 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		OverrideBackends: make(map[string]*OverrideBackend),
-		// Simulator: &SimulatorConfig{
-		// 	OverrideRequest:  &RequestConfig{},
-		// },
-		// Testing: &TestConfig{
-		// 	OverrideRequest: &RequestConfig{},
-		// },
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
@@ -123,6 +127,7 @@ func New(args []string) (*Config, error) {
 	// Copy common fields
 	c.Simulator.IncludePaths = c.IncludePaths
 	c.Testing.IncludePaths = c.IncludePaths
+	c.Transform.IncludePaths = c.IncludePaths
 
 	return c, nil
 }

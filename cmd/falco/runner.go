@@ -3,7 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -21,7 +24,8 @@ import (
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/tester"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/vintage/transformer/core"
+	"github.com/ysugimoto/vintage/transformer/fastly"
 )
 
 var (
@@ -56,13 +60,6 @@ type StatsResult struct {
 	Directors   int    `json:"directors"`
 	Files       int    `json:"files"`
 	Lines       int    `json:"lines"`
-}
-
-type Fetcher interface {
-	Backends() ([]*types.RemoteBackend, error)
-	Dictionaries() ([]*types.RemoteDictionary, error)
-	Acls() ([]*types.RemoteAcl, error)
-	Snippets() ([]*types.RemoteVCL, error)
 }
 
 type RunMode int
@@ -100,6 +97,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
+// NewRunner creates command runner pointer
 func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:       LevelError,
@@ -159,20 +157,20 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 	return r, nil
 }
 
-func (r *Runner) Transform(vcl *plugin.VCL) error {
-	// VCL data is shared between parser and transformar through the falco/io package.
-	encoded, err := plugin.Encode(vcl)
-	if err != nil {
-		return fmt.Errorf("Failed to encode VCL: %w", err)
-	}
-
-	for _, t := range r.transformers {
-		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
-			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
-		}
-	}
-	return nil
-}
+// func (r *Runner) Transform(vcl *plugin.VCL) error {
+// 	// VCL data is shared between parser and transformar through the falco/io package.
+// 	encoded, err := plugin.Encode(vcl)
+// 	if err != nil {
+// 		return fmt.Errorf("Failed to encode VCL: %w", err)
+// 	}
+//
+// 	for _, t := range r.transformers {
+// 		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
+// 			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
+// 		}
+// 	}
+// 	return nil
+// }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
@@ -486,4 +484,43 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	}
 	r.message(white, " Done.\n")
 	return factory, nil
+}
+
+func (r *Runner) Transform(rslv resolver.Resolver) error {
+	c := r.config.Transform
+	options := []core.TransformOption{
+		core.WithOutputPackage(c.Package),
+	}
+	if r.snippets != nil {
+		options = append(options, core.WithSnippets(r.snippets))
+	}
+	buf, err := fastly.NewFastlyTransformer(options...).Transform(rslv)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	output, err := filepath.Abs(c.Output)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Check output file existence and can overwrite
+	if _, err := os.Stat(output); err == nil {
+		if !c.Overwrite {
+			return errors.New(fmt.Sprintf(
+				"Output file %s already exists. Provide --overwrite option to overwrite",
+				output,
+			))
+		}
+	}
+
+	out, err := os.OpenFile(output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer out.Close()
+	if _, err := io.Copy(out, bytes.NewReader(buf)); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

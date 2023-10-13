@@ -51,6 +51,7 @@ const (
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
+	subcommandTransform = "transform"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -87,7 +88,7 @@ func main() {
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
 		action = c.Commands.At(1)
-	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest:
+	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest, subcommandTransform:
 		// "lint", "simulate", "stats" and "test" command provides single file of service,
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
@@ -154,6 +155,8 @@ func main() {
 			exitErr = runSimulate(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v)
+		case subcommandTransform:
+			exitErr = runTransform(runner, v)
 		default:
 			exitErr = runLint(runner, v)
 		}
@@ -216,10 +219,10 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
-	if err := runner.Transform(result.Vcl); err != nil {
-		writeln(red, err.Error())
-		return ErrExit
-	}
+	// if err := runner.Transform(result.Vcl); err != nil {
+	// 	writeln(red, err.Error())
+	// 	return ErrExit
+	// }
 	return nil
 }
 
@@ -368,5 +371,13 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
+	return nil
+}
+
+func runTransform(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Transform(rslv); err != nil {
+		writeln(red, "Failed to transform VCL: %s", err.Error())
+		return ErrExit
+	}
 	return nil
 }

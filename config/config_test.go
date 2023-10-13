@@ -63,6 +63,11 @@ func TestConfigFromCLI(t *testing.T) {
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
+		Transform: &TransformConfig{
+			Package:      "main",
+			Output:       "compute.go",
+			IncludePaths: []string{"."},
+		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}
 

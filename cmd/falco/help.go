@@ -7,6 +7,8 @@ import (
 func printHelp(cmd string) {
 	printSplash()
 	switch cmd {
+	case subcommandTransform:
+		printTransformHelp()
 	case subcommandTerraform:
 		printTerraformHelp()
 	case subcommandSimulate:
@@ -163,5 +165,19 @@ Flags:
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl
+	`))
+}
+
+func printTransformHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco transform [flags]
+
+Flags:
+    -I, --include_path : Add include path
+    -o, --output       : Output filename
+    --target           : Target platform (compute or native, compute as default)
+    --package          : Package name that transformed code belongs to
+    --overwrite        : If specify, overwrite file even if exists
 	`))
 }
