@@ -22,28 +22,28 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 	return []RepoExampleTestMetadata{
 		{
 			name:     "example 1",
-			fileName: "../../examples/default01.vcl",
+			fileName: "../../examples/linter/default01.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    0,
 		},
 		{
 			name:     "example 2",
-			fileName: "../../examples/default02.vcl",
+			fileName: "../../examples/linter/default02.vcl",
 			errors:   1,
 			warnings: 0,
 			infos:    0,
 		},
 		{
 			name:     "example 3",
-			fileName: "../../examples/default03.vcl",
+			fileName: "../../examples/linter/default03.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    1,
 		},
 		{
 			name:     "example 4",
-			fileName: "../../examples/default04.vcl",
+			fileName: "../../examples/linter/default04.vcl",
 			errors:   0,
 			warnings: 0,
 			infos:    1,
@@ -51,7 +51,7 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 	}
 }
 
-func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher) {
+func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, *terraform.TerraformFetcher) {
 	buf, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
@@ -70,7 +70,12 @@ func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, Fetcher
 func TestResolveExternalWithExternalProperties(t *testing.T) {
 	for _, fileName := range []string{"../../terraform/data/terraform-valid.json", "../../terraform/data/terraform-valid-weird-name.json"} {
 		rslv, f := loadFromTfJson(fileName, t)
-		r, err := NewRunner(&config.Config{VerboseWarning: true}, f)
+		c := &config.Config{
+			Linter: &config.LinterConfig{
+				VerboseWarning: true,
+			},
+		}
+		r, err := NewRunner(c, f)
 		if err != nil {
 			t.Fatalf("Unexpected runner creation error: %s", err)
 			return
@@ -94,7 +99,12 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 	fileName := "../../terraform/data/terraform-empty.json"
 	rslv, f := loadFromTfJson(fileName, t)
-	r, err := NewRunner(&config.Config{VerboseWarning: true}, f)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
+	r, err := NewRunner(c, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 		return
@@ -117,7 +127,12 @@ func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 func TestResolveWithDuplicateDeclarations(t *testing.T) {
 	fileName := "../../terraform/data/terraform-duplicate.json"
 	rslv, f := loadFromTfJson(fileName, t)
-	r, err := NewRunner(&config.Config{VerboseWarning: true}, f)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
+	r, err := NewRunner(c, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 	}
@@ -134,8 +149,13 @@ func TestResolveWithDuplicateDeclarations(t *testing.T) {
 func TestResolveModulesWithVCLExtension(t *testing.T) {
 	fileName := "../../terraform/data/terraform-modules-extension.json"
 	rslv, f := loadFromTfJson(fileName, t)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
 
-	r, err := NewRunner(&config.Config{VerboseWarning: true}, f)
+	r, err := NewRunner(c, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 	}
@@ -153,8 +173,13 @@ func TestResolveModulesWithVCLExtension(t *testing.T) {
 func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 	fileName := "../../terraform/data/terraform-modules-without-extension.json"
 	rslv, f := loadFromTfJson(fileName, t)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
 
-	r, err := NewRunner(&config.Config{VerboseWarning: true}, f)
+	r, err := NewRunner(c, f)
 	if err != nil {
 		t.Fatalf("Unexpected runner creation error: %s", err)
 	}
@@ -175,7 +200,11 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 // Test cases for when the command runs in stdout mode (no -json flag set)
 func TestRepositoryExamples(t *testing.T) {
 	tests := loadRepoExampleTestMetadata()
-	c := &config.Config{VerboseWarning: true}
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resolvers, err := resolver.NewFileResolvers(tt.fileName, c.IncludePaths)
@@ -212,7 +241,12 @@ func TestRepositoryExamples(t *testing.T) {
 // Test cases for JSON mode (-json flag set)
 func TestRepositoryExamplesJSONMode(t *testing.T) {
 	tests := loadRepoExampleTestMetadata()
-	c := &config.Config{VerboseWarning: true, Json: true}
+	c := &config.Config{
+		Json: true,
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

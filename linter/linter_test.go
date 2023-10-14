@@ -10,6 +10,7 @@ import (
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -2500,8 +2501,8 @@ sub vcl_recv {
 }
 
 func TestFastlyScopedSnippetInclusion(t *testing.T) {
-	snippets := &context.FastlySnippet{
-		ScopedSnippets: map[string][]context.FastlySnippetItem{
+	snippets := &snippets.Snippets{
+		ScopedSnippets: map[string][]snippets.SnippetItem{
 			"recv": {
 				{
 					Name: "recv_injection",
@@ -2517,12 +2518,12 @@ sub vcl_recv {
    return (pass);
 }
 `
-	assertError(t, input, context.WithFastlySnippets(snippets))
+	assertError(t, input, context.WithSnippets(snippets))
 }
 
 func TestFastlySnippetInclusion(t *testing.T) {
-	snippets := &context.FastlySnippet{
-		IncludeSnippets: map[string]context.FastlySnippetItem{
+	snippets := &snippets.Snippets{
+		IncludeSnippets: map[string]snippets.SnippetItem{
 			"recv_injection": {
 				Name: "recv_injection",
 				Data: `set req.http.InjectedViaMacro = 1;`,
@@ -2537,7 +2538,7 @@ sub vcl_recv {
    }
 }
 `
-	assertError(t, input, context.WithFastlySnippets(snippets))
+	assertError(t, input, context.WithSnippets(snippets))
 }
 
 func TestFastlyInfoH2FingerPrintCouldLint(t *testing.T) {

@@ -11,6 +11,7 @@ import (
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
@@ -344,8 +345,8 @@ func (l *Linter) resolveSnippetInclusion(
 ) []ast.Statement {
 
 	var statements []ast.Statement
-	snippets := ctx.Snippets().IncludeSnippets
-	snip, ok := snippets[strings.TrimPrefix(include.Module.Value, "snippet::")]
+	s := ctx.Snippets().IncludeSnippets
+	snip, ok := s[strings.TrimPrefix(include.Module.Value, "snippet::")]
 	if !ok {
 		e := &LintError{
 			Severity: ERROR,
@@ -911,15 +912,15 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 	phrase := strings.ToUpper("FASTLY " + scope)
 
 	// prepare scoped snippets
-	snippets, ok := ctx.Snippets().ScopedSnippets[scope]
+	scopedSnippets, ok := ctx.Snippets().ScopedSnippets[scope]
 	if !ok {
-		snippets = []context.FastlySnippetItem{}
+		scopedSnippets = []snippets.SnippetItem{}
 	}
 
 	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
 	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
-		for _, s := range snippets {
+		for _, s := range scopedSnippets {
 			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 		}
 		sub.Block.Statements = append(resolved, sub.Block.Statements...)
@@ -930,7 +931,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 	for _, stmt := range sub.Block.Statements {
 		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) && !found {
 			// Macro found but embedding snippets should do only once
-			for _, s := range snippets {
+			for _, s := range scopedSnippets {
 				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 			}
 			found = true

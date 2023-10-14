@@ -3,20 +3,24 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/debugger"
+	"github.com/ysugimoto/falco/interpreter"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/plugin"
-	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -72,7 +76,8 @@ type Runner struct {
 	transformers []*Transformer
 	overrides    map[string]linter.Severity
 	lexers       map[string]*lexer.Lexer
-	snippets     *context.FastlySnippet
+	snippets     *snippets.Snippets
+	config       *config.Config
 
 	level       Level
 	lintErrors  map[string][]*linter.LintError
@@ -82,8 +87,6 @@ type Runner struct {
 	infos    int
 	warnings int
 	errors   int
-
-	jsonMode bool
 }
 
 // Wrap writeln function in order to prevent to write when json mode turns on
@@ -91,51 +94,32 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	// Suppress output when JSON mode turns on
 	// This is because JSON only should display JSON string
 	// so any other messages we must not output
-	if r.jsonMode {
+	if r.config.Json {
 		return
 	}
-	writeln(c, format, args...)
+	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
 		lexers:      make(map[string]*lexer.Lexer),
+		config:      c,
 		lintErrors:  make(map[string][]*linter.LintError),
 		parseErrors: make(map[string]*parser.ParseError),
-		jsonMode:    c.Json,
 	}
 
-	if c.Remote {
-		r.message(cyan, "Remote option supplied. Fetching snippets from Fastly.")
-		// If remote flag is provided, fetch predefined data from Fastly.
-		//
-		// We communicate Fastly API with service id and api key,
-		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
-		// So user needs to set them with "-r" argument.
-		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
-			return nil, errors.New("Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
-		}
-		func() {
-			// Remote communication is optional so we keep processing even if remote communication is failed
-			// We allow each API call to take up to to 5 seconds
-			f := remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
-			snippets, err := NewSnippet(f).Fetch()
-			if err != nil {
-				r.message(red, err.Error())
-			}
-			// Stack to runner field, combime before run()
-			r.snippets = snippets
-		}()
-	}
-
-	if f != nil {
-		snippets, err := NewSnippet(f).Fetch()
+	// If fetch interface is provided, communicate with it
+	if fetcher != nil {
+		s, err := snippets.Fetch(fetcher)
 		if err != nil {
-			r.message(red, err.Error())
+			r.message(red, err.Error()+"\n")
 		}
-		r.snippets = snippets
+		r.snippets = s
+		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
+			r.message(red, err.Error()+"\n")
+		}
 	}
 
 	// Check transformer exists and format to absolute path
@@ -150,14 +134,14 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 	}
 
 	// Set verbose level
-	if c.VerboseInfo {
+	if c.Linter.VerboseInfo {
 		r.level = LevelInfo
-	} else if c.VerboseWarning {
+	} else if c.Linter.VerboseWarning {
 		r.level = LevelWarning
 	}
 
 	// Override linter rules
-	for key, value := range c.Rules {
+	for key, value := range c.Linter.Rules {
 		switch strings.ToUpper(value) {
 		case "ERROR":
 			r.overrides[key] = linter.ERROR
@@ -168,7 +152,7 @@ func NewRunner(c *config.Config, f Fetcher) (*Runner, error) {
 		case "IGNORE":
 			r.overrides[key] = linter.IGNORE
 		default:
-			r.message(yellow, "Level for rule %s has invalid value %s, skipping.", key, value)
+			r.message(yellow, "Level for rule %s has invalid value %s, skipping.\n", key, value)
 		}
 	}
 
@@ -194,7 +178,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithFastlySnippets(r.snippets))
+		options = append(options, context.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -205,7 +189,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	// Note: this context is not Go context, our parsing context :)
 	ctx := context.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
-	if err != nil && !r.jsonMode {
+	if err != nil && !r.config.Json {
 		return nil, err
 	}
 
@@ -256,7 +240,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 				file = "in " + pe.Token.File + " "
 			}
 			// Nothing to print to stdout if JSON mode is enabled, exit early.
-			if r.jsonMode {
+			if r.config.Json {
 				r.parseErrors[pe.Token.File] = pe
 			} else {
 				r.printParseError(lt.FatalError.Lexer, file, pe)
@@ -278,7 +262,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 			}
 
 			// Store all but ignored linter errors
-			if r.jsonMode && severity != linter.IGNORE {
+			if r.config.Json && severity != linter.IGNORE {
 				r.lintErrors[le.Token.File] = append(r.lintErrors[le.Token.File], le)
 			}
 			r.printLinterError(r.lexers[main.Name], severity, le)
@@ -304,7 +288,7 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 				file = "in " + pe.Token.File + " "
 			}
 			// Nothing to print to stdout if JSON mode is enabled, exit early.
-			if r.jsonMode {
+			if r.config.Json {
 				r.parseErrors[pe.Token.File] = pe
 			}
 			r.printParseError(lx, file, pe)
@@ -318,7 +302,7 @@ func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 }
 
 func (r *Runner) printParseError(lx *lexer.Lexer, file string, err *parser.ParseError) {
-	r.message(red, ":boom: %s\n%sat line %d, position %d", err.Message, file, err.Token.Line, err.Token.Position)
+	r.message(red, ":boom: %s\n%sat line %d, position %d\n", err.Message, file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 5; l <= problemLine; l++ {
@@ -328,15 +312,15 @@ func (r *Runner) printParseError(lx *lexer.Lexer, file string, err *parser.Parse
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			r.message(white, " %s%s",
+			r.message(white, " %s%s\n",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 }
@@ -357,24 +341,24 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 	switch severity {
 	case linter.ERROR:
 		r.errors++
-		r.message(red, ":fire:[ERROR] %s%s", err.Message, rule)
+		r.message(red, ":fire:[ERROR] %s%s\n", err.Message, rule)
 	case linter.WARNING:
 		r.warnings++
 		if r.level < LevelWarning {
 			return
 		}
-		r.message(yellow, ":exclamation:[WARNING] %s%s", err.Message, rule)
+		r.message(yellow, ":exclamation:[WARNING] %s%s\n", err.Message, rule)
 	case linter.INFO:
 		r.infos++
 		if r.level < LevelInfo {
 			return
 		}
-		r.message(cyan, ":speaker:[INFO] %s%s", err.Message, rule)
+		r.message(cyan, ":speaker:[INFO] %s%s\n", err.Message, rule)
 	case linter.IGNORE:
 		return
 	}
 
-	r.message(white, "%sat line %d, position %d", file, err.Token.Line, err.Token.Position)
+	r.message(white, "%sat line %d, position %d\n", file, err.Token.Line, err.Token.Position)
 
 	problemLine := err.Token.Line
 	for l := problemLine - 1; l <= problemLine+1; l++ {
@@ -384,29 +368,29 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 		}
 		tabCount := strings.Count(line, "\t")
 		if l == problemLine {
-			r.message(yellow, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(yellow, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 			lineLength := len(fmt.Sprint(l))
 			prefixSpaceSize := lineLength + err.Token.Position - tabCount + (tabCount * 4)
-			r.message(white, " %s%s",
+			r.message(white, " %s%s\n",
 				strings.Repeat(" ", prefixSpaceSize),
 				strings.Repeat("^", len([]rune(err.Token.Literal))+err.Token.Offset),
 			)
 		} else {
-			r.message(white, " %d|%s", l, strings.ReplaceAll(line, "\t", "    "))
+			r.message(white, " %d|%s\n", l, strings.ReplaceAll(line, "\t", "    "))
 		}
 	}
 
 	if err.Reference != "" {
-		r.message(white, "See reference documentation: %s", err.Reference)
+		r.message(white, "See reference documentation: %s\n", err.Reference)
 	}
-	r.message(white, "")
+	r.message(white, "\n")
 }
 
 func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithFastlySnippets(r.snippets))
+		options = append(options, context.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -436,4 +420,70 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	}
 
 	return stats, nil
+}
+
+func (r *Runner) Simulate(rslv resolver.Resolver) error {
+	sc := r.config.Simulator
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
+	if r.snippets != nil {
+		options = append(options, icontext.WithSnippets(r.snippets))
+	}
+	if sc.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(sc.OverrideRequest))
+	}
+	if r.config.OverrideBackends != nil {
+		options = append(options, icontext.WithOverrideBackends(r.config.OverrideBackends))
+	}
+
+	i := interpreter.New(options...)
+
+	// If debugger flag is on, run debugger mode
+	if sc.IsDebug {
+		return debugger.New(interpreter.New(options...)).Run(sc.Port)
+	}
+
+	// Otherwise, simply start simulator server
+	mux := http.NewServeMux()
+	mux.Handle("/", i)
+
+	s := &http.Server{
+		Handler: mux,
+		Addr:    fmt.Sprintf(":%d", sc.Port),
+	}
+	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	return s.ListenAndServe()
+}
+
+func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
+	tc := r.config.Testing
+	options := []icontext.Option{
+		icontext.WithResolver(rslv),
+		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
+		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+	}
+	if r.snippets != nil {
+		options = append(options, icontext.WithSnippets(r.snippets))
+	}
+	if tc.OverrideRequest != nil {
+		options = append(options, icontext.WithRequest(tc.OverrideRequest))
+	}
+	if tc.OverrideHost != "" {
+		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
+	}
+
+	i := interpreter.New(options...)
+	r.message(white, "Running tests...")
+	i.Debugger = tester.NewDebugger()
+	factory, err := tester.New(tc, i).Run(r.config.Commands.At(1))
+	if err != nil {
+		writeln(red, " Failed.")
+		writeln(red, "Failed to run test: %s", err.Error())
+		return nil, err
+	}
+	r.message(white, " Done.\n")
+	return factory, nil
 }

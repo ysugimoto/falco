@@ -18,6 +18,8 @@ var needValueOptions = map[string]struct{}{
 	"--include_path": {},
 	"-t":             {},
 	"--transformer":  {},
+	"-f":             {},
+	"--filter":       {},
 }
 
 func parseCommands(args []string) Commands {

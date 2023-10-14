@@ -42,10 +42,10 @@ linters-settings:
     check-type-assertions: true
     check-blank: true
   funlen:
-    lines: 120
-    statements: 90
+    lines: 200
+    statements: 100
   gocognit:
-    min-complexity: 35
+    min-complexity: 50
   goconst:
     min-len: 3
     min-occurrences: 3
@@ -68,8 +68,7 @@ linters-settings:
       - captLocal
       - caseOrder
       - commentFormatting
-      - commentedOutCode
-      - commentedOutimport
+      #- commentedOutCode
       - defaultCaseOrder
       - dupArg
       - dupBranchBody
@@ -123,14 +122,6 @@ linters-settings:
     simplify: true
   golint:
     min-confidence: 0.8
-  govet:
-    #enable:
-    #  - fieldalignment
-    # check-shadowing: true
-    #gomnd:
-    #  settings:
-    #    mnd:
-    #      checks: argument,assign,operation,return
   lll:
     line-length: 150
   misspell:

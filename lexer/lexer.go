@@ -18,6 +18,7 @@ type Lexer struct {
 	stack  []string
 	file   string
 	peeks  []token.Token
+	isEOF  bool
 }
 
 func New(r io.Reader, opts ...OptionFunc) *Lexer {
@@ -280,6 +281,10 @@ func (l *Lexer) NextToken() token.Token {
 		t.Type = token.EOF
 		t.Line = line
 		t.Position = index
+		if !l.isEOF {
+			l.NewLine()
+			l.isEOF = true
+		}
 	case 0x0A: // '\n'
 		t = newToken(token.LF, l.char, line, index)
 	default:

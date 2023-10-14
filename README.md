@@ -1,7 +1,7 @@
 <p align="center">
 <img src="https://user-images.githubusercontent.com/1000401/225396918-6490ea38-6883-434a-ac1f-e8b6188ec58b.png" width="320" />
 </p>
-<p align="center">VCL parser and linter optimized for <a href="https://www.fastly.com">Fastly</a>.</p>
+<p align="center"><a href="https://www.fastly.com">Fastly</a> VCL developer tool</p>
 
 ----
 
@@ -15,7 +15,7 @@ This is a VCL parser, but dedicated to Fastly's VCL (version 2.x), so we don't c
 The Varnish may have additional syntax, builtin function, predefined variables, but this tool may not parse correctly.
 
 Additionally, Fastly provides its special builtin function, predefined variables. It's not compatible with Varnish.
-But this tool is optimized for them, we could parse and lint their declarations.
+But this tool is optimized for them, we could parse and lint/execute their declarations.
 
 ## Motivation
 
@@ -31,7 +31,7 @@ Typically our deployment flow using custom VCLs is following:
 Above flows take a time, and then if we have some mistakes on VCL e.g. missing semicolon X(, the deployment will fail.
 Additionally, unnecessary service versions will be created by our trivial issue.
 
-To solve them, we made a Fastly dedicated VCL parser and linter tool to notice syntax errors and unexpected mistakes before starting the deployment flow.
+To solve them, we made a Fastly dedicated tool to develop custom VCLs locally.
 
 ## Installation
 
@@ -41,7 +41,7 @@ Download binary from [releases page](https://github.com/ysugimoto/falco/releases
 $ brew install falco
 ```
 
-You can compile project yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
+You can compile this project by yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
 
 ## Usage
 
@@ -49,192 +49,76 @@ Command help displays following:
 
 ```shell
 falco -h
-=======================================
-  falco: Fastly VCL parser / linter
-=======================================
+=========================================================
+    ____        __
+   / __/______ / /_____ ____
+  / /_ / __  // //  __// __ \
+ / __// /_/ // // /__ / /_/ /
+/_/   \____//_/ \___/ \____/  Fastly VCL developer tool
+
+=========================================================
 Usage:
-    falco [main vcl file]
+    falco [subcommand] [flags] [main vcl file]
 
-Flags:
+Subcommands:
+    lint      : Run lint (default)
+    terraform : Run lint from terraform planned JSON
+    stats     : Analyze VCL statistics
+    simulate  : Run simulator server with provided VCLs
+    test      : Run local testing for provided VCLs
+
+See subcommands help with:
+    falco [subcommand] -h
+
+Common Flags:
     -I, --include_path : Add include path
-    -t, --transformer  : Specify transformer
     -h, --help         : Show this help
-    -r, --remote       : Communicate with Fastly API
+    -r, --remote       : Connect with Fastly API
     -V, --version      : Display build version
-    -v,                : Verbose warning lint result
-    -vv,               : Verbose all lint result
+    -v                 : Output lint warnings (verbose)
+    -vv                : Output all lint results (very verbose)
+    -json              : Output results as JSON (very verbose)
 
-Example:
+Simple linting example:
     falco -I . -vv /path/to/vcl/main.vcl
 ```
 
-### Note:
-Your VCL will have dependent modules loaded via `include [module]`. `falco` accept include path from `-I, --include_path` flag and search and load destination module from include path.
+`falco` provides some useful features for developing Fastly VCL.
 
-## User defined subroutine
+## Linter
 
-On linting, `falco` could not recognize when the user-defined subroutine is called, so you should apply the subroutine scope by adding annotation or its subroutine name. falco understands call scope by following rules:
+The main feature, parse and run lint your VCL locally, and report problems.
+`falco` bundles many linter rules that come from the author's operation experience, Fastly recommends,
+that you improve your VCL more robustly by passing the linter.
 
-### Subroutine name
+See [linter documentation](https://github.com/ysugimoto/falco/blob/develop/docs/linter.md) in detail.
 
-If the subroutine name has a suffix of `_[scope]`, falco lint within that scope.
+## Local Simulator / VCL Debugger
 
-```vcl
-sub custom_recv { // name has `_recv` suffix, lint with RECV scope
-  ...
-}
+`falco` has self-implemented interpreter for running VCL program locally.
+You can simulate how your VCL behaves through the simulator.
 
-sub custom_fetch { // name has `_fetch` suffix, lint with FETCH scope
-  ...
-}
-```
+In addition to local simulator, `falco ` also provided VCL debugger.
+You can debug your VCL step-by-step with dumping variables.
 
-Following table describes subroutine name and recognizing scope:
+See [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) in detail.
 
-| suffix  | scope   | example               |
-|:--------|:--------|:----------------------|
-| _recv    | RECV    | sub custom_recv {}    |
-| _miss    | MISS    | sub custom_miss {}    |
-| _hash    | HASH    | sub custom_hash {}    |
-| _pass    | PASS    | sub custom_pass {}    |
-| _fetch   | FETCH   | sub custom_fetch {}   |
-| _error   | ERROR   | sub custom_error {}   |
-| _deliver | DELIVER | sub custom_deliver {} |
-| _log     | LOG     | sub custom_log {}     |
+## VCL Unit Testing
 
-### Annotation
+You can run unit testing through the `falco` runtime.
+The unit testing file also can be written in VCL, and run test for each subroutine that you want individually.
 
-For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes. Multiple scopes
-are declared as comma seperated values.
+See [testing documentation](https://github.com/ysugimoto/falco/blob/develop/docs/testing.md) in detail.
 
-Then, if you apply a hint of scope on annotation, `falco` also understands scope. There are two ways to define the scope annotation:
-1. `@scope: <scope_name1>, <scope_name2>` this is the newest annotation method and it should be prefered over 2.
-2. `@<scope_name1>, <scope_name2>`, this is used to maintain backwards compatibility and it may be deprecated in the future.
+## Terraform Support
 
-```vcl
-// @scope: recv, miss
-sub custom_process {
-   // subroutine has `recv` annotation, lint with RECV|MISS scope.
-   // All variables must be accessible in both RECV and MISS scope.
-  ...
-}
+`falco` supports to run features for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly).
 
-// @fetch, miss
-sub custom_request {
-  // subroutine has `fetch` annotation, lint with FETCH scope
-  ...
-}
-```
-
-Following table describes annotation name and recognizing scope:
-
-| annotation  | scope   | example                      |
-|:------------|:--------|:-----------------------------|
-| @recv       | RECV    | // @recv<br>sub custom {}    |
-| @miss       | MISS    | // @miss<br>sub custom {}    |
-| @hash       | HASH    | // @hash<br>sub custom {}    |
-| @pass       | PASS    | // @pass<br>sub custom {}    |
-| @fetch      | FETCH   | // @fetch<br>sub custom {}   |
-| @error      | ERROR   | // @error<br>sub custom {}   |
-| @deliver    | DELIVER | // @deliver<br>sub custom {} |
-| @log        | LOG     | // @log<br>sub custom {}     |
-
-## Fastly related features
-
-Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
-
-## Terraform support
-
-`falco` supports to parse and lint for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly). See [terraform.md](https://github.com/ysugimoto/falco/blob/master/docs/terraform.md) in detail.
-
-## Lint error
-
-`falco` has built in lint rules. see [rules](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) in detail. `falco` may report lots of errors and warnings because falco lints with strict type checks, disallows implicit type conversions even VCL is fuzzy typed language.
-
-## Ignoring errors
-
-Fastly also accepts some syntax and function which comes from Varnish (e.g `map()` function) but falco reports error for it. Then, you can put leading/trailing comemnts for each statements, falco will ignore the error.
-
-The comment syntax is similar to eslint, but very simplified.
-Note that this feature only ignores linting error, the parser erorr will be reported.
-
-### Next Line
-
-Put `// falco-ignore-next-line` comment on the statement, ignoring errors for next statement.
-
-```vcl
-sub vcl_recv {
-  # FASTLY RECV
-
-  // falco-ignore-next-line
-  set req.http.Example = some.undefined.variable;
-}
-```
-
-### Current statement
-
-Put `// falco-ignore` comment on the trailing, ignoring errors for current statement.
-
-```vcl
-sub vcl_recv {
-  # FASTLY RECV
-
-  set req.http.Example = some.undefined.variable; // falco-ignore
-}
-```
-
-### Range ignoring
-
-falco recognizes `// falco-ignore-start` and `// falco-ignore-end` comment, ignore the errors between this range.
-
-```vcl
-sub vcl_recv {
-  # FASTLY RECV
-
-  // falco-ignore-start
-  set req.http.Example = some.undefined.variable;
-  // falco-igore-end
-
-}
-```
-
-## Overriding Severity
-
-To avoid them, you can override severity levels by putting a configuration file named `.falcorc` on working directory. the configuration file contents format is following:
-
-```yaml
-## /path/to/working/directory/.falcorc
-regex/matched-value-override: IGNORE
-...
-```
-
-Format is simply a yaml key-value object. The key is rule name, see [rules.md](https://github.com/ysugimoto/falco/blob/main/docs/rules.md) and value should be one of `IGNORE`, `INFO`, `WARNING` and `ERROR`, case insensitive.
-
-In the above case, the rule of `regex/matched-value-override` reports `INFO` as default, but overrides `IGNORE` which does not report it.
-
-## Error Levels
-
-`falco` reports three of severity on linting:
-
-### ERROR
-
-VCL may cause errors on Fastly, or may cause unexpected behavior for actual works.
-
-### WARNING
-
-VCL could work, but may have potential bug and cause unexpected behavior for actual works.
-
-`falco` does not output warnings as default. To see them, run with `-v` option.
-
-### INFORMATION
-
-VCL is fine, but we suggest you improve your VCL considering Fastly recommendation.
-
-`falco` does not output information as default. To see them, run with `-vv` option.
+See [terraform.md](https://github.com/ysugimoto/falco/blob/develop/docs/terraform.md) in detail.
 
 ## Transforming
 
-`falco` is planning to transpile Fastly VCL to the other programming language e.g Go (HTTP service), node.js (Lambda@Edge) to use temporal CDN instead of Fastly.
+`falco` plans to transpile Fastly VCL to the other programming language that works on the Compute@Edge, keep you posted when there is any progress.
 
 ## Contribution
 

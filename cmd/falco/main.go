@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"encoding/json"
 
@@ -12,8 +15,14 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	ife "github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/tester"
+	"github.com/ysugimoto/falco/token"
 )
 
 var version string = ""
@@ -27,13 +36,21 @@ var (
 	cyan    = color.New(color.FgCyan)
 	magenta = color.New(color.FgMagenta)
 
+	// Displaying test result needs adding background colors
+	noTestColor = color.New(color.FgBlack, color.BgWhite, color.Bold)
+	passColor   = color.New(color.FgWhite, color.BgGreen, color.Bold)
+	failColor   = color.New(color.FgWhite, color.BgRed, color.Bold)
+	redBold     = color.New(color.FgRed, color.Bold)
+
 	ErrExit = errors.New("exit")
 )
 
 const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
-	subcommandStat      = "stat"
+	subcommandSimulate  = "simulate"
+	subcommandStats     = "stats"
+	subcommandTest      = "test"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -44,44 +61,6 @@ func writeln(c *color.Color, format string, args ...interface{}) {
 	write(c, format+"\n", args...)
 }
 
-func printUsage() {
-	usage := `
-=======================================
-  falco: Fastly VCL parser / linter
-=======================================
-Usage:
-    falco [subcommand] [main vcl file]
-
-Subcommands:
-    terraform : Run lint from terraform planned JSON
-    lint      : Run lint (default)
-    stat      : Calculate statistic for input VCL
-
-Flags:
-    -I, --include_path : Add include path
-    -t, --transformer  : Specify transformer
-    -h, --help         : Show this help
-    -r, --remote       : Connect with Fastly API
-    -V, --version      : Display build version
-    -v                 : Output lint warnings (verbose)
-    -vv                : Output all lint results (very verbose)
-    -json              : Output results as JSON (very verbose)
-
-Simple linting example:
-    falco -I . -vv /path/to/vcl/main.vcl
-
-Get statistics example:
-    falco -I . stats /path/to/vcl/main.vcl
-
-Linting with terraform:
-    terraform plan -out planned.out
-    terraform show -json planned.out | falco -vv terraform
-`
-
-	fmt.Println(strings.TrimLeft(usage, "\n"))
-	os.Exit(1)
-}
-
 func main() {
 	c, err := config.New(os.Args[1:])
 	if err != nil {
@@ -89,13 +68,15 @@ func main() {
 		os.Exit(1)
 	}
 	if c.Help {
-		printUsage()
+		printHelp(c.Commands.At(0))
+		os.Exit(1)
 	} else if c.Version {
 		writeln(white, version)
 		os.Exit(1)
 	}
 
-	var fetcher Fetcher
+	var fetcher snippets.Fetcher
+	var action string
 	// falco could lint multiple services so resolver should be a slice
 	var resolvers []resolver.Resolver
 	switch c.Commands.At(0) {
@@ -105,12 +86,40 @@ func main() {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
-	case subcommandLint, subcommandStat:
-		// "lint" command provides single file of service, then resolvers size is always 1
+		action = c.Commands.At(1)
+	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest:
+		// "lint", "simulate", "stats" and "test" command provides single file of service,
+		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
+		action = c.Commands.At(0)
+	case "":
+		printHelp("")
+		os.Exit(1)
 	default:
-		// "lint" command provides single file of service, then resolvers size is always 1
-		resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
+			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
+		} else {
+			// "lint" command provides single file of service, then resolvers size is always 1
+			resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
+			action = c.Commands.At(0)
+		}
+	}
+
+	if c.Remote {
+		if !c.Json {
+			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
+		}
+		// If remote flag is provided, fetch predefined data from Fastly.
+		//
+		// We communicate Fastly API with service id and api key,
+		// lookup fixed environment variable, FASTLY_SERVICE_ID and FASTLY_API_KEY
+		// So user needs to set them with "-r" argument.
+		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
+			writeln(red, "Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
+			os.Exit(1)
+		}
+		// Create remote fetcher
+		fetcher = remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
 	}
 
 	if err != nil {
@@ -121,10 +130,16 @@ func main() {
 	var shouldExit bool
 	for _, v := range resolvers {
 		if name := v.Name(); name != "" {
-			writeln(white, `Lint service "%s"`, name)
+			writeln(white, `Lint service of "%s"`, name)
 			writeln(white, strings.Repeat("=", 18+len(name)))
-		}
 
+			// If fetcher is instance of TerraformFetcher, set name to filter service
+			if fetcher != nil {
+				if t, ok := fetcher.(*terraform.TerraformFetcher); ok {
+					t.SetName(name)
+				}
+			}
+		}
 		runner, err := NewRunner(c, fetcher)
 		if err != nil {
 			writeln(red, err.Error())
@@ -132,8 +147,12 @@ func main() {
 		}
 
 		var exitErr error
-		switch c.Commands.At(0) {
-		case subcommandStat:
+		switch action {
+		case subcommandTest:
+			exitErr = runTest(runner, v)
+		case subcommandSimulate:
+			exitErr = runSimulate(runner, v)
+		case subcommandStats:
 			exitErr = runStats(runner, v)
 		default:
 			exitErr = runLint(runner, v)
@@ -158,14 +177,13 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
-	if runner.jsonMode {
+	if runner.config.Json {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(result); err != nil {
 			writeln(red, err.Error())
-			os.Exit(1)
+			return ErrExit
 		}
-		return ErrExit
 	}
 
 	write(red, ":fire:%d errors, ", result.Errors)
@@ -205,6 +223,14 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
+func runSimulate(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Simulate(rslv); err != nil {
+		writeln(red, "Failed to start local simulator: %s", err.Error())
+		return ErrExit
+	}
+	return nil
+}
+
 func runStats(runner *Runner, rslv resolver.Resolver) error {
 	stats, err := runner.Stats(rslv)
 	if err != nil {
@@ -214,14 +240,17 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		return ErrExit
 	}
 
-	if runner.jsonMode {
+	if runner.config.Json {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(stats); err != nil {
 			writeln(red, err.Error())
-			os.Exit(1)
+			return ErrExit
 		}
-		return ErrExit
+		return nil
+	}
+	printStats := func(format string, args ...interface{}) {
+		fmt.Fprintf(os.Stdout, format+"\n", args...)
 	}
 
 	printStats(strings.Repeat("=", 80))
@@ -246,6 +275,98 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
-func printStats(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stdout, format+"\n", args...)
+func runTest(runner *Runner, rslv resolver.Resolver) error {
+	factory, err := runner.Test(rslv)
+	if err != nil {
+		return ErrExit
+	}
+
+	if runner.config.Json {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(struct {
+			Tests   []*tester.TestResult `json:"tests"`
+			Summary *tester.TestCounter  `json:"summary"`
+		}{
+			Tests:   factory.Results,
+			Summary: factory.Statistics,
+		}); err != nil {
+			writeln(red, err.Error())
+			return ErrExit
+		}
+		return nil
+	}
+
+	// shrthand indent making
+	indent := func(level int) string {
+		return strings.Repeat(" ", level*2)
+	}
+	// print problem line
+	printCodeLine := func(lx *lexer.Lexer, tok token.Token) {
+		problemLine := tok.Line
+		lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
+		for l := problemLine - 1; l <= problemLine+1; l++ {
+			line, ok := lx.GetLine(l)
+			if !ok {
+				continue
+			}
+			color := white
+			if l == problemLine {
+				color = yellow
+			}
+			writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+		}
+	}
+
+	var passedCount, failedCount, totalCount int
+	for _, r := range factory.Results {
+		switch {
+		case len(r.Cases) == 0:
+			write(noTestColor, " NO TESTS ")
+			writeln(white, " "+r.Filename)
+		case r.IsPassed():
+			write(passColor, " PASS ")
+			writeln(white, " "+r.Filename)
+		default:
+			write(failColor, " FAIL ")
+			writeln(white, " "+r.Filename)
+		}
+
+		for _, c := range r.Cases {
+			totalCount++
+			if c.Error != nil {
+				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
+				writeln(red, "%s%s", indent(2), c.Error.Error())
+				switch e := c.Error.(type) {
+				case *ife.AssertionError:
+					write(white, "%sActual Value: ", indent(2))
+					writeln(red, "%s\n", e.Actual.String())
+					printCodeLine(r.Lexer, e.Token)
+				case *ife.TestingError:
+					writeln(white, "")
+					printCodeLine(r.Lexer, e.Token)
+				}
+				writeln(white, "")
+				failedCount++
+			} else {
+				writeln(green, "%s✓ [%s] %s", indent(1), c.Scope, c.Name)
+				passedCount++
+			}
+		}
+	}
+
+	if passedCount > 0 {
+		write(green, "%d passed, ", passedCount)
+	} else {
+		write(white, "%d passed, ", passedCount)
+	}
+	if failedCount > 0 {
+		write(red, "%d failed, ", failedCount)
+	} else {
+		write(white, "%d failed, ", failedCount)
+	}
+	write(white, "%d total, ", totalCount)
+	writeln(white, "%d assertions", factory.Statistics.Asserts)
+
+	return nil
 }
