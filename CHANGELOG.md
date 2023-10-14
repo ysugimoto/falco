@@ -1,3 +1,11 @@
+## v1.0.0
+
+New features for the major version.
+
+- Local Simulator - You can run your VCL locally and test what subroutine will be processed under the some limitations
+- VCL Debugger - Put breakpoint onto the VCL, and then look into what variable is set
+- Unit Testing - (Experimental) unit-test for the subroutine individually, can be written by VCL
+
 ## v0.24.0
 
 - add new predefined/builtins, implement checker [#171](https://github.com/ysugimoto/falco/pull/171) (@ysugimoto)
