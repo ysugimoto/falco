@@ -160,6 +160,7 @@ We describe them following table and examples:
 | testing.state           | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
+| testing.override_host   | FUNCTION   | Override request host with provided argument in the test case                                |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
@@ -219,6 +220,28 @@ sub test_vcl {
 
     // some time related assertions here
     assert.true(req.http.Is-Session-Expired)
+}
+```
+
+----
+
+### testing.override_host(STRING host)
+
+Use fixed `Host` header in the current test case.
+On the interpreter, the `Host` header value is always `localhost` and it inconvenient for the origin testing.
+Then calling this function use a fixed `Host` header.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Use fixed host header
+    testing.override_host("example.com");
+
+    // call vcl_recv Fastly reserved subroutine in RECV scope
+    testing.call_subroutine("vcl_recv");
+
+    // some time related assertions here
+    assert.true(resp.status == 200);
 }
 ```
 
