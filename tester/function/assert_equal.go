@@ -6,22 +6,22 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_equal_lookup_Name = "assert"
+const Assert_equal_Name = "assert"
 
-func Assert_equal_lookup_Validate(args []value.Value) error {
+func Assert_equal_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {
-		return errors.ArgumentNotInRange(Assert_equal_lookup_Name, 2, 3, args)
+		return errors.ArgumentNotInRange(Assert_equal_Name, 2, 3, args)
 	}
 	if len(args) == 3 {
 		if args[2].Type() != value.StringType {
-			return errors.TypeMismatch(Assert_equal_lookup_Name, 3, value.StringType, args[2].Type())
+			return errors.TypeMismatch(Assert_equal_Name, 3, value.StringType, args[2].Type())
 		}
 	}
 	return nil
 }
 
 func Assert_equal(ctx *context.Context, args ...value.Value) (value.Value, error) {
-	if err := Assert_equal_lookup_Validate(args); err != nil {
+	if err := Assert_equal_Validate(args); err != nil {
 		return nil, errors.NewTestingError(err.Error())
 	}
 

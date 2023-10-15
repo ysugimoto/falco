@@ -8,13 +8,11 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Testing_fixed_time_lookup_Name = "testing.fixed_time"
+const Testing_fixed_time_Name = "testing.fixed_time"
 
-var Testing_fixed_time_lookup_ArgumentTypes = []value.Type{value.StringType}
-
-func Testing_fixed_time_lookup_Validate(args []value.Value) error {
+func Testing_fixed_time_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough(Testing_fixed_time_lookup_Name, 1, args)
+		return errors.ArgumentNotEnough(Testing_fixed_time_Name, 1, args)
 	}
 	return nil
 }
@@ -26,7 +24,7 @@ func Testing_fixed_time(
 	args ...value.Value,
 ) (value.Value, error) {
 
-	if err := Testing_fixed_time_lookup_Validate(args); err != nil {
+	if err := Testing_fixed_time_Validate(args); err != nil {
 		return nil, errors.NewTestingError(err.Error())
 	}
 
@@ -48,7 +46,7 @@ func Testing_fixed_time(
 	default:
 		return value.Null, errors.NewTestingError(
 			"First argument of %s must be INTEGER or TIME or STRING type, %s provided",
-			Testing_fixed_time_lookup_Name,
+			Testing_fixed_time_Name,
 			args[0].Type(),
 		)
 	}
