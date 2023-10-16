@@ -1,3 +1,7 @@
+## v1.1.0
+
+Inspect variable on testing [#194](https://github.com/ysugimoto/falco/pull/194) (@ysugimoto)
+
 ## v1.0.1
 
 implement testing.override_host function [#193](https://github.com/ysugimoto/falco/pull/193) (@ysugimoto)
