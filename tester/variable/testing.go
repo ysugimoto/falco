@@ -2,6 +2,7 @@ package variable
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -20,7 +21,7 @@ type TestingVariables struct {
 func (v *TestingVariables) Get(ctx *context.Context, scope context.Scope, name string) (value.Value, error) {
 	switch name { // nolint:gocritic
 	case TESTING_STATE:
-		return ctx.ReturnState, nil
+		return &value.String{Value: strings.ToUpper(ctx.ReturnState.Value)}, nil
 	}
 
 	return nil, fmt.Errorf("Not Found")

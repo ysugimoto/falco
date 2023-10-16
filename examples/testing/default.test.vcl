@@ -17,3 +17,12 @@ sub test_vcl_deliver {
 }
 
 
+// @scope: recv
+// @suite: Checking auth raise an error with 401 status code
+sub test_check_auth {
+  set req.http.Check-Auth = "1";
+  testing.call_subroutine("vcl_recv");
+
+  assert.equal(testing.state, "ERROR");
+  assert.equal(testing.inspect("obj.status"), 401);
+}
