@@ -56,6 +56,16 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				return false
 			},
 		},
+		"testing.inspect": {
+			Scope: allScope,
+			// On this function, we don't need to unwrap ident
+			// because ident value should be looked up as predefined variables
+			Call:             Testing_inspect,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 		"assert": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

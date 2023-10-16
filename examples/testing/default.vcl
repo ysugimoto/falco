@@ -37,6 +37,10 @@ sub vcl_recv {
   set req.backend = httpbin_org;
   set req.http.Foo = {" foo bar baz "};
   call custom_logger;
+
+  if (req.http.Check-Auth) {
+    error 401;
+  }
   return (lookup);
 }
 

@@ -14,9 +14,13 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() string {
+	var file string
+	if e.Token.File != "" {
+		file = " at " + e.Token.File
+	}
 	return fmt.Sprintf(
-		"Parse Error: %s, line: %d, position: %d",
-		e.Message, e.Token.Line, e.Token.Position,
+		"Parse Error: %s%s, line: %d, position: %d",
+		e.Message, file, e.Token.Line, e.Token.Position,
 	)
 }
 
