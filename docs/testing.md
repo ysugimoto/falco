@@ -169,6 +169,7 @@ We describe them following table and examples:
 | assert.not_equal        | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
 | assert.strict_equal     | FUNCTION   | Assert actual value should be equal to expected value strictly                               |
 | assert.not_strict_equal | FUNCTION   | Assert actual value should not be equal to expected value strictly                           |
+| assert.equal_fold       | FUNCTION   | Assert actual value should be equal to with case insensitive                                 |
 | assert.match            | FUNCTION   | Assert actual string should be matched against expected regular expression                   |
 | assert.not_match        | FUNCTION   | Assert actual string should not be matches against expected regular expression               |
 | assert.contains         | FUNCTION   | Assert actual string should contain the expected string                                      |
@@ -383,6 +384,24 @@ sub test_vcl {
 
     // Fail because value type is not equal
     assert.not_strict_equal(var.testing, var.testing2);
+}
+```
+
+----
+
+### assert.equal_fold(STRING actual, STRING expect [, STRING message])
+
+Assert actual value should be equal to the expected value as case insensitive.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+    declare local var.testing2 INTEGER;
+
+    set var.testing = "foo";
+
+    // Pass because value is equal with case insensitive
+    assert.strict_equal(var.testing, "Foo");
 }
 ```
 
