@@ -60,16 +60,13 @@ func Testing_inspect(
 		variable.NewRecvScopeVariables(ctx),
 		variable.NewAllScopeVariables(ctx),
 	}
-	var ret value.Value
-	var err error
 	for i := range lookups {
-		ret, err = lookups[i].Get(context.AnyScope, id.Value)
-
 		// If value is found in either scope, return it
-		if err == nil {
+		if ret, err := lookups[i].Get(context.AnyScope, id.Value); err == nil {
 			return ret, nil
 		}
 	}
+
 	return value.Null, errors.NewTestingError(
 		"[%s] Variable %s does not found or could not get",
 		Testing_inspect_Name,
