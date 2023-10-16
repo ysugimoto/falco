@@ -161,6 +161,7 @@ We describe them following table and examples:
 | testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host   | FUNCTION   | Override request host with provided argument in the test case                                |
+| testing.inspect         | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
@@ -242,6 +243,25 @@ sub test_vcl {
 
     // some time related assertions here
     assert.true(resp.status == 200);
+}
+```
+
+----
+
+### testing.inspect(STRING var_name)
+
+Inspect specific variable. This function has special permission that all variable value can inspect.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // call vcl_recv Fastly reserved subroutine in RECV scope,
+    // will call error statement in this subroutine.
+    testing.call_subroutine("vcl_recv");
+
+    // Typically obj.status could not access in recv scope,
+    // but can inspect via this function.
+    assert.equal(testing.inspect("obj.status"), 400);
 }
 ```
 
