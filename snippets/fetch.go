@@ -151,6 +151,8 @@ func renderBackendShields(backends []*types.RemoteBackend) ([]SnippetItem, error
 			return "hash"
 		case remote.Client:
 			return "client"
+		case remote.Shield:
+			return "shield"
 		}
 		return ""
 	}
@@ -174,7 +176,7 @@ func renderBackendShields(backends []*types.RemoteBackend) ([]SnippetItem, error
 	for sd := range shieldDirectors {
 		d := remote.Director{
 			Name:     "ssl_shield_" + strings.ReplaceAll(sd, "-", "_"),
-			Type:     remote.Random,
+			Type:     remote.Shield,
 			Backends: []string{shieldBackend},
 		}
 		buf := new(bytes.Buffer)
