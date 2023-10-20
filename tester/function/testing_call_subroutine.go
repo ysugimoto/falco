@@ -7,20 +7,20 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Testing_call_subroutine_lookup_Name = "assert"
+const Testing_call_subroutine_Name = "assert"
 
-var Testing_call_subroutine_lookup_ArgumentTypes = []value.Type{value.StringType}
+var Testing_call_subroutine_ArgumentTypes = []value.Type{value.StringType}
 
-func Testing_call_subroutine_lookup_Validate(args []value.Value) error {
+func Testing_call_subroutine_Validate(args []value.Value) error {
 	if len(args) != 1 {
-		return errors.ArgumentNotEnough(Testing_call_subroutine_lookup_Name, 1, args)
+		return errors.ArgumentNotEnough(Testing_call_subroutine_Name, 1, args)
 	}
 	for i := range args {
-		if args[i].Type() != Testing_call_subroutine_lookup_ArgumentTypes[i] {
+		if args[i].Type() != Testing_call_subroutine_ArgumentTypes[i] {
 			return errors.TypeMismatch(
-				Testing_call_subroutine_lookup_Name,
+				Testing_call_subroutine_Name,
 				i+1,
-				Testing_call_subroutine_lookup_ArgumentTypes[i],
+				Testing_call_subroutine_ArgumentTypes[i],
 				args[i].Type(),
 			)
 		}
@@ -34,7 +34,7 @@ func Testing_call_subroutine(
 	args ...value.Value,
 ) (value.Value, error) {
 
-	if err := Testing_call_subroutine_lookup_Validate(args); err != nil {
+	if err := Testing_call_subroutine_Validate(args); err != nil {
 		return nil, errors.NewTestingError(err.Error())
 	}
 

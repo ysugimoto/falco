@@ -43,14 +43,18 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				if err != nil {
 					return value.Null, errors.WithStack(err)
 				}
-				v, err := Testing_fixed_time(ctx, unwrapped...)
-				if err != nil {
-					c.Fail()
-				} else {
-					c.Pass()
-				}
-				return v, err
+				return Testing_fixed_time(ctx, unwrapped...)
 			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.inspect": {
+			Scope: allScope,
+			// On this function, we don't need to unwrap ident
+			// because ident value should be looked up as predefined variables
+			Call:             Testing_inspect,
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {
 				return false
@@ -104,6 +108,26 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 					return value.Null, errors.WithStack(err)
 				}
 				v, err := Assert_false(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.equal_fold": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_equal(ctx, unwrapped...)
 				if err != nil {
 					c.Fail()
 				} else {

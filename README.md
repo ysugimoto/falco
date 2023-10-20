@@ -35,11 +35,10 @@ To solve them, we made a Fastly dedicated tool to develop custom VCLs locally.
 
 ## Installation
 
-Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according to your platform and place it under the `$PATH`, or you can install via Homebrew:
+Download binary from [releases page](https://github.com/ysugimoto/falco/releases) according to your platform and place it under the `$PATH`, or you can install via [Homebrew](https://brew.sh/):
 
 ```shell
-brew tap ysugimoto/falco
-brew install falco
+$ brew install falco
 ```
 
 You can compile this project by yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
@@ -92,7 +91,7 @@ The main feature, parse and run lint your VCL locally, and report problems.
 `falco` bundles many linter rules that come from the author's operation experience, Fastly recommends,
 that you improve your VCL more robustly by passing the linter.
 
-See [linter documentation](https://github.com/ysugimoto/falco/blob/develop/docs/linter.md) in detail.
+See [linter documentation](https://github.com/ysugimoto/falco/blob/main/docs/linter.md) in detail.
 
 ## Local Simulator / VCL Debugger
 
@@ -102,20 +101,20 @@ You can simulate how your VCL behaves through the simulator.
 In addition to local simulator, `falco ` also provided VCL debugger.
 You can debug your VCL step-by-step with dumping variables.
 
-See [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) in detail.
+See [simulator documentation](https://github.com/ysugimoto/falco/blob/main/docs/simulator.md) in detail.
 
 ## VCL Unit Testing
 
 You can run unit testing through the `falco` runtime.
 The unit testing file also can be written in VCL, and run test for each subroutine that you want individually.
 
-See [testing documentation](https://github.com/ysugimoto/falco/blob/develop/docs/testing.md) in detail.
+See [testing documentation](https://github.com/ysugimoto/falco/blob/main/docs/testing.md) in detail.
 
 ## Terraform Support
 
 `falco` supports to run features for [terraform](https://www.terraform.io/) planned result of [Fastly Provider](https://github.com/fastly/terraform-provider-fastly).
 
-See [terraform.md](https://github.com/ysugimoto/falco/blob/develop/docs/terraform.md) in detail.
+See [terraform.md](https://github.com/ysugimoto/falco/blob/main/docs/terraform.md) in detail.
 
 ## Transforming
 

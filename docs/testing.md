@@ -160,6 +160,8 @@ We describe them following table and examples:
 | testing.state           | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
+| testing.override_host   | FUNCTION   | Override request host with provided argument in the test case                                |
+| testing.inspect         | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
@@ -167,6 +169,7 @@ We describe them following table and examples:
 | assert.not_equal        | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
 | assert.strict_equal     | FUNCTION   | Assert actual value should be equal to expected value strictly                               |
 | assert.not_strict_equal | FUNCTION   | Assert actual value should not be equal to expected value strictly                           |
+| assert.equal_fold       | FUNCTION   | Assert actual value should be equal to with case insensitive                                 |
 | assert.match            | FUNCTION   | Assert actual string should be matched against expected regular expression                   |
 | assert.not_match        | FUNCTION   | Assert actual string should not be matches against expected regular expression               |
 | assert.contains         | FUNCTION   | Assert actual string should contain the expected string                                      |
@@ -219,6 +222,47 @@ sub test_vcl {
 
     // some time related assertions here
     assert.true(req.http.Is-Session-Expired)
+}
+```
+
+----
+
+### testing.override_host(STRING host)
+
+Use fixed `Host` header in the current test case.
+On the interpreter, the `Host` header value is always `localhost` and it inconvenient for the origin testing.
+Then calling this function use a fixed `Host` header.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Use fixed host header
+    testing.override_host("example.com");
+
+    // call vcl_recv Fastly reserved subroutine in RECV scope
+    testing.call_subroutine("vcl_recv");
+
+    // some time related assertions here
+    assert.true(resp.status == 200);
+}
+```
+
+----
+
+### testing.inspect(STRING var_name)
+
+Inspect specific variable. This function has special permission that all variable value can inspect.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // call vcl_recv Fastly reserved subroutine in RECV scope,
+    // will call error statement in this subroutine.
+    testing.call_subroutine("vcl_recv");
+
+    // Typically obj.status could not access in recv scope,
+    // but can inspect via this function.
+    assert.equal(testing.inspect("obj.status"), 400);
 }
 ```
 
@@ -340,6 +384,24 @@ sub test_vcl {
 
     // Fail because value type is not equal
     assert.not_strict_equal(var.testing, var.testing2);
+}
+```
+
+----
+
+### assert.equal_fold(STRING actual, STRING expect [, STRING message])
+
+Assert actual value should be equal to the expected value as case insensitive.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+    declare local var.testing2 INTEGER;
+
+    set var.testing = "foo";
+
+    // Pass because value is equal with case insensitive
+    assert.strict_equal(var.testing, "Foo");
 }
 ```
 
