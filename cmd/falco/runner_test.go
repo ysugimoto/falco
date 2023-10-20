@@ -75,12 +75,7 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 				VerboseWarning: true,
 			},
 		}
-		r, err := NewRunner(c, f)
-		if err != nil {
-			t.Fatalf("Unexpected runner creation error: %s", err)
-			return
-		}
-		ret, err := r.Run(rslv[0])
+		ret, err := NewRunner(c, f).Run(rslv[0])
 		if err != nil {
 			t.Fatalf("Unexpected Run() error: %s", err)
 		}
@@ -104,12 +99,7 @@ func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 			VerboseWarning: true,
 		},
 	}
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-		return
-	}
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -132,11 +122,7 @@ func TestResolveWithDuplicateDeclarations(t *testing.T) {
 			VerboseWarning: true,
 		},
 	}
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -155,12 +141,7 @@ func TestResolveModulesWithVCLExtension(t *testing.T) {
 		},
 	}
 
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -179,12 +160,7 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 		},
 	}
 
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -212,12 +188,7 @@ func TestRepositoryExamples(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(c, nil)
-			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
-				return
-			}
-			ret, err := r.Run(resolvers[0])
+			ret, err := NewRunner(c, nil).Run(resolvers[0])
 			if tt.errors != 0 {
 				if err == nil {
 					t.Errorf("Expected Run() to generate an error")
@@ -255,12 +226,7 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(c, nil)
-			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
-				return
-			}
-			ret, err := r.Run(resolvers[0])
+			ret, err := NewRunner(c, nil).Run(resolvers[0])
 			if tt.errors != 0 {
 				if err != nil {
 					t.Errorf("Unexpected error running Run(): %s", err)

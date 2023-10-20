@@ -25,7 +25,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/gobwas/glob v0.2.3
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
-	github.com/ysugimoto/vintage v0.0.0-20231013121315-04bc684cfe8d
+	github.com/ysugimoto/vintage v0.1.0
 )
 
 require (

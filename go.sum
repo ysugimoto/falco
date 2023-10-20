@@ -63,6 +63,8 @@ github.com/ysugimoto/twist v0.10.2 h1:0wDTWBzbPyuXF3E6NV/KtWODP5odlDUF0W8t9jDLbD
 github.com/ysugimoto/twist v0.10.2/go.mod h1:T6V0OlIucJ42GXo5vEs26LWgBmYbe0+3KHnzdKG4z5I=
 github.com/ysugimoto/vintage v0.0.0-20231013121315-04bc684cfe8d h1:WEhwXUwz/9/9/W02Hx2wTaoGgV3AaGBkHYs6eBCYna0=
 github.com/ysugimoto/vintage v0.0.0-20231013121315-04bc684cfe8d/go.mod h1:6DsjwbEMRMUyg7PCj1zolLW0OoBYRElt+a2YJthMQu8=
+github.com/ysugimoto/vintage v0.1.0 h1:Le98PP7BH82XQEfH44C6Snhgzyj9YBCxJG0TniiJrns=
+github.com/ysugimoto/vintage v0.1.0/go.mod h1:1loieM4v/hb3A9Bgwtbi8T5/2W8CracItge+1QwlMMw=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=

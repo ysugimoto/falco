@@ -53,12 +53,18 @@ type TransformConfig struct {
 	Package      string   `cli:"package" yaml:"package" default:"main"`
 	Output       string   `cli:"o,output" yaml:"output" default:"compute.go"`
 	Overwrite    bool     `cli:"overwrite" yaml:"overwrite"`
+	Target       string   `cli:"target" yaml:"target" default:"compute"`
 }
+
+// Target constant string
+const (
+	TransformTargetCompute = "compute"
+	TransformTargetNative  = "native"
+)
 
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
-	Transforms   []string `cli:"t,transformer" yaml:"transformers"`
 	Help         bool     `cli:"h,help"`
 	Version      bool     `cli:"V"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`

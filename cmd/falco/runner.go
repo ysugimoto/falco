@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -20,12 +21,12 @@ import (
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/vintage/transformer/core"
 	"github.com/ysugimoto/vintage/transformer/fastly"
+	"github.com/ysugimoto/vintage/transformer/native"
 )
 
 var (
@@ -48,7 +49,7 @@ type RunnerResult struct {
 	LintErrors  map[string][]*linter.LintError
 	ParseErrors map[string]*parser.ParseError
 
-	Vcl *plugin.VCL
+	Vcl *ast.VCL
 }
 
 type StatsResult struct {
@@ -70,11 +71,10 @@ const (
 )
 
 type Runner struct {
-	transformers []*Transformer
-	overrides    map[string]linter.Severity
-	lexers       map[string]*lexer.Lexer
-	snippets     *snippets.Snippets
-	config       *config.Config
+	overrides map[string]linter.Severity
+	lexers    map[string]*lexer.Lexer
+	snippets  *snippets.Snippets
+	config    *config.Config
 
 	level       Level
 	lintErrors  map[string][]*linter.LintError
@@ -98,7 +98,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 }
 
 // NewRunner creates command runner pointer
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -118,17 +118,6 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
 			r.message(red, err.Error()+"\n")
 		}
-	}
-
-	// Check transformer exists and format to absolute path
-	// Transformer is provided as independent binary, named "falco-transform-[name]"
-	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
-		}
-		r.transformers = append(r.transformers, tf)
 	}
 
 	// Set verbose level
@@ -154,23 +143,8 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		}
 	}
 
-	return r, nil
+	return r
 }
-
-// func (r *Runner) Transform(vcl *plugin.VCL) error {
-// 	// VCL data is shared between parser and transformar through the falco/io package.
-// 	encoded, err := plugin.Encode(vcl)
-// 	if err != nil {
-// 		return fmt.Errorf("Failed to encode VCL: %w", err)
-// 	}
-//
-// 	for _, t := range r.transformers {
-// 		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
-// 			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
-// 		}
-// 	}
-// 	return nil
-// }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	options := []context.Option{context.WithResolver(rslv)}
@@ -201,7 +175,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*ast.VCL, error) {
 	vcl, err := r.parseVCL(main.Name, main.Data)
 	if err != nil {
 		return nil, err
@@ -267,10 +241,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	return &plugin.VCL{
-		File: main.Name,
-		AST:  vcl,
-	}, nil
+	return vcl, nil
 }
 
 func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
@@ -487,16 +458,34 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 }
 
 func (r *Runner) Transform(rslv resolver.Resolver) error {
+	writeln(white, "Linting your VCL before transform.")
+	// Before transforming, the VCL must be valid.
+	// For the transformation, some rules must treat as an ERROR due to compilation problem
+	r.overrides["unused/variable"] = linter.ERROR
+	lint, err := r.Run(rslv)
+	if err != nil {
+		if err != ErrParser {
+			writeln(red, err.Error())
+		}
+		return ErrExit
+	}
+
+	// If lint result has ERROR level, stop transformation.
+	// It causes compilation error on transformed program
+	if lint.Errors > 0 {
+		writeln(yellow, "VCL has problem to transform, should be resolved before.")
+		return ErrExit
+	}
+
+	// Linting is OK, let's transform!
+	writeln(green, "VCL looks fine, start transforming!")
+
 	c := r.config.Transform
 	options := []core.TransformOption{
 		core.WithOutputPackage(c.Package),
 	}
 	if r.snippets != nil {
 		options = append(options, core.WithSnippets(r.snippets))
-	}
-	buf, err := fastly.NewFastlyTransformer(options...).Transform(rslv)
-	if err != nil {
-		return errors.WithStack(err)
 	}
 
 	output, err := filepath.Abs(c.Output)
@@ -514,6 +503,29 @@ func (r *Runner) Transform(rslv resolver.Resolver) error {
 		}
 	}
 
+	var transformer core.Transformer
+	switch c.Target {
+	case config.TransformTargetCompute:
+		write(white, "Transform VCL for Fastly Compute...")
+		transformer = fastly.NewFastlyTransformer(options...)
+	case config.TransformTargetNative:
+		write(white, "Transform VCL for Native Go platform...")
+		transformer = native.NewNativeTransformer(options...)
+	default:
+		return errors.New(fmt.Sprintf(
+			"Unsupported transform target %s. Only compute or native is supporeted",
+			c.Target,
+		))
+	}
+	start := time.Now()
+	buf, err := transformer.Transform(rslv)
+	if err != nil {
+		writeln(red, "Failed.")
+		return errors.WithStack(err)
+	}
+
+	writeln(white, "Done.")
+	writeln(white, "Transformation succeeded. Write output file to %s", output)
 	out, err := os.OpenFile(output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return errors.WithStack(err)
@@ -522,5 +534,7 @@ func (r *Runner) Transform(rslv resolver.Resolver) error {
 	if _, err := io.Copy(out, bytes.NewReader(buf)); err != nil {
 		return errors.WithStack(err)
 	}
+	write(cyan, "Finished!")
+	writeln(white, " Elapsed %dms.", time.Since(start).Milliseconds())
 	return nil
 }

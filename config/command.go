@@ -22,6 +22,7 @@ var needValueOptions = map[string]struct{}{
 	"--filter":       {},
 	"-o":             {},
 	"--output":       {},
+	"--target":       {},
 }
 
 func parseCommands(args []string) Commands {
