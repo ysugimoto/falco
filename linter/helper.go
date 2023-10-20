@@ -99,6 +99,13 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		},
 		Requires: []string{"id"},
 	},
+	"shield": {
+		// We should do linting loughly because this type is only provided via Faslty Origin-Shielding
+		Props: map[string]types.Type{
+			"shield": types.StringType,
+		},
+		Requires: []string{"shield"},
+	},
 }
 
 var ValueTypeMap = map[string]types.Type{

@@ -40,6 +40,7 @@ const (
 	Random DirectorType = iota + 1
 	Hash
 	Client
+	Shield // shield director type is special type for Origin-Shielding on Faslty configuration
 )
 
 type Director struct {
