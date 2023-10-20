@@ -171,13 +171,11 @@ func renderBackendShields(backends []*types.RemoteBackend) ([]SnippetItem, error
 	}
 
 	var snippets []SnippetItem
-	// We need to pick an arbitrary backend to avoid an undeclared linter error
-	shieldBackend := "F_" + backends[0].Name
 	for sd := range shieldDirectors {
 		d := remote.Director{
 			Name:     "ssl_shield_" + strings.ReplaceAll(sd, "-", "_"),
 			Type:     remote.Shield,
-			Backends: []string{shieldBackend},
+			Backends: []string{},
 		}
 		buf := new(bytes.Buffer)
 		if err := dirTmpl.Execute(buf, d); err != nil {
