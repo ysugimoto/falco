@@ -1,5 +1,7 @@
 package remote
 
+import "time"
+
 type Version struct {
 	Number int64 `json:"number"`
 }
@@ -30,8 +32,36 @@ type AccessControlEntry struct {
 }
 
 type Backend struct {
-	Name   string  `json:"name"`
-	Shield *string `json:"shield"`
+	Name                string        `json:"name"`
+	Shield              *string       `json:"shield"`
+	BetweenBytesTimeout time.Duration `json:"between_bytes_timeout"`
+	ConnectTimeout      time.Duration `json:"connect_timeout"`
+	FirstByteTimeout    time.Duration `json:"first_byte_timeout"`
+	HealthCheck         *string       `json:"healthcheck"`
+	Host                string        `json:"hostname"`
+	MaxConnection       int64         `json:"max_conn"`
+	Port                int64         `json:"port"`
+	OverrideHost        *string       `json:"override_host"`
+	SSL                 bool          `json:"use_ssl"`
+	SSLCertHostname     *string       `json:"ssl_cert_hostname"`
+	SSLCheckCert        bool          `json:"ssl_check_cert"`
+	SSLSniHostname      *string       `json:"ssl_sni_hostname"`
+	Probe               *Healthcheck
+}
+
+type Healthcheck struct {
+	Initial          int64    `json:"initial"`
+	ExpectedResponse int64    `json:"expected_response"`
+	CheckInterval    int64    `json:"check_interval"`
+	Headers          []string `json:"headers"`
+	Host             string   `json:"host"`
+	HttpVersion      string   `json:"http_version"`
+	Method           string   `json:"method"`
+	Name             string   `json:"name"`
+	Path             string   `json:"path"`
+	Threshold        int64    `json:"threshold"`
+	Timeout          int64    `json:"timeout"`
+	Window           int64    `json:"window"`
 }
 
 type DirectorType int8
