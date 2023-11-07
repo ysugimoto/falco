@@ -15,6 +15,8 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/console"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/remote"
@@ -51,6 +53,7 @@ const (
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
+	subcommandConsole   = "console"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -95,6 +98,12 @@ func main() {
 	case "":
 		printHelp("")
 		os.Exit(1)
+	case subcommandConsole:
+		c := console.New(icontext.RecvScope)
+		if err := c.Run(); err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
 			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
