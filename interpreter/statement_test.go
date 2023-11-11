@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -131,6 +132,43 @@ func TestReturnStatement(t *testing.T) {
 		s := ip.ProcessReturnStatement(tt.stmt)
 		if s != tt.expect {
 			t.Errorf("%s expects state %s, got %s", tt.name, tt.expect, s)
+		}
+	}
+}
+
+func TestSetStatement(t *testing.T) {
+	tests := []struct {
+		name string
+		stmt *ast.SetStatement
+	}{
+		{
+			name: "set local variable",
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "var.foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.Integer{Value: 100},
+			},
+		},
+		{
+			name: "set client.geo.ip_override",
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "client.geo.ip_override"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "127.0.0.1"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		ip := New(nil)
+		if err := ip.localVars.Declare("var.foo", "INTEGER"); err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+
+		ip.ctx = context.New()
+		ip.SetScope(context.RecvScope)
+		if err := ip.ProcessSetStatement(tt.stmt); err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
 	}
 }
