@@ -82,10 +82,9 @@ func (c *Console) Run(defaultScope string) error {
 	c.i.SetScope(scope)
 	displayHelp()
 
-	suggestions := append(
-		statementSuggestions,
-		promptSuggestions[scope.String()]...,
-	)
+	var suggestions []prompt.Suggest
+	suggestions = append(suggestions, statementSuggestions...)
+	suggestions = append(suggestions, promptSuggestions[scope.String()]...)
 
 	for {
 		line := prompt.Input(
@@ -116,10 +115,9 @@ func (c *Console) Run(defaultScope string) error {
 			yellow.Fprintf(output, "Scope changes to %s\n", s.String())
 			c.i.SetScope(s)
 			scope = s
-			suggestions = append(
-				statementSuggestions,
-				promptSuggestions[s.String()]...,
-			)
+			suggestions = []prompt.Suggest{}
+			suggestions = append(suggestions, statementSuggestions...)
+			suggestions = append(suggestions, promptSuggestions[s.String()]...)
 		case strings.HasPrefix(line, "\\h"),
 			strings.HasPrefix(line, "\\help"):
 			displayHelp()
