@@ -727,8 +727,8 @@ func (l *Linter) lintDirectorProperty(decl *ast.DirectorDeclaration, ctx *contex
 		}
 	}
 
-	// At least one backend must be declared
-	if backends == 0 {
+	// At least one backend must be declared excepts shield type director
+	if backends == 0 && decl.DirectorType.Value != "shield" {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    decl.Token,

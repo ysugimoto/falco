@@ -20,6 +20,7 @@ var backendTemplate = `
 backend F_{{ .Name }} {}
 `
 
+// remote director should only have a shield type
 var directorTemplate = `
 director {{ .Name }} {{ .Type | printtype }} {
 	{{- range .Backends }}

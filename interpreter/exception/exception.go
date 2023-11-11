@@ -28,7 +28,7 @@ func (e *Exception) Error() string {
 	} else {
 		t := *e.Token
 		if t.File != "" {
-			file = " in" + t.File
+			file = " in " + t.File
 		}
 
 		out = fmt.Sprintf("[%s] %s%s at line: %d, position: %d", e.Type, e.Message, file, t.Line, t.Position)
