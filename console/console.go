@@ -55,19 +55,10 @@ func New() *Console {
 	}
 }
 
-// // completer is interface function of prompt.Completer
-// func (c *Console) completer(in prompt.Document) []prompt.Suggest {
-// 	suggestions := []prompt.Suggest{
-// 		{Text: "set", Description: "set statement"},
-// 		{Text: "unset", Description: "unset statement"},
-// 	}
-//
-// 	return prompt.FilterHasPrefix(suggestions, in.GetWordBeforeCursorWithSpace(), true)
-// }
-
 // displayHelp displays usage messages
-func (c *Console) displayHelp() {
+func displayHelp() {
 	fmt.Println(strings.TrimSpace(`
+===========================================
 falco console tool
 ===========================================
   \s, \scope [scope] : Change running scope
@@ -89,7 +80,7 @@ func (c *Console) Run(defaultScope string) error {
 		return fmt.Errorf("Failed to initialize interpreter: %s", err)
 	}
 	c.i.SetScope(scope)
-	c.displayHelp()
+	displayHelp()
 
 	suggestions := append(
 		statementSuggestions,
@@ -131,7 +122,7 @@ func (c *Console) Run(defaultScope string) error {
 			)
 		case strings.HasPrefix(line, "\\h"),
 			strings.HasPrefix(line, "\\help"):
-			c.displayHelp()
+			displayHelp()
 		case strings.HasPrefix(line, "\\q"),
 			strings.HasPrefix(line, "\\quit"):
 			fmt.Println("bye")
