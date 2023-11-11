@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/console"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/remote"
@@ -95,15 +94,14 @@ func main() {
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
-	case "":
-		printHelp("")
-		os.Exit(1)
 	case subcommandConsole:
-		c := console.New(icontext.RecvScope)
-		if err := c.Run(); err != nil {
+		if err := console.New().Run(c.Console.Scope); err != nil {
 			os.Exit(1)
 		}
 		os.Exit(0)
+	case "":
+		printHelp("")
+		os.Exit(1)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
 			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))

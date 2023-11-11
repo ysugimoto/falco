@@ -23,6 +23,31 @@ const (
 	LOG     int = 0x100000000
 )
 
+func ScopeFromString(s string) int {
+	switch strings.ToUpper(s) {
+	case "RECV":
+		return RECV
+	case "HASH":
+		return HASH
+	case "HIT":
+		return HIT
+	case "MISS":
+		return MISS
+	case "PASS":
+		return PASS
+	case "FETCH":
+		return FETCH
+	case "ERROR":
+		return ERROR
+	case "DELIVER":
+		return DELIVER
+	case "LOG":
+		return LOG
+	default:
+		return -1
+	}
+}
+
 func ScopeString(s int) string {
 	switch s {
 	case RECV:

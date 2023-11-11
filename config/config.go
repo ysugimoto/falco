@@ -47,6 +47,15 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Console configuration
+type ConsoleConfig struct {
+	// Initial scope string, for example, recv, pass, fetch, etc...
+	Scope string `cli:"scope" default:"recv"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
+
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
@@ -77,6 +86,8 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Console configuration
+	Console *ConsoleConfig
 }
 
 func New(args []string) (*Config, error) {
@@ -92,12 +103,6 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		OverrideBackends: make(map[string]*OverrideBackend),
-		// Simulator: &SimulatorConfig{
-		// 	OverrideRequest:  &RequestConfig{},
-		// },
-		// Testing: &TestConfig{
-		// 	OverrideRequest: &RequestConfig{},
-		// },
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
@@ -117,6 +122,7 @@ func New(args []string) (*Config, error) {
 		if rc, err := LoadRequestConfig(c.Request); err == nil {
 			c.Simulator.OverrideRequest = rc
 			c.Testing.OverrideRequest = rc
+			c.Console.OverrideRequest = rc
 		}
 	}
 

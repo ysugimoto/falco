@@ -20,7 +20,7 @@ const (
 	IntegerType Type = "INTEGER"
 	FloatType   Type = "FLOAT"
 	StringType  Type = "STRING"
-	BooleanType Type = "BOOLEAN"
+	BooleanType Type = "BOOL"
 	RTimeType   Type = "RTIME"
 	TimeType    Type = "TIME"
 	IpType      Type = "IP"
