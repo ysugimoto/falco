@@ -635,6 +635,21 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 				return &value.Boolean{Value: true}, nil
 			}
 			return &value.Boolean{Value: false}, nil
+		case value.AclType:
+			rv := value.Unwrap[*value.Acl](right)
+			ip := net.ParseIP(lv.Value)
+			if ip == nil {
+				return value.Null, errors.WithStack(
+					fmt.Errorf("Failed to parse IP from string %s", lv.Value),
+				)
+			}
+			res, err := matchesAcl(*rv, ip)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return &value.Boolean{
+				Value: res,
+			}, nil
 		default:
 			return value.Null, errors.WithStack(
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -645,32 +660,12 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 		switch right.Type() {
 		case value.AclType:
 			rv := value.Unwrap[*value.Acl](right)
-
-			for _, entry := range rv.Value.CIDRs {
-				var mask int64 = 32
-				if entry.Mask != nil {
-					mask = entry.Mask.Value
-				}
-
-				cidr := fmt.Sprintf("%s/%d", entry.IP.Value, mask)
-				_, ipnet, err := net.ParseCIDR(cidr)
-				if err != nil {
-					return value.Null, errors.WithStack(
-						fmt.Errorf("Failed to parse CIDR %s", cidr),
-					)
-				}
-				if ipnet.Contains(lv.Value) {
-					return &value.Boolean{
-						Value: true,
-					}, nil
-				} else if entry.Inverse != nil && entry.Inverse.Value {
-					return &value.Boolean{
-						Value: true,
-					}, nil
-				}
+			res, err := matchesAcl(*rv, lv.Value)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
 			}
 			return &value.Boolean{
-				Value: false,
+				Value: res,
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -682,6 +677,27 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 		)
 	}
+}
+
+func matchesAcl(acl value.Acl, ip net.IP) (bool, error) {
+	for _, entry := range acl.Value.CIDRs {
+		var mask int64 = 32
+		if entry.Mask != nil {
+			mask = entry.Mask.Value
+		}
+
+		cidr := fmt.Sprintf("%s/%d", entry.IP.Value, mask)
+		_, ipnet, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return false, fmt.Errorf("Failed to parse CIDR %s", cidr)
+		}
+		if ipnet.Contains(ip) {
+			return true, nil
+		} else if entry.Inverse != nil && entry.Inverse.Value {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func NotRegex(ctx *context.Context, left, right value.Value) (value.Value, error) {
