@@ -105,6 +105,7 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "left", right: &value.String{Value: "example"}, expect: "example"},
 			{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "example"},
 			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foo"},
+			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}, Literal: true}, expect: "foo"},
 			{left: "left", right: &value.Boolean{Value: true}, expect: "1"},
 			{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "0"},
 			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1"},
