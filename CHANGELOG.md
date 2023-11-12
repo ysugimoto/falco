@@ -1,3 +1,10 @@
+## v1.1.1
+
+- Feature/add equal fold assertion [#195](https://github.com/ysugimoto/falco/pull/195) (@ysugimoto)
+- add shield director type for origin-sheileding [#197](https://github.com/ysugimoto/falco/pull/197) (@ysugimoto)
+- Implement STRING to ACL regex comparison [#200](https://github.com/ysugimoto/falco/pull/200) (@MasonM)
+- Fix type of client.geo.ip_override [#201](https://github.com/ysugimoto/falco/pull/201) (@MasonM)
+
 ## v1.1.0
 
 Inspect variable on testing [#194](https://github.com/ysugimoto/falco/pull/194) (@ysugimoto)
