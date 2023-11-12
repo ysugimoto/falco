@@ -82,7 +82,7 @@ type Context struct {
 	StaleContents                       *value.String
 	FastlyError                         *value.String
 	ClientIdentity                      *value.String
-	ClientGeoIpOverride                 *value.Boolean
+	ClientGeoIpOverride                 *value.String
 	ClientSocketCongestionAlgorithm     *value.String
 	ClientSocketCwnd                    *value.Integer
 	ClientSocketPace                    *value.Integer
@@ -177,7 +177,7 @@ func New(options ...Option) *Context {
 		StaleIsRevalidating:                 &value.Boolean{},
 		StaleContents:                       &value.String{},
 		FastlyError:                         &value.String{},
-		ClientGeoIpOverride:                 &value.Boolean{},
+		ClientGeoIpOverride:                 &value.String{},
 		ClientSocketCongestionAlgorithm:     &value.String{Value: "cubic"},
 		ClientSocketCwnd:                    &value.Integer{Value: 60},
 		ClientSocketPace:                    &value.Integer{},
