@@ -50,6 +50,20 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				return false
 			},
 		},
+		"testing.override_host": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				return Testing_override_host(ctx, unwrapped...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 		"testing.inspect": {
 			Scope: allScope,
 			// On this function, we don't need to unwrap ident
