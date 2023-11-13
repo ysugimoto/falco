@@ -16,9 +16,9 @@ require (
 	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ysugimoto/twist v0.10.2
-	golang.org/x/net v0.14.0
+	golang.org/x/net v0.17.0
 	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 )
 
 require (
@@ -33,7 +33,6 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -42,8 +41,8 @@ require (
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	golang.org/x/term v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	modernc.org/libc v1.17.0 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.2.0 // indirect
