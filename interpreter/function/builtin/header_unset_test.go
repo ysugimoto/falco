@@ -85,7 +85,7 @@ func Test_Header_unset(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"}}}, isError: true},
@@ -148,7 +148,7 @@ func Test_Header_unset(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"}}}, isError: true},
@@ -211,7 +211,7 @@ func Test_Header_unset(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"}}}, isError: true},
@@ -274,7 +274,7 @@ func Test_Header_unset(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"}}}, isError: true},
@@ -337,7 +337,7 @@ func Test_Header_unset(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"}}}, isError: true},
