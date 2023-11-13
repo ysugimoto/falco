@@ -95,7 +95,7 @@ func main() {
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
 	case subcommandConsole:
-		if err := console.New().Run(c.Console.Scope); err != nil {
+		if err := console.Run(c.Console.Scope); err != nil {
 			os.Exit(1)
 		}
 		os.Exit(0)

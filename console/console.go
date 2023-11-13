@@ -44,17 +44,6 @@ var promptOptions = []prompt.Option{
 	prompt.OptionDescriptionTextColor(prompt.White),
 }
 
-type Console struct {
-	i         *interpreter.Interpreter
-	histories []string
-}
-
-func New() *Console {
-	return &Console{
-		i: interpreter.New(),
-	}
-}
-
 // displayHelp displays usage messages
 func displayHelp() {
 	fmt.Println(strings.TrimSpace(`
@@ -68,7 +57,7 @@ falco console tool
 }
 
 // Run runs console application
-func (c *Console) Run(defaultScope string) error {
+func Run(defaultScope string) error {
 	scope := context.ScopeByString(defaultScope)
 	switch scope {
 	case context.UnknownScope:
@@ -76,12 +65,14 @@ func (c *Console) Run(defaultScope string) error {
 	case context.InitScope:
 		return fmt.Errorf("Could not use INIT scope on console")
 	}
-	if err := c.i.ConsoleProcessInit(); err != nil {
+	ip := interpreter.New()
+	if err := ip.ConsoleProcessInit(); err != nil {
 		return fmt.Errorf("Failed to initialize interpreter: %s", err)
 	}
-	c.i.SetScope(scope)
+	ip.SetScope(scope)
 	displayHelp()
 
+	var histories []string
 	var suggestions []prompt.Suggest
 	suggestions = append(suggestions, statementSuggestions...)
 	suggestions = append(suggestions, promptSuggestions[scope.String()]...)
@@ -96,7 +87,7 @@ func (c *Console) Run(defaultScope string) error {
 					true,
 				)
 			},
-			append(promptOptions, prompt.OptionHistory(c.histories))...,
+			append(promptOptions, prompt.OptionHistory(histories))...,
 		)
 
 		switch {
@@ -113,7 +104,7 @@ func (c *Console) Run(defaultScope string) error {
 				red.Fprintln(output, "Could not use INIT scope on console")
 			}
 			yellow.Fprintf(output, "Scope changes to %s\n", s.String())
-			c.i.SetScope(s)
+			ip.SetScope(s)
 			scope = s
 			suggestions = []prompt.Suggest{}
 			suggestions = append(suggestions, statementSuggestions...)
@@ -129,26 +120,26 @@ func (c *Console) Run(defaultScope string) error {
 			if line == "" {
 				break
 			}
-			output, err := c.evaluateInput(line)
+			output, err := evaluateInput(ip, line)
 			if err != nil {
 				red.Println(err)
 			} else if output != "" {
 				yellow.Println(output)
 			}
-			c.histories = append(c.histories, line)
+			histories = append(histories, line)
 		}
 	}
 }
 
-// evaluate evaluates console input in the interpreter
-func (c *Console) evaluateInput(line string) (string, error) {
+// evaluateInput evaluates console input in the interpreter
+func evaluateInput(ip *interpreter.Interpreter, line string) (string, error) {
 	statements, err := parser.New(
 		lexer.NewFromString(line, lexer.WithFile("Console.Input")),
 	).ParseSnippetVCL()
 
 	if err != nil {
 		// If parser raises an error of parser.ParseError, attempt to evaluate as expression
-		if out, expErr := c.evaluateExpression(strings.TrimSuffix(line, ";")); expErr != nil {
+		if out, expErr := evaluateExpression(ip, strings.TrimSuffix(line, ";")); expErr != nil {
 			return "", expErr
 		} else {
 			return out, nil
@@ -156,24 +147,24 @@ func (c *Console) evaluateInput(line string) (string, error) {
 	}
 	// If parser returns empty statements, attempt to evaluate as expression
 	if len(statements) == 0 {
-		return c.evaluateExpression(strings.TrimSuffix(line, ";"))
+		return evaluateExpression(ip, strings.TrimSuffix(line, ";"))
 	}
 
 	// Otherwise, interpret statement
-	if _, _, err = c.i.ProcessBlockStatement(statements, interpreter.DebugPass); err != nil {
+	if _, _, err = ip.ProcessBlockStatement(statements, interpreter.DebugPass); err != nil {
 		return "", err
 	}
 	return "", nil
 }
 
-// evaluate evaluates as expression in the interpreter
-func (c *Console) evaluateExpression(line string) (string, error) {
+// evaluateExpression evaluates as expression in the interpreter
+func evaluateExpression(ip *interpreter.Interpreter, line string) (string, error) {
 	psr := parser.New(lexer.NewFromString("(" + line + ")"))
 	exp, err := psr.ParseExpression(parser.LOWEST)
 	if err != nil {
 		return "", err
 	}
-	val, err := c.i.ProcessExpression(exp, false)
+	val, err := ip.ProcessExpression(exp, false)
 	if err != nil {
 		if re, ok := err.(*exception.Exception); ok {
 			return "", fmt.Errorf(re.Message) // DO NOT diplay line and position info
