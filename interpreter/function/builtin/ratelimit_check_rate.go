@@ -34,6 +34,6 @@ func Ratelimit_check_rate(ctx *context.Context, args ...value.Value) (value.Valu
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("ratelimit.check_rate")
+	// TODO: Needs to be implemented
+	return &value.Boolean{Value: false}, nil
 }
