@@ -368,5 +368,9 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
-	return nil
+	if failedCount > 0 {
+		return ErrExit
+	} else {
+		return nil
+	}
 }
