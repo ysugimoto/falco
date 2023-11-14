@@ -294,6 +294,13 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			writeln(red, err.Error())
 			return ErrExit
 		}
+		for _, r := range factory.Results {
+			for _, c := range r.Cases {
+				if c.Error != nil {
+					return ErrExit
+				}
+			}
+		}
 		return nil
 	}
 
