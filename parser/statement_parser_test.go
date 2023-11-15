@@ -376,6 +376,68 @@ sub vcl_recv {
 		assert(t, vcl, expect)
 	})
 
+	t.Run("combination of boolean conditions", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	if (true || false && false) {
+		restart;
+	}
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 1),
+									Operator: "||",
+									Left: &ast.Boolean{
+										Meta:  ast.New(T, 1),
+										Value: true,
+									},
+									Right: &ast.InfixExpression{
+										Meta:     ast.New(T, 1),
+										Operator: "&&",
+										Left: &ast.Boolean{
+											Meta:  ast.New(T, 1),
+											Value: false,
+										},
+										Right: &ast.Boolean{
+											Meta:  ast.New(T, 1),
+											Value: false,
+										},
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
 	t.Run("if-else", func(t *testing.T) {
 		input := `// Subroutine
 sub vcl_recv {
@@ -1185,7 +1247,7 @@ sub vcl_recv {
 									Meta:     ast.New(T, 1),
 									Operator: "+",
 									Right: &ast.String{
-										Meta: ast.New(T, 1),
+										Meta:  ast.New(T, 1),
 										Value: "	timestamp:",
 									},
 									Left: &ast.InfixExpression{
