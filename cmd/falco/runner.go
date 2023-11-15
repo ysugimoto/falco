@@ -454,7 +454,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:3124")
+	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
 	return s.ListenAndServe()
 }
 
