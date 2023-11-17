@@ -49,7 +49,7 @@ func Test_Header_filter_except(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},

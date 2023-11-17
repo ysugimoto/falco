@@ -79,7 +79,7 @@ func Test_Header_set(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: "value"},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},
@@ -151,7 +151,7 @@ func Test_Header_set(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: "value"},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},
@@ -223,7 +223,7 @@ func Test_Header_set(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: "value"},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},
@@ -295,7 +295,7 @@ func Test_Header_set(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: "value"},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},
@@ -367,7 +367,7 @@ func Test_Header_set(t *testing.T) {
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: "value"},
+			}, isError: true},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},

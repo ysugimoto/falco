@@ -266,11 +266,36 @@ sub vcl_recv {
 }
 
 func TestProcessExpression(t *testing.T) {
-	vcl := `
-sub vcl_recv {
-	set req.http.Foo = "yes";
-}`
-	assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-		"req.http.Foo": &value.String{Value: "yes"},
+	t.Run("Set header to literal", func(t *testing.T) {
+		vcl := `
+	sub vcl_recv {
+		set req.http.Foo = "yes";
+	}`
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.Foo": &value.String{Value: "yes"},
+		})
+	})
+
+	t.Run("Set variable to backend", func(t *testing.T) {
+		vcl := `
+	sub vcl_recv {
+		declare local var.backend STRING;
+		set var.backend = req.backend;
+		set req.http.Foo = var.backend;
+	}`
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.Foo": &value.String{Value: "example"},
+		})
+	})
+
+	// FIXME: Should give an error
+	t.Run("Set string to backend literal", func(t *testing.T) {
+		vcl := `
+	sub vcl_recv {
+		set req.http.Foo = example;
+	}`
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.Foo": &value.String{Value: ""},
+		})
 	})
 }

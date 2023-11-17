@@ -134,6 +134,9 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value = rv.Value.Format(http.TimeFormat)
 		case value.BackendType: // STRING = BACKEND
+			if right.IsLiteral() {
+				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
+			}
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.Value.Name.Value
 		case value.BooleanType: // STRING = BOOL
