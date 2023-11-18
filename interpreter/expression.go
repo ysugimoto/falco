@@ -39,6 +39,9 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 			return value.Null, errors.WithStack(err)
 		}
 	} else {
+		if v2, ok := v.(*value.Backend); ok {
+			return &value.Backend{Value: v2.Value, Director: v2.Director, Healthy: v2.Healthy, Literal: false}, nil
+		}
 		return v, nil
 	}
 }

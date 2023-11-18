@@ -288,14 +288,17 @@ func TestProcessExpression(t *testing.T) {
 		})
 	})
 
-	// FIXME: Should give an error
-	t.Run("Set string to backend literal", func(t *testing.T) {
+	t.Run("Set string to backend literal causes error", func(t *testing.T) {
 		vcl := `
 	sub vcl_recv {
 		set req.http.Foo = example;
 	}`
-		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+		ip := assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
 			"req.http.Foo": &value.String{Value: ""},
 		})
+		if ip.process.Error == nil {
+			t.Error("Expected error but nil")
+		}
+
 	})
 }
