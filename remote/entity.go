@@ -30,8 +30,9 @@ type AccessControlEntry struct {
 }
 
 type Backend struct {
-	Name   string  `json:"name"`
-	Shield *string `json:"shield"`
+	Name    string  `json:"name"`
+	Shield  *string `json:"shield"`
+	Address *string `json:"address"`
 }
 
 type DirectorType int8
