@@ -34,6 +34,6 @@ func Ratelimit_ratecounter_increment(ctx *context.Context, args ...value.Value) 
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("ratelimit.ratecounter_increment")
+	// TODO: Needs to be implemented
+	return &value.Integer{Value: 0}, nil
 }
