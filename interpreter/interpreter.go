@@ -136,29 +136,23 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 }
 
 func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
-	// Process root declarations and statements
-	for _, stmt := range statements {
-		// Call debugger
-		i.Debugger.Run(stmt)
+	// Process root declarations and statements.
+	// Must process backends first because they're referenced by directors.
+	// https://developer.fastly.com/reference/vcl/declarations/
+	if err := i.ProcessBackends(statements); err != nil {
+		return err
+	}
 
+	for _, stmt := range statements {
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:
+			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Acls[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "ACL %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Acls[t.Name.Value] = &value.Acl{Value: t, Literal: true}
-		case *ast.BackendDeclaration:
-			h := &atomic.Bool{}
-			h.Store(true)
-			// Determine default backend
-			if i.ctx.Backend == nil {
-				i.ctx.Backend = &value.Backend{Value: t, Literal: true, Healthy: h}
-			}
-			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
-				return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
-			}
-			i.ctx.Backends[t.Name.Value] = &value.Backend{Value: t, Literal: true, Healthy: h}
 		case *ast.DirectorDeclaration:
+			i.Debugger.Run(stmt)
 			// Director should treat as backend
 			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Director %s is duplicated in backend definition", t.Name.Value)
@@ -169,11 +163,13 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			}
 			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
 		case *ast.TableDeclaration:
+			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
 		case *ast.SubroutineDeclaration:
+			i.Debugger.Run(stmt)
 			if t.ReturnType != nil {
 				if _, ok := i.ctx.SubroutineFunctions[t.Name.Value]; ok {
 					return exception.Runtime(&t.Token, "Subroutine %s is duplicated", t.Name.Value)
@@ -196,16 +192,39 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			// Other custom user subroutine could not be duplicated
 			return exception.Runtime(&t.Token, "Subroutine %s is duplicated", t.Name.Value)
 		case *ast.PenaltyboxDeclaration:
+			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Penaltyboxes[t.Name.Value] = t
 		case *ast.RatecounterDeclaration:
+			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Ratecounters[t.Name.Value] = t
 		}
+	}
+	return nil
+}
+
+func (i *Interpreter) ProcessBackends(statements []ast.Statement) error {
+	for _, stmt := range statements {
+		t, ok := stmt.(*ast.BackendDeclaration)
+		if !ok {
+			continue
+		}
+		i.Debugger.Run(stmt)
+		h := &atomic.Bool{}
+		h.Store(true)
+		// Determine default backend
+		if i.ctx.Backend == nil {
+			i.ctx.Backend = &value.Backend{Value: t, Literal: true, Healthy: h}
+		}
+		if _, ok := i.ctx.Backends[t.Name.Value]; ok {
+			return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
+		}
+		i.ctx.Backends[t.Name.Value] = &value.Backend{Value: t, Literal: true, Healthy: h}
 	}
 	return nil
 }
