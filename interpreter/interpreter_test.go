@@ -13,6 +13,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/token"
 )
 
 func defaultBackend(url *url.URL) string {
@@ -77,7 +78,7 @@ func assertValue(t *testing.T, name string, expect, actual value.Value) {
 func TestProcessDeclarations(t *testing.T) {
 	ip := New()
 	ip.ctx = context.New()
-	err := ip.ProcessDeclarations([]ast.Statement{
+	if err := ip.ProcessDeclarations([]ast.Statement{
 		&ast.DirectorDeclaration{
 			Name:         &ast.Ident{Value: "director_example"},
 			DirectorType: &ast.Ident{Value: "client"},
@@ -109,8 +110,7 @@ func TestProcessDeclarations(t *testing.T) {
 				},
 			},
 		},
-	})
-	if err != nil {
+	}); err != nil {
 		t.Errorf("%+v\n", err)
 	}
 	if _, ok := ip.ctx.Backends["backend_example"]; !ok {
@@ -119,4 +119,47 @@ func TestProcessDeclarations(t *testing.T) {
 	if _, ok := ip.ctx.Backends["director_example"]; !ok {
 		t.Errorf("Failed to find director_example in backends: %v\n", ip.ctx.Backends)
 	}
+}
+
+func TestProcessBackends(t *testing.T) {
+	t.Run("Multiple backends", func(t *testing.T) {
+		ip := New()
+		ip.ctx = context.New()
+		if err := ip.ProcessBackends([]ast.Statement{
+			&ast.BackendDeclaration{Name: &ast.Ident{Value: "backend_example"}},
+			&ast.BackendDeclaration{Name: &ast.Ident{Value: "backend_example2"}},
+		}); err != nil {
+			t.Errorf("%+v\n", err)
+		}
+		if ip.ctx.Backend == nil || ip.ctx.Backend.Value.Name.Value != "backend_example" {
+			t.Errorf("Default backend not set to backend_example: %v\n", ip.ctx.Backend)
+		}
+		if ip.ctx.Backends == nil || len(ip.ctx.Backends) != 2 {
+			t.Errorf("Unexpected ip.ctx.Backends: %v\n", ip.ctx.Backends)
+		}
+		if _, ok := ip.ctx.Backends["backend_example"]; !ok {
+			t.Errorf("Failed to find backend_example in backends: %v\n", ip.ctx.Backends)
+		}
+		if _, ok := ip.ctx.Backends["backend_example2"]; !ok {
+			t.Errorf("Failed to find backend_example in backends: %v\n", ip.ctx.Backends)
+		}
+	})
+
+	t.Run("Duplicate backends", func(t *testing.T) {
+		ip := New()
+		ip.ctx = context.New()
+		if err := ip.ProcessBackends([]ast.Statement{
+			&ast.BackendDeclaration{Name: &ast.Ident{Value: "dupe"}},
+			&ast.BackendDeclaration{
+				Name: &ast.Ident{
+					Value: "dupe",
+				},
+				Meta: &ast.Meta{
+					Token: token.Token{Type: token.BACKEND},
+				},
+			},
+		}); err == nil {
+			t.Error("Expected error due to duplicated backends")
+		}
+	})
 }

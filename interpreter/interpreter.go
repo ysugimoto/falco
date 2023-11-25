@@ -139,22 +139,8 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 	// Process root declarations and statements.
 	// Must process backends first because they're referenced by directors.
 	// https://developer.fastly.com/reference/vcl/declarations/
-	for _, stmt := range statements {
-		t, ok := stmt.(*ast.BackendDeclaration)
-		if !ok {
-			continue
-		}
-		i.Debugger.Run(stmt)
-		h := &atomic.Bool{}
-		h.Store(true)
-		// Determine default backend
-		if i.ctx.Backend == nil {
-			i.ctx.Backend = &value.Backend{Value: t, Literal: true, Healthy: h}
-		}
-		if _, ok := i.ctx.Backends[t.Name.Value]; ok {
-			return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
-		}
-		i.ctx.Backends[t.Name.Value] = &value.Backend{Value: t, Literal: true, Healthy: h}
+	if err := i.ProcessBackends(statements); err != nil {
+		return err
 	}
 
 	for _, stmt := range statements {
@@ -218,6 +204,27 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			}
 			i.ctx.Ratecounters[t.Name.Value] = t
 		}
+	}
+	return nil
+}
+
+func (i *Interpreter) ProcessBackends(statements []ast.Statement) error {
+	for _, stmt := range statements {
+		t, ok := stmt.(*ast.BackendDeclaration)
+		if !ok {
+			continue
+		}
+		i.Debugger.Run(stmt)
+		h := &atomic.Bool{}
+		h.Store(true)
+		// Determine default backend
+		if i.ctx.Backend == nil {
+			i.ctx.Backend = &value.Backend{Value: t, Literal: true, Healthy: h}
+		}
+		if _, ok := i.ctx.Backends[t.Name.Value]; ok {
+			return exception.Runtime(&t.Token, "Backend %s is duplicated", t.Name.Value)
+		}
+		i.ctx.Backends[t.Name.Value] = &value.Backend{Value: t, Literal: true, Healthy: h}
 	}
 	return nil
 }
