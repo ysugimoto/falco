@@ -318,7 +318,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: addr}, nil
 
 	case REQ_BACKEND:
-		return v.ctx.Backend, nil
+		return &value.Backend{Value: v.ctx.Backend.Value, Director: v.ctx.Backend.Director}, nil
 	case REQ_GRACE:
 		return v.Get(s, "req.max_stale_if_error")
 

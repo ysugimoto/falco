@@ -242,74 +242,90 @@ func TestGroupedExpression(t *testing.T) {
 	})
 }
 
-func TestIfExpression(t *testing.T) {
-
-	t.Run("Consequence", func(t *testing.T) {
-		vcl := `
-sub vcl_recv {
-	set req.http.Foo = if(req.http.Bar, "yes", "no");
-}`
-		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-			"req.http.Foo": &value.String{Value: "no"},
-		})
-	})
-
-	t.Run("Alternative", func(t *testing.T) {
-		vcl := `
-sub vcl_recv {
-	set req.http.Foo = if(!req.http.Bar, "yes", "no");
-}`
-		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-			"req.http.Foo": &value.String{Value: "yes"},
-		})
-	})
-}
-
 func TestProcessExpression(t *testing.T) {
-	t.Run("Set header to literal", func(t *testing.T) {
-		vcl := `
-	sub vcl_recv {
-		set req.http.Foo = "yes";
-	}`
-		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-			"req.http.Foo": &value.String{Value: "yes"},
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "If expression (consequence)",
+			vcl:  `sub vcl_recv { set req.http.Foo = if(req.http.Bar, "yes", "no"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "no"},
+			},
+			isError: false,
+		},
+		{
+			name: "If expression (alternative)",
+			vcl:  `sub vcl_recv { set req.http.Foo = if(!req.http.Bar, "yes", "no"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "yes"},
+			},
+			isError: false,
+		},
+		{
+			name: "Set header to string literal",
+			vcl:  `sub vcl_recv { set req.http.Foo = "yes"; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "yes"},
+			},
+			isError: false,
+		},
+		{
+			name: "Set header to req.backend",
+			vcl:  `sub vcl_recv { set req.http.Foo = req.backend; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "example"},
+			},
+			isError: false,
+		},
+		{
+			name: "Set variable to backend",
+			vcl: `sub vcl_recv {
+				declare local var.backend STRING;
+				set var.backend = req.backend;
+				set req.http.Foo = var.backend;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "example"},
+			},
+			isError: false,
+		},
+		{
+			name: "Set header to backend literal causes error",
+			vcl:  `sub vcl_recv { set req.http.Foo = example; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: ""},
+			},
+			isError: true,
+		},
+		{
+			name: "Set integer variable to float literal causes error",
+			vcl: `sub vcl_recv {
+				declare local var.time TIME;
+				set var.time = 1.2;
+			}`,
+			assertions: map[string]value.Value{},
+			isError:    true,
+		},
+		{
+			name: "Function call expression with call to header.get",
+			vcl: `sub vcl_recv {
+				set req.http.Foo2 = "yes";
+				set req.http.Foo = header.get(req, "Foo2");
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "yes"},
+			},
+			isError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
-	})
-
-	t.Run("Set variable to backend", func(t *testing.T) {
-		vcl := `
-	sub vcl_recv {
-		declare local var.backend STRING;
-		set var.backend = req.backend;
-		set req.http.Foo = var.backend;
-	}`
-		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-			"req.http.Foo": &value.String{Value: "example"},
-		})
-	})
-
-	t.Run("Set string to backend literal causes error", func(t *testing.T) {
-		vcl := `
-	sub vcl_recv {
-		set req.http.Foo = example;
-	}`
-		ip := assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-			"req.http.Foo": &value.String{Value: ""},
-		})
-		if ip.process.Error == nil {
-			t.Error("Expected error but nil")
-		}
-
-	})
-}
-
-func TestProcessFunctionCallExpressionWithIdent(t *testing.T) {
-	vcl := `
-sub vcl_recv {
-	set req.http.Foo2 = "yes";
-	set req.http.Foo = header.get(req, "Foo2");
-}`
-	assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
-		"req.http.Foo": &value.String{Value: "yes"},
-	})
+	}
 }
