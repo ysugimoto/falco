@@ -208,7 +208,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 			// This is because some function uses collection value like req.http.Cookie as ID type,
 			// But the processor passes *value.String as primitive value normally.
 			// In order to treat collection value inside, ensure ident argument is treated as correspond types.
-			if ident, ok := exp.Arguments[j].(*ast.Ident); !ok {
+			if ident, ok := exp.Arguments[j].(*ast.Ident); ok {
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {
 				return value.Null, errors.WithStack(

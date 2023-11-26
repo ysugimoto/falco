@@ -302,3 +302,14 @@ func TestProcessExpression(t *testing.T) {
 
 	})
 }
+
+func TestProcessFunctionCallExpressionWithIdent(t *testing.T) {
+	vcl := `
+sub vcl_recv {
+	set req.http.Foo2 = "yes";
+	set req.http.Foo = header.get(req, "Foo2");
+}`
+	assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+		"req.http.Foo": &value.String{Value: "yes"},
+	})
+}
