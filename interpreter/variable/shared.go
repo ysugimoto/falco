@@ -210,8 +210,8 @@ func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value)
 		return true, nil
 	}
 	return false, nil
-
 }
+
 func SetWafVariables(ctx *context.Context, name, operator string, val value.Value) (bool, error) {
 	switch name {
 	case WAF_ANOMALY_SCORE:
