@@ -543,7 +543,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 
 	switch state {
-	case DELIVER, DELIVER_STALE:
+	case DELIVER, DELIVER_STALE, PASS:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case ERROR:
