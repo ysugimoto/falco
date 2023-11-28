@@ -152,6 +152,12 @@ func (v *PassScopeVariables) Set(s context.Scope, name, operator string, val val
 		return nil
 	}
 
+	if ok, err := SetBackendRequestHeader(v.ctx, name, val); err != nil {
+		return errors.WithStack(err)
+	} else if ok {
+		return nil
+	}
+
 	if ok, err := SetWafVariables(v.ctx, name, operator, val); err != nil {
 		return errors.WithStack(err)
 	} else if ok {
