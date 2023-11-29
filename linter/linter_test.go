@@ -1244,6 +1244,16 @@ sub foo {
 }`
 		assertNoError(t, input)
 	})
+
+	t.Run("pass with PCRE expression that uses atomic grouping (unsupported by regexp)", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.User-Agent ~ "\b(?>integer|insert|in)\b") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintRegexNotOperator(t *testing.T) {

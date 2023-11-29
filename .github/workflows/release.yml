@@ -37,6 +37,7 @@ jobs:
         with:
           files: |
             dist/falco-linux-amd64
+            dist/falco-linux-arm64
             dist/falco-darwin-amd64
             dist/falco-darwin-arm64
             dist/falco-linux-amd64.tar.gz

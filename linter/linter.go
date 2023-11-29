@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	regexp "github.com/shadialtarsha/go-pcre"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
@@ -14,6 +13,7 @@ import (
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
+	regexp "go.elara.ws/pcre"
 )
 
 type Linter struct {
