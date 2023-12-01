@@ -318,7 +318,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: addr}, nil
 
 	case REQ_BACKEND:
-		return v.ctx.Backend, nil
+		return &value.Backend{Value: v.ctx.Backend.Value, Director: v.ctx.Backend.Director}, nil
 	case REQ_GRACE:
 		return v.Get(s, "req.max_stale_if_error")
 
@@ -730,6 +730,11 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
+		}
+		if v, ok := val.(*value.Backend); ok && v.Literal {
+			return errors.WithStack(fmt.Errorf(
+				"BACKEND literal %s cannot be assigned to %s in scope: %s", v.String(), name, s.String(),
+			))
 		}
 		setRequestHeaderValue(v.ctx.Request, match[1], val)
 		return nil

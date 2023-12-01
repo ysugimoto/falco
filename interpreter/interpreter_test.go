@@ -27,7 +27,7 @@ backend example {
 	)
 }
 
-func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value) {
+func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -62,6 +62,12 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 		if diff := cmp.Diff(val, v); diff != "" {
 			t.Errorf("Value asserion error, diff: %s", diff)
 		}
+	}
+
+	if isError && ip.process.Error == nil {
+		t.Error("Expected error but got nil")
+	} else if !isError && ip.process.Error != nil {
+		t.Errorf("Did not expect error but got %s", ip.process.Error)
 	}
 }
 
