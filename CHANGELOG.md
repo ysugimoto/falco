@@ -1,3 +1,20 @@
+## v1.2.0
+
+- Allow assigning a backend to a string [#206](https://github.com/ysugimoto/falco/pull/206) (@MasonM)
+- Fix testing.override_host [#207](https://github.com/ysugimoto/falco/pull/207) (@MasonM)
+- Fix backend not found in director [#208](https://github.com/ysugimoto/falco/pull/208) (@MasonM)
+- Fix Terraform plan parsing when multiple resources present [#209](https://github.com/ysugimoto/falco/pull/209) (@MasonM)
+- Fix tester/simulator when shielding used [#210](https://github.com/ysugimoto/falco/pull/210) (@MasonM)
+- Fix segfault when testing backend from snippet [#211](https://github.com/ysugimoto/falco/pull/211) (@MasonM)
+- Fix calling function with ident argument [#212](https://github.com/ysugimoto/falco/pull/212) (@MasonM)
+- Don't generate error for ratelimit functions [#213](https://github.com/ysugimoto/falco/pull/213) (@MasonM)
+- Exit with status 1 on test failures [#214](https://github.com/ysugimoto/falco/pull/214) (@MasonM)
+- Show right port number when starting simulator [#215](https://github.com/ysugimoto/falco/pull/215) (@MasonM)
+- Fix boolean operator precedence [#216](https://github.com/ysugimoto/falco/pull/216) (@MasonM)
+- Allow setting bereq.http.{NAME} in miss/pass [#217](https://github.com/ysugimoto/falco/pull/217) (@MasonM)
+- Support "return(pass)" in vcl_fetch [#218](https://github.com/ysugimoto/falco/pull/218) (@MasonM)
+- Build on linux/arm64 [#219](https://github.com/ysugimoto/falco/pull/219) (@MasonM)
+
 ## v1.1.1
 
 - Feature/add equal fold assertion [#195](https://github.com/ysugimoto/falco/pull/195) (@ysugimoto)
