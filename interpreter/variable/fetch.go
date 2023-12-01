@@ -379,11 +379,9 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		return nil
 	}
 
-	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
-			return errors.WithStack(err)
-		}
-		setRequestHeaderValue(v.ctx.BackendRequest, match[1], val)
+	if ok, err := SetBackendRequestHeader(v.ctx, name, val); err != nil {
+		return errors.WithStack(err)
+	} else if ok {
 		return nil
 	}
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {

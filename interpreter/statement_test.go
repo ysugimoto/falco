@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
@@ -138,11 +139,13 @@ func TestReturnStatement(t *testing.T) {
 
 func TestSetStatement(t *testing.T) {
 	tests := []struct {
-		name string
-		stmt *ast.SetStatement
+		name  string
+		scope context.Scope
+		stmt  *ast.SetStatement
 	}{
 		{
-			name: "set local variable",
+			name:  "set local variable",
+			scope: context.RecvScope,
 			stmt: &ast.SetStatement{
 				Ident:    &ast.Ident{Value: "var.foo"},
 				Operator: &ast.Operator{Operator: "="},
@@ -150,11 +153,30 @@ func TestSetStatement(t *testing.T) {
 			},
 		},
 		{
-			name: "set client.geo.ip_override",
+			name:  "set client.geo.ip_override in vcl_recv",
+			scope: context.RecvScope,
 			stmt: &ast.SetStatement{
 				Ident:    &ast.Ident{Value: "client.geo.ip_override"},
 				Operator: &ast.Operator{Operator: "="},
 				Value:    &ast.String{Value: "127.0.0.1"},
+			},
+		},
+		{
+			name:  "set bereq.http.Foo in vcl_miss",
+			scope: context.MissScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "test"},
+			},
+		},
+		{
+			name:  "set bereq.http.Foo in vcl_pass",
+			scope: context.PassScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "test"},
 			},
 		},
 	}
@@ -166,7 +188,12 @@ func TestSetStatement(t *testing.T) {
 		}
 
 		ip.ctx = context.New()
-		ip.SetScope(context.RecvScope)
+		ip.SetScope(tt.scope)
+		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		ip.ctx.BackendRequest = req
 		if err := ip.ProcessSetStatement(tt.stmt); err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
