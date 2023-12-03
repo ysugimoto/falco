@@ -13,7 +13,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/rs/xid v1.5.0
-	github.com/shadialtarsha/go-pcre v0.0.0-20220904164957-b4f1834ceecc
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ysugimoto/twist v0.10.2
 	golang.org/x/net v0.17.0
@@ -25,6 +24,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/gobwas/glob v0.2.3
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
+	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
 
 require (

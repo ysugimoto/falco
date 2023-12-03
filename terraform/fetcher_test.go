@@ -6,7 +6,11 @@ import (
 )
 
 func TestStuff(t *testing.T) {
-	for _, fileName := range []string{"./data/terraform-valid.json", "./data/terraform-valid-shielded.json"} {
+	for _, fileName := range []string{
+		"./data/terraform-valid.json",
+		"./data/terraform-valid-shielded.json",
+		"./data/terraform-valid-with-s3.json",
+	} {
 		buf, err := os.ReadFile(fileName)
 
 		if err != nil {

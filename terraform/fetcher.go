@@ -36,8 +36,9 @@ func (f *TerraformFetcher) Backends() ([]*types.RemoteBackend, error) {
 	for _, s := range f.filterService() {
 		for _, serviceBackend := range s.Backends {
 			b = append(b, &types.RemoteBackend{
-				Name:   serviceBackend.Name,
-				Shield: serviceBackend.Shield,
+				Name:    serviceBackend.Name,
+				Shield:  serviceBackend.Shield,
+				Address: serviceBackend.Address,
 			})
 		}
 	}

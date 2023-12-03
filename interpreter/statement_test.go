@@ -1,9 +1,11 @@
 package interpreter
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -131,6 +133,69 @@ func TestReturnStatement(t *testing.T) {
 		s := ip.ProcessReturnStatement(tt.stmt)
 		if s != tt.expect {
 			t.Errorf("%s expects state %s, got %s", tt.name, tt.expect, s)
+		}
+	}
+}
+
+func TestSetStatement(t *testing.T) {
+	tests := []struct {
+		name  string
+		scope context.Scope
+		stmt  *ast.SetStatement
+	}{
+		{
+			name:  "set local variable",
+			scope: context.RecvScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "var.foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.Integer{Value: 100},
+			},
+		},
+		{
+			name:  "set client.geo.ip_override in vcl_recv",
+			scope: context.RecvScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "client.geo.ip_override"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "127.0.0.1"},
+			},
+		},
+		{
+			name:  "set bereq.http.Foo in vcl_miss",
+			scope: context.MissScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "test"},
+			},
+		},
+		{
+			name:  "set bereq.http.Foo in vcl_pass",
+			scope: context.PassScope,
+			stmt: &ast.SetStatement{
+				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value:    &ast.String{Value: "test"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		ip := New(nil)
+		if err := ip.localVars.Declare("var.foo", "INTEGER"); err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+
+		ip.ctx = context.New()
+		ip.SetScope(tt.scope)
+		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		ip.ctx.BackendRequest = req
+		if err := ip.ProcessSetStatement(tt.stmt); err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
 	}
 }

@@ -115,6 +115,16 @@ func TestRegexOperator(t *testing.T) {
 
 	t.Run("left is STRING", func(t *testing.T) {
 		now := time.Now()
+		acl := &ast.AclDeclaration{
+			Name: &ast.Ident{Value: "example"},
+			CIDRs: []*ast.AclCidr{
+				{
+					Inverse: &ast.Boolean{Value: false},
+					IP:      &ast.IP{Value: "127.0.0.0"},
+					Mask:    &ast.Integer{Value: 16},
+				},
+			},
+		}
 		tests := []struct {
 			left    value.Value
 			right   value.Value
@@ -138,6 +148,9 @@ func TestRegexOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{left: &value.String{Value: "127.0.0.1"}, right: &value.Acl{Value: acl}, expect: true},
+			{left: &value.String{Value: "192.168.0.1"}, right: &value.Acl{Value: acl}, expect: false},
+			{left: &value.String{Value: "INVALID IP"}, right: &value.Acl{Value: acl}, isError: true},
 		}
 
 		for i, tt := range tests {

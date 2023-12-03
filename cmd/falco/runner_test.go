@@ -194,6 +194,33 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 	}
 }
 
+func TestTesterWithTerraform(t *testing.T) {
+	fileName := "../../terraform/data/terraform-valid.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+		Testing: &config.TestConfig{
+			IncludePaths: []string{"../../terraform/testing/"},
+			Filter:       "*.test.vcl",
+		},
+	}
+
+	r, err := NewRunner(c, f)
+	if err != nil {
+		t.Fatalf("Unexpected runner creation error: %s", err)
+	}
+
+	res, err := r.Test(rslv[0])
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+	if res.Statistics.Fails > 0 || res.Statistics.Passes != 1 {
+		t.Errorf("Expected 0 failures and 1 pass, got %d failures and %d passes", res.Statistics.Fails, res.Statistics.Passes)
+	}
+}
+
 // Tests for all the example code in the repo to make sure we don't accidentally
 // break those as they are the first thing someone might try on the repo.
 

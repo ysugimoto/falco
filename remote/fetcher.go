@@ -43,8 +43,9 @@ func (f *FastlyApiFetcher) Backends() ([]*types.RemoteBackend, error) {
 	r := []*types.RemoteBackend{}
 	for _, b := range fstlyBack {
 		r = append(r, &types.RemoteBackend{
-			Name:   b.Name,
-			Shield: b.Shield,
+			Name:    b.Name,
+			Shield:  b.Shield,
+			Address: b.Address,
 		})
 	}
 	return r, nil

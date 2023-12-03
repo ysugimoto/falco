@@ -17,7 +17,9 @@ acl {{ .Name }} {
 `
 
 var backendTemplate = `
-backend F_{{ .Name }} {}
+backend F_{{ .Name }} {
+	{{ if .Address }}.host = "{{.Address}}";{{ end }}
+}
 `
 
 // remote director should only have a shield type

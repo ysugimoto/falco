@@ -25,6 +25,7 @@ const (
 	DIRECTORTYPE_HASH     = "hash"
 	DIRECTORTYPE_CLIENT   = "client"
 	DIRECTORTYPE_CHASH    = "chash"
+	DIRECTORTYPE_SHIELD   = "shield"
 )
 
 var (
@@ -167,7 +168,8 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 		DIRECTORTYPE_FALLBACK,
 		DIRECTORTYPE_HASH,
 		DIRECTORTYPE_CLIENT,
-		DIRECTORTYPE_CHASH:
+		DIRECTORTYPE_CHASH,
+		DIRECTORTYPE_SHIELD:
 		conf.Type = d.DirectorType.Value
 	default:
 		return nil, exception.Runtime(
@@ -218,7 +220,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 		}
 	}
 
-	if len(conf.Backends) == 0 {
+	if len(conf.Backends) == 0 && d.DirectorType.Value != DIRECTORTYPE_SHIELD {
 		return nil, exception.Runtime(
 			&d.GetMeta().Token,
 			"At least one backend must be specified in director '%s'",

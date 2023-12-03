@@ -89,6 +89,25 @@ director test random {
 	}
 }
 
+func TestGetDirectorConfigShield(t *testing.T) {
+	director := "director test shield { }"
+	ip, err := createTestInterpreter(director)
+	if err != nil {
+		t.Errorf("Failed to create interpreter: %s", err)
+	}
+	d := ip.ctx.Backends["test"].Director
+
+	expect := &value.DirectorConfig{
+		Quorum:  0,
+		Retries: 0,
+		Name:    "test",
+		Type:    "shield",
+	}
+	if diff := cmp.Diff(expect, d, cmpopts.IgnoreFields(value.Backend{}, "Healthy")); diff != "" {
+		t.Errorf("getDirectorConfig returns diff: %s", diff)
+	}
+}
+
 func TestRandomDirector(t *testing.T) {
 	director := `
 director test random {

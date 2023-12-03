@@ -294,8 +294,9 @@ type RemoteDictionary struct {
 // TODO(davinci26): We can unmarshall all the properties from the TF file
 // and lint them to make sure they have sane values.
 type RemoteBackend struct {
-	Name   string
-	Shield *string
+	Name    string
+	Shield  *string
+	Address *string
 }
 
 type RemoteVCL struct {

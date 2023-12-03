@@ -9,10 +9,11 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
+// Reference: https://developer.fastly.com/reference/vcl/operators/
 const (
 	LOWEST int = iota + 1
-	AND
 	OR
+	AND
 	REGEX
 	EQUALS
 	LESS_GREATER

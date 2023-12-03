@@ -34,6 +34,6 @@ func Ratelimit_penaltybox_add(ctx *context.Context, args ...value.Value) (value.
 		return value.Null, err
 	}
 
-	// Need to be implemented
-	return value.Null, errors.NotImplemented("ratelimit.penaltybox_add")
+	// TODO: Needs to be implemented
+	return value.Null, nil
 }

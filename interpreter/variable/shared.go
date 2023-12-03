@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -198,6 +199,17 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 		return ctx.WafXSSScore, nil
 	}
 	return nil, nil
+}
+
+func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value) (bool, error) {
+	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
+			return true, errors.WithStack(err)
+		}
+		setRequestHeaderValue(ctx.BackendRequest, match[1], val)
+		return true, nil
+	}
+	return false, nil
 }
 
 func SetWafVariables(ctx *context.Context, name, operator string, val value.Value) (bool, error) {

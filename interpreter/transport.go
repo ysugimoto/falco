@@ -73,8 +73,10 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	} else {
 		if v, err := i.getBackendProperty(backend.Value.Properties, "host"); err != nil {
 			return nil, errors.WithStack(err)
-		} else {
+		} else if v != nil {
 			host = value.Unwrap[*value.String](v).Value
+		} else {
+			return nil, exception.Runtime(nil, "Failed to find host for backend %s", backend)
 		}
 	}
 
