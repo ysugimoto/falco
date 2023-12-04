@@ -292,7 +292,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case BERESP_CACHEABLE:
-		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
+		if err := doAssign(v.ctx.BackendResponseCacheable, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
