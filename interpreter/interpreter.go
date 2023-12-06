@@ -49,6 +49,8 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 		i.vars = variable.NewRecvScopeVariables(i.ctx)
 	case context.HashScope:
 		i.vars = variable.NewHashScopeVariables(i.ctx)
+	case context.HitScope:
+		i.vars = variable.NewHitScopeVariables(i.ctx)
 	case context.MissScope:
 		i.vars = variable.NewMissScopeVariables(i.ctx)
 	case context.PassScope:
