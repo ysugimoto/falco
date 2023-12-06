@@ -69,6 +69,10 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
 	i.Debugger.Message(fmt.Sprintf("Restarted (%d) time", i.ctx.Restarts))
+	i.ctx.BackendRequest = nil
+	i.ctx.BackendResponse = nil
+	i.ctx.Object = nil
+	i.ctx.Response = nil
 
 	if err := i.ProcessRecv(); err != nil {
 		return err
