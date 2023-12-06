@@ -252,6 +252,7 @@ func (i *Interpreter) ProcessRecv() error {
 	switch state {
 	case PASS:
 		i.ctx.State = "MISS"
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> HASH", i.ctx.Scope))
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
@@ -263,6 +264,7 @@ func (i *Interpreter) ProcessRecv() error {
 	case RESTART:
 		err = i.restart()
 	case LOOKUP, NONE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> HASH", i.ctx.Scope))
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
