@@ -310,7 +310,7 @@ func (i *Interpreter) ProcessHash() error {
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
 		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
-		} else if state != HASH {
+		} else if state != HASH && state != NONE {
 			return exception.Runtime(
 				&sub.GetMeta().Token,
 				"Subroutine %s returned unexpected state %s in HASH",
