@@ -49,6 +49,8 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 		i.vars = variable.NewRecvScopeVariables(i.ctx)
 	case context.HashScope:
 		i.vars = variable.NewHashScopeVariables(i.ctx)
+	case context.HitScope:
+		i.vars = variable.NewHitScopeVariables(i.ctx)
 	case context.MissScope:
 		i.vars = variable.NewMissScopeVariables(i.ctx)
 	case context.PassScope:
@@ -67,6 +69,10 @@ func (i *Interpreter) SetScope(scope context.Scope) {
 func (i *Interpreter) restart() error {
 	i.ctx.Restarts++
 	i.Debugger.Message(fmt.Sprintf("Restarted (%d) time", i.ctx.Restarts))
+	i.ctx.BackendRequest = nil
+	i.ctx.BackendResponse = nil
+	i.ctx.Object = nil
+	i.ctx.Response = nil
 
 	if err := i.ProcessRecv(); err != nil {
 		return err
@@ -250,6 +256,7 @@ func (i *Interpreter) ProcessRecv() error {
 	switch state {
 	case PASS:
 		i.ctx.State = "MISS"
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> HASH", i.ctx.Scope))
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
@@ -261,6 +268,7 @@ func (i *Interpreter) ProcessRecv() error {
 	case RESTART:
 		err = i.restart()
 	case LOOKUP, NONE:
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> HASH", i.ctx.Scope))
 		if err = i.ProcessHash(); err != nil {
 			return errors.WithStack(err)
 		}
@@ -306,7 +314,7 @@ func (i *Interpreter) ProcessHash() error {
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
 		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
 			return errors.WithStack(err)
-		} else if state != HASH {
+		} else if state != HASH && state != NONE {
 			return exception.Runtime(
 				&sub.GetMeta().Token,
 				"Subroutine %s returned unexpected state %s in HASH",
@@ -326,15 +334,13 @@ func (i *Interpreter) ProcessMiss() error {
 	}
 
 	var err error
-	if i.ctx.BackendRequest == nil {
-		if i.ctx.Backend.Director != nil {
-			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
-		} else {
-			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
-		}
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	if i.ctx.Backend.Director != nil {
+		i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
+	} else {
+		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
+	}
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -436,15 +442,13 @@ func (i *Interpreter) ProcessPass() error {
 	}
 
 	var err error
-	if i.ctx.BackendRequest == nil {
-		if i.ctx.Backend.Director != nil {
-			i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
-		} else {
-			i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
-		}
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	if i.ctx.Backend.Director != nil {
+		i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
+	} else {
+		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
+	}
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Simulate Fastly statement lifecycle
