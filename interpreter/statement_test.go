@@ -126,6 +126,11 @@ func TestReturnStatement(t *testing.T) {
 			},
 			expect: PASS,
 		},
+		{
+			name:   "should return none state",
+			stmt:   &ast.ReturnStatement{},
+			expect: BARE_RETURN,
+		},
 	}
 
 	for _, tt := range tests {
@@ -196,6 +201,81 @@ func TestSetStatement(t *testing.T) {
 		ip.ctx.BackendRequest = req
 		if err := ip.ProcessSetStatement(tt.stmt); err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+	}
+}
+
+func TestBlockStatement(t *testing.T) {
+	var pass ast.Expression = &ast.Ident{
+		Value: "pass",
+		Meta:  &ast.Meta{},
+	}
+	tests := []struct {
+		name           string
+		scope          context.Scope
+		stmts          []ast.Statement
+		expected_state State
+	}{
+		{
+			name:  "block statement with bare return",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.ReturnStatement{},
+			},
+			expected_state: BARE_RETURN,
+		},
+		{
+			name:  "nested block statement with return",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.ReturnStatement{
+							ReturnExpression: &pass,
+						},
+					},
+				},
+				&ast.ReturnStatement{},
+			},
+			expected_state: PASS,
+		},
+		{
+			name:  "return in if statement should stop block execution",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.IfStatement{
+					Condition: &ast.Boolean{Value: true},
+					Consequence: &ast.BlockStatement{
+						Statements: []ast.Statement{
+							&ast.ReturnStatement{},
+						},
+					},
+				},
+				&ast.ReturnStatement{
+					ReturnExpression: &pass,
+				},
+			},
+			expected_state: BARE_RETURN,
+		},
+	}
+
+	for _, tt := range tests {
+		ip := New(nil)
+
+		ip.ctx = context.New()
+		ip.SetScope(tt.scope)
+
+		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		ip.ctx.BackendRequest = req
+		state, _, err := ip.ProcessBlockStatement(tt.stmts, DebugPass)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		if state != tt.expected_state {
+			t.Errorf("expect: \"%s\", actual: \"%s\"", tt.expected_state, state)
 		}
 	}
 }

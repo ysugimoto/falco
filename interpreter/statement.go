@@ -16,6 +16,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+// nolint: gocognit
 func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds DebugState) (State, DebugState, error) {
 	var err error
 	var debugState DebugState = ds
@@ -156,7 +157,7 @@ func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error 
 
 func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 	if stmt.ReturnExpression == nil {
-		return NONE
+		return BARE_RETURN
 	}
 	return State((*stmt.ReturnExpression).String())
 }
@@ -234,26 +235,30 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 }
 
 func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugState) (State, error) {
+	var state State
+	var err error
 	name := stmt.Subroutine.Value
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
-		_, state, err := i.ProcessFunctionSubroutine(sub, ds)
+		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
-		return state, nil
-	} else if sub, ok := i.ctx.Subroutines[name]; ok {
-		state, err := i.ProcessSubroutine(sub, ds)
+	} else if sub, ok = i.ctx.Subroutines[name]; ok {
+		state, err = i.ProcessSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
-		return state, nil
+	} else {
+		return NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
+			"Calling subroutine %s is not defined",
+			name,
+		)
 	}
-
-	return NONE, exception.Runtime(
-		&stmt.GetMeta().Token,
-		"Calling subroutine %s is not defined",
-		name,
-	)
+	if state == BARE_RETURN {
+		state = NONE
+	}
+	return state, nil
 }
 
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {

@@ -15,6 +15,7 @@ const (
 	LOG            State = "log"
 	END            State = "end"
 	INTERNAL_ERROR State = "_internal_error_"
+	BARE_RETURN    State = "_bare_return_"
 )
 
 func (s State) String() string {
@@ -41,6 +42,8 @@ func (s State) String() string {
 		return "end"
 	case INTERNAL_ERROR:
 		return "_internal_error_"
+	case BARE_RETURN:
+		return "_bare_return_"
 	default:
 		return ""
 	}
