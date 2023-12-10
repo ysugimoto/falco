@@ -127,6 +127,15 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			}
 			return ERROR, DebugPass, nil
 
+		case *ast.BlockStatement:
+			state, _, err := i.ProcessBlockStatement(t.Statements, debugState)
+			if err != nil {
+				return NONE, DebugPass, errors.WithStack(err)
+			}
+			if state != NONE {
+				return state, DebugPass, nil
+			}
+
 		// Others, no effects
 		case *ast.EsiStatement:
 			// Nothing to do, actually enable ESI in origin request
