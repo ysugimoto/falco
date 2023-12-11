@@ -164,9 +164,6 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = time.Duration(rv.Value)
 		case value.RTimeType: // RTIME = RTIME
-			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to RTIME"))
-			}
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = rv.Value
 		case value.TimeType: // RTIME = TIME
