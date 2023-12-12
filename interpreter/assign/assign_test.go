@@ -179,7 +179,7 @@ func TestProcessAssignment(t *testing.T) {
 			{left: now, right: &value.String{Value: "example"}, isError: true},
 			{left: now, right: &value.String{Value: "example", Literal: true}, isError: true},
 			{left: now, right: &value.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
-			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
 			{left: now, right: &value.Time{Value: now2}, expect: now2},
 			{left: now, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: now, right: &value.Boolean{Value: true}, isError: true},
