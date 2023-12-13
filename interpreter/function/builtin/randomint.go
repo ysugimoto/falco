@@ -41,9 +41,9 @@ func Randomint(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	to := value.Unwrap[*value.Integer](args[1])
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rand_value := r.Int63n(to.Value - from.Value + 1)
+	rv := r.Int63n(to.Value - from.Value + 1)
 
 	return &value.Integer{
-		Value: rand_value + from.Value,
+		Value: rv + from.Value,
 	}, nil
 }
