@@ -24,6 +24,7 @@ func Test_Randomint_seeded(t *testing.T) {
 		{from: 0, to: 99, expect: 2, seed: 1000001},
 		{from: -1, to: 0, expect: 0, seed: 1000000},
 		{from: -1, to: 0, expect: -1, seed: 1000001},
+		{from: 0, to: 0, expect: 0, seed: 0},
 	}
 
 	for i, tt := range tests {
