@@ -116,6 +116,19 @@ See [testing documentation](https://github.com/ysugimoto/falco/blob/main/docs/te
 
 See [terraform.md](https://github.com/ysugimoto/falco/blob/main/docs/terraform.md) in detail.
 
+## GitHub Actions Support
+
+To integrate `falco` into your GitHub Actions pipeline, e.g. for linting:
+
+    - name: Lint VCL
+      uses: ain/falco-github-action@v1
+      with:
+        subcommand: lint
+        options: "-v -I test/vcl/includes"
+        target: test/vcl/file_to_be_linted.vcl
+
+See [ain/falco-github-action](https://github.com/ain/falco-github-action) for documentation.
+
 ## Transforming
 
 `falco` plans to transpile Fastly VCL to the other programming language that works on the Compute@Edge, keep you posted when there is any progress.
