@@ -4,7 +4,7 @@
 - Add sha1 to a set of identifiers [#224](https://github.com/ysugimoto/falco/pull/224) (@evdokimovn)
 - Propagate bare returns out of nested block statements [#223](https://github.com/ysugimoto/falco/pull/223) (@richardmarshall)
 - State change fixes [#221](https://github.com/ysugimoto/falco/pull/221) (@richardmarshall)
-- https://github.com/ysugimoto/falco/pull/225 [#225](https://github.com/ysugimoto/falco/pull/225) (@MasonM)
+- Fix randomint(), randomint_seeded(), randombool(), and randombool_seeded() [#225](https://github.com/ysugimoto/falco/pull/225) (@MasonM)
 
 ## v1.2.0
 
