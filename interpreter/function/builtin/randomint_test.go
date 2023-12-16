@@ -20,6 +20,7 @@ func Test_Randomint(t *testing.T) {
 	}{
 		{from: 0, to: 99},
 		{from: -1, to: 0},
+		{from: 0, to: 0},
 	}
 
 	for i, tt := range tests {
