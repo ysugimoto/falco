@@ -386,7 +386,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			// This is because some function uses collection value like req.http.Cookie as ID type,
 			// But the processor passes *value.String as primitive value normally.
 			// In order to treat collection value inside, enthruse with the function logic how value is treated as correspond types.
-			if ident, ok := stmt.Arguments[j].(*ast.Ident); !ok {
+			if ident, ok := stmt.Arguments[j].(*ast.Ident); ok {
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {
 				return NONE, exception.Runtime(
