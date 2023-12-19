@@ -279,3 +279,41 @@ func TestBlockStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestFunctionCallStatement(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "Function statement with builtin",
+			vcl:  `sub vcl_recv { header.set(req, "foo", "bar"); }`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "bar"},
+			},
+			isError: false,
+		},
+		{
+			name: "Function statement with user defined subroutine",
+			vcl: `sub bool_fn BOOL {
+				set req.http.foo = "1";
+				return true;
+			}
+			sub vcl_recv {
+				set req.http.foo = "0";
+				bool_fn(); }`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "0"},
+			},
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}

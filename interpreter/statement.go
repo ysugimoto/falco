@@ -349,20 +349,12 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 }
 
 func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement, ds DebugState) (State, error) {
-	if sub, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
-		if len(stmt.Arguments) > 0 {
-			return NONE, exception.Runtime(
-				&stmt.GetMeta().Token,
-				"Function subroutine %s could not accept any arguments",
-				stmt.Function.Value,
-			)
-		}
-		// Functional subroutine may change status
-		_, s, err := i.ProcessFunctionSubroutine(sub, ds)
-		if err != nil {
-			return s, errors.WithStack(err)
-		}
-		return s, nil
+	if _, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
+		return NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
+			"User defined function %s cannot be called as a statement",
+			stmt.Function.Value,
+		)
 	}
 
 	// Builtin function will not change any state
