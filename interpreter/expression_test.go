@@ -321,6 +321,17 @@ func TestProcessExpression(t *testing.T) {
 			},
 			isError: false,
 		},
+		{
+			name: "User defined function call expression",
+			vcl: `sub bool_fn BOOL { return true; }
+				sub vcl_recv {
+					set req.http.foo = bool_fn();
+				}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "1"},
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {
