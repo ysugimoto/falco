@@ -116,7 +116,6 @@ var ValueTypeMap = map[string]types.Type{
 	"BACKEND": types.BackendType,
 	"IP":      types.IPType,
 	"STRING":  types.StringType,
-	"ID":      types.IDType,
 	"RTIME":   types.RTimeType,
 	"TIME":    types.TimeType,
 }
