@@ -330,7 +330,7 @@ var typeMap = map[string]string{
 	"TABLE":   "value.IdentType",
 	"STRING":  "value.StringType",
 	"IP":      "value.IpType",
-	"BOOLEAN": "value.BooleanType",
+	"BOOL":    "value.BooleanType",
 	"INTEGER": "value.IntegerType",
 	"FLOAT":   "value.FloatType",
 	"RTIME":   "value.RTimeType",
