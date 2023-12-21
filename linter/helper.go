@@ -108,18 +108,6 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 	},
 }
 
-var ValueTypeMap = map[string]types.Type{
-	"INTEGER": types.IntegerType,
-	"FLOAT":   types.FloatType,
-	"BOOL":    types.BoolType,
-	"ACL":     types.AclType,
-	"BACKEND": types.BackendType,
-	"IP":      types.IPType,
-	"STRING":  types.StringType,
-	"RTIME":   types.RTimeType,
-	"TIME":    types.TimeType,
-}
-
 func isAlphaNumeric(r rune) bool {
 	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_'
 }
