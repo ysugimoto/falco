@@ -443,7 +443,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 			if t.ValueType == nil {
 				table.ValueType = types.StringType // default as STRING (e.g. Edge Dictionary)
 			} else {
-				v, ok := ValueTypeMap[t.ValueType.Value]
+				v, ok := types.ValueTypeMap[t.ValueType.Value]
 				if !ok {
 					l.Error(UndefinedTableType(
 						t.ValueType.GetMeta(), t.Name.Value, t.ValueType.Value,
@@ -473,7 +473,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 				}
 
-				returnType, ok := ValueTypeMap[t.ReturnType.Value]
+				returnType, ok := types.ValueTypeMap[t.ReturnType.Value]
 				if !ok {
 					err := &LintError{
 						Severity: ERROR,
@@ -760,7 +760,7 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 	var valueType types.Type
 	if decl.ValueType == nil {
 		valueType = types.StringType
-	} else if v, ok := ValueTypeMap[decl.ValueType.Value]; ok {
+	} else if v, ok := types.ValueTypeMap[decl.ValueType.Value]; ok {
 		valueType = v
 	}
 
@@ -813,7 +813,7 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	scope := getSubroutineCallScope(decl)
 	var cc *context.Context
 	if decl.ReturnType != nil {
-		returnType := ValueTypeMap[decl.ReturnType.Value]
+		returnType := types.ValueTypeMap[decl.ReturnType.Value]
 		cc = ctx.UserDefinedFunctionScope(decl.Name.Value, scope, returnType)
 	} else {
 		cc = ctx.Scope(scope)
@@ -987,7 +987,7 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 		l.Error(err.Match(DECLARE_STATEMENT_SYNTAX))
 	}
 
-	vt, ok := ValueTypeMap[stmt.ValueType.Value]
+	vt, ok := types.ValueTypeMap[stmt.ValueType.Value]
 	if !ok {
 		err := &LintError{
 			Severity: ERROR,

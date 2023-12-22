@@ -349,20 +349,12 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 }
 
 func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStatement, ds DebugState) (State, error) {
-	if sub, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
-		if len(stmt.Arguments) > 0 {
-			return NONE, exception.Runtime(
-				&stmt.GetMeta().Token,
-				"Function subroutine %s could not accept any arguments",
-				stmt.Function.Value,
-			)
-		}
-		// Functional subroutine may change status
-		_, s, err := i.ProcessFunctionSubroutine(sub, ds)
-		if err != nil {
-			return s, errors.WithStack(err)
-		}
-		return s, nil
+	if _, ok := i.ctx.SubroutineFunctions[stmt.Function.Value]; ok {
+		return NONE, exception.Runtime(
+			&stmt.GetMeta().Token,
+			"User defined function %s cannot be called as a statement",
+			stmt.Function.Value,
+		)
 	}
 
 	// Builtin function will not change any state
@@ -386,7 +378,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			// This is because some function uses collection value like req.http.Cookie as ID type,
 			// But the processor passes *value.String as primitive value normally.
 			// In order to treat collection value inside, enthruse with the function logic how value is treated as correspond types.
-			if ident, ok := stmt.Arguments[j].(*ast.Ident); !ok {
+			if ident, ok := stmt.Arguments[j].(*ast.Ident); ok {
 				args[j] = &value.Ident{Value: ident.Value}
 			} else {
 				return NONE, exception.Runtime(

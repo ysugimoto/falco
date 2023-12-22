@@ -480,7 +480,7 @@ sub baz {
 	declare local var.item2 INTEGER;
 	declare local var.item3 FLOAT;
 	declare local var.item4 IP;
-	declare local var.item5 ID;
+	declare local var.item5 BOOL;
 	declare local var.item6 ACL;
 	declare local var.item7 BACKEND;
 
@@ -488,7 +488,7 @@ sub baz {
 	set var.item2 = 1;
 	set var.item3 = 1.0;
 	set var.item4 = std.ip("192.168.0.1", "192.168.0.2");
-	set var.item5 = always;
+	set var.item5 = true;
 	set var.item6 = foo;
 	set var.item7 = bar;
 
