@@ -2,6 +2,7 @@ package variable
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -27,7 +28,9 @@ func (v LocalVariables) Declare(name, valueType string) error {
 	case "RTIME":
 		val = &value.RTime{}
 	case "TIME":
-		val = &value.Time{}
+		val = &value.Time{
+			Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
+		}
 	default:
 		return errors.WithStack(fmt.Errorf(
 			"Unexpected value type: %s", valueType,
