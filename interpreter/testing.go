@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const testBackendResponseBody = "falco_test_response"
@@ -15,6 +17,21 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	var err error
 	if err = i.ProcessInit(r); err != nil {
 		return errors.WithStack(err)
+	}
+
+	// If backend is not defined in main VCL, set virual backend
+	if i.ctx.Backend == nil {
+		i.ctx.Backend = &value.Backend{
+			Value: &ast.BackendDeclaration{
+				Name: &ast.Ident{Value: "falco_local_backend"},
+				Properties: []*ast.BackendProperty{
+					{
+						Key:   &ast.Ident{Value: "host"},
+						Value: &ast.String{Value: "http://localhost:3124"},
+					},
+				},
+			},
+		}
 	}
 
 	// On testing process, all request/response variables should be set initially
