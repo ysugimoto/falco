@@ -100,6 +100,8 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case CLIENT_PLATFORM_TVPLAYER:
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
+	case CLIENT_SESS_TIMEOUT:
+		return v.ctx.ClientSessTimeout, nil
 	case FASTLY_INFO_EDGE_IS_TLS:
 		return &value.Boolean{Value: req.TLS != nil}, nil
 	case FASTLY_INFO_IS_H2:
@@ -655,6 +657,11 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			v.ctx.ClientIdentity = &value.String{Value: ""}
 		}
 		if err := doAssign(v.ctx.ClientIdentity, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	case CLIENT_SESS_TIMEOUT:
+		if err := doAssign(v.ctx.ClientSessTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

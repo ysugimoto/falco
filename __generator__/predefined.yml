@@ -20,6 +20,11 @@ req.backend.is_cluster:
   on: [DELIVER]
   get: BOOL
 
+client.sess_timeout:
+  reference: "https://web.archive.org/web/20210306052653/https://developer.fastly.com/reference/vcl/variables/client-connection/client-sess-timeout/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+  set: RTIME
 
 ## Following variables are documented.
 backend.conn.is_tls:

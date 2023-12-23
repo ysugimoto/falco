@@ -86,6 +86,7 @@ type Context struct {
 	ClientSocketCongestionAlgorithm     *value.String
 	ClientSocketCwnd                    *value.Integer
 	ClientSocketPace                    *value.Integer
+	ClientSessTimeout                   *value.RTime
 	EsiAllowInsideCData                 *value.Boolean
 	EnableRangeOnPass                   *value.Boolean
 	EnableSegmentedCaching              *value.Boolean
@@ -182,6 +183,7 @@ func New(options ...Option) *Context {
 		ClientSocketCongestionAlgorithm:     &value.String{Value: "cubic"},
 		ClientSocketCwnd:                    &value.Integer{Value: 60},
 		ClientSocketPace:                    &value.Integer{},
+		ClientSessTimeout:                   &value.RTime{Value: time.Minute * 10},
 		EsiAllowInsideCData:                 &value.Boolean{},
 		EnableRangeOnPass:                   &value.Boolean{},
 		EnableSegmentedCaching:              &value.Boolean{},

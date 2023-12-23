@@ -132,6 +132,7 @@ const (
 	CLIENT_PLATFORM_TVPLAYER                   = "client.platform.tvplayer"
 	CLIENT_PORT                                = "client.port"
 	CLIENT_REQUESTS                            = "client.requests"
+	CLIENT_SESS_TIMEOUT                        = "client.sess_timeout"
 	CLIENT_SOCKET_CONGESTION_ALGORITHM         = "client.socket.congestion_algorithm"
 	CLIENT_SOCKET_CWND                         = "client.socket.cwnd"
 	CLIENT_SOCKET_NEXTHOP                      = "client.socket.nexthop"

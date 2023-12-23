@@ -1388,6 +1388,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/",
 					},
 				},
+				"sess_timeout": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://web.archive.org/web/20210306052653/https://developer.fastly.com/reference/vcl/variables/client-connection/client-sess-timeout/",
+					},
+				},
 				"socket": &Object{
 					Items: map[string]*Object{
 						"congestion_algorithm": &Object{
