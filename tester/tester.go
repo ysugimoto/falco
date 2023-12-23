@@ -134,20 +134,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 
 			// Some functions like "testing.table_set()" will take side-effect for another testing subroutine
 			// so we always initialize interpreter, inject testing functions for each subroutine
-			i := interpreter.New(t.interpreterOptions...)
-			i.Debugger = t.debugger
-			i.IdentFinder = func(val string) value.Value {
-				if v, ok := defs.Backends[val]; ok {
-					return v
-				} else if v, ok := defs.Acls[val]; ok {
-					return v
-				} else if _, ok := defs.Tables[val]; ok {
-					return &value.Ident{Value: val, Literal: true}
-				}
-				return nil
-			}
-			variable.Inject(&tv.TestingVariables{})
-			function.Inject(tf.TestingFunctions(i, defs, t.counter))
+			i := t.setupInterpreter(defs)
 
 			if err := i.TestProcessInit(mockRequest.Clone(ctx)); err != nil {
 				errChan <- errors.WithStack(err)
@@ -183,6 +170,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 	}
 }
 
+// Find test suite name and may multile scopes
 func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icontext.Scope) {
 	// Find test suite name and scope from annotation
 	suiteName := sub.Name.Value
@@ -240,6 +228,27 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 	return suiteName, scopes
 }
 
+// Set up interprete for each test subroutines
+func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter {
+	i := interpreter.New(t.interpreterOptions...)
+	i.Debugger = t.debugger
+	i.IdentResolver = func(val string) value.Value {
+		if v, ok := defs.Backends[val]; ok {
+			return v
+		} else if v, ok := defs.Acls[val]; ok {
+			return v
+		} else if _, ok := defs.Tables[val]; ok {
+			return &value.Ident{Value: val, Literal: true}
+		}
+		return nil
+	}
+	variable.Inject(&tv.TestingVariables{})
+	function.Inject(tf.TestingFunctions(i, defs, t.counter))
+
+	return i
+}
+
+// Factory declarations in testing VCL
 func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
 	defs := &tf.Definiions{
 		Tables:   make(map[string]*ast.TableDeclaration),

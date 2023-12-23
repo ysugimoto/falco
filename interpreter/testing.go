@@ -19,18 +19,11 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 		return errors.WithStack(err)
 	}
 
-	// If backend is not defined in main VCL, set default or virual backend
-	if len(i.ctx.Backends) > 0 {
-		// pick first backend
-		for _, v := range i.ctx.Backends {
-			i.ctx.Backend = v
-			break
-		}
-	} else {
-		// Set virtual backend
+	// If backend is not defined in main VCL, set virual backend
+	if i.ctx.Backend == nil {
 		i.ctx.Backend = &value.Backend{
 			Value: &ast.BackendDeclaration{
-				Name: &ast.Ident{Value: "falco_testing_backend"},
+				Name: &ast.Ident{Value: "falco_local_backend"},
 				Properties: []*ast.BackendProperty{
 					{
 						Key:   &ast.Ident{Value: "host"},
