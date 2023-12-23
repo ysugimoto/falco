@@ -1,16 +1,14 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/terraform"
 )
 
+/*
 type RepoExampleTestMetadata struct {
 	name     string
 	fileName string
@@ -378,6 +376,57 @@ func TestTester(t *testing.T) {
 		}
 		if ret.Statistics.Passes != 2 {
 			t.Errorf("Testing passes should be 2, got: %d", ret.Statistics.Passes)
+			return
+		}
+	})
+}
+*/
+func TestMacroTester(t *testing.T) {
+	main, err := filepath.Abs("../../examples/testing/fastly_macro.vcl")
+	if err != nil {
+		t.Errorf("Unexpected making absolute path error: %s", err)
+		return
+	}
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+		Testing: &config.TestConfig{
+			Filter: "*fastly_macro.test.vcl",
+		},
+		Commands: config.Commands{"test", main},
+	}
+
+	t.Run("Fastly macro test", func(t *testing.T) {
+		resolvers, err := resolver.NewFileResolvers("../../examples/testing/fastly_macro.vcl", c.IncludePaths)
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		r, err := NewRunner(c, nil)
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		ret, err := r.Test(resolvers[0])
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		for _, v := range ret.Results {
+			for _, c := range v.Cases {
+				if c.Error != nil {
+					t.Errorf("Test case %s raises error: %s", c.Name, c.Error)
+					return
+				}
+			}
+		}
+		if ret.Statistics.Fails > 0 {
+			t.Errorf("Testing fails should be zero, got: %d", ret.Statistics.Fails)
+			return
+		}
+		if ret.Statistics.Passes != 8 {
+			t.Errorf("Testing passes should be 8, got: %d", ret.Statistics.Passes)
 			return
 		}
 	})

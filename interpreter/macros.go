@@ -211,6 +211,7 @@ const FastlyLogMacro = ""
 
 var fastlyMacroExtractedVCLs = map[context.Scope]string{
 	context.RecvScope:    FastlyRecvMacro,
+	context.PassScope:    FastlyPassMacro,
 	context.HitScope:     FastlyHitMacro,
 	context.MissScope:    FastlyMissMacro,
 	context.HashScope:    FastlyHashMacro,

@@ -10,6 +10,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/snippets"
 )
 
 func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
@@ -192,18 +193,17 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 }
 
 func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) error {
-	if i.ctx.FastlySnippets == nil {
-		return nil
-	}
-
 	// If subroutine name is fastly subroutine, find and extract boilerplate macro
 	macro, ok := context.FastlyReservedSubroutine[sub.Name.Value]
 	if !ok {
 		return nil
 	}
-	snippets, ok := i.ctx.FastlySnippets.ScopedSnippets[macro]
-	if !ok || len(snippets) == 0 {
-		return nil
+
+	var snips []snippets.SnippetItem
+	if i.ctx.FastlySnippets != nil {
+		if v, ok := i.ctx.FastlySnippets.ScopedSnippets[macro]; ok {
+			snips = append(snips, v...)
+		}
 	}
 
 	macroName := strings.ToUpper("fastly " + macro)
@@ -211,7 +211,14 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	var resolved []ast.Statement
 	// Find "FASTLY [macro]" comment and extract in infix comment of block statement
 	if hasFastlyBoilerplateMacro(sub.Block.InfixComment(), macroName) {
-		for _, s := range snippets {
+		// Exract and append fastly auto-generated macro VCLs
+		ms, err := fastlyMacroVCLStatements(i.ctx.Scope)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		resolved = append(resolved, ms...)
+
+		for _, s := range snips {
 			statements, err := loadStatementVCL(s.Name, s.Data)
 			if err != nil {
 				return errors.WithStack(err)
@@ -227,7 +234,14 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	var found bool // guard flag, embedding macro should do only once
 	for _, stmt := range sub.Block.Statements {
 		if hasFastlyBoilerplateMacro(stmt.LeadingComment(), macroName) && !found {
-			for _, s := range snippets {
+			// Exract and append fastly auto-generated macro VCLs
+			ms, err := fastlyMacroVCLStatements(i.ctx.Scope)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			resolved = append(resolved, ms...)
+
+			for _, s := range snips {
 				statements, err := loadStatementVCL(s.Name, s.Data)
 				if err != nil {
 					return errors.WithStack(err)

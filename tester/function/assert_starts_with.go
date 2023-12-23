@@ -53,8 +53,8 @@ func Assert_starts_with(ctx *context.Context, args ...value.Value) (value.Value,
 		return ret, errors.NewAssertionError(
 			actual,
 			`"%s" should start with "%s"`,
-			expect.Value,
 			actual.Value,
+			expect.Value,
 		)
 	}
 	return ret, nil
