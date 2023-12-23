@@ -119,6 +119,26 @@ func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) m
 				return false
 			},
 		},
+		"assert.is_notset": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_is_notset(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 		"assert.true": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

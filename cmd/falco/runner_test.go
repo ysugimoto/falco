@@ -349,7 +349,7 @@ func TestTester(t *testing.T) {
 			name:   "empty and notset value test",
 			main:   "../../examples/testing/default_values.vcl",
 			filter: "*values.test.vcl",
-			passes: 15,
+			passes: 16,
 		},
 	}
 
