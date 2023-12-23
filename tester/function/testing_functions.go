@@ -2,6 +2,7 @@ package function
 
 import (
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
 	ifn "github.com/ysugimoto/falco/interpreter/function"
@@ -15,8 +16,14 @@ type Counter interface {
 	Fail()
 }
 
+type Definiions struct {
+	Tables   map[string]*ast.TableDeclaration
+	Backends map[string]*value.Backend
+	Acls     map[string]*value.Acl
+}
+
 // nolint: funlen,gocognit
-func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Function {
+func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) map[string]*ifn.Function {
 	return map[string]*ifn.Function{
 		// Special testing function of "testing.call_subrouting"
 		// We need to interpret subroutine statement in this function
@@ -69,6 +76,24 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 			// On this function, we don't need to unwrap ident
 			// because ident value should be looked up as predefined variables
 			Call:             Testing_inspect,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.table_set": {
+			Scope:            allScope,
+			Call:             Testing_table_set,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.table_merge": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Testing_table_merge(ctx, defs, args...)
+			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {
 				return false

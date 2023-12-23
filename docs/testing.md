@@ -162,6 +162,8 @@ We describe them following table and examples:
 | testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host   | FUNCTION   | Override request host with provided argument in the test case                                |
 | testing.inspect         | FUNCTION   | Inspect predefined variables for any scopes                                                  |
+| testing.table_set       | FUNCTION   | Inject value for key to main VCL table                                                       |
+| testing.table_merge     | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
@@ -263,6 +265,53 @@ sub test_vcl {
     // Typically obj.status could not access in recv scope,
     // but can inspect via this function.
     assert.equal(testing.inspect("obj.status"), 400);
+}
+```
+
+----
+
+### testing.table_set(ID table, STRING key, STRING value)
+
+Inject value for key to main VCL table.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Inject table value
+    testing.table_set(example_dict, "foo", "bar");
+
+    // call vcl_recv Fastly reserved subroutine in RECV scope,
+    // will call error statement in this subroutine.
+    testing.call_subroutine("vcl_recv");
+
+    // Assert injected value
+    assert.equal(table.lookup(example_dict, "foo", ""), "bar");
+}
+```
+
+----
+
+### testing.table_merge(ID base, ID merge)
+
+Merge values from testing VCL table to main VCL table.
+
+```vcl
+
+table merge_dict {
+    "foo": "bar",
+}
+
+// @scope: recv
+sub test_vcl {
+    // Merge table value
+    testing.table_merge(example_dict, merge_dict);
+
+    // call vcl_recv Fastly reserved subroutine in RECV scope,
+    // will call error statement in this subroutine.
+    testing.call_subroutine("vcl_recv");
+
+    // Assert injected value
+    assert.equal(table.lookup(example_dict, "foo", ""), "bar");
 }
 ```
 

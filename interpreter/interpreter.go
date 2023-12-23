@@ -27,10 +27,11 @@ type Interpreter struct {
 
 	options []context.Option
 
-	ctx      *context.Context
-	process  *process.Process
-	cache    *cache.Cache
-	Debugger Debugger
+	ctx         *context.Context
+	process     *process.Process
+	cache       *cache.Cache
+	Debugger    Debugger
+	IdentFinder func(v string) value.Value
 }
 
 func New(options ...context.Option) *Interpreter {

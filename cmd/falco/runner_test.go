@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
@@ -329,4 +330,55 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 			testIssuesWithSeverity("Error", tt.errors)
 		})
 	}
+}
+
+func TestTester(t *testing.T) {
+	main, err := filepath.Abs("../../examples/testing/table_manipulation.vcl")
+	if err != nil {
+		t.Errorf("Unexpected making absolute path error: %s", err)
+		return
+	}
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+		Testing: &config.TestConfig{
+			Filter: "*table_*.test.vcl",
+		},
+		Commands: config.Commands{"test", main},
+	}
+
+	t.Run("table manipulation tests", func(t *testing.T) {
+		resolvers, err := resolver.NewFileResolvers("../../examples/testing/table_manipulation.vcl", c.IncludePaths)
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		r, err := NewRunner(c, nil)
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		ret, err := r.Test(resolvers[0])
+		if err != nil {
+			t.Errorf("Unexpected runner creation error: %s", err)
+			return
+		}
+		for _, v := range ret.Results {
+			for _, c := range v.Cases {
+				if c.Error != nil {
+					t.Errorf("Test case %s raises error: %s", c.Name, c.Error)
+					return
+				}
+			}
+		}
+		if ret.Statistics.Fails > 0 {
+			t.Errorf("Testing fails should be zero, got: %d", ret.Statistics.Fails)
+			return
+		}
+		if ret.Statistics.Passes != 2 {
+			t.Errorf("Testing passes should be 2, got: %d", ret.Statistics.Passes)
+			return
+		}
+	})
 }

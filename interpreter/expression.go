@@ -15,6 +15,14 @@ import (
 )
 
 func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
+	// Extra lookups identity - call additional ident finder if defined
+	// This feature is implemented for testing, typically we do not use for interpreter working
+	if i.IdentFinder != nil {
+		if v := i.IdentFinder(val); v != nil {
+			return v, nil
+		}
+	}
+
 	if v, ok := i.ctx.Backends[val]; ok {
 		return v, nil
 	} else if v, ok := i.ctx.Acls[val]; ok {

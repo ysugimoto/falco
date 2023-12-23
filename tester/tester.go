@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,6 +15,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function"
+	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
@@ -28,14 +30,18 @@ var (
 )
 
 type Tester struct {
-	interpreter *interpreter.Interpreter
-	config      *config.TestConfig
+	interpreterOptions []icontext.Option
+	config             *config.TestConfig
+	counter            *TestCounter
+	debugger           *Debugger
 }
 
-func New(c *config.TestConfig, i *interpreter.Interpreter) *Tester {
+func New(c *config.TestConfig, opts []icontext.Option) *Tester {
 	return &Tester{
-		interpreter: i,
-		config:      c,
+		interpreterOptions: opts,
+		config:             c,
+		counter:            NewTestCounter(),
+		debugger:           NewDebugger(),
 	}
 }
 
@@ -67,18 +73,6 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
-	counter := NewTestCounter()
-	// Inject testing variables and functions to be enable to run tests in testing VCL files
-	variable.Inject(&tv.TestingVariables{})
-	if err := function.Inject(tf.TestingFunctions(t.interpreter, counter)); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	// Attach debugger to interpreter
-	debugger := NewDebugger()
-	t.interpreter.Debugger = debugger
-
 	// Run tests
 	var results []*TestResult
 	for i := range targetFiles {
@@ -91,8 +85,8 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 
 	return &TestFactory{
 		Results:    results,
-		Statistics: counter,
-		Logs:       debugger.stack,
+		Statistics: t.counter,
+		Logs:       t.debugger.stack,
 	}, nil
 }
 
@@ -128,6 +122,8 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 	timeoutChan := time.After(time.Duration(timeout) * time.Minute)
 
 	go func(vcl *ast.VCL) {
+		// Factory definitions in the test file
+		defs := t.factoryDefinitions(vcl)
 		var cases []*TestCase
 		for _, stmt := range vcl.Statements {
 			// We treat subroutine as testing
@@ -135,14 +131,32 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 			if !ok {
 				continue
 			}
-			if err := t.interpreter.TestProcessInit(mockRequest.Clone(ctx)); err != nil {
+
+			// Some functions like "testing.table_set()" will take side-effect for another testing subroutine
+			// so we always initialize interpreter, inject testing functions for each subroutine
+			i := interpreter.New(t.interpreterOptions...)
+			i.Debugger = t.debugger
+			i.IdentFinder = func(val string) value.Value {
+				if v, ok := defs.Backends[val]; ok {
+					return v
+				} else if v, ok := defs.Acls[val]; ok {
+					return v
+				} else if _, ok := defs.Tables[val]; ok {
+					return &value.Ident{Value: val, Literal: true}
+				}
+				return nil
+			}
+			variable.Inject(&tv.TestingVariables{})
+			function.Inject(tf.TestingFunctions(i, defs, t.counter))
+
+			if err := i.TestProcessInit(mockRequest.Clone(ctx)); err != nil {
 				errChan <- errors.WithStack(err)
 				return
 			}
 			suite, scopes := t.findTestSuites(sub)
 			for _, s := range scopes {
 				start := time.Now()
-				err := t.interpreter.ProcessTestSubroutine(s, sub)
+				err := i.ProcessTestSubroutine(s, sub)
 				cases = append(cases, &TestCase{
 					Name:  suite,
 					Error: errors.Cause(err),
@@ -224,4 +238,31 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 	}
 
 	return suiteName, scopes
+}
+
+func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
+	defs := &tf.Definiions{
+		Tables:   make(map[string]*ast.TableDeclaration),
+		Backends: make(map[string]*value.Backend),
+		Acls:     make(map[string]*value.Acl),
+	}
+
+	for _, stmt := range vcl.Statements {
+		switch t := stmt.(type) {
+		case *ast.TableDeclaration:
+			defs.Tables[t.Name.Value] = t
+		case *ast.BackendDeclaration:
+			v := &atomic.Bool{}
+			v.Store(true)
+			defs.Backends[t.Name.Value] = &value.Backend{
+				Value:   t,
+				Healthy: v,
+			}
+		case *ast.AclDeclaration:
+			defs.Acls[t.Name.Value] = &value.Acl{
+				Value: t,
+			}
+		}
+	}
+	return defs
 }
