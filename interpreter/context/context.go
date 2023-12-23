@@ -99,7 +99,7 @@ type Context struct {
 	WafCounter                          *value.Integer
 	WafExecuted                         *value.Boolean
 	WafHttpViolationScore               *value.Integer
-	WafInbouldAnomalyScore              *value.Integer
+	WafInboundAnomalyScore              *value.Integer
 	WafLFIScore                         *value.Integer
 	WafLogData                          *value.String
 	WafLogged                           *value.Boolean
@@ -107,7 +107,7 @@ type Context struct {
 	WafPassed                           *value.Boolean
 	WafRFIScore                         *value.Integer
 	WafRuleId                           *value.Integer
-	WafSesionFixationScore              *value.Integer
+	WafSessionFixationScore             *value.Integer
 	WafSeverity                         *value.Integer
 	WafXSSScore                         *value.Integer
 	BetweenBytesTimeout                 *value.RTime
@@ -196,7 +196,7 @@ func New(options ...Option) *Context {
 		WafCounter:                          &value.Integer{},
 		WafExecuted:                         &value.Boolean{},
 		WafHttpViolationScore:               &value.Integer{},
-		WafInbouldAnomalyScore:              &value.Integer{},
+		WafInboundAnomalyScore:              &value.Integer{},
 		WafLFIScore:                         &value.Integer{},
 		WafLogData:                          &value.String{},
 		WafLogged:                           &value.Boolean{},
@@ -204,7 +204,7 @@ func New(options ...Option) *Context {
 		WafPassed:                           &value.Boolean{},
 		WafRFIScore:                         &value.Integer{},
 		WafRuleId:                           &value.Integer{},
-		WafSesionFixationScore:              &value.Integer{},
+		WafSessionFixationScore:             &value.Integer{},
 		WafSeverity:                         &value.Integer{},
 		WafXSSScore:                         &value.Integer{},
 		BetweenBytesTimeout:                 &value.RTime{},

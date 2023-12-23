@@ -237,7 +237,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVairable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

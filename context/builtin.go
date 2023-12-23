@@ -4469,7 +4469,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
-						Set:       types.NeverType,
+						Set:       types.IntegerType,
 						Unset:     false,
 						Scopes:    PASS | MISS | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/",
@@ -4479,7 +4479,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
-						Set:       types.NeverType,
+						Set:       types.IntegerType,
 						Unset:     false,
 						Scopes:    PASS | MISS | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/",
