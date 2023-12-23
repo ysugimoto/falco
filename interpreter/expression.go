@@ -192,7 +192,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	case *value.String:
-		if t.Value != "" {
+		if !t.IsNotSet {
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	default:
