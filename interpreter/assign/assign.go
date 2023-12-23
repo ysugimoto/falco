@@ -108,6 +108,8 @@ func Assign(left, right value.Value) error {
 		case value.StringType: // STRING = STRING
 			rv := value.Unwrap[*value.String](right)
 			lv.Value = rv.Value
+			// Note: left value turns "Set" value even right string is NotSet
+			// see: https://fiddle.fastly.dev/fiddle/68ca66ec
 			lv.IsNotSet = false
 		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
