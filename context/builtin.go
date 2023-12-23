@@ -1811,7 +1811,7 @@ func predefinedVariables() Variables {
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+								Reference: "",
 							},
 						},
 						"is_push": &Object{

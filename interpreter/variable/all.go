@@ -110,6 +110,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: req.ProtoMajor == 3}, nil
 	case FASTLY_INFO_HOST_HEADER:
 		return &value.String{Value: v.ctx.OriginalHost}, nil
+	case FASTLY_INFO_H2_FINGERPRINT:
+		if req.ProtoMajor != 2 {
+			return &value.String{}, nil
+		}
+		// Format is undocumented, returning the value seen with the fiddle client.
+		return &value.String{Value: "|00|1:0:0:16|m,s,p,a"}, nil
 
 	// Backend is always healthy on simulator
 	case REQ_BACKEND_HEALTHY:

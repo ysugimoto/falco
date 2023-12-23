@@ -11,7 +11,7 @@ fastly_info.is_cluster_shield:
   get: BOOL
 
 fastly_info.h2.fingerprint:
-  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  reference: # no references for this variable seem to exist.
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: STRING
 
