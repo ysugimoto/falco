@@ -3,6 +3,7 @@ package interpreter
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -78,7 +79,9 @@ func TestDeclareStatement(t *testing.T) {
 				Name:      &ast.Ident{Value: "var.foo"},
 				ValueType: &ast.Ident{Value: "TIME"},
 			},
-			expect: &value.Time{},
+			expect: &value.Time{
+				Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
+			},
 		},
 		{
 			name: "ACL value declaration",
