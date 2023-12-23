@@ -66,16 +66,12 @@ func (v LocalVariables) Set(name, operator string, val value.Value) error {
 
 func (v LocalVariables) Add(name string, val value.Value) error {
 	return errors.WithStack(fmt.Errorf(
-		"Could not add any value into local variable",
+		"Cannot add any value into local variable",
 	))
 }
 
 func (v LocalVariables) Unset(name string) error {
-	if _, ok := v[name]; !ok {
-		return errors.WithStack(fmt.Errorf(
-			"Undeclared variable %s", name,
-		))
-	}
-	delete(v, name)
-	return nil
+	return errors.WithStack(fmt.Errorf(
+		"Cannot unset local variable %s", name,
+	))
 }
