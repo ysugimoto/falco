@@ -218,7 +218,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 			}
 			resolved = append(resolved, statements...)
 		}
-		// Prevent to block statements
+		// Prepend to block statements
 		sub.Block.Statements = append(resolved, sub.Block.Statements...)
 		return nil
 	}
