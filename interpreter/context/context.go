@@ -1,6 +1,8 @@
 package context
 
 import (
+	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -73,6 +75,7 @@ type Context struct {
 	Restarts                            int
 	State                               string
 	RequestHash                         *value.String
+	RequestID                           *value.String
 	Backend                             *value.Backend
 	MaxStaleIfError                     *value.RTime
 	MaxStaleWhileRevalidate             *value.RTime
@@ -167,32 +170,38 @@ func New(options ...Option) *Context {
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:    make(map[string]*config.OverrideBackend),
 
-		CacheHitItem:                        nil,
-		RequestStartTime:                    time.Now(),
-		State:                               "NONE",
-		Backend:                             nil,
-		ClientIdentity:                      nil,
-		MaxStaleIfError:                     &value.RTime{Value: defaultStaleDuration},
-		MaxStaleWhileRevalidate:             &value.RTime{Value: defaultStaleDuration},
-		Stale:                               &value.Boolean{},
-		StaleIsError:                        &value.Boolean{},
-		StaleIsRevalidating:                 &value.Boolean{},
-		StaleContents:                       &value.String{},
-		FastlyError:                         &value.String{},
-		ClientGeoIpOverride:                 &value.String{},
-		ClientSocketCongestionAlgorithm:     &value.String{Value: "cubic"},
-		ClientSocketCwnd:                    &value.Integer{Value: 60},
-		ClientSocketPace:                    &value.Integer{},
-		ClientSessTimeout:                   &value.RTime{Value: time.Minute * 10},
-		EsiAllowInsideCData:                 &value.Boolean{},
-		EnableRangeOnPass:                   &value.Boolean{},
-		EnableSegmentedCaching:              &value.Boolean{},
-		EnableSSI:                           &value.Boolean{},
-		HashAlwaysMiss:                      &value.Boolean{},
-		HashIgnoreBusy:                      &value.Boolean{},
-		SegmentedCacheingBlockSize:          &value.Integer{},
-		ESILevel:                            &value.Integer{},
-		RequestHash:                         &value.String{},
+		CacheHitItem:                    nil,
+		RequestStartTime:                time.Now(),
+		State:                           "NONE",
+		Backend:                         nil,
+		ClientIdentity:                  nil,
+		MaxStaleIfError:                 &value.RTime{Value: defaultStaleDuration},
+		MaxStaleWhileRevalidate:         &value.RTime{Value: defaultStaleDuration},
+		Stale:                           &value.Boolean{},
+		StaleIsError:                    &value.Boolean{},
+		StaleIsRevalidating:             &value.Boolean{},
+		StaleContents:                   &value.String{},
+		FastlyError:                     &value.String{},
+		ClientGeoIpOverride:             &value.String{},
+		ClientSocketCongestionAlgorithm: &value.String{Value: "cubic"},
+		ClientSocketCwnd:                &value.Integer{Value: 60},
+		ClientSocketPace:                &value.Integer{},
+		ClientSessTimeout:               &value.RTime{Value: time.Minute * 10},
+		EsiAllowInsideCData:             &value.Boolean{},
+		EnableRangeOnPass:               &value.Boolean{},
+		EnableSegmentedCaching:          &value.Boolean{},
+		EnableSSI:                       &value.Boolean{},
+		HashAlwaysMiss:                  &value.Boolean{},
+		HashIgnoreBusy:                  &value.Boolean{},
+		SegmentedCacheingBlockSize:      &value.Integer{},
+		ESILevel:                        &value.Integer{},
+		RequestHash:                     &value.String{},
+
+		// The format of the request ID is not documented.
+		// Observations indicate that it is a zero padded hex representation of two
+		// 64-bit values The first 64-bits are seemingly random, the nature of the
+		// apparent randomness is unknown. The second 64-bit value is always 1.
+		RequestID:                           &value.String{Value: fmt.Sprintf("%016x0000000000000001", rand.Int63())},
 		WafAnomalyScore:                     &value.Integer{},
 		WafBlocked:                          &value.Boolean{},
 		WafCounter:                          &value.Integer{},

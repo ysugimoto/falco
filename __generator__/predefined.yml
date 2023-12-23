@@ -15,6 +15,11 @@ fastly_info.h2.fingerprint:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: STRING
 
+fastly_info.request_id:
+  reference: # no references for this variable seem to exist.
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
 req.backend.is_cluster:
   reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
   on: [DELIVER]

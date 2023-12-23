@@ -1886,6 +1886,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/",
 					},
 				},
+				"request_id": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "",
+					},
+				},
 				"state": &Object{
 					Items: map[string]*Object{},
 					Value: &Accessor{
