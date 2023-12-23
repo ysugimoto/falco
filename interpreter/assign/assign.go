@@ -108,43 +108,50 @@ func Assign(left, right value.Value) error {
 		case value.StringType: // STRING = STRING
 			rv := value.Unwrap[*value.String](right)
 			lv.Value = rv.Value
-			lv.IsNotSet = rv.IsNotSet
+			lv.IsNotSet = false
 		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = rv.String()
+			lv.IsNotSet = false
 		case value.FloatType: // STRING = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = rv.String()
+			lv.IsNotSet = false
 		case value.RTimeType: // STRING = RTIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = rv.String()
+			lv.IsNotSet = false
 		case value.TimeType: // STRING = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value = rv.Value.Format(http.TimeFormat)
+			lv.IsNotSet = false
 		case value.BackendType: // STRING = BACKEND
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.Value.Name.Value
+			lv.IsNotSet = false
 		case value.BooleanType: // STRING = BOOL
 			rv := value.Unwrap[*value.Boolean](right)
 			lv.Value = rv.String()
+			lv.IsNotSet = false
 		case value.IpType: // STRING = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value.String()
+			lv.IsNotSet = false
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for STRING type, got %s", right.Type()))
 		}
@@ -229,10 +236,12 @@ func Assign(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("Invalid IP format, got %s", rv.Value))
 			} else {
 				lv.Value = ip
+				lv.IsNotSet = false
 			}
 		case value.IpType: // IP = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value
+			lv.IsNotSet = false
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for IP type, got %s", right.Type()))
 		}

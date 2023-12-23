@@ -184,7 +184,7 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 		}
 		// If @suite annotation found, use it as suite name
 		if strings.HasPrefix(l, "@suite:") {
-			suiteName = strings.TrimPrefix(l, "@suite:")
+			suiteName = strings.TrimSpace(strings.TrimPrefix(l, "@suite:"))
 			continue
 		}
 		var an []string

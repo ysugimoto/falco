@@ -430,7 +430,7 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 			return state, nil
 		}
 	case *value.String:
-		if t.Value != "" {
+		if !t.IsNotSet {
 			state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
 			if err != nil {
 				return NONE, errors.WithStack(err)

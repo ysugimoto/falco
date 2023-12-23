@@ -55,7 +55,7 @@ func TestDeclareStatement(t *testing.T) {
 				Name:      &ast.Ident{Value: "var.foo"},
 				ValueType: &ast.Ident{Value: "IP"},
 			},
-			expect: &value.IP{},
+			expect: &value.IP{IsNotSet: true},
 		},
 		{
 			name: "STRING value declaration",
@@ -63,7 +63,7 @@ func TestDeclareStatement(t *testing.T) {
 				Name:      &ast.Ident{Value: "var.foo"},
 				ValueType: &ast.Ident{Value: "STRING"},
 			},
-			expect: &value.String{},
+			expect: &value.String{IsNotSet: true},
 		},
 		{
 			name: "RTIME value declaration",
@@ -311,6 +311,59 @@ func TestFunctionCallStatement(t *testing.T) {
 				"req.http.foo": &value.String{Value: "0"},
 			},
 			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestIfStatement(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "Inverse string condition (empty)",
+			vcl: `
+			sub vcl_recv {
+				declare local var.N BOOL;
+				declare local var.S STRING;
+				set var.S = "";
+				if (!var.S) {
+					set var.N = true;
+				} else {
+					set var.N = false;
+				}
+				header.set(req, "foo", var.N);
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "0"},
+			},
+			isError: false,
+		},
+		{
+			name: "Inverse string condition (not set)",
+			vcl: `
+			sub vcl_recv {
+				declare local var.N BOOL;
+				declare local var.S STRING;
+				if (!var.S) {
+					set var.N = true;
+				} else {
+					set var.N = false;
+				}
+				header.set(req, "foo", var.N);
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "1"},
+			},
+			isError: false,
 		},
 	}
 

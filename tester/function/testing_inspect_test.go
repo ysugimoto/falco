@@ -67,7 +67,7 @@ func Test_inspect(t *testing.T) {
 			isError bool
 		}{
 			{name: "obj.status", expect: &value.Integer{Value: 500}},
-			{name: "req.http.Foo", expect: &value.String{Value: ""}},
+			{name: "req.http.Foo", expect: &value.String{IsNotSet: true}},
 			{name: "some.undefined", isError: true},
 		}
 
