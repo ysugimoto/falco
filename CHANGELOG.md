@@ -1,3 +1,11 @@
+## v1.3.0
+
+- Feat/state related asserter [#232](https://github.com/ysugimoto/falco/pull/232) (@ysugimoto)
+- Fix not_set value related implementation [#231](https://github.com/ysugimoto/falco/pull/231) (@ysugimoto)
+- Fix time default value [#230](https://gthub.com/ysugimoto/falco/pull/230) (@ysugimoto)
+- Implement table manipulation testing functions [#229](https://github.com/ysugimoto/falco/pull/229) (@ysugimoto)
+- User defined function fixes [@228](https://github.com/ysugimoto/falco/pull/228) (@richardmarshall)
+
 ## v1.2.1
 
 - Fix assigning RTIME literal to RTIME variable [#226](https://github.com/ysugimoto/falco/pull/226) (@MasonM)
