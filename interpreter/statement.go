@@ -360,7 +360,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 		)
 	}
 
-	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
+	i.Process.Logs = append(i.Process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
 	i.Debugger.Message(line)
 	return nil
 }
