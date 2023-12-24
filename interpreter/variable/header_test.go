@@ -5,20 +5,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func TestGetRequestHeaderValue(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect string
+		expect *value.String
 	}{
-		{name: "foo", expect: "bar"},
-		{name: "hoge", expect: ""},
-		{name: "Text:lorem", expect: "ipsum"},
-		{name: "Text:amet", expect: ""},
-		{name: "Cookie:foo", expect: "bar"},
-		{name: "Cookie:baz", expect: ""},
+		{name: "foo", expect: &value.String{Value: "bar"}},
+		{name: "hoge", expect: &value.String{IsNotSet: true}},
+		{name: "Text:lorem", expect: &value.String{Value: "ipsum"}},
+		{name: "Text:amet", expect: &value.String{IsNotSet: true}},
+		{name: "Cookie:foo", expect: &value.String{Value: "bar"}},
+		{name: "Cookie:baz", expect: &value.String{IsNotSet: true}},
 	}
 	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
 	req.Header.Set("Foo", "bar")
@@ -28,8 +29,8 @@ func TestGetRequestHeaderValue(t *testing.T) {
 
 	for _, tt := range tests {
 		ret := getRequestHeaderValue(req, tt.name)
-		if ret.Value != tt.expect {
-			t.Errorf("Return value unmatch, expect=%s, got=%s", tt.expect, ret.Value)
+		if diff := cmp.Diff(ret, tt.expect); diff != "" {
+			t.Errorf("Return value unmatch, diff=%s", diff)
 		}
 	}
 
@@ -37,12 +38,12 @@ func TestGetRequestHeaderValue(t *testing.T) {
 func TestGetReponseHeaderValue(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect string
+		expect *value.String
 	}{
-		{name: "foo", expect: "bar"},
-		{name: "hoge", expect: ""},
-		{name: "Text:lorem", expect: "ipsum"},
-		{name: "Text:amet", expect: ""},
+		{name: "foo", expect: &value.String{Value: "bar"}},
+		{name: "hoge", expect: &value.String{IsNotSet: true}},
+		{name: "Text:lorem", expect: &value.String{Value: "ipsum"}},
+		{name: "Text:amet", expect: &value.String{IsNotSet: true}},
 	}
 	header := http.Header{}
 	header.Set("Foo", "bar")
@@ -53,8 +54,8 @@ func TestGetReponseHeaderValue(t *testing.T) {
 
 	for _, tt := range tests {
 		ret := getResponseHeaderValue(resp, tt.name)
-		if ret.Value != tt.expect {
-			t.Errorf("Return value unmatch, expect=%s, got=%s", tt.expect, ret.Value)
+		if diff := cmp.Diff(ret, tt.expect); diff != "" {
+			t.Errorf("Return value unmatch, diff=%s", diff)
 		}
 	}
 
@@ -118,8 +119,8 @@ func TestUnsetRequestHeaderValue(t *testing.T) {
 	for _, tt := range tests {
 		unsetRequestHeaderValue(req, tt.name)
 		ret := getRequestHeaderValue(req, tt.name)
-		if ret.Value != "" {
-			t.Errorf("Unset value still not empty, got=%s", ret.Value)
+		if diff := cmp.Diff(ret, &value.String{IsNotSet: true}); diff != "" {
+			t.Errorf("Unset value still not empty, diff=%s", diff)
 		}
 	}
 }
@@ -142,8 +143,8 @@ func TestUnsetResponseHeaderValue(t *testing.T) {
 	for _, tt := range tests {
 		unsetResponseHeaderValue(resp, tt.name)
 		ret := getResponseHeaderValue(resp, tt.name)
-		if ret.Value != "" {
-			t.Errorf("Unset value still not empty, got=%s", ret.Value)
+		if diff := cmp.Diff(ret, &value.String{IsNotSet: true}); diff != "" {
+			t.Errorf("Unset value still not empty, diff=%s", diff)
 		}
 	}
 }

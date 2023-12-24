@@ -76,7 +76,7 @@ func TestPrefixExpression(t *testing.T) {
 					},
 				},
 				expect: &value.Boolean{
-					Value: true,
+					Value: false,
 				},
 				withCondition: true,
 			},
@@ -219,7 +219,7 @@ func TestGroupedExpression(t *testing.T) {
 					},
 				},
 				expect: &value.Boolean{
-					Value: true,
+					Value: false,
 				},
 			},
 		}
@@ -297,7 +297,7 @@ func TestProcessExpression(t *testing.T) {
 			name: "Set header to backend literal causes error",
 			vcl:  `sub vcl_recv { set req.http.Foo = example; }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: ""},
+				"req.http.Foo": &value.String{IsNotSet: true},
 			},
 			isError: true,
 		},

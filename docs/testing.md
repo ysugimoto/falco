@@ -167,6 +167,7 @@ We describe them following table and examples:
 | assert                  | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true             | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false            | FUNCTION   | Assert actual value should be false                                                          |
+| assert.is_notset        | FUNCTION   | Assert actual value should be NotSet                                                         |
 | assert.equal            | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
 | assert.not_equal        | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
 | assert.strict_equal     | FUNCTION   | Assert actual value should be equal to expected value strictly                               |
@@ -382,6 +383,29 @@ sub test_vcl {
 
     // Fail because experssion value is not BOOL false
     assert.false(req.http.Foo);
+}
+```
+
+----
+
+### assert.is_notset(ANY actual [, STRING message])
+
+Assert actualvalue should be [NotSet](https://developer.fastly.com/reference/vcl/types/#not-set).
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+
+    // Pass because value is NotSet
+    assert.is_notset(var.testing);
+
+    set var.testing = "";
+
+    // Fail because value is empty, not NotSet
+    assert.is_notset(var.testing);
+
+    // Pass because value is NotSet
+    assert.is_notset(req.http.Foo);
 }
 ```
 

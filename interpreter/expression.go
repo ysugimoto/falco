@@ -137,7 +137,10 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
 				)
 			}
-			return &value.Boolean{Value: t.Value == ""}, nil
+			if t.IsNotSet {
+				return &value.Boolean{Value: true}, nil
+			}
+			return &value.Boolean{Value: false}, nil
 		default:
 			return value.Null, errors.WithStack(
 				exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
@@ -189,7 +192,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	case *value.String:
-		if t.Value != "" {
+		if !t.IsNotSet {
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	default:
