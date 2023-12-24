@@ -36,7 +36,7 @@ func TestingFunctions(i *interpreter.Interpreter, defs *Definitions, c Counter) 
 }
 
 // nolint: funlen,gocognit
-func testingFunctions(i *interpreter.Interpreter, defs *Definitions ) Functions {
+func testingFunctions(i *interpreter.Interpreter, defs *Definitions) Functions {
 	return Functions{
 		// Special testing function of "testing.call_subroutine"
 		// We need to interpret subroutine statement in this function
@@ -106,6 +106,20 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definitions ) Functions 
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 				return Testing_table_merge(ctx, defs, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.get_log": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				return Testing_get_log(ctx, i.Process, unwrapped...)
 			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {
