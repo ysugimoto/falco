@@ -26,6 +26,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	defer func() {
 		i.ctx.RegexMatchedValues = make(map[string]*value.String)
 		i.localVars = variable.LocalVariables{}
+		i.ctx.SubroutineCalls[sub.Name.Value]++
 	}()
 
 	// Try to extract fastly reserved subroutine macro

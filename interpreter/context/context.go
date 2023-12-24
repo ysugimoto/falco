@@ -135,8 +135,9 @@ type Context struct {
 
 	// For testing fields
 	// Stored subroutine return state
-	ReturnState *value.String
-	FixedTime   *time.Time
+	ReturnState     *value.String
+	FixedTime       *time.Time
+	SubroutineCalls map[string]int
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
@@ -231,6 +232,7 @@ func New(options ...Option) *Context {
 		IsLocallyGenerated:                  &value.Boolean{},
 
 		RegexMatchedValues: make(map[string]*value.String),
+		SubroutineCalls:    make(map[string]int),
 	}
 
 	// collect options
