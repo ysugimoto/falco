@@ -240,7 +240,7 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 		} else if _, ok := defs.Tables[val]; ok {
 			return &value.Ident{Value: val, Literal: true}
 		} else if s := interpreter.StateFromString(val); s != interpreter.NONE {
-			// Some assertion uses interpreter state so we need to resolve state ident like look in testing VCL
+			// Some assertion uses interpreter state so we need to resolve state ident like "lookup" in testing VCL
 			return &value.Ident{Value: s.String()}
 		}
 		return nil
