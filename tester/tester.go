@@ -229,7 +229,7 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 }
 
 // Set up interprete for each test subroutines
-func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter {
+func (t *Tester) setupInterpreter(defs *tf.Definitions) *interpreter.Interpreter {
 	i := interpreter.New(t.interpreterOptions...)
 	i.Debugger = t.debugger
 	i.IdentResolver = func(val string) value.Value {
@@ -252,8 +252,8 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 }
 
 // Factory declarations in testing VCL
-func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
-	defs := &tf.Definiions{
+func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definitions {
+	defs := &tf.Definitions{
 		Tables:   make(map[string]*ast.TableDeclaration),
 		Backends: make(map[string]*value.Backend),
 		Acls:     make(map[string]*value.Acl),

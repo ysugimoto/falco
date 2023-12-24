@@ -40,7 +40,7 @@ table test_example {
 		testTable := testVCL.Statements[0].(*ast.TableDeclaration)
 		_, err = Testing_table_merge(
 			c,
-			&Definiions{
+			&Definitions{
 				Tables: map[string]*ast.TableDeclaration{
 					testTable.Name.Value: testTable,
 				},
@@ -95,7 +95,7 @@ table test_example {
 		testTable := testVCL.Statements[0].(*ast.TableDeclaration)
 		_, err = Testing_table_merge(
 			c,
-			&Definiions{
+			&Definitions{
 				Tables: map[string]*ast.TableDeclaration{
 					testTable.Name.Value: testTable,
 				},
@@ -127,7 +127,7 @@ table test_example {
 		c := &context.Context{}
 		_, err := Testing_table_merge(
 			c,
-			&Definiions{
+			&Definitions{
 				Tables: map[string]*ast.TableDeclaration{},
 			},
 			&value.Ident{Value: "example"},
@@ -155,7 +155,7 @@ table example {
 		}
 		_, err = Testing_table_merge(
 			c,
-			&Definiions{
+			&Definitions{
 				Tables: map[string]*ast.TableDeclaration{},
 			},
 			&value.Ident{Value: "example"},
@@ -193,7 +193,7 @@ table test_example STRING {
 		testTable := testVCL.Statements[0].(*ast.TableDeclaration)
 		_, err = Testing_table_merge(
 			c,
-			&Definiions{
+			&Definitions{
 				Tables: map[string]*ast.TableDeclaration{
 					testTable.Name.Value: testTable,
 				},

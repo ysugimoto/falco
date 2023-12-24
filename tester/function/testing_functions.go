@@ -16,7 +16,7 @@ type Counter interface {
 	Fail()
 }
 
-type Definiions struct {
+type Definitions struct {
 	Tables   map[string]*ast.TableDeclaration
 	Backends map[string]*value.Backend
 	Acls     map[string]*value.Acl
@@ -24,7 +24,7 @@ type Definiions struct {
 
 type Functions map[string]*ifn.Function
 
-func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) Functions {
+func TestingFunctions(i *interpreter.Interpreter, defs *Definitions, c Counter) Functions {
 	functions := Functions{}
 	for key, val := range testingFunctions(i, defs) {
 		functions[key] = val
@@ -36,9 +36,9 @@ func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) F
 }
 
 // nolint: funlen,gocognit
-func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
+func testingFunctions(i *interpreter.Interpreter, defs *Definitions ) Functions {
 	return Functions{
-		// Special testing function of "testing.call_subrouting"
+		// Special testing function of "testing.call_subroutine"
 		// We need to interpret subroutine statement in this function
 		// so pass *interpreter.Interpreter pointer to the function
 		"testing.call_subroutine": {

@@ -28,7 +28,7 @@ func Testing_table_merge_Validate(args []value.Value) error {
 
 func Testing_table_merge(
 	ctx *context.Context,
-	defs *Definiions,
+	defs *Definitions,
 	args ...value.Value,
 ) (value.Value, error) {
 
