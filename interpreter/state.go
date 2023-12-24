@@ -1,5 +1,7 @@
 package interpreter
 
+import "strings"
+
 type State string
 
 const (
@@ -60,4 +62,11 @@ var stateMap = map[string]State{
 	"deliver_stale": DELIVER_STALE,
 	"log":           LOG,
 	"end":           END,
+}
+
+func StateFromString(s string) State {
+	if v, ok := stateMap[strings.ToLower(s)]; ok {
+		return v
+	}
+	return NONE
 }

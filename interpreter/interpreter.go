@@ -32,14 +32,17 @@ type Interpreter struct {
 	cache         *cache.Cache
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
+
+	TestingState State
 }
 
 func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
-		options:   options,
-		cache:     cache.New(),
-		localVars: variable.LocalVariables{},
-		Debugger:  DefaultDebugger{},
+		options:      options,
+		cache:        cache.New(),
+		localVars:    variable.LocalVariables{},
+		Debugger:     DefaultDebugger{},
+		TestingState: NONE,
 	}
 }
 

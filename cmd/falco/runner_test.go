@@ -351,6 +351,12 @@ func TestTester(t *testing.T) {
 			filter: "*values.test.vcl",
 			passes: 16,
 		},
+		{
+			name:   "assertions test",
+			main:   "../../examples/testing/assertion.vcl",
+			filter: "*assertion.test.vcl",
+			passes: 5,
+		},
 	}
 
 	for _, tt := range tests {

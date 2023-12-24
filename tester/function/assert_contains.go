@@ -8,7 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_contains_Name = "assert"
+const Assert_contains_Name = "assert.contains"
 
 var Assert_contains_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
