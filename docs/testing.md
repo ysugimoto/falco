@@ -155,30 +155,34 @@ On running tests, `falco` injects special runtime functions and variables to ass
 
 We describe them following table and examples:
 
-| Name                    | Type       | Description                                                                                  |
-|:------------------------|:----------:|:---------------------------------------------------------------------------------------------|
-| testing.state           | STRING     | Return state which is called `return` statement in a subroutine                              |
-| testing.call_subroutine | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
-| testing.fixed_time      | FUNCTION   | Use fixed time whole the test suite                                                          |
-| testing.override_host   | FUNCTION   | Override request host with provided argument in the test case                                |
-| testing.inspect         | FUNCTION   | Inspect predefined variables for any scopes                                                  |
-| testing.table_set       | FUNCTION   | Inject value for key to main VCL table                                                       |
-| testing.table_merge     | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
-| assert                  | FUNCTION   | Assert provided expression should be true                                                    |
-| assert.true             | FUNCTION   | Assert actual value should be true                                                           |
-| assert.false            | FUNCTION   | Assert actual value should be false                                                          |
-| assert.is_notset        | FUNCTION   | Assert actual value should be NotSet                                                         |
-| assert.equal            | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
-| assert.not_equal        | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
-| assert.strict_equal     | FUNCTION   | Assert actual value should be equal to expected value strictly                               |
-| assert.not_strict_equal | FUNCTION   | Assert actual value should not be equal to expected value strictly                           |
-| assert.equal_fold       | FUNCTION   | Assert actual value should be equal to with case insensitive                                 |
-| assert.match            | FUNCTION   | Assert actual string should be matched against expected regular expression                   |
-| assert.not_match        | FUNCTION   | Assert actual string should not be matches against expected regular expression               |
-| assert.contains         | FUNCTION   | Assert actual string should contain the expected string                                      |
-| assert.not_contains     | FUNCTION   | Assert actual string should not contain the expected string                                  |
-| assert.starts_with      | FUNCTION   | Assert actual string should start with expected string                                       |
-| assert.ends_with        | FUNCTION   | Assert actual string should end with expected string                                         |
+| Name                     | Type       | Description                                                                                  |
+|:-------------------------|:----------:|:---------------------------------------------------------------------------------------------|
+| testing.state            | STRING     | Return state which is called `return` statement in a subroutine                              |
+| testing.call_subroutine  | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
+| testing.fixed_time       | FUNCTION   | Use fixed time whole the test suite                                                          |
+| testing.override_host    | FUNCTION   | Override request host with provided argument in the test case                                |
+| testing.inspect          | FUNCTION   | Inspect predefined variables for any scopes                                                  |
+| testing.table_set        | FUNCTION   | Inject value for key to main VCL table                                                       |
+| testing.table_merge      | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
+| assert                   | FUNCTION   | Assert provided expression should be true                                                    |
+| assert.true              | FUNCTION   | Assert actual value should be true                                                           |
+| assert.false             | FUNCTION   | Assert actual value should be false                                                          |
+| assert.is_notset         | FUNCTION   | Assert actual value should be NotSet                                                         |
+| assert.equal             | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
+| assert.not_equal         | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
+| assert.strict_equal      | FUNCTION   | Assert actual value should be equal to expected value strictly                               |
+| assert.not_strict_equal  | FUNCTION   | Assert actual value should not be equal to expected value strictly                           |
+| assert.equal_fold        | FUNCTION   | Assert actual value should be equal to with case insensitive                                 |
+| assert.match             | FUNCTION   | Assert actual string should be matched against expected regular expression                   |
+| assert.not_match         | FUNCTION   | Assert actual string should not be matches against expected regular expression               |
+| assert.contains          | FUNCTION   | Assert actual string should contain the expected string                                      |
+| assert.not_contains      | FUNCTION   | Assert actual string should not contain the expected string                                  |
+| assert.starts_with       | FUNCTION   | Assert actual string should start with expected string                                       |
+| assert.ends_with         | FUNCTION   | Assert actual string should end with expected string                                         |
+| assert.subroutine_called | FUNCTION   | Assert subroutine has called in testing subroutine (with times)                              |
+| assert.restart           | FUNCTION   | Assert restart statement has called                                                          |
+| assert.state             | FUNCTION   | Assert after state is expected one                                                           |
+| assert.error             | FUNCTION   | Assert error status code (and response) if error statement has called                        |
 
 ----
 
@@ -612,3 +616,74 @@ sub test_vcl {
     assert.ends_with(var.testing, "bar");
 }
 ```
+
+----
+
+### assert.subroutine_called(STRING name [, INTEGER times, STRING message])
+
+Assert subroutine has called in testing subroutine (with times).
+
+```vcl
+sub test_vcl {
+    // Like "auth_recv" subroutine will be called in vcl_recv
+    testing.call_subroutine("vcl_recv");
+
+    // Assert "auth_recv" subroutine has called in processing vcl_recv
+    assert.subroutine_called("auth_recv");
+
+    // Additionally, "auth_recv" called only once
+    assert.subroutine_called("auth_recv", 1);
+}
+```
+
+----
+
+### assert.restart([, STRING message])
+
+Assert restart statement has called.
+
+```vcl
+sub test_vcl {
+    // restart statement will be called on some request condition
+    testing.call_subroutine("vcl_recv");
+
+    // Assert restart statement has called
+    assert.restart();
+}
+```
+
+----
+
+### assert.state(ID state [, STRING message])
+
+Assert current state is expected.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will move state to lookup to lookup cache
+    testing.call_subroutine("vcl_recv");
+
+    // Assert state moves to lookup
+    assert.state(lookup);
+}
+```
+
+----
+
+### assert.error(INTEGER status [, STRING response, STRING message])
+
+Assert error status code (and response) if error statement has called.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will call error statement with status code and response
+    testing.call_subroutine("vcl_recv");
+
+    // Assert error statement has called with expected status
+    assert.error(900);
+
+    // Assert error statement has called with expected status and response text
+    assert.error(900, "Fastly Internal");
+}
+```
+
