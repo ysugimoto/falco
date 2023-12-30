@@ -119,6 +119,11 @@ const (
 	PENALTYBOX       = "PENALTYBOX"       // penaltybox
 	RATECOUNTER      = "RATECOUNTER"      // ratecounter
 	GOTO             = "GOTO"             // goto
+	SWITCH           = "SWITCH"           // switch
+	CASE             = "CASE"             // case
+	DEFAULT          = "DEFAULT"          // default
+	BREAK            = "BREAK"            // break
+	FALLTHROUGH      = "FALLTHROUGH"      // fallthrough
 )
 
 var keywords = map[string]TokenType{
@@ -152,6 +157,11 @@ var keywords = map[string]TokenType{
 	"penaltybox":       PENALTYBOX,
 	"ratecounter":      RATECOUNTER,
 	"goto":             GOTO,
+	"switch":           SWITCH,
+	"case":             CASE,
+	"default":          DEFAULT,
+	"break":            BREAK,
+	"fallthrough":      FALLTHROUGH,
 }
 
 func LookupIdent(ident string) TokenType {

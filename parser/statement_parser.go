@@ -6,6 +6,78 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
+func (p *Parser) parseStatement() (ast.Statement, error) {
+	var stmt ast.Statement
+	var err error
+
+	p.nextToken() // point to statement
+	switch p.curToken.Token.Type {
+	// https://github.com/ysugimoto/falco/issues/17
+	// VCL accepts block syntax:
+	// ```
+	// sub vcl_recv {
+	//   {
+	//      log "recv";
+	//   }
+	// }
+	// ```
+	case token.LEFT_BRACE:
+		stmt, err = p.parseBlockStatement()
+	case token.SET:
+		stmt, err = p.parseSetStatement()
+	case token.UNSET:
+		stmt, err = p.parseUnsetStatement()
+	case token.REMOVE:
+		stmt, err = p.parseRemoveStatement()
+	case token.ADD:
+		stmt, err = p.parseAddStatement()
+	case token.CALL:
+		stmt, err = p.parseCallStatement()
+	case token.DECLARE:
+		stmt, err = p.parseDeclareStatement()
+	case token.ERROR:
+		stmt, err = p.parseErrorStatement()
+	case token.ESI:
+		stmt, err = p.parseEsiStatement()
+	case token.LOG:
+		stmt, err = p.parseLogStatement()
+	case token.RESTART:
+		stmt, err = p.parseRestartStatement()
+	case token.RETURN:
+		stmt, err = p.parseReturnStatement()
+	case token.SYNTHETIC:
+		stmt, err = p.parseSyntheticStatement()
+	case token.SYNTHETIC_BASE64:
+		stmt, err = p.parseSyntheticBase64Statement()
+	case token.IF:
+		stmt, err = p.parseIfStatement()
+	case token.SWITCH:
+		stmt, err = p.parseSwitchStatement()
+	case token.GOTO:
+		stmt, err = p.parseGotoStatement()
+	case token.INCLUDE:
+		stmt, err = p.parseIncludeStatement()
+	case token.BREAK:
+		stmt, err = p.parseBreakStatement()
+	case token.FALLTHROUGH:
+		stmt, err = p.parseFallthroughStatement()
+	case token.IDENT:
+		// Check if the current ident is a function call
+		if p.peekTokenIs(token.LEFT_PAREN) {
+			stmt, err = p.parseFunctionCall()
+		} else {
+			// Could be a goto destination
+			stmt, err = p.parseGotoDestination()
+		}
+	default:
+		err = UnexpectedToken(p.curToken)
+	}
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return stmt, nil
+}
+
 func (p *Parser) parseImportStatement() (*ast.ImportStatement, error) {
 	i := &ast.ImportStatement{
 		Meta: p.curToken,
@@ -45,7 +117,6 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 	return i, nil
 }
 
-// nolint: dupl
 func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	// Note: block statement is used for declaration/statement inside like subroutine, if, elseif, else
 	// on start this statement, current token must point start of LEFT_BRACE
@@ -56,66 +127,7 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	}
 
 	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		var stmt ast.Statement
-		var err error
-
-		p.nextToken() // point to statement
-		switch p.curToken.Token.Type {
-		// https://github.com/ysugimoto/falco/issues/17
-		// VCL accepts block syntax:
-		// ```
-		// sub vcl_recv {
-		//   {
-		//      log "recv";
-		//   }
-		// }
-		// ```
-		case token.LEFT_BRACE:
-			stmt, err = p.parseBlockStatement()
-		case token.SET:
-			stmt, err = p.parseSetStatement()
-		case token.UNSET:
-			stmt, err = p.parseUnsetStatement()
-		case token.REMOVE:
-			stmt, err = p.parseRemoveStatement()
-		case token.ADD:
-			stmt, err = p.parseAddStatement()
-		case token.CALL:
-			stmt, err = p.parseCallStatement()
-		case token.DECLARE:
-			stmt, err = p.parseDeclareStatement()
-		case token.ERROR:
-			stmt, err = p.parseErrorStatement()
-		case token.ESI:
-			stmt, err = p.parseEsiStatement()
-		case token.LOG:
-			stmt, err = p.parseLogStatement()
-		case token.RESTART:
-			stmt, err = p.parseRestartStatement()
-		case token.RETURN:
-			stmt, err = p.parseReturnStatement()
-		case token.SYNTHETIC:
-			stmt, err = p.parseSyntheticStatement()
-		case token.SYNTHETIC_BASE64:
-			stmt, err = p.parseSyntheticBase64Statement()
-		case token.IF:
-			stmt, err = p.parseIfStatement()
-		case token.GOTO:
-			stmt, err = p.parseGotoStatement()
-		case token.INCLUDE:
-			stmt, err = p.parseIncludeStatement()
-		case token.IDENT:
-			// Check if the current ident is a function call
-			if p.peekTokenIs(token.LEFT_PAREN) {
-				stmt, err = p.parseFunctionCall()
-			} else {
-				// Could be a goto destination
-				stmt, err = p.parseGotoDestination()
-			}
-		default:
-			err = UnexpectedToken(p.peekToken)
-		}
-
+		stmt, err := p.parseStatement()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -131,7 +143,6 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	return b, nil
 }
 
-// nolint: dupl
 func (p *Parser) parseSetStatement() (*ast.SetStatement, error) {
 	stmt := &ast.SetStatement{
 		Meta: p.curToken,
@@ -207,7 +218,6 @@ func (p *Parser) parseRemoveStatement() (*ast.RemoveStatement, error) {
 	return stmt, nil
 }
 
-// nolint: dupl
 func (p *Parser) parseAddStatement() (*ast.AddStatement, error) {
 	stmt := &ast.AddStatement{
 		Meta: p.curToken,
@@ -493,7 +503,6 @@ func (p *Parser) parseSyntheticBase64Statement() (*ast.SyntheticBase64Statement,
 	return stmt, nil
 }
 
-// nolint: gocognit
 func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 	stmt := &ast.IfStatement{
 		Meta: p.curToken,
@@ -600,6 +609,190 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 		return nil, errors.WithStack(err)
 	}
 	// cursor must be on RIGHT_BRACE
+	return stmt, nil
+}
+
+func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
+	stmt := &ast.SwitchStatement{
+		Meta:    p.curToken,
+		Default: -1,
+	}
+
+	if !p.expectPeek(token.LEFT_PAREN) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
+	}
+
+	p.nextToken() // point at control expression
+
+	// Switch control expression can be a literal, variable identifier, or
+	// function call.
+	var control ast.Expression
+	var err error
+	if p.peekTokenIs(token.LEFT_PAREN) {
+		i := p.parseIdent()
+		p.nextToken()
+		control, err = p.parseFunctionCallExpression(i)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		if p.curTokenIs(token.IDENT) {
+			control = p.parseIdent()
+		} else {
+			// Only string and bool literals can be used as a switch control
+			// expression.
+			if !p.curTokenIs(token.TRUE) && !p.curTokenIs(token.FALSE) && !p.curTokenIs(token.STRING) {
+				return nil, UnexpectedToken(
+					p.curToken,
+					"invalid literal %s for switch control, expect BOOL or STRING",
+					string(p.curToken.Token.Type))
+			}
+			control, err = p.parseExpression(LOWEST)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+		}
+	}
+	stmt.Control = control
+
+	if !p.expectPeek(token.RIGHT_PAREN) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
+	}
+
+	if !p.expectPeek(token.LEFT_BRACE) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
+	}
+
+	// Parse case clauses
+	for !p.peekTokenIs(token.RIGHT_BRACE) {
+		t := p.peekToken
+		clause, err := p.parseCaseStatement()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		// Clauses must end with break or fallthrough
+		if !clause.IsBreak() && !clause.IsFallthrough() {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "break", "fallthrough"))
+		}
+
+		if clause.Test == nil {
+			// There cannot be multiple default clauses
+			if stmt.Default != -1 {
+				return nil, errors.WithStack(MultipleDefaults(t))
+			}
+			stmt.Default = len(stmt.Cases)
+		}
+
+		// Case tests must be unique
+		for _, c := range stmt.Cases {
+			if c.TestEqual(clause) {
+				return nil, errors.WithStack(DuplicateCase(clause.Test.Meta))
+			}
+		}
+		stmt.Cases = append(stmt.Cases, clause)
+	}
+
+	// There must be at least one case
+	if len(stmt.Cases) == 0 {
+		return nil, errors.WithStack(EmptySwitch(p.peekToken))
+	}
+
+	// The last case can't be a fallthrough
+	lc := stmt.Cases[len(stmt.Cases)-1]
+	if lc.IsFallthrough() {
+		return nil, errors.WithStack(FinalFallthrough(lc.FinalStatement().GetMeta()))
+	}
+
+	p.nextToken()
+	swapLeadingTrailing(p.peekToken, stmt.Meta)
+	return stmt, nil
+}
+
+func (p *Parser) parseBreakStatement() (*ast.BreakStatement, error) {
+	stmt := &ast.BreakStatement{
+		Meta: p.curToken,
+	}
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+	stmt.Meta.Trailing = p.trailing()
+	p.nextToken() // point to SEMICOLON
+
+	return stmt, nil
+}
+
+func (p *Parser) parseFallthroughStatement() (*ast.FallthroughStatement, error) {
+	stmt := &ast.FallthroughStatement{
+		Meta: p.curToken,
+	}
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+	stmt.Meta.Trailing = p.trailing()
+	p.nextToken() // point to SEMICOLON
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
+	p.nextToken()
+	stmt := &ast.CaseStatement{
+		Meta:       p.curToken,
+		Statements: []ast.Statement{},
+	}
+	caseLeading := p.curToken.Leading
+	switch p.curToken.Token.Type {
+	case token.CASE:
+		p.nextToken() // match expression
+
+		matchExp := &ast.InfixExpression{
+			Meta: p.curToken,
+		}
+		switch p.curToken.Token.Type {
+		case token.STRING:
+			exp, err := p.parseExpression(LOWEST)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			matchExp.Operator = "=="
+			matchExp.Right = exp
+		case token.REGEX_MATCH:
+			exp, err := p.parsePrefixExpression()
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			matchExp.Operator = "~"
+			matchExp.Right = exp.Right
+		default:
+			return nil, UnexpectedToken(p.curToken, "string", "~")
+		}
+		stmt.Test = matchExp
+	case token.DEFAULT:
+		// nothing to do
+	default:
+		return nil, UnexpectedToken(p.curToken, "case", "default")
+	}
+
+	caseTrailing := p.trailing()
+	if !p.expectPeek(token.COLON) {
+		return nil, errors.WithStack(MissingColon(p.curToken))
+	}
+	for !p.peekTokenIs(token.CASE) && !p.peekTokenIs(token.DEFAULT) && !p.peekTokenIs(token.RIGHT_BRACE) {
+		s, err := p.parseStatement()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		stmt.Statements = append(stmt.Statements, s)
+		if p.prevTokenIs(token.BREAK) || p.prevTokenIs(token.FALLTHROUGH) {
+			break
+		}
+	}
+
+	stmt.Meta.Leading = caseLeading
+	stmt.Meta.Trailing = caseTrailing
 	return stmt, nil
 }
 

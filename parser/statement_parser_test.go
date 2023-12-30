@@ -779,6 +779,342 @@ sub vcl_recv {
 	})
 }
 
+func TestParseSwitchStatement(t *testing.T) {
+	t.Run("switch statement", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case "1":
+		esi;
+		break;
+	default:
+		esi;
+		fallthrough;
+	case ~/* infix */"[2-3]":
+		esi;
+		break;
+	} 
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SwitchStatement{
+								Meta: ast.New(T, 1, comments("// Switch")),
+								Control: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "req.http.host",
+								},
+								Default: 1,
+								Cases: []*ast.CaseStatement{
+									{
+										Meta: ast.New(T, 2),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "==",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2),
+												Value: "1"},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+									{
+										Meta: ast.New(T, 2),
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.FallthroughStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+									{
+										Meta: ast.New(T, 2),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "~",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2, comments("/* infix */")),
+												Value: "[2-3]"},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+	t.Run("switch statement with function control statement", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (uuid.version4()) {
+	case "xxx-xxx-xxx":
+		esi;
+		break;
+	} 
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SwitchStatement{
+								Meta: ast.New(T, 1, comments("// Switch")),
+								Control: &ast.FunctionCallExpression{
+									Meta: ast.New(T, 1),
+									Function: &ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "uuid.version4",
+									},
+									Arguments: []ast.Expression{},
+								},
+								Default: -1,
+								Cases: []*ast.CaseStatement{
+									{
+										Meta: ast.New(T, 2),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "==",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2),
+												Value: "xxx-xxx-xxx"},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+	t.Run("switch statement with bool literal control statement", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (true) {
+	case "1":
+		esi;
+		break;
+	default:
+		esi;
+		break;
+	} 
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SwitchStatement{
+								Meta: ast.New(T, 1, comments("// Switch")),
+								Control: &ast.Boolean{
+									Meta:  ast.New(T, 1),
+									Value: true,
+								},
+								Default: 1,
+								Cases: []*ast.CaseStatement{
+									{
+										Meta: ast.New(T, 2),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "==",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2),
+												Value: "1"},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+									{
+										Meta: ast.New(T, 2),
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+	t.Run("float literal as control should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (1.0) {
+	case "1.00":
+		esi;
+	default:
+		esi;
+		break;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("case with missing break should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case "1":
+		esi;
+	default:
+		esi;
+		break;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("duplicate cases should should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case "1":
+		esi;
+		break;
+	case "1":
+		esi;
+		break;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("duplicate default cases should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	default:
+		esi;
+		break;
+	default:
+		esi;
+		break;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("case with non-string match expression should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case 1:
+		esi;
+		break;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("fallthrough on final case should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case 1:
+		esi;
+		fallthrough;
+	} 
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+}
+
 func TestParseUnsetStatement(t *testing.T) {
 	input := `// Subroutine
 sub vcl_recv {
