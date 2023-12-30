@@ -870,6 +870,42 @@ sub foo {
 	})
 }
 
+func TestLintSwitchStatement(t *testing.T) {
+	t.Run("pass: simple switch", func(t *testing.T) {
+		input := `
+sub foo {
+	switch (req.http.foo) {
+	case "bar":
+		break;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("undefined function in control", func(t *testing.T) {
+		input := `
+sub foo {
+	switch (undefined()) {
+	case "bar":
+		break;
+	}
+}`
+		assertError(t, input)
+	})
+
+	t.Run("bool function in control", func(t *testing.T) {
+		input := `
+sub boolfn BOOL { return true; }
+sub foo {
+	switch (boolfn()) {
+	case "1":
+		break;
+	}
+}`
+		assertError(t, input)
+	})
+}
+
 func TestLintBangPrefixExpression(t *testing.T) {
 	t.Run("pass: use with variable identity", func(t *testing.T) {
 		input := `
