@@ -18,6 +18,7 @@ const (
 	END            State = "end"
 	INTERNAL_ERROR State = "_internal_error_"
 	BARE_RETURN    State = "_bare_return_"
+	FALLTHROUGH    State = "_fallthrough_"
 )
 
 func (s State) String() string {

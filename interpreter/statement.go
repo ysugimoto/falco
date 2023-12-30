@@ -12,8 +12,10 @@ import (
 	"github.com/ysugimoto/falco/interpreter/function"
 	fe "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/limitations"
+	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/types"
 )
 
 // nolint: gocognit
@@ -90,6 +92,13 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 				return state, DebugPass, nil
 			}
 
+		case *ast.SwitchStatement:
+			var state State
+			state, err = i.ProcessSwitchStatement(t, debugState)
+			if state != NONE {
+				return state, DebugPass, nil
+			}
+
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
 				return NONE, DebugPass, exception.Runtime(
@@ -114,6 +123,9 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			// When return statement is processed, return its state immediately
 			state := i.ProcessReturnStatement(t)
 			return state, DebugPass, nil
+
+		case *ast.FallthroughStatement:
+			return FALLTHROUGH, DebugPass, nil
 
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
@@ -493,4 +505,95 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 		return state, nil
 	}
 	return NONE, nil
+}
+
+func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds DebugState) (State, error) {
+	// User defined functions used in a switch control statement must have a STRING return type.
+	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+		if fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]; ok {
+			if fn.ReturnType.Value != string(value.StringType) {
+				return NONE, errors.WithStack(exception.Runtime(
+					&fnCall.Token,
+					"user defined function has invalid return type (%s) for switch, must be STRING",
+					fn.ReturnType.Value,
+				))
+			}
+		}
+	}
+	expr, err := i.ProcessExpression(stmt.Control, false)
+	if err != nil {
+		return NONE, errors.WithStack(err)
+	}
+	// Control expression must evaluate to a value type
+	if _, ok := types.ValueTypeMap[string(expr.Type())]; !ok {
+		return NONE, errors.WithStack(exception.Runtime(
+			&stmt.GetMeta().Token,
+			"switch has invalid control type %s",
+			expr.Type(),
+		))
+	}
+	control := &value.String{Value: expr.String()}
+	for n := range stmt.Cases {
+		if n == stmt.Default {
+			continue
+		}
+		state, matched, err := i.ProcessCaseStatement(stmt, n, control, false, ds)
+		if err != nil {
+			return NONE, errors.WithStack(err)
+		}
+		if matched {
+			return state, nil
+		}
+	}
+	if stmt.Default != -1 {
+		state, _, err := i.ProcessCaseStatement(stmt, stmt.Default, control, false, ds)
+		if err != nil {
+			return NONE, errors.WithStack(err)
+		}
+		return state, nil
+	}
+
+	return NONE, nil
+}
+
+func (i *Interpreter) ProcessCaseStatement(stmt *ast.SwitchStatement, offset int,
+	control value.Value, isFallthrough bool, ds DebugState) (State, bool, error) {
+
+	var matched bool
+	if stmt.Default == offset || isFallthrough {
+		matched = true
+	} else {
+		right, err := i.ProcessExpression(stmt.Cases[offset].Test.Right, false)
+		if err != nil {
+			return NONE, false, err
+		}
+		var match value.Value
+		if stmt.Cases[offset].Test.Operator == "~" {
+			match, err = operator.Regex(i.ctx, control, right)
+		} else {
+			match, err = operator.Equal(control, right)
+		}
+		if err != nil {
+			return NONE, false, errors.WithStack(err)
+		}
+		matched = value.Unwrap[*value.Boolean](match).Value
+	}
+
+	if matched {
+		state, _, err := i.ProcessBlockStatement(stmt.Cases[offset].Statements, ds)
+		if err != nil {
+			return NONE, false, errors.WithStack(err)
+		}
+		if state == FALLTHROUGH {
+			// This shouldn't be possible as it would be a syntax error from the
+			// parser to have a fallthrough on the last case of a switch.
+			// But better to give the user an error than a panic.
+			if offset+1 >= len(stmt.Cases) {
+				return NONE, false, exception.Runtime(&stmt.Token, "Fallthrough not allowed in final case")
+			}
+			return i.ProcessCaseStatement(stmt, offset+1, control, true, ds)
+		}
+		return state, true, nil
+	}
+	return NONE, false, nil
 }
