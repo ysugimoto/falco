@@ -71,7 +71,7 @@ type String struct {
 }
 
 func (v *String) String() string {
-	// Temporaly comment out to suppress not set output
+	// Temporarily comment out to suppress not set output
 	// if v.IsNotSet {
 	// 	return "(null)"
 	// }
@@ -94,7 +94,7 @@ type IP struct {
 }
 
 func (v *IP) String() string {
-	// Temporaly return empty string if notset
+	// Temporarily return empty string if notset
 	if v.IsNotSet {
 		return ""
 	}
