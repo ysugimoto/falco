@@ -71,9 +71,10 @@ type String struct {
 }
 
 func (v *String) String() string {
-	if v.IsNotSet {
-		return "[not set]"
-	}
+	// Temporarily comment out to suppress not set output
+	// if v.IsNotSet {
+	// 	return "(null)"
+	// }
 	return v.Value
 }
 func (v *String) Type() Type      { return StringType }
@@ -93,8 +94,9 @@ type IP struct {
 }
 
 func (v *IP) String() string {
+	// Temporarily return empty string if notset
 	if v.IsNotSet {
-		return "[not set]"
+		return ""
 	}
 	return v.Value.String()
 }

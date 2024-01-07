@@ -84,7 +84,7 @@ sub test_default_local_var_recv {
     set var.is_null = false;
   }
   assert.true(var.is_null);
-  assert.not_equal(var.string, "");
+  assert.equal(var.string, "");
 }
 
 // @scope: recv
