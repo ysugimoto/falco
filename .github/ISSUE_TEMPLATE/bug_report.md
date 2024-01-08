@@ -1,28 +1,55 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: "[BUG] Parser/Linter/Simulator/Testing error"
-labels: ''
+title: "[BUG]"
+labels: 'bug'
 assignees: ysugimoto
 
 ---
 
-**Describe the problem**
-A clear and concise description of what the bug is.
+Please fill all **required** sections
 
-**VCL code that cause the problem / reproduceable**
-If applicable, put your VCL code to reproduce on our environment
+### Kind of proposals
+
+**required**
+You can turn on multiple checkboxes.
+
+- []Parser
+- []Linter
+- []Simulator
+- []Testing
+
+### Describe the problem
+
+**required**
+A clear and concise description of what the bug is.
+Please write details to grab the problem 
+
+### VCL code that cause the problem / reproduceable
+
+**required**
+If applicable, put your VCL code to reproduce on our environment.
+At least simplified case even If you cannot show your VCL,
+
 Putting link to [Fastly Fiddle](https://fiddle.fastly.dev/) would be very nice to compare with Fastly actual behavior.
 
-**Screenshots**
+### Expected behavior
+
+**required**
+Corresponding to above reproduceable VCL, describe the difference and what happen falco should behave.
+
+### Screenshots
+
+**optional**
 If applicable, add console output screenshots to help explain your problem.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### Desktop (please complete the following information)
 
-**Desktop (please complete the following information):**
+**required**
  - OS: [e.g. iOS]
  - Shell [e.g. bash, zsh]
 
-**Additional context**
-Add any other context about the problem here.
+### Additional context
+
+**optional**
+Add any other context (links, documentations, etc) about the problem here.
