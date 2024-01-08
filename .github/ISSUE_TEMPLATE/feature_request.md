@@ -1,17 +1,28 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Request a feature for improving this project
 title: "[Feature]"
-labels: ''
+labels: 'feature request'
 assignees: ysugimoto
 
 ---
 
-**Describe the feature you'd like**
+### Kind of proposals
+
+You can turn on multiple checkboxes.
+
+- []Parser
+- []Linter
+- []Simulator
+- []Testing
+
+### Describe the feature
+
+**required**
 Please write solve problem when the feature is added
 
-**Put example VCL after the feature has been implemented**
+_Put example VCL after the feature has been implemented_
 
 
-**Additional context**
+### Give us your considerations
 Write some conditions, related links you've considered
