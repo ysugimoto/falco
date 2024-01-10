@@ -107,14 +107,14 @@ func BackendRequest(
 	}
 
 	// Clone client request
-	cloned, err := req.Clone()
+	cloned, err := ctx.Request.Clone()
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to clone from client request: %s", err)
 	}
 
 	// Parse backend request URI and set to cloned request
-	ru := fmt.Sprintf("%s://%s:%s%s", scheme, host, port, req.URL.Path)
-	query := req.URL.Query()
+	ru := fmt.Sprintf("%s://%s:%s%s", scheme, host, port, ctx.Request.URL.Path)
+	query := ctx.Request.URL.Query()
 	if v := query.Encode(); v != "" {
 		ru += "?" + v
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -98,7 +99,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case BEREQ_HEADER_BYTES_WRITTEN:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range bereq.Header {
+		for k, v := range flchttp.ToGoHttpHeader(bereq.Header) {
 			// add ":" character that header separator character
 			headerBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -238,11 +239,11 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 func (v *FetchScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return v.ctx.BackendRequest.Header.Get(match[1])
 	}
 
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.BackendResponse, match[1])
+		return v.ctx.BackendResponse.Header.Get(match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -388,7 +389,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.BackendResponse, match[1], val)
+		v.ctx.BackendResponse.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -402,12 +403,12 @@ func (v *FetchScopeVariables) Add(s context.Scope, name string, val value.Value)
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.BackendRequest.Header.Add(match[1], val.String())
+		v.ctx.BackendRequest.Header.Add(match[1], val)
 	} else if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.BackendResponse.Header.Add(match[1], val.String())
+		v.ctx.BackendResponse.Header.Add(match[1], val)
 	} else {
 		return v.base.Add(s, name, val)
 	}
@@ -421,7 +422,7 @@ func (v *FetchScopeVariables) Unset(s context.Scope, name string) error {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		unsetRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		v.ctx.BackendRequest.Header.Del(match[1])
 		return nil
 	}
 
@@ -430,7 +431,7 @@ func (v *FetchScopeVariables) Unset(s context.Scope, name string) error {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		unsetResponseHeaderValue(v.ctx.BackendResponse, match[1])
+		v.ctx.BackendResponse.Header.Del(match[1])
 		return nil
 	}
 

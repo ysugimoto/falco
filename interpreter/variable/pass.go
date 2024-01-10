@@ -96,7 +96,7 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 func (v *PassScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return v.ctx.BackendRequest.Header.Get(match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -179,7 +179,7 @@ func (v *PassScopeVariables) Add(s context.Scope, name string, val value.Value) 
 		return errors.WithStack(err)
 	}
 
-	v.ctx.BackendRequest.Header.Add(match[1], val.String())
+	v.ctx.BackendRequest.Header.Add(match[1], val)
 	return nil
 }
 
@@ -192,6 +192,6 @@ func (v *PassScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	unsetRequestHeaderValue(v.ctx.BackendRequest, match[1])
+	v.ctx.BackendRequest.Header.Del(match[1])
 	return nil
 }

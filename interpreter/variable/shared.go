@@ -206,7 +206,7 @@ func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value)
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return true, errors.WithStack(err)
 		}
-		setRequestHeaderValue(ctx.BackendRequest, match[1], val)
+		ctx.BackendRequest.Header.Set(match[1], val)
 		return true, nil
 	}
 	return false, nil

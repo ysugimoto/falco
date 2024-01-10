@@ -1,10 +1,8 @@
 package process
 
 import (
-	"context"
-
 	"github.com/ysugimoto/falco/ast"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/context"
 )
 
 type Flow struct {
@@ -19,9 +17,7 @@ type Flow struct {
 	Object          *HttpFlow `json:"object,omitempty"`
 }
 
-func NewFlow(ctx *icontext.Context, sub *ast.SubroutineDeclaration) *Flow {
-	c := context.Background()
-
+func NewFlow(ctx *context.Context, sub *ast.SubroutineDeclaration) *Flow {
 	token := sub.GetMeta().Token
 	f := &Flow{
 		File:       token.File,
@@ -30,10 +26,12 @@ func NewFlow(ctx *icontext.Context, sub *ast.SubroutineDeclaration) *Flow {
 		Subroutine: sub.Name.Value,
 	}
 	if ctx.Request != nil {
-		f.Request = newFlowRequest(ctx.Request.Clone(c))
+		cloned, _ := ctx.Request.Clone()
+		f.Request = newFlowRequest(cloned)
 	}
 	if ctx.BackendRequest != nil {
-		f.BackendRequest = newFlowRequest(ctx.BackendRequest.Clone(c))
+		cloned, _ := ctx.BackendRequest.Clone()
+		f.BackendRequest = newFlowRequest(cloned)
 	}
 	if ctx.BackendResponse != nil {
 		f.BackendResponse = newFlowResponse(ctx.BackendResponse)

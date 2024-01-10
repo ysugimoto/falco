@@ -185,7 +185,13 @@ func FromGoHttpHeader(h http.Header) Header {
 		values := make([][]HeaderItem, len(val))
 		for i := range val {
 			hv := []HeaderItem{}
-			obj := strings.Split(val[i], ",")
+			var obj []string
+			// If cookie header, multiple items is sparated by semicolon
+			if key == "Cookie" {
+				obj = strings.Split(val[i], ";")
+			} else {
+				obj = strings.Split(val[i], ",")
+			}
 			for _, vv := range obj {
 				if pos := strings.Index(vv, "="); pos != -1 {
 					hv = append(hv, HeaderItem{
@@ -236,7 +242,13 @@ func ToGoHttpHeader(h Header) http.Header {
 				}
 				ret = append(ret, line)
 			}
-			if r := strings.Join(ret, ","); r != "" {
+			var r string
+			if key == "Cookie" { // Cookie string should be contatenated with semicolon
+				r = strings.Join(ret, "; ")
+			} else {
+				r = strings.Join(ret, ",")
+			}
+			if r != "" {
 				v.Add(key, r)
 			}
 		}

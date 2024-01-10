@@ -162,7 +162,7 @@ func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Object, match[1])
+	return v.ctx.Object.Header.Get(match[1])
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -247,7 +247,7 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.Object, match[1], val)
+		v.ctx.Object.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -266,7 +266,7 @@ func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value)
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Object.Header.Add(match[1], val.String())
+	v.ctx.Object.Header.Add(match[1], val)
 	return nil
 }
 
@@ -280,6 +280,6 @@ func (v *ErrorScopeVariables) Unset(s context.Scope, name string) error {
 		return errors.WithStack(err)
 	}
 
-	unsetResponseHeaderValue(v.ctx.Object, match[1])
+	v.ctx.Object.Header.Del(match[1])
 	return nil
 }

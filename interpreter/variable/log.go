@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -54,7 +55,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case BEREQ_HEADER_BYTES_WRITTEN:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range bereq.Header {
+		for k, v := range flchttp.ToGoHttpHeader(bereq.Header) {
 			// add ":" character that header separator character
 			headerBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -162,7 +163,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case REQ_BYTES_READ:
 		var readBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range req.Header {
+		for k, v := range flchttp.ToGoHttpHeader(req.Header) {
 			// add ":" character that header separator character
 			readBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -242,9 +243,13 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case SEGMENTED_CACHING_CLIENT_REQ_IS_OPEN_ENDED:
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_CLIENT_REQ_IS_RANGE:
-		return &value.Boolean{Value: req.Header.Get("Range") != ""}, nil
+		v := req.Header.Get("Range")
+		return &value.Boolean{
+			Value: v.StrictString() != "",
+		}, nil
 	case SEGMENTED_CACHING_CLIENT_REQ_RANGE_HIGH:
-		spl := strings.SplitN(req.Header.Get("Range"), "-", 2)
+		rh := req.Header.Get("Range").StrictString()
+		spl := strings.SplitN(rh, "-", 2)
 		if len(spl) != 2 {
 			return &value.Integer{Value: 0}, nil
 		}
@@ -254,7 +259,8 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.Integer{Value: high}, nil
 	case SEGMENTED_CACHING_CLIENT_REQ_RANGE_LOW:
-		spl := strings.SplitN(req.Header.Get("Range"), "-", 2)
+		rh := req.Header.Get("Range").StrictString()
+		spl := strings.SplitN(rh, "-", 2)
 		if len(spl) != 2 {
 			return &value.Integer{Value: 0}, nil
 		}
@@ -325,14 +331,10 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 func (v *LogScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP response header matching
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return &value.String{
-			Value: v.ctx.Response.Header.Get(match[1]),
-		}
+		return v.ctx.Response.Header.Get(match[1])
 	}
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return &value.String{
-			Value: v.ctx.BackendRequest.Header.Get(match[1]),
-		}
+		return v.ctx.BackendRequest.Header.Get(match[1])
 	}
 	return v.base.getFromRegex(name)
 }
@@ -400,7 +402,7 @@ func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Response.Header.Set(match[1], val.String())
+		v.ctx.Response.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -419,7 +421,7 @@ func (v *LogScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		return errors.WithStack(err)
 	}
 
-	v.ctx.Response.Header.Add(match[1], val.String())
+	v.ctx.Response.Header.Add(match[1], val)
 	return nil
 }
 

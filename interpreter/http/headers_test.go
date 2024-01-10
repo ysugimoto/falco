@@ -142,6 +142,46 @@ func TestFromGoHttpHeader(t *testing.T) {
 			t.Errorf("header mismatch, diff=%s", diff)
 		}
 	})
+
+	t.Run("Cookie header", func(t *testing.T) {
+		gh := http.Header{}
+		gh.Add("Cookie", "foo=bar; dog=bark")
+
+		hv := FromGoHttpHeader(gh)
+		expect := Header{
+			"Cookie": [][]HeaderItem{
+				{
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "foo"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bar"},
+							},
+						},
+					},
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "dog"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bark"},
+							},
+						},
+					},
+				},
+			},
+		}
+		if diff := cmp.Diff(expect, hv); diff != "" {
+			t.Errorf("header mismatch, diff=%s", diff)
+		}
+	})
 }
 
 func TestToGoHttpHeader(t *testing.T) {
@@ -326,6 +366,46 @@ func TestToGoHttpHeader(t *testing.T) {
 		gh := ToGoHttpHeader(h)
 		expect := http.Header{
 			"X-Foo": []string{"1(null)"},
+		}
+		if diff := cmp.Diff(expect, gh); diff != "" {
+			t.Errorf("header mismatch, diff=%s", diff)
+		}
+	})
+
+	t.Run("Cookie header", func(t *testing.T) {
+		h := Header{
+			"Cookie": [][]HeaderItem{
+				{
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "foo"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bar"},
+							},
+						},
+					},
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "dog"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bark"},
+							},
+						},
+					},
+				},
+			},
+		}
+		gh := ToGoHttpHeader(h)
+		expect := http.Header{
+			"Cookie": []string{"foo=bar; dog=bark"},
 		}
 		if diff := cmp.Diff(expect, gh); diff != "" {
 			t.Errorf("header mismatch, diff=%s", diff)
