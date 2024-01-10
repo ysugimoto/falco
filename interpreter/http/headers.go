@@ -1,4 +1,4 @@
-package interpreter
+package http
 
 import (
 	"net/http"
@@ -8,30 +8,43 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-// Integreated interface type in order to accept *value.String or *value.LenientString
-type HttpHeaderItemType interface {
-	String() string
-	Copy() value.Value
-}
-
 // Atomic struct for header value representation
-type HttpHeaderItem struct {
+type HeaderItem struct {
 	Key   *value.LenientString
 	Value *value.LenientString
 }
 
-type HttpHeader map[string][][]HttpHeaderItem
+type Header map[string][][]HeaderItem
 
 // Implement same methods of Golang http.Header struct but arguments are different
-func (h HttpHeader) Set(key string, val HttpHeaderItemType) {
+func (h Header) Clone() Header {
+	cloned := Header{}
+	for key, headers := range h {
+		hc := make([][]HeaderItem, len(headers))
+		for i := range headers {
+			items := make([]HeaderItem, len(headers[i]))
+			for j := range headers[i] {
+				items[j] = HeaderItem{
+					Key:   headers[i][j].Key.Copy().(*value.LenientString),
+					Value: headers[i][j].Value.Copy().(*value.LenientString),
+				}
+			}
+			hc[i] = items
+		}
+		cloned[key] = hc
+	}
+	return cloned
+}
+
+func (h Header) Set(key string, val value.Value) {
 	if pos := strings.Index(key, ":"); pos != -1 {
 		h.SetObject(key[:pos], key[pos+1:], val)
 		return
 	}
 
-	h[textproto.CanonicalMIMEHeaderKey(key)] = [][]HttpHeaderItem{
+	h[textproto.CanonicalMIMEHeaderKey(key)] = [][]HeaderItem{
 		{
-			HttpHeaderItem{
+			HeaderItem{
 				Key:   copyToLenientString(val),
 				Value: nil,
 			},
@@ -39,12 +52,12 @@ func (h HttpHeader) Set(key string, val HttpHeaderItemType) {
 	}
 }
 
-func (h HttpHeader) SetObject(name, key string, val HttpHeaderItemType) {
+func (h Header) SetObject(name, key string, val value.Value) {
 	v, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok {
-		h[textproto.CanonicalMIMEHeaderKey(name)] = [][]HttpHeaderItem{
+		h[textproto.CanonicalMIMEHeaderKey(name)] = [][]HeaderItem{
 			{
-				HttpHeaderItem{
+				HeaderItem{
 					Key: &value.LenientString{
 						Values: []value.Value{
 							&value.String{Value: key},
@@ -57,7 +70,7 @@ func (h HttpHeader) SetObject(name, key string, val HttpHeaderItemType) {
 		return
 	}
 
-	v[0] = append(v[0], HttpHeaderItem{
+	v[0] = append(v[0], HeaderItem{
 		Key: &value.LenientString{
 			Values: []value.Value{
 				&value.String{Value: key},
@@ -68,13 +81,13 @@ func (h HttpHeader) SetObject(name, key string, val HttpHeaderItemType) {
 
 }
 
-func (h HttpHeader) Add(key string, val HttpHeaderItemType) {
+func (h Header) Add(key string, val value.Value) {
 	v, ok := h[textproto.CanonicalMIMEHeaderKey(key)]
 	if !ok {
 		h.Set(key, val)
 		return
 	}
-	v = append(v, []HttpHeaderItem{
+	v = append(v, []HeaderItem{
 		{
 			Key:   copyToLenientString(val),
 			Value: nil,
@@ -83,7 +96,7 @@ func (h HttpHeader) Add(key string, val HttpHeaderItemType) {
 }
 
 // Get header fields value - always returns ambiguous STRING
-func (h HttpHeader) Get(key string) *value.LenientString {
+func (h Header) Get(key string) *value.LenientString {
 	if pos := strings.Index(key, ":"); pos != -1 {
 		return h.GetObject(key[:pos], key[pos+1:])
 	}
@@ -121,7 +134,7 @@ func (h HttpHeader) Get(key string) *value.LenientString {
 }
 
 // Get header fields value for key - always returns ambiguous STRING
-func (h HttpHeader) GetObject(name, key string) *value.LenientString {
+func (h Header) GetObject(name, key string) *value.LenientString {
 	hv, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok {
 		return &value.LenientString{IsNotSet: true}
@@ -138,7 +151,7 @@ func (h HttpHeader) GetObject(name, key string) *value.LenientString {
 	return &value.LenientString{IsNotSet: true}
 }
 
-func (h HttpHeader) Del(key string) {
+func (h Header) Del(key string) {
 	if pos := strings.Index(key, ":"); pos != -1 {
 		h.DelObject(key[:pos], key[pos+1:])
 		return
@@ -149,13 +162,13 @@ func (h HttpHeader) Del(key string) {
 	delete(h, textproto.CanonicalMIMEHeaderKey(key))
 }
 
-func (h HttpHeader) DelObject(name, key string) {
+func (h Header) DelObject(name, key string) {
 	hv, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok || len(hv) == 0 {
 		return
 	}
 
-	var filtered []HttpHeaderItem
+	var filtered []HeaderItem
 	for _, v := range hv[0] {
 		if v.Key.String() == key {
 			continue
@@ -165,17 +178,17 @@ func (h HttpHeader) DelObject(name, key string) {
 	hv[0] = filtered
 }
 
-// Utility function - create struct from Golang http.Header
-func FromGoHttpHeader(h http.Header) HttpHeader {
-	v := HttpHeader{}
+// Utility function - convert to Header type from Golang http.Header
+func FromGoHttpHeader(h http.Header) Header {
+	v := Header{}
 	for key, val := range h {
-		values := make([][]HttpHeaderItem, len(val))
+		values := make([][]HeaderItem, len(val))
 		for i := range val {
-			hv := []HttpHeaderItem{}
+			hv := []HeaderItem{}
 			obj := strings.Split(val[i], ",")
 			for _, vv := range obj {
 				if pos := strings.Index(vv, "="); pos != -1 {
-					hv = append(hv, HttpHeaderItem{
+					hv = append(hv, HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: strings.TrimSpace(vv[:pos])},
@@ -189,7 +202,7 @@ func FromGoHttpHeader(h http.Header) HttpHeader {
 					})
 					continue
 				}
-				hv = append(hv, HttpHeaderItem{
+				hv = append(hv, HeaderItem{
 					Key: &value.LenientString{
 						Values: []value.Value{
 							&value.String{Value: vv},
@@ -205,8 +218,8 @@ func FromGoHttpHeader(h http.Header) HttpHeader {
 	return v
 }
 
-// Utility function - convert to Golang http.Header
-func ToGoHttpHeader(h HttpHeader) http.Header {
+// Utility function - convert to Golang http.Header from Header type
+func ToGoHttpHeader(h Header) http.Header {
 	v := http.Header{}
 	for key, val := range h {
 		for i := range val {
@@ -231,17 +244,8 @@ func ToGoHttpHeader(h HttpHeader) http.Header {
 	return v
 }
 
-// Check header key or value is implicitly empty.
-// On LenientString, NotSet value should be ignored so need type assertion
-func isImplicitEmptyString(v HttpHeaderItemType) bool {
-	if ls, ok := v.(*value.LenientString); ok {
-		return ls.StrictString() == ""
-	}
-	return v.String() == ""
-}
-
-// expliciy copy value as *value.LenientString
-func copyToLenientString(v HttpHeaderItemType) *value.LenientString {
+// Explicitly copy value as *value.LenientString
+func copyToLenientString(v value.Value) *value.LenientString {
 	switch t := v.(type) {
 	case *value.String:
 		ls := &value.LenientString{

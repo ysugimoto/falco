@@ -1,4 +1,4 @@
-package interpreter
+package http
 
 import (
 	"net/http"
@@ -15,10 +15,10 @@ func TestFromGoHttpHeader(t *testing.T) {
 		gh.Add("Content-Type", "text/plain")
 
 		hv := FromGoHttpHeader(gh)
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -28,9 +28,9 @@ func TestFromGoHttpHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -53,10 +53,10 @@ func TestFromGoHttpHeader(t *testing.T) {
 		gh.Add("X-Foo", "baz")
 
 		hv := FromGoHttpHeader(gh)
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -66,7 +66,7 @@ func TestFromGoHttpHeader(t *testing.T) {
 					},
 				},
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "baz"},
@@ -76,9 +76,9 @@ func TestFromGoHttpHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -100,10 +100,10 @@ func TestFromGoHttpHeader(t *testing.T) {
 		gh.Add("X-Foo", "bar,dog=bark")
 
 		hv := FromGoHttpHeader(gh)
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -111,7 +111,7 @@ func TestFromGoHttpHeader(t *testing.T) {
 						},
 						Value: nil,
 					},
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "dog"},
@@ -125,9 +125,9 @@ func TestFromGoHttpHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -144,12 +144,12 @@ func TestFromGoHttpHeader(t *testing.T) {
 	})
 }
 
-func TestToGoHeader(t *testing.T) {
+func TestToGoHttpHeader(t *testing.T) {
 	t.Run("Typical Go HTTP Header", func(t *testing.T) {
-		h := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		h := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -159,9 +159,9 @@ func TestToGoHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -172,9 +172,9 @@ func TestToGoHeader(t *testing.T) {
 				},
 			},
 			// should be skipped because empty header value
-			"X-Bar": [][]HttpHeaderItem{
+			"X-Bar": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key:   &value.LenientString{IsNotSet: true},
 						Value: nil,
 					},
@@ -192,10 +192,10 @@ func TestToGoHeader(t *testing.T) {
 	})
 
 	t.Run("Multiple Headers", func(t *testing.T) {
-		h := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		h := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -205,7 +205,7 @@ func TestToGoHeader(t *testing.T) {
 					},
 				},
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "baz"},
@@ -215,9 +215,9 @@ func TestToGoHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -239,10 +239,10 @@ func TestToGoHeader(t *testing.T) {
 	})
 
 	t.Run("Includes objective values", func(t *testing.T) {
-		h := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		h := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -250,7 +250,7 @@ func TestToGoHeader(t *testing.T) {
 						},
 						Value: nil,
 					},
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "dog"},
@@ -264,9 +264,9 @@ func TestToGoHeader(t *testing.T) {
 					},
 				},
 			},
-			"Content-Type": [][]HttpHeaderItem{
+			"Content-Type": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "text/plain"},
@@ -288,10 +288,10 @@ func TestToGoHeader(t *testing.T) {
 	})
 
 	t.Run("Includes notset value", func(t *testing.T) {
-		h := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		h := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							IsNotSet: true,
 						},
@@ -308,10 +308,10 @@ func TestToGoHeader(t *testing.T) {
 	})
 
 	t.Run("Includes notset value in combinated expression", func(t *testing.T) {
-		h := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		h := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.Boolean{Value: true},
@@ -333,15 +333,15 @@ func TestToGoHeader(t *testing.T) {
 	})
 }
 
-func TestHttpHeaderSet(t *testing.T) {
+func TestHeaderSet(t *testing.T) {
 	t.Run("Usual set", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "bar"})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -357,17 +357,17 @@ func TestHttpHeaderSet(t *testing.T) {
 		}
 	})
 	t.Run("Usual set (lenient)", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.LenientString{
 			Values: []value.Value{
 				&value.String{Value: "bar"},
 			},
 		})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -384,13 +384,13 @@ func TestHttpHeaderSet(t *testing.T) {
 	})
 
 	t.Run("Objective set", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo:bar", &value.String{Value: "baz"})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -411,17 +411,17 @@ func TestHttpHeaderSet(t *testing.T) {
 	})
 
 	t.Run("Objective set (lenient)", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo:bar", &value.LenientString{
 			Values: []value.Value{
 				&value.String{Value: "baz"},
 			},
 		})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "bar"},
@@ -442,17 +442,17 @@ func TestHttpHeaderSet(t *testing.T) {
 	})
 
 	t.Run("Includes notset string", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.LenientString{
 			Values: []value.Value{
 				&value.String{IsNotSet: true},
 			},
 		})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{IsNotSet: true},
@@ -469,9 +469,9 @@ func TestHttpHeaderSet(t *testing.T) {
 	})
 }
 
-func TestHttpHeaderGet(t *testing.T) {
+func TestHeaderGet(t *testing.T) {
 	t.Run("Usual get", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "bar"})
 
 		expect := &value.LenientString{
@@ -485,7 +485,7 @@ func TestHttpHeaderGet(t *testing.T) {
 		}
 	})
 	t.Run("Usual get(notset)", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{IsNotSet: true})
 
 		expect := &value.LenientString{
@@ -497,7 +497,7 @@ func TestHttpHeaderGet(t *testing.T) {
 		}
 	})
 	t.Run("Get for undefined field", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "bar"})
 
 		expect := &value.LenientString{
@@ -510,7 +510,7 @@ func TestHttpHeaderGet(t *testing.T) {
 	})
 
 	t.Run("Objective get", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo:bar", &value.String{Value: "baz"})
 
 		expect := &value.LenientString{
@@ -524,7 +524,7 @@ func TestHttpHeaderGet(t *testing.T) {
 		}
 	})
 	t.Run("Get for undefined object field", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "bar"})
 
 		expect := &value.LenientString{
@@ -537,7 +537,7 @@ func TestHttpHeaderGet(t *testing.T) {
 	})
 
 	t.Run("Object get", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo:bar", &value.String{Value: "baz"})
 
 		expect := &value.LenientString{
@@ -554,12 +554,12 @@ func TestHttpHeaderGet(t *testing.T) {
 	})
 }
 
-func TestHttpHeaderDel(t *testing.T) {
+func TestHeaderDel(t *testing.T) {
 	t.Run("Usual delete", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "baz"})
 
-		expect := HttpHeader{}
+		expect := Header{}
 		h.Del("X-Foo")
 		if diff := cmp.Diff(expect, h); diff != "" {
 			t.Errorf("header mismatch, diff=%s", diff)
@@ -567,13 +567,13 @@ func TestHttpHeaderDel(t *testing.T) {
 	})
 
 	t.Run("Delete for undefined key", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "baz"})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "baz"},
@@ -591,14 +591,14 @@ func TestHttpHeaderDel(t *testing.T) {
 	})
 
 	t.Run("Objective delete", func(t *testing.T) {
-		h := HttpHeader{}
+		h := Header{}
 		h.Set("x-foo", &value.String{Value: "baz"})
 		h.Set("x-foo:bar", &value.String{Value: "baz"})
 
-		expect := HttpHeader{
-			"X-Foo": [][]HttpHeaderItem{
+		expect := Header{
+			"X-Foo": [][]HeaderItem{
 				{
-					HttpHeaderItem{
+					HeaderItem{
 						Key: &value.LenientString{
 							Values: []value.Value{
 								&value.String{Value: "baz"},

@@ -223,16 +223,21 @@ func (v *Time) Copy() Value {
 	}
 }
 
+// Virtual director interface
+type Director interface {
+	Director() string
+}
+
 type Backend struct {
 	Value    *ast.BackendDeclaration
-	Director *DirectorConfig // wrap director as Backend
+	Director Director // wrap director as Backend
 	Literal  bool
 	Healthy  *atomic.Bool
 }
 
 func (v *Backend) String() string {
 	if v.Director != nil {
-		return v.Director.Name
+		return v.Director.Director()
 	}
 	if v.Value != nil {
 		return v.Value.Name.Value

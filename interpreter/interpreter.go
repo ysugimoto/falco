@@ -13,8 +13,10 @@ import (
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
+	"github.com/ysugimoto/falco/interpreter/transport"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 	"github.com/ysugimoto/falco/lexer"
@@ -121,7 +123,10 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	}
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
-	i.ctx.Request = r
+	i.ctx.Request, err = flchttp.FromGoHttpRequest(r)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {
@@ -167,7 +172,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if _, ok := i.ctx.Backends[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Director %s is duplicated in backend definition", t.Name.Value)
 			}
-			dc, err := i.getDirectorConfig(t)
+			dc, err := transport.GetDirector(i.ctx, t)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -280,7 +285,10 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.CacheHitItem = v
-			i.ctx.Object = i.cloneResponse(v.Response)
+			i.ctx.Object, err = v.Response.Clone()
+			if err != nil {
+				return errors.WithStack(err)
+			}
 			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
@@ -339,9 +347,12 @@ func (i *Interpreter) ProcessMiss() error {
 
 	var err error
 	if i.ctx.Backend.Director != nil {
-		i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
+		i.ctx.BackendRequest, err = transport.DirectorRequest(
+			i.ctx,
+			i.ctx.Backend.Director.(*flchttp.Director),
+		)
 	} else {
-		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
+		i.ctx.BackendRequest, err = transport.BackendRequest(i.ctx, i.ctx.Backend)
 	}
 	if err != nil {
 		return errors.WithStack(err)
@@ -447,9 +458,12 @@ func (i *Interpreter) ProcessPass() error {
 
 	var err error
 	if i.ctx.Backend.Director != nil {
-		i.ctx.BackendRequest, err = i.createDirectorRequest(i.ctx, i.ctx.Backend.Director)
+		i.ctx.BackendRequest, err = transport.DirectorRequest(
+			i.ctx,
+			i.ctx.Backend.Director.(*flchttp.Director),
+		)
 	} else {
-		i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
+		i.ctx.BackendRequest, err = transport.BackendRequest(i.ctx, i.ctx.Backend)
 	}
 	if err != nil {
 		return errors.WithStack(err)
@@ -498,9 +512,23 @@ func (i *Interpreter) ProcessFetch() error {
 		return exception.System("No backend determined on FETCH")
 	}
 
+	// Get first byte timeout from determined backend
+	var firstByteTimeout time.Duration
+	for _, v := range i.ctx.Backend.Value.Properties {
+		if v.Key.Value == "first_byte_timeout" {
+			if val, err := i.ProcessExpression(v.Value, false); err == nil {
+				firstByteTimeout = value.Unwrap[*value.RTime](val).Value
+			}
+			break
+		}
+	}
+
 	// Send request to backend
 	var err error
-	i.ctx.BackendResponse, err = i.sendBackendRequest(i.ctx.Backend)
+	i.ctx.BackendResponse, err = transport.Send(
+		i.ctx.BackendRequest,
+		firstByteTimeout,
+	)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -520,7 +548,7 @@ func (i *Interpreter) ProcessFetch() error {
 
 	// Consider cache, create client response from backend response
 	defer func() {
-		resp := i.cloneResponse(i.ctx.BackendResponse)
+		resp, _ := i.ctx.BackendResponse.Clone() // nolint:errcheck
 		// Note: compare BackendResponseCacheable value
 		// because this value will be changed by user in vcl_fetch directive
 		if i.ctx.BackendResponseCacheable.Value {
@@ -582,22 +610,22 @@ func (i *Interpreter) ProcessError() error {
 
 	if i.ctx.Object == nil {
 		if i.ctx.BackendResponse != nil {
-			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
+			i.ctx.Object, _ = i.ctx.BackendResponse.Clone() // nolint:errcheck
 			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
 			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
 		} else {
-			i.ctx.Object = &http.Response{
-				StatusCode: int(i.ctx.ObjectStatus.Value),
-				Status:     http.StatusText(int(i.ctx.ObjectStatus.Value)),
-				Proto:      "HTTP/1.0",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header: http.Header{
-					"Content-Type": {"text/plain"},
-				},
+			// Object response may have not created yet when error statement is called on RECV directive
+			h := flchttp.Header{}
+			h.Set("Content-Type", &value.String{Value: "text/plain"})
+			i.ctx.Object = &flchttp.Response{
+				StatusCode:    int(i.ctx.ObjectStatus.Value),
+				Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
+				Proto:         "HTTP/1.0",
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				Header:        h,
 				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
 				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-				Request:       i.ctx.Request,
 			}
 		}
 	}
@@ -640,17 +668,20 @@ func (i *Interpreter) ProcessError() error {
 func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
+	var err error
 	if i.ctx.Response == nil {
 		if i.ctx.BackendResponse != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
+			i.ctx.Response, err = i.ctx.BackendResponse.Clone()
 		} else if i.ctx.Object != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.Object)
+			i.ctx.Response, err = i.ctx.Object.Clone()
 		}
+	}
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
-	var err error
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
@@ -675,21 +706,25 @@ func (i *Interpreter) ProcessDeliver() error {
 		}
 
 		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
-		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+		i.ctx.Response.Header.Set("X-Served-By", &value.String{Value: cache.LocalDatacenterString})
+		i.ctx.Response.Header.Set("X-Cache", &value.String{Value: i.ctx.State})
 
 		// Additionally set cache related headers
 		if i.ctx.CacheHitItem != nil {
-			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
-			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+			i.ctx.Response.Header.Set("X-Cache-Hits", &value.String{Value: fmt.Sprint(i.ctx.CacheHitItem.Hits)})
+			i.ctx.Response.Header.Set("Age", &value.String{
+				Value: fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()),
+			})
 		} else {
-			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
+			i.ctx.Response.Header.Set("X-Cache-Hits", &value.String{Value: "0"})
 		}
 		// When Fastly-Debug header is present, add debug header but values are fakes
-		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
+		if v := i.ctx.Request.Header.Get("Fastly-Debug"); !v.IsNotSet {
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-Path",
-				fmt.Sprintf("(D %s 0) (F %s 0)", cache.LocalDatacenterString, cache.LocalDatacenterString),
+				&value.String{
+					Value: fmt.Sprintf("(D %s 0) (F %s 0)", cache.LocalDatacenterString, cache.LocalDatacenterString),
+				},
 			)
 			cacheHit := "M"
 			if i.ctx.State == "HIT" {
@@ -697,7 +732,9 @@ func (i *Interpreter) ProcessDeliver() error {
 			}
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-TTL",
-				fmt.Sprintf("(%s %s %.3f %.3f %d)", cacheHit, cache.LocalDatacenterString, 0.000, 0.000, 0),
+				&value.String{
+					Value: fmt.Sprintf("(%s %s %.3f %.3f %d)", cacheHit, cache.LocalDatacenterString, 0.000, 0.000, 0),
+				},
 			)
 		}
 
@@ -742,28 +779,31 @@ func (i *Interpreter) ProcessLog() error {
 
 var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
-func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
-	if v := resp.Header.Get("Surrogate-Control"); v != "" {
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+func (i *Interpreter) determineCacheTTL(resp *flchttp.Response) time.Duration {
+	if v := resp.Header.Get("Surrogate-Control"); !v.IsNotSet {
+		val := v.StrictString()
+		if strings.HasPrefix(val, "max-age=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(val, "max-age=") + "s"); err == nil {
 				return dur
 			}
 		}
 	}
-	if v := resp.Header.Get("Cache-Control"); v != "" {
-		if strings.HasPrefix(v, "s-maxage=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+	if v := resp.Header.Get("Cache-Control"); !v.IsNotSet {
+		val := v.StrictString()
+		if strings.HasPrefix(val, "s-maxage=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(val, "s-maxage=") + "s"); err == nil {
 				return dur
 			}
 		}
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if strings.HasPrefix(val, "max-age=") {
+			if dur, err := time.ParseDuration(strings.TrimPrefix(val, "max-age=") + "s"); err == nil {
 				return dur
 			}
 		}
 	}
-	if v := resp.Header.Get("Expires"); v != "" {
-		if d, err := time.Parse(expiresValueLayout, v); err == nil {
+	if v := resp.Header.Get("Expires"); v.IsNotSet {
+		val := v.StrictString()
+		if d, err := time.Parse(expiresValueLayout, val); err == nil {
 			return time.Until(d)
 		}
 	}
