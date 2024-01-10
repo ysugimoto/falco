@@ -67,9 +67,11 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 
 func (v *HashScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	if name == "req.hash" {
-		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
+		assigned, err := doAssign(v.ctx.RequestHash, operator, val)
+		if err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.RequestHash = coerceString(assigned)
 		return nil
 	}
 	// If not found, pass to all scope value

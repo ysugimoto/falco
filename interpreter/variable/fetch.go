@@ -252,14 +252,16 @@ func (v *FetchScopeVariables) getFromRegex(name string) value.Value {
 func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	bereq := v.ctx.BackendRequest
 	beresp := v.ctx.BackendResponse
+	var assigned value.Value
+	var err error
 
 	switch name {
 	case BEREQ_METHOD:
 		left := &value.String{Value: bereq.Method}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		bereq.Method = left.Value
+		bereq.Method = coerceString(assigned).Value
 		return nil
 	case BEREQ_REQUEST:
 		return v.Set(s, "bereq.method", operator, val)
@@ -272,10 +274,10 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 			u += "#" + fragment
 		}
 		left := &value.String{Value: u}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := url.Parse(coerceString(assigned).Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -285,7 +287,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		bereq.URL.RawFragment = parsed.RawFragment
 		return nil
 	case BERESP_BROTLI:
-		if err := doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseBrotli, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		if v.ctx.BackendResponseBrotli.Value {
@@ -293,27 +295,27 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case BERESP_CACHEABLE:
-		if err := doAssign(v.ctx.BackendResponseCacheable, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseCacheable, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_DO_ESI:
-		if err := doAssign(v.ctx.BackendResponseDoESI, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseDoESI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_DO_STREAM:
-		if err := doAssign(v.ctx.BackendResponseDoStream, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseDoStream, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_GRACE:
-		if err := doAssign(v.ctx.BackendResponseGrace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_GZIP:
-		if err := doAssign(v.ctx.BackendResponseGzip, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseGzip, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		if v.ctx.BackendResponseGzip.Value {
@@ -321,60 +323,61 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case BERESP_HIPAA:
-		if err := doAssign(v.ctx.BackendResponseHipaa, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseHipaa, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_PCI:
-		if err := doAssign(v.ctx.BackendResponsePCI, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponsePCI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_RESPONSE:
-		if err := doAssign(v.ctx.BackendResponseResponse, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.BackendResponseResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.BackendResponseResponse = coerceString(assigned)
 		return nil
 	case BERESP_SAINTMODE:
-		if err := doAssign(v.ctx.BackendResponseSaintMode, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseSaintMode, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_STALE_IF_ERROR:
-		if err := doAssign(v.ctx.BackendResponseStaleIfError, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseStaleIfError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_STALE_WHILE_REVALIDATE:
-		if err := doAssign(v.ctx.BackendResponseStaleWhileRevalidate, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseStaleWhileRevalidate, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BERESP_STATUS:
 		left := &value.Integer{}
-		if err := doAssign(left, operator, val); err != nil {
+		if _, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		beresp.StatusCode = int(left.Value)
 		beresp.Status = http.StatusText(int(left.Value))
 		return nil
 	case BERESP_TTL:
-		if err := doAssign(v.ctx.BackendResponseTTL, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BackendResponseTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ESI_ALLOW_INSIDE_CDATA:
-		if err := doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ESI:
-		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

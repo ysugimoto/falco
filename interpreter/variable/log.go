@@ -340,29 +340,33 @@ func (v *LogScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
-		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientSocketCongestionAlgorithm = coerceString(assigned)
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_PACE:
-		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_GRACE:
-		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_TTL:
-		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -372,21 +376,21 @@ func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		left := &value.String{Value: buf.String()}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Response.Body = io.NopCloser(strings.NewReader(left.Value))
+		v.ctx.Response.Body = io.NopCloser(strings.NewReader(coerceString(assigned).Value))
 		return nil
 	case RESP_STATUS:
 		left := &value.Integer{Value: int64(v.ctx.Response.StatusCode)}
-		if err := doAssign(left, operator, val); err != nil {
+		if _, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Response.StatusCode = int(left.Value)
 		v.ctx.Response.Status = http.StatusText(int(left.Value))
 		return nil
 	case SEGMENTED_CACHING_BLOCK_SIZE:
-		if err := doAssign(v.ctx.SegmentedCacheingBlockSize, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.SegmentedCacheingBlockSize, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

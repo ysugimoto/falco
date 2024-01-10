@@ -95,28 +95,32 @@ func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case OBJ_GRACE:
-		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_RESPONSE:
-		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ObjectResponse = coerceString(assigned)
 		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
-		if err := doAssign(i, operator, val); err != nil {
+		if _, err = doAssign(i, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
 		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
-		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

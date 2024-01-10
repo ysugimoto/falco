@@ -101,54 +101,58 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 }
 
 func (v *RecvScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
-		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientSocketCongestionAlgorithm = coerceString(assigned)
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_PACE:
-		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ESI_ALLOW_INSIDE_CDATA:
-		if err := doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ENABLE_RANGE_ON_PASS:
-		if err := doAssign(v.ctx.EnableRangeOnPass, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EnableRangeOnPass, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ENABLE_SEGMENTED_CACHING:
-		if err := doAssign(v.ctx.EnableSegmentedCaching, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EnableSegmentedCaching, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ESI:
-		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_HASH_ALWAYS_MISS:
-		if err := doAssign(v.ctx.HashAlwaysMiss, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.HashAlwaysMiss, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_HASH_IGNORE_BUSY:
-		if err := doAssign(v.ctx.HashIgnoreBusy, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.HashIgnoreBusy, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case SEGMENTED_CACHING_BLOCK_SIZE:
-		if err := doAssign(v.ctx.SegmentedCacheingBlockSize, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.SegmentedCacheingBlockSize, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

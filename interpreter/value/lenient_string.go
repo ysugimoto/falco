@@ -25,6 +25,11 @@ func (v *LenientString) String() string {
 				ret += NullString // add "(null)" string if value is NotSet
 			}
 		}
+		if ip, ok := v.Values[i].(*IP); ok {
+			if ip.IsNotSet {
+				ret += NullString // add "(null)" string if value is NotSet
+			}
+		}
 		ret += v.Values[i].String()
 	}
 
@@ -43,14 +48,28 @@ func (v *LenientString) StrictString() string {
 				continue
 			}
 		}
+		if ip, ok := v.Values[i].(*IP); ok {
+			if ip.IsNotSet {
+				continue
+			}
+		}
 		ret += v.Values[i].String()
 	}
 
 	return ret
 }
 
-func (v *LenientString) Append(val Value) {
-	v.Values = append(v.Values, val.Copy()) // explicit append copied value
+func (v *LenientString) ToString() *String {
+	if v.IsNotSet {
+		return &String{IsNotSet: true}
+	}
+	return &String{Value: v.StrictString()}
+}
+
+func (v *LenientString) Append(values ...Value) {
+	for i := range values {
+		v.Values = append(v.Values, values[i].Copy()) // explicit append copied value
+	}
 }
 func (v *LenientString) Type() Type      { return LenientStringType }
 func (v *LenientString) IsLiteral() bool { return false }

@@ -56,10 +56,16 @@ func (v LocalVariables) Set(name, operator string, val value.Value) error {
 			"Undefined variable %s", name,
 		))
 	}
-	if err := doAssign(left, operator, val); err != nil {
+	assigned, err := doAssign(left, operator, val)
+	if err != nil {
 		return errors.WithStack(fmt.Errorf(
 			"Failed to assign value to %s, %w", name, err,
 		))
+	}
+	if left.Type() == value.StringType {
+		v[name] = coerceString(assigned)
+	} else {
+		v[name] = assigned
 	}
 	return nil
 }

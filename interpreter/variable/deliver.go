@@ -272,24 +272,28 @@ func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
-		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
+		if assigned, err = doAssign(&value.String{}, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientSocketCongestionAlgorithm = coerceString(assigned)
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_PACE:
-		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ESI:
-		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -299,14 +303,14 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 		left := &value.String{Value: buf.String()}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Response.Body = io.NopCloser(strings.NewReader(left.Value))
+		v.ctx.Response.Body = io.NopCloser(strings.NewReader(coerceString(assigned).Value))
 		return nil
 	case RESP_STATUS:
 		left := &value.Integer{Value: int64(v.ctx.Response.StatusCode)}
-		if err := doAssign(left, operator, val); err != nil {
+		if _, err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Response.StatusCode = int(left.Value)

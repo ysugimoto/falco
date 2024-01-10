@@ -49,13 +49,13 @@ func Equal(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
-		lv := value.Unwrap[*value.String](left)
-		rv := value.Unwrap[*value.String](right)
+		lv := value.GetString(left)
+		rv := value.GetString(right)
 		// IsNotSet string does not match all equal expression
 		if lv.IsNotSet || rv.IsNotSet {
 			return &value.Boolean{Value: false}, nil
 		}
-		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+		return &value.Boolean{Value: lv.String() == rv.String()}, nil
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(
@@ -730,14 +730,17 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		lv = value.Unwrap[*value.Boolean](left).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](left)
+		str := value.GetString(left)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical AND operator: Could not use string literal in left expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical AND operator: Could not use string literal in left expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical AND operator: left type must be falsy type, got %s", left.Type()),
@@ -748,14 +751,16 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		rv = value.Unwrap[*value.Boolean](right).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](right)
+		str := value.GetString(right)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical AND operator: Could not use string literal in right expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical AND operator: Could not use string literal in right expression, value is %s",
+					str.String()),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical AND operator: right type must be falsy type, got %s", right.Type()),
@@ -772,14 +777,17 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		lv = value.Unwrap[*value.Boolean](left).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](left)
+		str := value.GetString(left)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical OR operator: Could not use string literal in left expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical OR operator: Could not use string literal in left expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical OR operator: left type must be falsy type, got %s", left.Type()),
@@ -790,14 +798,17 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		rv = value.Unwrap[*value.Boolean](right).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](right)
+		str := value.GetString(right)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical OR operator: Could not use string literal in right expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical OR operator: Could not use string literal in right expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical OR operator: right type must be falsy type, got %s", right.Type()),
@@ -837,6 +848,29 @@ func Concat(left, right value.Value) (value.Value, error) {
 		}
 	}
 
+	var lv, rv *value.LenientString
+	var ok bool
+
+	// left side is lenient
+	if lv, ok = left.(*value.LenientString); ok {
+		if rv, ok = right.(*value.LenientString); ok {
+			lv.Append(rv.Values...)
+		} else {
+			lv.Append(&value.String{Value: right.String()})
+		}
+		return lv, nil
+	}
+	// right side is lenient
+	if rv, ok = right.(*value.LenientString); ok {
+		lv = &value.LenientString{
+			Values: []value.Value{
+				&value.String{Value: left.String()},
+			},
+		}
+		lv.Append(rv.Values...)
+		return lv, nil
+	}
+	// both side are not lenient
 	return &value.String{
 		Value: left.String() + right.String(),
 	}, nil

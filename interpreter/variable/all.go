@@ -650,58 +650,59 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch strings.ToLower(name) {
 	case CLIENT_IDENTITY:
-		if v.ctx.ClientIdentity == nil {
-			v.ctx.ClientIdentity = &value.String{Value: ""}
-		}
-		if err := doAssign(v.ctx.ClientIdentity, operator, val); err != nil {
+		if assigned, err = doAssign(&value.String{Value: ""}, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientIdentity = coerceString(assigned)
 		return nil
 	case RESP_STALE:
-		if err := doAssign(v.ctx.Stale, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.Stale, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case RESP_STALE_IS_ERROR:
-		if err := doAssign(v.ctx.StaleIsError, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.StaleIsError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case RESP_STALE_IS_REVALIDATING:
-		if err := doAssign(v.ctx.StaleIsRevalidating, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.StaleIsRevalidating, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_BACKEND:
-		if err := doAssign(v.ctx.Backend, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.Backend, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_GRACE:
 		return v.Set(s, "req.max_stale_if_error", operator, val)
 	case REQ_MAX_STALE_IF_ERROR:
-		if err := doAssign(v.ctx.MaxStaleIfError, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.MaxStaleIfError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_MAX_STALE_WHILE_REVALIDATE:
-		if err := doAssign(v.ctx.MaxStaleWhileRevalidate, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.MaxStaleWhileRevalidate, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_GEO_IP_OVERRIDE:
-		if err := doAssign(v.ctx.ClientGeoIpOverride, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientGeoIpOverride, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_METHOD:
 		left := &value.String{Value: v.ctx.Request.Method}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Request.Method = left.Value
+		v.ctx.Request.Method = coerceString(assigned).Value
 		return nil
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
@@ -714,10 +715,10 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			u += "#" + fragment
 		}
 		left := &value.String{Value: u}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := url.Parse(coerceString(assigned).Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
