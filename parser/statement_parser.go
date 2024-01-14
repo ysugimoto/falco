@@ -120,7 +120,7 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	// Note: block statement is used for declaration/statement inside like subroutine, if, elseif, else
 	// on start this statement, current token must point start of LEFT_BRACE
-	// and after on end this statement, current token must poinrt end of RIGHT_BRACE
+	// and after on end this statement, current token must point end of RIGHT_BRACE
 	b := &ast.BlockStatement{
 		Meta:       p.curToken,
 		Statements: []ast.Statement{},
@@ -130,6 +130,10 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 		stmt, err := p.parseStatement()
 		if err != nil {
 			return nil, errors.WithStack(err)
+		}
+		switch stmt.(type) {
+		case *ast.BreakStatement, *ast.FallthroughStatement:
+			return nil, UnexpectedToken(stmt.GetMeta())
 		}
 		b.Statements = append(b.Statements, stmt)
 	}

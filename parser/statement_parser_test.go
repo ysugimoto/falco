@@ -794,7 +794,7 @@ sub vcl_recv {
 	case ~/* infix */"[2-3]":
 		esi;
 		break;
-	} 
+	}
 }`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
@@ -883,7 +883,7 @@ sub vcl_recv {
 	case "xxx-xxx-xxx":
 		esi;
 		break;
-	} 
+	}
 }`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
@@ -950,7 +950,7 @@ sub vcl_recv {
 	default:
 		esi;
 		break;
-	} 
+	}
 }`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
@@ -1023,7 +1023,7 @@ sub vcl_recv {
 	default:
 		esi;
 		break;
-	} 
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
@@ -1040,7 +1040,7 @@ sub vcl_recv {
 	default:
 		esi;
 		break;
-	} 
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
@@ -1058,7 +1058,7 @@ sub vcl_recv {
 	case "1":
 		esi;
 		break;
-	} 
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
@@ -1076,7 +1076,7 @@ sub vcl_recv {
 	default:
 		esi;
 		break;
-	} 
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
@@ -1091,7 +1091,7 @@ sub vcl_recv {
 	case 1:
 		esi;
 		break;
-	} 
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
@@ -1103,10 +1103,26 @@ sub vcl_recv {
 sub vcl_recv {
 	// Switch
 	switch (req.http.host) {
-	case 1:
+	case "1":
 		esi;
 		fallthrough;
-	} 
+	}
+}`
+		_, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err == nil {
+			t.Errorf("expected error")
+		}
+	})
+	t.Run("break in nested block statement should fail", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch
+	switch (req.http.host) {
+	case "1":
+		if ("") { break; }
+		esi;
+		break;
+	}
 }`
 		_, err := New(lexer.NewFromString(input)).ParseVCL()
 		if err == nil {
