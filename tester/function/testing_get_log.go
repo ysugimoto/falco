@@ -1,8 +1,6 @@
 package function
 
 import (
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/process"
@@ -11,19 +9,15 @@ import (
 
 const Testing_get_log_Name = "testing.get_log"
 
-var Testing_get_log_ArgumentTypes = []value.Type{value.StringType, value.IntegerType}
-
 func Testing_get_log_Validate(args []value.Value) error {
-	if len(args) != 2 {
-		return errors.ArgumentNotEnough(Testing_get_log_Name, 2, args)
+	if len(args) != 1 {
+		return errors.ArgumentNotEnough(Testing_get_log_Name, 1, args)
 	}
 
-	for i := range Testing_get_log_ArgumentTypes {
-		if args[i].Type() != Testing_get_log_ArgumentTypes[i] {
-			return errors.TypeMismatch(
-				Testing_get_log_Name, i+1, Testing_get_log_ArgumentTypes[i], args[i].Type(),
-			)
-		}
+	if args[0].Type() != value.IntegerType {
+		return errors.TypeMismatch(
+			Testing_get_log_Name, 1, value.IntegerType, args[0].Type(),
+		)
 	}
 	return nil
 }
@@ -38,18 +32,11 @@ func Testing_get_log(
 		return nil, errors.NewTestingError(err.Error())
 	}
 
-	state := strings.ToUpper(value.Unwrap[*value.String](args[0]).Value)
-	offset := int(value.Unwrap[*value.Integer](args[1]).Value)
-	var i int
+	offset := int(value.Unwrap[*value.Integer](args[0]).Value)
 
-	for _, l := range proc.Logs {
-		if l.Scope == state {
-			if i == offset {
-				return &value.String{Value: l.Message}, nil
-			}
-			i += 1
-		}
+	if offset >= len(proc.Logs) {
+		return value.Null, nil
 	}
 
-	return value.Null, nil
+	return &value.String{Value: proc.Logs[offset].Message}, nil
 }

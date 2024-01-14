@@ -164,6 +164,7 @@ We describe them following table and examples:
 | testing.inspect              | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
+| testing.get_log              | FUNCTION   | Access log messages emitted in the test case                                                 |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -184,6 +185,7 @@ We describe them following table and examples:
 | assert.restart               | FUNCTION   | Assert restart statement has called                                                          |
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
+| assert.is_json               | FUNCTION   | Assert actual string should be valid JSON                                                    |
 
 ----
 
@@ -318,6 +320,24 @@ sub test_vcl {
 
     // Assert injected value
     assert.equal(table.lookup(example_dict, "foo", ""), "bar");
+}
+```
+
+----
+
+### testing.get_log(INTEGER offset)
+
+
+
+```vcl
+
+// @scope: recv
+sub test_vcl {
+    // call vcl_recv Fastly reserved subroutine in RECV scope,
+    testing.call_subroutine("vcl_recv");
+
+    // Assert first log message
+    assert.equal(testing.get_log(0), "bar");
 }
 ```
 
@@ -620,6 +640,7 @@ sub test_vcl {
 
 ----
 
+<<<<<<< HEAD
 ### assert.subroutine_called(STRING name [, INTEGER times, STRING message])
 
 Assert subroutine has called in testing subroutine (with times).
@@ -704,3 +725,24 @@ sub test_vcl {
 }
 ```
 
+=======
+### assert.is_json(STRING actual [, STRING message])
+
+Assert actual string should be valid JSON.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+
+    set var.testing = "[1,2,3]";
+
+    // Pass because value contains valid JSON array.
+    assert.is_json(var.testing);
+
+    set var.testing = "[1,2,3,]";
+
+    // Fail because value contains array with trailing comma.
+    assert.is_json(var.testing);
+}
+```
+>>>>>>> 3f09bb4 (cleanup)
