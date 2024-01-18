@@ -124,9 +124,6 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			state := i.ProcessReturnStatement(t)
 			return state, DebugPass, nil
 
-		case *ast.FallthroughStatement:
-			return FALLTHROUGH, DebugPass, nil
-
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
 				return NONE, DebugPass, exception.Runtime(
@@ -584,7 +581,7 @@ func (i *Interpreter) ProcessCaseStatement(stmt *ast.SwitchStatement, offset int
 		if err != nil {
 			return NONE, false, errors.WithStack(err)
 		}
-		if state == FALLTHROUGH {
+		if state == NONE && stmt.Cases[offset].Fallthrough {
 			// This shouldn't be possible as it would be a syntax error from the
 			// parser to have a fallthrough on the last case of a switch.
 			// But better to give the user an error than a panic.

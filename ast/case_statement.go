@@ -6,8 +6,9 @@ import (
 
 type CaseStatement struct {
 	*Meta
-	Test       *InfixExpression
-	Statements []Statement
+	Test        *InfixExpression
+	Statements  []Statement
+	Fallthrough bool
 }
 
 func (s *CaseStatement) statement()     {}

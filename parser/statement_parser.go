@@ -791,8 +791,11 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		stmt.Statements = append(stmt.Statements, s)
 	}
 
-	if !p.prevTokenIs(token.BREAK) && !p.prevTokenIs(token.FALLTHROUGH) {
-		return nil, errors.WithStack(UnexpectedToken(p.prevToken, "break", "fallthrough"))
+	if !p.prevTokenIs(token.BREAK) {
+		if !p.prevTokenIs(token.FALLTHROUGH) {
+			return nil, errors.WithStack(UnexpectedToken(p.prevToken, "break", "fallthrough"))
+		}
+		stmt.Fallthrough = true
 	}
 
 	stmt.Meta.Leading = caseLeading

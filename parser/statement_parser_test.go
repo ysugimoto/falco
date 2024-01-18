@@ -843,6 +843,7 @@ sub vcl_recv {
 												Meta: ast.New(T, 2),
 											},
 										},
+										Fallthrough: true,
 									},
 									{
 										Meta: ast.New(T, 2),

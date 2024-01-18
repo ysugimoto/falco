@@ -675,6 +675,30 @@ func TestSwitchStatement(t *testing.T) {
 			isError: false,
 		},
 		{
+			name: "return in fallthrough case",
+			vcl: `
+			sub vcl_recv {
+				switch ("baz") {
+				case "bar":
+					set req.http.case = "0";
+					break;
+				case ~"az$":
+					set req.http.case = "1";
+					set req.http.fallthrough = "1";
+					return (pass);
+					fallthrough;
+				case "foo":
+					set req.http.case = "2";
+					break;
+				}
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.case":        &value.String{Value: "1"},
+				"req.http.fallthrough": &value.String{Value: "1"},
+			},
+			isError: false,
+		},
+		{
 			name: "ID control value",
 			vcl: `
 			table foo {}
