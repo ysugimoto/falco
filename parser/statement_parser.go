@@ -675,11 +675,6 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 			return nil, errors.WithStack(err)
 		}
 
-		// Clauses must end with break or fallthrough
-		if !clause.IsBreak() && !clause.IsFallthrough() {
-			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "break", "fallthrough"))
-		}
-
 		if clause.Test == nil {
 			// There cannot be multiple default clauses
 			if stmt.Default != -1 {
@@ -689,8 +684,11 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 		}
 
 		// Case tests must be unique
-		for _, c := range stmt.Cases {
-			if c.TestEqual(clause) {
+		for _, o := range stmt.Cases {
+			if clause.Test == nil || o.Test == nil || clause.Test.Operator != o.Test.Operator {
+				continue
+			}
+			if clause.Test.Right.String() == o.Test.Right.String() {
 				return nil, errors.WithStack(DuplicateCase(clause.Test.Meta))
 			}
 		}
@@ -702,10 +700,11 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 		return nil, errors.WithStack(EmptySwitch(p.peekToken))
 	}
 
-	// The last case can't be a fallthrough
+	// Final case can't be a fallthrough case.
 	lc := stmt.Cases[len(stmt.Cases)-1]
-	if lc.IsFallthrough() {
-		return nil, errors.WithStack(FinalFallthrough(lc.FinalStatement().GetMeta()))
+	ls := lc.Statements[len(lc.Statements)-1]
+	if _, ok := ls.(*ast.FallthroughStatement); ok {
+		return nil, errors.WithStack(FinalFallthrough(ls.GetMeta()))
 	}
 
 	p.nextToken()
@@ -790,9 +789,10 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 			return nil, errors.WithStack(err)
 		}
 		stmt.Statements = append(stmt.Statements, s)
-		if p.prevTokenIs(token.BREAK) || p.prevTokenIs(token.FALLTHROUGH) {
-			break
-		}
+	}
+
+	if !p.prevTokenIs(token.BREAK) && !p.prevTokenIs(token.FALLTHROUGH) {
+		return nil, errors.WithStack(UnexpectedToken(p.prevToken, "break", "fallthrough"))
 	}
 
 	stmt.Meta.Leading = caseLeading
