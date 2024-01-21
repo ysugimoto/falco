@@ -3,10 +3,12 @@
 package builtin
 
 import (
-	"net/http"
+	"net/textproto"
+	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -37,9 +39,9 @@ func Setcookie_delete_by_name(ctx *context.Context, args ...value.Value) (value.
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	name := value.GetString(args[1]).String()
 
-	var resp *http.Response
+	var resp *flchttp.Response
 	switch where.Value {
 	case "beresp":
 		if !ctx.Scope.Is(context.FetchScope) {
@@ -57,24 +59,29 @@ func Setcookie_delete_by_name(ctx *context.Context, args ...value.Value) (value.
 		)
 	}
 
-	var ignored bool
-	var cookies []string
-	for _, c := range resp.Cookies() {
-		if c.Name == name.Value {
-			ignored = true
-			continue
-		}
-		cookies = append(cookies, c.String())
-	}
-
-	if !ignored {
+	setCookies, ok := resp.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")]
+	if !ok {
 		return &value.Boolean{Value: false}, nil
 	}
 
-	// Replace Set-Cookie headers
-	resp.Header.Del("Set-Cookie")
-	for _, c := range cookies {
-		resp.Header.Add("Set-Cookie", c)
+	var isDeleted bool
+	var filtered [][]flchttp.HeaderItem
+	for _, sc := range setCookies {
+		if !strings.HasPrefix(sc[0].Key.StrictString(), name+"=") {
+			continue
+		}
+		filtered = append(filtered, sc)
+		isDeleted = true
+	}
+
+	if !isDeleted {
+		return &value.Boolean{Value: false}, nil
+	}
+
+	if len(filtered) == 0 {
+		resp.Header.Del("Set-Cookie")
+	} else {
+		resp.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")] = filtered
 	}
 	return &value.Boolean{Value: true}, nil
 }

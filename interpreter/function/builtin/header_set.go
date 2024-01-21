@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/function/shared"
@@ -17,7 +16,7 @@ import (
 
 const Header_set_Name = "header.set"
 
-var Header_set_ArgumentTypes = []value.Type{value.IdentType}
+var Header_set_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.StringType}
 
 func Header_set_Validate(args []value.Value) error {
 	if len(args) != 3 {
@@ -51,46 +50,40 @@ func Header_set(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
-
-	name := &value.String{}
-	if err := assign.Assign(name, args[1]); err != nil {
-		return value.Null, errors.New(Header_set_Name, err.Error())
-	}
+	name := value.GetString(args[1]).String()
+	val := value.GetString(args[2])
 
 	// Invalid header and protected header are no effect
-	if !shared.IsValidHeader(name.Value) {
+	if !shared.IsValidHeader(name) {
 		return value.Null, nil
 	}
-	if err := limitations.CheckProtectedHeader(name.Value); err != nil {
+	if err := limitations.CheckProtectedHeader(name); err != nil {
 		return value.Null, nil
-	}
-
-	val := &value.String{}
-	if err := assign.Assign(val, args[2]); err != nil {
-		return value.Null, errors.New(Header_set_Name, err.Error())
 	}
 
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			header_set(ctx.Request.Header, name.Value, val.Value)
+			ctx.Request.Header.Set(name, val)
 		}
 	case "resp":
 		if ctx.Response != nil {
-			header_set(ctx.Response.Header, name.Value, val.Value)
+			ctx.Response.Header.Set(name, val)
 		}
 	case "obj":
 		if ctx.Object != nil {
-			header_set(ctx.Object.Header, name.Value, val.Value)
+			ctx.Object.Header.Set(name, val)
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			header_set(ctx.BackendRequest.Header, name.Value, val.Value)
+			ctx.BackendRequest.Header.Set(name, val)
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			header_set(ctx.BackendResponse.Header, name.Value, val.Value)
+			ctx.BackendResponse.Header.Set(name, val)
 		}
+	default:
+		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)
 	}
 
 	return value.Null, nil

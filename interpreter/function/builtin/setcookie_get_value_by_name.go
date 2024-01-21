@@ -3,10 +3,12 @@
 package builtin
 
 import (
-	"net/http"
+	"net/textproto"
+	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -37,9 +39,9 @@ func Setcookie_get_value_by_name(ctx *context.Context, args ...value.Value) (val
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	name := value.GetString(args[1]).String()
 
-	var resp *http.Response
+	var resp *flchttp.Response
 	switch where.Value {
 	case "beresp":
 		if !ctx.Scope.Is(context.FetchScope) {
@@ -61,19 +63,23 @@ func Setcookie_get_value_by_name(ctx *context.Context, args ...value.Value) (val
 		)
 	}
 
-	var found bool
-	var cookie string
-	for _, c := range resp.Cookies() {
-		// Consider multiple cookies.
-		// From the function spec, function should return the last matched one
-		if c.Name == name.Value {
-			found = true
-			cookie = c.Value
-		}
-	}
-
-	if !found {
+	setCookies, ok := resp.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")]
+	if !ok {
 		return &value.String{IsNotSet: true}, nil
 	}
-	return &value.String{Value: cookie}, nil
+
+	for _, sc := range setCookies {
+		val := sc[0].Key.StrictString()
+		idx := strings.Index(val, name+"=")
+		if idx == -1 {
+			continue
+		}
+		v, _, found := strings.Cut(string(val[idx+1]), ";")
+		if !found {
+			continue
+		}
+		return &value.String{Value: v}, nil
+	}
+
+	return &value.String{IsNotSet: true}, nil
 }
