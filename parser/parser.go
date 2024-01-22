@@ -132,6 +132,10 @@ func (p *Parser) trailing() ast.Comments {
 	return cs
 }
 
+func (p *Parser) prevTokenIs(t token.TokenType) bool {
+	return p.prevToken.Token.Type == t
+}
+
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Token.Type == t
 }
