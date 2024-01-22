@@ -507,14 +507,13 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds DebugState) (State, error) {
 	// User defined functions used in a switch control statement must have a STRING return type.
 	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
-		if fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]; ok {
-			if fn.ReturnType.Value != string(value.StringType) {
-				return NONE, errors.WithStack(exception.Runtime(
-					&fnCall.Token,
-					"user defined function has invalid return type (%s) for switch, must be STRING",
-					fn.ReturnType.Value,
-				))
-			}
+		fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]
+		if ok && fn.ReturnType.Value != string(value.StringType) {
+			return NONE, errors.WithStack(exception.Runtime(
+				&fnCall.Token,
+				"user defined function has invalid return type (%s) for switch, must be STRING",
+				fn.ReturnType.Value,
+			))
 		}
 	}
 	expr, err := i.ProcessExpression(stmt.Control, false)
@@ -542,6 +541,7 @@ func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds Debug
 			return state, nil
 		}
 	}
+	// No cases matched, check if switch has a default case.
 	if stmt.Default != -1 {
 		state, _, err := i.ProcessCaseStatement(stmt, stmt.Default, control, false, ds)
 		if err != nil {
@@ -553,10 +553,17 @@ func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds Debug
 	return NONE, nil
 }
 
-func (i *Interpreter) ProcessCaseStatement(stmt *ast.SwitchStatement, offset int,
-	control value.Value, isFallthrough bool, ds DebugState) (State, bool, error) {
+func (i *Interpreter) ProcessCaseStatement(
+	stmt *ast.SwitchStatement,
+	offset int,
+	control value.Value,
+	isFallthrough bool,
+	ds DebugState,
+) (State, bool, error) {
 
 	var matched bool
+	// If the case offset being processed is the default case or if a fallthrough
+	// is being handled skip processing of case test expression.
 	if stmt.Default == offset || isFallthrough {
 		matched = true
 	} else {

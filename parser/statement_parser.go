@@ -619,7 +619,7 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 	stmt := &ast.SwitchStatement{
 		Meta:    p.curToken,
-		Default: -1,
+		Default: -1, // -1 is used to represent a switch without a default case.
 	}
 
 	if !p.expectPeek(token.LEFT_PAREN) {
