@@ -19,7 +19,13 @@ import (
 )
 
 // nolint: gocognit
-func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds DebugState) (State, DebugState, error) {
+func (i *Interpreter) ProcessBlockStatement(
+	statements []ast.Statement,
+	ds DebugState,
+	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
+	isReturnAsValue bool,
+) (value.Value, State, DebugState, error) {
+
 	var err error
 	var debugState DebugState = ds
 
@@ -45,12 +51,18 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			err = i.ProcessLogStatement(t)
 		case *ast.SyntheticStatement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, DebugPass, exception.Runtime(&t.Token, "synthetic statement is only available in ERROR scope")
+				return value.Null, NONE, DebugPass, exception.Runtime(
+					&t.Token,
+					"synthetic statement is only available in ERROR scope",
+				)
 			}
 			err = i.ProcessSyntheticStatement(t)
 		case *ast.SyntheticBase64Statement:
 			if !i.ctx.Scope.Is(context.ErrorScope) {
-				return NONE, DebugPass, exception.Runtime(&t.Token, "synthetic.base64 statement is only available in ERROR scope")
+				return value.Null, NONE, DebugPass, exception.Runtime(
+					&t.Token,
+					"synthetic.base64 statement is only available in ERROR scope",
+				)
 			}
 			err = i.ProcessSyntheticBase64Statement(t)
 
@@ -70,7 +82,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 				state, err = i.ProcessFunctionCallStatement(t, DebugStepOut)
 			}
 			if state != NONE {
-				return state, DebugPass, nil
+				return value.Null, state, DebugPass, nil
 			}
 
 		case *ast.CallStatement:
@@ -82,26 +94,32 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 				state, err = i.ProcessCallStatement(t, DebugStepOut)
 			}
 			if state != NONE {
-				return state, DebugPass, nil
+				return value.Null, state, DebugPass, nil
 			}
 
 		case *ast.IfStatement:
+			var val value.Value
 			var state State
-			state, err = i.ProcessIfStatement(t, debugState)
+			// If statement has nested block statement so need to pass current isReturnAsValue
+			// and evaluate return value is either value.Value or state
+			val, state, err = i.ProcessIfStatement(t, debugState, isReturnAsValue)
+			if val != value.Null {
+				return val, NONE, DebugPass, err
+			}
 			if state != NONE {
-				return state, DebugPass, nil
+				return value.Null, state, DebugPass, nil
 			}
 
 		case *ast.SwitchStatement:
 			var state State
 			state, err = i.ProcessSwitchStatement(t, debugState)
 			if state != NONE {
-				return state, DebugPass, nil
+				return value.Null, state, DebugPass, nil
 			}
 
 		case *ast.RestartStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.FetchScope, context.ErrorScope, context.DeliverScope) {
-				return NONE, DebugPass, exception.Runtime(
+				return value.Null, NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"restart statement is only available in RECV, HIT, FETCH, ERROR, and DELIVER scope",
 				)
@@ -109,7 +127,7 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 
 			// If next restart will exceed Fastly restart count limit, raise an exception
 			if i.ctx.Restarts+1 > limitations.MaxVarnishRestarts {
-				return NONE, DebugPass, exception.Runtime(
+				return value.Null, NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"Max restart limit exceeded. Requests are limited to %d restarts",
 					limitations.MaxVarnishRestarts,
@@ -117,47 +135,60 @@ func (i *Interpreter) ProcessBlockStatement(statements []ast.Statement, ds Debug
 			}
 
 			// restart statement force change state to RESTART
-			return RESTART, DebugPass, nil
+			return value.Null, RESTART, DebugPass, nil
 
 		case *ast.ReturnStatement:
+			// In functional subroutine, return statement could return value
+			if isReturnAsValue {
+				val, state, err := i.ProcessExpressionReturnStatement(t)
+				if err != nil {
+					return value.Null, NONE, DebugPass, errors.WithStack(err)
+				}
+				return val, state, DebugPass, err
+			}
 			// When return statement is processed, return its state immediately
 			state := i.ProcessReturnStatement(t)
-			return state, DebugPass, nil
+			return value.Null, state, DebugPass, nil
 
 		case *ast.ErrorStatement:
 			if !i.ctx.Scope.Is(context.RecvScope, context.HitScope, context.MissScope, context.PassScope, context.FetchScope) {
-				return NONE, DebugPass, exception.Runtime(
+				return value.Null, NONE, DebugPass, exception.Runtime(
 					&t.Token,
 					"error statement is only available in RECV, HIT, MISS, PASS, and FETCH scope")
 			}
 
 			// restart statement force change state to ERROR
 			if err := i.ProcessErrorStatement(t); err != nil {
-				return ERROR, DebugPass, errors.WithStack(err)
+				return value.Null, ERROR, DebugPass, errors.WithStack(err)
 			}
-			return ERROR, DebugPass, nil
+			return value.Null, ERROR, DebugPass, nil
 
 		case *ast.BlockStatement:
-			state, _, err := i.ProcessBlockStatement(t.Statements, debugState)
+			// nested block statement also need to pass current isReturnAsValue
+			// and evaluate return value is either value.Value or state
+			val, state, _, err := i.ProcessBlockStatement(t.Statements, debugState, isReturnAsValue)
 			if err != nil {
-				return NONE, DebugPass, errors.WithStack(err)
+				return value.Null, NONE, DebugPass, errors.WithStack(err)
+			}
+			if val != value.Null {
+				return val, NONE, DebugPass, nil
 			}
 			if state != NONE {
-				return state, DebugPass, nil
+				return value.Null, state, DebugPass, nil
 			}
 
 		// Others, no effects
 		case *ast.EsiStatement:
 			// Nothing to do, actually enable ESI in origin request
 			if err := i.ProcessEsiStatement(t); err != nil {
-				return NONE, DebugPass, errors.WithStack(err)
+				return value.Null, NONE, DebugPass, errors.WithStack(err)
 			}
 		}
 		if err != nil {
-			return INTERNAL_ERROR, DebugPass, errors.WithStack(err)
+			return value.Null, INTERNAL_ERROR, DebugPass, errors.WithStack(err)
 		}
 	}
-	return NONE, DebugPass, nil
+	return value.Null, NONE, DebugPass, nil
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
@@ -422,33 +453,44 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	return NONE, nil
 }
 
-func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (State, error) {
+// nolint:gocognit
+func (i *Interpreter) ProcessIfStatement(
+	stmt *ast.IfStatement,
+	ds DebugState,
+	isReturnAsValue bool,
+) (value.Value, State, error) {
 	// if
 	cond, err := i.ProcessExpression(stmt.Condition, true)
 	if err != nil {
-		return NONE, errors.WithStack(err)
+		return value.Null, NONE, errors.WithStack(err)
 	}
 
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+			val, state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds, isReturnAsValue)
 			if err != nil {
-				return NONE, errors.WithStack(err)
+				return value.Null, NONE, errors.WithStack(err)
 			}
-			return state, nil
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			return value.Null, state, nil
 		}
 	case *value.String:
 		if !t.IsNotSet {
-			state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds)
+			val, state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds, isReturnAsValue)
 			if err != nil {
-				return NONE, errors.WithStack(err)
+				return value.Null, NONE, errors.WithStack(err)
 			}
-			return state, nil
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			return value.Null, state, nil
 		}
 	default:
 		if cond != value.Null {
-			return NONE, exception.Runtime(
+			return value.Null, NONE, exception.Runtime(
 				&stmt.GetMeta().Token,
 				"If condition is not boolean",
 			)
@@ -463,31 +505,37 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 		}
 		cond, err := i.ProcessExpression(ei.Condition, true)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return value.Null, NONE, errors.WithStack(err)
 		}
 
 		switch t := cond.(type) {
 		case *value.Boolean:
 			if t.Value {
-				state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds)
+				val, state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds, isReturnAsValue)
 				if err != nil {
-					return NONE, errors.WithStack(err)
+					return value.Null, NONE, errors.WithStack(err)
 				}
-				return state, nil
+				if val != value.Null {
+					return val, NONE, nil
+				}
+				return value.Null, state, nil
 			}
 		case *value.String:
 			if !t.IsNotSet {
-				state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds)
+				val, state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds, isReturnAsValue)
 				if err != nil {
-					return NONE, errors.WithStack(err)
+					return value.Null, NONE, errors.WithStack(err)
 				}
-				return state, nil
+				if val != value.Null {
+					return val, NONE, nil
+				}
+				return value.Null, state, nil
 			}
 		default:
 			if cond != value.Null {
-				return NONE, exception.Runtime(
+				return value.Null, NONE, exception.Runtime(
 					&stmt.GetMeta().Token,
-					"If condition is not boolean",
+					"else-if condition is not boolean",
 				)
 			}
 		}
@@ -495,13 +543,16 @@ func (i *Interpreter) ProcessIfStatement(stmt *ast.IfStatement, ds DebugState) (
 
 	// else
 	if stmt.Alternative != nil {
-		state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds)
+		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds, isReturnAsValue)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return value.Null, NONE, errors.WithStack(err)
 		}
-		return state, nil
+		if val != value.Null {
+			return val, NONE, nil
+		}
+		return value.Null, state, nil
 	}
-	return NONE, nil
+	return value.Null, NONE, nil
 }
 
 func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds DebugState) (State, error) {
@@ -584,7 +635,8 @@ func (i *Interpreter) ProcessCaseStatement(
 	}
 
 	if matched {
-		state, _, err := i.ProcessBlockStatement(stmt.Cases[offset].Statements, ds)
+		// third argument must be false because switch case statement could not return value
+		_, state, _, err := i.ProcessBlockStatement(stmt.Cases[offset].Statements, ds, false)
 		if err != nil {
 			return NONE, false, errors.WithStack(err)
 		}

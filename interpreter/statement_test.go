@@ -273,12 +273,98 @@ func TestBlockStatement(t *testing.T) {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
 		ip.ctx.BackendRequest = req
-		state, _, err := ip.ProcessBlockStatement(tt.stmts, DebugPass)
+		_, state, _, err := ip.ProcessBlockStatement(tt.stmts, DebugPass, false)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
 		if state != tt.expected_state {
 			t.Errorf("expect: \"%s\", actual: \"%s\"", tt.expected_state, state)
+		}
+	}
+}
+
+func TestBlockStatementWithReturnValue(t *testing.T) {
+	var pass ast.Expression = &ast.Integer{
+		Value: 1,
+		Meta:  &ast.Meta{},
+	}
+	var invalid ast.Expression = &ast.String{
+		Value: "invalid",
+		Meta:  &ast.Meta{},
+	}
+	tests := []struct {
+		name  string
+		scope context.Scope
+		stmts []ast.Statement
+	}{
+		{
+			name:  "block statement will return value",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.ReturnStatement{
+					ReturnExpression: &pass,
+				},
+			},
+		},
+		{
+			name:  "nested block statement with return value",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.ReturnStatement{
+							ReturnExpression: &pass,
+						},
+					},
+				},
+				&ast.ReturnStatement{
+					ReturnExpression: &invalid,
+				},
+			},
+		},
+		{
+			name:  "return in if statement should stop block execution and return value",
+			scope: context.RecvScope,
+			stmts: []ast.Statement{
+				&ast.IfStatement{
+					Condition: &ast.Boolean{Value: true},
+					Consequence: &ast.BlockStatement{
+						Statements: []ast.Statement{
+							&ast.ReturnStatement{
+								ReturnExpression: &pass,
+							},
+						},
+					},
+				},
+				&ast.ReturnStatement{
+					ReturnExpression: &invalid,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		ip := New(nil)
+
+		ip.ctx = context.New()
+		ip.SetScope(tt.scope)
+
+		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		ip.ctx.BackendRequest = req
+		val, state, _, err := ip.ProcessBlockStatement(tt.stmts, DebugPass, true)
+		if err != nil {
+			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		}
+		if state != NONE {
+			t.Errorf("Expected return value, state %s returned", state)
+		}
+		if v, ok := val.(*value.Integer); !ok {
+			t.Errorf("(%s) block statement should return INTEGER, returns %s", tt.name, val.Type())
+		} else if v.Value != 1 {
+			t.Errorf("(%s) expect: \"%d\", actual: \"%d\"", tt.name, 1, v.Value)
 		}
 	}
 }
