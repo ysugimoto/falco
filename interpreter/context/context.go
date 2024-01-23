@@ -109,6 +109,8 @@ type Context struct {
 	WafLogged                           *value.Boolean
 	WafMessage                          *value.String
 	WafPassed                           *value.Boolean
+	WafPHPInjectionScore                *value.Integer
+	WafRCEScore                         *value.Integer
 	WafRFIScore                         *value.Integer
 	WafRuleId                           *value.Integer
 	WafSessionFixationScore             *value.Integer
@@ -213,6 +215,8 @@ func New(options ...Option) *Context {
 		WafLogged:                           &value.Boolean{},
 		WafMessage:                          &value.String{},
 		WafPassed:                           &value.Boolean{},
+		WafPHPInjectionScore:                &value.Integer{},
+		WafRCEScore:                         &value.Integer{},
 		WafRFIScore:                         &value.Integer{},
 		WafRuleId:                           &value.Integer{},
 		WafSessionFixationScore:             &value.Integer{},

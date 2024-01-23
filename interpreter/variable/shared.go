@@ -184,9 +184,9 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	case WAF_PASSED:
 		return ctx.WafPassed, nil
 	case WAF_PHP_INJECTION_SCORE:
-		return &value.Integer{Value: 0}, nil
+		return ctx.WafPHPInjectionScore, nil
 	case WAF_RCE_SCORE:
-		return &value.Integer{Value: 0}, nil
+		return ctx.WafRCEScore, nil
 	case WAF_RFI_SCORE:
 		return ctx.WafRFIScore, nil
 	case WAF_RULE_ID:
@@ -294,7 +294,17 @@ func SetWafVariables(ctx *context.Context, name, operator string, val value.Valu
 			return true, errors.WithStack(err)
 		}
 		return true, nil
-	case WAF_FAILURES, WAF_PHP_INJECTION_SCORE, WAF_RCE_SCORE:
+	case WAF_PHP_INJECTION_SCORE:
+		if err := doAssign(ctx.WafPHPInjectionScore, operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
+		return true, nil
+	case WAF_RCE_SCORE:
+		if err := doAssign(ctx.WafRCEScore, operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
+		return true, nil
+	case WAF_FAILURES:
 		return false, errors.WithStack(fmt.Errorf(
 			"Variable %s could not set value", name,
 		))
