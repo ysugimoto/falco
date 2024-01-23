@@ -124,8 +124,12 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 				return value.Null, state, nil
 			}
 		case *ast.SwitchStatement:
+			var val value.Value
 			var state State
-			state, err = i.ProcessSwitchStatement(t, debugState)
+			val, state, err = i.ProcessSwitchStatement(t, debugState, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
 			if state != NONE {
 				return value.Null, state, nil
 			}
