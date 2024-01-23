@@ -176,7 +176,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 
 	return value.Null, NONE, exception.Runtime(
 		&sub.GetMeta().Token,
-		"Functioncal subroutine %s did not return any values",
+		"Functional subroutine %s did not return any values",
 		sub.Name.Value,
 	)
 }
@@ -189,7 +189,7 @@ func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement
 	if !val.IsLiteral() {
 		return value.Null, NONE, exception.Runtime(
 			&stmt.GetMeta().Token,
-			"Functioncal subroutine only can return value only accepts a literal value",
+			"Functional subroutine only can return value only accepts a literal value",
 		)
 	}
 
