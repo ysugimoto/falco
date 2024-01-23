@@ -44,6 +44,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	return state, err
 }
 
+// nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
@@ -90,6 +91,16 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		// case *ast.GotoDestinationStatement:
 		// 	err = i.ProcessGotoDesticationStatement(t)
 		// Probably change status statements
+		case *ast.BlockStatement:
+			var val value.Value
+			var state State
+			val, state, _, err = i.ProcessBlockStatement(t.Statements, ds, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			if state != NONE {
+				return value.Null, state, nil
+			}
 		case *ast.FunctionCallStatement:
 			var state State
 			// Enable breakpoint if current debug state is step-in
