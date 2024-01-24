@@ -395,23 +395,12 @@ func (l *Lexer) skipWhitespace() {
 }
 
 func (l *Lexer) readString() string {
-	var isEscape bool
 	var rs []rune
 	l.readChar()
 	for {
-		if (l.char == '"' && !isEscape) || l.char == 0x00 {
+		if l.char == '"' || l.char == 0x00 {
 			break
 		}
-		// escape sequence
-		if l.char == 0x5C {
-			if l.peekChar() != 0x5C {
-				isEscape = true
-			}
-			rs = append(rs, l.char)
-			l.readChar()
-			continue
-		}
-		isEscape = false
 		rs = append(rs, l.char)
 		l.readChar()
 	}
@@ -420,7 +409,6 @@ func (l *Lexer) readString() string {
 }
 
 func (l *Lexer) readBracketString() string {
-	var isEscape bool
 	var rs []rune
 	l.readChar()
 	for {
@@ -428,32 +416,13 @@ func (l *Lexer) readBracketString() string {
 			break
 		}
 		if l.char == '"' {
-			if isEscape {
-				isEscape = false
-				rs = append(rs, l.char)
-				l.readChar()
-				continue
-			}
 			if l.peekChar() == '}' {
 				l.readChar()
 				break
 			}
 		}
-		// escape sequence
-		if l.char == 0x5C {
-			if l.peekChar() != 0x5C {
-				isEscape = true
-			}
-			l.readChar()
-			continue
-		}
-
-		if isEscape {
-			rs = append(rs, '\\')
-		}
 		rs = append(rs, l.char)
 		l.readChar()
-		isEscape = false
 	}
 
 	return string(rs)

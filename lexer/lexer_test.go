@@ -100,7 +100,7 @@ sub vcl_recv {
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.STRING, Literal: " foobar "},
 		{Type: token.LF, Literal: "\n"},
-		{Type: token.STRING, Literal: " foo\"bar "},
+		{Type: token.STRING, Literal: ` foo\"bar `},
 		{Type: token.LF, Literal: "\n"},
 
 		// import
