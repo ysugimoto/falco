@@ -111,8 +111,12 @@ func (i *Interpreter) ProcessBlockStatement(
 			}
 
 		case *ast.SwitchStatement:
+			var val value.Value
 			var state State
-			state, err = i.ProcessSwitchStatement(t, debugState)
+			val, state, err = i.ProcessSwitchStatement(t, debugState, isReturnAsValue)
+			if val != value.Null {
+				return val, NONE, DebugPass, err
+			}
 			if state != NONE {
 				return value.Null, state, DebugPass, nil
 			}
@@ -555,12 +559,16 @@ func (i *Interpreter) ProcessIfStatement(
 	return value.Null, NONE, nil
 }
 
-func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds DebugState) (State, error) {
+func (i *Interpreter) ProcessSwitchStatement(
+	stmt *ast.SwitchStatement,
+	ds DebugState,
+	isReturnAsValue bool,
+) (value.Value, State, error) {
 	// User defined functions used in a switch control statement must have a STRING return type.
 	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
 		fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]
 		if ok && fn.ReturnType.Value != string(value.StringType) {
-			return NONE, errors.WithStack(exception.Runtime(
+			return value.Null, NONE, errors.WithStack(exception.Runtime(
 				&fnCall.Token,
 				"user defined function has invalid return type (%s) for switch, must be STRING",
 				fn.ReturnType.Value,
@@ -569,11 +577,11 @@ func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds Debug
 	}
 	expr, err := i.ProcessExpression(stmt.Control, false)
 	if err != nil {
-		return NONE, errors.WithStack(err)
+		return value.Null, NONE, errors.WithStack(err)
 	}
 	// Control expression must evaluate to a value type
 	if _, ok := types.ValueTypeMap[string(expr.Type())]; !ok {
-		return NONE, errors.WithStack(exception.Runtime(
+		return value.Null, NONE, errors.WithStack(exception.Runtime(
 			&stmt.GetMeta().Token,
 			"switch has invalid control type %s",
 			expr.Type(),
@@ -584,24 +592,30 @@ func (i *Interpreter) ProcessSwitchStatement(stmt *ast.SwitchStatement, ds Debug
 		if n == stmt.Default {
 			continue
 		}
-		state, matched, err := i.ProcessCaseStatement(stmt, n, control, false, ds)
+		val, state, matched, err := i.ProcessCaseStatement(stmt, n, control, false, ds, isReturnAsValue)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return value.Null, NONE, errors.WithStack(err)
+		}
+		if val != value.Null {
+			return val, NONE, nil
 		}
 		if matched {
-			return state, nil
+			return value.Null, state, nil
 		}
 	}
 	// No cases matched, check if switch has a default case.
 	if stmt.Default != -1 {
-		state, _, err := i.ProcessCaseStatement(stmt, stmt.Default, control, false, ds)
+		val, state, _, err := i.ProcessCaseStatement(stmt, stmt.Default, control, false, ds, isReturnAsValue)
 		if err != nil {
-			return NONE, errors.WithStack(err)
+			return value.Null, NONE, errors.WithStack(err)
 		}
-		return state, nil
+		if val != value.Null {
+			return val, NONE, nil
+		}
+		return value.Null, state, nil
 	}
 
-	return NONE, nil
+	return value.Null, NONE, nil
 }
 
 func (i *Interpreter) ProcessCaseStatement(
@@ -610,7 +624,8 @@ func (i *Interpreter) ProcessCaseStatement(
 	control value.Value,
 	isFallthrough bool,
 	ds DebugState,
-) (State, bool, error) {
+	isReturnAsValue bool,
+) (value.Value, State, bool, error) {
 
 	var matched bool
 	// If the case offset being processed is the default case or if a fallthrough
@@ -620,7 +635,7 @@ func (i *Interpreter) ProcessCaseStatement(
 	} else {
 		right, err := i.ProcessExpression(stmt.Cases[offset].Test.Right, false)
 		if err != nil {
-			return NONE, false, err
+			return value.Null, NONE, false, err
 		}
 		var match value.Value
 		if stmt.Cases[offset].Test.Operator == "~" {
@@ -629,27 +644,29 @@ func (i *Interpreter) ProcessCaseStatement(
 			match, err = operator.Equal(control, right)
 		}
 		if err != nil {
-			return NONE, false, errors.WithStack(err)
+			return value.Null, NONE, false, errors.WithStack(err)
 		}
 		matched = value.Unwrap[*value.Boolean](match).Value
 	}
 
 	if matched {
-		// third argument must be false because switch case statement could not return value
-		_, state, _, err := i.ProcessBlockStatement(stmt.Cases[offset].Statements, ds, false)
+		val, state, _, err := i.ProcessBlockStatement(stmt.Cases[offset].Statements, ds, isReturnAsValue)
 		if err != nil {
-			return NONE, false, errors.WithStack(err)
+			return value.Null, NONE, false, errors.WithStack(err)
+		}
+		if val != value.Null {
+			return val, NONE, false, nil
 		}
 		if state == NONE && stmt.Cases[offset].Fallthrough {
 			// This shouldn't be possible as it would be a syntax error from the
 			// parser to have a fallthrough on the last case of a switch.
 			// But better to give the user an error than a panic.
 			if offset+1 >= len(stmt.Cases) {
-				return NONE, false, exception.Runtime(&stmt.Token, "Fallthrough not allowed in final case")
+				return value.Null, NONE, false, exception.Runtime(&stmt.Token, "Fallthrough not allowed in final case")
 			}
-			return i.ProcessCaseStatement(stmt, offset+1, control, true, ds)
+			return i.ProcessCaseStatement(stmt, offset+1, control, true, ds, isReturnAsValue)
 		}
-		return state, true, nil
+		return value.Null, state, true, nil
 	}
-	return NONE, false, nil
+	return value.Null, NONE, false, nil
 }

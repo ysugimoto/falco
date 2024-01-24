@@ -44,6 +44,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	return state, err
 }
 
+// nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
@@ -90,6 +91,16 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		// case *ast.GotoDestinationStatement:
 		// 	err = i.ProcessGotoDesticationStatement(t)
 		// Probably change status statements
+		case *ast.BlockStatement:
+			var val value.Value
+			var state State
+			val, state, _, err = i.ProcessBlockStatement(t.Statements, ds, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			if state != NONE {
+				return value.Null, state, nil
+			}
 		case *ast.FunctionCallStatement:
 			var state State
 			// Enable breakpoint if current debug state is step-in
@@ -124,8 +135,12 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 				return value.Null, state, nil
 			}
 		case *ast.SwitchStatement:
+			var val value.Value
 			var state State
-			state, err = i.ProcessSwitchStatement(t, debugState)
+			val, state, err = i.ProcessSwitchStatement(t, debugState, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
 			if state != NONE {
 				return value.Null, state, nil
 			}
@@ -172,7 +187,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 
 	return value.Null, NONE, exception.Runtime(
 		&sub.GetMeta().Token,
-		"Functioncal subroutine %s did not return any values",
+		"Functional subroutine %s did not return any values",
 		sub.Name.Value,
 	)
 }
@@ -185,7 +200,7 @@ func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement
 	if !val.IsLiteral() {
 		return value.Null, NONE, exception.Runtime(
 			&stmt.GetMeta().Token,
-			"Functioncal subroutine only can return value only accepts a literal value",
+			"Functional subroutine only can return value only accepts a literal value",
 		)
 	}
 
