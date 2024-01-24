@@ -38,6 +38,8 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 
 	case REQ_IS_PURGE:
 		return &value.Boolean{Value: v.ctx.Request.Method == PURGE}, nil
+	case FASTLY_INFO_REQUEST_ID:
+		return v.ctx.RequestID, nil
 	}
 
 	// Look up shared variables
@@ -51,7 +53,7 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVairable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

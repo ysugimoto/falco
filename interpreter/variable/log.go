@@ -281,6 +281,8 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 0}, nil
 	case SEGMENTED_CACHING_TOTAL_BLOCKS:
 		return &value.Integer{Value: 0}, nil
+	case FASTLY_INFO_REQUEST_ID:
+		return v.ctx.RequestID, nil
 	}
 
 	// Look up shared variables
@@ -299,7 +301,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVairable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

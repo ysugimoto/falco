@@ -42,6 +42,7 @@ var BackendProbePropertyTypes = map[string]types.Type{
 	"window":            types.IntegerType,
 	"initial":           types.IntegerType,
 	"threshold":         types.IntegerType,
+	"url":               types.StringType,
 }
 
 type DirectorProps struct {
