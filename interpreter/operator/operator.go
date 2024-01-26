@@ -631,7 +631,7 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Left String type could not be a literal"),
 			)
 		}
-		lv := value.Unwrap[*value.String](left)
+		lv := value.GetString(left)
 		switch right.Type() {
 		case value.StringType:
 			rv := value.Unwrap[*value.String](right)
@@ -641,7 +641,7 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); matches != nil {
+			if matches := re.FindStringSubmatch(lv.String()); matches != nil {
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
 				}
@@ -650,10 +650,10 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			return &value.Boolean{Value: false}, nil
 		case value.AclType:
 			rv := value.Unwrap[*value.Acl](right)
-			ip := net.ParseIP(lv.Value)
+			ip := net.ParseIP(lv.String())
 			if ip == nil {
 				return value.Null, errors.WithStack(
-					fmt.Errorf("Failed to parse IP from string %s", lv.Value),
+					fmt.Errorf("Failed to parse IP from string %s", lv.String()),
 				)
 			}
 			res, err := matchesAcl(*rv, ip)
