@@ -669,7 +669,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		v.ctx.ClientIdentity = coerceString(assigned)
 		return nil
 	case CLIENT_SESS_TIMEOUT:
-		if err := doAssign(v.ctx.ClientSessTimeout, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.ClientSessTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

@@ -285,7 +285,7 @@ func SetWafVariables(ctx *context.Context, name, operator string, val value.Valu
 		}
 		return true, nil
 	case WAF_SESSION_FIXATION_SCORE:
-		if _, err = doAssign(ctx.WafSesionFixationScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafSessionFixationScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
