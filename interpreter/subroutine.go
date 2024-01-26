@@ -39,11 +39,12 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 		return NONE, errors.WithStack(err)
 	}
 
-	// Ignore debug status
-	state, _, err := i.ProcessBlockStatement(statements, ds)
+	// Ignore debug status and must return state, not a value
+	_, state, _, err := i.ProcessBlockStatement(statements, ds, false)
 	return state, err
 }
 
+// nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
@@ -90,6 +91,16 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		// case *ast.GotoDestinationStatement:
 		// 	err = i.ProcessGotoDesticationStatement(t)
 		// Probably change status statements
+		case *ast.BlockStatement:
+			var val value.Value
+			var state State
+			val, state, _, err = i.ProcessBlockStatement(t.Statements, ds, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			if state != NONE {
+				return value.Null, state, nil
+			}
 		case *ast.FunctionCallStatement:
 			var state State
 			// Enable breakpoint if current debug state is step-in
@@ -113,8 +124,23 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 				return value.Null, state, nil
 			}
 		case *ast.IfStatement:
+			var val value.Value
 			var state State
-			state, err = i.ProcessIfStatement(t, debugState)
+			// If statement inside functional subroutine could return value
+			val, state, err = i.ProcessIfStatement(t, debugState, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			if state != NONE {
+				return value.Null, state, nil
+			}
+		case *ast.SwitchStatement:
+			var val value.Value
+			var state State
+			val, state, err = i.ProcessSwitchStatement(t, debugState, true)
+			if val != value.Null {
+				return val, NONE, nil
+			}
 			if state != NONE {
 				return value.Null, state, nil
 			}
@@ -124,7 +150,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		case *ast.ReturnStatement:
 			var val value.Value
 			var state State
-			val, state, err = i.ProcessFunctionReturnStatement(t)
+			val, state, err = i.ProcessExpressionReturnStatement(t)
 			if err != nil {
 				return val, state, errors.WithStack(err)
 			}
@@ -161,12 +187,12 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 
 	return value.Null, NONE, exception.Runtime(
 		&sub.GetMeta().Token,
-		"Functioncal subroutine %s did not return any values",
+		"Functional subroutine %s did not return any values",
 		sub.Name.Value,
 	)
 }
 
-func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
+func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
 	val, err := i.ProcessExpression(*stmt.ReturnExpression, false)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
@@ -174,7 +200,7 @@ func (i *Interpreter) ProcessFunctionReturnStatement(stmt *ast.ReturnStatement) 
 	if !val.IsLiteral() {
 		return value.Null, NONE, exception.Runtime(
 			&stmt.GetMeta().Token,
-			"Functioncal subroutine only can return value only accepts a literal value",
+			"Functional subroutine only can return value only accepts a literal value",
 		)
 	}
 

@@ -189,6 +189,8 @@ func FromGoHttpHeader(h http.Header) Header {
 			// If cookie header, multiple items is sparated by semicolon
 			if key == "Cookie" {
 				obj = strings.Split(val[i], ";")
+			} else if key == "Set-Cookie" {
+				obj = append(obj, val[i])
 			} else {
 				obj = strings.Split(val[i], ",")
 			}

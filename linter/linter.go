@@ -207,6 +207,8 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintRemoveStatement(t, ctx)
 	case *ast.IfStatement:
 		return l.lintIfStatement(t, ctx)
+	case *ast.SwitchStatement:
+		return l.lintSwitchStatement(t, ctx)
 	case *ast.RestartStatement:
 		return l.lintRestartStatement(t, ctx)
 	case *ast.EsiStatement:
@@ -1163,6 +1165,41 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 			Message:  fmt.Sprintf("Condition return type %s may not be used in boolean comparison", cc.String()),
 		})
 	}
+}
+
+func (l *Linter) lintSwitchStatement(stmt *ast.SwitchStatement, ctx *context.Context) types.Type {
+	if c, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+		fn, err := ctx.GetFunction(c.Function.Value)
+		if err != nil {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    c.Function.Token,
+				Message:  err.Error(),
+			})
+		} else if fn.IsUserDefinedFunction && !expectType(fn.Return, types.StringType) {
+			// Fastly VCL only permits user defined functions that return STRING in a
+			// switch control. Built-in function return values will be coerced into a
+			// STRING.
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    c.Token,
+				Message:  fmt.Sprintf("Switch condition function return type must be STRING %s returns %s", c.Function.Value, fn.Return.String()),
+			})
+		}
+	}
+
+	for _, c := range stmt.Cases {
+		for _, s := range c.Statements {
+			switch s.(type) {
+			case *ast.BreakStatement, *ast.FallthroughStatement:
+				break // parser already made sure break/fallthrough is at the end.
+			default:
+				l.lint(s, ctx)
+			}
+		}
+	}
+
+	return types.NeverType
 }
 
 func (l *Linter) lintRestartStatement(stmt *ast.RestartStatement, ctx *context.Context) types.Type {

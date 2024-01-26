@@ -220,6 +220,8 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	// Digest ratio will return fixed value
 	case REQ_DIGEST_RATIO:
 		return &value.Float{Value: 0.4}, nil
+	case FASTLY_INFO_REQUEST_ID:
+		return v.ctx.RequestID, nil
 	}
 
 	// Look up shared variables
@@ -238,7 +240,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVairable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

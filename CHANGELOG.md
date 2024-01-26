@@ -1,3 +1,11 @@
+## v1.4.0
+
+- Additional builtin variables [#245](https://github.com/ysugimoto/falco/pull/245) (@richardmarshall)
+- Value returns from switch and bare block statements [#244](https://github.com/ysugimoto/falco/pull/244) (@richardmarshall)
+- Support return value in block statement and if statement [#242](https://github.com/ysugimoto/falco/pull/242) (@ysugimoto)
+- Add support for switch statements [#238](https://github.com/ysugimoto/falco/pull/238) (@richardmarshall)
+- Suppress notset output [#234](https://github.com/ysugimoto/falco/pull/234) (@ysugimoto)
+
 ## v1.3.0
 
 - Feat/state related asserter [#232](https://github.com/ysugimoto/falco/pull/232) (@ysugimoto)

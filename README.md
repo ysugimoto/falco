@@ -151,6 +151,8 @@ MIT License
 - [@shadialtarsha](https://github.com/shadialtarsha)
 - [@davinci26](https://github.com/davinci26)
 - [@ivomurrell](https://github.com/ivomurrell)
+- [@MasonM](https://github.com/MasonM)
+- [@richardmarshall](https://github.com/richardmarshall)
 
 ## Credits / Thanks
 

@@ -1388,6 +1388,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/",
 					},
 				},
+				"sess_timeout": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://web.archive.org/web/20210306052653/https://developer.fastly.com/reference/vcl/variables/client-connection/client-sess-timeout/",
+					},
+				},
 				"socket": &Object{
 					Items: map[string]*Object{
 						"congestion_algorithm": &Object{
@@ -1801,7 +1811,7 @@ func predefinedVariables() Variables {
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
+								Reference: "",
 							},
 						},
 						"is_push": &Object{
@@ -1874,6 +1884,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/",
+					},
+				},
+				"request_id": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "",
 					},
 				},
 				"state": &Object{
@@ -4469,7 +4489,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
-						Set:       types.NeverType,
+						Set:       types.IntegerType,
 						Unset:     false,
 						Scopes:    PASS | MISS | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/",
@@ -4479,7 +4499,7 @@ func predefinedVariables() Variables {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
-						Set:       types.NeverType,
+						Set:       types.IntegerType,
 						Unset:     false,
 						Scopes:    PASS | MISS | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/",

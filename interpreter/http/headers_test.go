@@ -182,6 +182,34 @@ func TestFromGoHttpHeader(t *testing.T) {
 			t.Errorf("header mismatch, diff=%s", diff)
 		}
 	})
+
+	t.Run("Set-Cookie header", func(t *testing.T) {
+		gh := http.Header{}
+		gh.Add("Set-Cookie", "session_key=foobar; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax")
+
+		hv := FromGoHttpHeader(gh)
+		expect := Header{
+			"Set-Cookie": [][]HeaderItem{
+				{
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "session_key"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "foobar; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax"},
+							},
+						},
+					},
+				},
+			},
+		}
+		if diff := cmp.Diff(expect, hv); diff != "" {
+			t.Errorf("header mismatch, diff=%s", diff)
+		}
+	})
 }
 
 func TestToGoHttpHeader(t *testing.T) {
@@ -406,6 +434,51 @@ func TestToGoHttpHeader(t *testing.T) {
 		gh := ToGoHttpHeader(h)
 		expect := http.Header{
 			"Cookie": []string{"foo=bar; dog=bark"},
+		}
+		if diff := cmp.Diff(expect, gh); diff != "" {
+			t.Errorf("header mismatch, diff=%s", diff)
+		}
+	})
+
+	t.Run("Set-Cookie header", func(t *testing.T) {
+		h := Header{
+			"Set-Cookie": [][]HeaderItem{
+				{
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "foo"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bar; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax"},
+							},
+						},
+					},
+				},
+				{
+					HeaderItem{
+						Key: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "dog"},
+							},
+						},
+						Value: &value.LenientString{
+							Values: []value.Value{
+								&value.String{Value: "bark; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax"},
+							},
+						},
+					},
+				},
+			},
+		}
+		gh := ToGoHttpHeader(h)
+		expect := http.Header{
+			"Set-Cookie": []string{
+				"foo=bar; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax",
+				"dog=bark; domain=localhost; path=/; expires=Sat, 25 Jan 2025 19:21:28 GMT; HttpOnly; SameSite=Lax",
+			},
 		}
 		if diff := cmp.Diff(expect, gh); diff != "" {
 			t.Errorf("header mismatch, diff=%s", diff)

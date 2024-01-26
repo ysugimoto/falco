@@ -11,7 +11,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func GetFastlyInfoVairable(name string) (value.Value, error) {
+func GetFastlyInfoVariable(name string) (value.Value, error) {
 	switch name {
 	case FASTLY_INFO_H2_IS_PUSH:
 		return &value.Boolean{Value: false}, nil
@@ -101,7 +101,7 @@ func GetTCPInfoVariable(name string) (value.Value, error) {
 }
 
 // TODO: consider we need to construct TLS server manually instead of net/http server
-// Temporaly return tentative data found in Fastly fiddle
+// Temporarily return tentative data found in Fastly fiddle
 func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 	switch name {
 	case TLS_CLIENT_CIPHER:
@@ -155,7 +155,7 @@ func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 }
 
 // Shared WAF relation variables.
-// Note that we could not sumulate Fastly legacy waf behavior, returns fake values.
+// Note that we could not simulate Fastly legacy waf behavior, returns fake values.
 // If user write logic which corresponds to following value, process may be unexpected.
 func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	switch name {
@@ -172,7 +172,7 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	case WAF_HTTP_VIOLATION_SCORE:
 		return ctx.WafHttpViolationScore, nil
 	case WAF_INBOUND_ANOMALY_SCORE:
-		return ctx.WafInbouldAnomalyScore, nil
+		return ctx.WafInboundAnomalyScore, nil
 	case WAF_LFI_SCORE:
 		return ctx.WafLFIScore, nil
 	case WAF_LOGDATA:
@@ -184,15 +184,15 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	case WAF_PASSED:
 		return ctx.WafPassed, nil
 	case WAF_PHP_INJECTION_SCORE:
-		return &value.Integer{Value: 0}, nil
+		return ctx.WafPHPInjectionScore, nil
 	case WAF_RCE_SCORE:
-		return &value.Integer{Value: 0}, nil
+		return ctx.WafRCEScore, nil
 	case WAF_RFI_SCORE:
 		return ctx.WafRFIScore, nil
 	case WAF_RULE_ID:
 		return ctx.WafRuleId, nil
 	case WAF_SESSION_FIXATION_SCORE:
-		return ctx.WafSesionFixationScore, nil
+		return ctx.WafSessionFixationScore, nil
 	case WAF_SEVERITY:
 		return ctx.WafSeverity, nil
 	case WAF_XSS_SCORE:
@@ -243,7 +243,7 @@ func SetWafVariables(ctx *context.Context, name, operator string, val value.Valu
 		}
 		return true, nil
 	case WAF_INBOUND_ANOMALY_SCORE:
-		if _, err = doAssign(ctx.WafInbouldAnomalyScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafInboundAnomalyScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
@@ -299,9 +299,17 @@ func SetWafVariables(ctx *context.Context, name, operator string, val value.Valu
 			return true, errors.WithStack(err)
 		}
 		return true, nil
-	case WAF_FAILURES,
-		WAF_PHP_INJECTION_SCORE,
-		WAF_RCE_SCORE:
+	case WAF_PHP_INJECTION_SCORE:
+		if _, err := doAssign(ctx.WafPHPInjectionScore, operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
+		return true, nil
+	case WAF_RCE_SCORE:
+		if _, err := doAssign(ctx.WafRCEScore, operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
+		return true, nil
+	case WAF_FAILURES:
 		return false, errors.WithStack(fmt.Errorf(
 			"Variable %s could not set value", name,
 		))
