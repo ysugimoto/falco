@@ -13,16 +13,16 @@ import (
 
 // Send proxy request to spefic origin
 func Send(r *flchttp.Request, timeout time.Duration) (*flchttp.Response, error) {
-	ctx, cancel := context.WithTimeout(r.Context, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	req, err := flchttp.ToGoHttpRequest(r, ctx)
-	if err != nil {
+	// Check Fastly limitations
+	if err := limitations.CheckFastlyRequestLimit(r); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	// Check Fastly limitations
-	if err := limitations.CheckFastlyRequestLimit(req); err != nil {
+	req, err := flchttp.ToGoHttpRequest(r)
+	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -36,7 +36,7 @@ func Send(r *flchttp.Request, timeout time.Duration) (*flchttp.Response, error) 
 			},
 		}
 	}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

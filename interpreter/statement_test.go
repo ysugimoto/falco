@@ -7,6 +7,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -197,7 +198,7 @@ func TestSetStatement(t *testing.T) {
 
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := flchttp.NewRequest(http.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
@@ -268,7 +269,7 @@ func TestBlockStatement(t *testing.T) {
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
 
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := flchttp.NewRequest(http.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
@@ -349,7 +350,7 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
 
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := flchttp.NewRequest(http.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
@@ -380,7 +381,11 @@ func TestFunctionCallStatement(t *testing.T) {
 			name: "Function statement with builtin",
 			vcl:  `sub vcl_recv { header.set(req, "foo", "bar"); }`,
 			assertions: map[string]value.Value{
-				"req.http.foo": &value.String{Value: "bar"},
+				"req.http.foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "bar"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -394,7 +399,11 @@ func TestFunctionCallStatement(t *testing.T) {
 				set req.http.foo = "0";
 				bool_fn(); }`,
 			assertions: map[string]value.Value{
-				"req.http.foo": &value.String{Value: "0"},
+				"req.http.foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "0"},
+					},
+				},
 			},
 			isError: true,
 		},
@@ -429,7 +438,11 @@ func TestIfStatement(t *testing.T) {
 				header.set(req, "foo", var.N);
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.foo": &value.String{Value: "0"},
+				"req.http.foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "0"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -447,7 +460,11 @@ func TestIfStatement(t *testing.T) {
 				header.set(req, "foo", var.N);
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.foo": &value.String{Value: "1"},
+				"req.http.foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -482,7 +499,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "2"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "2"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -502,7 +523,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "2"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "2"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -522,7 +547,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -540,7 +569,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -560,7 +593,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -580,7 +617,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -601,7 +642,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -621,7 +666,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -639,7 +688,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -658,7 +711,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -676,7 +733,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -694,7 +755,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -712,7 +777,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "0"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "0"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -733,7 +802,11 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case": &value.String{Value: "2"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "2"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -755,8 +828,16 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case":        &value.String{Value: "2"},
-				"req.http.fallthrough": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "2"},
+					},
+				},
+				"req.http.fallthrough": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -779,8 +860,16 @@ func TestSwitchStatement(t *testing.T) {
 				}
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.case":        &value.String{Value: "1"},
-				"req.http.fallthrough": &value.String{Value: "1"},
+				"req.http.case": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
+				"req.http.fallthrough": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "1"},
+					},
+				},
 			},
 			isError: false,
 		},

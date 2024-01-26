@@ -24,9 +24,16 @@ func (h Header) Clone() Header {
 		for i := range headers {
 			items := make([]HeaderItem, len(headers[i]))
 			for j := range headers[i] {
-				items[j] = HeaderItem{
-					Key:   headers[i][j].Key.Copy().(*value.LenientString),
-					Value: headers[i][j].Value.Copy().(*value.LenientString),
+				if headers[i][j].Value != nil {
+					items[j] = HeaderItem{
+						Key:   headers[i][j].Key.Copy().(*value.LenientString),
+						Value: headers[i][j].Value.Copy().(*value.LenientString),
+					}
+				} else {
+					items[j] = HeaderItem{
+						Key:   headers[i][j].Key.Copy().(*value.LenientString),
+						Value: nil,
+					}
 				}
 			}
 			hc[i] = items
@@ -102,10 +109,14 @@ func (h Header) Get(key string) *value.LenientString {
 	}
 	hv, ok := h[textproto.CanonicalMIMEHeaderKey(key)]
 	if !ok {
-		return &value.LenientString{IsNotSet: true}
+		return &value.LenientString{
+			IsNotSet: true,
+		}
 	}
 	if len(hv) == 0 {
-		return &value.LenientString{IsNotSet: true}
+		return &value.LenientString{
+			IsNotSet: true,
+		}
 	}
 
 	// Merge ambiguous strings
@@ -128,7 +139,9 @@ func (h Header) Get(key string) *value.LenientString {
 	}
 
 	if len(merged) == 0 {
-		return &value.LenientString{IsNotSet: true}
+		return &value.LenientString{
+			IsNotSet: true,
+		}
 	}
 	return &value.LenientString{Values: merged}
 }
@@ -137,10 +150,14 @@ func (h Header) Get(key string) *value.LenientString {
 func (h Header) GetObject(name, key string) *value.LenientString {
 	hv, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok {
-		return &value.LenientString{IsNotSet: true}
+		return &value.LenientString{
+			IsNotSet: true,
+		}
 	}
 	if len(hv) == 0 {
-		return &value.LenientString{IsNotSet: true}
+		return &value.LenientString{
+			IsNotSet: true,
+		}
 	}
 	for _, v := range hv[0] {
 		if v.Key.String() != key {
@@ -148,7 +165,9 @@ func (h Header) GetObject(name, key string) *value.LenientString {
 		}
 		return v.Value.Copy().(*value.LenientString)
 	}
-	return &value.LenientString{IsNotSet: true}
+	return &value.LenientString{
+		IsNotSet: true,
+	}
 }
 
 func (h Header) Del(key string) {
@@ -279,6 +298,12 @@ func copyToLenientString(v value.Value) *value.LenientString {
 		return ls
 	case *value.LenientString:
 		return t.Copy().(*value.LenientString)
+	case *value.Backend:
+		return &value.LenientString{
+			Values: []value.Value{
+				&value.String{Value: t.Value.Name.Value},
+			},
+		}
 	default:
 		return &value.LenientString{
 			Values: []value.Value{t.Copy()},

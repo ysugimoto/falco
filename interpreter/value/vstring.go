@@ -64,15 +64,20 @@ func (v *VString) Get() Value {
 }
 
 func GetString(s Value) *VString {
-	if v, ok := s.(*LenientString); ok {
+	switch t := s.(type) {
+	case *LenientString:
 		return &VString{
-			ls:       v,
-			IsNotSet: v.IsNotSet,
+			ls:       t,
+			IsNotSet: t.IsNotSet,
 		}
-	}
-	v, _ := s.(*String)
-	return &VString{
-		s:        v,
-		IsNotSet: v.IsNotSet,
+	case *String:
+		return &VString{
+			s:        t,
+			IsNotSet: t.IsNotSet,
+		}
+	default:
+		return &VString{
+			s: &String{Value: s.String()},
+		}
 	}
 }

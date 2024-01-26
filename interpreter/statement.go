@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"encoding/base64"
 	"io"
 	"strings"
 
@@ -313,7 +314,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 			return errors.WithStack(err)
 		}
 		// set obj.status and obj.response variable internally
-		if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
+		if _, err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
 			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 		}
 	}
@@ -324,8 +325,14 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 			return errors.WithStack(err)
 		}
 
-		if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
+		var response value.Value
+		if response, err = assign.Assign(&value.String{}, arg); err != nil {
 			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		}
+		if v, ok := response.(*value.LenientString); ok {
+			i.ctx.ObjectResponse = v.ToString()
+		} else {
+			i.ctx.ObjectResponse = value.Unwrap[*value.String](response)
 		}
 	}
 	return nil
@@ -371,11 +378,11 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 		return errors.WithStack(err)
 	}
 
-	v := &value.String{}
-	if err := assign.Assign(v, val); err != nil {
+	var body value.Value
+	if body, err = assign.Assign(&value.String{}, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = io.NopCloser(strings.NewReader(value.GetString(body).String()))
 	return nil
 }
 
@@ -384,11 +391,17 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	v := &value.String{}
-	if err := assign.Assign(v, val); err != nil {
+
+	var body value.Value
+	if body, err = assign.Assign(&value.String{}, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = io.NopCloser(
+		base64.NewDecoder(
+			base64.StdEncoding,
+			strings.NewReader(value.GetString(body).String()),
+		),
+	)
 	return nil
 }
 
@@ -492,6 +505,17 @@ func (i *Interpreter) ProcessIfStatement(
 			}
 			return value.Null, state, nil
 		}
+	case *value.LenientString:
+		if !t.IsNotSet {
+			val, state, _, err := i.ProcessBlockStatement(stmt.Consequence.Statements, ds, isReturnAsValue)
+			if err != nil {
+				return value.Null, NONE, errors.WithStack(err)
+			}
+			if val != value.Null {
+				return val, NONE, nil
+			}
+			return value.Null, state, nil
+		}
 	default:
 		if cond != value.Null {
 			return value.Null, NONE, exception.Runtime(
@@ -525,6 +549,17 @@ func (i *Interpreter) ProcessIfStatement(
 				return value.Null, state, nil
 			}
 		case *value.String:
+			if !t.IsNotSet {
+				val, state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds, isReturnAsValue)
+				if err != nil {
+					return value.Null, NONE, errors.WithStack(err)
+				}
+				if val != value.Null {
+					return val, NONE, nil
+				}
+				return value.Null, state, nil
+			}
+		case *value.LenientString:
 			if !t.IsNotSet {
 				val, state, _, err := i.ProcessBlockStatement(ei.Consequence.Statements, ds, isReturnAsValue)
 				if err != nil {

@@ -11,7 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 var (
@@ -33,7 +36,6 @@ func (i *Interpreter) executeESI() error {
 
 	body := respBody.Bytes()
 	req := i.ctx.Request
-	ctx := i.ctx.Request.Context()
 	var parsed []byte
 	for {
 		match := esiIncludeRegex.FindSubmatchIndex(body)
@@ -46,8 +48,8 @@ func (i *Interpreter) executeESI() error {
 		parsed = append(parsed, previous...)
 
 		// resolve inclusion
-		cloned := req.Clone(ctx)
-		partial, err := executeEsiInclude(ctx, cloned, src)
+		cloned, _ := req.Clone()
+		partial, err := executeEsiInclude(req.Context, cloned, src)
 		if err != nil {
 			// If ESI inclusion failed, find <esi:remove> tag and use its nodeText
 			index := bytes.Index(body, esiRemoveStart)
@@ -87,17 +89,22 @@ func (i *Interpreter) executeESI() error {
 	return nil
 }
 
-func executeEsiInclude(ctx context.Context, req *http.Request, includeUrl []byte) ([]byte, error) {
+func executeEsiInclude(ctx context.Context, req *flchttp.Request, includeUrl []byte) ([]byte, error) {
 	ctx, timeout := context.WithTimeout(ctx, 10*time.Second)
 	defer timeout()
 
 	if err := resolveIncludeURL(req, string(includeUrl)); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	gr, err := flchttp.ToGoHttpRequest(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
+	}
+
+	resp, err := http.DefaultClient.Do(gr)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 	defer resp.Body.Close()
 	var buf bytes.Buffer
@@ -107,7 +114,7 @@ func executeEsiInclude(ctx context.Context, req *http.Request, includeUrl []byte
 	return buf.Bytes(), nil
 }
 
-func resolveIncludeURL(req *http.Request, path string) error {
+func resolveIncludeURL(req *flchttp.Request, path string) error {
 	switch {
 	case strings.HasPrefix(path, "http://"), strings.HasPrefix(path, "https://"):
 		parsed, err := url.Parse(path)
@@ -115,7 +122,7 @@ func resolveIncludeURL(req *http.Request, path string) error {
 			return err
 		}
 		req.URL = parsed
-		req.Header.Set("Host", parsed.Host)
+		req.Header.Set("Host", &value.String{Value: parsed.Host})
 		return nil
 	case strings.HasPrefix(path, "/"):
 		req.URL.Path = path

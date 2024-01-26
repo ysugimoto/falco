@@ -513,7 +513,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 
 	// Get first byte timeout from determined backend
-	var firstByteTimeout time.Duration
+	firstByteTimeout := 20 * time.Second
 	for _, v := range i.ctx.Backend.Value.Properties {
 		if v.Key.Value == "first_byte_timeout" {
 			if val, err := i.ProcessExpression(v.Value, false); err == nil {

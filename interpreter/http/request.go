@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Interpreter HTTP request representation
@@ -32,6 +33,31 @@ type Request struct {
 
 	// Copied request body
 	Body io.ReadCloser
+}
+
+func NewRequest(method, url string, body io.Reader) (*Request, error) {
+	return NewRequestWithContext(context.Background(), method, url, body)
+}
+
+func NewRequestWithContext(ctx context.Context, method, requestUrl string, body io.Reader) (*Request, error) {
+	u, err := url.Parse(requestUrl)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	req := &Request{
+		Method:     method,
+		Proto:      "1.0",
+		ProtoMajor: 1,
+		ProtoMinor: 0,
+		Host:       u.Host,
+		RequestURI: requestUrl,
+		Context:    ctx,
+		URL:        u,
+		Body:       io.NopCloser(body),
+		Header:     Header{},
+	}
+	req.Header.Set("Host", &value.String{Value: u.Host})
+	return req, nil
 }
 
 func (r *Request) Clone() (*Request, error) {
@@ -60,7 +86,7 @@ func (r *Request) Clone() (*Request, error) {
 		RawFragment: r.URL.RawFragment,
 	}
 
-	// Convert HttpHeader
+	// Clone HttpHeader
 	req.Header = r.Header.Clone()
 
 	// Copy request body
@@ -74,9 +100,8 @@ func (r *Request) Clone() (*Request, error) {
 	return req, nil
 }
 
-func ToGoHttpRequest(r *Request, ctx context.Context) (*http.Request, error) {
-	req, err := http.NewRequestWithContext(
-		ctx,
+func ToGoHttpRequest(r *Request) (*http.Request, error) {
+	req, err := http.NewRequest(
 		r.Method,
 		r.URL.String(),
 		r.Body,

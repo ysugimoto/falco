@@ -141,6 +141,17 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 				return &value.Boolean{Value: true}, nil
 			}
 			return &value.Boolean{Value: false}, nil
+		case *value.LenientString:
+			// If withCondition is enabled, STRING could be converted to BOOL
+			if !withCondition {
+				return value.Null, errors.WithStack(
+					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
+				)
+			}
+			if t.IsNotSet {
+				return &value.Boolean{Value: true}, nil
+			}
+			return &value.Boolean{Value: false}, nil
 		default:
 			return value.Null, errors.WithStack(
 				exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
@@ -192,6 +203,10 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	case *value.String:
+		if !t.IsNotSet {
+			return i.ProcessExpression(exp.Consequence, false)
+		}
+	case *value.LenientString:
 		if !t.IsNotSet {
 			return i.ProcessExpression(exp.Consequence, false)
 		}

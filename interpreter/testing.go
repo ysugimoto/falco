@@ -1,13 +1,14 @@
 package interpreter
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/interpreter/transport"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -35,25 +36,22 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	}
 
 	// On testing process, all request/response variables should be set initially
-	i.ctx.BackendRequest, err = i.createBackendRequest(i.ctx, i.ctx.Backend)
+	i.ctx.BackendRequest, err = transport.BackendRequest(i.ctx, i.ctx.Backend)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.ctx.BackendResponse = &http.Response{
+	i.ctx.BackendResponse = &flchttp.Response{
 		StatusCode:    http.StatusOK,
 		Status:        http.StatusText(http.StatusOK),
 		Proto:         "HTTP/1.1",
 		ProtoMajor:    1,
 		ProtoMinor:    1,
-		Header:        http.Header{},
+		Header:        flchttp.Header{},
 		Body:          io.NopCloser(strings.NewReader(testBackendResponseBody)),
 		ContentLength: int64(len(testBackendResponseBody)),
-		Close:         true,
 		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       i.ctx.BackendRequest.Clone(context.Background()),
 	}
-	i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-	i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
+	i.ctx.Response, _ = i.ctx.BackendResponse.Clone()
+	i.ctx.Object, _ = i.ctx.BackendResponse.Clone()
 	return nil
 }

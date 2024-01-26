@@ -16,13 +16,13 @@ import (
 
 const Header_set_Name = "header.set"
 
-var Header_set_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.StringType}
+var Header_set_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Header_set_Validate(args []value.Value) error {
 	if len(args) != 3 {
 		return errors.ArgumentNotEnough(Header_set_Name, 3, args)
 	}
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 2; i++ {
 		if args[i].Type() != Header_set_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_set_Name, i+1, Header_set_ArgumentTypes[i], args[i].Type())
 		}
@@ -64,23 +64,23 @@ func Header_set(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			ctx.Request.Header.Set(name, val)
+			ctx.Request.Header.Set(name, val.Get())
 		}
 	case "resp":
 		if ctx.Response != nil {
-			ctx.Response.Header.Set(name, val)
+			ctx.Response.Header.Set(name, val.Get())
 		}
 	case "obj":
 		if ctx.Object != nil {
-			ctx.Object.Header.Set(name, val)
+			ctx.Object.Header.Set(name, val.Get())
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			ctx.BackendRequest.Header.Set(name, val)
+			ctx.BackendRequest.Header.Set(name, val.Get())
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			ctx.BackendResponse.Header.Set(name, val)
+			ctx.BackendResponse.Header.Set(name, val.Get())
 		}
 	default:
 		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)
