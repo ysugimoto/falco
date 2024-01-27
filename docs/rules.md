@@ -140,6 +140,35 @@ sub vcl_recv {
 }
 ```
 
+## backend/prober-configuration
+
+Misconfiguration for backend probe section.
+The `.initial` property should be less than `.threshold` property.
+
+Problem:
+
+```vcl
+backend F_example_backend_0 {
+  ...
+  .probe = {
+      .initial   = 5;
+      .threshold = 2;
+  }
+}
+```
+
+Fix:
+
+```vcl
+backend F_example_backend_0 {
+  ...
+  .probe = {
+      .initial   = 5;
+      .threshold = 10;
+  }
+}
+```
+
 ## director/syntax
 
 Syntax error on DIRECTOR definition.
@@ -416,6 +445,114 @@ Fix:
 sub check_password {
   ...
 }
+```
+
+## subroutine/invalid-return-type
+
+A functional subroutine declaration has an invalid return type, or return type is specified for state-machine subroutine like `vcl_recv`.
+
+Problem:
+
+```vcl
+sub functional_subroutine COMPLEX { // COMPLES type is invalid
+    ....
+}
+```
+
+Fix:
+
+```vcl
+sub functional_subroutine STRING {
+    ....
+}
+```
+
+## penaltybox/syntax
+
+Syntax error on `penaltybox` declaration.
+
+Declaration syntax is:
+
+```vcl
+penaltybox (?<penaltybox_name>[a-zA-Z0-9_]+) {}
+```
+
+Fastly document: https://developer.fastly.com/reference/vcl/declarations/penaltybox/
+
+## penaltybox/nonempty-block
+
+The `penaltybox` declaration block content must be empty.
+
+Declaration syntax is:
+
+```vcl
+penaltybox (?<penaltybox_name>[a-zA-Z0-9_]+) {
+  // Must be empty
+}
+```
+
+Fastly document: https://developer.fastly.com/reference/vcl/declarations/penaltybox/
+
+## penaltybox/duplicated
+
+The `penaltybox` declaration is duplicated.
+
+
+Problem:
+
+```vcl
+penaltybox foo {}
+penaltybox foo {}
+```
+
+Fix:
+
+```vcl
+penaltybox foo {}
+```
+
+## ratecounter/syntax
+
+Syntax error on `ratecounter` declaration.
+
+Declaration syntax is:
+
+```vcl
+ratecounter (?<ratecounter_name>[a-zA-Z0-9_]+) {}
+```
+
+Fastly document: https://developer.fastly.com/reference/vcl/declarations/ratecounter/
+
+## ratecounter/nonempty-block
+
+The `ratecounter` declaration block content must be empty.
+
+Declaration syntax is:
+
+```vcl
+ratecounter (?<ratecounter_name>[a-zA-Z0-9_]+) {
+  // Must be empty
+}
+```
+
+Fastly document: https://developer.fastly.com/reference/vcl/declarations/ratecounter/
+
+## ratecounter/duplicated
+
+The `ratecounter` declaration is duplicated.
+
+
+Problem:
+
+```vcl
+ratecounter foo {}
+ratecounter foo {}
+```
+
+Fix:
+
+```vcl
+ratecounter foo {}
 ```
 
 ## declare-statement/syntax
@@ -802,3 +939,26 @@ if (req.http.Host) {
 }
 ```
 
+## disallow-empty-return
+
+A `return` statement in state-machine subroutine like `vcl_recv` must have the next state.
+
+Problem:
+
+```vcl
+sub vcl_recv {
+    ...
+    return; // Must return with next state
+}
+```
+
+Fix:
+
+```vcl
+sub vcl_recv {
+    ...
+    return (lookup);
+}
+```
+
+Fastly document: https://developer.fastly.com/reference/vcl/subroutines#returning-a-state
