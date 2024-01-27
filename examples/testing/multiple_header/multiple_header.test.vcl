@@ -1,3 +1,5 @@
+// see: https://github.com/ysugimoto/falco/issues/237
+
 // @scope: recv
 // @suite: ADD header(add-add-add) BUGGY
 sub test_recv {

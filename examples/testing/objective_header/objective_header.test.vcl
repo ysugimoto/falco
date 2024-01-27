@@ -1,3 +1,5 @@
+// see: https://github.com/ysugimoto/falco/issues/236
+
 // @scope: recv
 // @suite: SET VARS VALUE
 sub test_recv {
