@@ -92,7 +92,7 @@ func (h Header) Set(key string, val value.Value) {
 }
 
 func (h Header) SetObject(name, key string, val value.Value) {
-	v, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
+	values, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok {
 		h[textproto.CanonicalMIMEHeaderKey(name)] = [][]HeaderItem{
 			{
@@ -109,7 +109,22 @@ func (h Header) SetObject(name, key string, val value.Value) {
 		return
 	}
 
-	v[0] = append(v[0], HeaderItem{
+	for i, hv := range values[0] {
+		// Already exists, override it
+		if hv.Key.StrictString() == key {
+			values[0][i] = HeaderItem{
+				Key: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: key},
+					},
+				},
+				Value: copyToLenientString(val),
+			}
+			return
+		}
+	}
+
+	values[0] = append(values[0], HeaderItem{
 		Key: &value.LenientString{
 			Values: []value.Value{
 				&value.String{Value: key},
@@ -178,7 +193,7 @@ func (h Header) Get(key string) *value.LenientString {
 
 	// Merge ambiguous strings
 	var merged []value.Value
-	for _, v := range hv[0] {
+	for i, v := range hv[0] {
 		if !v.Key.IsNotSet {
 			cpk := v.Key.Copy().(*value.LenientString) // nolint:errcheck
 			merged = append(merged, cpk.Values...)
@@ -192,6 +207,9 @@ func (h Header) Get(key string) *value.LenientString {
 			}
 			cpv := v.Value.Copy().(*value.LenientString) // nolint:errcheck
 			merged = append(merged, cpv.Values...)
+		}
+		if i != len(hv[0])-1 {
+			merged = append(merged, &value.String{Value: ", "})
 		}
 	}
 
@@ -251,7 +269,18 @@ func (h Header) DelObject(name, key string) {
 		}
 		filtered = append(filtered, v)
 	}
-	hv[0] = filtered
+	hv[0] = cleanupHeaderItem(filtered)
+}
+
+func cleanupHeaderItem(items []HeaderItem) []HeaderItem {
+	var cleanup []HeaderItem
+	for _, v := range items {
+		if v.Key.StrictString() == "" {
+			continue
+		}
+		cleanup = append(cleanup, v)
+	}
+	return cleanup
 }
 
 // Utility function - convert to Header type from Golang http.Header
@@ -345,9 +374,7 @@ func copyToLenientString(v value.Value) *value.LenientString {
 		ls := &value.LenientString{
 			IsNotSet: t.IsNotSet,
 		}
-		if t.Value != "" {
-			ls.Values = append(ls.Values, &value.String{Value: t.Value})
-		}
+		ls.Values = append(ls.Values, &value.String{Value: t.Value})
 		return ls
 	case *value.IP:
 		ls := &value.LenientString{

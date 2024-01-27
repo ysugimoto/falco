@@ -24,14 +24,14 @@ func Assert_is_notset(ctx *context.Context, args ...value.Value) (value.Value, e
 	// Check custom message
 	var message string
 	if len(args) == 3 {
-		message = value.Unwrap[*value.String](args[2]).Value
+		message = value.GetString(args[2]).String()
 	} else {
 		message = "Value isn't NotSet"
 	}
 
 	switch args[0].Type() {
 	case value.StringType:
-		v := value.Unwrap[*value.String](args[0])
+		v := value.GetString(args[0])
 		return assert(v, v.IsNotSet, true, message)
 	case value.IpType:
 		v := value.Unwrap[*value.IP](args[0])

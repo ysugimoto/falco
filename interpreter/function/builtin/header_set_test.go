@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	flchttp "github.com/ysugimoto/falco/interpreter/http"
@@ -419,7 +418,6 @@ func Test_Header_set(t *testing.T) {
 			)
 			if tt.isError {
 				if err == nil {
-					pp.Println(tt)
 					t.Errorf("[%d] Header_set should return error but nil", i)
 				}
 				continue

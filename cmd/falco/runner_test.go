@@ -336,26 +336,37 @@ func TestTester(t *testing.T) {
 	tests := []struct {
 		name   string
 		main   string
-		filter string
 		passes int
 	}{
 		{
 			name:   "table manipulation test",
-			main:   "../../examples/testing/table_manipulation.vcl",
-			filter: "*table_*.test.vcl",
+			main:   "../../examples/testing/table_manipulation/main.vcl",
 			passes: 2,
 		},
 		{
 			name:   "empty and notset value test",
-			main:   "../../examples/testing/default_values.vcl",
-			filter: "*values.test.vcl",
+			main:   "../../examples/testing/default_values/main.vcl",
 			passes: 16,
 		},
 		{
 			name:   "assertions test",
-			main:   "../../examples/testing/assertion.vcl",
-			filter: "*assertion.test.vcl",
+			main:   "../../examples/testing/assertion/main.vcl",
 			passes: 5,
+		},
+		{
+			name:   "notset string test",
+			main:   "../../examples/testing/notset_string/main.vcl",
+			passes: 6,
+		},
+		{
+			name:   "objective header manipulation test",
+			main:   "../../examples/testing/objective_header/main.vcl",
+			passes: 9,
+		},
+		{
+			name:   "multiple header manipulation test",
+			main:   "../../examples/testing/multiple_header/main.vcl",
+			passes: 8,
 		},
 	}
 
@@ -371,7 +382,7 @@ func TestTester(t *testing.T) {
 					VerboseWarning: true,
 				},
 				Testing: &config.TestConfig{
-					Filter: tt.filter,
+					Filter: "*.test.vcl",
 				},
 				Commands: config.Commands{"test", main},
 			}

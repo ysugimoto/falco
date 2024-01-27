@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	flchttp "github.com/ysugimoto/falco/interpreter/http"
@@ -475,9 +474,8 @@ func Test_Header_get(t *testing.T) {
 			resp.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Response: resp}
 
-			v, err := Header_get(ctx, &value.Ident{Value: "foo"}, tt.name)
+			_, err := Header_get(ctx, &value.Ident{Value: "foo"}, tt.name)
 			if err == nil {
-				pp.Println(tt, v)
 				t.Errorf("[%d] Header_get expects error but nil", i)
 			}
 		}
