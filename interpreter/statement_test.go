@@ -440,7 +440,7 @@ func TestIfStatement(t *testing.T) {
 			assertions: map[string]value.Value{
 				"req.http.foo": &value.LenientString{
 					Values: []value.Value{
-						&value.String{Value: "0"},
+						&value.Boolean{Value: false},
 					},
 				},
 			},
@@ -462,7 +462,7 @@ func TestIfStatement(t *testing.T) {
 			assertions: map[string]value.Value{
 				"req.http.foo": &value.LenientString{
 					Values: []value.Value{
-						&value.String{Value: "1"},
+						&value.Boolean{Value: true},
 					},
 				},
 			},

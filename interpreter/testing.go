@@ -7,12 +7,21 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
 	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/transport"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const testBackendResponseBody = "falco_test_response"
+
+func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
+	i.SetScope(scope)
+	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
 
 func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	var err error

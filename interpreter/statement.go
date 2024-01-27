@@ -367,7 +367,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 		)
 	}
 
-	i.process.Logs = append(i.process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
+	i.Process.Logs = append(i.Process.Logs, process.NewLog(stmt, i.ctx.Scope, line))
 	i.Debugger.Message(line)
 	return nil
 }
@@ -382,7 +382,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 	if body, err = assign.Assign(&value.String{}, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(value.GetString(body).String()))
+	i.ctx.Object.Body = io.NopCloser(strings.NewReader(body.String()))
 	return nil
 }
 
@@ -399,7 +399,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	i.ctx.Object.Body = io.NopCloser(
 		base64.NewDecoder(
 			base64.StdEncoding,
-			strings.NewReader(value.GetString(body).String()),
+			strings.NewReader(body.String()),
 		),
 	)
 	return nil

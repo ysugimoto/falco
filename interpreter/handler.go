@@ -20,7 +20,7 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	handleError := func(err error) {
 		// If debug is true, print with stacktrace
-		i.process.Error = err
+		i.Process.Error = err
 		if re, ok := errors.Cause(err).(*exception.Exception); ok {
 			i.Debugger.Message(re.Error())
 		} else {
@@ -34,14 +34,14 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handleError(err)
 	}
 
-	i.process.Restarts = i.ctx.Restarts
-	i.process.Backend = i.ctx.Backend
-	if i.process.Error != nil {
+	i.Process.Restarts = i.ctx.Restarts
+	i.Process.Backend = i.ctx.Backend
+	if i.Process.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-	out, err := i.process.Finalize(i.ctx.Response)
+	out, err := i.Process.Finalize(i.ctx.Response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

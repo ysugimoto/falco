@@ -30,7 +30,7 @@ type Interpreter struct {
 	options []context.Option
 
 	ctx           *context.Context
-	process       *process.Process
+	Process       *process.Process
 	cache         *cache.Cache
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
@@ -133,7 +133,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 		i.ctx.OriginalHost = r.Host
 	}
 
-	i.process = process.New()
+	i.Process = process.New()
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
@@ -282,7 +282,7 @@ func (i *Interpreter) ProcessRecv() error {
 			return errors.WithStack(err)
 		}
 		if v := i.cache.Get(i.ctx.RequestHash.Value); v != nil {
-			i.process.Cached = true
+			i.Process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.CacheHitItem = v
 			i.ctx.Object, err = v.Response.Clone()
