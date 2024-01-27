@@ -13,10 +13,10 @@ Thanks for considering proposal for this project! We welcome your proposals alwa
 
 You can turn on multiple checkboxes.
 
-- []Parser
-- []Linter
-- []Simulator
-- []Testing
+- [] Parser
+- [] Linter
+- [] Simulator
+- [] Testing
 
 ### Describe your proposal
 

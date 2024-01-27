@@ -11,10 +11,10 @@ assignees: ysugimoto
 
 You can turn on multiple checkboxes.
 
-- []Parser
-- []Linter
-- []Simulator
-- []Testing
+- [] Parser
+- [] Linter
+- [] Simulator
+- [] Testing
 
 ### Describe the feature
 
