@@ -60,7 +60,14 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 		ContentLength: int64(len(testBackendResponseBody)),
 		Uncompressed:  false,
 	}
-	i.ctx.Response, _ = i.ctx.BackendResponse.Clone()
-	i.ctx.Object, _ = i.ctx.BackendResponse.Clone()
+	i.ctx.Response, err = i.ctx.BackendResponse.Clone()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	i.ctx.Object, err = i.ctx.BackendResponse.Clone()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }

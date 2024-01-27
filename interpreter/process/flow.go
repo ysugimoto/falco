@@ -26,11 +26,11 @@ func NewFlow(ctx *context.Context, sub *ast.SubroutineDeclaration) *Flow {
 		Subroutine: sub.Name.Value,
 	}
 	if ctx.Request != nil {
-		cloned, _ := ctx.Request.Clone()
+		cloned, _ := ctx.Request.Clone() // nolint:errcheck
 		f.Request = newFlowRequest(cloned)
 	}
 	if ctx.BackendRequest != nil {
-		cloned, _ := ctx.BackendRequest.Clone()
+		cloned, _ := ctx.BackendRequest.Clone() // nolint:errcheck
 		f.BackendRequest = newFlowRequest(cloned)
 	}
 	if ctx.BackendResponse != nil {

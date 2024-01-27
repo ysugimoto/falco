@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
@@ -48,7 +47,7 @@ func (i *Interpreter) executeESI() error {
 		parsed = append(parsed, previous...)
 
 		// resolve inclusion
-		cloned, _ := req.Clone()
+		cloned, _ := req.Clone() // nolint:errcheck
 		partial, err := executeEsiInclude(req.Context, cloned, src)
 		if err != nil {
 			// If ESI inclusion failed, find <esi:remove> tag and use its nodeText
@@ -90,9 +89,6 @@ func (i *Interpreter) executeESI() error {
 }
 
 func executeEsiInclude(ctx context.Context, req *flchttp.Request, includeUrl []byte) ([]byte, error) {
-	ctx, timeout := context.WithTimeout(ctx, 10*time.Second)
-	defer timeout()
-
 	if err := resolveIncludeURL(req, string(includeUrl)); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -102,7 +98,7 @@ func executeEsiInclude(ctx context.Context, req *flchttp.Request, includeUrl []b
 		return nil, errors.WithStack(err)
 	}
 
-	resp, err := http.DefaultClient.Do(gr)
+	resp, err := http.DefaultClient.Do(gr.WithContext(ctx))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

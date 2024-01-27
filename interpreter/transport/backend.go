@@ -36,7 +36,10 @@ func getBackendProperty[T PropTypes](backend *value.Backend, key string) (T, err
 	if prop == nil {
 		return nil, nil
 	}
-	return prop.(T), nil
+	if v, ok := prop.(T); ok {
+		return v, nil
+	}
+	return nil, errors.New("Type assertion failed")
 }
 
 func backendScheme(backend *value.Backend, override *config.OverrideBackend) (string, error) {
@@ -73,10 +76,7 @@ func backendHost(backend *value.Backend, override *config.OverrideBackend) (stri
 	return "", exception.Runtime(nil, "Failed to find host for backend %s", backend)
 }
 
-func BackendRequest(
-	ctx *context.Context,
-	backend *value.Backend,
-) (*flchttp.Request, error) {
+func BackendRequest(ctx *context.Context, backend *value.Backend) (*flchttp.Request, error) {
 	var scheme, host, port string
 	var err error
 

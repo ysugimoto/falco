@@ -35,8 +35,8 @@ type Request struct {
 	Body io.ReadCloser
 }
 
-func NewRequest(method, url string, body io.Reader) (*Request, error) {
-	return NewRequestWithContext(context.Background(), method, url, body)
+func NewRequest(method, requestUrl string, body io.Reader) (*Request, error) {
+	return NewRequestWithContext(context.Background(), method, requestUrl, body)
 }
 
 func NewRequestWithContext(ctx context.Context, method, requestUrl string, body io.Reader) (*Request, error) {

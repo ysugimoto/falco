@@ -99,7 +99,7 @@ func doAssign(left value.Value, operator string, right value.Value) (value.Value
 		}
 		return left, nil
 	default: // "="
-		// Important: Assign fucntion returns assigned Value.
+		// Important: Assign function returns assigned Value.
 		// This is because value type would be changed after assignment (e.g String -> LenientString)
 		// To accept this change, return new value
 		return assign.Assign(left, right.Copy())

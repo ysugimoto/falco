@@ -206,7 +206,7 @@ func GetDirector(ctx *context.Context, decl *ast.DirectorDeclaration) (*flchttp.
 		}
 	}
 
-	// Origin-Sheilding director which is generated via Fastly would not have any backends
+	// Origin-Shielding director which is generated via Fastly would not have any backends
 	if len(d.Backends) == 0 && decl.DirectorType.Value != flchttp.DIRECTORTYPE_SHIELD {
 		return nil, exception.Runtime(
 			&decl.GetMeta().Token,

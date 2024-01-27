@@ -8,6 +8,12 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+// Special dealing HTTP header names
+const (
+	cookieHeaderName    = "Cookie"
+	setCookieHeaderName = "Set-Cookie"
+)
+
 // Atomic struct for header value representation
 type HeaderItem struct {
 	Key   *value.LenientString
@@ -53,7 +59,7 @@ func (h Header) Set(key string, val value.Value) {
 	// Special treating about Set-Cookie header.
 	// The Set-Cookie header value has specific format like key=value; domain=xxx; path=/; expire=x, HttpOnly; SameSite=Lax
 	// Then we should split key and value by "=" character
-	if name == "Set-Cookie" {
+	if name == setCookieHeaderName {
 		v := copyToLenientString(val)
 		kv := strings.SplitN(v.String(), "=", 2)
 		h[name] = [][]HeaderItem{
@@ -111,7 +117,6 @@ func (h Header) SetObject(name, key string, val value.Value) {
 		},
 		Value: copyToLenientString(val),
 	})
-
 }
 
 func (h Header) Add(key string, val value.Value) {
@@ -125,7 +130,7 @@ func (h Header) Add(key string, val value.Value) {
 	// Special treating about Set-Cookie header.
 	// The Set-Cookie header value has specific format like key=value; domain=xxx; path=/; expire=x, HttpOnly; SameSite=Lax
 	// Then we should split key and value by "=" character
-	if name == "Set-Cookie" {
+	if name == setCookieHeaderName {
 		hv := copyToLenientString(val)
 		kv := strings.SplitN(hv.String(), "=", 2)
 		v = append(v, []HeaderItem{
@@ -175,7 +180,7 @@ func (h Header) Get(key string) *value.LenientString {
 	var merged []value.Value
 	for _, v := range hv[0] {
 		if !v.Key.IsNotSet {
-			cpk := v.Key.Copy().(*value.LenientString)
+			cpk := v.Key.Copy().(*value.LenientString) // nolint:errcheck
 			merged = append(merged, cpk.Values...)
 		}
 		if v.Value == nil {
@@ -185,7 +190,7 @@ func (h Header) Get(key string) *value.LenientString {
 			if v.Value.StrictString() != "" {
 				merged = append(merged, &value.String{Value: "="})
 			}
-			cpv := v.Value.Copy().(*value.LenientString)
+			cpv := v.Value.Copy().(*value.LenientString) // nolint:errcheck
 			merged = append(merged, cpv.Values...)
 		}
 	}
@@ -256,15 +261,19 @@ func FromGoHttpHeader(h http.Header) Header {
 		values := make([][]HeaderItem, len(val))
 		for i := range val {
 			hv := []HeaderItem{}
+
 			var obj []string
+			switch key {
 			// If cookie header, multiple items is sparated by semicolon
-			if key == "Cookie" {
+			case cookieHeaderName:
 				obj = strings.Split(val[i], ";")
-			} else if key == "Set-Cookie" {
+			// If set-cookie header, value does not need to be splitted
+			case setCookieHeaderName:
 				obj = append(obj, val[i])
-			} else {
+			default:
 				obj = strings.Split(val[i], ",")
 			}
+
 			for _, vv := range obj {
 				if pos := strings.Index(vv, "="); pos != -1 {
 					hv = append(hv, HeaderItem{
@@ -316,7 +325,7 @@ func ToGoHttpHeader(h Header) http.Header {
 				ret = append(ret, line)
 			}
 			var r string
-			if key == "Cookie" { // Cookie string should be contatenated with semicolon
+			if key == cookieHeaderName { // Cookie string should be contatenated with semicolon
 				r = strings.Join(ret, "; ")
 			} else {
 				r = strings.Join(ret, ",")
