@@ -81,17 +81,3 @@ func GetString(s Value) *VString {
 		}
 	}
 }
-
-func EnforceString(s Value) *String {
-	switch t := s.(type) {
-	case *LenientString:
-		return &String{
-			IsNotSet: t.IsNotSet,
-			Value:    t.StrictString(),
-		}
-	case *String:
-		return t
-	default:
-		return &String{Value: s.String()}
-	}
-}
