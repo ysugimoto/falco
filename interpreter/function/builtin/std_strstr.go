@@ -36,8 +36,8 @@ func Std_strstr(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	haystack := value.Unwrap[*value.String](args[0]).Value
-	needle := value.Unwrap[*value.String](args[1]).Value
+	haystack := value.GetString(args[0]).String()
+	needle := value.GetString(args[1]).String()
 
 	idx := strings.Index(haystack, needle)
 	if idx == -1 {

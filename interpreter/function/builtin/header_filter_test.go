@@ -5,13 +5,12 @@ package builtin
 import (
 	"net"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -30,10 +29,10 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "Invalid%Header$<>"}, isError: true},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Add("Object", "foo=valuefoo")
-			req.Header.Add("Object", "bar=valuebar")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			req.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Request: req}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "req"}, tt.name)
@@ -59,21 +58,21 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isFiltered: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Content-Length"}, isError: true},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -88,8 +87,8 @@ func Test_Header_filter(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
 			ctx := &context.Context{Request: req}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "req"}, tt.name)
@@ -107,12 +106,12 @@ func Test_Header_filter(t *testing.T) {
 
 			actual := req.Header.Get("X-Custom-Header")
 			if tt.isFiltered {
-				if actual != "" {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if actual == "" {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}
@@ -127,21 +126,21 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isFiltered: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Content-Length"}, isError: true},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -156,8 +155,8 @@ func Test_Header_filter(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
 			ctx := &context.Context{BackendRequest: req}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "bereq"}, tt.name)
@@ -175,12 +174,12 @@ func Test_Header_filter(t *testing.T) {
 
 			actual := req.Header.Get("X-Custom-Header")
 			if tt.isFiltered {
-				if actual != "" {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if actual == "" {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}
@@ -195,21 +194,21 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isFiltered: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Content-Length"}, isError: true},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -224,10 +223,10 @@ func Test_Header_filter(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
 			ctx := &context.Context{BackendResponse: resp}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "beresp"}, tt.name)
@@ -245,12 +244,12 @@ func Test_Header_filter(t *testing.T) {
 
 			actual := resp.Header.Get("X-Custom-Header")
 			if tt.isFiltered {
-				if actual != "" {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if actual == "" {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}
@@ -265,21 +264,21 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isFiltered: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Content-Length"}, isError: true},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -294,10 +293,10 @@ func Test_Header_filter(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
 			ctx := &context.Context{Object: resp}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "obj"}, tt.name)
@@ -315,12 +314,12 @@ func Test_Header_filter(t *testing.T) {
 
 			actual := resp.Header.Get("X-Custom-Header")
 			if tt.isFiltered {
-				if actual != "" {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if actual == "" {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}
@@ -335,21 +334,21 @@ func Test_Header_filter(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isFiltered: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Content-Length"}, isError: true},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -364,10 +363,10 @@ func Test_Header_filter(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
 			ctx := &context.Context{Response: resp}
 
 			_, err := Header_filter(ctx, &value.Ident{Value: "resp"}, tt.name)
@@ -385,12 +384,12 @@ func Test_Header_filter(t *testing.T) {
 
 			actual := resp.Header.Get("X-Custom-Header")
 			if tt.isFiltered {
-				if actual != "" {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if actual == "" {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}
@@ -398,22 +397,21 @@ func Test_Header_filter(t *testing.T) {
 
 	t.Run("filter for object-like header", func(t *testing.T) {
 		tests := []struct {
-			name       value.Value
+			name       string
 			isFiltered bool
 			isError    bool
 		}{
-			{name: &value.String{Value: "Object:foo"}, isFiltered: true},
-			{name: &value.String{Value: "Object:bar"}, isFiltered: false},
-			{name: &value.String{Value: "Object:baz"}, isFiltered: false},
+			{name: "Object:foo", isFiltered: true},
+			{name: "Object:bar", isFiltered: true},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Add("Object", "foo=valuefoo")
-			req.Header.Add("Object", "bar=valuebar")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			req.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Request: req}
 
-			_, err := Header_filter(ctx, &value.Ident{Value: "req"}, tt.name)
+			_, err := Header_filter(ctx, &value.Ident{Value: "req"}, &value.String{Value: tt.name})
 			if tt.isError {
 				if err == nil {
 					t.Errorf("[%d] Header_filter should return error but nil", i)
@@ -426,22 +424,14 @@ func Test_Header_filter(t *testing.T) {
 				}
 			}
 
-			var exists bool
-			for _, v := range req.Header.Values("Object") {
-				spl := strings.SplitN(v, "=", 2)
-				if spl[0] == "foo" {
-					exists = true
-					break
-				}
-			}
-
+			actual := req.Header.Get(tt.name)
 			if tt.isFiltered {
-				if exists {
-					t.Errorf("[%d] Could not be filtered header", i)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Could not filter expected header", i)
 				}
 			} else {
-				if !exists {
-					t.Errorf("[%d] Unexpected header has been filtered", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header Should not be filtered ", i)
 				}
 			}
 		}

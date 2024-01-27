@@ -3,9 +3,12 @@
 package builtin
 
 import (
+	"net/http"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.count
@@ -13,5 +16,70 @@ import (
 // - ID
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/
 func Test_Std_count(t *testing.T) {
-	t.Skip("Test Builtin function std.count should be impelemented")
+
+	t.Run("req.headers", func(t *testing.T) {
+		req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+		req.Header.Set("Foo", &value.String{Value: "bar"})
+		ret, err := Std_count(&context.Context{Request: req}, &value.Ident{Value: "req.headers"})
+		if err != nil {
+			t.Errorf("Unexpected error returned. err=%s", err)
+			return
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value != 2 { // expect 2 because Host header is added
+			t.Errorf("header count mismatch expects=1, got=%d", v.Value)
+		}
+	})
+	t.Run("bereq.headers", func(t *testing.T) {
+		req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+		req.Header.Set("Foo", &value.String{Value: "bar"})
+		ret, err := Std_count(&context.Context{BackendRequest: req}, &value.Ident{Value: "bereq.headers"})
+		if err != nil {
+			t.Errorf("Unexpected error returned. err=%s", err)
+			return
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value != 2 { // expect 2 because Host header is added
+			t.Errorf("header count mismatch expects=1, got=%d", v.Value)
+		}
+	})
+	t.Run("beresp.headers", func(t *testing.T) {
+		resp := &flchttp.Response{Header: flchttp.Header{}}
+		resp.Header.Set("Foo", &value.String{Value: "bar"})
+		ret, err := Std_count(&context.Context{BackendResponse: resp}, &value.Ident{Value: "beresp.headers"})
+		if err != nil {
+			t.Errorf("Unexpected error returned. err=%s", err)
+			return
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value != 1 {
+			t.Errorf("header count mismatch expects=1, got=%d", v.Value)
+		}
+	})
+	t.Run("resp.headers", func(t *testing.T) {
+		resp := &flchttp.Response{Header: flchttp.Header{}}
+		resp.Header.Set("Foo", &value.String{Value: "bar"})
+		ret, err := Std_count(&context.Context{Response: resp}, &value.Ident{Value: "resp.headers"})
+		if err != nil {
+			t.Errorf("Unexpected error returned. err=%s", err)
+			return
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value != 1 {
+			t.Errorf("header count mismatch expects=1, got=%d", v.Value)
+		}
+	})
+	t.Run("obj.headers", func(t *testing.T) {
+		resp := &flchttp.Response{Header: flchttp.Header{}}
+		resp.Header.Set("Foo", &value.String{Value: "bar"})
+		ret, err := Std_count(&context.Context{Object: resp}, &value.Ident{Value: "obj.headers"})
+		if err != nil {
+			t.Errorf("Unexpected error returned. err=%s", err)
+			return
+		}
+		v := value.Unwrap[*value.Integer](ret)
+		if v.Value != 1 {
+			t.Errorf("header count mismatch expects=1, got=%d", v.Value)
+		}
+	})
 }

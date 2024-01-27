@@ -37,22 +37,22 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 		return value.Null, err
 	}
 
-	v := value.Unwrap[*value.String](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	v := value.GetString(args[0]).String()
+	name := value.GetString(args[1]).String()
 
-	query, err := shared.ParseQuery(v.Value)
+	query, err := shared.ParseQuery(v)
 	if err != nil {
 		return value.Null, errors.New(
-			Querystring_regfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
+			Querystring_regfilter_except_Name, "Failed to parse query: %s, error: %s", v, err.Error(),
 		)
 	}
 
 	var matchErr error
 	query.Filter(func(key string) bool {
-		matched, err := regexp.MatchString(name.Value, key)
+		matched, err := regexp.MatchString(name, key)
 		if err != nil {
 			matchErr = errors.New(
-				Querystring_regfilter_except_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
+				Querystring_regfilter_except_Name, "Invalid regexp pattern: %s, error: %s", name, err.Error(),
 			)
 		}
 		return matched

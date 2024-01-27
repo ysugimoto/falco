@@ -36,10 +36,10 @@ func Accept_media_lookup(ctx *context.Context, args ...value.Value) (value.Value
 		return value.Null, err
 	}
 
-	lookup := value.Unwrap[*value.String](args[0])
-	defaultValue := value.Unwrap[*value.String](args[1])
-	pattern := value.Unwrap[*value.String](args[2])
-	accept := value.Unwrap[*value.String](args[3])
+	lookup := value.GetString(args[0]).String()
+	defaultValue := value.GetString(args[1]).String()
+	pattern := value.GetString(args[2])
+	accept := value.GetString(args[3]).String()
 
 	// Third argument MUST be a literal, could not variable
 	if !pattern.IsLiteral() {
@@ -47,12 +47,12 @@ func Accept_media_lookup(ctx *context.Context, args ...value.Value) (value.Value
 	}
 
 	mediaTypes := make(map[string]string)
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for _, v := range strings.Split(lookup, ":") {
 		mediaTypes[v] = v
 	}
 
 	patterns := make(map[string]string)
-	for _, v := range strings.Split(pattern.Value, ":") {
+	for _, v := range strings.Split(pattern.String(), ":") {
 		// Duplicate media types are not allowed among the first three arguments.
 		if _, ok := mediaTypes[v]; ok {
 			return value.Null, errors.New(Accept_media_lookup_Name, "Third argument media must not duplicate in first argument")
@@ -65,7 +65,7 @@ func Accept_media_lookup(ctx *context.Context, args ...value.Value) (value.Value
 		}
 	}
 
-	for _, v := range strings.Split(accept.Value, ",") {
+	for _, v := range strings.Split(accept, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]
@@ -75,7 +75,7 @@ func Accept_media_lookup(ctx *context.Context, args ...value.Value) (value.Value
 		} else if m, ok := patterns[v]; ok {
 			return &value.String{Value: m}, nil
 		} else if v == "*/*" {
-			return defaultValue, nil
+			return &value.String{Value: defaultValue}, nil
 		}
 	}
 

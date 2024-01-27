@@ -37,7 +37,7 @@ func Urldecode(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 	// "%" string is also encoded as "%25" so we need to decode properly
 	input = strings.ReplaceAll(input, "%25", "%")
 

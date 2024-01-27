@@ -634,11 +634,11 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 		lv := value.GetString(left)
 		switch right.Type() {
 		case value.StringType:
-			rv := value.Unwrap[*value.String](right)
-			re, err := regexp.Compile(rv.Value)
+			rv := value.GetString(right)
+			re, err := regexp.Compile(rv.String())
 			if err != nil {
 				return value.Null, errors.WithStack(
-					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
+					fmt.Errorf("Failed to compile regular expression from string %s", rv.String()),
 				)
 			}
 			if matches := re.FindStringSubmatch(lv.String()); matches != nil {

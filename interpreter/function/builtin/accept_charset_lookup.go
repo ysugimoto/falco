@@ -37,8 +37,8 @@ func Accept_charset_lookup(ctx *context.Context, args ...value.Value) (value.Val
 	}
 
 	lookup := value.Unwrap[*value.String](args[0])
-	defaultValue := value.Unwrap[*value.String](args[1])
-	accept := value.Unwrap[*value.String](args[2])
+	defaultValue := value.GetString(args[1]).String()
+	accept := value.GetString(args[2]).String()
 
 	var charsets []string
 	for _, v := range strings.Split(lookup.Value, ":") {
@@ -46,7 +46,7 @@ func Accept_charset_lookup(ctx *context.Context, args ...value.Value) (value.Val
 	}
 
 	index := len(charsets)
-	for _, v := range strings.Split(accept.Value, ",") {
+	for _, v := range strings.Split(accept, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]
@@ -63,5 +63,5 @@ func Accept_charset_lookup(ctx *context.Context, args ...value.Value) (value.Val
 	if index < len(charsets) {
 		return &value.String{Value: charsets[index]}, nil
 	}
-	return defaultValue, nil
+	return &value.String{Value: defaultValue}, nil
 }

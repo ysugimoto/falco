@@ -37,7 +37,7 @@ func Table_lookup(ctx *context.Context, args ...value.Value) (value.Value, error
 	}
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
-	key := value.Unwrap[*value.String](args[1]).Value
+	key := value.GetString(args[1]).String()
 	defaultValue := &value.String{IsNotSet: true}
 	if len(args) > 2 {
 		// explicit clone value

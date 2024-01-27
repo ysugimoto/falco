@@ -48,8 +48,34 @@ func (h Header) Set(key string, val value.Value) {
 		h.SetObject(key[:pos], key[pos+1:], val)
 		return
 	}
+	name := textproto.CanonicalMIMEHeaderKey(key)
 
-	h[textproto.CanonicalMIMEHeaderKey(key)] = [][]HeaderItem{
+	// Special treating about Set-Cookie header.
+	// The Set-Cookie header value has specific format like key=value; domain=xxx; path=/; expire=x, HttpOnly; SameSite=Lax
+	// Then we should split key and value by "=" character
+	if name == "Set-Cookie" {
+		v := copyToLenientString(val)
+		kv := strings.SplitN(v.String(), "=", 2)
+		h[name] = [][]HeaderItem{
+			{
+				HeaderItem{
+					Key: &value.LenientString{
+						Values: []value.Value{
+							&value.String{Value: kv[0]},
+						},
+					},
+					Value: &value.LenientString{
+						Values: []value.Value{
+							&value.String{Value: kv[1]},
+						},
+					},
+				},
+			},
+		}
+		return
+	}
+
+	h[name] = [][]HeaderItem{
 		{
 			HeaderItem{
 				Key:   copyToLenientString(val),
@@ -89,9 +115,34 @@ func (h Header) SetObject(name, key string, val value.Value) {
 }
 
 func (h Header) Add(key string, val value.Value) {
-	v, ok := h[textproto.CanonicalMIMEHeaderKey(key)]
+	name := textproto.CanonicalMIMEHeaderKey(key)
+	v, ok := h[name]
 	if !ok {
 		h.Set(key, val)
+		return
+	}
+
+	// Special treating about Set-Cookie header.
+	// The Set-Cookie header value has specific format like key=value; domain=xxx; path=/; expire=x, HttpOnly; SameSite=Lax
+	// Then we should split key and value by "=" character
+	if name == "Set-Cookie" {
+		hv := copyToLenientString(val)
+		kv := strings.SplitN(hv.String(), "=", 2)
+		v = append(v, []HeaderItem{
+			{
+				Key: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: kv[0]},
+					},
+				},
+				Value: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: kv[1]},
+					},
+				},
+			},
+		})
+		h[name] = v
 		return
 	}
 	v = append(v, []HeaderItem{
@@ -100,6 +151,7 @@ func (h Header) Add(key string, val value.Value) {
 			Value: nil,
 		},
 	})
+	h[name] = v
 }
 
 // Get header fields value - always returns ambiguous STRING

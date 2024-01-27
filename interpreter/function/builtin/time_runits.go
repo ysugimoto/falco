@@ -37,7 +37,7 @@ func Time_runits(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	unit := value.Unwrap[*value.String](args[0]).Value
+	unit := value.GetString(args[0]).String()
 	rtime := value.Unwrap[*value.RTime](args[1]).Value
 
 	switch unit {

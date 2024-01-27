@@ -5,12 +5,12 @@ package builtin
 import (
 	"net"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -29,21 +29,21 @@ func Test_Header_filter_except(t *testing.T) {
 			{name: &value.String{Value: "X-Custom-Header"}, isExepcted: true},
 			{name: &value.String{Value: "X-Not-Found"}},
 			{name: &value.String{Value: "Fastly-FF"}},
-			{name: &value.Integer{Value: 10}},
+			{name: &value.Integer{Value: 10}, isError: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}},
+			{name: &value.Float{Value: 10}, isError: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}},
-			{name: &value.Boolean{Value: true, Literal: true}}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}},
+			{name: &value.Boolean{Value: false}, isError: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isError: true},
+			{name: &value.RTime{Value: time.Second}, isError: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{name: &value.Time{Value: time.Now()}, isError: true},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isError: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}},
+			}, isError: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -58,10 +58,10 @@ func Test_Header_filter_except(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("Fastly-FF", "test")
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Set("X-Additional-Header", "value")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("Fastly-FF", &value.String{Value: "test"})
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("X-Additional-Header", &value.String{Value: "value"})
 			ctx := &context.Context{Request: req}
 
 			_, err := Header_filter_except(ctx, &value.Ident{Value: "req"}, tt.name)
@@ -78,16 +78,16 @@ func Test_Header_filter_except(t *testing.T) {
 
 			actual := req.Header.Get("X-Custom-Header")
 			if tt.isExepcted {
-				if actual == "" {
-					t.Errorf("[%d] Could not be excepted header", i)
+				if actual.IsNotSet {
+					t.Errorf("[%d] Header should exist but not set", i)
 				}
 			} else {
-				if actual != "" {
-					t.Errorf("[%d] Unexpected header has been expected: %s", i, actual)
+				if !actual.IsNotSet {
+					t.Errorf("[%d] Header should not exist but found: %s", i, actual.String())
 				}
 			}
 
-			if req.Header.Get("Fastly-FF") == "" {
+			if req.Header.Get("Fastly-FF").IsNotSet {
 				t.Errorf("[%d] Protected header must not be removed", i)
 			}
 		}

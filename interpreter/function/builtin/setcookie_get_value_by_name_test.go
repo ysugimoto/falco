@@ -3,11 +3,11 @@
 package builtin
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -39,11 +39,9 @@ func Test_Setcookie_get_value_by_name(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		resp := &http.Response{
-			Header: http.Header{},
-		}
+		resp := &flchttp.Response{Header: flchttp.Header{}}
 		for _, c := range tt.setCookie {
-			resp.Header.Add("Set-Cookie", c)
+			resp.Header.Add("Set-Cookie", &value.String{Value: c})
 		}
 
 		ret, err := Setcookie_get_value_by_name(
@@ -57,9 +55,8 @@ func Test_Setcookie_get_value_by_name(t *testing.T) {
 		if ret.Type() != value.StringType {
 			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
 		}
-		v := value.Unwrap[*value.String](ret)
-		if diff := cmp.Diff(tt.expect, v); diff != "" {
-			t.Errorf("[%d] Remaining set-cookie value unmatch, diff=%s", i, diff)
+		if diff := cmp.Diff(tt.expect, ret); diff != "" {
+			t.Errorf("[%d] Got set-cookie value unmatch, diff=%s", i, diff)
 		}
 	}
 }

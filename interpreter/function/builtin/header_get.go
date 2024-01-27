@@ -3,12 +3,10 @@
 package builtin
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/function/shared"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -21,26 +19,12 @@ func Header_get_Validate(args []value.Value) error {
 		return errors.ArgumentNotEnough(Header_get_Name, 2, args)
 	}
 
-	for i := range Header_filter_ArgumentTypes {
+	for i := 0; i < 1; i++ {
 		if args[i].Type() != Header_get_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_get_Name, i+1, Header_get_ArgumentTypes[i], args[i].Type())
 		}
 	}
 	return nil
-}
-
-func header_get(h http.Header, name string) string {
-	if !strings.Contains(name, ":") {
-		return h.Get(name)
-	}
-	spl := strings.SplitN(name, ":", 2)
-	for _, v := range h.Values(spl[0]) {
-		kv := strings.SplitN(v, "=", 2)
-		if kv[0] == spl[1] {
-			return kv[1]
-		}
-	}
-	return ""
 }
 
 // Fastly built-in function implementation of header.get
@@ -54,34 +38,59 @@ func Header_get(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
-	name := value.GetString(args[1]).String()
-	if !shared.IsValidHeader(name) {
-		return &value.String{IsNotSet: true}, nil
+	// Type assertion for second argument
+	switch t := args[1].(type) {
+	case *value.Integer:
+		if t.Literal {
+			return value.Null, errors.New(Header_get_Name, "Integer literal could not provide on second argument")
+		}
+	case *value.Float:
+		if t.Literal {
+			return value.Null, errors.New(Header_get_Name, "Float literal could not provide on second argument")
+		}
+	case *value.RTime:
+		if t.Literal {
+			return value.Null, errors.New(Header_get_Name, "RTime literal could not provide on second argument")
+		}
+	case *value.Backend:
+		if t.Literal {
+			return value.Null, errors.New(Header_get_Name, "Backend literal could not provide on second argument")
+		}
+	case *value.Acl:
+		return value.Null, errors.New(Header_get_Name, "Acl could not provide on second argument")
 	}
+
+	name := value.GetString(args[1]).String()
+	var header flchttp.Header
 
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			return ctx.Request.Header.Get(name), nil
+			header = ctx.Request.Header
 		}
 	case "resp":
 		if ctx.Response != nil {
-			return ctx.Response.Header.Get(name), nil
+			header = ctx.Response.Header
 		}
 	case "obj":
 		if ctx.Object != nil {
-			return ctx.Object.Header.Get(name), nil
+			header = ctx.Object.Header
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			return ctx.BackendRequest.Header.Get(name), nil
+			header = ctx.BackendRequest.Header
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			return ctx.BackendResponse.Header.Get(name), nil
+			header = ctx.BackendResponse.Header
 		}
 	default:
 		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)
 	}
-	return &value.String{IsNotSet: true}, nil
+
+	if header == nil || !shared.IsValidHeader(name) {
+		return &value.LenientString{IsNotSet: true}, nil
+	}
+
+	return header.Get(name), nil
 }

@@ -53,10 +53,12 @@ func NewRequestWithContext(ctx context.Context, method, requestUrl string, body 
 		RequestURI: requestUrl,
 		Context:    ctx,
 		URL:        u,
-		Body:       io.NopCloser(body),
 		Header:     Header{},
 	}
 	req.Header.Set("Host", &value.String{Value: u.Host})
+	if body != nil {
+		req.Body = io.NopCloser(body)
+	}
 	return req, nil
 }
 

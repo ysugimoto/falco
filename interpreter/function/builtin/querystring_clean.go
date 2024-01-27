@@ -35,12 +35,12 @@ func Querystring_clean(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	v := value.Unwrap[*value.String](args[0])
+	v := value.GetString(args[0]).String()
 
-	query, err := shared.ParseQuery(v.Value)
+	query, err := shared.ParseQuery(v)
 	if err != nil {
 		return value.Null, errors.New(
-			Querystring_clean_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
+			Querystring_clean_Name, "Failed to parse url: %s, error: %s", v, err.Error(),
 		)
 	}
 

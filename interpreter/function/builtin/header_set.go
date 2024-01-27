@@ -22,7 +22,7 @@ func Header_set_Validate(args []value.Value) error {
 	if len(args) != 3 {
 		return errors.ArgumentNotEnough(Header_set_Name, 3, args)
 	}
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		if args[i].Type() != Header_set_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_set_Name, i+1, Header_set_ArgumentTypes[i], args[i].Type())
 		}
@@ -51,7 +51,6 @@ func Header_set(ctx *context.Context, args ...value.Value) (value.Value, error) 
 
 	where := value.Unwrap[*value.Ident](args[0])
 	name := value.GetString(args[1]).String()
-	val := value.GetString(args[2])
 
 	// Invalid header and protected header are no effect
 	if !shared.IsValidHeader(name) {
@@ -61,26 +60,48 @@ func Header_set(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, nil
 	}
 
+	// Type assertion for third argument
+	switch t := args[2].(type) {
+	case *value.Integer:
+		if t.Literal {
+			return value.Null, errors.New(Header_set_Name, "Integer literal could not provide on third argument")
+		}
+	case *value.Float:
+		if t.Literal {
+			return value.Null, errors.New(Header_set_Name, "Float literal could not provide on third argument")
+		}
+	case *value.RTime:
+		if t.Literal {
+			return value.Null, errors.New(Header_set_Name, "RTime literal could not provide on third argument")
+		}
+	case *value.Backend:
+		if t.Literal {
+			return value.Null, errors.New(Header_set_Name, "Backend literal could not provide on third argument")
+		}
+	case *value.Acl:
+		return value.Null, errors.New(Header_set_Name, "Acl could not provide on third argument")
+	}
+
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			ctx.Request.Header.Set(name, val.Get())
+			ctx.Request.Header.Set(name, args[2])
 		}
 	case "resp":
 		if ctx.Response != nil {
-			ctx.Response.Header.Set(name, val.Get())
+			ctx.Response.Header.Set(name, args[2])
 		}
 	case "obj":
 		if ctx.Object != nil {
-			ctx.Object.Header.Set(name, val.Get())
+			ctx.Object.Header.Set(name, args[2])
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			ctx.BackendRequest.Header.Set(name, val.Get())
+			ctx.BackendRequest.Header.Set(name, args[2])
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			ctx.BackendResponse.Header.Set(name, val.Get())
+			ctx.BackendResponse.Header.Set(name, args[2])
 		}
 	default:
 		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)

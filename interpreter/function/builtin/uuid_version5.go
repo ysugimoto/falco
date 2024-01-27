@@ -35,8 +35,8 @@ func Uuid_version5(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	namespace := value.Unwrap[*value.String](args[0]).Value
-	name := value.Unwrap[*value.String](args[1]).Value
+	namespace := value.GetString(args[0]).String()
+	name := value.GetString(args[1]).String()
 
 	space, err := uuid.Parse(namespace)
 	if err != nil {

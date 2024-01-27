@@ -3,8 +3,12 @@
 package builtin
 
 import (
+	"net/textproto"
+	"strings"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -24,6 +28,21 @@ func Std_collect_Validate(args []value.Value) error {
 	return nil
 }
 
+func Std_collect_headers(h flchttp.Header, key string) {
+	name := textproto.CanonicalMIMEHeaderKey(key)
+	items, ok := h[name]
+	if !ok || len(items) < 2 {
+		return
+	}
+	first := items[0]
+	for _, item := range items[1:] {
+		for _, hv := range item {
+			first = append(first, hv)
+		}
+	}
+	h[name] = [][]flchttp.HeaderItem{first}
+}
+
 // Fastly built-in function implementation of std.collect
 // Arguments may be:
 // - ID
@@ -35,31 +54,35 @@ func Std_collect(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// TODO: std.collection has no effect because Golang's HTTP header is automatically collected
-	// ident := value.Unwrap[*value.Ident](args[0])
+	ident := value.Unwrap[*value.Ident](args[0])
+	// TODO: separator does not work due to our header implementation
 	// sep := ","
 	// if len(args) > 1 {
 	// 	sep = value.Unwrap[*value.String](args[1]).Value
 	// }
-	//
-	// switch {
-	// case strings.HasPrefix(ident.Value, "req.http."):
-	// 	name := strings.TrimPrefix(ident.Value, "req.http.")
-	// 	value := ctx.Request.Header.Values(name)
-	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "bereq.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "bereq.http.")
-	// 	value := ctx.BackendRequest.Header.Values(name)
-	// 	ctx.BackendRequest.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "beresp.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "beresp.http.")
-	// 	value := ctx.BackendResponse.Header.Values(name)
-	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "resp.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "resp.http.")
-	// 	value := ctx.BackendResponse.Header.Values(name)
-	// 	ctx.BackendResponse.Header.Set(name, strings.Join(value, sep))
-	// }
+
+	// std.collect could work correctly in Set-Cookie header so we will raise an error
+	if strings.HasSuffix(strings.ToLower(ident.Value), "set-cookie") {
+		return value.Null, errors.New(Std_collect_Name, "could not work correctly in Set-Cookie header")
+	}
+
+	switch {
+	case strings.HasPrefix(ident.Value, "req.http."):
+		name := strings.TrimPrefix(ident.Value, "req.http.")
+		Std_collect_headers(ctx.Request.Header, name)
+	case strings.HasPrefix(ident.Value, "bereq.http"):
+		name := strings.TrimPrefix(ident.Value, "bereq.http.")
+		Std_collect_headers(ctx.BackendRequest.Header, name)
+	case strings.HasPrefix(ident.Value, "beresp.http"):
+		name := strings.TrimPrefix(ident.Value, "beresp.http.")
+		Std_collect_headers(ctx.BackendResponse.Header, name)
+	case strings.HasPrefix(ident.Value, "resp.http"):
+		name := strings.TrimPrefix(ident.Value, "resp.http.")
+		Std_collect_headers(ctx.Response.Header, name)
+	case strings.HasPrefix(ident.Value, "obj.http"):
+		name := strings.TrimPrefix(ident.Value, "obj.http.")
+		Std_collect_headers(ctx.Object.Header, name)
+	}
 
 	return value.Null, nil
 }

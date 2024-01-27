@@ -36,7 +36,7 @@ func Utf8_is_valid(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 	return &value.Boolean{
 		Value: utf8.ValidString(input),
 	}, nil

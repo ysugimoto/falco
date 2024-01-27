@@ -5,15 +5,15 @@ package builtin
 import (
 	"net"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/k0kubun/pp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
-	// "github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of header.get
@@ -24,59 +24,56 @@ func Test_Header_get(t *testing.T) {
 
 	t.Run("Invalid arguments", func(t *testing.T) {
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name value.Value
 		}{
-			{name: &value.String{Value: ""}, expect: ""},
-			{name: &value.String{Value: "Invalid%Header$<>"}, expect: ""},
+			{name: &value.String{Value: ""}},
+			{name: &value.String{Value: "Invalid%Header$<>"}},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Add("Object", "foo=valuefoo")
-			req.Header.Add("Object", "bar=valuebar")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			req.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Request: req}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "req"}, tt.name)
-			if tt.isError {
-				if err == nil {
-					t.Errorf("[%d] Header_get should return error but non-nil", i)
-					continue
-				}
+			if err != nil {
+				t.Errorf("[%d] Header_get should not return error but non-nil: %s", i, err)
+				continue
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
 		}
 	})
 
 	t.Run("get from req", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
+			isError  bool
 		}{
 			{name: &value.String{Value: "X-Custom-Header"}, expect: "value"},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: "valuefoo"},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
+			{name: &value.Float{Value: 10}, isNotSet: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, expect: "1"},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.Time{Value: now}, isNotSet: true},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}, isNotSet: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -91,16 +88,16 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Add("Object", "foo=valuefoo")
-			req.Header.Add("Object", "bar=valuebar")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			req.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Request: req}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "req"}, tt.name)
 			if tt.isError {
 				if err == nil {
-					t.Errorf("[%d] Header_get should return error but nil", i)
+					t.Errorf("[%d] Header_get should return error but non-nil", i)
 				}
 				continue
 			} else {
@@ -110,37 +107,46 @@ func Test_Header_get(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if tt.isNotSet {
+				if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
+					t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+				}
+				return
+			}
+
+			str := value.GetString(v).String()
+			if diff := cmp.Diff(str, tt.expect); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
 		}
 	})
 
 	t.Run("get from bereq", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
+			isError  bool
 		}{
 			{name: &value.String{Value: "X-Custom-Header"}, expect: "value"},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: "valuefoo"},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
+			{name: &value.Float{Value: 10}, isNotSet: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, expect: "1"},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.Time{Value: now}, isNotSet: true},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}, isNotSet: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -155,10 +161,10 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			req.Header.Set("X-Custom-Header", "value")
-			req.Header.Add("Object", "foo=valuefoo")
-			req.Header.Add("Object", "bar=valuebar")
+			req, _ := flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			req.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			req.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{BackendRequest: req}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "bereq"}, tt.name)
@@ -174,37 +180,46 @@ func Test_Header_get(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if tt.isNotSet {
+				if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
+					t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+				}
+				return
+			}
+
+			str := value.GetString(v).String()
+			if diff := cmp.Diff(str, tt.expect); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
 		}
 	})
 
 	t.Run("get from beresp", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
+			isError  bool
 		}{
 			{name: &value.String{Value: "X-Custom-Header"}, expect: "value"},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: "valuefoo"},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
+			{name: &value.Float{Value: 10}, isNotSet: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, expect: "1"},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.Time{Value: now}, isNotSet: true},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}, isNotSet: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -219,12 +234,12 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
-			resp.Header.Add("Object", "foo=valuefoo")
-			resp.Header.Add("Object", "bar=valuebar")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			resp.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			resp.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{BackendResponse: resp}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "beresp"}, tt.name)
@@ -240,37 +255,46 @@ func Test_Header_get(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if tt.isNotSet {
+				if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
+					t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+				}
+				return
+			}
+
+			str := value.GetString(v).String()
+			if diff := cmp.Diff(str, tt.expect); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
 		}
 	})
 
 	t.Run("get from obj", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
+			isError  bool
 		}{
 			{name: &value.String{Value: "X-Custom-Header"}, expect: "value"},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: "valuefoo"},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
+			{name: &value.Float{Value: 10}, isNotSet: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, expect: "1"},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.Time{Value: now}, isNotSet: true},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}, isNotSet: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -285,15 +309,19 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
-			resp.Header.Add("Object", "foo=valuefoo")
-			resp.Header.Add("Object", "bar=valuebar")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			resp.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			resp.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Object: resp}
 
-			v, err := Header_get(ctx, &value.Ident{Value: "obj"}, tt.name)
+			v, err := Header_get(
+				ctx,
+				&value.Ident{Value: "obj"},
+				tt.name,
+			)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("[%d] Header_get should return error but non-nil", i)
@@ -306,37 +334,46 @@ func Test_Header_get(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if tt.isNotSet {
+				if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
+					t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+				}
+				return
+			}
+
+			str := value.GetString(v).String()
+			if diff := cmp.Diff(str, tt.expect); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
 		}
 	})
 
 	t.Run("get from response", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
+			isError  bool
 		}{
 			{name: &value.String{Value: "X-Custom-Header"}, expect: "value"},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: "valuefoo"},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
 			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
+			{name: &value.Float{Value: 10}, isNotSet: true},
 			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, expect: "1"},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
 			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.Time{Value: now}, isNotSet: true},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}, isNotSet: true},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
@@ -351,15 +388,19 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
-			resp.Header.Add("Object", "foo=valuefoo")
-			resp.Header.Add("Object", "bar=valuebar")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			resp.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			resp.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Response: resp}
 
-			v, err := Header_get(ctx, &value.Ident{Value: "resp"}, tt.name)
+			v, err := Header_get(
+				ctx,
+				&value.Ident{Value: "resp"},
+				tt.name,
+			)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("[%d] Header_get should return error but non-nil", i)
@@ -372,74 +413,72 @@ func Test_Header_get(t *testing.T) {
 				}
 			}
 
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
+			if tt.isNotSet {
+				if diff := cmp.Diff(v, &value.LenientString{IsNotSet: true}); diff != "" {
+					t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+				}
+				return
+			}
+
+			str := value.GetString(v).String()
+			if diff := cmp.Diff(str, tt.expect); diff != "" {
 				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
 			}
+
 		}
 	})
 
 	t.Run("get from invalid id", func(t *testing.T) {
+		now := time.Now()
 		tests := []struct {
-			name    value.Value
-			expect  string
-			isError bool
+			name     value.Value
+			expect   string
+			isNotSet bool
 		}{
-			{name: &value.String{Value: "X-Custom-Header"}, expect: ""},
-			{name: &value.String{Value: "X-Not-Found"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:foo"}, expect: ""},
-			{name: &value.String{Value: "OBJECT:baz"}, expect: ""},
-			{name: &value.Integer{Value: 10}, expect: ""},
-			{name: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{name: &value.Float{Value: 10}, expect: ""},
-			{name: &value.Float{Value: 10, Literal: true}, isError: true},
-			{name: &value.Boolean{Value: false}, expect: ""},
-			{name: &value.Boolean{Value: true, Literal: true}, expect: ""}, // BOOL could be provide as literal
-			{name: &value.RTime{Value: time.Second}, expect: ""},
-			{name: &value.RTime{Value: time.Second, Literal: true}, isError: true},
-			{name: &value.Time{Value: time.Now()}, expect: ""},
-			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, expect: ""},
+			{name: &value.String{Value: "X-Custome-Header"}, expect: "value"},
+			{name: &value.String{Value: "X-Not-Found"}, isNotSet: true},
+			{name: &value.String{Value: "Object:foo"}, expect: "valuefoo"},
+			{name: &value.Integer{Value: 10}, isNotSet: true},
+			{name: &value.Integer{Value: 10, Literal: true}},
+			{name: &value.Float{Value: 10}, isNotSet: true},
+			{name: &value.Float{Value: 10, Literal: true}},
+			{name: &value.Boolean{Value: false}, isNotSet: true},
+			{name: &value.Boolean{Value: true, Literal: true}, isNotSet: true},
+			{name: &value.RTime{Value: time.Second}, isNotSet: true},
+			{name: &value.RTime{Value: time.Second, Literal: true}},
+			{name: &value.Time{Value: now}},
+			{name: &value.IP{Value: net.ParseIP("192.168.0.1")}, isNotSet: true},
 			{name: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, expect: ""},
+			}},
 			{name: &value.Backend{
 				Literal: true,
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 			{name: &value.Acl{
 				Value: &ast.AclDeclaration{
 					Name: &ast.Ident{Value: "example"},
 				},
-			}, isError: true},
+			}},
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &flchttp.Response{
+				Header: flchttp.Header{},
 			}
-			resp.Header.Set("X-Custom-Header", "value")
-			resp.Header.Add("Object", "foo=valuefoo")
-			resp.Header.Add("Object", "bar=valuebar")
+			resp.Header.Set("X-Custom-Header", &value.String{Value: "value"})
+			resp.Header.Set("Object:foo", &value.String{Value: "valuefoo"})
+			resp.Header.Set("Object:bar", &value.String{Value: "valuebar"})
 			ctx := &context.Context{Response: resp}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "foo"}, tt.name)
-			if tt.isError {
-				if err == nil {
-					t.Errorf("[%d] Header_get should return error but non-nil", i)
-				}
-				continue
-			} else {
-				if err != nil {
-					t.Errorf("[%d] Header_get should not return error but non-nil: %s", i, err)
-					continue
-				}
-			}
-
-			if diff := cmp.Diff(v, &value.String{Value: tt.expect}); diff != "" {
-				t.Errorf("[%d] Unexpected value returned, diff=%s", i, diff)
+			if err == nil {
+				pp.Println(tt, v)
+				t.Errorf("[%d] Header_get expects error but nil", i)
 			}
 		}
 	})

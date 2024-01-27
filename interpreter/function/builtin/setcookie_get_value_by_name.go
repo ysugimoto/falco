@@ -3,9 +3,6 @@
 package builtin
 
 import (
-	"net/textproto"
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	flchttp "github.com/ysugimoto/falco/interpreter/http"
@@ -63,23 +60,18 @@ func Setcookie_get_value_by_name(ctx *context.Context, args ...value.Value) (val
 		)
 	}
 
-	setCookies, ok := resp.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")]
-	if !ok {
+	var found string
+	for _, sc := range flchttp.ReadSetCookies(resp) {
+		if sc.Name != name {
+			continue
+		}
+		// If multiple cookies of the same name are present in the response,
+		// the value of the last one will be returned.
+		found = sc.Value
+	}
+
+	if found == "" {
 		return &value.String{IsNotSet: true}, nil
 	}
-
-	for _, sc := range setCookies {
-		val := sc[0].Key.StrictString()
-		idx := strings.Index(val, name+"=")
-		if idx == -1 {
-			continue
-		}
-		v, _, found := strings.Cut(string(val[idx+1]), ";")
-		if !found {
-			continue
-		}
-		return &value.String{Value: v}, nil
-	}
-
-	return &value.String{IsNotSet: true}, nil
+	return &value.String{Value: found}, nil
 }

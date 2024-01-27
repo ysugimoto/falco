@@ -36,7 +36,7 @@ func Urlencode(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 	// url.QueryEscape encodes white space to "+" so we should use url.PathEscape
 	// in order to encode white space to "%20"
 	enc := url.PathEscape(input)

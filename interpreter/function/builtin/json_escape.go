@@ -55,15 +55,15 @@ func Json_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	str := value.Unwrap[*value.String](args[0])
+	str := value.GetString(args[0]).String()
 
 	// Preparation: check provided is valid in UTF-8 sequence
-	if !utf8.ValidString(str.Value) {
+	if !utf8.ValidString(str) {
 		return &value.String{Value: ""}, nil
 	}
 
 	var escaped []rune
-	for _, r := range []rune(str.Value) {
+	for _, r := range []rune(str) {
 		if v, ok := Json_escape_CharacterMap[r]; ok {
 			escaped = append(escaped, v...)
 			continue

@@ -38,8 +38,8 @@ func Digest_hash_sha512_from_base64(ctx *context.Context, args ...value.Value) (
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	decoded, err := base64.StdEncoding.DecodeString(input.Value)
+	input := value.GetString(args[0]).String()
+	decoded, err := base64.StdEncoding.DecodeString(input)
 	if err != nil {
 		return value.Null, err
 	}

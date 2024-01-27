@@ -37,8 +37,8 @@ func Digest_hash_sha512(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	enc := sha512.Sum512([]byte(input.Value))
+	input := value.GetString(args[0]).String()
+	enc := sha512.Sum512([]byte(input))
 
 	return &value.String{
 		Value: hex.EncodeToString(enc[:]),

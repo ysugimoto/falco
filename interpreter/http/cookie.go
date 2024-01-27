@@ -33,7 +33,7 @@ func ReadCookies(r *Request) []*Cookie {
 	return readCookies(cookies)
 }
 
-// Follwing functions striongly respect net/http package's cookie manipulation
+// Follwing functions strongly respect net/http package's cookie manipulation
 func readCookies(cookies [][]HeaderItem) []*Cookie {
 	var read []*Cookie
 
@@ -52,6 +52,62 @@ func readCookies(cookies [][]HeaderItem) []*Cookie {
 				continue
 			}
 			value, ok := parseCookieValue(cookie.Value.StrictString(), true)
+			if !ok {
+				continue
+			}
+			read = append(read, &Cookie{
+				Name:  name,
+				Value: value,
+			})
+		}
+	}
+	return read
+}
+
+func ReadSetCookie(r *Response, filter string) *Cookie {
+	cookies, ok := r.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")]
+	if !ok {
+		return nil
+	}
+	for _, c := range readSetCookies(cookies) {
+		if c.Name == filter {
+			return c
+		}
+	}
+	return nil
+}
+
+func ReadSetCookies(r *Response) []*Cookie {
+	cookies, ok := r.Header[textproto.CanonicalMIMEHeaderKey("Set-Cookie")]
+	if !ok {
+		return []*Cookie{}
+	}
+	return readSetCookies(cookies)
+}
+
+// Follwing functions strongly respect net/http package's cookie manipulation
+func readSetCookies(cookies [][]HeaderItem) []*Cookie {
+	var read []*Cookie
+
+	for i := range cookies {
+		for j := range cookies[i] {
+			cookie := cookies[i][j]
+			name := cookie.Key.StrictString()
+			if name == "" {
+				continue
+			}
+			name = textproto.TrimString(name)
+			if !isValidCookieName(name) {
+				continue
+			}
+			if cookie.Value == nil {
+				continue
+			}
+			before, _, found := strings.Cut(cookie.Value.StrictString(), ";")
+			if !found {
+				before = cookie.Value.StrictString()
+			}
+			value, ok := parseCookieValue(before, true)
 			if !ok {
 				continue
 			}

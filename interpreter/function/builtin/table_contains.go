@@ -35,7 +35,7 @@ func Table_contains(ctx *context.Context, args ...value.Value) (value.Value, err
 	}
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
-	key := value.Unwrap[*value.String](args[1]).Value
+	key := value.GetString(args[1]).String()
 
 	table, ok := ctx.Tables[id]
 	if !ok {

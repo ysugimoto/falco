@@ -58,7 +58,7 @@ func Strftime(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	format := []byte(value.Unwrap[*value.String](args[0]).Value)
+	format := []byte(value.GetString(args[0]).String())
 	t := value.Unwrap[*value.Time](args[1]).Value
 
 	var formatted string

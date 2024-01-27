@@ -36,20 +36,20 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	pattern := value.Unwrap[*value.String](args[1])
-	replacement := value.Unwrap[*value.String](args[2])
+	input := value.GetString(args[0]).String()
+	pattern := value.GetString(args[1]).String()
+	replacement := value.GetString(args[2]).String()
 
-	re, err := regexp.Compile(pattern.Value)
+	re, err := regexp.Compile(pattern)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
-		return &value.String{Value: input.Value}, errors.New(
-			Regsub_Name, "Invalid regular expression pattern: %s", pattern.Value,
+		return &value.String{Value: input}, errors.New(
+			Regsub_Name, "Invalid regular expression pattern: %s", pattern,
 		)
 	}
 
-	expand, _ := convertGoExpandString(replacement.Value)
+	expand, _ := convertGoExpandString(replacement)
 	return &value.String{
-		Value: re.ReplaceAllString(input.Value, expand),
+		Value: re.ReplaceAllString(input, expand),
 	}, nil
 }

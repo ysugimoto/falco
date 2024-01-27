@@ -4,7 +4,6 @@ package builtin
 
 import (
 	"net/textproto"
-	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -67,11 +66,11 @@ func Setcookie_delete_by_name(ctx *context.Context, args ...value.Value) (value.
 	var isDeleted bool
 	var filtered [][]flchttp.HeaderItem
 	for _, sc := range setCookies {
-		if !strings.HasPrefix(sc[0].Key.StrictString(), name+"=") {
+		if sc[0].Key.StrictString() == name {
+			isDeleted = true
 			continue
 		}
 		filtered = append(filtered, sc)
-		isDeleted = true
 	}
 
 	if !isDeleted {

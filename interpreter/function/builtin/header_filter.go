@@ -24,7 +24,7 @@ func Header_filter_Validate(args []value.Value) error {
 	}
 	for i := 1; i < len(args); i++ {
 		if args[i].Type() != value.StringType {
-			return errors.TypeMismatch(Header_filter_Name, i+1, value.StringType, args[i].Type())
+			return errors.TypeMismatch(Header_filter_except_Name, i+1, value.StringType, args[i].Type())
 		}
 	}
 	return nil

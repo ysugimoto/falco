@@ -34,8 +34,8 @@ func Digest_secure_is_equal(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	s1 := []rune(value.Unwrap[*value.String](args[0]).Value)
-	s2 := []rune(value.Unwrap[*value.String](args[1]).Value)
+	s1 := []rune(value.GetString(args[0]).String())
+	s2 := []rune(value.GetString(args[1]).String())
 
 	if len(s1) != len(s2) {
 		return &value.Boolean{Value: false}, nil

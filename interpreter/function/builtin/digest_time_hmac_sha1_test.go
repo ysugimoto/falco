@@ -19,7 +19,7 @@ func Test_Digest_time_hmac_sha1(t *testing.T) {
 	secret := base64.StdEncoding.EncodeToString([]byte("12345678901234567890"))
 	ret, err := digest_time_hmac_sha1(
 		time.Date(1970, 1, 1, 0, 0, 59, 0, time.UTC),
-		&value.String{Value: secret},
+		secret,
 		&value.Integer{Value: 30},
 		&value.Integer{Value: 0},
 	)

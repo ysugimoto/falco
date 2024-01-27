@@ -36,8 +36,8 @@ func Digest_base64url_decode(ctx *context.Context, args ...value.Value) (value.V
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	dec, err := base64.URLEncoding.DecodeString(input.Value)
+	input := value.GetString(args[0]).String()
+	dec, err := base64.URLEncoding.DecodeString(input)
 	if err != nil {
 		return value.Null, err
 	}

@@ -34,8 +34,8 @@ func H2_disable_header_compression(ctx *context.Context, args ...value.Value) (v
 	}
 
 	for i := range args {
-		v := value.Unwrap[*value.String](args[i])
-		ctx.DisableCompressionHeaders = append(ctx.DisableCompressionHeaders, v.Value)
+		v := value.GetString(args[i]).String()
+		ctx.DisableCompressionHeaders = append(ctx.DisableCompressionHeaders, v)
 	}
 
 	// nil means VOID type

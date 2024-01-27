@@ -37,11 +37,11 @@ func Digest_hash_crc32(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
+	input := value.GetString(args[0]).String()
 
 	// https://github.com/whik/crc-lib-c/blob/master/crcLib.c#L554
 	var crc uint32 = 0xffffffff
-	for _, c := range []byte(input.Value) {
+	for _, c := range []byte(input) {
 		crc = crc ^ ((uint32)(c) << 24)
 		for i := 0; i < 8; i++ {
 			if crc&0x80000000 != 0 {

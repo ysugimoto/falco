@@ -37,8 +37,8 @@ func Accept_encoding_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	}
 
 	lookup := value.Unwrap[*value.String](args[0])
-	defaultValue := value.Unwrap[*value.String](args[1])
-	encoding := value.Unwrap[*value.String](args[2])
+	defaultValue := value.GetString(args[1]).String()
+	encoding := value.GetString(args[2]).String()
 
 	var encodings []string
 	for _, v := range strings.Split(lookup.Value, ":") {
@@ -46,7 +46,7 @@ func Accept_encoding_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	}
 
 	index := len(encodings)
-	for _, v := range strings.Split(encoding.Value, ",") {
+	for _, v := range strings.Split(encoding, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]
@@ -63,5 +63,5 @@ func Accept_encoding_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	if index < len(encodings) {
 		return &value.String{Value: encodings[index]}, nil
 	}
-	return defaultValue, nil
+	return &value.String{Value: defaultValue}, nil
 }

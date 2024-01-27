@@ -38,7 +38,7 @@ func Http_status_matches(ctx *context.Context, args ...value.Value) (value.Value
 	}
 
 	status := fmt.Sprint(value.Unwrap[*value.Integer](args[0]).Value)
-	format := value.Unwrap[*value.String](args[1]).Value
+	format := value.GetString(args[1]).String()
 
 	var inverse bool
 	if format[0] == 0x21 { // prefixed with "!"

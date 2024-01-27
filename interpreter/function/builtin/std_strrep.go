@@ -36,7 +36,7 @@ func Std_strrep(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0]).Value
+	s := value.GetString(args[0]).String()
 	count := value.Unwrap[*value.Integer](args[1]).Value
 	if count < 0 {
 		count = 0

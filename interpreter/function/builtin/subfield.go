@@ -37,9 +37,10 @@ func Subfield(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	subject := value.Unwrap[*value.String](args[0]).Value
-	field := value.Unwrap[*value.String](args[1]).Value
+	subject := value.GetString(args[0]).String()
+	field := value.GetString(args[1]).String()
 	separator := ","
+
 	if len(args) == 3 {
 		separator = value.Unwrap[*value.String](args[2]).Value
 		if len(separator) > 1 {

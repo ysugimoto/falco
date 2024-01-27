@@ -40,13 +40,13 @@ func Crypto_decrypt_base64(ctx *context.Context, args ...value.Value) (value.Val
 	cipherId := value.Unwrap[*value.Ident](args[0])
 	mode := value.Unwrap[*value.Ident](args[1])
 	padding := value.Unwrap[*value.Ident](args[2])
-	key := value.Unwrap[*value.String](args[3])
-	iv := value.Unwrap[*value.String](args[4])
-	text := value.Unwrap[*value.String](args[5])
+	key := value.GetString(args[3]).String()
+	iv := value.GetString(args[4]).String()
+	text := value.GetString(args[5]).String()
 
-	buf, err := base64.StdEncoding.DecodeString(text.Value)
+	buf, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
-		return value.Null, errors.New("Failed to decode base64 encoded string: %s", text.Value)
+		return value.Null, errors.New("Failed to decode base64 encoded string: %s", text)
 	}
 
 	codec, err := shared.NewCryptoCodec(
@@ -57,7 +57,7 @@ func Crypto_decrypt_base64(ctx *context.Context, args ...value.Value) (value.Val
 		return value.Null, err
 	}
 
-	decrypted, err := codec.Decrypt(key.Value, iv.Value, buf)
+	decrypted, err := codec.Decrypt(key, iv, buf)
 	if err != nil {
 		return value.Null, err
 	}

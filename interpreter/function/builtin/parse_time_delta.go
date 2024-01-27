@@ -36,12 +36,12 @@ func Parse_time_delta(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	specifier := value.Unwrap[*value.String](args[0])
+	specifier := value.GetString(args[0]).String()
 	var delta int64
 	var stack []byte
 
 	// Golang's time.ParseDuration does not recognize "d" and "D", date duration so we need to parse manually
-	for _, s := range []byte(specifier.Value) {
+	for _, s := range []byte(specifier) {
 		switch s {
 		case 0x64, 0x44: // "d" or "D"
 			v, err := strconv.ParseInt(string(stack), 10, 64)
