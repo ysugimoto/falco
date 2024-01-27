@@ -8,7 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_not_match_Name = "assert"
+const Assert_not_match_Name = "assert.not_match"
 
 var Assert_not_match_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 

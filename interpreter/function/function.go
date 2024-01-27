@@ -29,14 +29,9 @@ func Exists(scope context.Scope, name string) (*Function, error) {
 	return fn, nil
 }
 
-func Inject(fns map[string]*Function) error {
+func Inject(fns map[string]*Function) {
+	// Always override existing functions
 	for key, fn := range fns {
-		if _, ok := builtinFunctions[key]; ok {
-			return errors.WithStack(
-				fmt.Errorf("Function %s already defiend and could not override", key),
-			)
-		}
 		builtinFunctions[key] = fn
 	}
-	return nil
 }

@@ -475,10 +475,8 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
 	}
 
-	i := interpreter.New(options...)
 	r.message(white, "Running tests...")
-	i.Debugger = tester.NewDebugger()
-	factory, err := tester.New(tc, i).Run(r.config.Commands.At(1))
+	factory, err := tester.New(tc, options).Run(r.config.Commands.At(1))
 	if err != nil {
 		writeln(red, " Failed.")
 		writeln(red, "Failed to run test: %s", err.Error())

@@ -1,3 +1,27 @@
+## v1.4.0
+
+- Additional builtin variables [#245](https://github.com/ysugimoto/falco/pull/245) (@richardmarshall)
+- Value returns from switch and bare block statements [#244](https://github.com/ysugimoto/falco/pull/244) (@richardmarshall)
+- Support return value in block statement and if statement [#242](https://github.com/ysugimoto/falco/pull/242) (@ysugimoto)
+- Add support for switch statements [#238](https://github.com/ysugimoto/falco/pull/238) (@richardmarshall)
+- Suppress notset output [#234](https://github.com/ysugimoto/falco/pull/234) (@ysugimoto)
+
+## v1.3.0
+
+- Feat/state related asserter [#232](https://github.com/ysugimoto/falco/pull/232) (@ysugimoto)
+- Fix not_set value related implementation [#231](https://github.com/ysugimoto/falco/pull/231) (@ysugimoto)
+- Fix time default value [#230](https://gthub.com/ysugimoto/falco/pull/230) (@ysugimoto)
+- Implement table manipulation testing functions [#229](https://github.com/ysugimoto/falco/pull/229) (@ysugimoto)
+- User defined function fixes [@228](https://github.com/ysugimoto/falco/pull/228) (@richardmarshall)
+
+## v1.2.1
+
+- Fix assigning RTIME literal to RTIME variable [#226](https://github.com/ysugimoto/falco/pull/226) (@MasonM)
+- Add sha1 to a set of identifiers [#224](https://github.com/ysugimoto/falco/pull/224) (@evdokimovn)
+- Propagate bare returns out of nested block statements [#223](https://github.com/ysugimoto/falco/pull/223) (@richardmarshall)
+- State change fixes [#221](https://github.com/ysugimoto/falco/pull/221) (@richardmarshall)
+- Fix randomint(), randomint_seeded(), randombool(), and randombool_seeded() [#225](https://github.com/ysugimoto/falco/pull/225) (@MasonM)
+
 ## v1.2.0
 
 - Allow assigning a backend to a string [#206](https://github.com/ysugimoto/falco/pull/206) (@MasonM)

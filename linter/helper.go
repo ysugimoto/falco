@@ -42,6 +42,7 @@ var BackendProbePropertyTypes = map[string]types.Type{
 	"window":            types.IntegerType,
 	"initial":           types.IntegerType,
 	"threshold":         types.IntegerType,
+	"url":               types.StringType,
 }
 
 type DirectorProps struct {
@@ -106,19 +107,6 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		},
 		Requires: []string{"shield"},
 	},
-}
-
-var ValueTypeMap = map[string]types.Type{
-	"INTEGER": types.IntegerType,
-	"FLOAT":   types.FloatType,
-	"BOOL":    types.BoolType,
-	"ACL":     types.AclType,
-	"BACKEND": types.BackendType,
-	"IP":      types.IPType,
-	"STRING":  types.StringType,
-	"ID":      types.IDType,
-	"RTIME":   types.RTimeType,
-	"TIME":    types.TimeType,
 }
 
 func isAlphaNumeric(r rune) bool {

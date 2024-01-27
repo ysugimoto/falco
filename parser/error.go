@@ -35,6 +35,13 @@ func MissingSemicolon(m *ast.Meta) *ParseError {
 	}
 }
 
+func MissingColon(m *ast.Meta) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: "Missing colon",
+	}
+}
+
 func UnexpectedToken(m *ast.Meta, expects ...string) *ParseError {
 	message := fmt.Sprintf(`Unexpected token "%s"`, m.Token.Literal)
 	if len(expects) > 0 {
@@ -57,5 +64,33 @@ func TypeConversionError(m *ast.Meta, tt string) *ParseError {
 	return &ParseError{
 		Token:   m.Token,
 		Message: fmt.Sprintf("Failed type conversion for token %s to %s ", m.Token.Literal, tt),
+	}
+}
+
+func DuplicateCase(m *ast.Meta) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: "Duplicate case label: " + m.Token.Literal,
+	}
+}
+
+func MultipleDefaults(m *ast.Meta) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: "Multiple default cases",
+	}
+}
+
+func FinalFallthrough(m *ast.Meta) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: "Final case cannot have fallthrough",
+	}
+}
+
+func EmptySwitch(m *ast.Meta) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: "Switch must have at least one case",
 	}
 }

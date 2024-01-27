@@ -2,6 +2,7 @@ package function
 
 import (
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
 	ifn "github.com/ysugimoto/falco/interpreter/function"
@@ -15,9 +16,28 @@ type Counter interface {
 	Fail()
 }
 
+type Definiions struct {
+	Tables   map[string]*ast.TableDeclaration
+	Backends map[string]*value.Backend
+	Acls     map[string]*value.Acl
+}
+
+type Functions map[string]*ifn.Function
+
+func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) Functions {
+	functions := Functions{}
+	for key, val := range testingFunctions(i, defs) {
+		functions[key] = val
+	}
+	for key, val := range assertionFunctions(i, c) {
+		functions[key] = val
+	}
+	return functions
+}
+
 // nolint: funlen,gocognit
-func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Function {
-	return map[string]*ifn.Function{
+func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
+	return Functions{
 		// Special testing function of "testing.call_subrouting"
 		// We need to interpret subroutine statement in this function
 		// so pass *interpreter.Interpreter pointer to the function
@@ -74,6 +94,30 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 				return false
 			},
 		},
+		"testing.table_set": {
+			Scope:            allScope,
+			Call:             Testing_table_set,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.table_merge": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Testing_table_merge(ctx, defs, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+	}
+}
+
+// nolint: funlen,gocognit
+func assertionFunctions(i *interpreter.Interpreter, c Counter) Functions {
+	return Functions{
 		"assert": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
@@ -82,6 +126,126 @@ func TestingFunctions(i *interpreter.Interpreter, c Counter) map[string]*ifn.Fun
 					return value.Null, errors.WithStack(err)
 				}
 				v, err := Assert(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.subroutine_called": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_subroutine_called(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.not_subroutine_called": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_not_subroutine_called(ctx, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.restart": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_restart(ctx, i, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.state": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_state(ctx, i, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.error": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_error(ctx, i, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.is_notset": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_is_notset(ctx, unwrapped...)
 				if err != nil {
 					c.Fail()
 				} else {

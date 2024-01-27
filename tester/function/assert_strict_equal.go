@@ -6,7 +6,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_strict_equal_Name = "assert"
+const Assert_strict_equal_Name = "assert.strict_equal"
 
 func Assert_strict_equal_Validate(args []value.Value) error {
 	if len(args) < 2 || len(args) > 3 {

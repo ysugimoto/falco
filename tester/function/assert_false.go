@@ -6,7 +6,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_false_Name = "assert"
+const Assert_false_Name = "assert.false"
 
 func Assert_false_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
@@ -28,8 +28,8 @@ func Assert_false(ctx *context.Context, args ...value.Value) (value.Value, error
 
 	// Check custom message
 	var message string
-	if len(args) == 3 {
-		message = value.Unwrap[*value.String](args[2]).Value
+	if len(args) == 2 {
+		message = value.Unwrap[*value.String](args[1]).Value
 	} else {
 		message = "Value should be false"
 	}

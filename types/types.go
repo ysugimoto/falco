@@ -42,6 +42,18 @@ const (
 	ReqBackendType Type = 0x100000000010000
 )
 
+var ValueTypeMap = map[string]Type{
+	"INTEGER": IntegerType,
+	"FLOAT":   FloatType,
+	"BOOL":    BoolType,
+	"ACL":     AclType,
+	"BACKEND": BackendType,
+	"IP":      IPType,
+	"STRING":  StringType,
+	"RTIME":   RTimeType,
+	"TIME":    TimeType,
+}
+
 func (t Type) String() string {
 	switch t {
 	case NeverType:

@@ -12,9 +12,11 @@ import (
 func getRequestHeaderValue(r *http.Request, name string) *value.String {
 	// Header name can contain ":" for object-like value
 	if !strings.Contains(name, ":") {
-		return &value.String{
-			Value: strings.Join(r.Header.Values(name), ", "),
+		v := strings.Join(r.Header.Values(name), ", ")
+		if v == "" {
+			return &value.String{IsNotSet: true}
 		}
+		return &value.String{Value: v}
 	}
 	spl := strings.SplitN(name, ":", 2)
 	// Request header can modify cookie, then we need to retrieve value from Cookie pointer
@@ -32,15 +34,17 @@ func getRequestHeaderValue(r *http.Request, name string) *value.String {
 			return &value.String{Value: kvs[1]}
 		}
 	}
-	return &value.String{Value: ""}
+	return &value.String{IsNotSet: true}
 }
 
 func getResponseHeaderValue(r *http.Response, name string) *value.String {
 	// Header name can contain ":" for object-like value
 	if !strings.Contains(name, ":") {
-		return &value.String{
-			Value: strings.Join(r.Header.Values(name), ", "),
+		v := strings.Join(r.Header.Values(name), ", ")
+		if v == "" {
+			return &value.String{IsNotSet: true}
 		}
+		return &value.String{Value: v}
 	}
 
 	spl := strings.SplitN(name, ":", 2)
@@ -50,7 +54,7 @@ func getResponseHeaderValue(r *http.Response, name string) *value.String {
 			return &value.String{Value: kvs[1]}
 		}
 	}
-	return &value.String{Value: ""}
+	return &value.String{IsNotSet: true}
 }
 
 func setRequestHeaderValue(r *http.Request, name string, val value.Value) {

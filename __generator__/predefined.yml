@@ -11,8 +11,13 @@ fastly_info.is_cluster_shield:
   get: BOOL
 
 fastly_info.h2.fingerprint:
-  reference: "https://www.integralist.co.uk/posts/fastly-varnish/"
+  reference: # no references for this variable seem to exist.
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+fastly_info.request_id:
+  reference: # no references for this variable seem to exist.
+  on: [RECV, HASH, DELIVER, LOG]
   get: STRING
 
 req.backend.is_cluster:
@@ -20,6 +25,11 @@ req.backend.is_cluster:
   on: [DELIVER]
   get: BOOL
 
+client.sess_timeout:
+  reference: "https://web.archive.org/web/20210306052653/https://developer.fastly.com/reference/vcl/variables/client-connection/client-sess-timeout/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: RTIME
+  set: RTIME
 
 ## Following variables are documented.
 backend.conn.is_tls:
@@ -2161,13 +2171,13 @@ waf.php_injection_score:
   reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/"
   on: [PASS, MISS, DELIVER, LOG]
   get: INTEGER
-  get: INTEGER
+  set: INTEGER
 
 waf.rce_score:
   reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/"
   on: [PASS, MISS, DELIVER, LOG]
   get: INTEGER
-  get: INTEGER
+  set: INTEGER
 
 waf.rfi_score:
   reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rfi-score/"

@@ -80,6 +80,20 @@ sub vcl_recv {
 	unset req.http.Cookie;
 	return(pass);
 	synthetic.base64 {"foo bar"};
+
+	switch (req.url) {
+	case "/":
+		esi;
+		break;
+	case ~ "[2-3]":
+		esi;
+		fallthrough;
+	default:
+		esi;
+		break;
+	}
+
+	set req.http.default:foo = "bar";
 }`
 
 	expects := []token.Token{
@@ -435,6 +449,55 @@ sub vcl_recv {
 		{Type: token.STRING, Literal: "foo bar"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
+		{Type: token.LF, Literal: "\n"},
+
+		{Type: token.SWITCH, Literal: "switch"},
+		{Type: token.LEFT_PAREN, Literal: "("},
+		{Type: token.IDENT, Literal: "req.url"},
+		{Type: token.RIGHT_PAREN, Literal: ")"},
+		{Type: token.LEFT_BRACE, Literal: "{"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.CASE, Literal: "case"},
+		{Type: token.STRING, Literal: "/"},
+		{Type: token.COLON, Literal: ":"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.ESI, Literal: "esi"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.BREAK, Literal: "break"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.CASE, Literal: "case"},
+		{Type: token.REGEX_MATCH, Literal: "~"},
+		{Type: token.STRING, Literal: "[2-3]"},
+		{Type: token.COLON, Literal: ":"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.ESI, Literal: "esi"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.FALLTHROUGH, Literal: "fallthrough"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.DEFAULT, Literal: "default"},
+		{Type: token.COLON, Literal: ":"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.ESI, Literal: "esi"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.BREAK, Literal: "break"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.RIGHT_BRACE, Literal: "}"},
+		{Type: token.LF, Literal: "\n"},
+
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.SET, Literal: "set"},
+		{Type: token.IDENT, Literal: "req.http.default:foo"},
+		{Type: token.ASSIGN, Literal: "="},
+		{Type: token.STRING, Literal: "bar"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+
 		{Type: token.RIGHT_BRACE, Literal: "}"},
 		{Type: token.EOF, Literal: ""},
 	}

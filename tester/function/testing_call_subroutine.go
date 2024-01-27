@@ -48,6 +48,7 @@ func Testing_call_subroutine(
 		// Scoped subroutine
 	} else if sub, ok := ctx.Subroutines[name]; ok {
 		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass)
+		i.TestingState = state
 	}
 	if err != nil {
 		return value.Null, errors.NewTestingError(err.Error())

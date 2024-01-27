@@ -11,9 +11,18 @@ import (
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/types"
 )
 
 func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
+	// Extra lookups identity - call additional ident finder if defined
+	// This feature is implemented for testing, typically we do not use for interpreter working
+	if i.IdentResolver != nil {
+		if v := i.IdentResolver(val); v != nil {
+			return v, nil
+		}
+	}
+
 	if v, ok := i.ctx.Backends[val]; ok {
 		return v, nil
 	} else if v, ok := i.ctx.Acls[val]; ok {
@@ -128,7 +137,10 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
 				)
 			}
-			return &value.Boolean{Value: t.Value == ""}, nil
+			if t.IsNotSet {
+				return &value.Boolean{Value: true}, nil
+			}
+			return &value.Boolean{Value: false}, nil
 		default:
 			return value.Null, errors.WithStack(
 				exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
@@ -180,7 +192,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	case *value.String:
-		if t.Value != "" {
+		if !t.IsNotSet {
 			return i.ProcessExpression(exp.Consequence, false)
 		}
 	default:
@@ -194,6 +206,29 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 }
 
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
+	if sub, ok := i.ctx.SubroutineFunctions[exp.Function.Value]; ok {
+		if len(exp.Arguments) > 0 {
+			return value.Null, exception.Runtime(
+				&exp.GetMeta().Token,
+				"Function subroutine %s could not accept any arguments",
+				exp.Function.Value,
+			)
+		}
+		if _, ok := types.ValueTypeMap[sub.ReturnType.Value]; !ok {
+			return value.Null, exception.Runtime(
+				&sub.GetMeta().Token,
+				"subroutine %s has invalid return type %s",
+				sub.Name,
+				sub.ReturnType,
+			)
+		}
+		// Functional subroutine may change status
+		v, _, err := i.ProcessFunctionSubroutine(sub, DebugPass)
+		if err != nil {
+			return v, errors.WithStack(err)
+		}
+		return v, nil
+	}
 	fn, err := function.Exists(i.ctx.Scope, exp.Function.Value)
 	if err != nil {
 		return value.Null, errors.WithStack(err)

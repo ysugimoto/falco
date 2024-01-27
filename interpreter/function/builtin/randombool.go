@@ -3,7 +3,6 @@
 package builtin
 
 import (
-	"math"
 	"math/rand"
 	"time"
 
@@ -41,10 +40,13 @@ func Randombool(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	numerator := value.Unwrap[*value.Integer](args[0])
 	denominator := value.Unwrap[*value.Integer](args[1])
 
-	rand.Seed(time.Now().UnixNano())
-	r := rand.Int63n(math.MaxInt64)
+	if denominator.Value <= 0 {
+		return &value.Boolean{Value: false}, nil
+	}
 
-	return &value.Boolean{
-		Value: r/math.MaxInt64 < numerator.Value/denominator.Value,
-	}, nil
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rv := r.Float64()
+	ratio := float64(numerator.Value) / float64(denominator.Value)
+
+	return &value.Boolean{Value: rv < ratio}, nil
 }

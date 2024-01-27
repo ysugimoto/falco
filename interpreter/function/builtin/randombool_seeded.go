@@ -3,7 +3,6 @@
 package builtin
 
 import (
-	"math"
 	"math/rand"
 
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -41,10 +40,13 @@ func Randombool_seeded(ctx *context.Context, args ...value.Value) (value.Value, 
 	denominator := value.Unwrap[*value.Integer](args[1])
 	seed := value.Unwrap[*value.Integer](args[2])
 
-	rand.Seed(seed.Value)
-	r := rand.Int63n(math.MaxInt64)
+	if denominator.Value <= 0 {
+		return &value.Boolean{Value: false}, nil
+	}
 
-	return &value.Boolean{
-		Value: r/math.MaxInt64 < numerator.Value/denominator.Value,
-	}, nil
+	r := rand.New(rand.NewSource(seed.Value))
+	rv := r.Float64()
+	ratio := float64(numerator.Value) / float64(denominator.Value)
+
+	return &value.Boolean{Value: rv < ratio}, nil
 }

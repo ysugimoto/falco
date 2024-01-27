@@ -15,13 +15,17 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/randomness/randombool-seeded/
 func Test_Randombool_seeded(t *testing.T) {
 	tests := []struct {
-		n int64
-		d int64
-		s int64
+		n      int64
+		d      int64
+		s      int64
+		expect bool
 	}{
-		{n: 1, d: 10, s: 1000000},
-		{n: 3, d: 4, s: 1111111},
-		{n: 5, d: 10, s: 2222222},
+		{n: 1, d: 10, s: 1000000, expect: false},
+		{n: 1, d: 10, s: 1000006, expect: true},
+		{n: 3, d: 4, s: 1111107, expect: false},
+		{n: 3, d: 4, s: 1111119, expect: true},
+		{n: 5, d: 10, s: 2222222, expect: true},
+		{n: 5, d: 0, s: 2222222, expect: false},
 	}
 
 	for i, tt := range tests {
@@ -36,6 +40,10 @@ func Test_Randombool_seeded(t *testing.T) {
 		}
 		if ret.Type() != value.BooleanType {
 			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+		}
+		v := value.Unwrap[*value.Boolean](ret)
+		if v.Value != tt.expect {
+			t.Errorf("[%d] Unexpected return value, expect=%t, got=%t", i, tt.expect, v.Value)
 		}
 	}
 }

@@ -121,6 +121,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example"}, expect: "exampleexample"},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example", Literal: true}, expect: "exampleexample"},
+			{left: &value.String{Value: "example"}, right: &value.String{IsNotSet: true}, expect: "example"},
 			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, expect: "example100.000"},
 			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, expect: "example" + now.Format(http.TimeFormat)},
@@ -128,6 +129,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, expect: "example1"},
 			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: false, Literal: true}, expect: "example0"},
 			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "example127.0.0.1"},
+			{left: &value.String{Value: "example"}, right: &value.IP{IsNotSet: true}, expect: "example"},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100}, expect: "example100"},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
 		}
@@ -362,6 +364,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.IP{Value: v}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
 			{left: &value.IP{Value: v}, right: &value.String{Value: "example"}, expect: "127.0.0.1example"},
 			{left: &value.IP{Value: v}, right: &value.String{Value: "example", Literal: true}, expect: "127.0.0.1example"},
+			{left: &value.IP{Value: v}, right: &value.String{IsNotSet: true}, expect: "127.0.0.1"},
 			{left: &value.IP{Value: v}, right: &value.RTime{Value: time.Second}, expect: "127.0.0.11.000"},
 			{left: &value.IP{Value: v}, right: &value.RTime{Value: time.Second, Literal: true}, isError: true},
 			{left: &value.IP{Value: v}, right: &value.Time{Value: now}, expect: "127.0.0.1" + now.Format(http.TimeFormat)},
@@ -369,6 +372,7 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.IP{Value: v}, right: &value.Boolean{Value: true}, expect: "127.0.0.11"},
 			{left: &value.IP{Value: v}, right: &value.Boolean{Value: false, Literal: true}, expect: "127.0.0.10"},
 			{left: &value.IP{Value: v}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1127.0.0.1"},
+			{left: &value.IP{Value: v}, right: &value.IP{IsNotSet: true}, expect: "127.0.0.1"},
 		}
 
 		for i, tt := range tests {

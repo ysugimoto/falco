@@ -292,6 +292,15 @@ func (l *Lexer) NextToken() token.Token {
 		case l.isLetter(l.char):
 			literal := l.readIdentifier()
 
+			// Switch's default case keyword needs special handling due to the header
+			// field access syntax.
+			if literal == "default" {
+				t = newToken(token.DEFAULT, l.char, line, index)
+				t.Literal = literal
+				t.File = l.file
+				return t
+			}
+
 			// Read more neighbor digit, dot, hyphen and colon character
 			// in order to lex digit contained identifier like "version4", "req.http.Cookie:session" string
 			for l.char == '-' || l.char == '.' || l.char == ':' || isDigit(l.char) {
@@ -353,8 +362,8 @@ func (l *Lexer) NextToken() token.Token {
 				t = newToken(token.RTIME, l.char, line, index)
 				t.Literal = num + string(l.char)
 			case '%':
-				// Also "%" is special character which indicates persentage.
-				// Usually it will be used on director.quorum field value and it's okey to treat as string token.
+				// Also "%" is special character which indicates percentage.
+				// Usually it will be used on director.quorum field value and it's okay to treat as string token.
 				t = newToken(token.STRING, l.char, line, index)
 				t.Literal = num + "%"
 			default:

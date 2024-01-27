@@ -21,6 +21,7 @@ func Test_Randombool(t *testing.T) {
 		{n: 1, d: 10},
 		{n: 3, d: 4},
 		{n: 5, d: 10},
+		{n: 5, d: 0},
 	}
 
 	for i, tt := range tests {

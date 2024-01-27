@@ -43,6 +43,19 @@ func Equal(left, right value.Value) (value.Value, error) {
 			return &value.Boolean{Value: false}, nil
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+	case value.StringType:
+		if right.Type() != value.StringType {
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+		lv := value.Unwrap[*value.String](left)
+		rv := value.Unwrap[*value.String](right)
+		// IsNotSet string does not match all equal expression
+		if lv.IsNotSet || rv.IsNotSet {
+			return &value.Boolean{Value: false}, nil
+		}
+		return &value.Boolean{Value: lv.Value == rv.Value}, nil
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(

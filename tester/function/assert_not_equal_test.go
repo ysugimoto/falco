@@ -164,7 +164,7 @@ func Test_Assert_not_equal(t *testing.T) {
 		}
 	})
 
-	t.Run("BOOLEAN", func(t *testing.T) {
+	t.Run("BOOL", func(t *testing.T) {
 		v := &value.Boolean{Value: true}
 		tests := []testSuite{
 			{compare: value.Null, err: assertionError},

@@ -8,7 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_starts_with_Name = "assert"
+const Assert_starts_with_Name = "assert.starts_with"
 
 var Assert_starts_with_ArgumentTypes = []value.Type{value.StringType, value.StringType}
 
