@@ -38,8 +38,8 @@ If you defined Edge Dictionary named `my_dictionary`, falco deals with as table:
 
 ```
 table my_dictionary STRING {
-  "[item_key01": "[item_value01]",
-  "[item_key02": "[item_value02]",
+  "[item_key01]": "[item_value01]",
+  "[item_key02]": "[item_value02]",
   ...
 }
 ```
@@ -48,7 +48,37 @@ You can access `my_dictionary` table in your custom VCL.
 
 ### Logging
 
-Currently not supported.
+Prefetch [Log Streaming](https://docs.fastly.com/en/guides/log-streaming-https) from Fastly.
+Currently falco supports following logging types:
+
+- bigquery
+- cloudfiles
+- datadog
+- digitalocean
+- elasticsearch
+- ftp
+- gcs
+- pubsub
+- https
+- heroku
+- honeycomb
+- kafka
+- kinesis
+- logshuttle
+- loggly
+- azureblob
+- newrelic
+- newrelicotlp
+- openstack
+- papertrail
+- s3
+- sftp
+- scalyr
+- splunk
+- sumologic
+- syslog
+
+Typically you don't need to logging endpoints on linting, local testing.
 
 ### VCL snippets
 
