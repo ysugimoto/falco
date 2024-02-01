@@ -78,7 +78,7 @@ Currently falco supports following logging types:
 - sumologic
 - syslog
 
-Typically you don't need to logging endpoints on linting, local testing.
+Typically you don't need logging endpoints for linting or local testing.
 
 ### VCL snippets
 
