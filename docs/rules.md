@@ -454,7 +454,7 @@ A functional subroutine declaration has an invalid return type, or return type i
 Problem:
 
 ```vcl
-sub functional_subroutine COMPLEX { // COMPLES type is invalid
+sub functional_subroutine COMPLEX { // COMPLEX type is invalid
     ....
 }
 ```
