@@ -84,7 +84,7 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition)
+			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition, false)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -171,7 +171,7 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, false)
+			value, err := ip.ProcessPrefixExpression(tt.expression, false, false)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)

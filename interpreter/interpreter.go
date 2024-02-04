@@ -516,7 +516,7 @@ func (i *Interpreter) ProcessFetch() error {
 	firstByteTimeout := 20 * time.Second
 	for _, v := range i.ctx.Backend.Value.Properties {
 		if v.Key.Value == "first_byte_timeout" {
-			if val, err := i.ProcessExpression(v.Value, false); err == nil {
+			if val, err := i.ProcessExpression(v.Value, false, false); err == nil {
 				firstByteTimeout = value.Unwrap[*value.RTime](val).Value
 			}
 			break

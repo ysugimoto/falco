@@ -14,7 +14,21 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
+func expand(val value.Value) value.Value {
+	var ns bool
+	switch v := val.(type) {
+	case *value.String:
+		ns = v.IsNotSet
+	case *value.IP:
+		ns = v.IsNotSet
+	}
+	if ns {
+		return value.NullStringValue
+	}
+	return val
+}
+
+func (i *Interpreter) IdentValue(val string, withCondition, expandNotSet bool) (value.Value, error) {
 	// Extra lookups identity - call additional ident finder if defined
 	// This feature is implemented for testing, typically we do not use for interpreter working
 	if i.IdentResolver != nil {
@@ -36,11 +50,14 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 	} else if _, ok := i.ctx.Ratecounters[val]; ok {
 		return &value.Ident{Value: val, Literal: true}, nil
 	} else if strings.HasPrefix(val, "var.") {
-		if v, err := i.localVars.Get(val); err != nil {
+		v, err := i.localVars.Get(val)
+		if err != nil {
 			return value.Null, errors.WithStack(err)
-		} else {
-			return v, nil
 		}
+		if expandNotSet {
+			v = expand(v)
+		}
+		return v, nil
 	} else if v, err := i.vars.Get(i.ctx.Scope, val); err != nil {
 		if withCondition {
 			return value.Null, nil
@@ -48,6 +65,9 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 			return value.Null, errors.WithStack(err)
 		}
 	} else {
+		if expandNotSet {
+			v = expand(v)
+		}
 		return v, nil
 	}
 }
@@ -62,11 +82,11 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 //	withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
 //	withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
 //	withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
-func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) (value.Value, error) {
+func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition, expandNotSet bool) (value.Value, error) {
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
 	case *ast.Ident:
-		return i.IdentValue(t.Value, withCondition)
+		return i.IdentValue(t.Value, withCondition, expandNotSet)
 	case *ast.IP:
 		return &value.IP{Value: net.ParseIP(t.Value), Literal: true}, nil
 	case *ast.Boolean:
@@ -105,11 +125,11 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 
 	// Combinated expressions
 	case *ast.PrefixExpression:
-		return i.ProcessPrefixExpression(t, withCondition)
+		return i.ProcessPrefixExpression(t, withCondition, expandNotSet)
 	case *ast.GroupedExpression:
 		return i.ProcessGroupedExpression(t)
 	case *ast.InfixExpression:
-		return i.ProcessInfixExpression(t, withCondition)
+		return i.ProcessInfixExpression(t, withCondition, expandNotSet)
 	case *ast.IfExpression:
 		return i.ProcessIfExpression(t)
 	case *ast.FunctionCallExpression:
@@ -119,8 +139,8 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	}
 }
 
-func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCondition bool) (value.Value, error) {
-	v, err := i.ProcessExpression(exp.Right, withCondition)
+func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCondition, expandNotSet bool) (value.Value, error) {
+	v, err := i.ProcessExpression(exp.Right, withCondition, expandNotSet)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -184,7 +204,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 }
 
 func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (value.Value, error) {
-	v, err := i.ProcessExpression(exp.Right, true)
+	v, err := i.ProcessExpression(exp.Right, true, false)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -192,7 +212,7 @@ func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (valu
 }
 
 func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, error) {
-	cond, err := i.ProcessExpression(exp.Condition, true)
+	cond, err := i.ProcessExpression(exp.Condition, true, false)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -200,24 +220,24 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			return i.ProcessExpression(exp.Consequence, false)
+			return i.ProcessExpression(exp.Consequence, false, false)
 		}
 	case *value.String:
 		if !t.IsNotSet {
-			return i.ProcessExpression(exp.Consequence, false)
+			return i.ProcessExpression(exp.Consequence, false, false)
 		}
 	case *value.LenientString:
 		if !t.IsNotSet {
-			return i.ProcessExpression(exp.Consequence, false)
+			return i.ProcessExpression(exp.Consequence, false, false)
 		}
 	default:
 		if cond == value.Null {
-			return i.ProcessExpression(exp.Alternative, false)
+			return i.ProcessExpression(exp.Alternative, false, false)
 		}
 		return value.Null, exception.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
 	}
 
-	return i.ProcessExpression(exp.Alternative, false)
+	return i.ProcessExpression(exp.Alternative, false, false)
 }
 
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
@@ -266,7 +286,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				)
 			}
 		} else {
-			a, err := i.ProcessExpression(exp.Arguments[j], withCondition)
+			a, err := i.ProcessExpression(exp.Arguments[j], withCondition, false)
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}
@@ -276,12 +296,12 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 	return fn.Call(i.ctx, args...)
 }
 
-func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondition bool) (value.Value, error) {
-	left, err := i.ProcessExpression(exp.Left, withCondition)
+func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondition, expandNotSet bool) (value.Value, error) {
+	left, err := i.ProcessExpression(exp.Left, withCondition, expandNotSet)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(exp.Right, withCondition)
+	right, err := i.ProcessExpression(exp.Right, withCondition, expandNotSet)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
