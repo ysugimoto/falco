@@ -22,10 +22,16 @@ func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.Subrou
 
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
-	// reset all local values and regex capture values
+
+	// Store the current values and restore after subroutine has ended
+	regex := i.ctx.RegexMatchedValues
+	local := i.localVars
+	i.ctx.RegexMatchedValues = make(map[string]*value.String)
+	i.localVars = variable.LocalVariables{}
+
 	defer func() {
-		i.ctx.RegexMatchedValues = make(map[string]*value.String)
-		i.localVars = variable.LocalVariables{}
+		i.ctx.RegexMatchedValues = regex
+		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
 	}()
 
@@ -57,6 +63,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
+		i.ctx.SubroutineCalls[sub.Name.Value]++
 	}()
 
 	var err error
