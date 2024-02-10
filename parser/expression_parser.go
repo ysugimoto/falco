@@ -9,7 +9,7 @@ import (
 func (p *Parser) registerExpressionParsers() {
 	p.prefixParsers = map[token.TokenType]prefixParser{
 		token.IDENT:      func() (ast.Expression, error) { return p.parseIdent(), nil },
-		token.STRING:     func() (ast.Expression, error) { return p.parseString(), nil },
+		token.STRING:     func() (ast.Expression, error) { return p.parseString() },
 		token.INT:        func() (ast.Expression, error) { return p.parseInteger() },
 		token.FLOAT:      func() (ast.Expression, error) { return p.parseFloat() },
 		token.RTIME:      func() (ast.Expression, error) { return p.parseRTime() },
