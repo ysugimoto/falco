@@ -17,6 +17,7 @@ const (
 	LESS_GREATER
 	CONCAT
 	PREFIX
+	POSTFIX
 	CALL
 )
 
@@ -36,11 +37,13 @@ var precedences = map[token.TokenType]int{
 	token.LEFT_PAREN:         CALL,
 	token.AND:                AND,
 	token.OR:                 OR,
+	token.PERCENT:            POSTFIX,
 }
 
 type (
-	prefixParser func() (ast.Expression, error)
-	infixParser  func(ast.Expression) (ast.Expression, error)
+	prefixParser  func() (ast.Expression, error)
+	infixParser   func(ast.Expression) (ast.Expression, error)
+	postfixParser func(ast.Expression) (ast.Expression, error)
 )
 
 type Parser struct {
@@ -51,8 +54,9 @@ type Parser struct {
 	peekToken *ast.Meta
 	level     int
 
-	prefixParsers map[token.TokenType]prefixParser
-	infixParsers  map[token.TokenType]infixParser
+	prefixParsers  map[token.TokenType]prefixParser
+	infixParsers   map[token.TokenType]infixParser
+	postfixParsers map[token.TokenType]postfixParser
 }
 
 func New(l *lexer.Lexer) *Parser {

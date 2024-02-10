@@ -322,7 +322,7 @@ func TestParseDirector(t *testing.T) {
 	input := `// Director Leading comment
 director example client {
 	// Quorum Leading comment
-	.quorum = 20%; // Quorum Trailing comment
+	.quorum = 20 /* Quorum Infix comment */ %; // Quorum Trailing comment
 	// Backend Leading comment
 	{ .backend = example; .weight = 1; } // Backend Trailing comment
 	// Director Infix comment
@@ -346,9 +346,13 @@ director example client {
 							Meta:  ast.New(T, 1),
 							Value: "quorum",
 						},
-						Value: &ast.String{
-							Meta:  ast.New(T, 1),
-							Value: "20%",
+						Value: &ast.PostfixExpression{
+							Meta: ast.New(T, 1, comments("/* Quorum Infix comment */")),
+							Left: &ast.Integer{
+								Meta:  ast.New(T, 1),
+								Value: 20,
+							},
+							Operator: "%",
 						},
 					},
 					&ast.DirectorBackendObject{

@@ -22,9 +22,13 @@ func TestDirectorDeclaration(t *testing.T) {
 					Meta:  New(T, 0),
 					Value: "quorum",
 				},
-				Value: &String{
-					Meta:  New(T, 0),
-					Value: "20%",
+				Value: &PostfixExpression{
+					Meta: New(T, 0),
+					Left: &Integer{
+						Meta:  New(T, 0),
+						Value: 20,
+					},
+					Operator: "%",
 				},
 			},
 			&DirectorBackendObject{
@@ -61,7 +65,7 @@ func TestDirectorDeclaration(t *testing.T) {
 director example client {
   // This is comment
   # This is another comment
-  .quorum = "20%"; // This is comment
+  .quorum = 20%; // This is comment
   // This is comment
   # This is another comment
   { .request = "GET / HTTP/1.1"; .weight = 1; } // This is comment

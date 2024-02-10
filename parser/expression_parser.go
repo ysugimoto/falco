@@ -41,6 +41,9 @@ func (p *Parser) registerExpressionParsers() {
 		token.AND:                p.parseInfixExpression,
 		token.OR:                 p.parseInfixExpression,
 	}
+	p.postfixParsers = map[token.TokenType]postfixParser{
+		token.PERCENT: p.parsePostfixExpression,
+	}
 }
 
 // Expose global function to be called externally
@@ -71,6 +74,14 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix, ok := p.infixParsers[p.peekToken.Token.Type]
 		if !ok {
+			if postfix, ok := p.postfixParsers[p.peekToken.Token.Type]; ok {
+				p.nextToken()
+				left, err = postfix(left)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+				continue
+			}
 			return left, nil
 		}
 		p.nextToken()
@@ -195,6 +206,16 @@ func (p *Parser) parseInfixStringConcatExpression(left ast.Expression) (ast.Expr
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
+
+	return exp, nil
+}
+
+func (p *Parser) parsePostfixExpression(left ast.Expression) (ast.Expression, error) {
+	exp := &ast.PostfixExpression{
+		Meta: p.curToken,
+		Left: left,
+	}
+	exp.Operator = p.curToken.Token.Literal
 
 	return exp, nil
 }

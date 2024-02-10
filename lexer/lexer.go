@@ -253,6 +253,8 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			t = newToken(token.REMAINDER, l.char, line, index)
 			t.Literal = "%="
+		} else {
+			t = newToken(token.PERCENT, l.char, line, index)
 		}
 	case ':':
 		t = newToken(token.COLON, l.char, line, index)
@@ -362,11 +364,6 @@ func (l *Lexer) NextToken() token.Token {
 			case 's', 'h', 'd', 'y': // second, hour, day, year
 				t = newToken(token.RTIME, l.char, line, index)
 				t.Literal = num + string(l.char)
-			case '%':
-				// Also "%" is special character which indicates percentage.
-				// Usually it will be used on director.quorum field value and it's okay to treat as string token.
-				t = newToken(token.STRING, l.char, line, index)
-				t.Literal = num + "%"
 			default:
 				// If literal contains ".", token should be FLOAT
 				if strings.Count(num, ".") == 1 {
