@@ -86,11 +86,11 @@ func (s *ShellView) HistoryDown() {
 }
 
 func (s *ShellView) CommandError(result string) {
-	s.buffers = append(s.buffers, colors.Bold(colors.Red(">> "+result)))
+	s.buffers = append(s.buffers, colors.Bold("%s", colors.Red(">> %s", result)))
 }
 
 func (s *ShellView) CommandResult(result string) {
-	s.buffers = append(s.buffers, colors.Bold(colors.Yellow(">> "+result)))
+	s.buffers = append(s.buffers, colors.Bold("%s", colors.Yellow(">> %s", result)))
 }
 
 func (s *ShellView) Draw(screen tcell.Screen) {

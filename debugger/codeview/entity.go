@@ -14,7 +14,7 @@ type Character struct {
 
 func (c Character) text() string {
 	if c.color != nil {
-		return c.color(c.code)
+		return c.color("%s", c.code)
 	}
 	return c.code
 }

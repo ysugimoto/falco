@@ -103,7 +103,7 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 
 	// Display server and file info
 	prefix := strings.Repeat(" ", width-len(c.file)-2)
-	fmt.Fprint(w, prefix+colors.Blue(c.file))
+	fmt.Fprint(w, prefix+colors.Blue("%s", c.file))
 
 	// Calculate max line unit
 	format := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(len(lines)))+1)))
@@ -129,7 +129,7 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 				w,
 				"%s%s\n",
 				colors.Bold(colors.Underline("[black:silver:]"+lineNumber))+colors.Reset, // highlight line number
-				colors.Underline(" "+line.text()+suffix),                                 // with underline
+				colors.Underline(" %s%s", line.text(), suffix),                           // with underline
 			)
 		// Otherwise, simply write line
 		default:

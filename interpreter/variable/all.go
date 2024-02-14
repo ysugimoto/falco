@@ -490,7 +490,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: id}, nil
 	case REQ_TOPURL: // FIXME: what is the difference of req.url ?
-		u := req.URL.Path
+		u := req.URL.EscapedPath()
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -499,7 +499,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: u}, nil
 	case REQ_URL:
-		u := req.URL.Path
+		u := req.URL.EscapedPath()
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -521,7 +521,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
 	case REQ_URL_PATH:
-		return &value.String{Value: req.URL.Path}, nil
+		return &value.String{Value: req.URL.EscapedPath()}, nil
 	case REQ_URL_QS:
 		return &value.String{Value: req.URL.RawQuery}, nil
 	case REQ_VCL:
@@ -734,7 +734,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		// Update request URLs
-		v.ctx.Request.URL.Path = parsed.Path
+		v.ctx.Request.URL.RawPath = parsed.EscapedPath()
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
 		return nil
