@@ -142,9 +142,9 @@ func (q *QueryStrings) String() string {
 			buf.WriteString(key)
 		} else {
 			for j := range v.Value {
-				buf.WriteString(key)
+				buf.WriteString(url.PathEscape(key))
 				buf.WriteString("=")
-				buf.WriteString(url.QueryEscape(v.Value[j]))
+				buf.WriteString(url.PathEscape(v.Value[j]))
 				if j != len(v.Value)-1 {
 					buf.WriteString("&")
 				}

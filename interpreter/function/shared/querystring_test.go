@@ -287,3 +287,56 @@ func TestQueryStringsSort(t *testing.T) {
 		}
 	}
 }
+
+func TestQueryStringsString(t *testing.T) {
+	tests := []struct {
+		input  *QueryStrings
+		expect string
+	}{
+		{
+			input: &QueryStrings{
+				Prefix: "/foo",
+				Items: []*QueryString{
+					{
+						Key:   "a&b",
+						Value: []string{"c&d"},
+					},
+				},
+			},
+			expect: "/foo?a&b=c&d",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/foo",
+				Items: []*QueryString{
+					{
+						Key:   "a",
+						Value: []string{"b"},
+					},
+					{
+						Key:   "a",
+						Value: []string{"c"},
+					},
+				},
+			},
+			expect: "/foo?a=b&a=c",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "",
+				Items: []*QueryString{
+					{
+						Key:   "a b",
+						Value: []string{"c d"},
+					},
+				},
+			},
+			expect: "?a%20b=c%20d",
+		},
+	}
+	for i, test := range tests {
+		if diff := cmp.Diff(test.expect, test.input.String()); diff != "" {
+			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
+		}
+	}
+}
