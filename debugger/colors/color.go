@@ -2,7 +2,6 @@ package colors
 
 import (
 	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -14,72 +13,85 @@ var Background = tcell.GetColor("#000000")
 
 type ColorFunc func(format string, args ...any) string
 
+// Wrapper around fmt.Sprintf that catches
+// the case when no args are passed and automatically
+// prevents the first argument from being treated as format
+// thus allowing % characters to be taken literally rather than
+// interpreted as format specifiers
+func sprintf(format string, args ...any) string {
+	if len(args) == 0 {
+		return fmt.Sprintf("%s", format)
+	} else {
+		return fmt.Sprintf(format, args...)
+	}
+}
+
 // Text extensions
 func Bold(format string, args ...any) string {
-	return fmt.Sprintf("[::b]"+format+"[::-]", args...)
+	return sprintf("[::b]"+format+"[::-]", args...)
 }
 
 func Underline(format string, args ...any) string {
-	return fmt.Sprintf("[::u]"+format+"[::-]", args...)
+	return sprintf("[::u]"+format+"[::-]", args...)
 }
 
 // Text colors
 func Black(format string, args ...any) string {
-	return fmt.Sprintf("[black]"+format+"[white]", args...)
+	return sprintf("[black]"+format+"[white]", args...)
 }
 
 func Maroon(format string, args ...any) string {
-	return fmt.Sprintf("[maroon]"+format+"[white]", args...)
+	return sprintf("[maroon]"+format+"[white]", args...)
 }
 
 func Green(format string, args ...any) string {
-	return fmt.Sprintf("[green]"+format+"[white]", args...)
+	return sprintf("[green]"+format+"[white]", args...)
 }
 
 func Olive(format string, args ...any) string {
-	return fmt.Sprintf("[olive]"+format+"[white]", args...)
+	return sprintf("[olive]"+format+"[white]", args...)
 }
 
 func Navy(format string, args ...any) string {
-	return fmt.Sprintf("[navy]"+format+"[white]", args...)
+	return sprintf("[navy]"+format+"[white]", args...)
 }
 
 func Purple(format string, args ...any) string {
-	return fmt.Sprintf("[purple]"+format+"[white]", args...)
+	return sprintf("[purple]"+format+"[white]", args...)
 }
 
 func Teal(format string, args ...any) string {
-	return fmt.Sprintf("[teal]"+format+"[white]", args...)
+	return sprintf("[teal]"+format+"[white]", args...)
 }
 
 func Silver(format string, args ...any) string {
-	return fmt.Sprintf("[silver]"+format+"[white]", args...)
+	return sprintf("[silver]"+format+"[white]", args...)
 }
 
 func Gray(format string, args ...any) string {
-	return fmt.Sprintf("[gray]"+format+"[white]", args...)
+	return sprintf("[gray]"+format+"[white]", args...)
 }
 
 func Red(format string, args ...any) string {
-	return fmt.Sprintf("[red]"+format+"[white]", args...)
+	return sprintf("[red]"+format+"[white]", args...)
 }
 
 func Lime(format string, args ...any) string {
-	return fmt.Sprintf("[lime]"+format+"[white]", args...)
+	return sprintf("[lime]"+format+"[white]", args...)
 }
 
 func Yellow(format string, args ...any) string {
-	return fmt.Sprintf("[yellow]"+format+"[white]", args...)
+	return sprintf("[yellow]"+format+"[white]", args...)
 }
 
 func Blue(format string, args ...any) string {
-	return fmt.Sprintf("[blue]"+format+"[white]", args...)
+	return sprintf("[blue]"+format+"[white]", args...)
 }
 
 func Fuchsia(format string, args ...any) string {
-	return fmt.Sprintf("[fuchsia]"+format+"[white]", args...)
+	return sprintf("[fuchsia]"+format+"[white]", args...)
 }
 
 func Aqua(format string, args ...any) string {
-	return fmt.Sprintf("[aqua]"+format+"[white]", args...)
+	return sprintf("[aqua]"+format+"[white]", args...)
 }
