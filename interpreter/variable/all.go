@@ -718,7 +718,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
 	case REQ_URL:
-		u := v.ctx.Request.URL.Path
+		u := v.ctx.Request.URL.EscapedPath()
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
 		}
@@ -734,7 +734,8 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		// Update request URLs
-		v.ctx.Request.URL.RawPath = parsed.EscapedPath()
+		v.ctx.Request.URL.RawPath = parsed.RawPath
+		v.ctx.Request.URL.Path = parsed.Path
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
 		return nil
