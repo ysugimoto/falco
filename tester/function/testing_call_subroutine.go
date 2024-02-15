@@ -49,6 +49,8 @@ func Testing_call_subroutine(
 	} else if sub, ok := ctx.Subroutines[name]; ok {
 		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass)
 		i.TestingState = state
+	} else {
+		return value.Null, errors.NewTestingError("subroutine %s not found in VCL", name)
 	}
 	if err != nil {
 		return value.Null, errors.NewTestingError(err.Error())
