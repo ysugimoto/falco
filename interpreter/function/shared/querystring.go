@@ -124,6 +124,14 @@ const (
 	SortDesc SortMode = "desc"
 )
 
+// Like as url.QueryEscape but escapes ' ' character
+// with '%20' rather then '+', which makes it consistent
+// with Fastly behavior.
+func queryEscape(s string) string {
+	escaped := url.QueryEscape(s)
+	return strings.ReplaceAll(escaped, "+", "%20")
+}
+
 func (q *QueryStrings) Sort(mode SortMode) {
 	sort.Slice(q.Items, func(i, j int) bool {
 		v := q.Items[i].Key > q.Items[j].Key
@@ -142,9 +150,9 @@ func (q *QueryStrings) String() string {
 			buf.WriteString(key)
 		} else {
 			for j := range v.Value {
-				buf.WriteString(url.PathEscape(key))
+				buf.WriteString(queryEscape(key))
 				buf.WriteString("=")
-				buf.WriteString(url.PathEscape(v.Value[j]))
+				buf.WriteString(queryEscape(v.Value[j]))
 				if j != len(v.Value)-1 {
 					buf.WriteString("&")
 				}
