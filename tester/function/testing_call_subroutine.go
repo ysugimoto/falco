@@ -50,7 +50,7 @@ func Testing_call_subroutine(
 		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass)
 		i.TestingState = state
 	} else {
-		return value.Null, errors.NewTestingError("subroutine %s not defined in VCL", name)
+		return value.Null, errors.NewTestingError("subroutine %s is not defined in VCL", name)
 	}
 	if err != nil {
 		return value.Null, errors.NewTestingError(err.Error())
