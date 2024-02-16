@@ -3,10 +3,11 @@
 package builtin
 
 import (
+	"net/url"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"net/url"
 )
 
 const Urldecode_Name = "urldecode"
