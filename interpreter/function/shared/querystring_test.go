@@ -290,8 +290,8 @@ func TestQueryStringsSort(t *testing.T) {
 
 func TestQueryStringsString(t *testing.T) {
 	unreservedChars := "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
-	reservedChars := "!\"#$%&'()*+,/:;<=>?@[\\]^`{|}"
-	reservedEncoded := "%21%22%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3C%3D%3E%3F%40%5B%5C%5D%5E%60%7B%7C%7D"
+	reservedChars := " !\"#$%&'()*+,/:;<=>?@[\\]^`{|}"
+	reservedEncoded := "%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3C%3D%3E%3F%40%5B%5C%5D%5E%60%7B%7C%7D"
 
 	tests := []struct {
 		input  *QueryStrings
