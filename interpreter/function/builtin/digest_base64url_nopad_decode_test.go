@@ -31,3 +31,39 @@ func Test_Digest_base64url_nopad_decode(t *testing.T) {
 		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
 	}
 }
+
+func Test_Digest_base64url_nopad_decode_with_nullByte(t *testing.T) {
+	ret, err := Digest_base64_decode(
+		&context.Context{},
+		&value.String{Value: "c29tZSBkYXRhIHdpdGggACBhbmQg77u/"},
+	)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.StringType {
+		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+	}
+	v := value.Unwrap[*value.String](ret)
+	expect := "some data with "
+	if v.Value != expect {
+		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+	}
+}
+
+func Test_Digest_base64url_nopad_decode_with_padding_sign(t *testing.T) {
+	ret, err := Digest_base64_decode(
+		&context.Context{},
+		&value.String{Value: "YWJjZA=YWJ"},
+	)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if ret.Type() != value.StringType {
+		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+	}
+	v := value.Unwrap[*value.String](ret)
+	expect := "abc"
+	if v.Value != expect {
+		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+	}
+}

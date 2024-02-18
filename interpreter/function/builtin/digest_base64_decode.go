@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"bytes"
 	"encoding/base64"
 
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -37,10 +38,16 @@ func Digest_base64_decode(ctx *context.Context, args ...value.Value) (value.Valu
 	}
 
 	input := value.Unwrap[*value.String](args[0])
-	dec, err := base64.StdEncoding.DecodeString(input.Value)
-	if err != nil {
-		return value.Null, err
-	}
+	dec, _ := base64.StdEncoding.DecodeString(input.Value)
 
-	return &value.String{Value: string(dec)}, nil
+	return &value.String{Value: string(terminateNullByte(dec))}, nil
+}
+
+var nullByte = []byte{0}
+
+func terminateNullByte(decoded []byte) []byte {
+	if found := bytes.Index(decoded, nullByte); found != -1 {
+		return decoded[:found]
+	}
+	return decoded
 }

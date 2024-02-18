@@ -4,6 +4,7 @@ package builtin
 
 import (
 	"encoding/base64"
+	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -37,10 +38,16 @@ func Digest_base64url_nopad_decode(ctx *context.Context, args ...value.Value) (v
 	}
 
 	input := value.Unwrap[*value.String](args[0])
-	dec, err := base64.RawURLEncoding.DecodeString(input.Value)
-	if err != nil {
-		return value.Null, err
-	}
+	dec, _ := base64.RawURLEncoding.DecodeString(terminatePaddingCharacter(input.Value))
 
-	return &value.String{Value: string(dec)}, nil
+	return &value.String{Value: string(terminateNullByte(dec))}, nil
+}
+
+// Fastly stops decoding if padding sign found in nopad decoding,
+// So we should trim all strings after padding sign.
+func terminatePaddingCharacter(input string) string {
+	if found := strings.Index(input, "="); found != -1 {
+		return input[:found]
+	}
+	return input
 }
