@@ -7,6 +7,52 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+func TestSubroutine(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			// ref: https://github.com/ysugimoto/falco/issues/253
+			name: "Local variable scope maintained after call statement",
+			vcl: `sub func {}
+
+			sub vcl_recv {
+				declare local var.myint INTEGER;
+				set var.myint = 2;
+				call func();
+				set req.http.X-Int-Value = var.myint;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.X-Int-Value": &value.String{Value: "2"},
+			},
+		},
+		{
+			// ref: https://github.com/ysugimoto/falco/issues/253
+			name: "Local variable from outer scope is not accessible",
+			vcl: `sub func {
+				log var.myint;
+			}
+
+			sub vcl_recv {
+				declare local var.myint INTEGER;
+				set var.myint = 2;
+				call func();
+				set req.http.X-Int-Value = var.myint;
+			}`,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
 func TestFunctionSubroutine(t *testing.T) {
 	tests := []struct {
 		name       string
