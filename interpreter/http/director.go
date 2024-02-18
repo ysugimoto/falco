@@ -75,7 +75,7 @@ func (d *Director) Random() (*value.Backend, error) {
 	}
 
 	for retry := 0; retry < maxRetry; retry++ {
-		// Check backens are enough healthy to determine
+		// Check backends are enough healthy to determine
 		if err := d.canDetermineBackend(); err != nil {
 			// @SPEC: random director waits 10ms until retry backend detection
 			time.Sleep(10 * time.Millisecond)
@@ -95,9 +95,9 @@ func (d *Director) Random() (*value.Backend, error) {
 			}
 		}
 
-		rand.New(rand.NewSource(time.Now().Unix()))
+		r := rand.New(rand.NewSource(time.Now().Unix()))
 		lottery = lottery[0:current]
-		item := d.Backends[lottery[rand.Intn(current)]]
+		item := d.Backends[lottery[r.Intn(current)]]
 
 		return item.Backend, nil
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/limitations"
 )
 
-// Send proxy request to spefic origin
+// Send proxy request to specific origin
 func Send(r *flchttp.Request, timeout time.Duration) (*flchttp.Response, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

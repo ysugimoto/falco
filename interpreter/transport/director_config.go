@@ -123,7 +123,7 @@ func getDirectorProperty(dt string, prop *ast.DirectorProperty) (func(d *flchttp
 			)
 		}
 		if v, ok := prop.Value.(*ast.Ident); !ok {
-			return nil, exception.Runtime(&prop.GetMeta().Token, ".key value must be integer")
+			return nil, exception.Runtime(&prop.GetMeta().Token, ".key value must be ident")
 		} else if v.Value != "object" && v.Value != "client" {
 			return nil, exception.Runtime(&prop.GetMeta().Token, ".key value must be either of object or client")
 		} else {

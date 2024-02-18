@@ -39,7 +39,9 @@ func getBackendProperty[T PropTypes](backend *value.Backend, key string) (T, err
 	if v, ok := prop.(T); ok {
 		return v, nil
 	}
-	return nil, errors.New("Type assertion failed")
+	return nil, errors.New(fmt.Sprintf(
+		`Type assertion failed. Need to specify correct type for property "%s"`, key,
+	))
 }
 
 func backendScheme(backend *value.Backend, override *config.OverrideBackend) (string, error) {
