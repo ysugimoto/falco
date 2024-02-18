@@ -14,56 +14,58 @@ import (
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad-decode/
 func Test_Digest_base64url_nopad_decode(t *testing.T) {
-	ret, err := Digest_base64url_nopad_decode(
-		&context.Context{},
-		&value.String{Value: "zprOsc67z47PgiDOv8-Bzq_Pg86xz4TOtQ"},
-	)
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{
+			name:   "Fastly example",
+			input:  "zprOsc67z47PgiDOv8-Bzq_Pg86xz4TOtQ",
+			expect: "Καλώς ορίσατε",
+		},
+		{
+			name:   "Includes nullbyte",
+			input:  "c29tZSBkYXRhIHdpdGggACBhbmQg77u/",
+			expect: "some data with ",
+		},
+		{
+			name:   "Skip invalid characters",
+			input:  "QU&|*#()JDRA==",
+			expect: "ABCD",
+		},
+		{
+			name:   "Skip padding sign",
+			input:  "QU&==|*#()JDRA==",
+			expect: "ABCD",
+		},
+		{
+			name:   "Skip single equal sign",
+			input:  "QU&=|*#()JDRA==",
+			expect: "ABCD",
+		},
+		{
+			name:   "Skip padding sign",
+			input:  "YWJjZB==",
+			expect: "abcd",
+		},
+	}
 
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	if ret.Type() != value.StringType {
-		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
-	}
-	v := value.Unwrap[*value.String](ret)
-	expect := "Καλώς ορίσατε"
-	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
-	}
-}
+	for _, tt := range tests {
+		ret, err := Digest_base64url_nopad_decode(
+			&context.Context{},
+			&value.String{Value: tt.input},
+		)
 
-func Test_Digest_base64url_nopad_decode_with_nullByte(t *testing.T) {
-	ret, err := Digest_base64_decode(
-		&context.Context{},
-		&value.String{Value: "c29tZSBkYXRhIHdpdGggACBhbmQg77u/"},
-	)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	if ret.Type() != value.StringType {
-		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
-	}
-	v := value.Unwrap[*value.String](ret)
-	expect := "some data with "
-	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
-	}
-}
-
-func Test_Digest_base64url_nopad_decode_with_padding_sign(t *testing.T) {
-	ret, err := Digest_base64_decode(
-		&context.Context{},
-		&value.String{Value: "YWJjZA=YWJ"},
-	)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	if ret.Type() != value.StringType {
-		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
-	}
-	v := value.Unwrap[*value.String](ret)
-	expect := "abc"
-	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		if err != nil {
+			t.Errorf("[%s] Unexpected error: %s", tt.name, err)
+		}
+		if ret.Type() != value.StringType {
+			t.Errorf("[%s] Unexpected return type, expect=STRING, got=%s", tt.name, ret.Type())
+		}
+		v := value.Unwrap[*value.String](ret)
+		if v.Value != tt.expect {
+			t.Errorf("[%s] return value unmatch, expect=%s, got=%s", tt.name, tt.expect, v.Value)
+		}
 	}
 }

@@ -3,7 +3,10 @@
 package builtin
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/base64"
+	"io"
 	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -38,16 +41,39 @@ func Digest_base64url_nopad_decode(ctx *context.Context, args ...value.Value) (v
 	}
 
 	input := value.Unwrap[*value.String](args[0])
-	dec, _ := base64.RawURLEncoding.DecodeString(terminatePaddingCharacter(input.Value))
+	removed := Digest_base64url_nopad_decode_removeInvalidCharacters(input.Value)
+	dec, _ := base64.RawURLEncoding.DecodeString(removed)
 
 	return &value.String{Value: string(terminateNullByte(dec))}, nil
 }
 
-// Fastly stops decoding if padding sign found in nopad decoding,
-// So we should trim all strings after padding sign.
-func terminatePaddingCharacter(input string) string {
-	if found := strings.Index(input, "="); found != -1 {
-		return input[:found]
+func Digest_base64url_nopad_decode_removeInvalidCharacters(input string) string {
+	removed := new(bytes.Buffer)
+	r := bufio.NewReader(strings.NewReader(input))
+
+	for {
+		b, err := r.ReadByte()
+		if err == io.EOF {
+			break
+		}
+		switch {
+		case b >= 0x41 && b <= 0x5A: // A-Z
+			removed.WriteByte(b)
+		case b >= 0x61 && b <= 0x7A: // a-z
+			removed.WriteByte(b)
+		case b >= 0x31 && b <= 0x39: // 0-9
+			removed.WriteByte(b)
+		case b == 0x2B: // + should replace to -
+			removed.WriteByte(0x2D)
+		case b == 0x2F: // / should replace to _
+			removed.WriteByte(0x5F)
+		case b == 0x2D || b == 0x5F: // + or /
+			removed.WriteByte(b)
+		default:
+			// Note: the "=" sign also treats as invalid character
+			// Invalid characters, skip it
+		}
 	}
-	return input
+
+	return removed.String()
 }
