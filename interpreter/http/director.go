@@ -95,9 +95,8 @@ func (d *Director) Random() (*value.Backend, error) {
 			}
 		}
 
-		r := rand.New(rand.NewSource(time.Now().Unix()))
 		lottery = lottery[0:current]
-		item := d.Backends[lottery[r.Intn(current)]]
+		item := d.Backends[lottery[rand.Intn(current)]]
 
 		return item.Backend, nil
 	}
