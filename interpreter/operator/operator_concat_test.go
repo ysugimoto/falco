@@ -34,6 +34,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Integer{Value: 10}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "10127.0.0.1"},
 			{left: &value.Integer{Value: 10, Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.Integer{Value: 10, Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{
+				left: &value.Integer{Value: 10},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "10lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -52,9 +61,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -82,6 +91,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Float{Value: 10.0}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "10.000127.0.0.1"},
 			{left: &value.Float{Value: 10.0, Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.Float{Value: 10.0, Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{
+				left: &value.Float{Value: 10.0},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "10.000lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -100,9 +118,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -132,6 +150,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.IP{IsNotSet: true}, expect: "example"},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100}, expect: "example100"},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{
+				left: &value.String{Value: "example"},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "examplelenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -150,9 +177,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -180,6 +207,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.RTime{Value: time.Second}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "1.000127.0.0.1"},
 			{left: &value.RTime{Value: time.Second, Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.RTime{Value: time.Second, Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{
+				left: &value.RTime{Value: time.Second},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "1.000lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -198,9 +234,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -227,6 +263,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Time{Value: now}, right: &value.Boolean{Value: true}, expect: f + "1"},
 			{left: &value.Time{Value: now}, right: &value.Boolean{Value: false, Literal: true}, expect: f + "0"},
 			{left: &value.Time{Value: now}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: f + "127.0.0.1"},
+			{
+				left: &value.Time{Value: now},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: f + "lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -245,9 +290,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -276,6 +321,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Backend{Value: backend}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "foo127.0.0.1"},
 			{left: &value.Backend{Value: backend, Literal: true}, right: &value.Boolean{Value: false, Literal: true}, isError: true},
 			{left: &value.Backend{Value: backend, Literal: true}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{
+				left: &value.Backend{Value: backend},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "foolenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -294,9 +348,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -324,6 +378,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.Boolean{Value: true}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "1127.0.0.1"},
 			{left: &value.Boolean{Value: true, Literal: true}, right: &value.Boolean{Value: true}, expect: "11"},
 			{left: &value.Boolean{Value: true, Literal: true}, right: &value.Boolean{Value: false, Literal: true}, expect: "10"},
+			{
+				left: &value.Boolean{Value: true},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "1lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -342,9 +405,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})
@@ -373,6 +436,15 @@ func TestConcatOperator(t *testing.T) {
 			{left: &value.IP{Value: v}, right: &value.Boolean{Value: false, Literal: true}, expect: "127.0.0.10"},
 			{left: &value.IP{Value: v}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1127.0.0.1"},
 			{left: &value.IP{Value: v}, right: &value.IP{IsNotSet: true}, expect: "127.0.0.1"},
+			{
+				left: &value.IP{Value: v},
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "127.0.0.1lenient",
+			},
 		}
 
 		for i, tt := range tests {
@@ -391,9 +463,9 @@ func TestConcatOperator(t *testing.T) {
 				t.Errorf("Index %d: expects string value, got %s", i, v.Type())
 				return
 			}
-			str := value.Unwrap[*value.String](v)
-			if str.Value != tt.expect {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.Value)
+			str := value.GetString(v)
+			if str.String() != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, str.String())
 			}
 		}
 	})

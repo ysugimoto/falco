@@ -39,14 +39,14 @@ func Digest_awsv4_hmac(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	key := value.Unwrap[*value.String](args[0])
-	dateStamp := value.Unwrap[*value.String](args[1])
-	region := value.Unwrap[*value.String](args[2])
-	service := value.Unwrap[*value.String](args[3])
-	stringToSign := value.Unwrap[*value.String](args[4])
+	key := value.GetString(args[0]).String()
+	dateStamp := value.GetString(args[1]).String()
+	region := value.GetString(args[2]).String()
+	service := value.GetString(args[3]).String()
+	stringToSign := value.GetString(args[4]).String()
 
-	signature := []byte("AWS4" + key.Value)
-	hashes := []string{dateStamp.Value, region.Value, service.Value, "aws4_request", stringToSign.Value}
+	signature := []byte("AWS4" + key)
+	hashes := []string{dateStamp, region, service, "aws4_request", stringToSign}
 	for i := range hashes {
 		mac := hmac.New(sha256.New, signature)
 		mac.Write([]byte(hashes[i]))

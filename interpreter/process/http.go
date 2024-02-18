@@ -1,8 +1,9 @@
 package process
 
 import (
-	"net/http"
 	"strings"
+
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 type HttpFlow struct {
@@ -26,7 +27,7 @@ func newFlowRequest(req *http.Request) *HttpFlow {
 		flow.URL += "?" + req.URL.RawQuery
 	}
 
-	for key, values := range req.Header {
+	for key, values := range http.ToGoHttpHeader(req.Header) {
 		flow.Headers[strings.ToLower(key)] = strings.Join(values, ", ")
 	}
 
@@ -40,7 +41,7 @@ func newFlowResponse(resp *http.Response) *HttpFlow {
 		StatusText: resp.Status,
 	}
 
-	for key, values := range resp.Header {
+	for key, values := range http.ToGoHttpHeader(resp.Header) {
 		flow.Headers[strings.ToLower(key)] = strings.Join(values, ", ")
 	}
 

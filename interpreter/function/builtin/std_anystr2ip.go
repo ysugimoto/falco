@@ -129,17 +129,17 @@ func Std_anystr2ip(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	addr := value.Unwrap[*value.String](args[0])
-	fallback := value.Unwrap[*value.String](args[1])
+	addr := value.GetString(args[0]).String()
+	fallback := value.GetString(args[1]).String()
 
-	fallbackIP := &value.IP{Value: net.ParseIP(fallback.Value)}
+	fallbackIP := &value.IP{Value: net.ParseIP(fallback)}
 
 	// TODO: support IPv6 string to parse
-	if strings.Contains(addr.Value, ":") {
+	if strings.Contains(addr, ":") {
 		return value.Null, errors.New(Std_anystr2ip_Name, "Does not support IPv6 format string")
 	}
 	// IPv4 parseing
-	if v, err := Std_anystr2ip_ParseIpv4(addr.Value); err != nil {
+	if v, err := Std_anystr2ip_ParseIpv4(addr); err != nil {
 		return fallbackIP, nil
 	} else {
 		return v, nil

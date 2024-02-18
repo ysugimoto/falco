@@ -89,34 +89,38 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 func (v *HitScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.Object, match[1])
+		return v.ctx.Object.Header.Get(match[1])
 	}
 	return v.base.getFromRegex(name)
 }
 
 func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case OBJ_GRACE:
-		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_RESPONSE:
-		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ObjectResponse = coerceString(assigned)
 		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
-		if err := doAssign(i, operator, val); err != nil {
+		if _, err = doAssign(i, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
 		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
-		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -126,7 +130,7 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.Object, match[1], val)
+		v.ctx.Object.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -145,7 +149,7 @@ func (v *HitScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		return errors.WithStack(err)
 	}
 
-	v.ctx.Object.Header.Add(match[1], val.String())
+	v.ctx.Object.Header.Add(match[1], val)
 	return nil
 }
 
@@ -158,6 +162,6 @@ func (v *HitScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	unsetResponseHeaderValue(v.ctx.Object, match[1])
+	v.ctx.Object.Header.Del(match[1])
 	return nil
 }

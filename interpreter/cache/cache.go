@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"net/http"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 )
 
 type CacheItem struct {
-	Response  *http.Response
+	Response  *flchttp.Response
 	Expires   time.Time
 	EntryTime time.Time
 	Hits      int

@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -47,10 +48,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case BEREQ_IS_CLUSTERING:
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_CLASS_BOT:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.IsBot()}, nil
 	case CLIENT_CLASS_BROWSER:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.Browser.Name > 0}, nil
 
 	// Following values are always false in interpreter
@@ -74,31 +75,31 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_DISPLAY_TOUCHSCREEN:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		isTouch := ua.DeviceType == uasurfer.DevicePhone ||
 			ua.DeviceType == uasurfer.DeviceTablet ||
 			ua.DeviceType == uasurfer.DeviceWearable
 		return &value.Boolean{Value: isTouch}, nil
 	case CLIENT_PLATFORM_EREADER:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.OS.Name == uasurfer.OSKindle}, nil
 	case CLIENT_PLATFORM_GAMECONSOLE:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		isGame := ua.OS.Name == uasurfer.OSPlaystation ||
 			ua.OS.Name == uasurfer.OSXbox ||
 			ua.OS.Name == uasurfer.OSNintendo
 		return &value.Boolean{Value: isGame}, nil
 	case CLIENT_PLATFORM_MOBILE:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DevicePhone}, nil
 	case CLIENT_PLATFORM_SMARTTV:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_PLATFORM_TABLET:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTablet}, nil
 	case CLIENT_PLATFORM_TVPLAYER:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_SESS_TIMEOUT:
 		return v.ctx.ClientSessTimeout, nil
@@ -272,7 +273,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case REQ_HEADER_BYTES_READ:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range req.Header {
+		for k, v := range flchttp.ToGoHttpHeader(req.Header) {
 			// add ":" character that header separator character
 			headerBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -339,16 +340,16 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case TIME_ELAPSED:
 		return &value.RTime{Value: time.Since(v.ctx.RequestStartTime)}, nil
 	case CLIENT_BOT_NAME:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_NAME:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_VERSION:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		v := ua.Browser.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
@@ -397,10 +398,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
 
 	case CLIENT_OS_NAME:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		return &value.String{Value: ua.OS.Name.String()}, nil
 	case CLIENT_OS_VERSION:
-		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+		ua := uasurfer.Parse(req.Header.Get("User-Agent").StrictString())
 		v := ua.OS.Version
 		return &value.String{
 			Value: fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch),
@@ -630,7 +631,7 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 
 	// HTTP request header matching
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.Request, match[1])
+		return v.ctx.Request.Header.Get(match[1])
 	}
 
 	// Ratecounter variable matching
@@ -657,63 +658,64 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 }
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch strings.ToLower(name) {
 	case CLIENT_IDENTITY:
-		if v.ctx.ClientIdentity == nil {
-			v.ctx.ClientIdentity = &value.String{Value: ""}
-		}
-		if err := doAssign(v.ctx.ClientIdentity, operator, val); err != nil {
+		if assigned, err = doAssign(&value.String{Value: ""}, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientIdentity = coerceString(assigned)
 		return nil
 	case CLIENT_SESS_TIMEOUT:
-		if err := doAssign(v.ctx.ClientSessTimeout, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.ClientSessTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case RESP_STALE:
-		if err := doAssign(v.ctx.Stale, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.Stale, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case RESP_STALE_IS_ERROR:
-		if err := doAssign(v.ctx.StaleIsError, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.StaleIsError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case RESP_STALE_IS_REVALIDATING:
-		if err := doAssign(v.ctx.StaleIsRevalidating, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.StaleIsRevalidating, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_BACKEND:
-		if err := doAssign(v.ctx.Backend, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.Backend, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_GRACE:
 		return v.Set(s, "req.max_stale_if_error", operator, val)
 	case REQ_MAX_STALE_IF_ERROR:
-		if err := doAssign(v.ctx.MaxStaleIfError, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.MaxStaleIfError, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_MAX_STALE_WHILE_REVALIDATE:
-		if err := doAssign(v.ctx.MaxStaleWhileRevalidate, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.MaxStaleWhileRevalidate, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_GEO_IP_OVERRIDE:
-		if err := doAssign(v.ctx.ClientGeoIpOverride, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientGeoIpOverride, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_METHOD:
 		left := &value.String{Value: v.ctx.Request.Method}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Request.Method = left.Value
+		v.ctx.Request.Method = coerceString(assigned).Value
 		return nil
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
@@ -726,10 +728,10 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 			u += "#" + fragment
 		}
 		left := &value.String{Value: u}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := url.Parse(coerceString(assigned).Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -749,7 +751,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 				"BACKEND literal %s cannot be assigned to %s in scope: %s", v.String(), name, s.String(),
 			))
 		}
-		setRequestHeaderValue(v.ctx.Request, match[1], val)
+		v.ctx.Request.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -776,7 +778,7 @@ func (v *AllScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		return errors.WithStack(err)
 	}
 
-	v.ctx.Request.Header.Add(match[1], val.String())
+	v.ctx.Request.Header.Add(match[1], val)
 	return nil
 }
 
@@ -795,7 +797,7 @@ func (v *AllScopeVariables) Unset(s context.Scope, name string) error {
 		return errors.WithStack(err)
 	}
 
-	unsetRequestHeaderValue(v.ctx.Request, match[1])
+	v.ctx.Request.Header.Del(match[1])
 	return nil
 }
 

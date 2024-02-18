@@ -38,7 +38,7 @@ func Time_hex_to_time(ctx *context.Context, args ...value.Value) (value.Value, e
 	}
 
 	divisor := value.Unwrap[*value.Integer](args[0]).Value
-	dividend := value.Unwrap[*value.String](args[1]).Value
+	dividend := value.GetString(args[1]).String()
 
 	if divisor == 0 {
 		return &value.Time{Value: time.Time{}}, errors.New(Time_hex_to_time_Name, "Could not divide by zero")

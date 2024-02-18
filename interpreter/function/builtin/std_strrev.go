@@ -34,7 +34,7 @@ func Std_strrev(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0]).Value
+	s := value.GetString(args[0]).String()
 	// Note: Fastly does not consider multibyte. When string includes multibyte, return empty string
 	// To check it, compare byte slice and rune slice length are same. It means strings are all byte representation
 	if len([]byte(s)) != len([]rune(s)) {

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -30,7 +31,7 @@ func New() *Process {
 	}
 }
 
-func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
+func (p *Process) Finalize(resp *flchttp.Response) ([]byte, error) {
 	var backend string
 	if p.Backend != nil {
 		backend = p.Backend.Value.Name.Value
@@ -52,7 +53,17 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 			if len(val) == 0 {
 				continue
 			}
-			headers[strings.ToLower(key)] = strings.Join(val, "; ")
+			for _, vs := range val {
+				var vss []string
+				for _, v := range vs {
+					line := v.Key.String()
+					if v.Value != nil {
+						line += "=" + v.Value.String()
+					}
+					vss = append(vss, key+": "+line)
+				}
+				headers[strings.ToLower(key)] = strings.Join(vss, "; ")
+			}
 		}
 	}
 

@@ -36,17 +36,17 @@ func Accept_language_lookup(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	lookup := value.Unwrap[*value.String](args[0])
-	defaultValue := value.Unwrap[*value.String](args[1])
-	language := value.Unwrap[*value.String](args[2])
+	lookup := value.GetString(args[0]).String()
+	defaultValue := value.GetString(args[1]).String()
+	language := value.GetString(args[2]).String()
 
 	var languages []string
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for _, v := range strings.Split(lookup, ":") {
 		languages = append(languages, v)
 	}
 
 	index := len(languages)
-	for _, v := range strings.Split(language.Value, ",") {
+	for _, v := range strings.Split(language, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]
@@ -63,5 +63,5 @@ func Accept_language_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	if index < len(languages) {
 		return &value.String{Value: languages[index]}, nil
 	}
-	return defaultValue, nil
+	return &value.String{Value: defaultValue}, nil
 }

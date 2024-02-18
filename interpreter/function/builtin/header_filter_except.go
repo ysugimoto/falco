@@ -3,13 +3,10 @@
 package builtin
 
 import (
-	"net/http"
-	"strings"
-
-	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/function/shared"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -25,32 +22,24 @@ func Header_filter_except_Validate(args []value.Value) error {
 	if args[0].Type() != Header_filter_except_ArgumentTypes[0] {
 		return errors.TypeMismatch(Header_filter_except_Name, 1, Header_filter_except_ArgumentTypes[0], args[0].Type())
 	}
+	for i := 1; i < len(args); i++ {
+		if args[i].Type() != value.StringType {
+			return errors.TypeMismatch(Header_filter_except_Name, i+1, value.StringType, args[i].Type())
+		}
+	}
 	return nil
 }
 
-func header_filter_except_delete(h http.Header, filter map[string]struct{}) http.Header {
-	for key, val := range h {
+func header_filter_except_delete(h flchttp.Header, filters map[string]struct{}) flchttp.Header {
+	for key, _ := range h {
 		if err := limitations.CheckProtectedHeader(key); err != nil {
 			continue
 		}
 
-		if _, ok := filter[strings.ToLower(key)]; ok {
+		if _, ok := filters[key]; ok {
 			continue
 		}
-		var filtered []string
-		for i := range val {
-			if strings.Contains(val[i], "=") {
-				spl := strings.SplitN(val[i], "=", 2)
-				if _, ok := filter[strings.ToLower(key+":"+spl[0])]; ok {
-					filtered = append(filtered, val[i])
-				}
-			}
-		}
-		if len(filtered) == 0 {
-			h.Del(key)
-		} else {
-			h[key] = filtered
-		}
+		h.Del(key)
 	}
 
 	return h
@@ -67,41 +56,40 @@ func Header_filter_except(ctx *context.Context, args ...value.Value) (value.Valu
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
-	filter := make(map[string]struct{})
+	filters := make(map[string]struct{})
 	for i := 1; i < len(args); i++ {
-		v := &value.String{}
-		if err := assign.Assign(v, args[i]); err != nil {
-			return value.Null, errors.New(Header_filter_except_Name, err.Error())
-		}
-		if !shared.IsValidHeader(v.Value) {
+		name := value.GetString(args[i]).String()
+		if !shared.IsValidHeader(name) {
 			return value.Null, errors.New(
-				Header_filter_except_Name, "Invalid header name %s is not permitted", v.Value,
+				Header_filter_except_Name, "Invalid header name %s is not permitted", name,
 			)
 		}
-		filter[strings.ToLower(v.Value)] = struct{}{}
+		filters[name] = struct{}{}
 	}
 
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			ctx.Request.Header = header_filter_except_delete(ctx.Request.Header, filter)
+			ctx.Request.Header = header_filter_except_delete(ctx.Request.Header, filters)
 		}
 	case "resp":
 		if ctx.Response != nil {
-			ctx.Response.Header = header_filter_except_delete(ctx.Response.Header, filter)
+			ctx.Response.Header = header_filter_except_delete(ctx.Response.Header, filters)
 		}
 	case "obj":
 		if ctx.Object != nil {
-			ctx.Object.Header = header_filter_except_delete(ctx.Object.Header, filter)
+			ctx.Object.Header = header_filter_except_delete(ctx.Object.Header, filters)
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			ctx.BackendRequest.Header = header_filter_except_delete(ctx.BackendRequest.Header, filter)
+			ctx.BackendRequest.Header = header_filter_except_delete(ctx.BackendRequest.Header, filters)
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			ctx.BackendResponse.Header = header_filter_except_delete(ctx.BackendResponse.Header, filter)
+			ctx.BackendResponse.Header = header_filter_except_delete(ctx.BackendResponse.Header, filters)
 		}
+	default:
+		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)
 	}
-	return value.Null, nil
+	return &value.String{IsNotSet: true}, nil
 }

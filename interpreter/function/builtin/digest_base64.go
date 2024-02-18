@@ -36,9 +36,9 @@ func Digest_base64(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
+	input := value.GetString(args[0]).String()
 
 	return &value.String{
-		Value: base64.StdEncoding.EncodeToString([]byte(input.Value)),
+		Value: base64.StdEncoding.EncodeToString([]byte(input)),
 	}, nil
 }

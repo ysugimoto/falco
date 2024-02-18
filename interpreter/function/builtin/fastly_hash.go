@@ -40,7 +40,7 @@ func Fastly_hash(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	key := value.Unwrap[*value.String](args[0])
+	key := value.GetString(args[0]).String()
 	seed := value.Unwrap[*value.Integer](args[1])
 	from := value.Unwrap[*value.Integer](args[2])
 	to := value.Unwrap[*value.Integer](args[3])
@@ -49,7 +49,7 @@ func Fastly_hash(ctx *context.Context, args ...value.Value) (value.Value, error)
 	// So we implement hashing function as our own way:
 	// sha256 hash algorithm
 	// concatnation with key string and seed, and get random int between from and to
-	enc := sha256.Sum256([]byte(key.Value))
+	enc := sha256.Sum256([]byte(key))
 	sb := make([]byte, 64)
 	n := binary.PutVarint(sb, seed.Value)
 	hash := append(enc[:], sb[:n]...)

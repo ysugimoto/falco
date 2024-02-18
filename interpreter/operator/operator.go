@@ -49,13 +49,13 @@ func Equal(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
-		lv := value.Unwrap[*value.String](left)
-		rv := value.Unwrap[*value.String](right)
+		lv := value.GetString(left)
+		rv := value.GetString(right)
 		// IsNotSet string does not match all equal expression
 		if lv.IsNotSet || rv.IsNotSet {
 			return &value.Boolean{Value: false}, nil
 		}
-		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+		return &value.Boolean{Value: lv.String() == rv.String()}, nil
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(
@@ -631,17 +631,17 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Left String type could not be a literal"),
 			)
 		}
-		lv := value.Unwrap[*value.String](left)
+		lv := value.GetString(left)
 		switch right.Type() {
 		case value.StringType:
-			rv := value.Unwrap[*value.String](right)
-			re, err := regexp.Compile(rv.Value)
+			rv := value.GetString(right)
+			re, err := regexp.Compile(rv.String())
 			if err != nil {
 				return value.Null, errors.WithStack(
-					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
+					fmt.Errorf("Failed to compile regular expression from string %s", rv.String()),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); matches != nil {
+			if matches := re.FindStringSubmatch(lv.String()); matches != nil {
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
 				}
@@ -650,10 +650,10 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			return &value.Boolean{Value: false}, nil
 		case value.AclType:
 			rv := value.Unwrap[*value.Acl](right)
-			ip := net.ParseIP(lv.Value)
+			ip := net.ParseIP(lv.String())
 			if ip == nil {
 				return value.Null, errors.WithStack(
-					fmt.Errorf("Failed to parse IP from string %s", lv.Value),
+					fmt.Errorf("Failed to parse IP from string %s", lv.String()),
 				)
 			}
 			res, err := matchesAcl(*rv, ip)
@@ -730,14 +730,17 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		lv = value.Unwrap[*value.Boolean](left).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](left)
+		str := value.GetString(left)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical AND operator: Could not use string literal in left expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical AND operator: Could not use string literal in left expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical AND operator: left type must be falsy type, got %s", left.Type()),
@@ -748,14 +751,16 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		rv = value.Unwrap[*value.Boolean](right).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](right)
+		str := value.GetString(right)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical AND operator: Could not use string literal in right expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical AND operator: Could not use string literal in right expression, value is %s",
+					str.String()),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical AND operator: right type must be falsy type, got %s", right.Type()),
@@ -772,14 +777,17 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		lv = value.Unwrap[*value.Boolean](left).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](left)
+		str := value.GetString(left)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical OR operator: Could not use string literal in left expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical OR operator: Could not use string literal in left expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical OR operator: left type must be falsy type, got %s", left.Type()),
@@ -790,14 +798,17 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 	case value.BooleanType:
 		rv = value.Unwrap[*value.Boolean](right).Value
 	case value.StringType:
-		str := value.Unwrap[*value.String](right)
+		str := value.GetString(right)
 		// Could not use literal string in expression
 		if str.IsLiteral() {
 			return value.Null, errors.WithStack(
-				fmt.Errorf("Logical OR operator: Could not use string literal in right expression, value is %s", str.Value),
+				fmt.Errorf(
+					"Logical OR operator: Could not use string literal in right expression, value is %s",
+					str.String(),
+				),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet && str.String() != ""
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Logical OR operator: right type must be falsy type, got %s", right.Type()),
@@ -837,6 +848,29 @@ func Concat(left, right value.Value) (value.Value, error) {
 		}
 	}
 
+	var lv, rv *value.LenientString
+	var ok bool
+
+	// left side is lenient
+	if lv, ok = left.(*value.LenientString); ok {
+		if rv, ok = right.(*value.LenientString); ok {
+			lv.Append(rv.Values...)
+		} else {
+			lv.Append(&value.String{Value: right.String()})
+		}
+		return lv, nil
+	}
+	// right side is lenient
+	if rv, ok = right.(*value.LenientString); ok {
+		lv = &value.LenientString{
+			Values: []value.Value{
+				&value.String{Value: left.String()},
+			},
+		}
+		lv.Append(rv.Values...)
+		return lv, nil
+	}
+	// both side are not lenient
 	return &value.String{
 		Value: left.String() + right.String(),
 	}, nil

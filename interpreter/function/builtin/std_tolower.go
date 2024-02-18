@@ -36,8 +36,8 @@ func Std_tolower(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	s := value.GetString(args[0]).String()
 	return &value.String{
-		Value: strings.ToLower(s.Value),
+		Value: strings.ToLower(s),
 	}, nil
 }

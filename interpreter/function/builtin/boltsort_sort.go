@@ -39,11 +39,11 @@ func Boltsort_sort(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	parsed, err := url.ParseRequestURI(input.Value)
+	input := value.GetString(args[0]).String()
+	parsed, err := url.ParseRequestURI(input)
 	if err != nil {
 		// ignoring error
-		return &value.String{Value: input.Value}, nil
+		return &value.String{Value: input}, nil
 	}
 	query := parsed.Query()
 	var sorted []string

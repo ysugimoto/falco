@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/function/shared"
@@ -16,13 +15,13 @@ import (
 
 const Header_unset_Name = "header.unset"
 
-var Header_unset_ArgumentTypes = []value.Type{value.IdentType}
+var Header_unset_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Header_unset_Validate(args []value.Value) error {
 	if len(args) != 2 {
 		return errors.ArgumentNotEnough(Header_unset_Name, 2, args)
 	}
-	for i := 0; i < 1; i++ {
+	for i := 0; i < len(Header_unset_ArgumentTypes); i++ {
 		if args[i].Type() != Header_unset_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_unset_Name, i+1, Header_unset_ArgumentTypes[i], args[i].Type())
 		}
@@ -62,39 +61,38 @@ func Header_unset(ctx *context.Context, args ...value.Value) (value.Value, error
 	}
 
 	where := value.Unwrap[*value.Ident](args[0])
+	name := value.GetString(args[1]).String()
 
-	name := &value.String{}
-	if err := assign.Assign(name, args[1]); err != nil {
-		return value.Null, errors.New(Header_unset_Name, err.Error())
-	}
-	if !shared.IsValidHeader(name.Value) {
+	if !shared.IsValidHeader(name) {
 		return value.Null, nil
 	}
-	if err := limitations.CheckProtectedHeader(name.Value); err != nil {
+	if err := limitations.CheckProtectedHeader(name); err != nil {
 		return value.Null, errors.New(Header_unset_Name, err.Error())
 	}
 
 	switch where.Value {
 	case "req":
 		if ctx.Request != nil {
-			header_unset(ctx.Request.Header, name.Value)
+			ctx.Request.Header.Del(name)
 		}
 	case "resp":
 		if ctx.Response != nil {
-			header_unset(ctx.Response.Header, name.Value)
+			ctx.Response.Header.Del(name)
 		}
 	case "obj":
 		if ctx.Object != nil {
-			header_unset(ctx.Object.Header, name.Value)
+			ctx.Object.Header.Del(name)
 		}
 	case "bereq":
 		if ctx.BackendRequest != nil {
-			header_unset(ctx.BackendRequest.Header, name.Value)
+			ctx.BackendRequest.Header.Del(name)
 		}
 	case "beresp":
 		if ctx.BackendResponse != nil {
-			header_unset(ctx.BackendResponse.Header, name.Value)
+			ctx.BackendResponse.Header.Del(name)
 		}
+	default:
+		return value.Null, errors.New(Header_get_Name, "ID of first argument %s is invalid", where.Value)
 	}
 
 	return value.Null, nil

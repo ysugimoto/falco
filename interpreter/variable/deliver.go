@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -54,7 +55,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case BEREQ_HEADER_BYTES_WRITTEN:
 		var headerBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range bereq.Header {
+		for k, v := range flchttp.ToGoHttpHeader(bereq.Header) {
 			// add ":" character that header separator character
 			headerBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -160,7 +161,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case REQ_BYTES_READ:
 		var readBytes int64
 		// FIXME: Do we need to include total byte header LF bytes?
-		for k, v := range req.Header {
+		for k, v := range flchttp.ToGoHttpHeader(req.Header) {
 			// add ":" character that header separator character
 			readBytes += int64(len(k) + 1 + len(strings.Join(v, ";")))
 		}
@@ -269,28 +270,32 @@ func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Response, match[1])
+	return v.ctx.Response.Header.Get(match[1])
 }
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
-		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
+		if assigned, err = doAssign(&value.String{}, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientSocketCongestionAlgorithm = coerceString(assigned)
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_PACE:
-		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ESI:
-		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
+		if _, err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -300,14 +305,14 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 		left := &value.String{Value: buf.String()}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Response.Body = io.NopCloser(strings.NewReader(left.Value))
+		v.ctx.Response.Body = io.NopCloser(strings.NewReader(coerceString(assigned).Value))
 		return nil
 	case RESP_STATUS:
 		left := &value.Integer{Value: int64(v.ctx.Response.StatusCode)}
-		if err := doAssign(left, operator, val); err != nil {
+		if _, err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Response.StatusCode = int(left.Value)
@@ -326,7 +331,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 
-		setResponseHeaderValue(v.ctx.Response, match[1], val)
+		v.ctx.Response.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -345,7 +350,7 @@ func (v *DeliverScopeVariables) Add(s context.Scope, name string, val value.Valu
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Response.Header.Add(match[1], val.String())
+	v.ctx.Response.Header.Add(match[1], val)
 	return nil
 }
 
@@ -359,7 +364,7 @@ func (v *DeliverScopeVariables) Unset(s context.Scope, name string) error {
 		return errors.WithStack(err)
 	}
 
-	unsetResponseHeaderValue(v.ctx.Response, match[1])
+	v.ctx.Response.Header.Del(match[1])
 	return nil
 }
 

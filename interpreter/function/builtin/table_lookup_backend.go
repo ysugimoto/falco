@@ -36,7 +36,7 @@ func Table_lookup_backend(ctx *context.Context, args ...value.Value) (value.Valu
 	}
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
-	key := value.Unwrap[*value.String](args[1]).Value
+	key := value.GetString(args[1]).String()
 	defaultBackend := value.Unwrap[*value.Backend](args[2]).Value
 
 	table, ok := ctx.Tables[id]

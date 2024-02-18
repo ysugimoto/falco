@@ -36,7 +36,7 @@ func Utf8_codepoint_count(ctx *context.Context, args ...value.Value) (value.Valu
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 	return &value.Integer{
 		Value: int64(utf8.RuneCountInString(input)),
 	}, nil

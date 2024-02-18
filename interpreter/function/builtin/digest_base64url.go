@@ -36,9 +36,9 @@ func Digest_base64url(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	s := value.GetString(args[0]).String()
 
 	return &value.String{
-		Value: base64.URLEncoding.EncodeToString([]byte(s.Value)),
+		Value: base64.URLEncoding.EncodeToString([]byte(s)),
 	}, nil
 }

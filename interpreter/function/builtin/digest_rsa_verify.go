@@ -55,14 +55,14 @@ func Digest_rsa_verify(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, errors.New("digest.rsa_verify", "Failed to determine hash method, %w", err)
 	}
 
-	publicKey := value.Unwrap[*value.String](args[1])
+	publicKey := value.GetString(args[1]).String()
 	payload := Digest_rsa_verify_HashSum(args[2], hashMethod)
 	digest, err := Digest_rsa_verify_DecodeArgument(args[3], base64Method)
 	if err != nil {
 		return value.Null, errors.New("digest.rsa_verify", "Failed to decode digest, %w", err)
 	}
 
-	block, _ := pem.Decode([]byte(publicKey.Value))
+	block, _ := pem.Decode([]byte(publicKey))
 	if block == nil {
 		return value.Null, errors.New("digest.rsa_verify", "Failed to parse pem block of public key, %w", err)
 	}
@@ -99,42 +99,42 @@ func Digest_rsa_verify_HashMethod(method value.Value) (crypto.Hash, error) {
 }
 
 func Digest_rsa_verify_HashSum(payload value.Value, hash crypto.Hash) []byte {
-	v := value.Unwrap[*value.String](payload)
+	v := value.GetString(payload).String()
 	switch hash {
 	case crypto.SHA1:
-		sum := sha1.Sum([]byte(v.Value))
+		sum := sha1.Sum([]byte(v))
 		return sum[:]
 	case crypto.SHA256:
-		sum := sha256.Sum256([]byte(v.Value))
+		sum := sha256.Sum256([]byte(v))
 		return sum[:]
 	case crypto.SHA384:
-		sum := sha512.Sum384([]byte(v.Value))
+		sum := sha512.Sum384([]byte(v))
 		return sum[:]
 	case crypto.SHA512:
-		sum := sha512.Sum512([]byte(v.Value))
+		sum := sha512.Sum512([]byte(v))
 		return sum[:]
 	default:
-		return []byte(v.Value)
+		return []byte(v)
 	}
 }
 
 func Digest_rsa_verify_DecodeArgument(v value.Value, b64 string) ([]byte, error) {
-	s := value.Unwrap[*value.String](v)
+	s := value.GetString(v).String()
 	switch b64 {
 	case "standard":
-		return base64.StdEncoding.DecodeString(s.Value)
+		return base64.StdEncoding.DecodeString(s)
 	case "url":
 		// Trick: url decoding may error. Then we try to decode as nopadding
-		dec, err := base64.RawURLEncoding.DecodeString(s.Value)
+		dec, err := base64.RawURLEncoding.DecodeString(s)
 		if err != nil {
-			return base64.RawURLEncoding.DecodeString(s.Value)
+			return base64.RawURLEncoding.DecodeString(s)
 		}
 		return dec, nil
 	case "url_nopad":
 		// Trick: url decoding may error. Then we try to decode with padding
-		dec, err := base64.RawURLEncoding.DecodeString(s.Value)
+		dec, err := base64.RawURLEncoding.DecodeString(s)
 		if err != nil {
-			return base64.URLEncoding.DecodeString(s.Value)
+			return base64.URLEncoding.DecodeString(s)
 		}
 		return dec, nil
 	default:

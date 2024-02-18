@@ -32,9 +32,9 @@ func H2_push(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	resource := value.Unwrap[*value.String](args[0])
+	resource := value.GetString(args[0]).String()
 	// Fastly document does not say about "as" variadic argument, so we ignore them for now.
-	ctx.PushResources = append(ctx.PushResources, resource.Value)
+	ctx.PushResources = append(ctx.PushResources, resource)
 
 	return nil, nil
 }

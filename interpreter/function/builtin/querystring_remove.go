@@ -36,8 +36,7 @@ func Querystring_remove(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	v := value.Unwrap[*value.String](args[0])
-	path := v.Value
+	path := value.GetString(args[0]).String()
 	if idx := strings.Index(path, "?"); idx != -1 {
 		path = path[0:idx]
 	}

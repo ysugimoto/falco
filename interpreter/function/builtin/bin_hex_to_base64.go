@@ -37,9 +37,9 @@ func Bin_hex_to_base64(ctx *context.Context, args ...value.Value) (value.Value, 
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
+	input := value.GetString(args[0]).String()
 
-	dec, err := hex.DecodeString(input.Value)
+	dec, err := hex.DecodeString(input)
 	if err != nil {
 		// If the hex string s is not valid, then fastly.error will be set to EINVAL.
 		ctx.FastlyError = &value.String{Value: "EINVAL"}

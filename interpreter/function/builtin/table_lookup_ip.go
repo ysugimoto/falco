@@ -38,7 +38,7 @@ func Table_lookup_ip(ctx *context.Context, args ...value.Value) (value.Value, er
 	}
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
-	key := value.Unwrap[*value.String](args[1]).Value
+	key := value.GetString(args[1]).String()
 	defaultValue := value.Unwrap[*value.IP](args[2]).Value
 
 	table, ok := ctx.Tables[id]

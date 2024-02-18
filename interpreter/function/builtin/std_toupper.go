@@ -36,8 +36,8 @@ func Std_toupper(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	s := value.GetString(args[0]).String()
 	return &value.String{
-		Value: strings.ToUpper(s.Value),
+		Value: strings.ToUpper(s),
 	}, nil
 }

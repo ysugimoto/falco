@@ -46,9 +46,9 @@ func Cstr_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	str := value.Unwrap[*value.String](args[0])
+	str := value.GetString(args[0]).String()
 	var escaped []byte
-	for _, b := range []byte(str.Value) {
+	for _, b := range []byte(str) {
 		if v, ok := Cstr_escape_CharacterMap[b]; ok {
 			escaped = append(escaped, v...)
 			continue

@@ -38,10 +38,10 @@ func Digest_hmac_sha1(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	key := value.Unwrap[*value.String](args[0])
-	input := value.Unwrap[*value.String](args[1])
-	mac := hmac.New(sha1.New, []byte(key.Value))
-	mac.Write([]byte(input.Value))
+	key := value.GetString(args[0]).String()
+	input := value.GetString(args[1]).String()
+	mac := hmac.New(sha1.New, []byte(key))
+	mac.Write([]byte(input))
 
 	return &value.String{
 		Value: hex.EncodeToString(mac.Sum(nil)),

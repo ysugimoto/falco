@@ -35,7 +35,7 @@ func Uuid_is_valid(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 	if _, err := uuid.Parse(input); err != nil {
 		return &value.Boolean{Value: false}, nil
 	}

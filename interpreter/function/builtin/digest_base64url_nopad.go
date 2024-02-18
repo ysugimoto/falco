@@ -36,9 +36,9 @@ func Digest_base64url_nopad(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	s := value.GetString(args[0]).String()
 
 	return &value.String{
-		Value: base64.RawURLEncoding.EncodeToString([]byte(s.Value)),
+		Value: base64.RawURLEncoding.EncodeToString([]byte(s)),
 	}, nil
 }

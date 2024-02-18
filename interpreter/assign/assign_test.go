@@ -36,14 +36,15 @@ func TestProcessAssignment(t *testing.T) {
 
 		for i, tt := range tests {
 			left := &value.Integer{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			v := value.Unwrap[*value.Integer](assigned)
+			if v.Value != tt.expect {
 				t.Errorf("Index %d: expect value %d, got %d", i, tt.expect, left.Value)
 			}
 		}
@@ -74,14 +75,15 @@ func TestProcessAssignment(t *testing.T) {
 
 		for i, tt := range tests {
 			left := &value.Float{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			v := value.Unwrap[*value.Float](assigned)
+			if v.Value != tt.expect {
 				t.Errorf("Index %d: expect value %.2f, got %.2f", i, tt.expect, left.Value)
 			}
 		}
@@ -108,18 +110,27 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "left", right: &value.Boolean{Value: true}, expect: "1"},
 			{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "0"},
 			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1"},
+			{
+				left: "left",
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				expect: "lenient",
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.String{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			if assigned.String() != tt.expect {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
 			}
 		}
@@ -146,18 +157,28 @@ func TestProcessAssignment(t *testing.T) {
 			{left: 10, right: &value.Boolean{Value: true}, isError: true},
 			{left: 10, right: &value.Boolean{Value: false, Literal: true}, isError: true},
 			{left: 10, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{
+				left: 10,
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				isError: true,
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.RTime{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			v := value.Unwrap[*value.RTime](assigned)
+			if v.Value != tt.expect {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
 			}
 		}
@@ -185,18 +206,28 @@ func TestProcessAssignment(t *testing.T) {
 			{left: now, right: &value.Boolean{Value: true}, isError: true},
 			{left: now, right: &value.Boolean{Value: false, Literal: true}, isError: true},
 			{left: now, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{
+				left: now,
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				isError: true,
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.Time{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			v := value.Unwrap[*value.Time](assigned)
+			if v.Value != tt.expect {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
 			}
 		}
@@ -223,18 +254,28 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "backend", right: &value.Boolean{Value: true}, isError: true},
 			{left: "backend", right: &value.Boolean{Value: false, Literal: true}, isError: true},
 			{left: "backend", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{
+				left: "backend",
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				isError: true,
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: tt.left}}}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value.Name.Value != tt.expect {
+			v := value.Unwrap[*value.Backend](assigned)
+			if v.Value.Name.Value != tt.expect {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value.Name.Value)
 			}
 		}
@@ -261,18 +302,28 @@ func TestProcessAssignment(t *testing.T) {
 			{left: false, right: &value.Boolean{Value: true}, expect: true},
 			{left: false, right: &value.Boolean{Value: true, Literal: true}, expect: true},
 			{left: false, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{
+				left: false,
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				isError: true,
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.Boolean{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value != tt.expect {
+			v := value.Unwrap[*value.Boolean](assigned)
+			if v.Value != tt.expect {
 				t.Errorf("Index %d: expect value %t, got %t", i, tt.expect, left.Value)
 			}
 		}
@@ -302,20 +353,99 @@ func TestProcessAssignment(t *testing.T) {
 			{left: v, right: &value.Boolean{Value: true}, isError: true},
 			{left: v, right: &value.Boolean{Value: true, Literal: true}, isError: true},
 			{left: v, right: &value.IP{Value: vv}, expect: vv},
+			{
+				left: v,
+				right: &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "lenient"},
+					},
+				},
+				isError: true,
+			},
 		}
 
 		for i, tt := range tests {
 			left := &value.IP{Value: tt.left}
-			err := Assign(left, tt.right)
+			assigned, err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("Index %d: expects error but non-nil", i)
 				}
 				continue
 			}
-			if left.Value.String() != tt.expect.String() {
+			v := value.Unwrap[*value.IP](assigned)
+			if v.Value.String() != tt.expect.String() {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
 			}
 		}
 	})
+}
+
+func TestLenientStringAssignment(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		left         string
+		right        value.Value
+		expect       string
+		strictExpect string
+		isError      bool
+	}{
+		{left: "left", right: &value.Integer{Value: 100}, expect: "100", strictExpect: "100"},
+		{left: "left", right: &value.Integer{Value: 100, Literal: true}, expect: "", isError: true},
+		{left: "left", right: &value.Float{Value: 50.0}, expect: "50.000", strictExpect: "50.000"},
+		{left: "left", right: &value.Float{Value: 50.0, Literal: true}, expect: "", isError: true},
+		{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "100.000", strictExpect: "100.000"},
+		{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: "", isError: true},
+		{
+			left:         "left",
+			right:        &value.Time{Value: now},
+			expect:       now.Format(http.TimeFormat),
+			strictExpect: now.Format(http.TimeFormat),
+		},
+		{left: "left", right: &value.String{Value: "example"}, expect: "example", strictExpect: "example"},
+		{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "example", strictExpect: "example"},
+		{left: "left", right: &value.String{IsNotSet: true}, expect: "(null)", strictExpect: ""},
+		{
+			left:         "left",
+			right:        &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}},
+			expect:       "foo",
+			strictExpect: "foo",
+		},
+		{left: "left", right: &value.Boolean{Value: true}, expect: "1", strictExpect: "1"},
+		{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "0", strictExpect: "0"},
+		{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1", strictExpect: "127.0.0.1"},
+		{left: "left", right: &value.IP{IsNotSet: true}, expect: "(null)", strictExpect: ""},
+		{
+			left: "left",
+			right: &value.LenientString{
+				Values: []value.Value{
+					&value.String{Value: "lenient"},
+				},
+			},
+			expect:       "lenient",
+			strictExpect: "lenient",
+		},
+	}
+
+	for i, tt := range tests {
+		left := &value.LenientString{
+			Values: []value.Value{
+				&value.String{Value: tt.left},
+			},
+		}
+		assigned, err := Assign(left, tt.right)
+		if tt.isError {
+			if err == nil {
+				t.Errorf("Index %d: expects error but non-nil", i)
+			}
+			continue
+		}
+		v := value.Unwrap[*value.LenientString](assigned)
+		if v.String() != tt.expect {
+			t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, v.String())
+		}
+		if v.StrictString() != tt.strictExpect {
+			t.Errorf("Index %d: strict expect value %s, got %s", i, tt.expect, v.String())
+		}
+	}
 }

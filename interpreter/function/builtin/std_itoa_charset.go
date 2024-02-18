@@ -35,7 +35,7 @@ func Std_itoa_charset(ctx *context.Context, args ...value.Value) (value.Value, e
 	}
 
 	input := value.Unwrap[*value.Integer](args[0]).Value
-	charsets := []byte(value.Unwrap[*value.String](args[1]).Value)
+	charsets := []byte(value.GetString(args[1]).String())
 
 	// ref: strconv.FormatInt implementation of general case
 	base := int64(len(charsets))

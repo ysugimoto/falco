@@ -64,10 +64,10 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 		}
 	}
 
-	if isError && ip.process.Error == nil {
+	if isError && ip.Process.Error == nil {
 		t.Error("Expected error but got nil")
-	} else if !isError && ip.process.Error != nil {
-		t.Errorf("Did not expect error but got %s", ip.process.Error)
+	} else if !isError && ip.Process.Error != nil {
+		t.Errorf("Did not expect error but got %s", ip.Process.Error)
 	}
 }
 

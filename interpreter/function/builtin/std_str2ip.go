@@ -37,9 +37,9 @@ func Std_str2ip(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	addr, err := netip.ParseAddr(value.Unwrap[*value.String](args[0]).Value)
+	addr, err := netip.ParseAddr(value.GetString(args[0]).String())
 	if err != nil {
-		addr, err = netip.ParseAddr(value.Unwrap[*value.String](args[1]).Value)
+		addr, err = netip.ParseAddr(value.GetString(args[1]).String())
 		if err != nil {
 			return value.Null, errors.New(Std_str2ip_Name, "Failed to parse IP: %s", err.Error())
 		}

@@ -107,36 +107,38 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 func (v *MissScopeVariables) getFromRegex(name string) value.Value {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return v.ctx.BackendRequest.Header.Get(match[1])
 	}
 	return v.base.getFromRegex(name)
 }
 
 func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	bereq := v.ctx.BackendRequest
+	var assigned value.Value
+	var err error
 
 	switch name {
 	case BEREQ_BETWEEN_BYTES_TIMEOUT:
-		if err := doAssign(v.ctx.BetweenBytesTimeout, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.BetweenBytesTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BEREQ_CONNECT_TIMEOUT:
-		if err := doAssign(v.ctx.ConnectTimeout, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ConnectTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BEREQ_FIRST_BYTE_TIMEOUT:
-		if err := doAssign(v.ctx.FirstByteTimeout, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.FirstByteTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case BEREQ_METHOD:
 		left := &value.String{Value: bereq.Method}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		bereq.Method = left.Value
+		bereq.Method = coerceString(assigned).Value
 		return nil
 	case BEREQ_REQUEST:
 		return v.Set(s, "bereq.method", operator, val)
@@ -149,10 +151,10 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 			u += "#" + fragment
 		}
 		left := &value.String{Value: u}
-		if err := doAssign(left, operator, val); err != nil {
+		if assigned, err = doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := url.Parse(coerceString(assigned).Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -190,7 +192,7 @@ func (v *MissScopeVariables) Add(s context.Scope, name string, val value.Value) 
 		return errors.WithStack(err)
 	}
 
-	v.ctx.BackendRequest.Header.Add(match[1], val.String())
+	v.ctx.BackendRequest.Header.Add(match[1], val)
 	return nil
 }
 
@@ -203,6 +205,6 @@ func (v *MissScopeVariables) Unset(s context.Scope, name string) error {
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	unsetRequestHeaderValue(v.ctx.BackendRequest, match[1])
+	v.ctx.BackendRequest.Header.Del(match[1])
 	return nil
 }

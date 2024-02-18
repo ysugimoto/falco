@@ -37,8 +37,8 @@ func Std_basename(ctx *context.Context, args ...value.Value) (value.Value, error
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
-	switch s.Value {
+	s := value.GetString(args[0]).String()
+	switch s {
 	case ".", "":
 		return &value.String{Value: "."}, nil
 	case "..":
@@ -46,7 +46,7 @@ func Std_basename(ctx *context.Context, args ...value.Value) (value.Value, error
 	case "/":
 		return &value.String{Value: "/"}, nil
 	default:
-		base := filepath.Base(strings.TrimSuffix(s.Value, "/"))
+		base := filepath.Base(strings.TrimSuffix(s, "/"))
 		return &value.String{Value: base}, nil
 	}
 }

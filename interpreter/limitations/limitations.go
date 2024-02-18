@@ -9,6 +9,8 @@ import (
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Units
@@ -26,7 +28,7 @@ const (
 	MaxRequestHeaderSize      = 69 * KB
 	MaxResponseHeaderSize     = 69 * KB
 	MaxRequestHeaderCount     = 96
-	MaxReponseHeaderCount     = 96
+	MaxResponseHeaderCount    = 96
 	MaxRequestBodyPayloadSize = 8 * KB
 
 	// Surrogate key limitations but actually don't check these
@@ -80,7 +82,7 @@ func CheckFastlyResourceLimit(ctx *context.Context) error {
 }
 
 // Validate limitation for the request
-func CheckFastlyRequestLimit(req *http.Request) error {
+func CheckFastlyRequestLimit(req *flchttp.Request) error {
 	if len([]byte(req.URL.String())) > MaxURLSize {
 		return exception.System(
 			"URL size is limited under the %d bytes",
@@ -89,34 +91,44 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	}
 
 	var cookieSize int
-	for _, c := range req.Cookies() {
-		cookieSize += len([]byte(c.Raw))
+	for _, cookies := range req.Header["Cookie"] {
+		for _, cookie := range cookies {
+			c := fmt.Sprintf("%s=%s", cookie.Key.StrictString(), cookie.Value.StrictString())
+			cookieSize += len([]byte(c))
+		}
 		// If max cookie size is greater than limitation, remove cookit header
 		// and add overflow header
 		if cookieSize > MaxCookieSize {
 			req.Header.Del("Cookie")
-			req.Header.Set("Fastly-Cookie-Overflow", "1")
+			req.Header.Set("Fastly-Cookie-Overflow", &value.String{Value: "1"})
 			break
 		}
 	}
 
 	var headerSize, headerCount int
 	for key, values := range req.Header {
-		headerSize += len(
-			[]byte(fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", "))),
-		)
-		if headerSize > MaxRequestHeaderSize {
-			return exception.System(
-				"Overflow request header size limitation of %d bytes",
-				MaxRequestHeaderSize,
-			)
-		}
-		headerCount++
-		if headerCount > MaxRequestHeaderCount {
-			return exception.System(
-				"Overflow request header count limitation of %d",
-				MaxRequestHeaderCount,
-			)
+		for _, headers := range values {
+			headerCount++
+			if headerCount > MaxRequestHeaderCount {
+				return exception.System(
+					"Overflow request header count limitation of %d",
+					MaxRequestHeaderCount,
+				)
+			}
+
+			for _, header := range headers {
+				h := key + ": " + header.Key.StrictString()
+				if header.Value != nil {
+					h += "=" + header.Value.StrictString()
+				}
+				headerSize += len([]byte(h))
+				if headerSize > MaxRequestHeaderSize {
+					return exception.System(
+						"Overflow request header size limitation of %d bytes",
+						MaxRequestHeaderSize,
+					)
+				}
+			}
 		}
 	}
 
@@ -139,24 +151,31 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 }
 
 // Validate limitation for the response
-func CheckFastlyResponseLimit(resp *http.Response) error {
+func CheckFastlyResponseLimit(resp *flchttp.Response) error {
 	var headerSize, headerCount int
 	for key, values := range resp.Header {
-		headerSize += len(
-			[]byte(fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", "))),
-		)
-		if headerSize > MaxRequestHeaderSize {
-			return exception.System(
-				"Overflow response header size limitation of %d bytes",
-				MaxRequestHeaderSize,
-			)
-		}
-		headerCount++
-		if headerCount > MaxRequestHeaderCount {
-			return exception.System(
-				"Overflow response header count limitation of %d",
-				MaxRequestHeaderCount,
-			)
+		for _, headers := range values {
+			headerCount++
+			if headerCount > MaxResponseHeaderCount {
+				return exception.System(
+					"Overflow response header count limitation of %d",
+					MaxResponseHeaderCount,
+				)
+			}
+
+			for _, header := range headers {
+				h := key + ": " + header.Key.StrictString()
+				if header.Value != nil {
+					h += "=" + header.Value.StrictString()
+				}
+				headerSize += len([]byte(h))
+				if headerSize > MaxResponseHeaderSize {
+					return exception.System(
+						"Overflow response header size limitation of %d bytes",
+						MaxResponseHeaderSize,
+					)
+				}
+			}
 		}
 	}
 

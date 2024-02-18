@@ -41,14 +41,14 @@ func Digest_time_hmac_sha256(ctx *context.Context, args ...value.Value) (value.V
 		return value.Null, err
 	}
 
-	secret := value.Unwrap[*value.String](args[0])
+	secret := value.GetString(args[0]).String()
 	interval := value.Unwrap[*value.Integer](args[1])
 	offset := value.Unwrap[*value.Integer](args[2])
 	return digest_time_hmac_sha256(time.Now(), secret, interval, offset)
 }
 
-func digest_time_hmac_sha256(baseTime time.Time, secret *value.String, interval, offset *value.Integer) (value.Value, error) {
-	dec, err := base64.StdEncoding.DecodeString(secret.Value)
+func digest_time_hmac_sha256(baseTime time.Time, secret string, interval, offset *value.Integer) (value.Value, error) {
+	dec, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
 		return value.Null, errors.New("digest.time_hmac_sha256", "Failed to base64 decode secret string")
 	}

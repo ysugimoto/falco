@@ -37,12 +37,12 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	v := value.Unwrap[*value.String](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	v := value.GetString(args[0]).String()
+	name := value.GetString(args[1]).String()
 
 	var qs string
-	if idx := strings.Index(v.Value, "?"); idx != -1 {
-		qs = v.Value[idx+1:]
+	if idx := strings.Index(v, "?"); idx != -1 {
+		qs = v[idx+1:]
 	}
 
 	// url.Value could not treat not set query value:
@@ -58,7 +58,7 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 		if err != nil {
 			continue
 		}
-		if n == name.Value {
+		if n == name {
 			return &value.String{Value: sp[1]}, nil
 		}
 	}

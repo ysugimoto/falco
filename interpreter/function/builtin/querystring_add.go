@@ -35,17 +35,17 @@ func Querystring_add(ctx *context.Context, args ...value.Value) (value.Value, er
 		return value.Null, err
 	}
 
-	u := value.Unwrap[*value.String](args[0])
-	name := value.Unwrap[*value.String](args[1])
-	val := value.Unwrap[*value.String](args[2])
+	u := value.GetString(args[0]).String()
+	name := value.GetString(args[1]).String()
+	val := value.GetString(args[2]).String()
 
-	query, err := shared.ParseQuery(u.Value)
+	query, err := shared.ParseQuery(u)
 	if err != nil {
 		return value.Null, errors.New(
-			Querystring_add_Name, "Failed to parse querystring: %s, error: %s", u.Value, err.Error(),
+			Querystring_add_Name, "Failed to parse querystring: %s, error: %s", u, err.Error(),
 		)
 	}
 
-	query.Add(name.Value, val.Value)
+	query.Add(name, val)
 	return &value.String{Value: query.String()}, nil
 }

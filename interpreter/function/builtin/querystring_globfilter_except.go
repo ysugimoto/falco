@@ -36,20 +36,20 @@ func Querystring_globfilter_except(ctx *context.Context, args ...value.Value) (v
 		return value.Null, err
 	}
 
-	v := value.Unwrap[*value.String](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	v := value.GetString(args[0]).String()
+	name := value.GetString(args[1]).String()
 
-	query, err := shared.ParseQuery(v.Value)
+	query, err := shared.ParseQuery(v)
 	if err != nil {
 		return value.Null, errors.New(
-			Querystring_globfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
+			Querystring_globfilter_except_Name, "Failed to parse query: %s, error: %s", v, err.Error(),
 		)
 	}
 
-	pattern, err := glob.Compile(name.Value)
+	pattern, err := glob.Compile(name)
 	if err != nil {
 		return value.Null, errors.New(
-			Querystring_globfilter_Name, "Invalid glob filter string: %s, error: %s", v.Value, err.Error(),
+			Querystring_globfilter_Name, "Invalid glob filter string: %s, error: %s", v, err.Error(),
 		)
 	}
 

@@ -3,12 +3,12 @@ package context
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/cache"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
@@ -61,11 +61,11 @@ type Context struct {
 	OverrideRequest     *config.RequestConfig
 	OverrideBackends    map[string]*config.OverrideBackend
 
-	Request          *http.Request
-	BackendRequest   *http.Request
-	BackendResponse  *http.Response
-	Object           *http.Response
-	Response         *http.Response
+	Request          *flchttp.Request
+	BackendRequest   *flchttp.Request
+	BackendResponse  *flchttp.Response
+	Object           *flchttp.Response
+	Response         *flchttp.Response
 	Scope            Scope
 	RequestEndTime   time.Time
 	RequestStartTime time.Time

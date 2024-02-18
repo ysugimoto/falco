@@ -37,8 +37,8 @@ func Digest_hash_sha256(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	enc := sha256.Sum256([]byte(input.Value))
+	input := value.GetString(args[0]).String()
+	enc := sha256.Sum256([]byte(input))
 
 	return &value.String{
 		Value: hex.EncodeToString(enc[:]),

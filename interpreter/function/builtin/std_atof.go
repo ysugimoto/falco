@@ -36,11 +36,11 @@ func Std_atof(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
-	f, err := strconv.ParseFloat(s.Value, 64)
+	s := value.GetString(args[0]).String()
+	f, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		return &value.Float{Value: 0}, errors.New(
-			Std_atof_Name, "Failed to parse float value: %s, %s", s.Value, err.Error(),
+			Std_atof_Name, "Failed to parse float value: %s, %s", s, err.Error(),
 		)
 	}
 	return &value.Float{Value: f}, nil

@@ -162,82 +162,88 @@ func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Object, match[1])
+	return v.ctx.Object.Header.Get(match[1])
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
-		if err := doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ClientSocketCongestionAlgorithm, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ClientSocketCongestionAlgorithm = coerceString(assigned)
 		return nil
 	case CLIENT_SOCKET_CWND:
-		if err := doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketCwnd, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case CLIENT_SOCKET_PACE:
-		if err := doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ClientSocketPace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ESI_ALLOW_INSIDE_CDATA:
-		if err := doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EsiAllowInsideCData, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_GRACE:
-		if err := doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectGrace, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case OBJ_RESPONSE:
-		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.ObjectResponse = coerceString(assigned)
 		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
-		if err := doAssign(i, operator, val); err != nil {
+		if _, err = doAssign(i, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
 		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
-		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_ESI:
-		if err := doAssign(v.ctx.EnableSSI, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.EnableSSI, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case REQ_HASH:
-		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
+		if assigned, err = doAssign(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
+		v.ctx.RequestHash = coerceString(assigned)
 		return nil
 	case WAF_BLOCKED:
-		if err := doAssign(v.ctx.WafBlocked, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.WafBlocked, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case WAF_EXECUTED:
-		if err := doAssign(v.ctx.WafExecuted, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.WafExecuted, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case WAF_LOGGED:
-		if err := doAssign(v.ctx.WafLogged, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.WafLogged, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case WAF_PASSED:
-		if err := doAssign(v.ctx.WafPassed, operator, val); err != nil {
+		if _, err = doAssign(v.ctx.WafPassed, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -247,7 +253,7 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.Object, match[1], val)
+		v.ctx.Object.Header.Set(match[1], val)
 		return nil
 	}
 
@@ -266,7 +272,7 @@ func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value)
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Object.Header.Add(match[1], val.String())
+	v.ctx.Object.Header.Add(match[1], val)
 	return nil
 }
 
@@ -280,6 +286,6 @@ func (v *ErrorScopeVariables) Unset(s context.Scope, name string) error {
 		return errors.WithStack(err)
 	}
 
-	unsetResponseHeaderValue(v.ctx.Object, match[1])
+	v.ctx.Object.Header.Del(match[1])
 	return nil
 }

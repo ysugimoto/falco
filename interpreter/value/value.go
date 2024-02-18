@@ -15,21 +15,22 @@ import (
 type Type string
 
 const (
-	NullType    Type = "NULL"
-	IdentType   Type = "IDENT"
-	IntegerType Type = "INTEGER"
-	FloatType   Type = "FLOAT"
-	StringType  Type = "STRING"
-	BooleanType Type = "BOOL"
-	RTimeType   Type = "RTIME"
-	TimeType    Type = "TIME"
-	IpType      Type = "IP"
-	BackendType Type = "BACKEND"
-	AclType     Type = "ACL"
+	NullType          Type = "NULL"
+	IdentType         Type = "IDENT"
+	IntegerType       Type = "INTEGER"
+	FloatType         Type = "FLOAT"
+	StringType        Type = "STRING"
+	BooleanType       Type = "BOOL"
+	RTimeType         Type = "RTIME"
+	TimeType          Type = "TIME"
+	IpType            Type = "IP"
+	BackendType       Type = "BACKEND"
+	AclType           Type = "ACL"
+	LenientStringType Type = "STRING" // lenient but underlying type is STRING
 )
 
 type ValueTypes interface {
-	*Ident | *String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl
+	*Ident | *String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl | *LenientString
 }
 
 func Unwrap[T ValueTypes](v Value) T {
@@ -64,19 +65,18 @@ func (v *Ident) IsLiteral() bool { return v.Literal }
 func (v *Ident) Copy() Value     { return &Ident{Value: v.Value, Literal: v.Literal} }
 
 type String struct {
-	Value      string
-	Literal    bool
-	IsNotSet   bool
-	Collection []string // collection is used for multiple header values. e.g Cookie
+	Value    string
+	Literal  bool
+	IsNotSet bool
 }
 
 func (v *String) String() string {
-	// Temporarily comment out to suppress not set output
-	// if v.IsNotSet {
-	// 	return "(null)"
-	// }
+	if v.IsNotSet {
+		return ""
+	}
 	return v.Value
 }
+
 func (v *String) Type() Type      { return StringType }
 func (v *String) IsLiteral() bool { return v.Literal }
 func (v *String) Copy() Value {
@@ -94,7 +94,6 @@ type IP struct {
 }
 
 func (v *IP) String() string {
-	// Temporarily return empty string if notset
 	if v.IsNotSet {
 		return ""
 	}
@@ -224,16 +223,21 @@ func (v *Time) Copy() Value {
 	}
 }
 
+// Virtual director interface
+type Director interface {
+	Director() string
+}
+
 type Backend struct {
 	Value    *ast.BackendDeclaration
-	Director *DirectorConfig // wrap director as Backend
+	Director Director // wrap director as Backend
 	Literal  bool
 	Healthy  *atomic.Bool
 }
 
 func (v *Backend) String() string {
 	if v.Director != nil {
-		return v.Director.Name
+		return v.Director.Director()
 	}
 	if v.Value != nil {
 		return v.Value.Name.Value

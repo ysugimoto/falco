@@ -253,7 +253,11 @@ func TestProcessExpression(t *testing.T) {
 			name: "If expression (consequence)",
 			vcl:  `sub vcl_recv { set req.http.Foo = if(req.http.Bar, "yes", "no"); }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "no"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "no"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -261,7 +265,11 @@ func TestProcessExpression(t *testing.T) {
 			name: "If expression (alternative)",
 			vcl:  `sub vcl_recv { set req.http.Foo = if(!req.http.Bar, "yes", "no"); }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "yes"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "yes"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -269,7 +277,11 @@ func TestProcessExpression(t *testing.T) {
 			name: "Set header to string literal",
 			vcl:  `sub vcl_recv { set req.http.Foo = "yes"; }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "yes"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "yes"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -277,7 +289,11 @@ func TestProcessExpression(t *testing.T) {
 			name: "Set header to req.backend",
 			vcl:  `sub vcl_recv { set req.http.Foo = req.backend; }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "example"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "example"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -289,7 +305,11 @@ func TestProcessExpression(t *testing.T) {
 				set req.http.Foo = var.backend;
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "example"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "example"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -297,7 +317,9 @@ func TestProcessExpression(t *testing.T) {
 			name: "Set header to backend literal causes error",
 			vcl:  `sub vcl_recv { set req.http.Foo = example; }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{IsNotSet: true},
+				"req.http.Foo": &value.LenientString{
+					IsNotSet: true,
+				},
 			},
 			isError: true,
 		},
@@ -317,7 +339,11 @@ func TestProcessExpression(t *testing.T) {
 				set req.http.Foo = header.get(req, "Foo2");
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "yes"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.String{Value: "yes"},
+					},
+				},
 			},
 			isError: false,
 		},
@@ -328,7 +354,11 @@ func TestProcessExpression(t *testing.T) {
 					set req.http.foo = bool_fn();
 				}`,
 			assertions: map[string]value.Value{
-				"req.http.foo": &value.String{Value: "1"},
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{
+						&value.Boolean{Value: true, Literal: true},
+					},
+				},
 			},
 			isError: false,
 		},

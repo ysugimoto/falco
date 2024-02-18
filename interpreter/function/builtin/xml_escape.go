@@ -34,7 +34,7 @@ func Xml_escape(ctx *context.Context, args ...value.Value) (value.Value, error) 
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0]).Value
+	input := value.GetString(args[0]).String()
 
 	var escaped []byte
 	for _, b := range []byte(input) {

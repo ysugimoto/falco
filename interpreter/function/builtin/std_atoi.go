@@ -37,9 +37,8 @@ func Std_atoi(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	input := value.GetString(args[0]).String()
 
-	input := s.Value
 	// If input string is empty, return 0 immediately without raising error
 	if input == "" {
 		return &value.Integer{Value: 0}, nil
@@ -51,7 +50,7 @@ func Std_atoi(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
 		return &value.Integer{Value: 0}, errors.New(
-			Std_atoi_Name, "Failed to parse int value: %s, %s", s.Value, err.Error(),
+			Std_atoi_Name, "Failed to parse int value: %s, %s", input, err.Error(),
 		)
 	}
 	return &value.Integer{Value: i}, nil

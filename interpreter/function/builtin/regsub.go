@@ -70,35 +70,35 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return value.Null, err
 	}
 
-	input := value.Unwrap[*value.String](args[0])
-	pattern := value.Unwrap[*value.String](args[1])
-	replacement := value.Unwrap[*value.String](args[2])
+	input := value.GetString(args[0]).String()
+	pattern := value.GetString(args[1]).String()
+	replacement := value.GetString(args[2]).String()
 
-	re, err := regexp.Compile(pattern.Value)
+	re, err := regexp.Compile(pattern)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
-		return &value.String{Value: input.Value}, errors.New(
-			Regsub_Name, "Invalid regular expression pattern: %s", pattern.Value,
+		return &value.String{Value: input}, errors.New(
+			Regsub_Name, "Invalid regular expression pattern: %s", pattern,
 		)
 	}
 
 	// Note: VCL's regsub uses PCRE regexp but golang is not PCRE
-	matches := re.FindStringSubmatchIndex(input.Value)
+	matches := re.FindStringSubmatchIndex(input)
 	if matches == nil {
-		return &value.String{Value: input.Value}, nil
+		return &value.String{Value: input}, nil
 	}
 
-	if expand, found := convertGoExpandString(replacement.Value); found {
-		replaced := re.ExpandString([]byte{}, expand, input.Value, matches)
+	if expand, found := convertGoExpandString(replacement); found {
+		replaced := re.ExpandString([]byte{}, expand, input, matches)
 		return &value.String{Value: string(replaced)}, nil
 	}
 	var replaced string
 	if matches[0] > 0 {
-		replaced += input.Value[:matches[0]]
+		replaced += input[:matches[0]]
 	}
-	replaced += replacement.Value
-	if matches[1] < len(input.Value)-1 {
-		replaced += input.Value[matches[1]:]
+	replaced += replacement
+	if matches[1] < len(input)-1 {
+		replaced += input[matches[1]:]
 	}
 	return &value.String{Value: replaced}, nil
 }

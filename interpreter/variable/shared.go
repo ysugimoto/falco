@@ -206,101 +206,106 @@ func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value)
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return true, errors.WithStack(err)
 		}
-		setRequestHeaderValue(ctx.BackendRequest, match[1], val)
+		ctx.BackendRequest.Header.Set(match[1], val)
 		return true, nil
 	}
 	return false, nil
 }
 
 func SetWafVariables(ctx *context.Context, name, operator string, val value.Value) (bool, error) {
+	var assigned value.Value
+	var err error
+
 	switch name {
 	case WAF_ANOMALY_SCORE:
-		if err := doAssign(ctx.WafAnomalyScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafAnomalyScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_BLOCKED:
-		if err := doAssign(ctx.WafBlocked, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafBlocked, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_COUNTER:
-		if err := doAssign(ctx.WafCounter, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafCounter, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_EXECUTED:
-		if err := doAssign(ctx.WafExecuted, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafExecuted, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_HTTP_VIOLATION_SCORE:
-		if err := doAssign(ctx.WafHttpViolationScore, operator, val); err != nil {
+		if _, err := doAssign(ctx.WafHttpViolationScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_INBOUND_ANOMALY_SCORE:
-		if err := doAssign(ctx.WafInboundAnomalyScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafInboundAnomalyScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_LFI_SCORE:
-		if err := doAssign(ctx.WafLFIScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafLFIScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_LOGDATA:
-		if err := doAssign(ctx.WafLogData, operator, val); err != nil {
+		if assigned, err = doAssign(ctx.WafLogData, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
+		ctx.WafLogData = coerceString(assigned)
 		return true, nil
 	case WAF_LOGGED:
-		if err := doAssign(ctx.WafLogged, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafLogged, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_MESSAGE:
-		if err := doAssign(ctx.WafMessage, operator, val); err != nil {
+		if assigned, err = doAssign(ctx.WafMessage, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
+		ctx.WafMessage = coerceString(assigned)
 		return true, nil
 	case WAF_PASSED:
-		if err := doAssign(ctx.WafPassed, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafPassed, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_RFI_SCORE:
-		if err := doAssign(ctx.WafRFIScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafRFIScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_RULE_ID:
-		if err := doAssign(ctx.WafRuleId, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafRuleId, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_SESSION_FIXATION_SCORE:
-		if err := doAssign(ctx.WafSessionFixationScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafSessionFixationScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_SEVERITY:
-		if err := doAssign(ctx.WafSeverity, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafSeverity, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_XSS_SCORE:
-		if err := doAssign(ctx.WafXSSScore, operator, val); err != nil {
+		if _, err = doAssign(ctx.WafXSSScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_PHP_INJECTION_SCORE:
-		if err := doAssign(ctx.WafPHPInjectionScore, operator, val); err != nil {
+		if _, err := doAssign(ctx.WafPHPInjectionScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil
 	case WAF_RCE_SCORE:
-		if err := doAssign(ctx.WafRCEScore, operator, val); err != nil {
+		if _, err := doAssign(ctx.WafRCEScore, operator, val); err != nil {
 			return true, errors.WithStack(err)
 		}
 		return true, nil

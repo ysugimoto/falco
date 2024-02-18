@@ -3,61 +3,55 @@ package function
 import (
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	flchttp "github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func Test_inspect(t *testing.T) {
 
 	ctx := context.New()
-	ctx.Request = httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-	ctx.BackendRequest = ctx.Request.Clone(ctx.Request.Context())
-	ctx.BackendResponse = &http.Response{
+	ctx.Request, _ = flchttp.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+	ctx.BackendRequest, _ = ctx.Request.Clone()
+	ctx.BackendResponse = &flchttp.Response{
 		StatusCode:    http.StatusOK,
 		Status:        http.StatusText(http.StatusOK),
 		Proto:         "HTTP/1.1",
 		ProtoMajor:    1,
 		ProtoMinor:    1,
-		Header:        http.Header{},
+		Header:        flchttp.Header{},
 		Body:          io.NopCloser(strings.NewReader("OK")),
 		ContentLength: 2,
-		Close:         true,
 		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
+		Trailer:       flchttp.Header{},
 	}
-	ctx.Response = &http.Response{
+	ctx.Response = &flchttp.Response{
 		StatusCode:    http.StatusOK,
 		Status:        http.StatusText(http.StatusOK),
 		Proto:         "HTTP/1.1",
 		ProtoMajor:    1,
 		ProtoMinor:    1,
-		Header:        http.Header{},
+		Header:        flchttp.Header{},
 		Body:          io.NopCloser(strings.NewReader("OK")),
 		ContentLength: 2,
-		Close:         true,
 		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
+		Trailer:       flchttp.Header{},
 	}
-	ctx.Object = &http.Response{
+	ctx.Object = &flchttp.Response{
 		StatusCode:    http.StatusOK,
 		Status:        http.StatusText(http.StatusOK),
 		Proto:         "HTTP/1.1",
 		ProtoMajor:    1,
 		ProtoMinor:    1,
-		Header:        http.Header{},
+		Header:        flchttp.Header{},
 		Body:          io.NopCloser(strings.NewReader("OK")),
 		ContentLength: 2,
-		Close:         true,
 		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
+		Trailer:       flchttp.Header{},
 	}
 
 	t.Run("Inspect variable", func(t *testing.T) {
@@ -67,7 +61,7 @@ func Test_inspect(t *testing.T) {
 			isError bool
 		}{
 			{name: "obj.status", expect: &value.Integer{Value: 500}},
-			{name: "req.http.Foo", expect: &value.String{IsNotSet: true}},
+			{name: "req.http.Foo", expect: &value.LenientString{IsNotSet: true}},
 			{name: "some.undefined", isError: true},
 		}
 
@@ -84,7 +78,7 @@ func Test_inspect(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(ret, tt.expect); diff != "" {
-				t.Errorf("return value unmatch, diff=%s", diff)
+				t.Errorf("%s return value unmatch, diff=%s", tt.name, diff)
 			}
 		}
 	})

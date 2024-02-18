@@ -36,8 +36,8 @@ func Std_suffixof(ctx *context.Context, args ...value.Value) (value.Value, error
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0]).Value
-	suffix := value.Unwrap[*value.String](args[1]).Value
+	s := value.GetString(args[0]).String()
+	suffix := value.GetString(args[1]).String()
 
 	return &value.Boolean{Value: strings.HasSuffix(s, suffix)}, nil
 }

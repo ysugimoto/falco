@@ -40,13 +40,13 @@ func Crypto_decrypt_hex(ctx *context.Context, args ...value.Value) (value.Value,
 	cipherId := value.Unwrap[*value.Ident](args[0])
 	mode := value.Unwrap[*value.Ident](args[1])
 	padding := value.Unwrap[*value.Ident](args[2])
-	key := value.Unwrap[*value.String](args[3])
-	iv := value.Unwrap[*value.String](args[4])
-	text := value.Unwrap[*value.String](args[5])
+	key := value.GetString(args[3]).String()
+	iv := value.GetString(args[4]).String()
+	text := value.GetString(args[5]).String()
 
-	buf, err := hex.DecodeString(text.Value)
+	buf, err := hex.DecodeString(text)
 	if err != nil {
-		return value.Null, errors.New("Failed to decode hex string: %s", text.Value)
+		return value.Null, errors.New("Failed to decode hex string: %s", text)
 	}
 
 	codec, err := shared.NewCryptoCodec(
@@ -57,7 +57,7 @@ func Crypto_decrypt_hex(ctx *context.Context, args ...value.Value) (value.Value,
 		return value.Null, err
 	}
 
-	decrypted, err := codec.Decrypt(key.Value, iv.Value, buf)
+	decrypted, err := codec.Decrypt(key, iv, buf)
 	if err != nil {
 		return value.Null, err
 	}
