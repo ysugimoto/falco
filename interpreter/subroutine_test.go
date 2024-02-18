@@ -26,7 +26,11 @@ func TestSubroutine(t *testing.T) {
 				set req.http.X-Int-Value = var.myint;
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.X-Int-Value": &value.String{Value: "2"},
+				"req.http.X-Int-Value": &value.LenientString{
+					Values: []value.Value{
+						&value.Integer{Value: 2},
+					},
+				},
 			},
 		},
 		{
