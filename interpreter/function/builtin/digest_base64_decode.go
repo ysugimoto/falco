@@ -87,10 +87,9 @@ func Digest_base64_decode_removeInvalidCharacters(input string) string {
 		case b == 0x3D: // =
 			// If "=" sign found, next byte must also be "="
 			if peek, err := r.Peek(1); err != nil && peek[0] == 0x3D {
-				// If removed bytes is not multiple of 4bytes, the sign is padding
 				removed.WriteByte(b)
 				removed.WriteByte(b)
-				r.ReadByte() // skip next equal sign
+				r.ReadByte() // skip next "=" character
 				continue
 			}
 			// Otherwise, treat as invalid character, stop decoding
