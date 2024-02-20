@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// The functions in this file implement Fastly querystring behavior
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/
+
 func queryEscape(s string) string {
 	escaped := url.QueryEscape(s)
 	return strings.ReplaceAll(escaped, "+", "%20")
@@ -25,11 +28,18 @@ func joinPair(lh, rh, sep string) string {
 	return lh + sep + rh
 }
 
-func QueryStringSet(qs, key, val string) string {
-	escapedKey := queryEscape(key)
-	escapedVal := queryEscape(val)
+// Returns the given URL with the given parameter name set to the given value,
+// replacing the original value and removing any duplicates. If the parameter
+// is not present in the query string, the parameter will be appended with the
+// given value to the end of the query string. The parameter name and value
+// will be URL-encoded when set in the query string.
+//
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-set/
+func QueryStringSet(urlStr, name, value string) string {
+	escapedKey := queryEscape(name)
+	escapedVal := queryEscape(value)
 	pairToAdd := joinPair(escapedKey, escapedVal, "=")
-	if path, query := splitPair(qs, "?"); query != nil {
+	if path, query := splitPair(urlStr, "?"); query != nil {
 		kvPairs := strings.Split(*query, "&")
 		updated := false
 		updatedQuery := make([]string, 0)
@@ -55,20 +65,47 @@ func QueryStringSet(qs, key, val string) string {
 	}
 }
 
-func QueryStringAdd(qs, key, val string) string {
-	k := queryEscape(key)
-	v := queryEscape(val)
+// Returns the given URL with the given parameter name and value appended to
+// the end of the query string. The parameter name and value will be
+// URL-encoded when added to the query string.
+//
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-add/
+func QueryStringAdd(urlStr, name, value string) string {
+	k := queryEscape(name)
+	v := queryEscape(value)
 	pair := joinPair(k, v, "=")
-	if path, query := splitPair(qs, "?"); query != nil {
+	if path, query := splitPair(urlStr, "?"); query != nil {
 		*query += "&" + pair
 		return joinPair(path, *query, "?")
 	}
-	return joinPair(qs, pair, "?")
+	return joinPair(urlStr, pair, "?")
 }
 
-func QueryStringGet(qs, key string) *string {
-	escapedKey := queryEscape(key)
-	if _, query := splitPair(qs, "?"); query != nil {
+// Returns a value associated with the name in the query component of an URL.
+//
+// If the query component does not contain a value associated with name, then
+// querystring.get returns a not set value. For example,
+// querystring.get("/?a=1&b=2&c=3", "d") is a not set value.
+//
+// If a query parameter associated with name is found but the value is absent,
+// then querystring.get returns the string "". For example,
+// querystring.get("/?a=1&b=&c=3", "b") is "".
+//
+// If multiple query parameters of the same name are present in the query
+// component, then querystring.get returns the first value associated with name.
+// For example, querystring.get("/?a=1&b=2&c=3&b=4&d=5", "b") is "2".
+//
+// If the URL does not include a query component, then querystring.get returns
+// a not set value. For example, querystring.get("/", "a") is a not set value.
+//
+// If querystring.get is called with not set or empty string arguments, then
+// it returns a not set value. For example, querystring.get("", "") is a not
+// set value.
+//
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-get/
+func QueryStringGet(urlStr, name string) *string {
+	escapedKey := queryEscape(name)
+	if _, query := splitPair(urlStr, "?"); query != nil {
 		pairs := strings.Split(*query, "&")
 		for _, pair := range pairs {
 			k, v := splitPair(pair, "=")
@@ -80,8 +117,16 @@ func QueryStringGet(qs, key string) *string {
 	return nil
 }
 
-func QueryStringClean(qs string) string {
-	if path, query := splitPair(qs, "?"); query != nil {
+// Returns the given URL without empty parameters. Parameters are considered empty
+// when their names are empty. Effectively, this strips a malformed query string
+// of superfluous separators, such as a trailing ? or extra ampersands:
+//
+//	/path?name=value&&=value-only&name-only becomes /path?name=value&name-only
+//	/path? becomes /path
+//
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-clean/
+func QueryStringClean(urlStr string) string {
+	if path, query := splitPair(urlStr, "?"); query != nil {
 		if *query == "" {
 			return path // Special case. If there is '?' but no query, fastly removes '?'
 		}
@@ -96,11 +141,21 @@ func QueryStringClean(qs string) string {
 		cleanedQuery := strings.Join(cleaned, "&")
 		return joinPair(path, cleanedQuery, "?")
 	}
-	return qs
+	return urlStr
 }
 
-func QueryStringFilter(qs string, filter func(name string) bool) string {
-	if path, query := splitPair(qs, "?"); query != nil {
+// Returns the given URL with only those parameters for which filter function
+// returns true.
+//
+// See:
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-filter/
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-filter-except/
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-globfilter/
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-globfilter-except/
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-regfilter/
+//   - https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-regfilter-except/
+func QueryStringFilter(urlStr string, filter func(name string) bool) string {
+	if path, query := splitPair(urlStr, "?"); query != nil {
 		pairs := strings.Split(*query, "&")
 		filtered := make([]string, 0)
 		for _, pair := range pairs {
@@ -115,7 +170,7 @@ func QueryStringFilter(qs string, filter func(name string) bool) string {
 		filteredQuery := strings.Join(filtered, "&")
 		return joinPair(path, filteredQuery, "?")
 	}
-	return qs
+	return urlStr
 }
 
 type SortMode string
@@ -125,8 +180,13 @@ const (
 	SortDesc SortMode = "desc"
 )
 
-func QueryStringSort(qs string, mode SortMode) string {
-	if path, query := splitPair(qs, "?"); query != nil {
+// Returns the given URL with its query string sorted.
+// For example, querystring.sort("/foo?b=1&a=2&c=3", SortAsc);
+// returns "/foo?a=2&b=1&c=3".
+//
+// See: https://www.fastly.com/documentation/reference/vcl/functions/query-string/querystring-sort/
+func QueryStringSort(urlStr string, mode SortMode) string {
+	if path, query := splitPair(urlStr, "?"); query != nil {
 		pairs := strings.Split(*query, "&")
 		sort.Slice(pairs, func(i, j int) bool {
 			v := pairs[i] > pairs[j]
@@ -137,5 +197,5 @@ func QueryStringSort(qs string, mode SortMode) string {
 		})
 		return joinPair(path, strings.Join(pairs, "&"), "?")
 	}
-	return qs
+	return urlStr
 }
