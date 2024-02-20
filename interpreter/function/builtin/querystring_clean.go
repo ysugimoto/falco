@@ -36,14 +36,6 @@ func Querystring_clean(ctx *context.Context, args ...value.Value) (value.Value, 
 	}
 
 	v := value.Unwrap[*value.String](args[0])
-
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_clean_Name, "Failed to parse url: %s, error: %s", v.Value, err.Error(),
-		)
-	}
-
-	query.Clean()
-	return &value.String{Value: query.String()}, nil
+	result := shared.QueryStringClean(v.Value)
+	return &value.String{Value: result}, nil
 }

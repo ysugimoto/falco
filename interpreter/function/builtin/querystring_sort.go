@@ -36,13 +36,7 @@ func Querystring_sort(ctx *context.Context, args ...value.Value) (value.Value, e
 	}
 
 	u := value.Unwrap[*value.String](args[0])
-	query, err := shared.ParseQuery(u.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_sort_Name, "Failed to parse urquery: %s, error: %s", u.Value, err.Error(),
-		)
-	}
 
-	query.Sort(shared.SortAsc)
-	return &value.String{Value: query.String()}, nil
+	result := shared.QueryStringSort(u.Value, shared.SortAsc)
+	return &value.String{Value: result}, nil
 }

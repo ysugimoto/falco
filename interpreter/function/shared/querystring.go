@@ -6,115 +6,115 @@ import (
 	"strings"
 )
 
-type QueryString struct {
-	Key   string
-	Value []string // nil indicates not set in VCL
+func queryEscape(s string) string {
+	escaped := url.QueryEscape(s)
+	return strings.ReplaceAll(escaped, "+", "%20")
 }
 
-// We implement original querytring struct in order to maname URL queries keeping its order.
-// url.Values are useful in Golang but Encode() result does not care its order because it is managed in map
-// and always sort by query name. On VCL, we need to keep query raw-order as present, this struct solved them.
-type QueryStrings struct {
-	Prefix string // protocol, host, port, path
-	Items  []*QueryString
+func splitPair(pair, sep string) (string, *string) {
+	index := strings.Index(pair, sep)
+	if index < 0 {
+		return pair, nil
+	} else {
+		rh := pair[index+1:]
+		return pair[0:index], &rh
+	}
 }
 
-func ParseQuery(qs string) (*QueryStrings, error) {
-	// Find querystring sign
-	idx := strings.Index(qs, "?")
-	if idx == -1 {
-		return &QueryStrings{Prefix: qs}, nil
-	}
-
-	ret := &QueryStrings{
-		Prefix: qs[0:idx],
-	}
-	qs = qs[idx+1:]
-	for _, q := range strings.Split(qs, "&") {
-		sp := strings.SplitN(q, "=", 2)
-		if len(sp) == 0 {
-			continue
-		}
-		key, err := url.QueryUnescape(sp[0])
-		if err != nil {
-			return nil, err
-		}
-		if len(sp) == 1 {
-			// e.g ?foo -- equal sign is not preset
-			ret.Items = append(ret.Items, &QueryString{Key: key, Value: nil})
-			continue
-		}
-		val, err := url.QueryUnescape(sp[1])
-		if err != nil {
-			return nil, err
-		}
-		ret.Add(key, val)
-	}
-	return ret, nil
+func joinPair(lh string, rh string, sep string) string {
+	return lh + sep + rh
 }
 
-func (q *QueryStrings) Set(name, val string) {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
-			continue
+func QueryStringSet(qs, key, val string) string {
+	escapedKey := queryEscape(key)
+	escapedVal := queryEscape(val)
+	pairToAdd := joinPair(escapedKey, escapedVal, "=")
+	if path, query := splitPair(qs, "?"); query != nil {
+		kvPairs := strings.Split(*query, "&")
+		updated := false
+		updatedQuery := make([]string, 0)
+		for _, pair := range kvPairs {
+			k, _ := splitPair(pair, "=")
+			if k != escapedKey {
+				updatedQuery = append(updatedQuery, pair)
+			} else if !updated {
+				updatedQuery = append(updatedQuery, pairToAdd)
+				updated = true
+			} else {
+				// skip over repeated occurrences of updated query param.
+			}
 		}
-		q.Items[i].Value = []string{val}
-		return
+		if !updated {
+			updatedQuery = append(updatedQuery, pairToAdd)
+		}
+		queryString := strings.Join(updatedQuery, "&")
+		return joinPair(path, queryString, "?")
+	} else {
+		return joinPair(path, pairToAdd, "?")
 	}
-
-	// set new
-	q.Items = append(q.Items, &QueryString{Key: name, Value: []string{val}})
 }
 
-func (q *QueryStrings) Add(name, val string) {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
-			continue
-		}
-		if q.Items[i].Value == nil {
-			q.Items[i].Value = []string{}
-		}
-		q.Items[i].Value = append(q.Items[i].Value, val)
-		return
+func QueryStringAdd(qs, key, val string) string {
+	k := queryEscape(key)
+	v := queryEscape(val)
+	pair := joinPair(k, v, "=")
+	if path, query := splitPair(qs, "?"); query != nil {
+		*query += "&" + pair
+		return joinPair(path, *query, "?")
 	}
-
-	// append new
-	q.Items = append(q.Items, &QueryString{Key: name, Value: []string{val}})
+	return joinPair(qs, pair, "?")
 }
 
-func (q *QueryStrings) Get(name string) *string {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
-			continue
+func QueryStringGet(qs, key string) *string {
+	escapedKey := queryEscape(key)
+	if _, query := splitPair(qs, "?"); query != nil {
+		pairs := strings.Split(*query, "&")
+		for _, pair := range pairs {
+			k, v := splitPair(pair, "=")
+			if k == escapedKey {
+				return v
+			}
 		}
-		if q.Items[i].Value == nil {
-			return nil // nil returns not set string in VCL
-		}
-		return &q.Items[i].Value[0]
 	}
 	return nil
 }
 
-func (q *QueryStrings) Clean() {
-	var cleaned []*QueryString
-	for _, v := range q.Items {
-		if v.Key == "" {
-			continue
+func QueryStringClean(qs string) string {
+	if path, query := splitPair(qs, "?"); query != nil {
+		if *query == "" {
+			return path // Special case. If there is '?' but no query, fastly removes '?'
 		}
-		cleaned = append(cleaned, v)
+		cleaned := make([]string, 0)
+		pairs := strings.Split(*query, "&")
+		for _, pair := range pairs {
+			key, _ := splitPair(pair, "=")
+			if key != "" {
+				cleaned = append(cleaned, pair)
+			}
+		}
+		cleanedQuery := strings.Join(cleaned, "&")
+		return joinPair(path, cleanedQuery, "?")
 	}
-	q.Items = cleaned
+	return qs
 }
 
-func (q *QueryStrings) Filter(filter func(name string) bool) {
-	var filtered []*QueryString
-	for _, v := range q.Items {
-		if !filter(v.Key) {
-			continue
+func QueryStringFilter(qs string, filter func(name string) bool) string {
+	if path, query := splitPair(qs, "?"); query != nil {
+		pairs := strings.Split(*query, "&")
+		filtered := make([]string, 0)
+		for _, pair := range pairs {
+			k, _ := splitPair(pair, "=")
+			if filter(k) {
+				filtered = append(filtered, pair)
+			}
 		}
-		filtered = append(filtered, v)
+		if len(filtered) == 0 {
+			return path
+		}
+		filteredQuery := strings.Join(filtered, "&")
+		return joinPair(path, filteredQuery, "?")
 	}
-	q.Items = filtered
+	return qs
 }
 
 type SortMode string
@@ -124,39 +124,17 @@ const (
 	SortDesc SortMode = "desc"
 )
 
-func (q *QueryStrings) Sort(mode SortMode) {
-	sort.Slice(q.Items, func(i, j int) bool {
-		v := q.Items[i].Key > q.Items[j].Key
-		if mode == SortAsc {
-			return !v
-		}
-		return v
-	})
-}
-
-func (q *QueryStrings) String() string {
-	var buf strings.Builder
-	for i, v := range q.Items {
-		key := q.Items[i].Key
-		if v.Value == nil {
-			buf.WriteString(key)
-		} else {
-			for j := range v.Value {
-				buf.WriteString(key)
-				buf.WriteString("=")
-				buf.WriteString(url.QueryEscape(v.Value[j]))
-				if j != len(v.Value)-1 {
-					buf.WriteString("&")
-				}
+func QueryStringSort(qs string, mode SortMode) string {
+	if path, query := splitPair(qs, "?"); query != nil {
+		pairs := strings.Split(*query, "&")
+		sort.Slice(pairs, func(i, j int) bool {
+			v := pairs[i] > pairs[j]
+			if mode == SortAsc {
+				return !v
 			}
-		}
-		if i != len(q.Items)-1 {
-			buf.WriteString("&")
-		}
+			return v
+		})
+		return joinPair(path, strings.Join(pairs, "&"), "?")
 	}
-	var sign string
-	if buf.Len() > 0 {
-		sign = "?"
-	}
-	return q.Prefix + sign + buf.String()
+	return qs
 }

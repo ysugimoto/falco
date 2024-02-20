@@ -40,15 +40,8 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_regfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
-		)
-	}
-
 	var matchErr error
-	query.Filter(func(key string) bool {
+	result := shared.QueryStringFilter(v.Value, func(key string) bool {
 		matched, err := regexp.MatchString(name.Value, key)
 		if err != nil {
 			matchErr = errors.New(
@@ -61,5 +54,5 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 	if matchErr != nil {
 		return value.Null, matchErr
 	}
-	return &value.String{Value: query.String()}, nil
+	return &value.String{Value: result}, nil
 }

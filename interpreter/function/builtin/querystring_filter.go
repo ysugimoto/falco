@@ -40,21 +40,15 @@ func Querystring_filter(ctx *context.Context, args ...value.Value) (value.Value,
 	v := value.Unwrap[*value.String](args[0])
 	names := value.Unwrap[*value.String](args[1])
 
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_filter_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
-		)
-	}
 	filterMap := make(map[string]struct{})
 	for _, f := range bytes.Split([]byte(names.Value), Querystring_filtersep_Sign) {
 		filterMap[string(f)] = struct{}{}
 	}
 
-	query.Filter(func(name string) bool {
+	result := shared.QueryStringFilter(v.Value, func(name string) bool {
 		_, ok := filterMap[name]
 		return !ok
 	})
 
-	return &value.String{Value: query.String()}, nil
+	return &value.String{Value: result}, nil
 }
