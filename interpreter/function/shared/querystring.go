@@ -21,7 +21,7 @@ func splitPair(pair, sep string) (string, *string) {
 	}
 }
 
-func joinPair(lh string, rh string, sep string) string {
+func joinPair(lh, rh, sep string) string {
 	return lh + sep + rh
 }
 
@@ -35,12 +35,13 @@ func QueryStringSet(qs, key, val string) string {
 		updatedQuery := make([]string, 0)
 		for _, pair := range kvPairs {
 			k, _ := splitPair(pair, "=")
-			if k != escapedKey {
+			switch {
+			case k != escapedKey:
 				updatedQuery = append(updatedQuery, pair)
-			} else if !updated {
+			case !updated:
 				updatedQuery = append(updatedQuery, pairToAdd)
 				updated = true
-			} else {
+			default:
 				// skip over repeated occurrences of updated query param.
 			}
 		}
