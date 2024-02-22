@@ -217,6 +217,8 @@ func identIsHeader(name string) bool {
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	var expandNotSet bool
+	// If value being assigned is not an identifier only expand not_set STRING/IP
+	// values if the target of the assignment is a header.
 	if _, ok := stmt.Value.(*ast.Ident); !ok && identIsHeader(stmt.Ident.Value) {
 		expandNotSet = true
 	}

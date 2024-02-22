@@ -21,6 +21,8 @@ func expand(val value.Value) value.Value {
 		ns = v.IsNotSet
 	case *value.IP:
 		ns = v.IsNotSet
+	case *value.LenientString:
+		ns = v.IsNotSet
 	}
 	if ns {
 		return value.NullStringValue

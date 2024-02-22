@@ -15,9 +15,6 @@ type LenientString struct {
 
 // Typically String() method creates string with treating NotSet string as "(null)"
 func (v *LenientString) String() string {
-	if v.IsNotSet {
-		return NullString
-	}
 	var ret string
 	for i := range v.Values {
 		if s, ok := v.Values[i].(*String); ok {
