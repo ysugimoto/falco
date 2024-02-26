@@ -209,6 +209,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.peekChar() == '=' {
 			l.readChar()
 			t = newToken(token.ADDITION, l.char, line, index)
+			t.Literal = "+="
 		} else {
 			// NOTE: The "+" character is not used for arithmetic operator in VCL,
 			// just use for explicit string concatenation.
