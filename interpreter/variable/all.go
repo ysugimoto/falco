@@ -729,7 +729,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
 	case REQ_URL:
-		u := v.ctx.Request.URL.EscapedPath()
+		u := getRawUrlPath(v.ctx.Request.URL)
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
 		}
