@@ -41,11 +41,11 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 
 // return unescaped path value from the specified URL
 // this function makes the best effort to get the raw path
-// even when standard getEscapedPath() chooses escaped version
-func getRawUrlPath(url *url.URL) string {
-	result := url.EscapedPath()
-	if url.RawPath != "" && result != url.RawPath {
-		result = url.RawPath
+// even when standard EscapedPath() chooses escaped version
+func getRawUrlPath(u *url.URL) string {
+	result := u.EscapedPath()
+	if u.RawPath != "" && result != u.RawPath {
+		result = u.RawPath
 	}
 	return result
 }
