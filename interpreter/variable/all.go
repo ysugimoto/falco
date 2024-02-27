@@ -39,6 +39,17 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	}
 }
 
+// return unescaped path value from the specified URL
+// this function makes the best effort to get the raw path
+// even when standard getEscapedPath() chooses escaped version
+func getRawUrlPath(url *url.URL) string {
+	result := url.EscapedPath()
+	if url.RawPath != "" && result != url.RawPath {
+		result = url.RawPath
+	}
+	return result
+}
+
 // nolint: funlen,gocognit,gocyclo
 func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	req := v.ctx.Request
@@ -499,7 +510,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: u}, nil
 	case REQ_URL:
-		u := req.URL.EscapedPath()
+		u := getRawUrlPath(req.URL)
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -509,19 +520,19 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{Value: u}, nil
 	case REQ_URL_BASENAME:
 		return &value.String{
-			Value: filepath.Base(req.URL.EscapedPath()),
+			Value: filepath.Base(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_DIRNAME:
 		return &value.String{
-			Value: filepath.Dir(req.URL.EscapedPath()),
+			Value: filepath.Dir(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_EXT:
-		ext := filepath.Ext(req.URL.EscapedPath())
+		ext := filepath.Ext(getRawUrlPath(req.URL))
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
 	case REQ_URL_PATH:
-		return &value.String{Value: req.URL.EscapedPath()}, nil
+		return &value.String{Value: getRawUrlPath(req.URL)}, nil
 	case REQ_URL_QS:
 		return &value.String{Value: req.URL.RawQuery}, nil
 	case REQ_VCL:

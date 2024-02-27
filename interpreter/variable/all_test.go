@@ -53,6 +53,15 @@ func TestReqUrl(t *testing.T) {
 			input:  "/fo&/ba*r.b$z",
 			expect: Expect{"/fo&/ba*r.b$z", "/fo&/ba*r.b$z", "/fo&", "ba*r.b$z", "b$z"},
 		},
+		{
+			input:  "/a b/c d.ex t",
+			expect: Expect{"/a b/c d.ex t", "/a b/c d.ex t", "/a b", "c d.ex t", "ex t"},
+		},
+		// TODO: Fastly does handle this case but in falco it leads to a segfault.
+		//{
+		//	input:  "/a%nnb/c%nn d.ex%nnt",
+		//	expect: Expect{"/a%nnb/c%nnd.ex%nnt", "/a%nnb/c%nnd.ex%nnt", "/a%nnb", "c%nnd.ex%nnt", "ex%nnt"},
+		//},
 	}
 	for i, test := range tests {
 		vars := createScopeVars(test.input)
