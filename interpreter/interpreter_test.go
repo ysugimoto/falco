@@ -27,7 +27,7 @@ backend example {
 	)
 }
 
-func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool) {
+func runVCL(vcl string) (*Interpreter, error) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -37,8 +37,7 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 
 	parsed, err := url.Parse(server.URL)
 	if err != nil {
-		t.Errorf("Test server URL parsing error: %s", err)
-		return
+		return nil, err
 	}
 
 	vcl = defaultBackend(parsed) + "\n" + vcl
@@ -49,6 +48,15 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 		httptest.NewRecorder(),
 		httptest.NewRequest(http.MethodGet, "http://localhost", nil),
 	)
+	return ip, nil
+}
+
+func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool) {
+	ip, err := runVCL(vcl)
+	if err != nil {
+		t.Errorf("Test server URL parsing error: %s", err)
+		return
+	}
 
 	for name, val := range assertions {
 		v, err := ip.vars.Get(scope, name)

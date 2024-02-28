@@ -84,7 +84,7 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition)
+			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition, false)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -171,7 +171,7 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, false)
+			value, err := ip.ProcessPrefixExpression(tt.expression, false, false)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -367,6 +367,95 @@ func TestProcessExpression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestNotSetExpansion(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "Assign header unset header",
+			vcl:  `sub vcl_recv { set req.http.Foo = req.http.unset; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.LenientString{
+					IsNotSet: true,
+				},
+			},
+		},
+		{
+			name: "Assign header unset header",
+			vcl:  `sub vcl_recv { add req.http.Foo = "t" + req.http.unset; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.LenientString{
+					Values: []value.Value{&value.String{Value: "t(null)"}},
+				},
+			},
+		},
+		{
+			name: "Assign header unset header",
+			vcl:  `sub vcl_recv { declare local var.unset STRING; set req.http.Foo = var.unset; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.LenientString{
+					IsNotSet: true,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestLogNotSetExpansion(t *testing.T) {
+	tests := []struct {
+		name    string
+		vcl     string
+		message string
+		isError bool
+	}{
+		{
+			name:    "Log unset header",
+			vcl:     `sub vcl_recv { log req.http.unset; }`,
+			message: "(null)",
+		},
+		{
+			name:    "Log unset header field",
+			vcl:     `sub vcl_recv { log req.http.unset:field; }`,
+			message: "(null)",
+		},
+		{
+			name:    "Log unset STRING var",
+			vcl:     `sub vcl_recv { declare local var.unset STRING; log var.unset; }`,
+			message: "(null)",
+		},
+		{
+			name:    "Log unset IP var",
+			vcl:     `sub vcl_recv { declare local var.unset IP; log var.unset; }`,
+			message: "(null)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i, err := runVCL(tt.vcl)
+			if err != nil {
+				t.Errorf("unexpected error: %s", err.Error())
+				return
+			}
+			for _, log := range i.Process.Logs {
+				if log.Message == tt.message {
+					return
+				}
+			}
+			t.Errorf("expected log message `%s` not found", tt.message)
 		})
 	}
 }

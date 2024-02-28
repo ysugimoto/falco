@@ -45,5 +45,5 @@ sub test_recv {
     assert.is_notset(req.http.VALUE);  # 0 header
 
     set req.http.MESSAGE = req.http.VALUE;
-    assert.equal(req.http.MESSAGE, "(null)");
+    assert.is_notset(req.http.MESSAGE);
 }

@@ -94,6 +94,13 @@ func (h Header) Set(key string, val value.Value) {
 func (h Header) SetObject(name, key string, val value.Value) {
 	values, ok := h[textproto.CanonicalMIMEHeaderKey(name)]
 	if !ok {
+		v := copyToLenientString(val)
+		// Assigning a not set value to a header field key with length greater
+		// than 1 results in the assignment of an empty string.
+		if len(key) > 1 && v.IsNotSet {
+			v.IsNotSet = false
+			v.Values = append(v.Values, &value.String{Value: ""})
+		}
 		h[textproto.CanonicalMIMEHeaderKey(name)] = [][]HeaderItem{
 			{
 				HeaderItem{
@@ -102,7 +109,7 @@ func (h Header) SetObject(name, key string, val value.Value) {
 							&value.String{Value: key},
 						},
 					},
-					Value: copyToLenientString(val),
+					Value: v,
 				},
 			},
 		}
