@@ -90,7 +90,7 @@ func setField(subject, key string, val value.Value, sep string) string {
 		// these characters.
 		// = @ ( ) [ ] { } ? / \\ ; : ' < > ,
 		if regexp.MustCompile(`[\s=@()\[\]{}?/\\;:'<>,]`).MatchString(sVal) {
-			escaped := strings.Replace(sVal, `"`, `\"`, -1)
+			escaped := strings.ReplaceAll(sVal, `"`, `\"`)
 			// Fastly truncates values at newlines after quoting the value.
 			sVal, _, _ = strings.Cut(`"`+escaped+`"`, "\n")
 		}
