@@ -53,11 +53,12 @@ func unsetField(subject, key, sep string) string {
 	}
 
 	loc := re.FindStringIndex(subject)
-	if len(loc) == 0 {
+	switch {
+	case len(loc) == 0:
 		return subject
-	} else if loc[0] == 0 { // found at the beginning of the header drop trailing separator
+	case loc[0] == 0: // found at the beginning of the header drop trailing separator
 		return subject[loc[1]:]
-	} else if string(subject[loc[1]-1]) == sep { // found in the middle drop trailing separator
+	case string(subject[loc[1]-1]) == sep: // found in the middle drop trailing separator
 		return subject[:loc[0]] + subject[loc[1]-1:]
 	}
 	// found at the end drop leading separator
