@@ -370,6 +370,10 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	// handle edge case of direct logging a concatenation of two unset values.
+	if value.IsNotSet(log) {
+		log = value.NullStringValue
+	}
 
 	line := log.String()
 	if len([]byte(line)) > limitations.MaxLogLineSize {

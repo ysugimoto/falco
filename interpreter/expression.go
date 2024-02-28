@@ -299,11 +299,11 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 }
 
 func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondition, expandNotSet bool) (value.Value, error) {
-	left, err := i.ProcessExpression(exp.Left, withCondition, expandNotSet)
+	left, err := i.ProcessExpression(exp.Left, withCondition, false)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(exp.Right, withCondition, expandNotSet)
+	right, err := i.ProcessExpression(exp.Right, withCondition, false)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -334,6 +334,12 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 		result, opErr = operator.LogicalAnd(left, right)
 	// "+" means string concatenation
 	case "+":
+		// not_set values are not expanded if both left and right sides of a
+		// concat are not_set.
+		if expandNotSet && (!value.IsNotSet(right) || !value.IsNotSet(left)) {
+			right = expand(right)
+			left = expand(left)
+		}
 		result, opErr = operator.Concat(left, right)
 	default:
 		return value.Null, errors.WithStack(

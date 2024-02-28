@@ -38,6 +38,18 @@ func Unwrap[T ValueTypes](v Value) T {
 	return ret
 }
 
+func IsNotSet(val Value) bool {
+	switch v := val.(type) {
+	case *String:
+		return v.IsNotSet
+	case *IP:
+		return v.IsNotSet
+	case *LenientString:
+		return v.IsNotSet
+	}
+	return false
+}
+
 type Value interface {
 	Type() Type
 	String() string
