@@ -8,7 +8,7 @@ sub test_recv {
     assert.is_notset(req.http.VALUE);
 
     set req.http.MESSAGE = req.http.VALUE;
-    assert.equal(req.http.MESSAGE, "(null)");
+    assert.is_notset(req.http.MESSAGE);
 }
 
 // @scope: recv
@@ -30,5 +30,5 @@ sub test_recv {
     assert.is_notset(req.http.VALUE);
 
     set req.http.MESSAGE = req.http.VALUE;
-    assert.equal(req.http.MESSAGE, "(null)");
+    assert.is_notset(req.http.MESSAGE);
 }
