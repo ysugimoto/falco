@@ -25,6 +25,8 @@ func Test_Subfield(t *testing.T) {
 		{input: "foo=bar,lorem=ipsum", field: "foo", expect: "bar"},
 		{input: "foo=bar&lorem=ipsum", field: "foo", sep: "&", expect: "bar"},
 		{input: "foo=bar&lorem=ipsum", field: "foo", sep: "%", expect: "bar&lorem=ipsum"},
+		{input: `foo="bar,lorem=ipsum",fiz=buz`, field: "lorem", expect: `ipsum"`},
+		{input: `foo="bar,lorem=ipsum",fiz=buz`, field: "foo", expect: `bar,lorem=ipsum`},
 	}
 
 	for i, tt := range tests {
