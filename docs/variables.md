@@ -97,6 +97,9 @@ Will be updated when we find or implement a way to get accurate values.
 | backend.socket.tcpi_snd_mss                | 0                                  |
 | backend.socket.tcpi_snd_ssthresh           | 0                                  |
 | backend.socket.tcpi_total_retrans          | 0                                  |
+| backend.{name}.connections_open            | 0                                  |
+| backend.{name}.connections_used            | 0                                  |
+| backend.{name}.healthy                     | true                               |
 | beresp.backend.alternate_ips               | (empty string)                     |
 | beresp.backend.ip                          | 0                                  |
 | beresp.backend.requests                    | 1                                  |

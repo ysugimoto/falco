@@ -664,6 +664,19 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 			Value: val,
 		}
 	}
+
+	if match := backendConnectionsOpenRegex.FindStringSubmatch(name); match != nil {
+		return &value.Integer{}
+	}
+
+	if match := backendConnectionsUsedRegex.FindStringSubmatch(name); match != nil {
+		return &value.Integer{}
+	}
+
+	if match := backendHealthyRegex.FindStringSubmatch(name); match != nil {
+		return &value.Boolean{Value: true}
+	}
+
 	return nil
 }
 
