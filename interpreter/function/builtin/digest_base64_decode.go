@@ -52,10 +52,8 @@ var nullByte = []byte{0}
 
 // Stop and return the point of Null-Byte found
 func terminateNullByte(decoded []byte) []byte {
-	if found := bytes.Index(decoded, nullByte); found != -1 {
-		return decoded[:found]
-	}
-	return decoded
+	before, _, _ := bytes.Cut(decoded, nullByte)
+	return before
 }
 
 // Even stopping decoding, we need to padding sign to success golang base64 decoding
