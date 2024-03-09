@@ -27,6 +27,7 @@ var BackendPropertyTypes = map[string]types.Type{
 	"between_bytes_timeout":    types.RTimeType,
 	"connect_timeout":          types.RTimeType,
 	"first_byte_timeout":       types.RTimeType,
+	"keepalive_time":           types.RTimeType,
 	"max_connections":          types.IntegerType,
 	"host_header":              types.StringType,
 	"always_use_host_header":   types.BoolType,
