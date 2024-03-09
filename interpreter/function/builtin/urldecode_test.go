@@ -20,7 +20,7 @@ func Test_Urldecode(t *testing.T) {
 		expect string
 	}{
 		{input: "hello%20world+!", expect: "hello world !"},
-		{input: "hello%2520world+!", expect: "hello world !"},
+		{input: "hello%2520world+!", expect: "hello%20world !"},
 	}
 
 	for i, tt := range tests {

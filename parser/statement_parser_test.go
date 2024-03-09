@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
@@ -77,47 +78,58 @@ include "feature_mod" // Trailing comment`
 }
 func TestParseSetStatement(t *testing.T) {
 	t.Run("simple assign", func(t *testing.T) {
-		input := `// Subroutine
-sub vcl_recv {
-	// Leading comment
-	set /* Host */ req.http.Host = "example.com"; // Trailing comment
-}`
-		expect := &ast.VCL{
-			Statements: []ast.Statement{
-				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
-					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
-						Value: "vcl_recv",
-					},
-					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
-						Statements: []ast.Statement{
-							&ast.SetStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
-								Ident: &ast.Ident{
-									Meta:  ast.New(T, 1, comments("/* Host */")),
-									Value: "req.http.Host",
-								},
-								Operator: &ast.Operator{
-									Meta:     ast.New(T, 1),
-									Operator: "=",
-								},
-								Value: &ast.String{
-									Meta:  ast.New(T, 1),
-									Value: "example.com",
+		operators := []string{
+			"=",                    // simple assign
+			"+=", "-=", "*=", "/=", // arithmetic ops
+			"%=", "|=", "&=", "^=", // bitwise ops
+			"<<=", ">>=", "rol=", "ror=", // bitwise shifts
+			"||=", "&&=", // boolean
+		}
+		for _, op := range operators {
+			input := fmt.Sprintf(`// Subroutine
+				sub vcl_recv {
+					// Leading comment
+					set /* Host */ req.http.Host %s "example.com"; // Trailing comment
+				}`,
+				op)
+			expect := &ast.VCL{
+				Statements: []ast.Statement{
+					&ast.SubroutineDeclaration{
+						Meta: ast.New(T, 0, comments("// Subroutine")),
+						Name: &ast.Ident{
+							Meta:  ast.New(T, 0),
+							Value: "vcl_recv",
+						},
+						Block: &ast.BlockStatement{
+							Meta: ast.New(T, 1),
+							Statements: []ast.Statement{
+								&ast.SetStatement{
+									Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+									Ident: &ast.Ident{
+										Meta:  ast.New(T, 1, comments("/* Host */")),
+										Value: "req.http.Host",
+									},
+									Operator: &ast.Operator{
+										Meta:     ast.New(T, 1),
+										Operator: op,
+									},
+									Value: &ast.String{
+										Meta:  ast.New(T, 1),
+										Value: "example.com",
+									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
+			vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+			if err != nil {
+				t.Errorf("%+v", err)
+			}
+			assert(t, vcl, expect)
+
 		}
-		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-		if err != nil {
-			t.Errorf("%+v", err)
-		}
-		assert(t, vcl, expect)
 	})
 
 	t.Run("with string concatenation", func(t *testing.T) {

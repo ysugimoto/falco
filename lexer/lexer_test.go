@@ -250,7 +250,7 @@ sub vcl_recv {
 
 		{Type: token.SET, Literal: "set"},
 		{Type: token.IDENT, Literal: "var.foo"},
-		{Type: token.ADDITION, Literal: "="},
+		{Type: token.ADDITION, Literal: "+="},
 		{Type: token.INT, Literal: "1"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
