@@ -54,6 +54,7 @@ type FormatConfig struct {
 	BoolUpperCase            bool   `yaml:"bool_uppercase" default:"false"`
 	ExplicitStringConat      bool   `yaml:"explicit_string_concat" default:"false"`
 	FormatComment            bool   `yaml:"format_comment" default:"true"`
+	SortDeclarationProperty  bool   `yaml:"sort_declaration_property" default:"false"`
 	AlignDeclarationProperty bool   `yaml:"align_declaration_property" default:"false"`
 	AclInverseWithSpace      bool   `yaml:"acl_inverse_with_space" default:"false"`
 }

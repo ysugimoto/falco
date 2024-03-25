@@ -237,3 +237,76 @@ sub vcl_recv {
 		assert(t, vcl, expect)
 	})
 }
+
+func TestInfixExpression(t *testing.T) {
+	t.Run("having infix comments in if condition", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	// foo
+	if (req.http.Foo && /* comment */ req.http.Bar) {
+		// foo
+		set req.http.Result = req.http.Foo req.http.Bar;
+	}
+	// end
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1),
+								Condition: &ast.InfixExpression{
+									Meta:     ast.New(T, 1),
+									Operator: "&&",
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "req.http.Foo",
+									},
+									Right: &ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "req.http.Bar",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Statements: []ast.Statement{
+										&ast.SetStatement{
+											Meta: ast.New(T, 2),
+											Operator: &ast.Operator{
+												Meta:     ast.New(T, 2),
+												Operator: "=",
+											},
+											Value: &ast.InfixExpression{
+												Meta:     ast.New(T, 2),
+												Operator: "",
+												Left: &ast.Ident{
+													Meta:  ast.New(T, 1),
+													Value: "req.http.Foo",
+												},
+												Right: &ast.Ident{
+													Meta:  ast.New(T, 1),
+													Value: "req.http.Bar",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}

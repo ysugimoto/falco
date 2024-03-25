@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
@@ -105,17 +103,8 @@ func (p *Parser) trailing() ast.Comments {
 	for {
 		// Analyze peek token
 		tok := p.l.PeekToken()
-		if tok.Type == token.LF {
+		if tok.Type == token.LF || tok.Type == token.EOF {
 			break
-		}
-		if tok.Type == token.EOF {
-			if len(p.peekToken.LeadingComment()) > 0 {
-				cs = append(cs, &ast.Comment{
-					Token: tok,
-					Value: strings.TrimSpace(p.peekToken.LeadingComment()),
-				})
-			}
-			return cs
 		}
 		if tok.Type == token.COMMENT {
 			cs = append(cs, &ast.Comment{
