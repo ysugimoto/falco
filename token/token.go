@@ -33,15 +33,16 @@ const (
 	EOF     = "EOF"
 
 	// Language idents
-	IDENT   = "IDENT"
-	INT     = "INT"
-	STRING  = "STRING"
-	FLOAT   = "FLOAT"
-	RTIME   = "RTIME"
-	COMMENT = "COMMENT"
-	TRUE    = "TRUE"
-	FALSE   = "FALSE"
-	LF      = "LF" // "\n"
+	IDENT       = "IDENT"
+	INT         = "INT"
+	STRING      = "STRING"
+	FLOAT       = "FLOAT"
+	RTIME       = "RTIME"
+	COMMENT     = "COMMENT"
+	TRUE        = "TRUE"
+	FALSE       = "FALSE"
+	LF          = "LF"          // "\n"
+	WHITESPACES = "WHITESPACES" // " ", "\r", "\t"
 
 	// Operators
 	// https://developer.fastly.com/reference/vcl/operators/
@@ -96,7 +97,7 @@ const (
 	DIRECTOR         = "DIRECTOR"         // director
 	BACKEND          = "BACKEND"          // backend
 	TABLE            = "TABLE"            // table
-	SUBROUTINE       = "SUBROUTINE"       // sub"
+	SUBROUTINE       = "SUBROUTINE"       // sub
 	ADD              = "ADD"              // add
 	CALL             = "CALL"             // call
 	DECLARE          = "DECLARE"          // declare

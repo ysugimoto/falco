@@ -47,6 +47,17 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Format configuration
+type FormatConfig struct {
+	IndentWidth              int    `yaml:"indent_Width" default:"2"`
+	IndentStyle              string `yaml:"indent_style" default:"space"`
+	BoolUpperCase            bool   `yaml:"bool_uppercase" default:"false"`
+	ExplicitStringConat      bool   `yaml:"explicit_string_concat" default:"false"`
+	FormatComment            bool   `yaml:"format_comment" default:"true"`
+	AlignDeclarationProperty bool   `yaml:"align_declaration_property" default:"false"`
+	AclInverseWithSpace      bool   `yaml:"acl_inverse_with_space" default:"false"`
+}
+
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
@@ -77,6 +88,8 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Format configuration
+	Format *FormatConfig `yaml:"format"`
 }
 
 func New(args []string) (*Config, error) {
