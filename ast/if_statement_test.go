@@ -6,14 +6,16 @@ import (
 
 func TestIfStatement(t *testing.T) {
 	ifs := &IfStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Keyword: "if",
+		Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
 		Condition: &Ident{
 			Meta:  New(T, 0),
 			Value: "req.http.Host",
 		},
 		Another: []*IfStatement{
 			{
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Keyword: "else if",
+				Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
 				Condition: &Ident{
 					Meta:  New(T, 0),
 					Value: "req.http.Host",

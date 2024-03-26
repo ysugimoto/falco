@@ -1,13 +1,9 @@
 package formatter
 
 import (
-	"io/ioutil"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
 )
 
 func TestAclDeclarationFormat(t *testing.T) {
@@ -61,36 +57,17 @@ func TestAclDeclarationFormat(t *testing.T) {
 }
 `,
 			conf: &config.FormatConfig{
-				IndentWidth:         2,
-				IndentStyle:         "space",
-				AclInverseWithSpace: true,
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				AclInverseWithSpace:  true,
+				TrailingCommentWidth: 2,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -169,6 +146,7 @@ func TestBackendDeclarationFormat(t *testing.T) {
 				IndentWidth:              2,
 				IndentStyle:              "space",
 				AlignDeclarationProperty: true,
+				TrailingCommentWidth:     2,
 			},
 		},
 		{
@@ -207,33 +185,14 @@ func TestBackendDeclarationFormat(t *testing.T) {
 				IndentStyle:              "space",
 				AlignDeclarationProperty: true,
 				SortDeclarationProperty:  true,
+				TrailingCommentWidth:     2,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -276,33 +235,14 @@ func TestDirectorDeclarationFormat(t *testing.T) {
 				IndentWidth:             2,
 				IndentStyle:             "space",
 				SortDeclarationProperty: true,
+				TrailingCommentWidth:    2,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -359,6 +299,7 @@ func TestTableDeclarationFormat(t *testing.T) {
 				IndentWidth:             2,
 				IndentStyle:             "space",
 				SortDeclarationProperty: true,
+				TrailingCommentWidth:    2,
 			},
 		},
 		{
@@ -378,33 +319,14 @@ func TestTableDeclarationFormat(t *testing.T) {
 				IndentWidth:              2,
 				IndentStyle:              "space",
 				AlignDeclarationProperty: true,
+				TrailingCommentWidth:     2,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -430,27 +352,7 @@ func TestPenaltyboxDeclarationFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -476,27 +378,7 @@ func TestRatecounterDeclarationFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }
@@ -516,9 +398,9 @@ sub vcl_recv {
 	// subroutine infix comment
 } // subroutine trailing comment`,
 			expect: `// subroutine leading comment
-sub vcl_recv {{
-	set req.http.Foo = "bar" ;
-	// subroutine infix comment
+sub vcl_recv {
+  set req.http.Foo = "bar";
+  // subroutine infix comment
 }  // subroutine trailing comment
 `,
 		},
@@ -526,27 +408,7 @@ sub vcl_recv {{
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &config.FormatConfig{
-				IndentWidth: 2,
-				IndentStyle: "space",
-			}
-			if tt.conf != nil {
-				c = tt.conf
-			}
-			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
-			if err != nil {
-				t.Errorf("Unexpected parser error: %s", err)
-				return
-			}
-			ret, err := New(c).Format(vcl)
-			if err != nil {
-				t.Errorf("Unexpected error returned: %s", err)
-				return
-			}
-			v, _ := ioutil.ReadAll(ret)
-			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
-				t.Errorf("Format result has diff: %s", diff)
-			}
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }

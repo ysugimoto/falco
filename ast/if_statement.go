@@ -6,6 +6,7 @@ import (
 
 type IfStatement struct {
 	*Meta
+	Keyword             string
 	Condition           Expression
 	Consequence         *BlockStatement
 	Another             []*IfStatement
@@ -19,7 +20,7 @@ func (i *IfStatement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(i.LeadingComment())
-	buf.WriteString(indent(i.Nest) + "if (")
+	buf.WriteString(indent(i.Nest) + i.Keyword + " (")
 	buf.WriteString(i.Condition.String())
 	buf.WriteString(") ")
 	buf.WriteString(i.Consequence.String())
@@ -27,7 +28,7 @@ func (i *IfStatement) String() string {
 	for _, a := range i.Another {
 		buf.WriteString("\n")
 		buf.WriteString(a.LeadingComment())
-		buf.WriteString(indent(i.Nest) + "else if (")
+		buf.WriteString(indent(i.Nest) + a.Keyword + " (")
 		buf.WriteString(a.Condition.String())
 		buf.WriteString(") ")
 		buf.WriteString(a.Consequence.String())

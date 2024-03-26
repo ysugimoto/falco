@@ -27,10 +27,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 			buf.WriteString("/" + cidr.Mask.String())
 		}
 		buf.WriteString(";")
-		if len(cidr.Trailing) > 0 {
-			buf.WriteString("  ")
-			buf.WriteString(f.formatComment(cidr.Trailing, "", 0))
-		}
+		buf.WriteString(f.trailing(cidr.Trailing))
 		buf.WriteString("\n")
 	}
 	if len(decl.Infix) > 0 {
@@ -38,10 +35,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -57,10 +51,7 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) strin
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -101,10 +92,7 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 			buf.WriteString(f.formatExpression(prop.Value))
 			buf.WriteString(";")
 		}
-		if len(prop.Trailing) > 0 {
-			buf.WriteString("  ")
-			buf.WriteString(f.formatComment(prop.Trailing, "", 0))
-		}
+		buf.WriteString(f.trailing(prop.Trailing))
 		buf.WriteString("\n")
 	}
 	return buf.String()
@@ -125,10 +113,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) str
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -148,10 +133,7 @@ func (f *Formatter) formatDirectorProperty(prop *ast.DirectorBackendObject) stri
 		buf.WriteString(fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value)))
 	}
 	buf.WriteString("}")
-	if len(prop.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(prop.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(prop.Trailing))
 
 	return buf.String()
 }
@@ -171,10 +153,7 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) string {
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -206,10 +185,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 		}
 		buf.WriteString(f.formatExpression(prop.Value))
 		buf.WriteString(",")
-		if len(prop.Trailing) > 0 {
-			buf.WriteString("  ")
-			buf.WriteString(f.formatComment(prop.Trailing, "", 0))
-		}
+		buf.WriteString(f.trailing(prop.Trailing))
 		buf.WriteString("\n")
 	}
 
@@ -228,10 +204,7 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Block.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Block.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Block.Trailing))
 
 	return buf.String()
 }
@@ -248,10 +221,7 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	if len(decl.Block.Trailing) > 0 {
-		buf.WriteString("  ")
-		buf.WriteString(f.formatComment(decl.Block.Trailing, "", 0))
-	}
+	buf.WriteString(f.trailing(decl.Block.Trailing))
 
 	return buf.String()
 }
@@ -260,8 +230,8 @@ func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration)
 	var buf bytes.Buffer
 
 	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
-	buf.WriteString("sub " + decl.Name.Value)
-	buf.WriteString(f.formatBlockStatement(decl.Block))
+	buf.WriteString("sub " + decl.Name.Value + " ")
+	buf.WriteString(f.formatBlockStatement(decl.Block, false))
 
 	return buf.String()
 }

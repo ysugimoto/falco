@@ -59,3 +59,14 @@ func (f *Formatter) indent(level int) string {
 	}
 	return strings.Repeat(c, level*f.conf.IndentWidth)
 }
+
+func (f *Formatter) trailing(trailing ast.Comments) string {
+	var c string
+
+	if len(trailing) == 0 {
+		return c
+	}
+	c += strings.Repeat(" ", f.conf.TrailingCommentWidth)
+	c += f.formatComment(trailing, "", 0)
+	return c
+}

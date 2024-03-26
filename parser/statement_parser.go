@@ -509,7 +509,8 @@ func (p *Parser) parseSyntheticBase64Statement() (*ast.SyntheticBase64Statement,
 
 func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 	stmt := &ast.IfStatement{
-		Meta: p.curToken,
+		Keyword: "if",
+		Meta:    p.curToken,
 	}
 
 	if !p.expectPeek(token.LEFT_PAREN) {
@@ -546,11 +547,13 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 
 			// If more peek token is IF, it should be "else if"
 			if p.peekTokenIs(token.IF) { // else if
+				leading := p.curToken.Leading
 				p.nextToken() // point to IF
-				another, err := p.parseAnotherIfStatement()
+				another, err := p.parseAnotherIfStatement("else if")
 				if err != nil {
 					return nil, errors.WithStack(err)
 				}
+				another.Leading = leading
 				stmt.Another = append(stmt.Another, another)
 				continue
 			}
@@ -568,7 +571,7 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 		// Note: VCL could define "else if" statement with "elseif", "elsif" keyword
 		case token.ELSEIF, token.ELSIF: // elseif, elsif
 			p.nextToken() // point to ELSEIF/ELSIF
-			another, err := p.parseAnotherIfStatement()
+			another, err := p.parseAnotherIfStatement(p.peekToken.Token.Literal)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
@@ -584,9 +587,10 @@ FINISH:
 }
 
 // AnotherIfStatement is similar to IfStatement but is not culious about alternative.
-func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
+func (p *Parser) parseAnotherIfStatement(keyword string) (*ast.IfStatement, error) {
 	stmt := &ast.IfStatement{
-		Meta: p.curToken,
+		Keyword: keyword,
+		Meta:    p.curToken,
 	}
 
 	if !p.expectPeek(token.LEFT_PAREN) {

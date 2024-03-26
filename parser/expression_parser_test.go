@@ -258,10 +258,10 @@ sub vcl_recv {
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: ast.New(T, 1, ast.Comments{}, ast.Comments{}, comments("// end")),
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1),
+								Meta: ast.New(T, 1, comments("// foo")),
 								Condition: &ast.InfixExpression{
 									Meta:     ast.New(T, 1),
 									Operator: "&&",
@@ -270,27 +270,32 @@ sub vcl_recv {
 										Value: "req.http.Foo",
 									},
 									Right: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta:  ast.New(T, 1, comments("/* comment */")),
 										Value: "req.http.Bar",
 									},
 								},
 								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2),
 									Statements: []ast.Statement{
 										&ast.SetStatement{
-											Meta: ast.New(T, 2),
+											Meta: ast.New(T, 2, comments("// foo")),
 											Operator: &ast.Operator{
 												Meta:     ast.New(T, 2),
 												Operator: "=",
 											},
+											Ident: &ast.Ident{
+												Meta:  ast.New(T, 2),
+												Value: "req.http.Result",
+											},
 											Value: &ast.InfixExpression{
 												Meta:     ast.New(T, 2),
-												Operator: "",
+												Operator: "+",
 												Left: &ast.Ident{
-													Meta:  ast.New(T, 1),
+													Meta:  ast.New(T, 2),
 													Value: "req.http.Foo",
 												},
 												Right: &ast.Ident{
-													Meta:  ast.New(T, 1),
+													Meta:  ast.New(T, 2),
 													Value: "req.http.Bar",
 												},
 											},
