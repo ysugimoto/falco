@@ -1,6 +1,7 @@
 package formatter
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -39,182 +40,203 @@ func (f *Formatter) formatExpression(expr ast.Expression) string {
 }
 
 func (f *Formatter) formatIdent(expr *ast.Ident) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += expr.Value
+	buf.WriteString(expr.Value)
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+	return buf.String()
 }
 
 func (f *Formatter) formatIP(expr *ast.IP) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += expr.Value
+	buf.WriteString(expr.Value)
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+	return buf.String()
 }
 
 func (f *Formatter) formatBoolean(expr *ast.Boolean) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
 	str := fmt.Sprintf("%t", expr.Value)
 	if f.conf.BoolUpperCase {
-		ret += strings.ToUpper(str)
+		buf.WriteString(strings.ToUpper(str))
 	} else {
-		ret += strings.ToLower(str)
+		buf.WriteString(strings.ToLower(str))
 	}
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatInteger(expr *ast.Integer) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += fmt.Sprint(expr.Value)
+	buf.WriteString(fmt.Sprint(expr.Value))
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatFloat(expr *ast.Float) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += fmt.Sprint(expr.Value)
+	buf.WriteString(fmt.Sprint(expr.Value))
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatString(expr *ast.String) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
 	if expr.Token.Offset == 4 {
-		// offset=4 means bracket-ed string line {"..."}
-		ret += fmt.Sprintf(`{"%s"}`, expr.Value)
+		// offset=4 means bracket string like {"..."}
+		buf.WriteString(fmt.Sprintf(`{"%s"}`, expr.Value))
 	} else {
 		// Otherwise, double quoted string
-		ret += fmt.Sprintf(`"%s"`, expr.Value)
+		buf.WriteString(fmt.Sprintf(`"%s"`, expr.Value))
 	}
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatRTime(expr *ast.RTime) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += expr.Value
+	buf.WriteString(expr.Value)
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += expr.Operator
-	ret += f.formatExpression(expr.Right)
+	buf.WriteString(expr.Operator)
+	buf.WriteString(f.formatExpression(expr.Right))
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += f.formatExpression(expr.Left)
+	buf.WriteString(f.formatExpression(expr.Left))
+
 	if expr.Operator == "+" { // concatenation
 		if f.conf.ExplicitStringConat {
-			ret += " + "
+			buf.WriteString(" + ")
 		} else {
-			ret += " "
+			buf.WriteString(" ")
 		}
 	} else {
-		ret += " " + expr.Operator + " "
+		buf.WriteString(" " + expr.Operator + " ")
 	}
-	ret += f.formatExpression(expr.Right)
+	buf.WriteString(f.formatExpression(expr.Right))
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += "if("
-	ret += f.formatExpression(expr.Condition)
-	ret += ", "
-	ret += f.formatExpression(expr.Consequence)
-	ret += ", "
-	ret += f.formatExpression(expr.Alternative)
-	ret += ")"
+	buf.WriteString("if(")
+	buf.WriteString(f.formatExpression(expr.Condition))
+	buf.WriteString(", ")
+	buf.WriteString(f.formatExpression(expr.Consequence))
+	buf.WriteString(", ")
+	buf.WriteString(f.formatExpression(expr.Alternative))
+	buf.WriteString(")")
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += "("
-	ret += f.formatExpression(expr.Right)
-	ret += ")"
+	buf.WriteString("(" + f.formatExpression(expr.Right) + ")")
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(" " + v)
 	}
-	return ret
+
+	return buf.String()
 }
 
 func (f *Formatter) formatFunctionCallExpression(expr *ast.FunctionCallExpression) string {
-	var ret string
+	var buf bytes.Buffer
+
 	if v := f.formatComment(expr.Leading, "", 0); v != "" {
-		ret += v + " "
+		buf.WriteString(v + " ")
 	}
-	ret += expr.Function.Value + "("
+	buf.WriteString(expr.Function.Value + "(")
 	for i, arg := range expr.Arguments {
-		ret += f.formatExpression(arg)
+		buf.WriteString(f.formatExpression(arg))
 		if i != len(expr.Arguments)-1 {
-			ret += ", "
+			buf.WriteString(", ")
 		}
 	}
-	ret += ")"
+	buf.WriteString(")")
 	if v := f.formatComment(expr.Trailing, "", 0); v != "" {
-		ret += " " + v
+		buf.WriteString(v + " ")
 	}
-	return ret
+
+	return buf.String()
 }

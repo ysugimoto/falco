@@ -63,6 +63,18 @@ func TestConfigFromCLI(t *testing.T) {
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
+		Format: &FormatConfig{
+			IndentWidth:               2,
+			TrailingCommentWidth:      2,
+			IndentStyle:               "space",
+			BoolUpperCase:             false,
+			ExplicitStringConat:       false,
+			SortDeclarationProperty:   false,
+			AlignDeclarationProperty:  false,
+			AclInverseWithSpace:       false,
+			ElseIf:                    false,
+			ReturnArgumentParenthesis: true,
+		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}
 
