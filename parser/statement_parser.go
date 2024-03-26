@@ -708,8 +708,10 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 		return nil, errors.WithStack(FinalFallthrough(ls.GetMeta()))
 	}
 
-	p.nextToken()
+	p.nextToken() // point to RIGHT_BRACE
+	swapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.trailing()
+
 	return stmt, nil
 }
 
@@ -747,7 +749,7 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		Meta:       p.curToken,
 		Statements: []ast.Statement{},
 	}
-	caseLeading := p.curToken.Leading
+
 	switch p.curToken.Token.Type {
 	case token.CASE:
 		p.nextToken() // match expression
@@ -780,10 +782,10 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		return nil, UnexpectedToken(p.curToken, "case", "default")
 	}
 
-	caseTrailing := p.trailing()
 	if !p.expectPeek(token.COLON) {
 		return nil, errors.WithStack(MissingColon(p.curToken))
 	}
+	stmt.Meta.Trailing = p.trailing()
 	for !p.peekTokenIs(token.CASE) && !p.peekTokenIs(token.DEFAULT) && !p.peekTokenIs(token.RIGHT_BRACE) {
 		s, err := p.parseStatement()
 		if err != nil {
@@ -799,8 +801,6 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		stmt.Fallthrough = true
 	}
 
-	stmt.Meta.Leading = caseLeading
-	stmt.Meta.Trailing = caseTrailing
 	return stmt, nil
 }
 

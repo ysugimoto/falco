@@ -1240,6 +1240,85 @@ sub vcl_recv {
 			t.Errorf("expected error")
 		}
 	})
+	t.Run("Full comments", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch Leading comment
+	switch (req.http.Host) {
+	// Case1 Leading comment
+	case "1": // Case1 Trailing comment
+		esi;
+		// Break1 Leading comment
+		break; // Break1 Trailing comment
+	// Default Leading comment
+	default: // Default Trailing comment
+		esi;
+		break;
+	// Switch Infix comment
+	} // Switch Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SwitchStatement{
+								Meta: ast.New(T, 1, comments("// Switch Leading comment"), comments("// Switch Trailing comment"), comments("// Switch Infix comment")),
+								Control: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "req.http.Host",
+								},
+								Default: 1,
+								Cases: []*ast.CaseStatement{
+									{
+										Meta: ast.New(T, 2, comments("// Case1 Leading comment"), comments("// Case1 Trailing comment")),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "==",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2),
+												Value: "1",
+											},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2, comments("// Break1 Leading comment"), comments("// Break1 Trailing comment")),
+											},
+										},
+									},
+									{
+										Meta: ast.New(T, 2, comments("// Default Leading comment"), comments("// Default Trailing comment")),
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestParseUnsetStatement(t *testing.T) {
