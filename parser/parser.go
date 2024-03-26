@@ -77,15 +77,19 @@ func (p *Parser) nextToken() {
 
 func (p *Parser) readPeek() {
 	leading := ast.Comments{}
+	var prefixedLineFeed bool
+
 	for {
 		t := p.l.NextToken()
 		switch t.Type {
 		case token.LF:
+			prefixedLineFeed = true
 			continue
 		case token.COMMENT:
 			leading = append(leading, &ast.Comment{
-				Token: t,
-				Value: t.Literal,
+				Token:            t,
+				Value:            t.Literal,
+				PrefixedLineFeed: prefixedLineFeed,
 			})
 			continue
 		case token.LEFT_BRACE:
@@ -100,24 +104,18 @@ func (p *Parser) readPeek() {
 
 func (p *Parser) trailing() ast.Comments {
 	cs := ast.Comments{}
-	for {
-		// Analyze peek token
-		tok := p.l.PeekToken()
-		if tok.Type == token.LF || tok.Type == token.EOF {
-			break
+	// Divide trailing comment for current node and leading comment for next node
+	if len(p.peekToken.Leading) > 0 {
+		updated := []*ast.Comment{}
+		for i, l := range p.peekToken.Leading {
+			if l.PrefixedLineFeed {
+				updated = p.peekToken.Leading[i:]
+				break
+			}
+			cs = append(cs, p.peekToken.Leading[i])
 		}
-		if tok.Type == token.COMMENT {
-			cs = append(cs, &ast.Comment{
-				Token: tok,
-				Value: tok.Literal,
-			})
-			// advance token
-			p.l.NextToken()
-			continue
-		}
-		break
+		p.peekToken.Leading = updated
 	}
-
 	return cs
 }
 
