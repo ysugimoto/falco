@@ -546,11 +546,18 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 
 			// If more peek token is IF, it should be "else if"
 			if p.peekTokenIs(token.IF) { // else if
+				// The leading comment of else if node is exists in "ELSE" token
+				// so store the comment before forward token
+				leading := p.curToken.Leading
+
 				p.nextToken() // point to IF
 				another, err := p.parseAnotherIfStatement()
 				if err != nil {
 					return nil, errors.WithStack(err)
 				}
+				// And restore the leading comments
+				another.Leading = leading
+
 				stmt.Another = append(stmt.Another, another)
 				continue
 			}
