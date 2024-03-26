@@ -22,9 +22,9 @@ type Linter struct {
 func newLinter() *Linter {
 	return &Linter{
 		predefinedInput:  "./predefined.yml",
-		predefinedOutput: "../context/builtin.go",
+		predefinedOutput: "../context/predefined.go",
 		builtinInput:     "./builtin.yml",
-		builtinOutput:    "../context/predefined.go",
+		builtinOutput:    "../context/builtin.go",
 	}
 }
 

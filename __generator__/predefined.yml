@@ -956,6 +956,11 @@ tls.client.tlsexts_sha:
   on: [RECV, HASH, DELIVER, LOG]
   get: STRING
 
+tls.client.ja4:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/variables/client-connection/tls-client-ja4/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
 transport.bw_estimate:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-bw-estimate/"
   on: [RECV, HASH, DELIVER, LOG]
