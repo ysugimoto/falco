@@ -25,6 +25,10 @@ func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
 	var formatted string
 	for i := range vcl.Statements {
 		switch t := vcl.Statements[i].(type) {
+		case *ast.ImportStatement:
+			formatted = f.formatImportStatement(t)
+		case *ast.IncludeStatement:
+			formatted = f.formatIncludeStatement(t)
 		case *ast.AclDeclaration:
 			formatted = f.formatAclDeclaration(t)
 		case *ast.BackendDeclaration:
@@ -33,52 +37,19 @@ func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
 			formatted = f.formatDirectorDeclaration(t)
 		case *ast.TableDeclaration:
 			formatted = f.formatTableDeclaration(t)
+		case *ast.PenaltyboxDeclaration:
+			formatted = f.formatPenaltyboxDeclaration(t)
+		case *ast.RatecounterDeclaration:
+			formatted = f.formatRatecounterDeclaration(t)
+		case *ast.SubroutineDeclaration:
+			formatted = f.formatSubroutineDeclaration(t)
 		}
 		buf.WriteString(formatted + "\n")
 		if i != len(vcl.Statements)-1 {
 			buf.WriteString("\n")
 		}
 	}
-
 	return bytes.NewReader(buf.Bytes()), nil
-
-	// for {
-	// 	tok := f.l.NextToken()
-
-	// 	switch tok.Type {
-	// 	case token.ACL:
-	// 		formatted, err = f.formatAclDeclaration(conf)
-	// 	// case token.IMPORT:
-	// 	// 	formatted, err = f.formatImportStatement(conf)
-	// 	// case token.INCLUDE:
-	// 	// 	formatted, err = f.formatIncludeStatement(conf)
-	// 	case token.BACKEND:
-	// 		formatted, err = f.formatBackendDeclaration(conf)
-	// 	// case token.DIRECTOR:
-	// 	// 	formatted, err = f.formatDirectorDeclaration(conf)
-	// 	// case token.TABLE:
-	// 	// 	formatted, err = f.formatTableDeclaration(conf)
-	// 	// case token.SUBROUTINE:
-	// 	// 	formatted, err = f.formatSubroutineDeclaration(conf)
-	// 	// case token.PENALTYBOX:
-	// 	// 	formatted, err = f.formatPenaltyboxDeclaration(conf)
-	// 	// case token.RATECOUNTER:
-	// 	// 	formatted, err = f.formatRatecounterDeclaration(conf)
-	// 	// case token.COMMENT:
-	// 	// 	formatted, err = f.formatComment(conf, token)
-	// 	case token.ILLEGAL:
-	// 		return nil, errors.New("Invalid token found")
-	// 	case token.EOF:
-	// 		return bytes.NewReader(buf.Bytes()), nil
-	// 	default:
-	// 		// LF, WHITESPACES, ETC
-	// 		formatted = tok.Literal
-	// 	}
-	// 	if err != nil {
-	// 		return nil, errors.WithStack(err)
-	// 	}
-	// 	buf.WriteString(formatted)
-	// }
 }
 
 func (f *Formatter) indent(level int) string {

@@ -408,3 +408,145 @@ func TestTableDeclarationFormat(t *testing.T) {
 		})
 	}
 }
+
+func TestPenaltyboxDeclarationFormat(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "formatting with comments",
+			input: `penaltybox banned_users {
+				# no properties
+			} // trailing comment`,
+			expect: `penaltybox banned_users {
+  # no properties
+}  // trailing comment
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &config.FormatConfig{
+				IndentWidth: 2,
+				IndentStyle: "space",
+			}
+			if tt.conf != nil {
+				c = tt.conf
+			}
+			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
+			if err != nil {
+				t.Errorf("Unexpected parser error: %s", err)
+				return
+			}
+			ret, err := New(c).Format(vcl)
+			if err != nil {
+				t.Errorf("Unexpected error returned: %s", err)
+				return
+			}
+			v, _ := ioutil.ReadAll(ret)
+			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
+				t.Errorf("Format result has diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestRatecounterDeclarationFormat(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "formatting with comments",
+			input: `ratecounter requests_rate {
+				# no properties
+			} // trailing comment`,
+			expect: `ratecounter requests_rate {
+  # no properties
+}  // trailing comment
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &config.FormatConfig{
+				IndentWidth: 2,
+				IndentStyle: "space",
+			}
+			if tt.conf != nil {
+				c = tt.conf
+			}
+			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
+			if err != nil {
+				t.Errorf("Unexpected parser error: %s", err)
+				return
+			}
+			ret, err := New(c).Format(vcl)
+			if err != nil {
+				t.Errorf("Unexpected error returned: %s", err)
+				return
+			}
+			v, _ := ioutil.ReadAll(ret)
+			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
+				t.Errorf("Format result has diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestSubroutineDeclarationFormat(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "basic formatting with comments",
+			input: `// subroutine leading comment
+sub vcl_recv {
+	set req.http.Foo = "bar";
+	// subroutine infix comment
+} // subroutine trailing comment`,
+			expect: `// subroutine leading comment
+sub vcl_recv {{
+	set req.http.Foo = "bar" ;
+	// subroutine infix comment
+}  // subroutine trailing comment
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &config.FormatConfig{
+				IndentWidth: 2,
+				IndentStyle: "space",
+			}
+			if tt.conf != nil {
+				c = tt.conf
+			}
+			vcl, err := parser.New(lexer.NewFromString(tt.input)).ParseVCL()
+			if err != nil {
+				t.Errorf("Unexpected parser error: %s", err)
+				return
+			}
+			ret, err := New(c).Format(vcl)
+			if err != nil {
+				t.Errorf("Unexpected error returned: %s", err)
+				return
+			}
+			v, _ := ioutil.ReadAll(ret)
+			if diff := cmp.Diff(string(v), tt.expect); diff != "" {
+				t.Errorf("Format result has diff: %s", diff)
+			}
+		})
+	}
+}

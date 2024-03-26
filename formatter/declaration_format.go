@@ -215,3 +215,53 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 
 	return buf.String()
 }
+
+func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
+	buf.WriteString("penaltybox " + decl.Name.Value)
+	buf.WriteString(" {\n")
+	// penaltybox does not have properties
+	if len(decl.Block.Infix) > 0 {
+		buf.WriteString(f.indent(1))
+		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
+	}
+	buf.WriteString("}")
+	if len(decl.Block.Trailing) > 0 {
+		buf.WriteString("  ")
+		buf.WriteString(f.formatComment(decl.Block.Trailing, "", 0))
+	}
+
+	return buf.String()
+}
+
+func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
+	buf.WriteString("ratecounter " + decl.Name.Value)
+	buf.WriteString(" {\n")
+	// ratecounter does not have properties
+	if len(decl.Block.Infix) > 0 {
+		buf.WriteString(f.indent(1))
+		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
+	}
+	buf.WriteString("}")
+	if len(decl.Block.Trailing) > 0 {
+		buf.WriteString("  ")
+		buf.WriteString(f.formatComment(decl.Block.Trailing, "", 0))
+	}
+
+	return buf.String()
+}
+
+func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
+	buf.WriteString("sub " + decl.Name.Value)
+	buf.WriteString(f.formatBlockStatement(decl.Block))
+
+	return buf.String()
+}
