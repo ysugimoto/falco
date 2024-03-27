@@ -503,7 +503,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 	var w io.Writer
 	if r.config.Format.Overwrite {
 		writeln(cyan, "Formatted %s.", main.Name)
-		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0644)
+		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
 		if err != nil {
 			return errors.WithStack(err)
 		}

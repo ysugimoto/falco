@@ -46,5 +46,5 @@ func (g *GlobResolver) MainVCL() (*VCL, error) {
 }
 
 func (g *GlobResolver) Resolve(sttmt *ast.IncludeStatement) (*VCL, error) {
-	return nil, errors.New(fmt.Sprintf("GlobResolver does not support resolve VCL"))
+	return nil, errors.New("GlobResolver does not support resolving VCL")
 }
