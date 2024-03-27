@@ -196,7 +196,7 @@ sub vcl_recv {
 func TestAllCommentPositions(t *testing.T) {
 	input := `
 // subroutine leading
-sub /* subroutine ident leading */ vcl_recv {
+sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 	// if leading
 	if (
 		req.http.Host &&
@@ -219,7 +219,7 @@ sub /* subroutine ident leading */ vcl_recv {
 					Value: "vcl_recv",
 				},
 				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1, ast.Comments{}, comments("// subroutine trailing"), comments("// subroutine block infix")),
+					Meta: ast.New(T, 1, comments("/* subroutine block leading */"), comments("// subroutine trailing"), comments("// subroutine block infix")),
 					Statements: []ast.Statement{
 						&ast.IfStatement{
 							Meta: ast.New(T, 1, comments("// if leading")),

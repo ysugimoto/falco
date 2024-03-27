@@ -440,7 +440,6 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, s.Name.Meta)
 
 	var err error
 	if s.Block, err = p.parseBlockStatement(); err != nil {
@@ -464,7 +463,6 @@ func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, pb.Name.Meta)
 
 	var err error
 	if pb.Block, err = p.parseBlockStatement(); err != nil {
@@ -487,7 +485,6 @@ func (p *Parser) parseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, r.Name.Meta)
 
 	var err error
 	if r.Block, err = p.parseBlockStatement(); err != nil {
