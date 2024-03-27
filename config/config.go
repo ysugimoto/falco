@@ -12,6 +12,11 @@ var (
 	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
 
+const (
+	IndentStyleSpace = "space"
+	IndentStyleTab   = "tab"
+)
+
 type OverrideBackend struct {
 	Host      string `yaml:"host"`
 	SSL       bool   `yaml:"ssl" default:"true"`
@@ -52,6 +57,7 @@ type FormatConfig struct {
 	IndentWidth          int    `yaml:"indent_Width" default:"2"`
 	TrailingCommentWidth int    `yaml:"trailing_comment_width" default:"2"`
 	IndentStyle          string `yaml:"indent_style" default:"space"`
+	LineWidth            int    `yaml:"line_width" default:"80"`
 	BoolUpperCase        bool   `yaml:"bool_uppercase" default:"false"`
 	ExplicitStringConat  bool   `yaml:"explicit_string_concat" default:"false"`
 	// FormatComment             bool   `yaml:"format_comment" default:"true"`

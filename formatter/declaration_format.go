@@ -11,7 +11,6 @@ import (
 func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("acl " + decl.Name.Value + " {\n")
 	for _, cidr := range decl.CIDRs {
 		buf.WriteString(f.formatComment(cidr.Leading, "\n", 1))
@@ -35,7 +34,6 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -43,7 +41,6 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("backend " + decl.Name.Value + " {\n")
 	buf.WriteString(f.formatBackendProperties(decl.Properties, 1))
 	if len(decl.Infix) > 0 {
@@ -51,7 +48,6 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) strin
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -78,18 +74,20 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 	for _, prop := range props {
 		buf.WriteString(f.formatComment(prop.Leading, "\n", nestLevel))
 		buf.WriteString(f.indent(nestLevel))
+		var left string
 		if f.conf.AlignDeclarationProperty {
 			format := fmt.Sprintf("%%-%ds", maxPropLength)
-			buf.WriteString(fmt.Sprintf("."+format+" = ", prop.Key.String()))
+			left = fmt.Sprintf("."+format+" = ", prop.Key.String())
 		} else {
-			buf.WriteString(fmt.Sprintf(".%s = ", prop.Key.String()))
+			left = fmt.Sprintf(".%s = ", prop.Key.String())
 		}
+		buf.WriteString(left)
 		if po, ok := prop.Value.(*ast.BackendProbeObject); ok {
 			buf.WriteString("{\n")
 			buf.WriteString(f.formatBackendProperties(po.Values, nestLevel+1))
 			buf.WriteString(f.indent(nestLevel) + "}")
 		} else {
-			buf.WriteString(f.formatExpression(prop.Value))
+			buf.WriteString(f.formatExpression(prop.Value).ChunkedString(prop.Nest, len(left)))
 			buf.WriteString(";")
 		}
 		buf.WriteString(f.trailing(prop.Trailing))
@@ -101,7 +99,6 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("director " + decl.Name.Value + " " + decl.DirectorType.Value + " {\n")
 	for _, prop := range decl.Properties {
 		buf.WriteString(f.indent(1))
@@ -113,7 +110,6 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) str
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -141,7 +137,6 @@ func (f *Formatter) formatDirectorProperty(prop *ast.DirectorBackendObject) stri
 func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("table " + decl.Name.Value)
 	if decl.ValueType != nil {
 		buf.WriteString(" " + decl.ValueType.Value)
@@ -153,7 +148,6 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) string {
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Trailing))
 
 	return buf.String()
 }
@@ -183,7 +177,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 		} else {
 			buf.WriteString(fmt.Sprintf("%s: ", f.formatString(prop.Key)))
 		}
-		buf.WriteString(f.formatExpression(prop.Value))
+		buf.WriteString(f.formatExpression(prop.Value).String())
 		buf.WriteString(",")
 		buf.WriteString(f.trailing(prop.Trailing))
 		buf.WriteString("\n")
@@ -195,7 +189,6 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("penaltybox " + decl.Name.Value)
 	buf.WriteString(" {\n")
 	// penaltybox does not have properties
@@ -204,7 +197,6 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Block.Trailing))
 
 	return buf.String()
 }
@@ -212,7 +204,6 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("ratecounter " + decl.Name.Value)
 	buf.WriteString(" {\n")
 	// ratecounter does not have properties
@@ -221,7 +212,6 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
-	buf.WriteString(f.trailing(decl.Block.Trailing))
 
 	return buf.String()
 }
@@ -229,9 +219,8 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.formatComment(decl.Leading, "\n", 0))
 	buf.WriteString("sub " + decl.Name.Value + " ")
-	buf.WriteString(f.formatBlockStatement(decl.Block, false))
+	buf.WriteString(f.formatBlockStatement(decl.Block))
 
 	return buf.String()
 }

@@ -591,6 +591,13 @@ func TestFormatSynthticBase64Statement(t *testing.T) {
   synthetic.base64 "ZmFsY28gaXMgdGhlIGJldHRlciB0b29sIHRvIGRldmVsb3AgRmFzdGx5IFZDTAo=";  // synthetic.base64 trailing comment
 }
 `,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				SortDeclarationProperty: true,
+				TrailingCommentWidth:    2,
+				LineWidth:               120,
+			},
 		},
 	}
 

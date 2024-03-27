@@ -19,12 +19,19 @@ func New(conf *config.FormatConfig) *Formatter {
 	}
 }
 
+func (f *Formatter) chunkBuffer() *ChunkBuffer {
+	return newBuffer(f.conf)
+}
+
 func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 
-	var formatted string
-	for i := range vcl.Statements {
-		switch t := vcl.Statements[i].(type) {
+	for i, stmt := range vcl.Statements {
+		buf.WriteString(f.formatComment(stmt.GetMeta().Leading, "\n", 0))
+		var formatted string
+		trailingNode := stmt
+
+		switch t := stmt.(type) {
 		case *ast.ImportStatement:
 			formatted = f.formatImportStatement(t)
 		case *ast.IncludeStatement:
@@ -37,24 +44,32 @@ func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
 			formatted = f.formatDirectorDeclaration(t)
 		case *ast.TableDeclaration:
 			formatted = f.formatTableDeclaration(t)
+
+		// penaltybox, ratecounter, and subroutine have trailing comment on the block statement
 		case *ast.PenaltyboxDeclaration:
 			formatted = f.formatPenaltyboxDeclaration(t)
+			trailingNode = t.Block
 		case *ast.RatecounterDeclaration:
 			formatted = f.formatRatecounterDeclaration(t)
+			trailingNode = t.Block
 		case *ast.SubroutineDeclaration:
 			formatted = f.formatSubroutineDeclaration(t)
+			trailingNode = t.Block
 		}
-		buf.WriteString(formatted + "\n")
+		buf.WriteString(formatted)
+		buf.WriteString(f.trailing(trailingNode.GetMeta().Trailing))
+		buf.WriteString("\n")
 		if i != len(vcl.Statements)-1 {
 			buf.WriteString("\n")
 		}
 	}
+
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
 func (f *Formatter) indent(level int) string {
 	c := " " // default as whitespace
-	if f.conf.IndentStyle == "tab" {
+	if f.conf.IndentStyle == config.IndentStyleTab {
 		c = "\t"
 	}
 	return strings.Repeat(c, level*f.conf.IndentWidth)

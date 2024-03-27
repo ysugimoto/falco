@@ -15,6 +15,7 @@ func assert(t *testing.T, input, expect string, conf *config.FormatConfig) strin
 		IndentWidth:          2,
 		IndentStyle:          "space",
 		TrailingCommentWidth: 2,
+		LineWidth:            80,
 	}
 	if conf != nil {
 		c = conf

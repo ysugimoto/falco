@@ -61,6 +61,7 @@ func TestAclDeclarationFormat(t *testing.T) {
 				IndentStyle:          "space",
 				AclInverseWithSpace:  true,
 				TrailingCommentWidth: 2,
+				LineWidth:            80,
 			},
 		},
 	}
@@ -147,6 +148,7 @@ func TestBackendDeclarationFormat(t *testing.T) {
 				IndentStyle:              "space",
 				AlignDeclarationProperty: true,
 				TrailingCommentWidth:     2,
+				LineWidth:                80,
 			},
 		},
 		{
@@ -186,6 +188,7 @@ func TestBackendDeclarationFormat(t *testing.T) {
 				AlignDeclarationProperty: true,
 				SortDeclarationProperty:  true,
 				TrailingCommentWidth:     2,
+				LineWidth:                80,
 			},
 		},
 	}
@@ -236,6 +239,7 @@ func TestDirectorDeclarationFormat(t *testing.T) {
 				IndentStyle:             "space",
 				SortDeclarationProperty: true,
 				TrailingCommentWidth:    2,
+				LineWidth:               80,
 			},
 		},
 	}
@@ -300,6 +304,7 @@ func TestTableDeclarationFormat(t *testing.T) {
 				IndentStyle:             "space",
 				SortDeclarationProperty: true,
 				TrailingCommentWidth:    2,
+				LineWidth:               80,
 			},
 		},
 		{
@@ -320,6 +325,7 @@ func TestTableDeclarationFormat(t *testing.T) {
 				IndentStyle:              "space",
 				AlignDeclarationProperty: true,
 				TrailingCommentWidth:     2,
+				LineWidth:                80,
 			},
 		},
 	}

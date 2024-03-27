@@ -66,6 +66,7 @@ func TestConfigFromCLI(t *testing.T) {
 		Format: &FormatConfig{
 			IndentWidth:               2,
 			TrailingCommentWidth:      2,
+			LineWidth:                 80,
 			IndentStyle:               "space",
 			BoolUpperCase:             false,
 			ExplicitStringConat:       false,
