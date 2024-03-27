@@ -23,7 +23,7 @@ func (f *Formatter) chunkBuffer() *ChunkBuffer {
 	return newBuffer(f.conf)
 }
 
-func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
+func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	buf := new(bytes.Buffer)
 
 	for i, stmt := range vcl.Statements {
@@ -64,7 +64,7 @@ func (f *Formatter) Format(vcl *ast.VCL) (io.Reader, error) {
 		}
 	}
 
-	return bytes.NewReader(buf.Bytes()), nil
+	return bytes.NewReader(buf.Bytes())
 }
 
 func (f *Formatter) indent(level int) string {

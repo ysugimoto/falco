@@ -17,9 +17,6 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 		buf.WriteString(f.indent(1))
 		if cidr.Inverse != nil && cidr.Inverse.Value {
 			buf.WriteString("!")
-			if f.conf.AclInverseWithSpace {
-				buf.WriteString(" ")
-			}
 		}
 		buf.WriteString(`"` + cidr.IP.String() + `"`)
 		if cidr.Mask != nil {

@@ -15,7 +15,7 @@ func assert(t *testing.T, input, expect string, conf *config.FormatConfig) strin
 		IndentWidth:          2,
 		IndentStyle:          "space",
 		TrailingCommentWidth: 2,
-		LineWidth:            80,
+		LineWidth:            120,
 	}
 	if conf != nil {
 		c = conf
@@ -25,11 +25,7 @@ func assert(t *testing.T, input, expect string, conf *config.FormatConfig) strin
 		t.Errorf("Unexpected parser error: %s", err)
 		return ""
 	}
-	ret, err := New(c).Format(vcl)
-	if err != nil {
-		t.Errorf("Unexpected error returned: %s", err)
-		return ""
-	}
+	ret := New(c).Format(vcl)
 	v, _ := ioutil.ReadAll(ret)
 	if diff := cmp.Diff(string(v), expect); diff != "" {
 		t.Errorf("Format result has diff: %s", diff)

@@ -54,18 +54,20 @@ type TestConfig struct {
 
 // Format configuration
 type FormatConfig struct {
-	IndentWidth          int    `yaml:"indent_Width" default:"2"`
-	TrailingCommentWidth int    `yaml:"trailing_comment_width" default:"2"`
-	IndentStyle          string `yaml:"indent_style" default:"space"`
-	LineWidth            int    `yaml:"line_width" default:"80"`
-	BoolUpperCase        bool   `yaml:"bool_uppercase" default:"false"`
-	ExplicitStringConat  bool   `yaml:"explicit_string_concat" default:"false"`
-	// FormatComment             bool   `yaml:"format_comment" default:"true"`
-	SortDeclarationProperty   bool `yaml:"sort_declaration_property" default:"false"`
-	AlignDeclarationProperty  bool `yaml:"align_declaration_property" default:"false"`
-	AclInverseWithSpace       bool `yaml:"acl_inverse_with_space" default:"false"`
-	ElseIf                    bool `yaml:"else_if" default:"false"`
-	ReturnArgumentParenthesis bool `yaml:"return_argument_parenthesis" default:"true"`
+	// CLI options
+	Overwrite bool `cli:"w,write" default:"false"`
+
+	// Formatter options
+	IndentWidth                int    `yaml:"indent_width" default:"2"`
+	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"2"`
+	IndentStyle                string `yaml:"indent_style" default:"space"`
+	LineWidth                  int    `yaml:"line_width" default:"120"`
+	BoolUpperCase              bool   `yaml:"bool_uppercase" default:"false"`
+	ExplicitStringConat        bool   `yaml:"explicit_string_concat" default:"false"`
+	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
+	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
+	ElseIf                     bool   `yaml:"else_if" default:"false"`
+	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
 }
 
 type Config struct {
@@ -115,12 +117,6 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		OverrideBackends: make(map[string]*OverrideBackend),
-		// Simulator: &SimulatorConfig{
-		// 	OverrideRequest:  &RequestConfig{},
-		// },
-		// Testing: &TestConfig{
-		// 	OverrideRequest: &RequestConfig{},
-		// },
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)

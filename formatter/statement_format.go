@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -166,13 +167,24 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	var buf bytes.Buffer
 
 	buf.WriteString(stmt.Keyword + " (")
-	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, buf.Len())
+
+	// Condition expression chunk should be printed with multi-line
+	offset := buf.Len()
+	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, offset)
 	if strings.Contains(chunk, "\n") {
-		buf.WriteString("\n" + chunk + "\n")
+		buf.WriteString(
+			fmt.Sprintf(
+				"\n%s%s%s\n",
+				f.indent(stmt.Nest),
+				strings.Repeat(" ", offset),
+				chunk,
+			),
+		)
+		buf.WriteString(f.indent(stmt.Nest) + ") ")
 	} else {
-		buf.WriteString(chunk)
+		buf.WriteString(chunk + ") ")
 	}
-	buf.WriteString(") ")
+
 	buf.WriteString(f.formatBlockStatement(stmt.Consequence))
 	for _, a := range stmt.Another {
 		// If leading comments exists, keyword should be placed with line-feed
@@ -319,7 +331,7 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 	if stmt.ReturnExpression != nil {
 		prefix := " "
 		suffix := ""
-		if f.conf.ReturnArgumentParenthesis {
+		if f.conf.ReturnStatementParenthesis {
 			prefix = " ("
 			suffix = ")"
 		}

@@ -478,10 +478,10 @@ func TestFormatReturnStatement(t *testing.T) {
 }
 `,
 			conf: &config.FormatConfig{
-				IndentWidth:               2,
-				IndentStyle:               "space",
-				TrailingCommentWidth:      2,
-				ReturnArgumentParenthesis: true,
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				TrailingCommentWidth:       2,
+				ReturnStatementParenthesis: true,
 			},
 		},
 		{
@@ -506,10 +506,10 @@ func TestFormatReturnStatement(t *testing.T) {
 }
 `,
 			conf: &config.FormatConfig{
-				IndentWidth:               2,
-				IndentStyle:               "space",
-				TrailingCommentWidth:      2,
-				ReturnArgumentParenthesis: false,
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				TrailingCommentWidth:       2,
+				ReturnStatementParenthesis: false,
 			},
 		},
 	}
@@ -765,6 +765,30 @@ func TestFormatIfStatement(t *testing.T) {
   }  // if trailing comment
 }
 `,
+		},
+		{
+			name: "chunked condition format",
+			input: `sub vcl_recv {
+	if (req.http.Header1 == "1" && req.http.Header2 == "2" && req.http.Header3 == "3" && req.http.Header4 == "4") {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+      req.http.Header1 == "1" && req.http.Header2 == "2" &&
+      req.http.Header3 == "3" && req.http.Header4 == "4"
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            80,
+			},
 		},
 	}
 

@@ -43,27 +43,6 @@ func TestAclDeclarationFormat(t *testing.T) {
 }  // trailing
 `,
 		},
-		{
-			name: "with inverse spacing",
-			input: `acl name {
-						  "192.0.2.0"/24; // some comment
-						  !"192.0.2.12";
-						  "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff";
-						}`,
-			expect: `acl name {
-  "192.0.2.0"/24;  // some comment
-  ! "192.0.2.12";
-  "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff";
-}
-`,
-			conf: &config.FormatConfig{
-				IndentWidth:          2,
-				IndentStyle:          "space",
-				AclInverseWithSpace:  true,
-				TrailingCommentWidth: 2,
-				LineWidth:            80,
-			},
-		},
 	}
 
 	for _, tt := range tests {

@@ -1,8 +1,8 @@
 package formatter
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 )
@@ -31,6 +31,10 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 		buf.WriteString(f.formatFloat(t))
 	case *ast.RTime:
 		buf.WriteString(f.formatRTime(t))
+	case *ast.FunctionCallExpression:
+		buf.WriteString(f.formatFunctionCallExpression(t))
+	case *ast.IfExpression:
+		buf.WriteString(f.formatIfExpression(t))
 
 	// Combinated expressions return *ChunkBuffer to merge
 	case *ast.PrefixExpression:
@@ -39,10 +43,6 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 		buf.Merge(f.formatGroupedExpression(t))
 	case *ast.InfixExpression:
 		buf.Merge(f.formatInfixExpression(t))
-	case *ast.FunctionCallExpression:
-		buf.Merge(f.formatFunctionCallExpression(t))
-	case *ast.IfExpression:
-		buf.Merge(f.formatIfExpression(t))
 	}
 
 	// trailing comment
@@ -64,11 +64,7 @@ func (f *Formatter) formatIP(expr *ast.IP) string {
 }
 
 func (f *Formatter) formatBoolean(expr *ast.Boolean) string {
-	str := fmt.Sprintf("%t", expr.Value)
-	if f.conf.BoolUpperCase {
-		return strings.ToUpper(str)
-	}
-	return strings.ToLower(str)
+	return fmt.Sprintf("%t", expr.Value)
 }
 
 func (f *Formatter) formatInteger(expr *ast.Integer) string {
@@ -103,6 +99,17 @@ func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuf
 	return buf
 }
 
+var mustSingleOperators = map[string]struct{}{
+	"==": {},
+	"!=": {},
+	"~":  {},
+	"!~": {},
+	">":  {},
+	"<":  {},
+	">=": {},
+	"<=": {},
+}
+
 func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
@@ -113,27 +120,38 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 		}
 	}
 
-	buf.Merge(f.formatExpression(expr.Left))
-	if operator != "" {
-		buf.WriteString(operator)
+	if _, ok := mustSingleOperators[operator]; ok {
+		buf.WriteString(
+			fmt.Sprintf(
+				"%s %s %s",
+				f.formatExpression(expr.Left).String(),
+				operator,
+				f.formatExpression(expr.Right).String(),
+			),
+		)
+	} else {
+		// Can split to newline
+		buf.Merge(f.formatExpression(expr.Left))
+		if operator != "" {
+			buf.WriteString(operator)
+		}
+		buf.Merge(f.formatExpression(expr.Right))
 	}
-	buf.Merge(f.formatExpression(expr.Right))
-
 	return buf
 }
 
-func (f *Formatter) formatIfExpression(expr *ast.IfExpression) *ChunkBuffer {
-	buf := f.chunkBuffer()
+func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
+	var buf bytes.Buffer
 
 	buf.WriteString("if(")
-	buf.Merge(f.formatExpression(expr.Condition))
+	buf.WriteString(f.formatExpression(expr.Condition).String())
 	buf.WriteString(", ")
-	buf.Merge(f.formatExpression(expr.Consequence))
+	buf.WriteString(f.formatExpression(expr.Consequence).String())
 	buf.WriteString(", ")
-	buf.Merge(f.formatExpression(expr.Alternative))
+	buf.WriteString(f.formatExpression(expr.Alternative).String())
 	buf.WriteString(")")
 
-	return buf
+	return buf.String()
 }
 
 func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkBuffer {
@@ -146,17 +164,17 @@ func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkB
 	return buf
 }
 
-func (f *Formatter) formatFunctionCallExpression(expr *ast.FunctionCallExpression) *ChunkBuffer {
-	buf := f.chunkBuffer()
+func (f *Formatter) formatFunctionCallExpression(expr *ast.FunctionCallExpression) string {
+	var buf bytes.Buffer
 
 	buf.WriteString(expr.Function.Value + "(")
 	for i, arg := range expr.Arguments {
-		buf.Merge(f.formatExpression(arg))
+		buf.WriteString(f.formatExpression(arg).String())
 		if i != len(expr.Arguments)-1 {
 			buf.WriteString(", ")
 		}
 	}
 	buf.WriteString(")")
 
-	return buf
+	return buf.String()
 }

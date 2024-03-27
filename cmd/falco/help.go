@@ -17,6 +17,8 @@ func printHelp(cmd string) {
 		printTestHelp()
 	case subcommandLint:
 		printLintHelp()
+	case subcommandFormat:
+		printFormatHelp()
 	default:
 		printGlobalHelp()
 	}
@@ -46,6 +48,7 @@ Subcommands:
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
+    fmt       : Run formatter for provided VCLs
 
 See subcommands help with:
     falco [subcommand] -h
@@ -91,7 +94,7 @@ Linting with terraform:
 func printSimulateHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco simulate [flags]
+    falco simulate [flags] file
 
 Flags:
     -I, --include_path : Add include path
@@ -113,7 +116,7 @@ Local debugger example:
 func printStatsHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco stats [flags]
+    falco stats [flags] file
 
 Flags:
     -I, --include_path : Add include path
@@ -150,18 +153,33 @@ Local testing example:
 func printLintHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco lint [flags]
+    falco lint [flags] file
 
 Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -V, --version      : Display build version
     -v                 : Output lint warnings (verbose)
     -vv                : Output all lint results (very verbose)
     -json              : Output results as JSON (very verbose)
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl
+	`))
+}
+
+func printFormatHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco fmt [flags] ...files
+
+Flags:
+    -h, --help         : Show this help
+    -w, --write        : Overwrite format result
+
+files argument accepts glob file patterns
+
+Simple format example:
+    falco fmt /path/to/vcl/main.vcl
 	`))
 }

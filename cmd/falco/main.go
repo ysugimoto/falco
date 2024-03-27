@@ -51,6 +51,7 @@ const (
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
+	subcommandFormat    = "fmt"
 )
 
 func write(c *color.Color, format string, args ...interface{}) {
@@ -88,10 +89,17 @@ func main() {
 		}
 		action = c.Commands.At(1)
 	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest:
-		// "lint", "simulate", "stats" and "test" command provides single file of service,
+		// "lint", "simulate", "stats", and "test" command provides single file of service,
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
+	case subcommandFormat:
+		// "fmt" command accepts multiple target files
+		resolvers, err = resolver.NewGlobResolver(c.Commands[1:]...)
+		action = c.Commands.At(0)
+		if len(resolvers) == 0 {
+			err = fmt.Errorf("No input files speficied")
+		}
 	case "":
 		printHelp("")
 		os.Exit(1)
@@ -105,7 +113,8 @@ func main() {
 		}
 	}
 
-	if c.Remote {
+	// No need to use remove object on fmt command
+	if action != subcommandFormat && c.Remote {
 		if !c.Json {
 			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		}
@@ -154,6 +163,8 @@ func main() {
 			exitErr = runSimulate(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v)
+		case subcommandFormat:
+			exitErr = runFormat(runner, v)
 		default:
 			exitErr = runLint(runner, v)
 		}
@@ -376,4 +387,14 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	} else {
 		return nil
 	}
+}
+
+func runFormat(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Format(rslv); err != nil {
+		if err != ErrParser {
+			writeln(red, err.Error())
+		}
+		return ErrExit
+	}
+	return nil
 }
