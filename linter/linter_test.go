@@ -104,9 +104,29 @@ func TestLintBackendStatement(t *testing.T) {
 		input := `
 backend foo {
   .host = "example.com";
-
+  .host_header = "example.com";
+  .always_use_host_header = true;
+  .keepalive_time = 30s;
+  .connect_timeout = 1s;
+  .dynamic = true;
+  .port = "443";
+  .first_byte_timeout = 20s;
+  .max_connections = 500;
+  .between_bytes_timeout = 20s;
+  .share_key = "xei5lohleex3Joh5ie5uy7du";
+  .ssl = true;
+  .ssl_sni_hostname = "httpbin.org";
+  .ssl_cert_hostname = "httpbin.org";
+  .ssl_check_cert = always;
+  .min_tls_version = "1.2";
+  .max_tls_version = "1.2";
   .probe = {
+    .dummy = false;
+    .initial = 5;
     .request = "GET / HTTP/1.1";
+    .threshold = 1;
+    .timeout = 2s;
+    .window = 4; 
   }
 }`
 		assertNoError(t, input)
