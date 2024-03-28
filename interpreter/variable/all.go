@@ -39,6 +39,17 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	}
 }
 
+// return unescaped path value from the specified URL
+// this function makes the best effort to get the raw path
+// even when standard EscapedPath() chooses escaped version
+func getRawUrlPath(u *url.URL) string {
+	result := u.EscapedPath()
+	if u.RawPath != "" && result != u.RawPath {
+		result = u.RawPath
+	}
+	return result
+}
+
 // nolint: funlen,gocognit,gocyclo
 func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	req := v.ctx.Request
@@ -490,7 +501,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: id}, nil
 	case REQ_TOPURL: // FIXME: what is the difference of req.url ?
-		u := req.URL.Path
+		u := req.URL.EscapedPath()
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -499,7 +510,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: u}, nil
 	case REQ_URL:
-		u := req.URL.Path
+		u := getRawUrlPath(req.URL)
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -509,19 +520,19 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{Value: u}, nil
 	case REQ_URL_BASENAME:
 		return &value.String{
-			Value: filepath.Base(req.URL.Path),
+			Value: filepath.Base(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_DIRNAME:
 		return &value.String{
-			Value: filepath.Dir(req.URL.Path),
+			Value: filepath.Dir(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_EXT:
-		ext := filepath.Ext(req.URL.Path)
+		ext := filepath.Ext(getRawUrlPath(req.URL))
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
 	case REQ_URL_PATH:
-		return &value.String{Value: req.URL.Path}, nil
+		return &value.String{Value: getRawUrlPath(req.URL)}, nil
 	case REQ_URL_QS:
 		return &value.String{Value: req.URL.RawQuery}, nil
 	case REQ_VCL:
@@ -718,7 +729,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
 	case REQ_URL:
-		u := v.ctx.Request.URL.Path
+		u := getRawUrlPath(v.ctx.Request.URL)
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
 		}
@@ -735,6 +746,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		// Update request URLs
 		v.ctx.Request.URL.Path = parsed.Path
+		v.ctx.Request.URL.RawPath = parsed.RawPath
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
 		return nil
