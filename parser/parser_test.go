@@ -89,6 +89,66 @@ sub vcl_recv {
 	}
 }
 
+func TestStringLiteralEscapes(t *testing.T) {
+	// % escapes are only expanded in double-quote strings.
+	input := `
+sub vcl_recv {
+	set req.http.v1 = "foo%20bar";
+	set req.http.v2 = {"foo%20bar"};
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: ast.New(T, 1),
+					Statements: []ast.Statement{
+						&ast.SetStatement{
+							Meta: ast.New(T, 1),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 1),
+								Value: "req.http.v1",
+							},
+							Operator: &ast.Operator{
+								Meta:     ast.New(T, 1),
+								Operator: "=",
+							},
+							Value: &ast.String{
+								Meta:  ast.New(T, 1),
+								Value: "foo bar",
+							},
+						},
+						&ast.SetStatement{
+							Meta: ast.New(T, 1),
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 1),
+								Value: "req.http.v2",
+							},
+							Operator: &ast.Operator{
+								Meta:     ast.New(T, 1),
+								Operator: "=",
+							},
+							Value: &ast.String{
+								Meta:  ast.New(T, 1),
+								Value: "foo%20bar",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
 func TestCommentInInfixExpression(t *testing.T) {
 	input := `
 sub vcl_recv {

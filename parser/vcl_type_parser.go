@@ -23,11 +23,21 @@ func (p *Parser) parseIP() *ast.IP {
 	}
 }
 
-func (p *Parser) parseString() *ast.String {
+func (p *Parser) parseString() (*ast.String, error) {
+	var err error
+	parsed := p.curToken.Token.Literal
+	// Escapes are only expanded in double-quoted strings.
+	if p.curToken.Token.Offset == 2 {
+		parsed, err = decodeStringEscapes(parsed)
+		if err != nil {
+			return nil, errors.WithStack(InvalidEscape(p.curToken, err.Error()))
+		}
+	}
+
 	return &ast.String{
 		Meta:  p.curToken,
-		Value: p.curToken.Token.Literal,
-	}
+		Value: parsed,
+	}, nil
 }
 
 func (p *Parser) parseInteger() (*ast.Integer, error) {

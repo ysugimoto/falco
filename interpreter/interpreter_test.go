@@ -90,8 +90,11 @@ func TestProcessDeclarations(t *testing.T) {
 			DirectorType: &ast.Ident{Value: "client"},
 			Properties: []ast.Expression{
 				&ast.DirectorProperty{
-					Key:   &ast.Ident{Value: "quorum"},
-					Value: &ast.String{Value: "20%"},
+					Key: &ast.Ident{Value: "quorum"},
+					Value: &ast.PostfixExpression{
+						Left:     &ast.Integer{Value: 20},
+						Operator: "%",
+					},
 				},
 				&ast.DirectorBackendObject{
 					Values: []*ast.DirectorProperty{

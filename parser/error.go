@@ -94,3 +94,10 @@ func EmptySwitch(m *ast.Meta) *ParseError {
 		Message: "Switch must have at least one case",
 	}
 }
+
+func InvalidEscape(m *ast.Meta, msg string) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: msg,
+	}
+}

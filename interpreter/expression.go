@@ -103,7 +103,7 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 		}
 		return &value.RTime{Value: val, Literal: true}, nil
 
-	// Combinated expressions
+	// Combined expressions
 	case *ast.PrefixExpression:
 		return i.ProcessPrefixExpression(t, withCondition)
 	case *ast.GroupedExpression:
@@ -170,6 +170,26 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 			exception.Runtime(&exp.GetMeta().Token, "Unexpected prefix operator: %s", exp.Operator),
 		)
 	}
+}
+
+func (i *Interpreter) ProcessPostfixExpression(exp *ast.PostfixExpression) (value.Value, error) {
+	v, err := i.ProcessExpression(exp.Left, false)
+	if err != nil {
+		return value.Null, errors.WithStack(err)
+	}
+
+	if exp.Operator != "%" {
+		return value.Null, errors.WithStack(
+			exception.Runtime(&exp.GetMeta().Token, "Unexpected postfix operator: %s", exp.Operator),
+		)
+	}
+	t, ok := v.(*value.Integer)
+	if !ok {
+		return value.Null, errors.WithStack(
+			exception.Runtime(&exp.GetMeta().Token, `Unexpected "%%" postfix operator for %v`, v),
+		)
+	}
+	return t, nil
 }
 
 func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (value.Value, error) {

@@ -251,6 +251,8 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintRTime(t)
 	case *ast.PrefixExpression:
 		return l.lintPrefixExpression(t, ctx)
+	case *ast.PostfixExpression:
+		return l.lintPostfixExpression(t, ctx)
 	case *ast.GroupedExpression:
 		return l.lintGroupedExpression(t, ctx)
 	case *ast.InfixExpression:
@@ -1582,6 +1584,20 @@ func (l *Linter) lintPrefixExpression(exp *ast.PrefixExpression, ctx *context.Co
 	}
 
 	return types.NeverType
+}
+
+func (l *Linter) lintPostfixExpression(exp *ast.PostfixExpression, ctx *context.Context) types.Type {
+	left := l.lint(exp.Left, ctx)
+	if left == types.NeverType {
+		return left
+	}
+	if exp.Operator != "%" { // % is the only postfix operator
+		return types.NeverType
+	}
+	if !expectType(left, types.IntegerType) {
+		l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.IntegerType))
+	}
+	return left
 }
 
 func (l *Linter) lintGroupedExpression(exp *ast.GroupedExpression, ctx *context.Context) types.Type {

@@ -41,6 +41,7 @@ const (
 	COMMENT = "COMMENT"
 	TRUE    = "TRUE"
 	FALSE   = "FALSE"
+	PERCENT = "PERCENT"
 	LF      = "LF" // "\n"
 
 	// Operators
