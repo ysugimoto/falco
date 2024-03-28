@@ -17,7 +17,7 @@ acl internal {
 	!"192.168.0.3";
 	!"192.168.0.4"/32;
 	// Leading comment
-	"192.168.0.5"; // Trailing comment
+	"192.168.0.5"; // CIDR Trailing comment
 	// Infix comment
 } // Trailing comment
 `
@@ -75,7 +75,7 @@ acl internal {
 						},
 					},
 					{
-						Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+						Meta: ast.New(T, 1, comments("// Leading comment"), comments("// CIDR Trailing comment")),
 						IP: &ast.IP{
 							Meta:  ast.New(token.Token{}, 1),
 							Value: "192.168.0.5",
@@ -93,26 +93,28 @@ acl internal {
 }
 
 func TestParseBackend(t *testing.T) {
-	input := `// Leading comment
+	input := `// Backend Leading comment
 backend example {
-	// Leading comment
-	.host = "example.com"; // Trailing comment
+	// Host Leading comment
+	.host = "example.com"; // Host Trailing comment
 	.probe = {
-		// Leading comment
-		.request = "GET / HTTP/1.1"; // Trailing comment
-	}
-}`
+		// Request Leading comment
+		.request = "GET / HTTP/1.1"; // Request Trailing comment
+		// Probe Infix comment
+	} // Probe Trailing comment
+	// Backend Infix comment
+} // Backend Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.BackendDeclaration{
-				Meta: ast.New(T, 0, comments("// Leading comment")),
+				Meta: ast.New(T, 0, comments("// Backend Leading comment"), comments("// Backend Trailing comment"), comments("// Backend Infix comment")),
 				Name: &ast.Ident{
 					Meta:  ast.New(T, 0),
 					Value: "example",
 				},
 				Properties: []*ast.BackendProperty{
 					{
-						Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+						Meta: ast.New(T, 1, comments("// Host Leading comment"), comments("// Host Trailing comment")),
 						Key: &ast.Ident{
 							Meta:  ast.New(T, 1),
 							Value: "host",
@@ -129,10 +131,10 @@ backend example {
 							Value: "probe",
 						},
 						Value: &ast.BackendProbeObject{
-							Meta: ast.New(T, 2),
+							Meta: ast.New(T, 2, ast.Comments{}, comments("// Probe Trailing comment"), comments("// Probe Infix comment")),
 							Values: []*ast.BackendProperty{
 								{
-									Meta: ast.New(T, 2, comments("// Leading comment"), comments("// Trailing comment")),
+									Meta: ast.New(T, 2, comments("// Request Leading comment"), comments("// Request Trailing comment")),
 									Key: &ast.Ident{
 										Meta:  ast.New(T, 2),
 										Value: "request",
@@ -158,19 +160,20 @@ backend example {
 
 func TestParseTable(t *testing.T) {
 	t.Run("with comma strictly", func(t *testing.T) {
-		input := `// Table definition
+		input := `// Table Leading comment
 table tbl {
 	"foo": "bar",
-	// Leading comment
-	"lorem": "ipsum", // Trailing comment
-	// Leading comment
-	"dolor": "sit", // Trailing comment
-}`
+	// Prop Leading comment
+	"lorem": "ipsum", // Prop Trailing comment
+	// Prop2 Leading comment
+	"dolor": "sit", // Prop2 Trailing comment
+	// Table Infix comment
+} // Table Trailing comment`
 
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.TableDeclaration{
-					Meta: ast.New(T, 0, comments("// Table definition")),
+					Meta: ast.New(T, 0, comments("// Table Leading comment"), comments("// Table Trailing comment"), comments("// Table Infix comment")),
 					Name: &ast.Ident{
 						Meta:  ast.New(T, 0),
 						Value: "tbl",
@@ -189,7 +192,7 @@ table tbl {
 							HasComma: true,
 						},
 						{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Meta: ast.New(T, 1, comments("// Prop Leading comment"), comments("// Prop Trailing comment")),
 							Key: &ast.String{
 								Meta:  ast.New(T, 1),
 								Value: "lorem",
@@ -201,7 +204,7 @@ table tbl {
 							HasComma: true,
 						},
 						{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Meta: ast.New(T, 1, comments("// Prop2 Leading comment"), comments("// Prop2 Trailing comment")),
 							Key: &ast.String{
 								Meta:  ast.New(T, 1),
 								Value: "dolor",
@@ -224,19 +227,20 @@ table tbl {
 	})
 
 	t.Run("without comma", func(t *testing.T) {
-		input := `// Table definition
+		input := `// Table Leading comment
 table tbl {
  	"foo": "bar",
- 	// Leading comment
- 	"lorem": "ipsum", // Trailing comment
- 	// Leading comment
- 	"dolor": "sit" // Trailing comment
-}`
+ 	// Prop Leading comment
+ 	"lorem": "ipsum", // Prop Trailing comment
+ 	// Prop2 Leading comment
+ 	"dolor": "sit" // Prop2 Trailing comment
+	// Table Infix comment
+} // Table Trailing comment`
 
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.TableDeclaration{
-					Meta: ast.New(T, 0, comments("// Table definition"), comments(), comments("// Trailing comment")),
+					Meta: ast.New(T, 0, comments("// Table Leading comment"), comments("// Table Trailing comment"), comments("// Table Infix comment")),
 					Name: &ast.Ident{
 						Meta:  ast.New(T, 0),
 						Value: "tbl",
@@ -255,7 +259,7 @@ table tbl {
 							HasComma: true,
 						},
 						{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Meta: ast.New(T, 1, comments("// Prop Leading comment"), comments("// Prop Trailing comment")),
 							Key: &ast.String{
 								Meta:  ast.New(T, 1),
 								Value: "lorem",
@@ -267,7 +271,7 @@ table tbl {
 							HasComma: true,
 						},
 						{
-							Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+							Meta: ast.New(T, 1, comments("// Prop2 Leading comment"), comments("// Prop2 Trailing comment")),
 							Key: &ast.String{
 								Meta:  ast.New(T, 1),
 								Value: "dolor",
@@ -289,14 +293,15 @@ table tbl {
 	})
 
 	t.Run("empty table", func(t *testing.T) {
-		input := `// Table definition
+		input := `// Table Leading comment
 table tbl {
-}`
+	// Table Infix comment
+} // Table Trailing comment`
 
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.TableDeclaration{
-					Meta: ast.New(T, 0, comments("// Table definition")),
+					Meta: ast.New(T, 0, comments("// Table Leading comment"), comments("// Table Trailing comment"), comments("// Table Infix comment")),
 					Name: &ast.Ident{
 						Meta:  ast.New(T, 0),
 						Value: "tbl",
@@ -314,17 +319,18 @@ table tbl {
 }
 
 func TestParseDirector(t *testing.T) {
-	input := `// Director definition
+	input := `// Director Leading comment
 director example client {
-	// Leading comment
-	.quorum = 20%; // Trailing comment
-	// Leading comment
-	{ .backend = example; .weight = 1; } // Trailing comment
-}`
+	// Quorum Leading comment
+	.quorum = 20%; // Quorum Trailing comment
+	// Backend Leading comment
+	{ .backend = example; .weight = 1; } // Backend Trailing comment
+	// Director Infix comment
+} // Director Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.DirectorDeclaration{
-				Meta: ast.New(T, 0, comments("// Director definition")),
+				Meta: ast.New(T, 0, comments("// Director Leading comment"), comments("// Director Trailing comment"), comments("// Director Infix comment")),
 				Name: &ast.Ident{
 					Meta:  ast.New(T, 0),
 					Value: "example",
@@ -335,7 +341,7 @@ director example client {
 				},
 				Properties: []ast.Expression{
 					&ast.DirectorProperty{
-						Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+						Meta: ast.New(T, 1, comments("// Quorum Leading comment"), comments("// Quorum Trailing comment")),
 						Key: &ast.Ident{
 							Meta:  ast.New(T, 1),
 							Value: "quorum",
@@ -346,7 +352,7 @@ director example client {
 						},
 					},
 					&ast.DirectorBackendObject{
-						Meta: ast.New(T, 2, comments("// Leading comment"), comments("// Trailing comment")),
+						Meta: ast.New(T, 2, comments("// Backend Leading comment"), comments("// Backend Trailing comment")),
 						Values: []*ast.DirectorProperty{
 							{
 								Meta: ast.New(T, 2),
@@ -384,19 +390,20 @@ director example client {
 }
 
 func TestParsePenaltybox(t *testing.T) {
-	input := `// Penaltybox definition
-	penaltybox ip_pbox {
-} // Trailing comment`
+	input := `// Penaltybox Leading comment
+penaltybox ip_pbox {
+  // Penaltybox Infix comment
+} // Penaltybox Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.PenaltyboxDeclaration{
-				Meta: ast.New(T, 0, comments("// Penaltybox definition")),
+				Meta: ast.New(T, 0, comments("// Penaltybox Leading comment")),
 				Name: &ast.Ident{
 					Meta:  ast.New(T, 0),
 					Value: "ip_pbox",
 				},
 				Block: &ast.BlockStatement{
-					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Penaltybox Trailing comment"), comments("// Penaltybox Infix comment")),
 					Statements: []ast.Statement{},
 				},
 			},
@@ -410,19 +417,20 @@ func TestParsePenaltybox(t *testing.T) {
 }
 
 func TestParseRatecounter(t *testing.T) {
-	input := `// Ratecounter definition
-	ratecounter ip_ratecounter {
-} // Trailing comment`
+	input := `// Ratecounter Leading comment
+ratecounter ip_ratecounter {
+	// Ratecounter Infix comment
+} // Ratecounter Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.RatecounterDeclaration{
-				Meta: ast.New(T, 0, comments("// Ratecounter definition")),
+				Meta: ast.New(T, 0, comments("// Ratecounter Leading comment")),
 				Name: &ast.Ident{
 					Meta:  ast.New(T, 0),
 					Value: "ip_ratecounter",
 				},
 				Block: &ast.BlockStatement{
-					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Trailing comment")),
+					Meta:       ast.New(T, 1, ast.Comments{}, comments("// Ratecounter Trailing comment"), comments("// Ratecounter Infix comment")),
 					Statements: []ast.Statement{},
 				},
 			},

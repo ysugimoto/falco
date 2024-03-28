@@ -91,8 +91,8 @@ func (p *Parser) parseImportStatement() (*ast.ImportStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	i.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	i.Meta.Trailing = p.trailing()
 
 	return i, nil
 }
@@ -106,13 +106,13 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
 	i.Module = p.parseString()
-	i.Meta.Trailing = p.trailing()
 
 	// Semicolons are actually not required at the end of include lines
 	// either works on fastly.
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken() // point to SEMICOLON
 	}
+	i.Meta.Trailing = p.trailing()
 
 	return i, nil
 }
@@ -138,8 +138,8 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 		b.Statements = append(b.Statements, stmt)
 	}
 
-	b.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT_BRACE
+	b.Meta.Trailing = p.trailing()
 
 	// RIGHT_BRACE leading comments are block infix comments
 	swapLeadingInfix(p.curToken, b.Meta)
@@ -178,8 +178,8 @@ func (p *Parser) parseSetStatement() (*ast.SetStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -197,8 +197,8 @@ func (p *Parser) parseUnsetStatement() (*ast.UnsetStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -216,8 +216,8 @@ func (p *Parser) parseRemoveStatement() (*ast.RemoveStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -253,8 +253,8 @@ func (p *Parser) parseAddStatement() (*ast.AddStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -282,8 +282,8 @@ func (p *Parser) parseCallStatement() (*ast.CallStatement, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -314,8 +314,8 @@ func (p *Parser) parseDeclareStatement() (*ast.DeclareStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -361,8 +361,8 @@ func (p *Parser) parseErrorStatement() (*ast.ErrorStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -375,8 +375,8 @@ func (p *Parser) parseEsiStatement() (*ast.EsiStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -396,8 +396,8 @@ func (p *Parser) parseLogStatement() (*ast.LogStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -410,8 +410,8 @@ func (p *Parser) parseRestartStatement() (*ast.RestartStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -459,8 +459,8 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -480,8 +480,8 @@ func (p *Parser) parseSyntheticStatement() (*ast.SyntheticStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -501,8 +501,8 @@ func (p *Parser) parseSyntheticBase64Statement() (*ast.SyntheticBase64Statement,
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -546,11 +546,18 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 
 			// If more peek token is IF, it should be "else if"
 			if p.peekTokenIs(token.IF) { // else if
+				// The leading comment of else if node is exists in "ELSE" token
+				// so store the comment before forward token
+				leading := p.curToken.Leading
+
 				p.nextToken() // point to IF
 				another, err := p.parseAnotherIfStatement()
 				if err != nil {
 					return nil, errors.WithStack(err)
 				}
+				// And restore the leading comments
+				another.Leading = leading
+
 				stmt.Another = append(stmt.Another, another)
 				continue
 			}
@@ -579,6 +586,7 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 		goto FINISH
 	}
 FINISH:
+	stmt.Meta.Trailing = p.trailing()
 	return stmt, nil
 }
 
@@ -707,8 +715,10 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 		return nil, errors.WithStack(FinalFallthrough(ls.GetMeta()))
 	}
 
-	p.nextToken()
-	swapLeadingTrailing(p.peekToken, stmt.Meta)
+	p.nextToken() // point to RIGHT_BRACE
+	swapLeadingInfix(p.curToken, stmt.Meta)
+	stmt.Meta.Trailing = p.trailing()
+
 	return stmt, nil
 }
 
@@ -720,8 +730,8 @@ func (p *Parser) parseBreakStatement() (*ast.BreakStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -734,8 +744,8 @@ func (p *Parser) parseFallthroughStatement() (*ast.FallthroughStatement, error) 
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -746,7 +756,7 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		Meta:       p.curToken,
 		Statements: []ast.Statement{},
 	}
-	caseLeading := p.curToken.Leading
+
 	switch p.curToken.Token.Type {
 	case token.CASE:
 		p.nextToken() // match expression
@@ -779,10 +789,10 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		return nil, UnexpectedToken(p.curToken, "case", "default")
 	}
 
-	caseTrailing := p.trailing()
 	if !p.expectPeek(token.COLON) {
 		return nil, errors.WithStack(MissingColon(p.curToken))
 	}
+	stmt.Meta.Trailing = p.trailing()
 	for !p.peekTokenIs(token.CASE) && !p.peekTokenIs(token.DEFAULT) && !p.peekTokenIs(token.RIGHT_BRACE) {
 		s, err := p.parseStatement()
 		if err != nil {
@@ -798,8 +808,6 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		stmt.Fallthrough = true
 	}
 
-	stmt.Meta.Leading = caseLeading
-	stmt.Meta.Trailing = caseTrailing
 	return stmt, nil
 }
 
@@ -816,8 +824,8 @@ func (p *Parser) parseGotoStatement() (*ast.GotoStatement, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }
@@ -853,8 +861,8 @@ func (p *Parser) parseFunctionCall() (*ast.FunctionCallStatement, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 
-	stmt.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
 }

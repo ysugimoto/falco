@@ -30,11 +30,11 @@ func (p *Parser) parseAclDeclaration() (*ast.AclDeclaration, error) {
 			acl.CIDRs = append(acl.CIDRs, cidr)
 		}
 	}
-	acl.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT BRACE
 
 	// RIGHT_BRACE leading comments are ACL infix comments
 	swapLeadingInfix(p.curToken, acl.Meta)
+	acl.Meta.Trailing = p.trailing()
 
 	return acl, nil
 }
@@ -76,8 +76,8 @@ func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	cidr.Meta.Trailing = p.trailing()
 	p.nextToken() // point to semicolon
+	cidr.Meta.Trailing = p.trailing()
 
 	return cidr, nil
 }
@@ -110,8 +110,8 @@ func (p *Parser) parseBackendDeclaration() (*ast.BackendDeclaration, error) {
 	}
 
 	swapLeadingInfix(p.peekToken, b.Meta)
-	b.Meta.Trailing = p.trailing()
 	p.nextToken()
+	b.Meta.Trailing = p.trailing()
 
 	return b, nil
 }
@@ -134,7 +134,6 @@ func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 	}
 	swapLeadingTrailing(p.curToken, prop.Key.Meta)
-
 	p.nextToken() // point to right token
 
 	// When current token is "{", property key should be ".probe"
@@ -151,9 +150,9 @@ func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
 			probe.Values = append(probe.Values, pp)
 		}
 
-		probe.Meta.Trailing = p.trailing()
 		p.nextToken() // point to RIGHT_BRACE
 		swapLeadingInfix(p.curToken, probe.Meta)
+		probe.Meta.Trailing = p.trailing()
 		prop.Value = probe
 		return prop, nil
 	}
@@ -168,8 +167,8 @@ func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	prop.Meta.Trailing = p.trailing()
 
 	return prop, nil
 }
@@ -220,8 +219,8 @@ func (p *Parser) parseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 	}
 
 	swapLeadingInfix(p.peekToken, d.Meta)
-	d.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT_BRACE
+	d.Meta.Trailing = p.trailing()
 
 	return d, nil
 }
@@ -253,8 +252,8 @@ func (p *Parser) parseDirectorProperty() (ast.Expression, error) {
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.Trailing = p.trailing()
 	p.nextToken() // point to SEMICOLON
+	prop.Meta.Trailing = p.trailing()
 
 	return prop, nil
 }
@@ -302,8 +301,8 @@ func (p *Parser) parseDirectorBackend() (ast.Expression, error) {
 	}
 
 	swapLeadingInfix(p.peekToken, backend.Meta)
-	backend.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT_BRACE
+	backend.Meta.Trailing = p.trailing()
 
 	return backend, nil
 }
@@ -344,8 +343,8 @@ func (p *Parser) parseTableDeclaration() (*ast.TableDeclaration, error) {
 	}
 
 	swapLeadingInfix(p.peekToken, t.Meta)
-	t.Meta.Trailing = p.trailing()
 	p.nextToken() // point to RIGHT_BRACE
+	t.Meta.Trailing = p.trailing()
 
 	return t, nil
 }
@@ -403,9 +402,9 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	switch p.peekToken.Token.Type {
 	case token.COMMA:
 		// usual case, user should add trailing comma for east properties :)
-		prop.Meta.Trailing = p.trailing()
 		prop.HasComma = true
 		p.nextToken() // point to COMMA
+		prop.Meta.Trailing = p.trailing()
 	case token.RIGHT_BRACE:
 		// if peed token is RIGHT_BRACE, it means table declaration end. if also be valid
 		// Note that in this case, we could not parse trailing comment. it is parsed as declaration infix comment.
@@ -441,7 +440,6 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, s.Name.Meta)
 
 	var err error
 	if s.Block, err = p.parseBlockStatement(); err != nil {
@@ -465,7 +463,6 @@ func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, pb.Name.Meta)
 
 	var err error
 	if pb.Block, err = p.parseBlockStatement(); err != nil {
@@ -488,7 +485,6 @@ func (p *Parser) parseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, r.Name.Meta)
 
 	var err error
 	if r.Block, err = p.parseBlockStatement(); err != nil {

@@ -789,6 +789,104 @@ sub vcl_recv {
 		}
 		assert(t, vcl, expect)
 	})
+
+	t.Run("Full comments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	// If Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+		// If Infix comment
+	} // If Trailing comment
+	// Elsif Leading comment
+	elsif (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+		// Elsif Infix comment
+	}
+	// Else Leading comment
+	else {
+		restart;
+		// Else Infix comment
+	} // Else Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.IfStatement{
+								Meta: ast.New(T, 1, comments("// If Leading comment")),
+								Condition: &ast.InfixExpression{
+									Meta: ast.New(T, 1),
+									Left: &ast.Ident{
+										Meta:  ast.New(T, 1),
+										Value: "req.http.Host",
+									},
+									Operator: "~",
+									Right: &ast.String{
+										Meta:  ast.New(T, 1),
+										Value: "example.com",
+									},
+								},
+								Consequence: &ast.BlockStatement{
+									Meta: ast.New(T, 2, ast.Comments{}, comments("// If Trailing comment"), comments("// If Infix comment")),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+								Another: []*ast.IfStatement{
+									{
+										Meta: ast.New(T, 1, comments("// Elsif Leading comment")),
+										Condition: &ast.InfixExpression{
+											Meta: ast.New(T, 1),
+											Left: &ast.Ident{
+												Meta:  ast.New(T, 1),
+												Value: "req.http.X-Forwarded-For",
+											},
+											Operator: "~",
+											Right: &ast.String{
+												Meta:  ast.New(T, 1),
+												Value: "192.168.0.1",
+											},
+										},
+										Consequence: &ast.BlockStatement{
+											Meta: ast.New(T, 2, ast.Comments{}, ast.Comments{}, comments("// Elsif Infix comment")),
+											Statements: []ast.Statement{
+												&ast.RestartStatement{
+													Meta: ast.New(T, 2),
+												},
+											},
+										},
+									},
+								},
+								Alternative: &ast.BlockStatement{
+									Meta: ast.New(T, 2, ast.Comments{}, comments("// Else Trailing comment"), comments("// Else Infix comment")),
+									Statements: []ast.Statement{
+										&ast.RestartStatement{
+											Meta: ast.New(T, 2),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestParseSwitchStatement(t *testing.T) {
@@ -1141,6 +1239,85 @@ sub vcl_recv {
 		if err == nil {
 			t.Errorf("expected error")
 		}
+	})
+	t.Run("Full comments", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Switch Leading comment
+	switch (req.http.Host) {
+	// Case1 Leading comment
+	case "1": // Case1 Trailing comment
+		esi;
+		// Break1 Leading comment
+		break; // Break1 Trailing comment
+	// Default Leading comment
+	default: // Default Trailing comment
+		esi;
+		break;
+	// Switch Infix comment
+	} // Switch Trailing comment
+}`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.SwitchStatement{
+								Meta: ast.New(T, 1, comments("// Switch Leading comment"), comments("// Switch Trailing comment"), comments("// Switch Infix comment")),
+								Control: &ast.Ident{
+									Meta:  ast.New(T, 1),
+									Value: "req.http.Host",
+								},
+								Default: 1,
+								Cases: []*ast.CaseStatement{
+									{
+										Meta: ast.New(T, 2, comments("// Case1 Leading comment"), comments("// Case1 Trailing comment")),
+										Test: &ast.InfixExpression{
+											Meta:     ast.New(T, 2),
+											Operator: "==",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2),
+												Value: "1",
+											},
+										},
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2, comments("// Break1 Leading comment"), comments("// Break1 Trailing comment")),
+											},
+										},
+									},
+									{
+										Meta: ast.New(T, 2, comments("// Default Leading comment"), comments("// Default Trailing comment")),
+										Statements: []ast.Statement{
+											&ast.EsiStatement{
+												Meta: ast.New(T, 2),
+											},
+											&ast.BreakStatement{
+												Meta: ast.New(T, 2),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
 	})
 }
 
@@ -1612,7 +1789,7 @@ sub vcl_recv {
 									Meta:     ast.New(T, 1),
 									Operator: "+",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: ast.New(T, 1),
 										Value: "	timestamp:",
 									},
 									Left: &ast.InfixExpression{
@@ -1864,6 +2041,51 @@ sub vcl_recv {
 		}
 		assert(t, vcl, expect)
 	})
+
+	t.Run("nested blocks with comments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	// Block Leading comment
+	{
+		log "vcl_recv";
+		// Block Infix comment
+	} // Block Trailing comment
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: ast.New(T, 0),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0),
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: ast.New(T, 1),
+						Statements: []ast.Statement{
+							&ast.BlockStatement{
+								Meta: ast.New(T, 2, comments("// Block Leading comment"), comments("// Block Trailing comment"), comments("// Block Infix comment")),
+								Statements: []ast.Statement{
+									&ast.LogStatement{
+										Meta: ast.New(T, 2),
+										Value: &ast.String{
+											Meta:  ast.New(T, 2),
+											Value: "vcl_recv",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestGotoStatement(t *testing.T) {
@@ -1952,7 +2174,8 @@ func TestFunctionCallStatement(t *testing.T) {
 	t.Run("normal function call without arguments", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	testFun();
+	// Function Leading comment
+	testFun(); // Function Trailing comment
 }`
 
 		expect := &ast.VCL{
@@ -1967,9 +2190,9 @@ sub vcl_recv {
 						Meta: ast.New(T, 1),
 						Statements: []ast.Statement{
 							&ast.FunctionCallStatement{
-								Meta: ast.New(T, 1),
+								Meta: ast.New(T, 1, comments("// Function Leading comment"), comments("// Function Trailing comment")),
 								Function: &ast.Ident{
-									Meta:  ast.New(T, 1),
+									Meta:  ast.New(T, 1, comments("// Function Leading comment"), comments("// Function Trailing comment")),
 									Value: "testFun",
 								},
 								Arguments: []ast.Expression{},
