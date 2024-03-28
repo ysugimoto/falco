@@ -367,6 +367,13 @@ time.sub:
     - [TIME, RTIME]
   return: TIME
 
+time.interval_elapsed_ratio:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/date-and-time/time-interval-elapsed-ratio/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TIME, TIME, TIME]
+  return: FLOAT
+
 time.units:
   reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-units/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
