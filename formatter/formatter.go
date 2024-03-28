@@ -27,6 +27,9 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	buf := new(bytes.Buffer)
 
 	for i, stmt := range vcl.Statements {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(stmt.GetMeta()))
+		}
 		buf.WriteString(f.formatComment(stmt.GetMeta().Leading, "\n", 0))
 		var formatted string
 		trailingNode := stmt
@@ -84,4 +87,11 @@ func (f *Formatter) trailing(trailing ast.Comments) string {
 	c += strings.Repeat(" ", f.conf.TrailingCommentWidth)
 	c += f.formatComment(trailing, "", 0)
 	return c
+}
+
+func (f *Formatter) lineFeed(meta *ast.Meta) string {
+	if meta.PreviousEmptyLines > 1 {
+		return "\n"
+	}
+	return ""
 }

@@ -798,3 +798,38 @@ func TestFormatIfStatement(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatEmptyLines(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "format multiple empty lines to single line",
+			input: `sub vcl_recv {
+
+// Leading empty line inside block statement should be cut out
+set req.http.Foo = "bar";
+
+
+// After second statement should be kept with single empty line
+set req.http.Foo = "baz";
+}`,
+			expect: `sub vcl_recv {
+  // Leading empty line inside block statement should be cut out
+  set req.http.Foo = "bar";
+
+  // After second statement should be kept with single empty line
+  set req.http.Foo = "baz";
+}
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}

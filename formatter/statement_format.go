@@ -111,6 +111,9 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 
 	buf.WriteString("{\n")
 	for i := range stmt.Statements {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(stmt.Statements[i].GetMeta()))
+		}
 		buf.WriteString(f.formatStatement(stmt.Statements[i]))
 		buf.WriteString("\n")
 	}

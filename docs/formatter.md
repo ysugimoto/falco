@@ -177,7 +177,7 @@ sub vcl_recv {
 
 ---
 
-### Explicit Declaration Contact
+### Explicit Declaration Concat
 
 **default: false**
 

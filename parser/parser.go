@@ -78,12 +78,22 @@ func (p *Parser) nextToken() {
 func (p *Parser) readPeek() {
 	leading := ast.Comments{}
 	var prefixedLineFeed bool
+	var previousEmptyLines int
 
 	for {
 		t := p.l.NextToken()
 		switch t.Type {
 		case token.LF:
 			prefixedLineFeed = true
+			// Count empty lines between the next token
+			for {
+				peek := p.l.PeekToken()
+				if peek.Type != token.LF {
+					break
+				}
+				previousEmptyLines++
+				p.l.NextToken()
+			}
 			continue
 		case token.COMMENT:
 			leading = append(leading, &ast.Comment{
@@ -97,7 +107,9 @@ func (p *Parser) readPeek() {
 		case token.RIGHT_BRACE:
 			p.level--
 		}
-		p.peekToken = ast.New(t, p.level, leading)
+		meta := ast.New(t, p.level, leading)
+		meta.PreviousEmptyLines = previousEmptyLines
+		p.peekToken = meta
 		break
 	}
 }
