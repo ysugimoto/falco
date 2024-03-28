@@ -131,6 +131,12 @@ func GetTLSVariable(s *tls.ConnectionState, name string) (value.Value, error) {
 		return &value.Integer{Value: 49199}, nil
 	case TLS_CLIENT_JA3_MD5:
 		return &value.String{Value: "582a3b42ab84f78a5b376b1e29d6d367"}, nil
+	case TLS_CLIENT_JA4:
+		// Use fastly fiddle value
+		// https://fiddle.fastly.dev/fiddle/67edbddf
+		// Actually we may be able to calculate, algorithm is here:
+		// https://github.com/FoxIO-LLC/ja4/blob/main/technical_details/JA4.md
+		return &value.String{Value: "t13d5911h2_a33745022dd6_1f22a2ca17c4"}, nil
 	case TLS_CLIENT_PROTOCOL:
 		if s == nil {
 			return &value.String{Value: ""}, nil

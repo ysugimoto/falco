@@ -394,6 +394,7 @@ const (
 	TLS_CLIENT_HANDSHAKE_SENT_BYTES            = "tls.client.handshake_sent_bytes"
 	TLS_CLIENT_IANA_CHOSEN_CIPHER_ID           = "tls.client.iana_chosen_cipher_id"
 	TLS_CLIENT_JA3_MD5                         = "tls.client.ja3_md5"
+	TLS_CLIENT_JA4                             = "tls.client.ja4"
 	TLS_CLIENT_PROTOCOL                        = "tls.client.protocol"
 	TLS_CLIENT_SERVERNAME                      = "tls.client.servername"
 	TLS_CLIENT_TLSEXTS_LIST                    = "tls.client.tlsexts_list"
