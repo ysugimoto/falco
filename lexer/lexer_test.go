@@ -100,7 +100,7 @@ sub vcl_recv {
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.STRING, Literal: " foobar "},
 		{Type: token.LF, Literal: "\n"},
-		{Type: token.STRING, Literal: " foo\"bar "},
+		{Type: token.STRING, Literal: ` foo\"bar `},
 		{Type: token.LF, Literal: "\n"},
 
 		// import
@@ -180,7 +180,8 @@ sub vcl_recv {
 		{Type: token.DOT, Literal: "."},
 		{Type: token.IDENT, Literal: "quorum"},
 		{Type: token.ASSIGN, Literal: "="},
-		{Type: token.STRING, Literal: "20%"},
+		{Type: token.INT, Literal: "20"},
+		{Type: token.PERCENT, Literal: "%"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LEFT_BRACE, Literal: "{"},

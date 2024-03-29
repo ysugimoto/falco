@@ -105,7 +105,11 @@ func (p *Parser) parseIncludeStatement() (ast.Statement, error) {
 	if !p.expectPeek(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
-	i.Module = p.parseString()
+	var err error
+	i.Module, err = p.parseString()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	// Semicolons are actually not required at the end of include lines
 	// either works on fastly.

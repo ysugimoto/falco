@@ -353,9 +353,13 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	if !p.expectPeek(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
 	}
+	key, err := p.parseString()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	prop := &ast.TableProperty{
 		Meta: p.curToken,
-		Key:  p.parseString(),
+		Key:  key,
 	}
 	prop.Key.Meta = clearComments(prop.Key.Meta)
 
@@ -370,7 +374,11 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	case token.IDENT:
 		prop.Value = p.parseIdent()
 	case token.STRING:
-		prop.Value = p.parseString()
+		var err error
+		prop.Value, err = p.parseString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 	case token.ACL, token.BACKEND:
 		prop.Value = p.parseIdent()
 	case token.TRUE, token.FALSE:

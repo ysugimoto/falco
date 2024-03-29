@@ -57,7 +57,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		Rule: DIRECTOR_PROPS_RANDOM,
 		Props: map[string]types.Type{
 			"retries": types.IntegerType,
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -73,7 +73,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 	"hash": {
 		Rule: DIRECTOR_PROPS_HASH,
 		Props: map[string]types.Type{
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -82,7 +82,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 	"client": {
 		Rule: DIRECTOR_PROPS_CLIENT,
 		Props: map[string]types.Type{
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -94,7 +94,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 			"key":             types.BackendType, // TODO: need accept object or client
 			"seed":            types.IntegerType,
 			"vnodes_per_node": types.IntegerType,
-			"quorum":          types.StringType,
+			"quorum":          types.IntegerType,
 			"weight":          types.IntegerType,
 			"id":              types.StringType,
 			"backend":         types.BackendType,
