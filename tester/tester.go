@@ -150,6 +150,9 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					Scope: s.String(),
 					Time:  time.Since(start).Milliseconds(),
 				})
+				if err != nil {
+					t.counter.Fail()
+				}
 			}
 		}
 		finishChan <- cases
