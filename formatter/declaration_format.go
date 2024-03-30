@@ -12,7 +12,10 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 	var buf bytes.Buffer
 
 	buf.WriteString("acl " + decl.Name.Value + " {\n")
-	for _, cidr := range decl.CIDRs {
+	for i, cidr := range decl.CIDRs {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(cidr.GetMeta()))
+		}
 		buf.WriteString(f.formatComment(cidr.Leading, "\n", 1))
 		buf.WriteString(f.indent(1))
 		if cidr.Inverse != nil && cidr.Inverse.Value {
@@ -68,7 +71,10 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 		}
 	}
 
-	for _, prop := range props {
+	for i, prop := range props {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(prop.GetMeta()))
+		}
 		buf.WriteString(f.formatComment(prop.Leading, "\n", nestLevel))
 		buf.WriteString(f.indent(nestLevel))
 		var left string
@@ -97,7 +103,10 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) str
 	var buf bytes.Buffer
 
 	buf.WriteString("director " + decl.Name.Value + " " + decl.DirectorType.Value + " {\n")
-	for _, prop := range decl.Properties {
+	for i, prop := range decl.Properties {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(prop.GetMeta()))
+		}
 		buf.WriteString(f.indent(1))
 		buf.WriteString(f.formatDirectorProperty(prop.(*ast.DirectorBackendObject)))
 		buf.WriteString("\n")
@@ -122,7 +131,10 @@ func (f *Formatter) formatDirectorProperty(prop *ast.DirectorBackendObject) stri
 
 	buf.WriteString(f.formatComment(prop.Leading, "\n", 0))
 	buf.WriteString("{ ")
-	for _, v := range prop.Values {
+	for i, v := range prop.Values {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(prop.GetMeta()))
+		}
 		buf.WriteString(fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value)))
 	}
 	buf.WriteString("}")
@@ -165,7 +177,10 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 		}
 	}
 
-	for _, prop := range props {
+	for i, prop := range props {
+		if i > 0 {
+			buf.WriteString(f.lineFeed(prop.Meta))
+		}
 		buf.WriteString(f.formatComment(prop.Leading, "\n", 0))
 		buf.WriteString(f.indent(1))
 		if f.conf.AlignDeclarationProperty {

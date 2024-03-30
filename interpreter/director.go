@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -80,20 +79,19 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 				".quorum field must not be present in fallback director type",
 			)
 		}
-		if v, ok := prop.Value.(*ast.String); !ok {
+		expr, ok := prop.Value.(*ast.PostfixExpression)
+		if !ok {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
-				"quorum value must be percentage prefixed value",
+				"quorum value must be integer literal expression like 50%%",
 			)
-		} else if n, err := strconv.Atoi(strings.TrimSuffix(v.Value, "%")); err != nil {
-			return exception.Runtime(
-				&prop.GetMeta().Token,
-				"Invalid quorum value '%s' found. Value must be percentage string like '50%%'",
-				v.Value,
-			)
-		} else {
-			conf.Quorum = n
 		}
+		l, err := i.ProcessPostfixExpression(expr)
+		if err != nil {
+			return err
+		}
+		left := value.Unwrap[*value.Integer](l)
+		conf.Quorum = int(left.Value)
 		return nil
 	case "retries":
 		if conf.Type != DIRECTORTYPE_RANDOM {

@@ -90,7 +90,7 @@ func (f *Formatter) trailing(trailing ast.Comments) string {
 }
 
 func (f *Formatter) lineFeed(meta *ast.Meta) string {
-	if meta.PreviousEmptyLines > 1 {
+	if meta.PreviousEmptyLines > 0 {
 		return "\n"
 	}
 	return ""

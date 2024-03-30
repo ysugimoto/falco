@@ -18,11 +18,13 @@ func TestAclDeclarationFormat(t *testing.T) {
 			input: `acl name {
 			  "192.0.2.0"/24;  // some comment
 			  !"192.0.2.12";
+
 			  "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff";
 			}`,
 			expect: `acl name {
   "192.0.2.0"/24;  // some comment
   !"192.0.2.12";
+
   "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff";
 }
 `,

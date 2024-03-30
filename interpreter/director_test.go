@@ -70,6 +70,7 @@ director test random {
 	ip, err := createTestInterpreter(director)
 	if err != nil {
 		t.Errorf("Failed to create interpreter: %s", err)
+		return
 	}
 	d := ip.ctx.Backends["test"].Director
 
@@ -94,6 +95,7 @@ func TestGetDirectorConfigShield(t *testing.T) {
 	ip, err := createTestInterpreter(director)
 	if err != nil {
 		t.Errorf("Failed to create interpreter: %s", err)
+		return
 	}
 	d := ip.ctx.Backends["test"].Director
 
@@ -122,6 +124,7 @@ director test random {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -139,6 +142,7 @@ director test random {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -174,6 +178,7 @@ director test random {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -220,6 +225,7 @@ director test fallback {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -238,6 +244,7 @@ director test fallback {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -264,6 +271,7 @@ director test hash {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -281,6 +289,7 @@ director test hash {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -326,6 +335,7 @@ director test client {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -343,6 +353,7 @@ director test client {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -400,6 +411,7 @@ director test chash {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 
@@ -417,6 +429,7 @@ director test chash {
 		ip, err := createTestInterpreter(director)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
@@ -452,6 +465,7 @@ director test chash {
 		ip, err := createTestInterpreter(director2)
 		if err != nil {
 			t.Errorf("Failed to create interpreter: %s", err)
+			return
 		}
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}

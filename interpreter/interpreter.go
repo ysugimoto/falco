@@ -122,6 +122,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
+	r.Header.Set("Host", r.Host)
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {
@@ -518,7 +519,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 	// TODO: consider stale-white-revalidate and stale-if-error TTL
 
-	// Consider cache, create client response from backend response
+	// Update cache
 	defer func() {
 		resp := i.cloneResponse(i.ctx.BackendResponse)
 		// Note: compare BackendResponseCacheable value
@@ -533,7 +534,6 @@ func (i *Interpreter) ProcessFetch() error {
 				})
 			}
 		}
-		i.ctx.Response = resp
 	}()
 
 	// Simulate Fastly statement lifecycle
@@ -580,26 +580,16 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	if i.ctx.Object == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
-			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
-			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
-		} else {
-			i.ctx.Object = &http.Response{
-				StatusCode: int(i.ctx.ObjectStatus.Value),
-				Status:     http.StatusText(int(i.ctx.ObjectStatus.Value)),
-				Proto:      "HTTP/1.0",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header: http.Header{
-					"Content-Type": {"text/plain"},
-				},
-				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-				Request:       i.ctx.Request,
-			}
-		}
+	i.ctx.Object = &http.Response{
+		StatusCode:    int(i.ctx.ObjectStatus.Value),
+		Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
+		Proto:         "HTTP/1.0",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        http.Header{},
+		Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+		ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+		Request:       i.ctx.Request,
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -640,12 +630,10 @@ func (i *Interpreter) ProcessError() error {
 func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
-	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-		} else if i.ctx.Object != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.Object)
-		}
+	if i.ctx.Object != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.Object)
+	} else if i.ctx.BackendResponse != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -721,11 +709,11 @@ func (i *Interpreter) ProcessLog() error {
 	i.SetScope(context.LogScope)
 
 	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Response = &v
-		} else if i.ctx.Object != nil {
+		if i.ctx.Object != nil {
 			v := *i.ctx.Object
+			i.ctx.Response = &v
+		} else if i.ctx.BackendResponse != nil {
+			v := *i.ctx.BackendResponse
 			i.ctx.Response = &v
 		}
 	}

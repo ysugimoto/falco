@@ -251,6 +251,8 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 		return l.lintRTime(t)
 	case *ast.PrefixExpression:
 		return l.lintPrefixExpression(t, ctx)
+	case *ast.PostfixExpression:
+		return l.lintPostfixExpression(t, ctx)
 	case *ast.GroupedExpression:
 		return l.lintGroupedExpression(t, ctx)
 	case *ast.InfixExpression:
@@ -1048,7 +1050,15 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	// We investigated type comparison and summarized.
 	// See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 	switch stmt.Operator.Operator {
-	case "+=", "-=":
+	case "+=":
+		// Special string assignment - normally "+=" operator cannot use for STRING type,
+		// But the exception case that "+=" operation can use for the "req.hash".
+		// See: https://fiddle.fastly.dev/fiddle/0f3fc0aa
+		if stmt.Ident.Value == "req.hash" && right == types.StringType {
+			break
+		}
+		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
+	case "-=":
 		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
 	case "*=", "/=", "%=":
 		l.lintArithmeticOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
@@ -1582,6 +1592,20 @@ func (l *Linter) lintPrefixExpression(exp *ast.PrefixExpression, ctx *context.Co
 	}
 
 	return types.NeverType
+}
+
+func (l *Linter) lintPostfixExpression(exp *ast.PostfixExpression, ctx *context.Context) types.Type {
+	left := l.lint(exp.Left, ctx)
+	if left == types.NeverType {
+		return left
+	}
+	if exp.Operator != "%" { // % is the only postfix operator
+		return types.NeverType
+	}
+	if !expectType(left, types.IntegerType) {
+		l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.IntegerType))
+	}
+	return left
 }
 
 func (l *Linter) lintGroupedExpression(exp *ast.GroupedExpression, ctx *context.Context) types.Type {
