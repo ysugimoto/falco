@@ -122,6 +122,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
+	r.Header.Set("Host", r.Host)
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {
