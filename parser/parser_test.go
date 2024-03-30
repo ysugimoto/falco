@@ -204,7 +204,8 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 		req.http.Foo == "bar"
 	) {
 		// set leading
-		set req.http.Host = "bar";
+		set req.http.Host = /* expression leading */ "bar" /* expression trailing */;
+		set req.http.Host = /* expression leading */ "bar" /* infix expression leading */ "baz" /* expression trailing */;
 	  // if infix
 	} // if trailing
 	// subroutine block infix
@@ -257,8 +258,31 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 											Operator: "=",
 										},
 										Value: &ast.String{
-											Meta:  ast.New(T, 2),
+											Meta:  ast.New(T, 2, comments("/* expression leading */"), comments("/* expression trailing */")),
 											Value: "bar",
+										},
+									},
+									&ast.SetStatement{
+										Meta: ast.New(T, 2),
+										Ident: &ast.Ident{
+											Meta:  ast.New(T, 2),
+											Value: "req.http.Host",
+										},
+										Operator: &ast.Operator{
+											Meta:     ast.New(T, 2),
+											Operator: "=",
+										},
+										Value: &ast.InfixExpression{
+											Meta: ast.New(T, 2, ast.Comments{}, comments("/* expression trailing */")),
+											Left: &ast.String{
+												Meta:  ast.New(T, 2, comments("/* expression leading */"), comments("/* infix expression leading */")),
+												Value: "bar",
+											},
+											Operator: "+",
+											Right: &ast.String{
+												Meta:  ast.New(T, 2, ast.Comments{}, comments("/* expression trailing */")),
+												Value: "baz",
+											},
 										},
 									},
 								},
