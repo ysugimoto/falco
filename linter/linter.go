@@ -1050,7 +1050,15 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	// We investigated type comparison and summarized.
 	// See: https://docs.google.com/spreadsheets/d/16xRPugw9ubKA1nXHIc5ysVZKokLLhysI-jAu3qbOFJ8/edit#gid=0
 	switch stmt.Operator.Operator {
-	case "+=", "-=":
+	case "+=":
+		// Special string assignment - normally "+=" operator cannot use for STRING type,
+		// But the exception case that "+=" operation can use for the "req.hash".
+		// See: https://fiddle.fastly.dev/fiddle/0f3fc0aa
+		if stmt.Ident.Value == "req.hash" && right == types.StringType {
+			break
+		}
+		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
+	case "-=":
 		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
 	case "*=", "/=", "%=":
 		l.lintArithmeticOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
