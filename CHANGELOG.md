@@ -1,3 +1,22 @@
+## v1.5.0
+
+- Add assert.not_subroutine_called [#247](https://github.com/ysugimoto/falco/pull/247) (@bungoume)
+- Save/restore current subroutine locals when processing call statement [#254](https://github.com/ysugimoto/falco/pull/254) (@richardmarshall)
+- Handle % string escapes [#256](https://github.com/ysugimoto/falco/pull/256) (@richardmarshall)
+- testing.call_subroutine ignores invalid subroutine name [#259](https://github.com/ysugimoto/falco/pull/259) (@akrainiouk)
+- fixed double decoding in urldecod [#261](https://github.com/ysugimoto/falco/pull/261) (@akrainiouk)
+- req.url: fixed consistency with Fastly implementation [#262](https://github.com/ysugimoto/falco/pull/262) (@akrainiouk)
+- fix base64 decode related builtin function [#263](https://github.com/ysugimoto/falco/pull/263) (@ysugimoto)
+- Fixed parsing of += operator [#266](https://github.com/ysugimoto/falco/pull/266) (@akrainiouk)
+- keepalive_time added to supported backend properties [#269](https://github.com/ysugimoto/falco/pull/269) (@akrainiouk)
+- improve trailing/infix comment parsing [#270](https://github.com/ysugimoto/falco/pull/270) (@ysugimoto)
+- follow new fastly documentation [#271](https://github.com/ysugimoto/falco/pull/271) (@ysugimoto)
+- special dealing for req.hash addition assignment [#275](https://github.com/ysugimoto/falco/pull/275) (@ysugimoto)
+- Prioritize cache object [#277](https://github.com/ysugimoto/falco/pull/277) (@richardmarshall)
+- fix exprression comment parsing [#278](https://github.com/ysugimoto/falco/pull/278) (@ysugimoto)
+- Setup req.http.host in ProcessInit [#279](https://github.com/ysugimoto/falco/pull/279) (@richardmarshall)
+- Record test runtime errors [#280](https://github.com/ysugimoto/falco/pull/280) (@richardmarshall)
+
 ## v1.4.0
 
 - Additional builtin variables [#245](https://github.com/ysugimoto/falco/pull/245) (@richardmarshall)
