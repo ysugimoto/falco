@@ -52,12 +52,12 @@ func isAssignmentOperator(t token.Token) bool {
 
 // Comment control helper
 func swapLeadingTrailing(from, to *ast.Meta) {
-	to.Trailing = from.Leading
+	to.Trailing = append(to.Trailing, from.Leading...)
 	from.Leading = ast.Comments{}
 }
 
 func swapLeadingInfix(from, to *ast.Meta) {
-	to.Infix = from.Leading
+	to.Infix = append(to.Infix, from.Leading...)
 	from.Leading = ast.Comments{}
 }
 

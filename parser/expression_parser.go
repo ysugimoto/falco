@@ -84,12 +84,17 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 			}
 			return left, nil
 		}
+		swapLeadingTrailing(p.peekToken, left.GetMeta())
 		p.nextToken()
 		left, err = infix(left)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		continue
+	}
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		swapLeadingTrailing(p.peekToken, left.GetMeta())
 	}
 
 	return left, nil
