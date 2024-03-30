@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
@@ -12,6 +13,12 @@ import (
 func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	i.Debugger.Message("Request Incoming =========>")
 	defer i.Debugger.Message("<========= Request finished")
+	if strings.Contains(r.Header.Get("Fastly-FF"), "cache-localsimulator") {
+		http.Error(w, "loop detected", http.StatusInternalServerError)
+		return
+	}
+	i.lock.Lock()
+	defer i.lock.Unlock()
 
 	if err := i.ProcessInit(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
