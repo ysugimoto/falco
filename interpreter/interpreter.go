@@ -518,7 +518,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 	// TODO: consider stale-white-revalidate and stale-if-error TTL
 
-	// Consider cache, create client response from backend response
+	// Update cache
 	defer func() {
 		resp := i.cloneResponse(i.ctx.BackendResponse)
 		// Note: compare BackendResponseCacheable value
@@ -533,7 +533,6 @@ func (i *Interpreter) ProcessFetch() error {
 				})
 			}
 		}
-		i.ctx.Response = resp
 	}()
 
 	// Simulate Fastly statement lifecycle
@@ -640,12 +639,10 @@ func (i *Interpreter) ProcessError() error {
 func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
-	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-		} else if i.ctx.Object != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.Object)
-		}
+	if i.ctx.Object != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.Object)
+	} else if i.ctx.BackendResponse != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -721,11 +718,11 @@ func (i *Interpreter) ProcessLog() error {
 	i.SetScope(context.LogScope)
 
 	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Response = &v
-		} else if i.ctx.Object != nil {
+		if i.ctx.Object != nil {
 			v := *i.ctx.Object
+			i.ctx.Response = &v
+		} else if i.ctx.BackendResponse != nil {
+			v := *i.ctx.BackendResponse
 			i.ctx.Response = &v
 		}
 	}
