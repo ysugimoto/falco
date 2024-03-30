@@ -579,26 +579,16 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	if i.ctx.Object == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
-			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
-			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
-		} else {
-			i.ctx.Object = &http.Response{
-				StatusCode: int(i.ctx.ObjectStatus.Value),
-				Status:     http.StatusText(int(i.ctx.ObjectStatus.Value)),
-				Proto:      "HTTP/1.0",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header: http.Header{
-					"Content-Type": {"text/plain"},
-				},
-				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-				Request:       i.ctx.Request,
-			}
-		}
+	i.ctx.Object = &http.Response{
+		StatusCode:    int(i.ctx.ObjectStatus.Value),
+		Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
+		Proto:         "HTTP/1.0",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        http.Header{},
+		Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+		ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+		Request:       i.ctx.Request,
 	}
 
 	// Simulate Fastly statement lifecycle
