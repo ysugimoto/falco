@@ -12,6 +12,7 @@ type Flow struct {
 	Line            int       `json:"line"`
 	Position        int       `json:"position"`
 	Subroutine      string    `json:"subroutine"`
+	Backend         string    `json:"backend,omitempty"`
 	Request         *HttpFlow `json:"req,omitempty"`
 	BackendRequest  *HttpFlow `json:"bereq,omitempty"`
 	BackendResponse *HttpFlow `json:"beresp,omitempty"`
@@ -28,6 +29,9 @@ func NewFlow(ctx *icontext.Context, sub *ast.SubroutineDeclaration) *Flow {
 		Line:       token.Line,
 		Position:   token.Position,
 		Subroutine: sub.Name.Value,
+	}
+	if ctx.Backend != nil {
+		f.Backend = ctx.Backend.String()
 	}
 	if ctx.Request != nil {
 		f.Request = newFlowRequest(ctx.Request.Clone(c))
