@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -125,8 +126,8 @@ func TestNotRegexOperator(t *testing.T) {
 			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.String{Value: "amp"}, expect: false},
-			{left: &value.String{Value: "example"}, right: &value.String{Value: "^++a"}, isError: true}, // invalid regex syntax
+			{left: &value.String{Value: "example"}, right: &value.String{Value: "amp"}, isError: true}, // pattern must be literal
+			{left: &value.String{Value: "example"}, right: &value.String{Value: "^++a"}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "amp", Literal: true}, expect: false},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "^++a", Literal: true}, isError: true}, // invalid regex syntax
 			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, isError: true},
@@ -426,6 +427,46 @@ func TestNotRegexOperator(t *testing.T) {
 			b := value.Unwrap[*value.Boolean](v)
 			if b.Value != tt.expect {
 				t.Errorf("Index %d: expect value %t, got %t", i, tt.expect, b.Value)
+			}
+		}
+	})
+
+	t.Run("re.match.{N}", func(t *testing.T) {
+		tests := []struct {
+			left   value.Value
+			right  value.Value
+			expect map[string]*value.String
+		}{
+			{
+				left:  &value.String{Value: "example"},
+				right: &value.String{Value: "amp", Literal: true},
+				expect: map[string]*value.String{
+					"0": {Value: "amp"},
+				},
+			},
+			{
+				left:  &value.String{Value: "www.example.com"},
+				right: &value.String{Value: `^([^.]+)\.([^.]+)\.([^.]+)$`, Literal: true},
+				expect: map[string]*value.String{
+					"0": {Value: "www.example.com"},
+					"1": {Value: "www"},
+					"2": {Value: "example"},
+					"3": {Value: "com"},
+				},
+			},
+		}
+
+		for i, tt := range tests {
+			ctx := &context.Context{
+				RegexMatchedValues: make(map[string]*value.String),
+			}
+			_, err := NotRegex(ctx, tt.left, tt.right)
+			if err != nil {
+				t.Errorf("Index %d: Unexpected error %s", i, err)
+				continue
+			}
+			if diff := cmp.Diff(ctx.RegexMatchedValues, tt.expect); diff != "" {
+				t.Errorf("Index %d: unexpected re.group.{N} values, diff=%s", i, diff)
 			}
 		}
 	})
