@@ -1659,10 +1659,17 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		return types.BoolType
 	case "~", "!~":
 		// Regex operator could compare only STRING,  IP or ACL type
-		if !expectType(left, types.StringType, types.IPType, types.AclType) {
+		if !expectType(left, types.StringType, types.IPType) {
 			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
-		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
+		} else if !expectType(right, types.StringType, types.AclType) {
+			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType).Match(OPERATOR_CONDITIONAL))
+		}
+		if expectType(right, types.StringType) && !isLiteralExpression(exp.Right) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    exp.Right.GetMeta().Token,
+				Message:  "Regex patterns must be string literals.",
+			})
 		}
 		// And, if right expression is STRING, regex must be valid
 		if v, ok := exp.Right.(*ast.String); ok {
