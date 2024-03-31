@@ -33,7 +33,8 @@ type SimulatorConfig struct {
 	IncludePaths []string // Copy from root field
 
 	// Override Request configuration
-	OverrideRequest *RequestConfig
+	OverrideRequest    *RequestConfig
+	OutputResponseBody bool `cli:"body" yaml:"output_response_body"`
 }
 
 // Testing configuration
@@ -52,7 +53,7 @@ type Config struct {
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
 	Transforms   []string `cli:"t,transformer" yaml:"transformers"`
 	Help         bool     `cli:"h,help"`
-	Version      bool     `cli:"V"`
+	Version      bool     `cli:"V,version"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`
 	Json         bool     `cli:"json"`
 	Request      string   `cli:"request"`

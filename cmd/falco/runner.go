@@ -428,6 +428,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithOutputResponseBody(r.config.Simulator.OutputResponseBody),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithSnippets(r.snippets))

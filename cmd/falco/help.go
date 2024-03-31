@@ -98,6 +98,7 @@ Flags:
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
     -request           : Simulate request config
+    -body              : Output response body
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation

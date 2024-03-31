@@ -12,6 +12,8 @@ import (
 )
 
 type Process struct {
+	includeBody bool
+
 	Flows     []*Flow
 	Logs      []*Log
 	Restarts  int
@@ -22,11 +24,12 @@ type Process struct {
 	Response  *http.Response
 }
 
-func New() *Process {
+func New(includeBody bool) *Process {
 	return &Process{
-		Flows:     []*Flow{},
-		Logs:      []*Log{},
-		StartTime: time.Now().UnixMicro(),
+		Flows:       []*Flow{},
+		Logs:        []*Log{},
+		StartTime:   time.Now().UnixMicro(),
+		includeBody: includeBody,
 	}
 }
 
@@ -56,6 +59,11 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		}
 	}
 
+	var body string
+	if p.includeBody {
+		body = buf.String()
+	}
+
 	return json.MarshalIndent(struct {
 		Flows          []*Flow `json:"flows"`
 		Logs           []*Log  `json:"logs"`
@@ -68,6 +76,7 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		ClientResponse struct {
 			StatusCode    int               `json:"status_code"`
 			ResponseBytes int               `json:"body_bytes"`
+			ResponseBody  string            `json:"body,omitempty"`
 			Headers       map[string]string `json:"headers"`
 		} `json:"client_response"`
 	}{
@@ -82,10 +91,12 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		ClientResponse: struct {
 			StatusCode    int               `json:"status_code"`
 			ResponseBytes int               `json:"body_bytes"`
+			ResponseBody  string            `json:"body,omitempty"`
 			Headers       map[string]string `json:"headers"`
 		}{
 			StatusCode:    statusCode,
 			ResponseBytes: len(buf.Bytes()),
+			ResponseBody:  body,
 			Headers:       headers,
 		},
 	}, "", "  ")
