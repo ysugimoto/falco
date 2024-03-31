@@ -4,6 +4,8 @@ import "fmt"
 
 type Line struct {
 	Buffer   string
+	Operator string
+	Leading  string
 	Trailing string
 }
 
