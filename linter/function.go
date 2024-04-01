@@ -101,5 +101,16 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 		}
 	}
 
+	// Special cases
+	if calledFn.name == "regsub" || calledFn.name == "regsuball" {
+		if !isTypeLiteral(calledFn.arguments[1]) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    calledFn.arguments[1].GetMeta().Token,
+				Message:  "Regex patterns must be string literals.",
+			})
+		}
+	}
+
 	return fn.Return
 }

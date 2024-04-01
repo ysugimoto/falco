@@ -635,6 +635,11 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 		switch right.Type() {
 		case value.StringType:
 			rv := value.Unwrap[*value.String](right)
+			if !rv.IsLiteral() {
+				return value.Null, errors.WithStack(
+					fmt.Errorf("Right String type must be a literal"),
+				)
+			}
 			re, err := regexp.Compile(rv.Value)
 			if err != nil {
 				return value.Null, errors.WithStack(
