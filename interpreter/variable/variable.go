@@ -23,6 +23,9 @@ var (
 	objectHttpHeaderRegex          = regexp.MustCompile(`^obj\.http\.(.+)`)
 	rateCounterRegex               = regexp.MustCompile(`ratecounter\.([^\.]+)\.(.+)`)
 	regexMatchedRegex              = regexp.MustCompile(`re\.group\.([0-9]+)`)
+	backendConnectionsOpenRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_open`)
+	backendConnectionsUsedRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_used`)
+	backendHealthyRegex            = regexp.MustCompile(`backend\.([^\.]+)\.healthy`)
 )
 
 func doAssign(left value.Value, operator string, right value.Value) error {
