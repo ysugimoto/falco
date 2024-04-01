@@ -8,15 +8,16 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
-	var buf bytes.Buffer
+func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration {
+	group := &GroupedLines{}
+	lines := DelclarationPropertyLines{}
 
-	buf.WriteString("acl " + decl.Name.Value + " {\n")
-	for i, cidr := range decl.CIDRs {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(cidr.GetMeta()))
+	for _, cidr := range decl.CIDRs {
+		if cidr.GetMeta().PreviousEmptyLines > 0 {
+			group.Lines = append(group.Lines, lines)
+			lines = DelclarationPropertyLines{}
 		}
-		buf.WriteString(f.formatComment(cidr.Leading, "\n", 1))
+		var buf bytes.Buffer
 		buf.WriteString(f.indent(1))
 		if cidr.Inverse != nil && cidr.Inverse.Value {
 			buf.WriteString("!")
@@ -25,20 +26,40 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) string {
 		if cidr.Mask != nil {
 			buf.WriteString("/" + cidr.Mask.String())
 		}
-		buf.WriteString(";")
-		buf.WriteString(f.trailing(cidr.Trailing))
-		buf.WriteString("\n")
+		lines = append(lines, &DelclarationPropertyLine{
+			Leading:      f.formatComment(cidr.Leading, "\n", 1),
+			Trailing:     f.trailing(cidr.Trailing),
+			Key:          buf.String(),
+			EndCharacter: ";",
+		})
 	}
+
+	// Append remaining lines
+	if len(lines) > 0 {
+		group.Lines = append(group.Lines, lines)
+	}
+
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("acl " + decl.Name.Value + " {\n")
+	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
 		buf.WriteString(f.indent(1))
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Acl,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
-func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) string {
+func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Declaration {
 	var buf bytes.Buffer
 
 	buf.WriteString("backend " + decl.Name.Value + " {\n")
@@ -49,101 +70,140 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) strin
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Backend,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
 func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLevel int) string {
-	var buf bytes.Buffer
-	var maxPropLength int
+	group := &GroupedLines{}
+	lines := DelclarationPropertyLines{}
 
-	if f.conf.SortDeclarationProperty {
-		sort.Slice(props, func(i, j int) bool {
-			if props[i].Key.String() == "probe" {
-				return false
+	for _, prop := range props {
+		if prop.GetMeta().PreviousEmptyLines > 0 {
+			if f.conf.AlignDeclarationProperty {
+				lines.AlignKey()
 			}
-			return props[i].Key.String() < props[j].Key.String()
-		})
-	}
+			if f.conf.SortDeclarationProperty {
+				lines.Sort()
+			}
+			group.Lines = append(group.Lines, lines)
+			lines = DelclarationPropertyLines{}
+		}
 
-	for i := range props {
-		if len(props[i].Key.String()) > maxPropLength {
-			maxPropLength = len(props[i].Key.String())
+		line := &DelclarationPropertyLine{
+			Leading:  f.formatComment(prop.Leading, "\n", nestLevel),
+			Trailing: f.trailing(prop.Trailing),
+			Key:      f.indent(nestLevel) + "." + prop.Key.String(),
+			Operator: " = ",
 		}
-	}
-
-	for i, prop := range props {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(prop.GetMeta()))
-		}
-		buf.WriteString(f.formatComment(prop.Leading, "\n", nestLevel))
-		buf.WriteString(f.indent(nestLevel))
-		var left string
-		if f.conf.AlignDeclarationProperty {
-			format := fmt.Sprintf("%%-%ds", maxPropLength)
-			left = fmt.Sprintf("."+format+" = ", prop.Key.String())
-		} else {
-			left = fmt.Sprintf(".%s = ", prop.Key.String())
-		}
-		buf.WriteString(left)
 		if po, ok := prop.Value.(*ast.BackendProbeObject); ok {
-			buf.WriteString("{\n")
-			buf.WriteString(f.formatBackendProperties(po.Values, nestLevel+1))
-			buf.WriteString(f.indent(nestLevel) + "}")
+			line.Value = "{\n"
+			line.Value += f.formatBackendProperties(po.Values, nestLevel+1)
+			line.Value += f.indent(nestLevel) + "}"
+			line.isObject = true
 		} else {
-			buf.WriteString(f.formatExpression(prop.Value).ChunkedString(prop.Nest, len(left)))
-			buf.WriteString(";")
+			line.Value = f.formatExpression(prop.Value).ChunkedString(prop.Nest, len(line.Key))
+			line.EndCharacter = ";"
 		}
-		buf.WriteString(f.trailing(prop.Trailing))
-		buf.WriteString("\n")
+
+		lines = append(lines, line)
 	}
-	return buf.String()
+
+	// Append remaining lines
+	if len(lines) > 0 {
+		if f.conf.AlignDeclarationProperty {
+			lines.AlignKey()
+		}
+		if f.conf.SortDeclarationProperty {
+			lines.Sort()
+		}
+		group.Lines = append(group.Lines, lines)
+	}
+
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	return group.String()
 }
 
-func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) string {
-	var buf bytes.Buffer
+func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *Declaration {
+	group := &GroupedLines{}
+	lines := DelclarationPropertyLines{}
 
-	buf.WriteString("director " + decl.Name.Value + " " + decl.DirectorType.Value + " {\n")
-	for i, prop := range decl.Properties {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(prop.GetMeta()))
+	for _, prop := range decl.Properties {
+		if prop.GetMeta().PreviousEmptyLines > 0 {
+			if f.conf.AlignDeclarationProperty {
+				lines.AlignKey()
+			}
+			if f.conf.SortDeclarationProperty {
+				lines.Sort()
+			}
+			group.Lines = append(group.Lines, lines)
+			lines = DelclarationPropertyLines{}
 		}
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatDirectorProperty(prop.(*ast.DirectorBackendObject)))
-		buf.WriteString("\n")
+		line := &DelclarationPropertyLine{
+			Leading:  f.formatComment(prop.GetMeta().Leading, "\n", 1),
+			Trailing: f.trailing(prop.GetMeta().Trailing),
+			Key:      f.indent(1),
+		}
+		switch t := prop.(type) {
+		case *ast.DirectorBackendObject:
+			line.Key += "{ "
+			if f.conf.SortDeclarationProperty {
+				sort.Slice(t.Values, func(i, j int) bool {
+					return t.Values[i].Key.Value < t.Values[j].Key.Value
+				})
+			}
+			for _, v := range t.Values {
+				line.Key += fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value))
+			}
+			line.Key += "}"
+			line.isObject = true
+		case *ast.DirectorProperty:
+			line.Key += "." + t.Key.Value
+			line.Operator = " = "
+			line.Value = t.Value.String()
+			line.EndCharacter = ";"
+		}
+		lines = append(lines, line)
 	}
+
+	// Append remaining lines
+	if len(lines) > 0 {
+		if f.conf.AlignDeclarationProperty {
+			lines.AlignKey()
+		}
+		if f.conf.SortDeclarationProperty {
+			lines.Sort()
+		}
+		group.Lines = append(group.Lines, lines)
+	}
+
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("director " + decl.Name.Value + " " + decl.DirectorType.Value + " {\n")
+	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
 		buf.WriteString(f.indent(1))
 		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Director,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
-func (f *Formatter) formatDirectorProperty(prop *ast.DirectorBackendObject) string {
-	var buf bytes.Buffer
-
-	if f.conf.SortDeclarationProperty {
-		sort.Slice(prop.Values, func(i, j int) bool {
-			return prop.Values[i].Key.Value < prop.Values[j].Key.Value
-		})
-	}
-
-	buf.WriteString(f.formatComment(prop.Leading, "\n", 0))
-	buf.WriteString("{ ")
-	for i, v := range prop.Values {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(prop.GetMeta()))
-		}
-		buf.WriteString(fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value)))
-	}
-	buf.WriteString("}")
-	buf.WriteString(f.trailing(prop.Trailing))
-
-	return buf.String()
-}
-
-func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) string {
+func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declaration {
 	var buf bytes.Buffer
 
 	buf.WriteString("table " + decl.Name.Value)
@@ -158,81 +218,106 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) string {
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Table,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
 func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
-	var buf bytes.Buffer
-	var maxPropLength int
+	group := &GroupedLines{}
+	lines := DelclarationPropertyLines{}
 
-	if f.conf.SortDeclarationProperty {
-		sort.Slice(props, func(i, j int) bool {
-			return props[i].Key.Value < props[j].Key.Value
-		})
+	for _, prop := range props {
+		if prop.Meta.PreviousEmptyLines > 0 {
+			if f.conf.AlignDeclarationProperty {
+				lines.AlignKey()
+			}
+			if f.conf.SortDeclarationProperty {
+				lines.Sort()
+			}
+			group.Lines = append(group.Lines, lines)
+			lines = DelclarationPropertyLines{}
+		}
+		line := &DelclarationPropertyLine{
+			Leading:      f.formatComment(prop.Meta.Leading, "\n", 1),
+			Trailing:     f.trailing(prop.Meta.Trailing),
+			Operator:     ": ",
+			Key:          f.indent(1) + f.formatString(prop.Key),
+			Value:        f.formatExpression(prop.Value).String(),
+			EndCharacter: ",",
+		}
+		lines = append(lines, line)
 	}
 
-	for i := range props {
-		if len(props[i].Key.String()) > maxPropLength {
-			maxPropLength = len(props[i].Key.String())
-		}
-	}
-
-	for i, prop := range props {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(prop.Meta))
-		}
-		buf.WriteString(f.formatComment(prop.Leading, "\n", 0))
-		buf.WriteString(f.indent(1))
+	// Append remaining lines
+	if len(lines) > 0 {
 		if f.conf.AlignDeclarationProperty {
-			format := fmt.Sprintf("%%-%ds", maxPropLength)
-			buf.WriteString(fmt.Sprintf(format+": ", f.formatString(prop.Key)))
-		} else {
-			buf.WriteString(fmt.Sprintf("%s: ", f.formatString(prop.Key)))
+			lines.AlignKey()
 		}
-		buf.WriteString(f.formatExpression(prop.Value).String())
-		buf.WriteString(",")
-		buf.WriteString(f.trailing(prop.Trailing))
-		buf.WriteString("\n")
+		if f.conf.SortDeclarationProperty {
+			lines.Sort()
+		}
+		group.Lines = append(group.Lines, lines)
 	}
 
-	return buf.String()
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	return group.String()
 }
 
-func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) string {
+func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) *Declaration {
 	var buf bytes.Buffer
 
 	buf.WriteString("penaltybox " + decl.Name.Value)
-	buf.WriteString(" {\n")
+	buf.WriteString(" {")
 	// penaltybox does not have properties
 	if len(decl.Block.Infix) > 0 {
+		buf.WriteString("\n")
 		buf.WriteString(f.indent(1))
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Penaltybox,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
-func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) string {
+func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) *Declaration {
 	var buf bytes.Buffer
 
 	buf.WriteString("ratecounter " + decl.Name.Value)
-	buf.WriteString(" {\n")
+	buf.WriteString(" {")
 	// ratecounter does not have properties
 	if len(decl.Block.Infix) > 0 {
+		buf.WriteString("\n")
 		buf.WriteString(f.indent(1))
 		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
 	}
 	buf.WriteString("}")
 
-	return buf.String()
+	return &Declaration{
+		Type:   Ratecounter,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }
 
-func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) string {
+func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) *Declaration {
 	var buf bytes.Buffer
 
 	buf.WriteString("sub " + decl.Name.Value + " ")
 	buf.WriteString(f.formatBlockStatement(decl.Block))
 
-	return buf.String()
+	return &Declaration{
+		Type:   Subroutine,
+		Name:   decl.Name.Value,
+		Buffer: buf.String(),
+	}
 }

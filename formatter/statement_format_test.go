@@ -818,6 +818,7 @@ set req.http.Foo = "bar";
 set req.http.Foo = "baz";
 }`,
 			expect: `sub vcl_recv {
+
   // Leading empty line inside block statement should be cut out
   set req.http.Foo = "bar";
 

@@ -8,66 +8,65 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (f *Formatter) formatStatement(stmt ast.Statement) string {
-	var buf bytes.Buffer
-
+func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 	if block, ok := stmt.(*ast.BlockStatement); ok {
-		// need subtract 1 because LEFT_BRACE is unnested
-		buf.WriteString(f.formatComment(block.Leading, "\n", block.Nest-1))
-		buf.WriteString(f.indent(block.Nest - 1))
-		buf.WriteString(f.formatBlockStatement(block))
-		buf.WriteString(f.trailing(block.Trailing))
-		return buf.String()
+		return &Line{
+			// need subtract 1 because LEFT_BRACE is unnested
+			Leading:  f.formatComment(block.Leading, "\n", block.Nest-1),
+			Trailing: f.trailing(block.Trailing),
+			Buffer:   f.indent(block.Nest-1) + f.formatBlockStatement(block),
+		}
 	}
 
-	buf.WriteString(f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest))
-	buf.WriteString(f.indent(stmt.GetMeta().Nest))
+	line := &Line{
+		Leading: f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest),
+		Buffer:  f.indent(stmt.GetMeta().Nest),
+	}
 
-	var formatted string
 	trailingNode := stmt
 	switch t := stmt.(type) {
 	case *ast.ImportStatement:
-		formatted = f.formatImportStatement(t)
+		line.Buffer += f.formatImportStatement(t)
 	case *ast.IncludeStatement:
-		formatted = f.formatIncludeStatement(t)
+		line.Buffer += f.formatIncludeStatement(t)
 	case *ast.DeclareStatement:
-		formatted = f.formatDeclareStatement(t)
+		line.Buffer += f.formatDeclareStatement(t)
 	case *ast.SetStatement:
-		formatted = f.formatSetStatement(t)
+		line.Buffer += f.formatSetStatement(t)
 	case *ast.UnsetStatement:
-		formatted = f.formatUnsetStatement(t)
+		line.Buffer += f.formatUnsetStatement(t)
 	case *ast.RemoveStatement:
-		formatted = f.formatRemoveStatement(t)
+		line.Buffer += f.formatRemoveStatement(t)
 	case *ast.SwitchStatement:
-		formatted = f.formatSwitchStatement(t)
+		line.Buffer += f.formatSwitchStatement(t)
 	case *ast.RestartStatement:
-		formatted = f.formatRestartStatement()
+		line.Buffer += f.formatRestartStatement()
 	case *ast.EsiStatement:
-		formatted = f.formatEsiStatement()
+		line.Buffer += f.formatEsiStatement()
 	case *ast.AddStatement:
-		formatted = f.formatAddStatement(t)
+		line.Buffer += f.formatAddStatement(t)
 	case *ast.CallStatement:
-		formatted = f.formatCallStatement(t)
+		line.Buffer += f.formatCallStatement(t)
 	case *ast.ErrorStatement:
-		formatted = f.formatErrorStatement(t)
+		line.Buffer += f.formatErrorStatement(t)
 	case *ast.LogStatement:
-		formatted = f.formatLogStatement(t)
+		line.Buffer += f.formatLogStatement(t)
 	case *ast.ReturnStatement:
-		formatted = f.formatReturnStatement(t)
+		line.Buffer += f.formatReturnStatement(t)
 	case *ast.SyntheticStatement:
-		formatted = f.formatSyntheticStatement(t)
+		line.Buffer += f.formatSyntheticStatement(t)
 	case *ast.SyntheticBase64Statement:
-		formatted = f.formatSyntheticBase64Statement(t)
+		line.Buffer += f.formatSyntheticBase64Statement(t)
 	case *ast.GotoStatement:
-		formatted = f.formatGotoStatement(t)
+		line.Buffer += f.formatGotoStatement(t)
 	case *ast.GotoDestinationStatement:
-		formatted = f.formatGotoDestinationStatement(t)
+		line.Buffer += f.formatGotoDestinationStatement(t)
 	case *ast.FunctionCallStatement:
-		formatted = f.formatFunctionCallStatement(t)
+		line.Buffer += f.formatFunctionCallStatement(t)
 
 	// On if statement, trailing comment node depends on its declarations
 	case *ast.IfStatement:
-		formatted = f.formatIfStatement(t)
+		line.Buffer += f.formatIfStatement(t)
 		switch {
 		case t.Alternative != nil:
 			// When "else" statament exists, trailing comment will be on it
@@ -80,10 +79,9 @@ func (f *Formatter) formatStatement(stmt ast.Statement) string {
 			trailingNode = t.Consequence
 		}
 	}
-	buf.WriteString(formatted)
-	buf.WriteString(f.trailing(trailingNode.GetMeta().Trailing))
+	line.Trailing = f.trailing(trailingNode.GetMeta().Trailing)
 
-	return buf.String()
+	return line
 }
 
 func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
@@ -107,16 +105,27 @@ func (f *Formatter) formatIncludeStatement(stmt *ast.IncludeStatement) string {
 }
 
 func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
-	var buf bytes.Buffer
+	group := &GroupedLines{}
+	lines := Lines{}
 
-	buf.WriteString("{\n")
-	for i := range stmt.Statements {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(stmt.Statements[i].GetMeta()))
+	for _, s := range stmt.Statements {
+		if s.GetMeta().PreviousEmptyLines > 0 {
+			group.Lines = append(group.Lines, lines)
+			lines = Lines{}
 		}
-		buf.WriteString(f.formatStatement(stmt.Statements[i]))
-		buf.WriteString("\n")
+		lines = append(lines, f.formatStatement(s))
 	}
+
+	if len(lines) > 0 {
+		group.Lines = append(group.Lines, lines)
+	}
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("{\n")
+	buf.WriteString(group.String())
 	if len(stmt.Infix) > 0 {
 		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest))
 	}
@@ -246,25 +255,53 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 		} else {
 			buf.WriteString("default:\n")
 		}
-		for _, s := range c.Statements {
-			if _, ok := s.(*ast.BreakStatement); ok {
-				buf.WriteString(f.indent(c.Meta.Nest + 1))
-				buf.WriteString("break;")
-			} else {
-				buf.WriteString(f.formatStatement(s))
-			}
-			buf.WriteString("\n")
-		}
-		if c.Fallthrough {
-			buf.WriteString(f.indent(c.Meta.Nest + 1))
-			buf.WriteString("fallthrough;\n")
-		}
+		buf.WriteString(f.formatCaseSectionStatements(c))
+		buf.WriteString("\n")
 	}
 	if len(stmt.Infix) > 0 {
 		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest))
 	}
 	buf.WriteString(f.indent(stmt.Meta.Nest))
 	buf.WriteString("}")
+
+	return buf.String()
+}
+
+func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
+	group := &GroupedLines{}
+	lines := Lines{}
+
+	for _, stmt := range cs.Statements {
+		if stmt.GetMeta().PreviousEmptyLines > 0 {
+			group.Lines = append(group.Lines, lines)
+			lines = Lines{}
+		}
+		line := &Line{
+			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest),
+			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", stmt.GetMeta().Nest),
+		}
+		if _, ok := stmt.(*ast.BreakStatement); ok {
+			line.Buffer = f.indent(stmt.GetMeta().Nest+1) + "break;"
+		} else {
+			line.Buffer = f.formatStatement(stmt).String()
+		}
+		lines = append(lines, line)
+	}
+
+	if len(lines) > 0 {
+		group.Lines = append(group.Lines, lines)
+	}
+
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(group.String())
+	if cs.Fallthrough {
+		buf.WriteString(f.indent(cs.Meta.Nest + 1))
+		buf.WriteString("fallthrough;")
+	}
 
 	return buf.String()
 }

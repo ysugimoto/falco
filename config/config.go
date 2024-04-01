@@ -68,6 +68,8 @@ type FormatConfig struct {
 	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
 	ElseIf                     bool   `yaml:"else_if" default:"false"`
 	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
+	SortDeclaration            bool   `yaml:"sort_declaration" defaul:"false"`
+	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
 }
 
 type Config struct {

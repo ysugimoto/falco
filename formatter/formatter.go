@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -24,45 +25,65 @@ func (f *Formatter) chunkBuffer() *ChunkBuffer {
 }
 
 func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
-	buf := new(bytes.Buffer)
-
-	for i, stmt := range vcl.Statements {
-		if i > 0 {
-			buf.WriteString(f.lineFeed(stmt.GetMeta()))
-		}
-		buf.WriteString(f.formatComment(stmt.GetMeta().Leading, "\n", 0))
-		var formatted string
+	decls := Declarations{}
+	for _, stmt := range vcl.Statements {
+		var decl *Declaration
 		trailingNode := stmt
 
 		switch t := stmt.(type) {
 		case *ast.ImportStatement:
-			formatted = f.formatImportStatement(t)
+			decl = &Declaration{
+				Type:   Import,
+				Buffer: f.formatImportStatement(t),
+			}
 		case *ast.IncludeStatement:
-			formatted = f.formatIncludeStatement(t)
+			decl = &Declaration{
+				Type:   Include,
+				Buffer: f.formatIncludeStatement(t),
+			}
 		case *ast.AclDeclaration:
-			formatted = f.formatAclDeclaration(t)
+			decl = f.formatAclDeclaration(t)
 		case *ast.BackendDeclaration:
-			formatted = f.formatBackendDeclaration(t)
+			decl = f.formatBackendDeclaration(t)
 		case *ast.DirectorDeclaration:
-			formatted = f.formatDirectorDeclaration(t)
+			decl = f.formatDirectorDeclaration(t)
 		case *ast.TableDeclaration:
-			formatted = f.formatTableDeclaration(t)
+			decl = f.formatTableDeclaration(t)
 
 		// penaltybox, ratecounter, and subroutine have trailing comment on the block statement
 		case *ast.PenaltyboxDeclaration:
-			formatted = f.formatPenaltyboxDeclaration(t)
+			decl = f.formatPenaltyboxDeclaration(t)
 			trailingNode = t.Block
 		case *ast.RatecounterDeclaration:
-			formatted = f.formatRatecounterDeclaration(t)
+			decl = f.formatRatecounterDeclaration(t)
 			trailingNode = t.Block
 		case *ast.SubroutineDeclaration:
-			formatted = f.formatSubroutineDeclaration(t)
+			decl = f.formatSubroutineDeclaration(t)
 			trailingNode = t.Block
+		default:
+			return nil
 		}
-		buf.WriteString(formatted)
-		buf.WriteString(f.trailing(trailingNode.GetMeta().Trailing))
+
+		decl.Buffer = fmt.Sprintf(
+			"%s%s%s",
+			f.formatComment(stmt.GetMeta().Leading, "\n", 0),
+			decl.Buffer,
+			f.trailing(trailingNode.GetMeta().Trailing),
+		)
+		decls = append(decls, decl)
+	}
+
+	if f.conf.SortDeclaration {
+		decls.Sort()
+	}
+
+	// output
+	var buf bytes.Buffer
+
+	for i, decl := range decls {
+		buf.WriteString(decl.Buffer)
 		buf.WriteString("\n")
-		if i != len(vcl.Statements)-1 {
+		if i != len(decls)-1 {
 			buf.WriteString("\n")
 		}
 	}
@@ -87,11 +108,4 @@ func (f *Formatter) trailing(trailing ast.Comments) string {
 	c += strings.Repeat(" ", f.conf.TrailingCommentWidth)
 	c += f.formatComment(trailing, "", 0)
 	return c
-}
-
-func (f *Formatter) lineFeed(meta *ast.Meta) string {
-	if meta.PreviousEmptyLines > 0 {
-		return "\n"
-	}
-	return ""
 }

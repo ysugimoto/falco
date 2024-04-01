@@ -45,6 +45,31 @@ func TestAclDeclarationFormat(t *testing.T) {
 }  // trailing
 `,
 		},
+		{
+			name: "align trailing comment",
+			input: `acl name {
+			  "192.0.2.0"/24;  // some comment
+			  !"192.0.2.12"; // some comment
+
+			  "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff"; // some comment
+			  // The ending
+			} // trailing`,
+			expect: `acl name {
+  "192.0.2.0"/24;  // some comment
+  !"192.0.2.12";   // some comment
+
+  "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff";  // some comment
+  // The ending
+}  // trailing
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            120,
+				AlignTrailingComment: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -172,6 +197,47 @@ func TestBackendDeclarationFormat(t *testing.T) {
 				LineWidth:                80,
 			},
 		},
+		{
+			name: "sorted and align properties and comments",
+			input: `backend example {
+				.connect_timeout = 1s; // some comment
+				.dynamic = true;
+				.port = "443";
+				.host = "example.com";
+				.first_byte_timeout = 30s;
+				.max_connections = 500;
+				.between_bytes_timeout = 30s; // some comment
+				.ssl = true;
+				.probe = {
+					.request = "GET / HTTP/1.1" "Host: example.com" "Connection: close";
+					.dummy = true;
+				}
+			}`,
+			expect: `backend example {
+  .between_bytes_timeout = 30s;            // some comment
+  .connect_timeout       = 1s;             // some comment
+  .dynamic               = true;
+  .first_byte_timeout    = 30s;
+  .host                  = "example.com";
+  .max_connections       = 500;
+  .port                  = "443";
+  .ssl                   = true;
+  .probe                 = {
+    .dummy   = true;
+    .request = "GET / HTTP/1.1" "Host: example.com" "Connection: close";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:              2,
+				IndentStyle:              "space",
+				AlignDeclarationProperty: true,
+				SortDeclarationProperty:  true,
+				TrailingCommentWidth:     2,
+				LineWidth:                120,
+				AlignTrailingComment:     true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -220,7 +286,34 @@ func TestDirectorDeclarationFormat(t *testing.T) {
 				IndentStyle:             "space",
 				SortDeclarationProperty: true,
 				TrailingCommentWidth:    2,
-				LineWidth:               80,
+				LineWidth:               120,
+			},
+		},
+		{
+			name: "sort properties and align comment",
+			input: `director example random {
+				.retries = 1; // some comment
+				.quorum = 1; // some comment
+				{ .weight=1; .backend=F_backend1; }
+				{ .weight=1; .backend=F_backend2; }
+				{ .weight=1; .backend=F_backend3; }
+			}`,
+			expect: `director example random {
+  .quorum  = 1;  // some comment
+  .retries = 1;  // some comment
+  { .backend = F_backend1; .weight = 1; }
+  { .backend = F_backend2; .weight = 1; }
+  { .backend = F_backend3; .weight = 1; }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:              2,
+				IndentStyle:              "space",
+				SortDeclarationProperty:  true,
+				TrailingCommentWidth:     2,
+				LineWidth:                120,
+				AlignTrailingComment:     true,
+				AlignDeclarationProperty: true,
 			},
 		},
 	}
@@ -289,7 +382,7 @@ func TestTableDeclarationFormat(t *testing.T) {
 			},
 		},
 		{
-			name: "alignment properties",
+			name: "align properties",
 			input: `table routing_table BACKEND {
 				"a.example.com":F_backendA,
 				"bb.example.com":F_backendB,
@@ -307,6 +400,28 @@ func TestTableDeclarationFormat(t *testing.T) {
 				AlignDeclarationProperty: true,
 				TrailingCommentWidth:     2,
 				LineWidth:                80,
+			},
+		},
+		{
+			name: "alig properties and comments",
+			input: `table routing_table BACKEND {
+				"a.example.com":F_backendA,
+				"bb.example.com":F_backendBB,  // some comment
+				"ccc.example.com":F_backendCCC,  // some comment
+			}`,
+			expect: `table routing_table BACKEND {
+  "a.example.com"  : F_backendA,
+  "bb.example.com" : F_backendBB,   // some comment
+  "ccc.example.com": F_backendCCC,  // some comment
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:              2,
+				IndentStyle:              "space",
+				AlignDeclarationProperty: true,
+				TrailingCommentWidth:     2,
+				LineWidth:                120,
+				AlignTrailingComment:     true,
 			},
 		},
 	}
@@ -390,6 +505,26 @@ sub vcl_recv {
   // subroutine infix comment
 }  // subroutine trailing comment
 `,
+		},
+		{
+			name: "align statements comment inside subroutine",
+			input: `
+sub vcl_recv {
+	set req.http.Foo = "bar"; // some comment
+	set req.htto.Lorem = "ipsum"; // some comment
+}`,
+			expect: `sub vcl_recv {
+  set req.http.Foo = "bar";      // some comment
+  set req.htto.Lorem = "ipsum";  // some comment
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            120,
+				AlignTrailingComment: true,
+			},
 		},
 	}
 
