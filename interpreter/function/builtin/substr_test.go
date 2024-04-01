@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"math"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,20 +18,37 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/substr/
 func Test_Substr(t *testing.T) {
 	tests := []struct {
-		input   string
-		offset  int64
-		length  int64
-		expect  string
-		isError bool
+		input    string
+		offset   int64
+		length   int64
+		expect   string
+		noLength bool
 	}{
-		{input: "abcdefg", offset: 3, length: 0, expect: "defg"},
-		{input: "abcdefg", offset: 0, length: 2, expect: "abc"},
+		{input: "abcdefg", offset: 3, expect: "defg", noLength: true},
+		{input: "abcdefg", offset: 0, length: 2, expect: "ab"},
 		{input: "abcdefg", offset: 5, length: 3, expect: "fg"},
-		{input: "abc", offset: 4, length: 2, expect: "", isError: true},
+		{input: "abcdefg", offset: 3, length: 0, expect: ""},
+		{input: "abc", offset: 4, length: 2, expect: ""},
 		{input: "abc", offset: 3, length: 2, expect: ""},
+		{input: "abcdefg", offset: -3, expect: "efg", noLength: true},
 		{input: "abcdefg", offset: -3, length: 2, expect: "ef"},
 		{input: "abcdefg", offset: 1, length: -3, expect: "bcd"},
-		{input: "abcdefg", offset: -4, length: -3, expect: "de"},
+		{input: "abcdefg", offset: -4, length: -3, expect: "d"},
+		{input: "abcdefg", offset: -4, length: 0, expect: ""},
+		{input: "あ", offset: 0, length: 1, expect: "\xe3"},
+		// Check extremes of length / offset values
+		{input: "abcdefg", offset: 2, length: math.MaxInt64 - 1, expect: ""},
+		{input: "abcdefg", offset: 1, length: math.MaxInt64, expect: ""},
+		{input: "abcdefg", offset: 5, length: -math.MaxInt64, expect: ""},
+		{input: "abcdefg", offset: 2, length: -math.MaxInt64 + 1, expect: ""},
+		{input: "abcdefg", offset: math.MaxInt64, length: 1, expect: ""},
+		{input: "abcdefg", offset: -math.MaxInt64, length: 1, expect: ""},
+		{input: "abcdefg", offset: math.MaxInt64, noLength: true, expect: ""},
+		{input: "abcdefg", offset: -math.MaxInt64, noLength: true, expect: ""},
+		{input: "abcdefg", offset: math.MaxInt64, length: math.MaxInt64, expect: ""},
+		{input: "abcdefg", offset: -math.MaxInt64, length: -math.MaxInt64, expect: ""},
+		{input: "abcdefg", offset: math.MaxInt64, length: -math.MaxInt64, expect: ""},
+		{input: "abcdefg", offset: -math.MaxInt64, length: math.MaxInt64, expect: ""},
 	}
 
 	for i, tt := range tests {
@@ -38,21 +56,24 @@ func Test_Substr(t *testing.T) {
 			&value.String{Value: tt.input},
 			&value.Integer{Value: tt.offset},
 		}
-		if tt.length != 0 {
+		if !tt.noLength {
 			args = append(args, &value.Integer{Value: tt.length})
 		}
 
 		ret, err := Substr(&context.Context{}, args...)
 		if err != nil {
-			if !tt.isError {
-				t.Errorf("[%d] Unexpected error: %s", i, err)
-			}
+			t.Errorf("[%d] Unexpected error: %s", i, err)
 			continue
 		}
 		if ret.Type() != value.StringType {
 			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			continue
 		}
 		v := value.Unwrap[*value.String](ret)
+		if v.IsNotSet {
+			t.Errorf("[%d] Unexpected return value, expect=%s, got=[not set]", i, tt.expect)
+			continue
+		}
 		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
 			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
 		}
