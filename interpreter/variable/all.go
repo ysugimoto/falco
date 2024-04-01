@@ -2,21 +2,20 @@ package variable
 
 import (
 	"bytes"
+	"crypto/md5"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"crypto/md5"
-	"crypto/sha256"
-	"encoding/base64"
-	"net/http"
-	"net/url"
-	"path/filepath"
 
 	"github.com/avct/uasurfer"
 	"github.com/pkg/errors"
@@ -557,11 +556,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Fixed values
 	case SERVER_DATACENTER:
-		return &value.String{Value: "FALCO"}, nil
+		return &value.String{Value: FALCO_DATACENTER}, nil
 	case SERVER_HOSTNAME:
-		return &value.String{Value: "cache-localsimulator"}, nil
+		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_IDENTITY:
-		return &value.String{Value: "cache-localsimulator"}, nil
+		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_REGION:
 		return &value.String{Value: "US"}, nil
 	case STALE_EXISTS:
