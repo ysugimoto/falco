@@ -32,6 +32,11 @@ func (c *ChunkBuffer) String() string {
 }
 
 func (c *ChunkBuffer) ChunkedString(level, offset int) string {
+	// If LineWidth configuration is disabled with -1 value, simply joins strings.
+	if c.conf.LineWidth < 0 {
+		return c.String()
+	}
+
 	var buf bytes.Buffer
 
 	count := offset + level*c.conf.IndentWidth
@@ -51,7 +56,7 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 		count += len(b)
 	}
 
-	return buf.String()
+	return strings.TrimSpace(buf.String())
 }
 
 func (c *ChunkBuffer) indent(level int) string {

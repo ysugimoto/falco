@@ -64,9 +64,15 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 			return nil
 		}
 
+		var lf string
+		if stmt.GetMeta().PreviousEmptyLines > 0 {
+			lf = "\n"
+		}
+
 		decl.Buffer = fmt.Sprintf(
-			"%s%s%s",
+			"%s%s%s%s",
 			f.formatComment(stmt.GetMeta().Leading, "\n", 0),
+			lf,
 			decl.Buffer,
 			f.trailing(trailingNode.GetMeta().Trailing),
 		)
@@ -81,12 +87,15 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	var buf bytes.Buffer
 
 	for i, decl := range decls {
-		buf.WriteString(decl.Buffer)
-		buf.WriteString("\n")
-		if i != len(decls)-1 {
+		if i > 0 {
 			buf.WriteString("\n")
+			if decl.Type != Import && decl.Type != Include {
+				buf.WriteString("\n")
+			}
 		}
+		buf.WriteString(decl.Buffer)
 	}
+	buf.WriteString("\n")
 
 	return bytes.NewReader(buf.Bytes())
 }
@@ -108,4 +117,32 @@ func (f *Formatter) trailing(trailing ast.Comments) string {
 	c += strings.Repeat(" ", f.conf.TrailingCommentWidth)
 	c += f.formatComment(trailing, "", 0)
 	return c
+}
+
+func (f *Formatter) formatComment(comments ast.Comments, sep string, level int) string {
+	if len(comments) == 0 {
+		return ""
+	}
+
+	var buf bytes.Buffer
+
+	for i := range comments {
+		if comments[i].PreviousEmptyLines > 0 {
+			buf.WriteString("\n")
+		}
+		buf.WriteString(f.indent(level))
+		switch f.conf.CommentStyle {
+		case config.CommentStyleSharp, config.CommentStyleSlash:
+			r := '#' // default as sharp style comment
+			if f.conf.CommentStyle == config.CommentStyleSlash {
+				r = '/'
+			}
+			buf.WriteString(formatCommentCharacter(comments[i].String(), r))
+		default:
+			buf.WriteString(comments[i].String())
+		}
+		buf.WriteString(sep)
+	}
+
+	return buf.String()
 }

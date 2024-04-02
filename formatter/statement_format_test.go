@@ -776,8 +776,8 @@ func TestFormatIfStatement(t *testing.T) {
 `,
 			expect: `sub vcl_recv {
   if (
-      req.http.Header1 == "1" && req.http.Header2 == "2" &&
-      req.http.Header3 == "3" && req.http.Header4 == "4"
+    req.http.Header1 == "1" && req.http.Header2 == "2" &&
+    req.http.Header3 == "3" && req.http.Header4 == "4"
   ) {
     set req.http.OK = "1";
   }
@@ -787,8 +787,63 @@ func TestFormatIfStatement(t *testing.T) {
 				IndentWidth:          2,
 				IndentStyle:          "space",
 				TrailingCommentWidth: 2,
-				LineWidth:            80,
+				LineWidth:            70,
 			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}
+
+func TestFormatSwitchStatement(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "basic formatting with comments",
+			input: `sub vcl_recv {
+	// switch leading comment
+	switch(req.http.Foo) {
+		// first case comment
+		case "bar":
+			// break leading comment
+			break;
+			// second case comment
+			case "baz":
+				// break leading comment
+				break;
+		// default case comment
+		default:
+			break;
+		// switch infix comment
+	} // trailing comment
+}
+`,
+			expect: `sub vcl_recv {
+  // switch leading comment
+  switch (req.http.Foo) {
+    // first case comment
+    case "bar":
+      // break leading comment
+      break;
+    // second case comment
+    case "baz":
+      // break leading comment
+      break;
+    // default case comment
+    default:
+      break;
+    // switch infix comment
+  }  // trailing comment
+}
+`,
 		},
 	}
 

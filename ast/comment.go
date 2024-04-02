@@ -23,7 +23,8 @@ type Comment struct {
 	// If this flag is false, it should be treated as trailing comment
 	// because the comment presents on the same line.
 	// Otherwise, this flag is true, it should be the leading comment for a next token.
-	PrefixedLineFeed bool
+	PrefixedLineFeed   bool
+	PreviousEmptyLines int
 }
 
 func (c *Comment) String() string {

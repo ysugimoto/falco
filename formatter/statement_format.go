@@ -23,6 +23,11 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 		Buffer:  f.indent(stmt.GetMeta().Nest),
 	}
 
+	// Some statement may have empty lines without leading comment
+	if stmt.GetMeta().PreviousEmptyLines > 0 {
+		line.Buffer = "\n" + f.indent(stmt.GetMeta().Nest)
+	}
+
 	trailingNode := stmt
 	switch t := stmt.(type) {
 	case *ast.ImportStatement:
@@ -133,7 +138,7 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	buf.WriteString(f.indent(stmt.Meta.Nest - 1))
 	buf.WriteString("}")
 
-	return buf.String()
+	return trimMutipleLineFeeds(buf.String())
 }
 
 func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
@@ -181,14 +186,12 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	buf.WriteString(stmt.Keyword + " (")
 
 	// Condition expression chunk should be printed with multi-line
-	offset := buf.Len()
-	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, offset)
+	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, stmt.Nest*f.conf.IndentWidth)
 	if strings.Contains(chunk, "\n") {
 		buf.WriteString(
 			fmt.Sprintf(
-				"\n%s%s%s\n",
-				f.indent(stmt.Nest),
-				strings.Repeat(" ", offset),
+				"\n%s%s\n",
+				f.indent(stmt.Nest+1),
 				chunk,
 			),
 		)
@@ -199,8 +202,8 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 
 	buf.WriteString(f.formatBlockStatement(stmt.Consequence))
 	for _, a := range stmt.Another {
-		// If leading comments exists, keyword should be placed with line-feed
-		if len(a.Leading) > 0 {
+		// If leading comments exists of configuration is enabled, keyword should be placed with line-feed
+		if len(a.Leading) > 0 || f.conf.AlwaysNextLineElseIf {
 			buf.WriteString("\n")
 			buf.WriteString(f.formatComment(a.Leading, "\n", a.Nest))
 			buf.WriteString(f.indent(a.Nest))
@@ -213,14 +216,20 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 		if f.conf.ElseIf {
 			keyword = "else if"
 		}
-		chunk := f.formatExpression(a.Condition).ChunkedString(a.Nest, len(keyword)+2)
+		chunk := f.formatExpression(a.Condition).ChunkedString(a.Nest, a.Nest*f.conf.IndentWidth)
 		buf.WriteString(keyword + " (")
 		if strings.Contains(chunk, "\n") {
-			buf.WriteString("\n" + chunk + "\n")
+			buf.WriteString(
+				fmt.Sprintf(
+					"\n%s%s\n",
+					f.indent(a.Nest+1),
+					chunk,
+				),
+			)
+			buf.WriteString(f.indent(stmt.Nest) + ") ")
 		} else {
-			buf.WriteString(chunk)
+			buf.WriteString(chunk + ") ")
 		}
-		buf.WriteString(") ")
 		buf.WriteString(f.formatBlockStatement(a.Consequence))
 	}
 	if stmt.Alternative != nil {
@@ -256,10 +265,9 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 			buf.WriteString("default:\n")
 		}
 		buf.WriteString(f.formatCaseSectionStatements(c))
-		buf.WriteString("\n")
 	}
 	if len(stmt.Infix) > 0 {
-		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest))
+		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest+1))
 	}
 	buf.WriteString(f.indent(stmt.Meta.Nest))
 	buf.WriteString("}")
@@ -276,9 +284,10 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 			group.Lines = append(group.Lines, lines)
 			lines = Lines{}
 		}
+		// need to plus 1 to  nested indent because parser won't increase nest level
 		line := &Line{
-			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest),
-			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", stmt.GetMeta().Nest),
+			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest+1),
+			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", stmt.GetMeta().Nest+1),
 		}
 		if _, ok := stmt.(*ast.BreakStatement); ok {
 			line.Buffer = f.indent(stmt.GetMeta().Nest+1) + "break;"
@@ -303,7 +312,7 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 		buf.WriteString("fallthrough;")
 	}
 
-	return buf.String()
+	return trimMutipleLineFeeds(buf.String())
 }
 
 func (f *Formatter) formatRestartStatement() string {

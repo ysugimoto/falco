@@ -12,9 +12,13 @@ var (
 	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
 
+// Formatting value constants
 const (
-	IndentStyleSpace = "space"
-	IndentStyleTab   = "tab"
+	IndentStyleSpace  = "space"
+	IndentStyleTab    = "tab"
+	CommentStyleNone  = "none"
+	CommentStyleSlash = "slash"
+	CommentStyleSharp = "sharp"
 )
 
 type OverrideBackend struct {
@@ -67,9 +71,11 @@ type FormatConfig struct {
 	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
 	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
 	ElseIf                     bool   `yaml:"else_if" default:"false"`
+	AlwaysNextLineElseIf       bool   `yaml:"always_next_line_else_if" default:"false"`
 	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
 	SortDeclaration            bool   `yaml:"sort_declaration" defaul:"false"`
 	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
+	CommentStyle               string `yaml:"comment_style" default:"none"`
 }
 
 type Config struct {

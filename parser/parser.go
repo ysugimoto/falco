@@ -101,10 +101,12 @@ func (p *Parser) readPeek() {
 			continue
 		case token.COMMENT:
 			leading = append(leading, &ast.Comment{
-				Token:            t,
-				Value:            t.Literal,
-				PrefixedLineFeed: prefixedLineFeed,
+				Token:              t,
+				Value:              t.Literal,
+				PrefixedLineFeed:   prefixedLineFeed,
+				PreviousEmptyLines: previousEmptyLines,
 			})
+			previousEmptyLines = 0
 			continue
 		case token.LEFT_BRACE:
 			p.level++
