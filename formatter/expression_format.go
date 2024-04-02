@@ -7,6 +7,8 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
+// Format expressions.
+// Note that expressions may be chunked by limited line characters.
 func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
@@ -90,6 +92,7 @@ func (f *Formatter) formatRTime(expr *ast.RTime) string {
 
 // Combinated expressions
 
+// Format prefix expression like "!foo"
 func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
@@ -99,6 +102,8 @@ func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuf
 	return buf
 }
 
+// This map is used for the expression can be chunked or not.
+// Following operators must be printed on a single line, otherwise VCL will cause syntax error.
 var mustSingleOperators = map[string]struct{}{
 	"==": {},
 	"!=": {},
@@ -120,6 +125,7 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 		}
 	}
 
+	// If operator must be printed on a single line, add combinated string to ChunkBuffer
 	if _, ok := mustSingleOperators[operator]; ok {
 		buf.WriteString(
 			fmt.Sprintf(
@@ -130,7 +136,7 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 			),
 		)
 	} else {
-		// Can split to newline
+		// Otherwise, the exprssion can be printed to newline
 		buf.Merge(f.formatExpression(expr.Left))
 		if operator != "" {
 			buf.WriteString(operator)
@@ -140,6 +146,7 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 	return buf
 }
 
+// Format prefix expression like `if(req.http.Foo, "foo", "bar")`
 func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
 	var buf bytes.Buffer
 
@@ -154,6 +161,7 @@ func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
 	return buf.String()
 }
 
+// Format parenthesis surrounded expression like `(req.http.Foo)`
 func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
@@ -164,6 +172,7 @@ func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkB
 	return buf
 }
 
+// Format function call expression like `regsuball(req.http.Foo, ".*", "$1")`
 func (f *Formatter) formatFunctionCallExpression(expr *ast.FunctionCallExpression) string {
 	var buf bytes.Buffer
 

@@ -8,6 +8,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
+// Format acl declaration
 func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration {
 	group := &GroupedLines{}
 	lines := DelclarationPropertyLines{}
@@ -59,6 +60,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 	}
 }
 
+// Format backend declaration
 func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Declaration {
 	var buf bytes.Buffer
 
@@ -77,6 +79,7 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Decl
 	}
 }
 
+// Format backend properties with align property names, trailing comment if needed
 func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLevel int) string {
 	group := &GroupedLines{}
 	lines := DelclarationPropertyLines{}
@@ -103,6 +106,7 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 			line.Value = "{\n"
 			line.Value += f.formatBackendProperties(po.Values, nestLevel+1)
 			line.Value += f.indent(nestLevel) + "}"
+			// probe property is object, semicolon is not needed
 			line.isObject = true
 		} else {
 			line.Value = f.formatExpression(prop.Value).ChunkedString(prop.Nest, len(line.Key))
@@ -130,6 +134,7 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 	return group.String()
 }
 
+// Format director declaration
 func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *Declaration {
 	group := &GroupedLines{}
 	lines := DelclarationPropertyLines{}
@@ -162,6 +167,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 				line.Key += fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value))
 			}
 			line.Key += "}"
+			// Backend property is object, semicolon is not needed
 			line.isObject = true
 		case *ast.DirectorProperty:
 			line.Key += "." + t.Key.Value
@@ -203,6 +209,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 	}
 }
 
+// Format table declaration
 func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declaration {
 	var buf bytes.Buffer
 
@@ -225,6 +232,7 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declarat
 	}
 }
 
+// Format table declaration
 func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	group := &GroupedLines{}
 	lines := DelclarationPropertyLines{}
@@ -269,6 +277,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	return group.String()
 }
 
+// Format penaltybox delclaration
 func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) *Declaration {
 	var buf bytes.Buffer
 
@@ -289,6 +298,7 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 	}
 }
 
+// Format ratecounter delclaration
 func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) *Declaration {
 	var buf bytes.Buffer
 
@@ -309,6 +319,7 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 	}
 }
 
+// Format subroutine declaration
 func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) *Declaration {
 	var buf bytes.Buffer
 

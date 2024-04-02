@@ -8,6 +8,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
+// Format VCL statements
 func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 	if block, ok := stmt.(*ast.BlockStatement); ok {
 		return &Line{
@@ -89,6 +90,7 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 	return line
 }
 
+// Format import statement
 func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
 	var buf bytes.Buffer
 
@@ -99,6 +101,7 @@ func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
 	return buf.String()
 }
 
+// Format include statement
 func (f *Formatter) formatIncludeStatement(stmt *ast.IncludeStatement) string {
 	var buf bytes.Buffer
 
@@ -109,6 +112,8 @@ func (f *Formatter) formatIncludeStatement(stmt *ast.IncludeStatement) string {
 	return buf.String()
 }
 
+// Format block statement.
+// This method will be called from subroutine, if, else-if formatting
 func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	group := &GroupedLines{}
 	lines := Lines{}
@@ -141,6 +146,7 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	return trimMutipleLineFeeds(buf.String())
 }
 
+// Format delclare local varialbe statement
 func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 	var buf bytes.Buffer
 
@@ -151,6 +157,7 @@ func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 	return buf.String()
 }
 
+// Format set statement
 func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
 	var buf bytes.Buffer
 
@@ -162,6 +169,7 @@ func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
 	return buf.String()
 }
 
+// Format unset statement
 func (f *Formatter) formatUnsetStatement(stmt *ast.UnsetStatement) string {
 	var buf bytes.Buffer
 
@@ -171,21 +179,29 @@ func (f *Formatter) formatUnsetStatement(stmt *ast.UnsetStatement) string {
 	return buf.String()
 }
 
+// Format remove statement.
 func (f *Formatter) formatRemoveStatement(stmt *ast.RemoveStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("remove " + stmt.Ident.Value)
+	// The "remove" statement is alias of "unset" statement,
+	// so it could replaced to unset by configuration
+	if f.conf.ShouldUseUnset {
+		buf.WriteString("unset " + stmt.Ident.Value)
+	} else {
+		buf.WriteString("remove " + stmt.Ident.Value)
+	}
 	buf.WriteString(";")
 
 	return buf.String()
 }
 
+// Format if statement
 func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	var buf bytes.Buffer
 
 	buf.WriteString(stmt.Keyword + " (")
 
-	// Condition expression chunk should be printed with multi-line
+	// Condition expression chunk string may be printed with multi-lines.
 	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, stmt.Nest*f.conf.IndentWidth)
 	if strings.Contains(chunk, "\n") {
 		buf.WriteString(
@@ -201,14 +217,17 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	}
 
 	buf.WriteString(f.formatBlockStatement(stmt.Consequence))
+
+	// else if, elseif, elsif
 	for _, a := range stmt.Another {
-		// If leading comments exists of configuration is enabled, keyword should be placed with line-feed
+		// If leading comments exists or AlwaysNextLineElseIf configuration is enabled,
+		// The keyword should be printed on the next line.
 		if len(a.Leading) > 0 || f.conf.AlwaysNextLineElseIf {
 			buf.WriteString("\n")
 			buf.WriteString(f.formatComment(a.Leading, "\n", a.Nest))
 			buf.WriteString(f.indent(a.Nest))
 		} else {
-			// Otherwise, write one whitespace characeter
+			// Otherwise, write with whitespace characeter
 			buf.WriteString(" ")
 		}
 
@@ -232,8 +251,10 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 		}
 		buf.WriteString(f.formatBlockStatement(a.Consequence))
 	}
+
+	// else
 	if stmt.Alternative != nil {
-		if len(stmt.Alternative.Leading) > 0 {
+		if len(stmt.Alternative.Leading) > 0 || f.conf.AlwaysNextLineElseIf {
 			buf.WriteString("\n")
 			buf.WriteString(f.formatComment(stmt.Alternative.Leading, "\n", stmt.Alternative.Nest))
 			buf.WriteString(f.indent(stmt.Alternative.Nest))
@@ -247,6 +268,7 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	return buf.String()
 }
 
+// Format switch statement
 func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 	var buf bytes.Buffer
 
@@ -275,6 +297,7 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 	return buf.String()
 }
 
+// Format case statement inside switch statement
 func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 	group := &GroupedLines{}
 	lines := Lines{}
@@ -315,6 +338,7 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 	return trimMutipleLineFeeds(buf.String())
 }
 
+// Format restart statement
 func (f *Formatter) formatRestartStatement() string {
 	var buf bytes.Buffer
 
@@ -323,6 +347,7 @@ func (f *Formatter) formatRestartStatement() string {
 	return buf.String()
 }
 
+// Format esi statement
 func (f *Formatter) formatEsiStatement() string {
 	var buf bytes.Buffer
 
@@ -331,6 +356,7 @@ func (f *Formatter) formatEsiStatement() string {
 	return buf.String()
 }
 
+// Format add statement
 func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
 	var buf bytes.Buffer
 
@@ -342,6 +368,7 @@ func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
 	return buf.String()
 }
 
+// Format call statement
 func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 	var buf bytes.Buffer
 
@@ -351,10 +378,12 @@ func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 	return buf.String()
 }
 
+// Fromat error statement
 func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 	var buf bytes.Buffer
 
 	buf.WriteString("error " + f.formatExpression(stmt.Code).String())
+	// argument is arbitrary
 	if stmt.Argument != nil {
 		buf.WriteString(" " + f.formatExpression(stmt.Argument).String())
 	}
@@ -363,6 +392,7 @@ func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 	return buf.String()
 }
 
+// Format log statement
 func (f *Formatter) formatLogStatement(stmt *ast.LogStatement) string {
 	var buf bytes.Buffer
 
@@ -373,6 +403,7 @@ func (f *Formatter) formatLogStatement(stmt *ast.LogStatement) string {
 	return buf.String()
 }
 
+// Format return statement
 func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 	var buf bytes.Buffer
 
@@ -380,6 +411,7 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 	if stmt.ReturnExpression != nil {
 		prefix := " "
 		suffix := ""
+		// If ReturnStatementParenthesis is enabled, must be surrounded by parenthesis
 		if f.conf.ReturnStatementParenthesis {
 			prefix = " ("
 			suffix = ")"
@@ -393,6 +425,7 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 	return buf.String()
 }
 
+// Format synthetic statement
 func (f *Formatter) formatSyntheticStatement(stmt *ast.SyntheticStatement) string {
 	var buf bytes.Buffer
 
@@ -403,6 +436,7 @@ func (f *Formatter) formatSyntheticStatement(stmt *ast.SyntheticStatement) strin
 	return buf.String()
 }
 
+// Format synthetic.base64 statement
 func (f *Formatter) formatSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) string {
 	var buf bytes.Buffer
 
@@ -413,6 +447,7 @@ func (f *Formatter) formatSyntheticBase64Statement(stmt *ast.SyntheticBase64Stat
 	return buf.String()
 }
 
+// Format goto statement
 func (f *Formatter) formatGotoStatement(stmt *ast.GotoStatement) string {
 	var buf bytes.Buffer
 
@@ -422,6 +457,7 @@ func (f *Formatter) formatGotoStatement(stmt *ast.GotoStatement) string {
 	return buf.String()
 }
 
+// Format goto destination statement
 func (f *Formatter) formatGotoDestinationStatement(stmt *ast.GotoDestinationStatement) string {
 	var buf bytes.Buffer
 
@@ -430,6 +466,7 @@ func (f *Formatter) formatGotoDestinationStatement(stmt *ast.GotoDestinationStat
 	return buf.String()
 }
 
+// Format function calling statement
 func (f *Formatter) formatFunctionCallStatement(stmt *ast.FunctionCallStatement) string {
 	var buf bytes.Buffer
 

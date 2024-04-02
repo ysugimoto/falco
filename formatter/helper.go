@@ -1,14 +1,30 @@
 package formatter
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+
+	"github.com/ysugimoto/falco/config"
+)
 
 var multiLineFeedRegex = regexp.MustCompile(`\n{3,}`)
 var replace = "\n\n"
 
+// Replace over three line-feed characters to two characters
 func trimMutipleLineFeeds(lines string) string {
 	return multiLineFeedRegex.ReplaceAllString(lines, replace)
 }
 
+// Calculate indent strings from configuration
+func indent(conf *config.FormatConfig, level int) string {
+	c := " " // default as whitespace
+	if conf.IndentStyle == config.IndentStyleTab {
+		c = "\t"
+	}
+	return strings.Repeat(c, level*conf.IndentWidth)
+}
+
+// Format comment line (ignore inline comment)
 func formatCommentCharacter(comment string, char rune) string {
 	bs := []rune(comment)
 	// Sharp-style comment

@@ -10,22 +10,31 @@ import (
 	"github.com/ysugimoto/falco/config"
 )
 
+// Formatter is struct for formatting input VCL.
 type Formatter struct {
+	// Defined at config package, all built-in formatting rules includes with default values
 	conf *config.FormatConfig
 }
 
+// Create Formatter pointer
 func New(conf *config.FormatConfig) *Formatter {
 	return &Formatter{
 		conf: conf,
 	}
 }
 
+// Create ChunkBuffer by passing provided configuration
 func (f *Formatter) chunkBuffer() *ChunkBuffer {
 	return newBuffer(f.conf)
 }
 
+// Do formatting.
+// Note that argument of vcl must be an AST-ed tree that is created by parser package.
+// It means parser should have all information about input VCL (comment, empty lines, etc...)
+// And of course input VCL must have a valid syntax.
 func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	decls := Declarations{}
+
 	for _, stmt := range vcl.Statements {
 		var decl *Declaration
 		trailingNode := stmt
@@ -79,11 +88,11 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 		decls = append(decls, decl)
 	}
 
+	// If all declarations should be sorted, do it
 	if f.conf.SortDeclaration {
 		decls.Sort()
 	}
 
-	// output
 	var buf bytes.Buffer
 
 	for i, decl := range decls {
@@ -100,14 +109,12 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	return bytes.NewReader(buf.Bytes())
 }
 
+// Calculate and crate ident strings from config (shorthand, without passing config)
 func (f *Formatter) indent(level int) string {
-	c := " " // default as whitespace
-	if f.conf.IndentStyle == config.IndentStyleTab {
-		c = "\t"
-	}
-	return strings.Repeat(c, level*f.conf.IndentWidth)
+	return indent(f.conf, level)
 }
 
+// Calculate trailing comments if exists
 func (f *Formatter) trailing(trailing ast.Comments) string {
 	var c string
 
@@ -119,6 +126,7 @@ func (f *Formatter) trailing(trailing ast.Comments) string {
 	return c
 }
 
+// Format leading/infix/trailing comments
 func (f *Formatter) formatComment(comments ast.Comments, sep string, level int) string {
 	if len(comments) == 0 {
 		return ""

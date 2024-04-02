@@ -6,12 +6,20 @@ import (
 	"sort"
 )
 
+// Alignable is an interface that should implements Align() and String()  method
+type Alignable interface {
+	Align()
+	String() string
+}
+
+// Line represents single-line string including leading/trailing comment string
 type Line struct {
 	Buffer   string
 	Leading  string
 	Trailing string
 }
 
+// Get Line string
 func (l Line) String() string {
 	var buf bytes.Buffer
 
@@ -22,13 +30,10 @@ func (l Line) String() string {
 	return buf.String()
 }
 
-type Alignable interface {
-	Align()
-	String() string
-}
-
+// Type alias for slice of Line
 type Lines []*Line
 
+// Implements Alignable interface
 func (l Lines) Align() {
 	var maxLength int
 
@@ -46,6 +51,7 @@ func (l Lines) Align() {
 	}
 }
 
+// Implements Alignable interface
 func (l Lines) String() string {
 	var buf bytes.Buffer
 
@@ -57,8 +63,11 @@ func (l Lines) String() string {
 	return buf.String()
 }
 
+// Check satisfieng Alignable interface
 var _ Alignable = (*Lines)(nil)
 
+// DelclarationPropertyLine represents a single line of declaration properties.
+// This struct is used for acl, backend, director, and table properties
 type DelclarationPropertyLine struct {
 	Key          string
 	Operator     string
@@ -70,18 +79,17 @@ type DelclarationPropertyLine struct {
 	EndCharacter string
 }
 
-func (l DelclarationPropertyLine) isIgnoreTarget() bool {
-	// Ignore objective property
-	return l.isObject
-}
-
+// Type alias for slice of DelclarationPropertyLine
 type DelclarationPropertyLines []*DelclarationPropertyLine
 
+// Declaration property name will be aligned from configuration
+// so need to implement AlignKey() method to do it
 func (l DelclarationPropertyLines) AlignKey() {
 	var maxLength int
 
 	for i := range l {
-		if l[i].isIgnoreTarget() {
+		// Ignore the alignment target for object (e.g director backend, probe property in backend)
+		if l[i].isObject {
 			continue
 		}
 		if len(l[i].Key) > maxLength {
@@ -96,11 +104,23 @@ func (l DelclarationPropertyLines) AlignKey() {
 	}
 }
 
+// DelclarationPropertyLines could be sorted by name alphabetically
+func (l DelclarationPropertyLines) Sort() {
+	sort.Slice(l, func(i, j int) bool {
+		// Ignore sorting target for object (e.g director backend, probe property in backend)
+		if l[i].isObject {
+			return false
+		}
+		return l[i].Key < l[j].Key
+	})
+}
+
+// Implement Alignable interface
 func (l DelclarationPropertyLines) Align() {
 	var maxLength int
 
 	for i := range l {
-		if l[i].isIgnoreTarget() {
+		if l[i].isObject {
 			continue
 		}
 		v := l[i].Key
@@ -118,15 +138,7 @@ func (l DelclarationPropertyLines) Align() {
 	}
 }
 
-func (l DelclarationPropertyLines) Sort() {
-	sort.Slice(l, func(i, j int) bool {
-		if l[i].isObject {
-			return false
-		}
-		return l[i].Key < l[j].Key
-	})
-}
-
+// Implement Alignable interface
 func (l DelclarationPropertyLines) String() string {
 	var buf bytes.Buffer
 
@@ -149,18 +161,32 @@ func (l DelclarationPropertyLines) String() string {
 	return buf.String()
 }
 
-var _ Alignable = (*Lines)(nil)
+// Check satisfieng Alignable interface
+var _ Alignable = (*DelclarationPropertyLines)(nil)
 
+// GroupedLines represents grouped lines
+// "grouped" means that lines are separated by empty line, for example:
+//
+// set req.http.Foo = "bar"; // group 1
+// set req.http.Foo = "baz"; // group 1
+//
+// set req.http.Bar = "bar"; // group 2
+// set req.http.Bar = "baz"; // group 2
+//
+// These group should be aligned for each group.
 type GroupedLines struct {
+	// Accept Alignable interface in order to append Lines or DelclarationPropertyLines
 	Lines []Alignable
 }
 
+// GroupedLines also satisfies Alignable interface
 func (g *GroupedLines) Align() {
 	for i := range g.Lines {
 		g.Lines[i].Align()
 	}
 }
 
+// GroupedLines also satisfies Alignable interface
 func (g *GroupedLines) String() string {
 	var buf bytes.Buffer
 
@@ -174,6 +200,7 @@ func (g *GroupedLines) String() string {
 	return buf.String()
 }
 
+// Check satisfieng Alignable interface
 var _ Alignable = (*GroupedLines)(nil)
 
 // DeclarationType represents formatted line name - can present on root scope

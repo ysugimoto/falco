@@ -76,6 +76,7 @@ type FormatConfig struct {
 	SortDeclaration            bool   `yaml:"sort_declaration" defaul:"false"`
 	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
 	CommentStyle               string `yaml:"comment_style" default:"none"`
+	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
 }
 
 type Config struct {
