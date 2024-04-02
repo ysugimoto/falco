@@ -74,6 +74,9 @@ func TestConfigFromCLI(t *testing.T) {
 			AlignDeclarationProperty:   false,
 			ElseIf:                     false,
 			ReturnStatementParenthesis: true,
+			SortDeclaration:            false,
+			AlignTrailingComment:       false,
+			CommentStyle:               "none",
 		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}
