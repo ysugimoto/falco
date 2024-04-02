@@ -49,7 +49,7 @@ Supporting rules are described the following table and sections.
 | Name (configuration field)  | Type   | Default | Description                                                                                    |
 |:----------------------------|:------:|:-------:|------------------------------------------------------------------------------------------------|
 | indent_width                | INT    | 2       | Specify indent width                                                                           |
-| indent_style                | STRING | space   | Specify indent style character. `space(whitespace)` or `tab(\t)` is accepted                   |
+| indent_style                | STRING | space   | Specify indent style character. Either `space(whitespace)` or `tab(\t)` is accepted            |
 | trailing_comment_width      | INT    | 2       | Specify space size for trailing comment                                                        |
 | line_width                  | INT    | 120     | Specify max characters for each line. The overflowed characters are displayed at the next line |
 | explicit_string_concat      | BOOL   | false   | Explicitly write string concatenation operator `+` between expressions                         |
@@ -57,6 +57,10 @@ Supporting rules are described the following table and sections.
 | align_declaration_property  | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
 | else_if                     | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
 | return_statement_parentheis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
+| sort_declaration            | BOOL   | false   | Sort root declaration by specific order                                                        |
+| align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
+| comment_style               | BOOL   | false   | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
+| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statemnt                                               |
 
 
 ### Indent Width
@@ -134,8 +138,11 @@ sub vcl_recv {
 
 Specify max characters for each line. The overflowed characters are printed at the next line with the same ident.
 
-[!IMPORTANT]
+```
 Inserting line-feed is judged for each expression. It means formatter does not split in the middle of a sentence.
+```
+
+You can prevent this formatting rule by providing `-1` value to this configuration
 
 ```vcl
 sub vcl_recv {
@@ -336,10 +343,171 @@ sub vcl_recv {
 }
 ```
 
-Formatted (recommend: true):
+Formatted (return_statement_parenthesis: true):
 
 ```vcl
 sub vcl_recv {
   return (lookup);
 }
 ```
+
+---
+
+## Sort Declaration
+
+**default:false**
+
+If true, sort root declarations by VCL directive order:
+
+1. import/include statements
+2. ACL
+3. Backend
+4. Director
+5. Table
+6. vcl_recv
+7. vcl_hash
+8. vcl_hit
+9. vcl_miss
+10. vcl_pass
+11. vcl_fetch
+12. vcl_error
+13. vcl_deliver
+14. vcl_log
+15. user-defined subroutines
+
+```vcl
+sub vcl_fetch {
+  ...
+}
+
+sub vcl_deliver {
+  ...
+}
+
+sub vcl_recv {
+  ...
+}
+```
+
+Formatted (sort_declaration: true):
+
+```vcl
+sub vcl_recv {
+  ...
+}
+
+sub vcl_fetch {
+  ...
+}
+
+sub vcl_deliver {
+  ...
+}
+```
+
+---
+
+## Align Trailing Comment
+
+**default:false**
+
+If true, align the trailing comment for each statement/declaration line:
+
+```vcl
+sub vcl_recv {
+  set req.http.X-Forwarded-Host = "example.com";  // request comes from example.com
+  set req.backend = example_com;  // set backend
+}
+```
+
+Formatted (align_trailing_comment: true):
+
+
+```vcl
+sub vcl_recv {
+  set req.http.X-Forwarded-Host = "example.com";  // request comes from example.com
+  set req.backend = example_com;                  // set backend
+}
+```
+
+---
+
+## Always Next Line ElseIf
+
+**default:false**
+
+If true, the `else if` and `else` statement prints to the next line.
+
+```vcl
+sub vcl_recv {
+  if (req.http.Foo) {
+    ...
+  } else if (req.http.Bar) {
+    ...
+  } else {
+    ...
+  }
+}
+```
+
+Formatted (always_nest_line_else_if: true):
+
+```vcl
+sub vcl_recv {
+  if (req.http.Foo) {
+    ...
+  }
+  else if (req.http.Bar) {
+    ...
+  }
+  else {
+    ...
+  }
+}
+```
+
+---
+
+## Comment Style
+
+**default:none**
+
+Define the comment style. `sharp` value will use `#` character, or `slash` value will use `/` character.
+Note that the inline style comment `/* ... */` does not replace.
+
+```vcl
+// Some leading comment
+sub vcl_recv {
+}
+```
+
+Formatted (comment_style: sharp):
+
+```vcl
+## Some leading comment
+sub vcl_recv {
+}
+```
+
+---
+
+## Should Use Unset
+
+**default:false**
+
+The `remove` statement is alias of `unset` statement, it can be replaced if this rule is true.
+
+```vcl
+sub vcl_recv {
+  remove req.http.Foo;
+}
+```
+
+Formatted (should_use_unset: true):
+
+```vcl
+sub vcl_recv {
+  unset req.http.Foo;
+}
+```
+

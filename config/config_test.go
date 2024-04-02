@@ -68,7 +68,6 @@ func TestConfigFromCLI(t *testing.T) {
 			TrailingCommentWidth:       2,
 			LineWidth:                  120,
 			IndentStyle:                "space",
-			BoolUpperCase:              false,
 			ExplicitStringConat:        false,
 			SortDeclarationProperty:    false,
 			AlignDeclarationProperty:   false,
