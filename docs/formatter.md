@@ -59,7 +59,7 @@ Supporting rules are described the following table and sections.
 | return_statement_parentheis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
 | sort_declaration            | BOOL   | false   | Sort root declaration by specific order                                                        |
 | align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
-| comment_style               | BOOL   | false   | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
+| comment_style               | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
 | should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statemnt                                               |
 
 
