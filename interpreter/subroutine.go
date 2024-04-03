@@ -20,20 +20,47 @@ func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.Subrou
 	return nil
 }
 
+func (i *Interpreter) subroutineInStack(sub *ast.SubroutineDeclaration) bool {
+	for _, s := range i.Stack {
+		if s.Subroutine == sub {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *Interpreter) pushStackFrame(sub *ast.SubroutineDeclaration) {
+	sf := &StackFrame{
+		Locals:     variable.LocalVariables{},
+		Regex:      make(map[string]*value.String),
+		Subroutine: sub,
+	}
+	i.Stack = append(i.Stack, sf)
+	i.StackPointer = sf
+	i.ctx.RegexMatchedValues = sf.Regex
+}
+
+func (i *Interpreter) popStackFrame() {
+	var sf *StackFrame
+	sf, i.Stack = i.Stack[len(i.Stack)-1], i.Stack[:len(i.Stack)-1]
+	if len(i.Stack) > 0 {
+		i.StackPointer = i.Stack[len(i.Stack)-1]
+	} else {
+		i.StackPointer = nil
+	}
+	i.ctx.SubroutineCalls[sf.Subroutine.Name.Value]++
+	i.ctx.RegexMatchedValues = sf.Regex
+}
+
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
+	if i.subroutineInStack(sub) {
+		return NONE, errors.WithStack(
+			errors.Errorf("Recursion detected, subroutine %s already in stack", sub.Name.Value),
+		)
+	}
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
-
-	// Store the current values and restore after subroutine has ended
-	regex := i.ctx.RegexMatchedValues
-	local := i.localVars
-	i.ctx.RegexMatchedValues = make(map[string]*value.String)
-	i.localVars = variable.LocalVariables{}
-
-	defer func() {
-		i.ctx.RegexMatchedValues = regex
-		i.localVars = local
-		i.ctx.SubroutineCalls[sub.Name.Value]++
-	}()
+	i.pushStackFrame(sub)
+	defer i.popStackFrame()
 
 	// Try to extract fastly reserved subroutine macro
 	if err := i.extractBoilerplateMacro(sub); err != nil {
@@ -52,19 +79,14 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 
 // nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
+	if i.subroutineInStack(sub) {
+		return value.Null, NONE, errors.WithStack(
+			errors.Errorf("Recursion detected, subroutine %s already in stack", sub.Name.Value),
+		)
+	}
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
-
-	// Store the current values and restore after subroutine has ended
-	regex := i.ctx.RegexMatchedValues
-	local := i.localVars
-	i.ctx.RegexMatchedValues = make(map[string]*value.String)
-	i.localVars = variable.LocalVariables{}
-
-	defer func() {
-		i.ctx.RegexMatchedValues = regex
-		i.localVars = local
-		i.ctx.SubroutineCalls[sub.Name.Value]++
-	}()
+	i.pushStackFrame(sub)
+	defer i.popStackFrame()
 
 	var err error
 	var debugState DebugState = ds

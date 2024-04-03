@@ -196,7 +196,7 @@ func (i *Interpreter) ProcessBlockStatement(
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
-	return i.localVars.Declare(stmt.Name.Value, stmt.ValueType.Value)
+	return i.StackPointer.Locals.Declare(stmt.Name.Value, stmt.ValueType.Value)
 }
 
 func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
@@ -213,7 +213,7 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	}
 
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
+		err = i.StackPointer.Locals.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
 	} else {
 		err = i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right)
 	}
@@ -252,7 +252,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	var err error
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Unset(stmt.Ident.Value)
+		err = i.StackPointer.Locals.Unset(stmt.Ident.Value)
 	} else {
 		err = i.vars.Unset(i.ctx.Scope, stmt.Ident.Value)
 	}
@@ -267,7 +267,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	// Alias of unset
 	var err error
 	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Unset(stmt.Ident.Value)
+		err = i.StackPointer.Locals.Unset(stmt.Ident.Value)
 	} else {
 		err = i.vars.Unset(i.ctx.Scope, stmt.Ident.Value)
 	}

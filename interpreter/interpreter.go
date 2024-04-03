@@ -22,10 +22,15 @@ import (
 	"github.com/ysugimoto/falco/parser"
 )
 
+type StackFrame struct {
+	Locals     variable.LocalVariables
+	Regex      map[string]*value.String
+	Subroutine *ast.SubroutineDeclaration
+}
+
 type Interpreter struct {
-	vars      variable.Variable
-	localVars variable.LocalVariables
-	lock      sync.Mutex
+	vars variable.Variable
+	lock sync.Mutex
 
 	options []context.Option
 
@@ -36,15 +41,25 @@ type Interpreter struct {
 	IdentResolver func(v string) value.Value
 
 	TestingState State
+
+	Stack        []*StackFrame
+	StackPointer *StackFrame
 }
 
 func New(options ...context.Option) *Interpreter {
+	stack := []*StackFrame{
+		{
+			Locals: variable.LocalVariables{},
+			Regex:  map[string]*value.String{},
+		},
+	}
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),
-		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
+		Stack:        stack,
+		StackPointer: stack[0],
 	}
 }
 

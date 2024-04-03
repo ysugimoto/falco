@@ -36,7 +36,7 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 	} else if _, ok := i.ctx.Ratecounters[val]; ok {
 		return &value.Ident{Value: val, Literal: true}, nil
 	} else if strings.HasPrefix(val, "var.") {
-		if v, err := i.localVars.Get(val); err != nil {
+		if v, err := i.StackPointer.Locals.Get(val); err != nil {
 			return value.Null, errors.WithStack(err)
 		} else {
 			return v, nil

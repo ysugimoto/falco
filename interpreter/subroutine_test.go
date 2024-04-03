@@ -44,6 +44,17 @@ func TestSubroutine(t *testing.T) {
 			}`,
 			isError: true,
 		},
+		{
+			name: "Recursion produces an error not a panic",
+			vcl: `sub func {
+				call func();
+			}
+
+			sub vcl_recv {
+				call func();
+			}`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -58,6 +69,7 @@ func TestFunctionSubroutine(t *testing.T) {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
+		isError    bool
 	}{
 		{
 			name: "Functional subroutine returns a value",
@@ -134,11 +146,22 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Int-Value": &value.String{Value: "2"},
 			},
 		},
+		{
+			name: "Recursion produces an error not a panic",
+			vcl: `sub func STRING {
+				return func();
+			}
+
+			sub vcl_recv {
+				set req.http.foo = func();
+			}`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, false)
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
 	}
 }

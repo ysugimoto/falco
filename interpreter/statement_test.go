@@ -95,7 +95,7 @@ func TestDeclareStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		ip := New(nil)
-		err := ip.localVars.Declare(tt.decl.Name.Value, tt.decl.ValueType.Value)
+		err := ip.StackPointer.Locals.Declare(tt.decl.Name.Value, tt.decl.ValueType.Value)
 		if err != nil {
 			if !tt.isError {
 				t.Errorf("%s: unexpected error returned: %s", tt.name, err)
@@ -103,7 +103,7 @@ func TestDeclareStatement(t *testing.T) {
 			continue
 		}
 
-		v, err := ip.localVars.Get(tt.decl.Name.Value)
+		v, err := ip.StackPointer.Locals.Get(tt.decl.Name.Value)
 		if err != nil {
 			t.Errorf("%s: %s varible must be declared: %s", tt.name, tt.decl.Name.Value, err)
 			continue
@@ -191,7 +191,7 @@ func TestSetStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		ip := New(nil)
-		if err := ip.localVars.Declare("var.foo", "INTEGER"); err != nil {
+		if err := ip.StackPointer.Locals.Declare("var.foo", "INTEGER"); err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
 
