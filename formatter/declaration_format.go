@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 )
@@ -324,6 +325,14 @@ func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration)
 	var buf bytes.Buffer
 
 	buf.WriteString("sub " + decl.Name.Value + " ")
+	// Functional Subroutine
+	if decl.ReturnType != nil {
+		buf.WriteString(strings.ToUpper(decl.ReturnType.Value) + " ")
+		f.isFunctionalSubroutine = true // flag turns on
+		defer func() {
+			f.isFunctionalSubroutine = false
+		}()
+	}
 	buf.WriteString(f.formatBlockStatement(decl.Block))
 
 	return &Declaration{

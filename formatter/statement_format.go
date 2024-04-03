@@ -411,8 +411,9 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 	if stmt.ReturnExpression != nil {
 		prefix := " "
 		suffix := ""
-		// If ReturnStatementParenthesis is enabled, must be surrounded by parenthesis
-		if f.conf.ReturnStatementParenthesis {
+		// If ReturnStatementParenthesis is enabled and inside functional subroutine,
+		// the return argument must be surrounded by parenthesis
+		if f.conf.ReturnStatementParenthesis && !f.isFunctionalSubroutine {
 			prefix = " ("
 			suffix = ")"
 		}

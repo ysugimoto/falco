@@ -534,3 +534,102 @@ sub vcl_recv {
 		})
 	}
 }
+
+func TestFunctionalSubroutne(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "basic formartting",
+			input: `sub boolfn BOOL {
+	return true;
+}`,
+			expect: `sub boolfn BOOL {
+  return true;
+}
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}
+
+func TestComplicatedExpressions(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "expression includes line comment",
+			input: `sub vcl_recv {
+	if (
+		// foo
+		req.http.foo == "bar"
+		// bar
+		&& req.http.bar == "baz"
+	) {
+		esi;
+	} elseif (req.http.foo) {
+		esi;
+	}
+}`,
+			expect: `sub vcl_recv {
+  if (
+    // foo
+    req.http.foo == "bar"
+    // bar
+    && req.http.bar == "baz"
+  ) {
+    esi;
+  } elseif (req.http.foo) {
+    esi;
+  }
+}
+`,
+		},
+		{
+			name: "grouped expression",
+			input: `sub vcl_recv {
+	if (
+		(req.http.foo == "bar" && req.http.bar == "baz") || (req.http.A == "B" && req.http.C == "D")
+	) {
+		esi;
+	} elseif (req.http.foo) {
+		esi;
+	}
+}`,
+			expect: `sub vcl_recv {
+  if (
+    (req.http.foo == "bar" && req.http.bar == "baz") ||
+    (req.http.A == "B" && req.http.C == "D")
+  ) {
+    esi;
+  } elseif (req.http.foo) {
+    esi;
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            70,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}

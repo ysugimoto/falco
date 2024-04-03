@@ -14,7 +14,7 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 
 	// leading comment
 	if v := f.formatComment(expr.GetMeta().Leading, "", 0); v != "" {
-		buf.WriteString(v + " ")
+		buf.WriteComment(v)
 	}
 
 	switch t := expr.(type) {
@@ -49,7 +49,7 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 
 	// trailing comment
 	if v := f.formatComment(expr.GetMeta().Trailing, "", 0); v != "" {
-		buf.WriteString(" " + v)
+		buf.WriteComment(v)
 	}
 
 	return buf
@@ -102,19 +102,6 @@ func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuf
 	return buf
 }
 
-// This map is used for the expression can be chunked or not.
-// Following operators must be printed on a single line, otherwise VCL will cause syntax error.
-var mustSingleOperators = map[string]struct{}{
-	"==": {},
-	"!=": {},
-	"~":  {},
-	"!~": {},
-	">":  {},
-	"<":  {},
-	">=": {},
-	"<=": {},
-}
-
 func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
@@ -125,24 +112,12 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 		}
 	}
 
-	// If operator must be printed on a single line, add combinated string to ChunkBuffer
-	if _, ok := mustSingleOperators[operator]; ok {
-		buf.WriteString(
-			fmt.Sprintf(
-				"%s %s %s",
-				f.formatExpression(expr.Left).String(),
-				operator,
-				f.formatExpression(expr.Right).String(),
-			),
-		)
-	} else {
-		// Otherwise, the exprssion can be printed to newline
-		buf.Merge(f.formatExpression(expr.Left))
-		if operator != "" {
-			buf.WriteString(operator)
-		}
-		buf.Merge(f.formatExpression(expr.Right))
+	buf.Merge(f.formatExpression(expr.Left))
+	if operator != "" {
+		buf.WriteOperator(operator)
 	}
+	buf.Merge(f.formatExpression(expr.Right))
+
 	return buf
 }
 
@@ -165,9 +140,9 @@ func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
 func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
-	buf.WriteString("(")
+	buf.WriteOperator("(")
 	buf.Merge(f.formatExpression(expr.Right))
-	buf.WriteString(")")
+	buf.WriteOperator(")")
 
 	return buf
 }
