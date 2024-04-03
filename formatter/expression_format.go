@@ -14,42 +14,42 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 
 	// leading comment
 	if v := f.formatComment(expr.GetMeta().Leading, "", 0); v != "" {
-		buf.WriteComment(v)
+		buf.Write(v, Comment)
 	}
 
 	switch t := expr.(type) {
 	// Primitive types return string
 	case *ast.Ident:
-		buf.WriteString(f.formatIdent(t))
+		buf.Write(f.formatIdent(t), Token)
 	case *ast.IP:
-		buf.WriteString(f.formatIP(t))
+		buf.Write(f.formatIP(t), Token)
 	case *ast.Boolean:
-		buf.WriteString(f.formatBoolean(t))
+		buf.Write(f.formatBoolean(t), Token)
 	case *ast.Integer:
-		buf.WriteString(f.formatInteger(t))
+		buf.Write(f.formatInteger(t), Token)
 	case *ast.String:
-		buf.WriteString(f.formatString(t))
+		buf.Write(f.formatString(t), Token)
 	case *ast.Float:
-		buf.WriteString(f.formatFloat(t))
+		buf.Write(f.formatFloat(t), Token)
 	case *ast.RTime:
-		buf.WriteString(f.formatRTime(t))
+		buf.Write(f.formatRTime(t), Token)
 	case *ast.FunctionCallExpression:
-		buf.WriteString(f.formatFunctionCallExpression(t))
+		buf.Write(f.formatFunctionCallExpression(t), Token)
 	case *ast.IfExpression:
-		buf.WriteString(f.formatIfExpression(t))
+		buf.Write(f.formatIfExpression(t), Token)
 
 	// Combinated expressions return *ChunkBuffer to merge
 	case *ast.PrefixExpression:
-		buf.Merge(f.formatPrefixExpression(t))
+		buf.Append(f.formatPrefixExpression(t))
 	case *ast.GroupedExpression:
-		buf.Merge(f.formatGroupedExpression(t))
+		buf.Append(f.formatGroupedExpression(t))
 	case *ast.InfixExpression:
-		buf.Merge(f.formatInfixExpression(t))
+		buf.Append(f.formatInfixExpression(t))
 	}
 
 	// trailing comment
 	if v := f.formatComment(expr.GetMeta().Trailing, "", 0); v != "" {
-		buf.WriteComment(v)
+		buf.Write(v, Comment)
 	}
 
 	return buf
@@ -96,8 +96,8 @@ func (f *Formatter) formatRTime(expr *ast.RTime) string {
 func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
-	buf.WriteString(expr.Operator)
-	buf.Merge(f.formatExpression(expr.Right))
+	buf.Write(expr.Operator, Operator)
+	buf.Append(f.formatExpression(expr.Right))
 
 	return buf
 }
@@ -112,11 +112,11 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 		}
 	}
 
-	buf.Merge(f.formatExpression(expr.Left))
+	buf.Append(f.formatExpression(expr.Left))
 	if operator != "" {
-		buf.WriteOperator(operator)
+		buf.Write(operator, Operator)
 	}
-	buf.Merge(f.formatExpression(expr.Right))
+	buf.Append(f.formatExpression(expr.Right))
 
 	return buf
 }
@@ -140,9 +140,9 @@ func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
 func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
-	buf.WriteOperator("(")
-	buf.Merge(f.formatExpression(expr.Right))
-	buf.WriteOperator(")")
+	buf.Write("(", Group)
+	buf.Append(f.formatExpression(expr.Right))
+	buf.Write(")", Group)
 
 	return buf
 }

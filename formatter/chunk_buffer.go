@@ -20,16 +20,24 @@ var mustSingleOperators = map[string]struct{}{
 	"<=": {},
 }
 
+type ChunkType int
+
+const (
+	Token ChunkType = iota + 1
+	Comment
+	Operator
+	Group
+)
+
 // Chunk struct represents a piece of expression token
 type Chunk struct {
-	buffer     string
-	isComment  bool
-	isOperator bool
+	buffer string
+	Type   ChunkType
 }
 
 // isLineComment() returns true if chunk buffer is line comment that start with "#" or "//"
 func (c *Chunk) isLineComment() bool {
-	if !c.isComment {
+	if c.Type != Comment {
 		return false
 	}
 
@@ -66,31 +74,16 @@ func (c *ChunkBuffer) nextChunk() *Chunk {
 	return c.chunks[c.index]
 }
 
-// Merge buffers
-func (c *ChunkBuffer) Merge(nc *ChunkBuffer) {
+// Append buffers
+func (c *ChunkBuffer) Append(nc *ChunkBuffer) {
 	c.chunks = append(c.chunks, nc.chunks...)
 }
 
-// Write operator string to buffer
-func (c *ChunkBuffer) WriteOperator(op string) {
-	c.chunks = append(c.chunks, &Chunk{
-		buffer:     op,
-		isOperator: true,
-	})
-}
-
-// Write "comment" string to buffer
-func (c *ChunkBuffer) WriteComment(comment string) {
-	c.chunks = append(c.chunks, &Chunk{
-		buffer:    comment,
-		isComment: true,
-	})
-}
-
-// Write string to buffer - same as bytes.Buffer
-func (c *ChunkBuffer) WriteString(s string) {
+// Write buffer to buffer with ChunkType
+func (c *ChunkBuffer) Write(s string, t ChunkType) {
 	c.chunks = append(c.chunks, &Chunk{
 		buffer: s,
+		Type:   t,
 	})
 }
 
@@ -150,26 +143,29 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 			return strings.TrimSpace(buf.String())
 		}
 
-		switch {
-		// "//", "#" comment, need to print next line
-		case chunk.isLineComment():
-			buf.WriteString(c.chunkLineComment(state, chunk))
-		// infix or group operator
-		case chunk.isOperator:
-			// If group operator, inside expressions should be printed on the same line
-			if chunk.buffer == "(" {
-				if next := c.nextChunk(); next != nil {
-					buf.WriteString(c.chunkGroupOperator(state, next))
-				}
+		switch chunk.Type {
+		case Comment:
+			// "//", "#" comment, need to print next line
+			if chunk.isLineComment() {
+				buf.WriteString(c.chunkLineComment(state, chunk))
 				continue
 			}
+			buf.WriteString(c.chunkString(state, chunk.buffer))
+		// group operator
+		case Group:
+			// If group operator, inside expressions should be printed on the same line
+			if next := c.nextChunk(); next != nil {
+				buf.WriteString(c.chunkGroupOperator(state, next))
+			}
+		// infix operator
+		case Operator:
 			// Or, the operator is the member os mustSingleOperators, the expression must be printed on the same line
 			if _, ok := mustSingleOperators[chunk.buffer]; ok {
 				buf.WriteString(c.chunkInfixOperator(state, chunk))
 				continue
 			}
 			buf.WriteString(c.chunkString(state, chunk.buffer))
-		// Otherwise (token, inline comment), create chunk string
+		// Otherwise (token), create chunk string
 		default:
 			buf.WriteString(c.chunkString(state, chunk.buffer))
 		}
@@ -232,12 +228,14 @@ func (c *ChunkBuffer) chunkInfixOperator(state *ChunkState, chunk *Chunk) string
 			return c.chunkString(state, expr)
 		}
 
-		switch {
-		case next.isLineComment():
-			expr += next.buffer
-			expr += c.nextLine(state)
-			state.reset()
-		case next.isComment:
+		switch next.Type {
+		case Comment:
+			if next.isLineComment() {
+				expr += next.buffer
+				expr += c.nextLine(state)
+				state.reset()
+				continue
+			}
 			expr += " " + next.buffer
 		default:
 			expr += " " + next.buffer

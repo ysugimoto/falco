@@ -66,7 +66,7 @@ incididunt ut labore et dolore magna aliqua`,
 				IndentWidth: 2,
 			})
 			for _, c := range tt.input {
-				cb.WriteString(c)
+				cb.Write(c, Token)
 			}
 			chunk := cb.ChunkedString(0, 0)
 			if diff := cmp.Diff(tt.expect, chunk); diff != "" {
@@ -109,7 +109,7 @@ func TestChunkBufferInExpression(t *testing.T) {
 				IndentWidth: 2,
 			})
 			for _, c := range tt.input {
-				cb.WriteString(c)
+				cb.Write(c, Token)
 			}
 			chunk := cb.ChunkedString(0, buf.Len())
 			buf.WriteString(chunk)
