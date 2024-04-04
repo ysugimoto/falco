@@ -343,7 +343,7 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	}
 
 	// If could not via subroutine name, find by annotations
-	// typically defined is module file
+	// typically defined in module file
 	scopes := 0
 	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
@@ -368,9 +368,50 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 		}
 	}
 	if scopes == 0 {
-		return context.RECV
+		// Unknown scope
+		return -1
 	}
 	return scopes
+}
+
+func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
+	var scopes int
+	for i := range scopeNames {
+		switch strings.ToUpper(scopeNames[i]) {
+		case "RECV":
+			scopes |= context.RECV
+		case "HASH":
+			scopes |= context.HASH
+		case "HIT":
+			scopes |= context.HIT
+		case "MISS":
+			scopes |= context.MISS
+		case "PASS":
+			scopes |= context.PASS
+		case "FETCH":
+			scopes |= context.FETCH
+		case "ERROR":
+			scopes |= context.ERROR
+		case "DELIVER":
+			scopes |= context.DELIVER
+		case "LOG":
+			scopes |= context.LOG
+		}
+	}
+	if scopes == 0 {
+		// Unknown scope
+		return -1
+	}
+	return scopes
+}
+
+func isIgnoredSubroutineInConfig(ignores []string, subroutineName string) bool {
+	for i := range ignores {
+		if ignores[i] == subroutineName {
+			return true
+		}
+	}
+	return false
 }
 
 func getFastlySubroutineScope(name string) string {

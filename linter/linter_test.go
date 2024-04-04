@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
@@ -14,6 +15,25 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
+var testConfig = &config.LinterConfig{
+	EnforceSubroutineScopes: map[string][]string{
+		"enforced_subroutine": {"pass", "miss"},
+		"foo":                 {"recv"},
+		"bar":                 {"recv"},
+		"baz":                 {"recv"},
+		"example":             {"recv"},
+		"returns_one":         {"recv"},
+		"custom_sub":          {"recv"},
+		"test_sub":            {"recv"},
+		"hoisted_subroutine":  {"recv"},
+		"returns_true":        {"recv"},
+		"get_bool":            {"recv"},
+	},
+	IgnoreSubroutines: []string{
+		"ignored_subroutine",
+	},
+}
+
 func assertNoError(t *testing.T, input string, opts ...context.Option) {
 	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
 	if err != nil {
@@ -21,7 +41,7 @@ func assertNoError(t *testing.T, input string, opts ...context.Option) {
 		t.FailNow()
 	}
 
-	l := New()
+	l := New(testConfig)
 	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) > 0 {
 		t.Errorf("Lint error: %s", l.Errors)
@@ -38,7 +58,7 @@ func assertError(t *testing.T, input string, opts ...context.Option) {
 		t.FailNow()
 	}
 
-	l := New()
+	l := New(testConfig)
 	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
@@ -54,7 +74,7 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts
 		t.FailNow()
 	}
 
-	l := New()
+	l := New(testConfig)
 	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
@@ -1692,7 +1712,7 @@ sub bar {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1708,7 +1728,7 @@ acl foo {}
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1725,7 +1745,7 @@ acl foo {}
 		}
 		ctx := context.New()
 		ctx.AddAcl("foo", &types.Acl{})
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, ctx)
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1747,7 +1767,7 @@ sub bar {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1763,7 +1783,7 @@ table foo {}
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1780,7 +1800,7 @@ table foo {}
 		}
 		ctx := context.New()
 		ctx.AddTable("foo", &types.Table{})
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, ctx)
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1802,7 +1822,7 @@ sub vcl_recl {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1818,7 +1838,7 @@ backend foo {}
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1835,7 +1855,7 @@ backend foo {}
 		}
 		ctx := context.New()
 		ctx.AddBackend("foo", &types.Backend{})
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, ctx)
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1857,7 +1877,7 @@ sub vcl_recl {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1873,7 +1893,7 @@ sub foo {}
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1894,7 +1914,7 @@ sub vcl_recv {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -1913,7 +1933,7 @@ sub vcl_recv {
 			t.FailNow()
 		}
 
-		l := New()
+		l := New(testConfig)
 		l.Lint(vcl, context.New())
 		if len(l.Errors) == 0 {
 			t.Errorf("Expect one lint error but empty returned")
@@ -2714,6 +2734,28 @@ sub vcl_recv {
 	#FASTLY RECV
 	call foo;
 }`
+		assertNoError(t, input)
+	})
+}
+
+func TestEnforcedSubroutineScopes(t *testing.T) {
+	t.Run("Pass on enforce scope subroutine", func(t *testing.T) {
+		input := `
+sub enforced_subroutine {
+	set bereq.method = "POST";
+}
+`
+		assertNoError(t, input)
+	})
+}
+
+func TestIgnoredSubroutnes(t *testing.T) {
+	t.Run("ignore subroutine linting from config", func(t *testing.T) {
+		input := `
+sub ignored_subroutine {
+	set bereq.method = 1;
+}
+`
 		assertNoError(t, input)
 	})
 }
