@@ -18,16 +18,18 @@ import (
 var testConfig = &config.LinterConfig{
 	EnforceSubroutineScopes: map[string][]string{
 		"enforced_subroutine": {"pass", "miss"},
-		"foo":                 {"recv"},
-		"bar":                 {"recv"},
-		"baz":                 {"recv"},
-		"example":             {"recv"},
-		"returns_one":         {"recv"},
-		"custom_sub":          {"recv"},
-		"test_sub":            {"recv"},
-		"hoisted_subroutine":  {"recv"},
-		"returns_true":        {"recv"},
-		"get_bool":            {"recv"},
+
+		// Keep backward compatibility for the changes https://github.com/ysugimoto/falco/issues/273
+		"foo":                {"recv"},
+		"bar":                {"recv"},
+		"baz":                {"recv"},
+		"example":            {"recv"},
+		"returns_one":        {"recv"},
+		"custom_sub":         {"recv"},
+		"test_sub":           {"recv"},
+		"hoisted_subroutine": {"recv"},
+		"returns_true":       {"recv"},
+		"get_bool":           {"recv"},
 	},
 	IgnoreSubroutines: []string{
 		"ignored_subroutine",
