@@ -25,8 +25,9 @@ type ChunkType int
 const (
 	Token ChunkType = iota + 1
 	Comment
-	Operator
+	Infix
 	Group
+	Prefix
 )
 
 // Chunk struct represents a piece of expression token
@@ -151,6 +152,11 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 				continue
 			}
 			buf.WriteString(c.chunkString(state, chunk.buffer))
+		// prefix operator
+		case Prefix:
+			if next := c.nextChunk(); next != nil {
+				buf.WriteString(chunk.buffer + next.buffer)
+			}
 		// group operator
 		case Group:
 			// If group operator, inside expressions should be printed on the same line
@@ -158,7 +164,7 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 				buf.WriteString(c.chunkGroupOperator(state, next))
 			}
 		// infix operator
-		case Operator:
+		case Infix:
 			// Or, the operator is the member os mustSingleOperators, the expression must be printed on the same line
 			if _, ok := mustSingleOperators[chunk.buffer]; ok {
 				buf.WriteString(c.chunkInfixOperator(state, chunk))

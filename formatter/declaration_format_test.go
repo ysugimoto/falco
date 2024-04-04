@@ -625,6 +625,30 @@ func TestComplicatedExpressions(t *testing.T) {
 				LineWidth:            70,
 			},
 		},
+		{
+			name: "prefix expression",
+			input: `sub vcl_recv {
+	if (! req.http.Foo) {
+		esi;
+	} elseif (req.http.foo) {
+		esi;
+	}
+}`,
+			expect: `sub vcl_recv {
+  if (!req.http.Foo) {
+    esi;
+  } elseif (req.http.foo) {
+    esi;
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            70,
+			},
+		},
 	}
 
 	for _, tt := range tests {

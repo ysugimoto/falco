@@ -274,8 +274,13 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 
 	buf.WriteString("switch (" + f.formatExpression(stmt.Control).String() + ") {\n")
 	for _, c := range stmt.Cases {
+		// If indent_cale_labels is false, subtrat 1 nest level
+		if !f.conf.IndentCaseLabels {
+			c.Meta.Nest--
+		}
 		buf.WriteString(f.formatComment(c.Leading, "\n", c.Meta.Nest))
 		buf.WriteString(f.indent(c.Meta.Nest))
+
 		if c.Test != nil {
 			buf.WriteString("case ")
 			if c.Test.Operator == "~" {
@@ -303,17 +308,22 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 	lines := Lines{}
 
 	for _, stmt := range cs.Statements {
-		if stmt.GetMeta().PreviousEmptyLines > 0 {
+		meta := stmt.GetMeta()
+		// If indent_cale_labels is false, subtrat 1 nest level
+		if !f.conf.IndentCaseLabels {
+			meta.Nest--
+		}
+		if meta.PreviousEmptyLines > 0 {
 			group.Lines = append(group.Lines, lines)
 			lines = Lines{}
 		}
 		// need to plus 1 to  nested indent because parser won't increase nest level
 		line := &Line{
-			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", stmt.GetMeta().Nest+1),
-			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", stmt.GetMeta().Nest+1),
+			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", meta.Nest+1),
+			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", meta.Nest+1),
 		}
 		if _, ok := stmt.(*ast.BreakStatement); ok {
-			line.Buffer = f.indent(stmt.GetMeta().Nest+1) + "break;"
+			line.Buffer = f.indent(meta.Nest+1) + "break;"
 		} else {
 			line.Buffer = f.formatStatement(stmt).String()
 		}

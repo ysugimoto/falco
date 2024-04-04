@@ -829,6 +829,45 @@ func TestFormatSwitchStatement(t *testing.T) {
 			expect: `sub vcl_recv {
   // switch leading comment
   switch (req.http.Foo) {
+  // first case comment
+  case "bar":
+    // break leading comment
+    break;
+  // second case comment
+  case "baz":
+    // break leading comment
+    break;
+  // default case comment
+  default:
+    break;
+    // switch infix comment
+  }  // trailing comment
+}
+`,
+		},
+		{
+			name: "indent case labels",
+			input: `sub vcl_recv {
+	// switch leading comment
+	switch(req.http.Foo) {
+		// first case comment
+		case "bar":
+			// break leading comment
+			break;
+			// second case comment
+			case "baz":
+				// break leading comment
+				break;
+		// default case comment
+		default:
+			break;
+		// switch infix comment
+	} // trailing comment
+}
+`,
+			expect: `sub vcl_recv {
+  // switch leading comment
+  switch (req.http.Foo) {
     // first case comment
     case "bar":
       // break leading comment
@@ -844,6 +883,13 @@ func TestFormatSwitchStatement(t *testing.T) {
   }  // trailing comment
 }
 `,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            70,
+				IndentCaseLabels:     true,
+			},
 		},
 	}
 

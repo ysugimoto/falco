@@ -61,6 +61,7 @@ Supporting rules are described the following table and sections.
 | align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
 | comment_style               | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
 | should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statemnt                                               |
+| indent_case_labels          | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
 
 
 ### Indent Width
@@ -511,3 +512,48 @@ sub vcl_recv {
 }
 ```
 
+---
+
+## Indent Case Labels
+
+By default format the placement of case labels at the same indentation level as the outer block.
+This keeps code in the case blocks indented the same amount as they would be in an if-else-if chain.
+
+**default: false**
+
+```vcl
+switch (req.http.foo) {
+    case "bar":
+      break;
+  case "baz":
+    break;
+default:
+  break;
+}
+```
+
+Formatted (false):
+
+```vcl
+switch (req.http.foo) {
+case "bar":
+  break;
+case "baz":
+  break;
+default:
+  break;
+}
+```
+
+Formatted (true):
+
+```vcl
+switch (req.http.foo) {
+  case "bar":
+    break;
+  case "baz":
+    break;
+  default:
+    break;
+}
+```

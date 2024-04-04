@@ -96,7 +96,7 @@ func (f *Formatter) formatRTime(expr *ast.RTime) string {
 func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuffer {
 	buf := f.chunkBuffer()
 
-	buf.Write(expr.Operator, Operator)
+	buf.Write(expr.Operator, Prefix)
 	buf.Append(f.formatExpression(expr.Right))
 
 	return buf
@@ -114,7 +114,7 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 
 	buf.Append(f.formatExpression(expr.Left))
 	if operator != "" {
-		buf.Write(operator, Operator)
+		buf.Write(operator, Infix)
 	}
 	buf.Append(f.formatExpression(expr.Right))
 
