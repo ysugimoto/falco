@@ -53,11 +53,17 @@ func fetchFastlyDocument(ctx context.Context, url string, m *sync.Map) error {
 			}
 			name := a.FirstChild.Data
 			if name == ignoreFunctionIf ||
-				strings.Contains(name, ignoreHTTPHeaderRelatedSignaure) ||
 				strings.Contains(name, ignoreRegexCapturedNumber) {
 
 				continue
 			}
+
+			name = strings.ReplaceAll(
+				name,
+				ignoreHTTPHeaderRelatedSignaure,
+				"%any%",
+			)
+
 			var link string
 			for _, v := range a.Attr {
 				if v.Key == "href" {

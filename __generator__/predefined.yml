@@ -2283,3 +2283,8 @@ ratecounter.%any%.rate.60s:
   reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-60s/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: FLOAT
+
+director.%any%.healthy:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
