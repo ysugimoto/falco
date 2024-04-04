@@ -296,6 +296,7 @@ func (p *Parser) parseDeclareStatement() (*ast.DeclareStatement, error) {
 	stmt := &ast.DeclareStatement{
 		Meta: p.curToken,
 	}
+	p.attachUnboundComments(stmt, AttachmentLeading, false)
 
 	// Declare Syntax is declare [IDENT:"local"] [IDENT:variable name] [IDENT:VCL type]
 	if !p.expectPeek(token.IDENT) {
@@ -304,6 +305,7 @@ func (p *Parser) parseDeclareStatement() (*ast.DeclareStatement, error) {
 	if p.curToken.Token.Literal != "local" {
 		return nil, errors.WithStack(UnexpectedToken(p.curToken, "local"))
 	}
+	p.attachUnboundComments(stmt, AttachmentInfix, false)
 
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
@@ -319,7 +321,7 @@ func (p *Parser) parseDeclareStatement() (*ast.DeclareStatement, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	p.nextToken() // point to SEMICOLON
-	stmt.Meta.Trailing = p.trailing()
+	p.attachUnboundComments(stmt, AttachmentTrailing, true)
 
 	return stmt, nil
 }
@@ -425,7 +427,7 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 		Meta:           p.curToken,
 		HasParenthesis: false,
 	}
-
+	p.attachUnboundComments(stmt, AttachmentLeading, false)
 	// return statement may not have argument
 	// https://developer.fastly.com/reference/vcl/statements/return/
 	if p.peekTokenIs(token.SEMICOLON) {
@@ -458,13 +460,11 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 		})
 	}
 
-	swapLeadingTrailing(p.curToken, (*stmt.ReturnExpression).GetMeta())
-
 	if !p.peekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	p.nextToken() // point to SEMICOLON
-	stmt.Meta.Trailing = p.trailing()
+	p.attachUnboundComments(stmt, AttachmentTrailing, true)
 
 	return stmt, nil
 }

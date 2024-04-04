@@ -16,7 +16,9 @@ func (d *DeclareStatement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(d.LeadingComment())
-	buf.WriteString(indent(d.Nest) + "declare local ")
+	buf.WriteString(indent(d.Nest) + "declare ")
+	buf.WriteString(d.InfixInlineComment())
+	buf.WriteString("local ")
 	buf.WriteString(d.Name.String())
 	buf.WriteString(" ")
 	buf.WriteString(d.ValueType.String() + ";")

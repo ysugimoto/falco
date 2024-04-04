@@ -432,6 +432,7 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	s := &ast.SubroutineDeclaration{
 		Meta: p.curToken,
 	}
+	p.attachUnboundComments(s, AttachmentLeading, false)
 
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
@@ -454,6 +455,7 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 		return nil, errors.WithStack(err)
 	}
 	// After block statement is parsed, cursor should point to RIGHT_BRACE, end of block statement
+	p.attachUnboundComments(s, AttachmentTrailing, true)
 
 	return s, nil
 }
