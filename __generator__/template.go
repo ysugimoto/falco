@@ -85,6 +85,17 @@ import (
 	"github.com/ysugimoto/falco/interpreter/function/builtin"
 )
 
+func doImplicitTypeConversion(args []value.Value, argTypes []value.Type) {
+	for i := range args {
+		if argTypes[i] == value.StringType && args[i].Type() != value.StringType {
+			// Handle implicit conversion to string
+			// "These types all have implicit conversions to strings, such that their values may be used in contexts where a STRING value is necessary."
+			// https://www.fastly.com/documentation/reference/vcl/types/"
+			args[i] = &value.String{Value: args[i].String()}
+		}
+	}
+}
+
 var builtinFunctions = map[string]*Function {
 	{{ .Functions }}
 }
