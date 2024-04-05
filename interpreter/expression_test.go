@@ -332,6 +332,26 @@ func TestProcessExpression(t *testing.T) {
 			},
 			isError: false,
 		},
+		{
+			name: "Backend type implicitly converted to string when calling regsub()",
+			vcl:  `sub vcl_recv { set req.http.foo = regsub(req.backend, "example", "example2"); }`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "example2"},
+			},
+			isError: false,
+		},
+		{
+			name: "Time type implicitly converted to string when calling regsub()",
+			vcl: `sub vcl_recv {
+				declare local var.time TIME;
+				set var.time = std.time("Mon, 02 Jan 2006 22:04:05 GMT", now);
+				set req.http.foo = regsub(var.time, "Mon", "Tues");
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "Tues, 02 Jan 2006 22:04:05 GMT"},
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {
