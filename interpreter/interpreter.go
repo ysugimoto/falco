@@ -26,7 +26,6 @@ const MaxStackDepth = 100
 
 type StackFrame struct {
 	Locals     variable.LocalVariables
-	Regex      map[string]*value.String
 	Subroutine *ast.SubroutineDeclaration
 }
 
@@ -49,12 +48,7 @@ type Interpreter struct {
 }
 
 func New(options ...context.Option) *Interpreter {
-	stack := []*StackFrame{
-		{
-			Locals: variable.LocalVariables{},
-			Regex:  map[string]*value.String{},
-		},
-	}
+	stack := []*StackFrame{{Locals: variable.LocalVariables{}}}
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),

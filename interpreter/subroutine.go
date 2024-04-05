@@ -32,7 +32,6 @@ func (i *Interpreter) subroutineInStack(sub *ast.SubroutineDeclaration) bool {
 func (i *Interpreter) pushStackFrame(sub *ast.SubroutineDeclaration) error {
 	sf := &StackFrame{
 		Locals:     variable.LocalVariables{},
-		Regex:      make(map[string]*value.String),
 		Subroutine: sub,
 	}
 	i.Stack = append(i.Stack, sf)
@@ -40,7 +39,6 @@ func (i *Interpreter) pushStackFrame(sub *ast.SubroutineDeclaration) error {
 		return errors.WithStack(exception.Runtime(&sub.Token, "max stack depth exceeded"))
 	}
 	i.StackPointer = sf
-	i.ctx.RegexMatchedValues = sf.Regex
 	return nil
 }
 
@@ -53,7 +51,6 @@ func (i *Interpreter) popStackFrame() {
 		i.StackPointer = nil
 	}
 	i.ctx.SubroutineCalls[sf.Subroutine.Name.Value]++
-	i.ctx.RegexMatchedValues = sf.Regex
 }
 
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
