@@ -22,6 +22,8 @@ import (
 	"github.com/ysugimoto/falco/parser"
 )
 
+const MaxStackDepth = 100
+
 type StackFrame struct {
 	Locals     variable.LocalVariables
 	Regex      map[string]*value.String

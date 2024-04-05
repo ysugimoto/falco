@@ -3,8 +3,12 @@ package interpreter
 import (
 	"testing"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 )
 
 func TestSubroutine(t *testing.T) {
@@ -163,5 +167,30 @@ func TestFunctionSubroutine(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
+	}
+}
+
+func TestMaxStackDepth(t *testing.T) {
+	vcl, err := parser.New(lexer.NewFromString(`sub test STRING { return ""; }`)).ParseVCL()
+	if err != nil {
+		t.Errorf("VCL parser error: %s", err)
+		return
+	}
+	ip := New()
+	ip.ctx = context.New()
+	ip.process = process.New()
+	if err = ip.ProcessDeclarations(vcl.Statements); err != nil {
+		t.Errorf("Failed to process statement: %s", err)
+		return
+	}
+	for i := 0; i < MaxStackDepth; i++ {
+		ip.Stack = append(ip.Stack, &StackFrame{Subroutine: &ast.SubroutineDeclaration{}})
+	}
+	n := ast.FunctionCallExpression{
+		Function: &ast.Ident{Value: "test"},
+	}
+	_, err = ip.ProcessFunctionCallExpression(&n, false)
+	if err == nil {
+		t.Error("Expected error got nil")
 	}
 }

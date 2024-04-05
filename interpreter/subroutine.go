@@ -29,15 +29,19 @@ func (i *Interpreter) subroutineInStack(sub *ast.SubroutineDeclaration) bool {
 	return false
 }
 
-func (i *Interpreter) pushStackFrame(sub *ast.SubroutineDeclaration) {
+func (i *Interpreter) pushStackFrame(sub *ast.SubroutineDeclaration) error {
 	sf := &StackFrame{
 		Locals:     variable.LocalVariables{},
 		Regex:      make(map[string]*value.String),
 		Subroutine: sub,
 	}
 	i.Stack = append(i.Stack, sf)
+	if len(i.Stack) > MaxStackDepth {
+		return errors.WithStack(exception.Runtime(&sub.Token, "max stack depth exceeded"))
+	}
 	i.StackPointer = sf
 	i.ctx.RegexMatchedValues = sf.Regex
+	return nil
 }
 
 func (i *Interpreter) popStackFrame() {
@@ -59,7 +63,9 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 		)
 	}
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
-	i.pushStackFrame(sub)
+	if err := i.pushStackFrame(sub); err != nil {
+		return NONE, errors.WithStack(err)
+	}
 	defer i.popStackFrame()
 
 	// Try to extract fastly reserved subroutine macro
@@ -85,7 +91,9 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		)
 	}
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
-	i.pushStackFrame(sub)
+	if err := i.pushStackFrame(sub); err != nil {
+		return value.Null, NONE, errors.WithStack(err)
+	}
 	defer i.popStackFrame()
 
 	var err error
