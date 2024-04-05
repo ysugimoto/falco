@@ -3,8 +3,12 @@ package interpreter
 import (
 	"testing"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 )
 
 func TestSubroutine(t *testing.T) {
@@ -44,6 +48,17 @@ func TestSubroutine(t *testing.T) {
 			}`,
 			isError: true,
 		},
+		{
+			name: "Recursion produces an error not a panic",
+			vcl: `sub func {
+				call func();
+			}
+
+			sub vcl_recv {
+				call func();
+			}`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -58,6 +73,7 @@ func TestFunctionSubroutine(t *testing.T) {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
+		isError    bool
 	}{
 		{
 			name: "Functional subroutine returns a value",
@@ -134,11 +150,47 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Int-Value": &value.String{Value: "2"},
 			},
 		},
+		{
+			name: "Recursion produces an error not a panic",
+			vcl: `sub func STRING {
+				return func();
+			}
+
+			sub vcl_recv {
+				set req.http.foo = func();
+			}`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, false)
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
+	}
+}
+
+func TestMaxStackDepth(t *testing.T) {
+	vcl, err := parser.New(lexer.NewFromString(`sub test STRING { return ""; }`)).ParseVCL()
+	if err != nil {
+		t.Errorf("VCL parser error: %s", err)
+		return
+	}
+	ip := New()
+	ip.ctx = context.New()
+	ip.process = process.New()
+	if err = ip.ProcessDeclarations(vcl.Statements); err != nil {
+		t.Errorf("Failed to process statement: %s", err)
+		return
+	}
+	for i := 0; i < MaxStackDepth; i++ {
+		ip.Stack = append(ip.Stack, &StackFrame{Subroutine: &ast.SubroutineDeclaration{}})
+	}
+	n := ast.FunctionCallExpression{
+		Function: &ast.Ident{Value: "test"},
+	}
+	_, err = ip.ProcessFunctionCallExpression(&n, false)
+	if err == nil {
+		t.Error("Expected error got nil")
 	}
 }
