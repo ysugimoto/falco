@@ -10,10 +10,13 @@ import (
 )
 
 func (p *Parser) parseIdent() *ast.Ident {
-	return &ast.Ident{
+	i := &ast.Ident{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
+	p.attachUnboundComments(i, AttachmentLeading, false)
+	p.attachUnboundComments(i, AttachmentTrailing, true)
+	return i
 }
 
 func (p *Parser) parseIP() *ast.IP {

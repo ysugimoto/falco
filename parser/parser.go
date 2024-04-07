@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
@@ -57,6 +59,9 @@ type Parser struct {
 	prefixParsers  map[token.TokenType]prefixParser
 	infixParsers   map[token.TokenType]infixParser
 	postfixParsers map[token.TokenType]postfixParser
+
+	unboundComments     ast.Comments // unbound comments preceeding current token
+	unboundPeekComments ast.Comments // unbound comments after current token (parsed during readPeek)
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -75,8 +80,40 @@ func New(l *lexer.Lexer) *Parser {
 func (p *Parser) nextToken() {
 	p.prevToken = p.curToken
 	p.curToken = p.peekToken
-
+	p.unboundComments = append(p.unboundComments, p.unboundPeekComments...)
+	p.unboundPeekComments = ast.Comments{}
 	p.readPeek()
+}
+
+const (
+	AttachmentLeading  = "leading"
+	AttachmentTrailing = "trailing"
+	AttachmentInfix    = "infix"
+)
+
+func (p *Parser) attachUnboundComments(n ast.Node, point string, peek bool) {
+	if peek {
+		p.unboundComments = append(p.unboundComments, p.unboundPeekComments...)
+		p.unboundPeekComments = ast.Comments{}
+	}
+	if len(p.unboundComments) < 1 {
+		return
+	}
+	m := n.GetMeta()
+	// Temp prints
+	fmt.Printf("token %s: Attached %d comments to %#v at (%s):\n", m.Token.Literal, len(p.unboundComments), n, point)
+	for _, c := range p.unboundComments {
+		fmt.Printf("%s\n", c.String())
+	}
+	switch point {
+	case AttachmentLeading:
+		m.Leading = append(m.Leading, p.unboundComments...)
+	case AttachmentInfix:
+		m.Infix = append(m.Infix, p.unboundComments...)
+	case AttachmentTrailing:
+		m.Trailing = append(m.Trailing, p.unboundComments...)
+	}
+	p.unboundComments = ast.Comments{}
 }
 
 func (p *Parser) readPeek() {
@@ -101,9 +138,10 @@ func (p *Parser) readPeek() {
 		case token.RIGHT_BRACE:
 			p.level--
 		}
-		p.peekToken = ast.New(t, p.level, leading)
+		p.peekToken = ast.New(t, p.level)
 		break
 	}
+	p.unboundPeekComments = append(p.unboundPeekComments, leading...)
 }
 
 func (p *Parser) trailing() ast.Comments {

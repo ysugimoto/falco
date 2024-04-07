@@ -67,7 +67,7 @@ func (m *Meta) TrailingComment() string {
 	var buf bytes.Buffer
 
 	for i := range m.Trailing {
-		buf.WriteString(m.Trailing[i].String())
+		buf.WriteString(m.Trailing[i].String() + " ")
 	}
 
 	return " " + buf.String()
@@ -81,6 +81,19 @@ func (m *Meta) InfixComment() string {
 
 	for i := range m.Infix {
 		buf.WriteString(indent(m.Nest) + m.Infix[i].String() + "\n")
+	}
+
+	return buf.String()
+}
+
+func (m *Meta) InfixInlineComment() string {
+	if len(m.Infix) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range m.Infix {
+		buf.WriteString(m.Infix[i].String() + " ")
 	}
 
 	return buf.String()

@@ -359,3 +359,46 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 	}
 	assert(t, vcl, expect)
 }
+
+func TestNewCommentModel(t *testing.T) {
+	input := `
+/* 1 */ sub /* 2 */ foo /* 3 */ {
+  /* 4 */ 
+  /* 5 */ declare /* 6 */ local /* 7 */ var.s /* 8 */ STRING /* 9 */; /* 10 */
+  /* 11 */
+} /* 12 */
+/* 13 */
+`
+	decl := &ast.DeclareStatement{
+		Meta: ast.New(T, 1, comments("/* 4 */", "/* 5 */"), comments("/* 10 */", "/* 11 */"), comments("/* 6 */")),
+		Name: &ast.Ident{
+			Meta:  ast.New(T, 1, comments("/* 7 */"), comments("/* 8 */")),
+			Value: "var.s",
+		},
+		ValueType: &ast.Ident{
+			Meta:  ast.New(T, 1, comments(), comments("/* 9 */")),
+			Value: "STRING",
+		},
+	}
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: ast.New(T, 0, comments("/* 1 */"), comments("/* 12 */", "/* 13 */")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0, comments("/* 2 */"), comments("/* 3 */")),
+					Value: "foo",
+				},
+				Block: &ast.BlockStatement{
+					Meta:       ast.New(T, 1),
+					Statements: []ast.Statement{decl},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+
+	assert(t, vcl, expect)
+}
