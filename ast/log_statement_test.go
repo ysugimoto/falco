@@ -6,7 +6,10 @@ import (
 
 func TestLogStatement(t *testing.T) {
 	log := &LogStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Value: &String{
 			Meta:  New(T, 0),
 			Value: "foobar",

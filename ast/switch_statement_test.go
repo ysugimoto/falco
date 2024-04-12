@@ -6,14 +6,20 @@ import (
 
 func TestSwitchStatement(t *testing.T) {
 	switchs := &SwitchStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("/* This is comment */"),
+		})),
 		Control: &Ident{
 			Meta:  New(T, 0),
 			Value: "req.http.host",
 		},
 		Cases: []*CaseStatement{
 			{
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Test: &InfixExpression{
 					Left:     &Ident{Value: "req.http.Host"},
 					Operator: "==",
@@ -24,7 +30,10 @@ func TestSwitchStatement(t *testing.T) {
 				},
 				Statements: []Statement{
 					&BreakStatement{
-						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment"),
+							PlaceTrailing: comments("/* This is comment */"),
+						})),
 					},
 				},
 			},
@@ -37,10 +46,16 @@ func TestSwitchStatement(t *testing.T) {
 						Value: "2",
 					},
 				},
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Statements: []Statement{
 					&FallthroughStatement{
-						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment"),
+							PlaceTrailing: comments("/* This is comment */"),
+						})),
 					},
 				},
 			},
@@ -53,10 +68,16 @@ func TestSwitchStatement(t *testing.T) {
 						Value: "[3-4]",
 					},
 				},
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Statements: []Statement{
 					&BreakStatement{
-						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment"),
+							PlaceTrailing: comments("/* This is comment */"),
+						})),
 					},
 				},
 			},
@@ -69,18 +90,30 @@ func TestSwitchStatement(t *testing.T) {
 						Value: "5",
 					},
 				},
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Statements: []Statement{
 					&BreakStatement{
-						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment"),
+							PlaceTrailing: comments("/* This is comment */"),
+						})),
 					},
 				},
 			},
 			{
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Statements: []Statement{
 					&BreakStatement{
-						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment"),
+							PlaceTrailing: comments("/* This is comment */"),
+						})),
 					},
 				},
 			},

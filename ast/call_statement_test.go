@@ -6,7 +6,10 @@ import (
 
 func TestCallStatement(t *testing.T) {
 	call := &CallStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Subroutine: &Ident{
 			Meta:  New(T, 0),
 			Value: "mod_recv",

@@ -6,33 +6,51 @@ import (
 
 func TestIfStatement(t *testing.T) {
 	ifs := &IfStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("/* This is comment */"),
+		})),
 		Condition: &Ident{
 			Meta:  New(T, 0),
 			Value: "req.http.Host",
 		},
 		Another: []*IfStatement{
 			{
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("/* This is comment */"),
+				})),
 				Condition: &Ident{
 					Meta:  New(T, 0),
 					Value: "req.http.Host",
 				},
 				Consequence: &BlockStatement{
-					Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+					Meta: New(T, 0, WithComments(CommentsMap{
+						PlaceLeading:  comments("// This is comment"),
+						PlaceTrailing: comments("/* This is comment */"),
+					})),
 					Statements: []Statement{
 						&EsiStatement{
-							Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+							Meta: New(T, 1, WithComments(CommentsMap{
+								PlaceLeading:  comments("// This is comment"),
+								PlaceTrailing: comments("/* This is comment */"),
+							})),
 						},
 					},
 				},
 			},
 		},
 		Consequence: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+			Meta: New(T, 0, WithComments(CommentsMap{
+				PlaceLeading:  comments("// This is comment"),
+				PlaceTrailing: comments("/* This is comment */"),
+			})),
 			Statements: []Statement{
 				&EsiStatement{
-					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+					Meta: New(T, 1, WithComments(CommentsMap{
+						PlaceLeading:  comments("// This is comment"),
+						PlaceTrailing: comments("/* This is comment */"),
+					})),
 				},
 			},
 		},
@@ -42,10 +60,16 @@ func TestIfStatement(t *testing.T) {
 			},
 		},
 		Alternative: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+			Meta: New(T, 0, WithComments(CommentsMap{
+				PlaceLeading:  comments("// This is comment"),
+				PlaceTrailing: comments("/* This is comment */"),
+			})),
 			Statements: []Statement{
 				&EsiStatement{
-					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+					Meta: New(T, 1, WithComments(CommentsMap{
+						PlaceLeading:  comments("// This is comment"),
+						PlaceTrailing: comments("/* This is comment */"),
+					})),
 				},
 			},
 		},

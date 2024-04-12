@@ -6,7 +6,7 @@ import (
 
 type ReturnStatement struct {
 	*Meta
-	ReturnExpression *Expression
+	ReturnExpression Expression
 	HasParenthesis   bool
 }
 
@@ -17,7 +17,7 @@ func (r *ReturnStatement) String() string {
 
 	buf.WriteString(r.LeadingComment())
 	if r.ReturnExpression != nil {
-		buf.WriteString(indent(r.Nest) + "return(" + (*r.ReturnExpression).String() + ");")
+		buf.WriteString(indent(r.Nest) + "return(" + r.ReturnExpression.String() + ");")
 	} else {
 		buf.WriteString(indent(r.Nest) + "return;")
 	}

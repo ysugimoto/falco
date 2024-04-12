@@ -7,6 +7,18 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
+type CommentPlace int
+
+// Basic comment placement constants.
+const (
+	PlaceLeading CommentPlace = iota + 1
+	PlaceInfix
+	PlaceTrailing
+	PlaceAclBeforeName
+	PlaceAclAfterName
+	PlaceAclCidrAfterInverse
+)
+
 type Comment struct {
 	Token token.Token
 	Value string
@@ -66,17 +78,10 @@ func (c *Comments) Annotations() []string {
 // For example:
 // declare /* a */ local /* b */ var.Foo STRING;
 //
-// Then /* a */ comment may be placed at "before_local".
-type CommentsMap map[string]Comments
+// Then /* a */ comment is placed at "before_local" and /* b */ comment is placed at "after_local"
+type CommentsMap map[CommentPlace]Comments
 
-// Basic comment placements
-const (
-	LeadingPlace  = "leading"
-	InfixPlace    = "infix"
-	TrailingPlace = "trailing"
-)
-
-func (c CommentsMap) Get(place string) Comments {
+func (c CommentsMap) Get(place CommentPlace) Comments {
 	if v, ok := c[place]; ok {
 		return v
 	}

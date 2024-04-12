@@ -6,14 +6,20 @@ import (
 
 func TestAclDeclaration(t *testing.T) {
 	acl := &AclDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Name: &Ident{
 			Meta:  New(T, 0),
 			Value: "internal",
 		},
 		CIDRs: []*AclCidr{
 			{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Inverse: &Boolean{
 					Meta:  New(T, 0),
 					Value: true,
@@ -28,7 +34,10 @@ func TestAclDeclaration(t *testing.T) {
 				},
 			},
 			{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Inverse: &Boolean{
 					Meta:  New(T, 0),
 					Value: false,
@@ -36,6 +45,19 @@ func TestAclDeclaration(t *testing.T) {
 				IP: &IP{
 					Meta:  New(T, 0),
 					Value: "192.168.0.2",
+				},
+			},
+			{
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceAclCidrAfterInverse: comments("/* inverse after */"),
+				})),
+				Inverse: &Boolean{
+					Meta:  New(T, 0),
+					Value: true,
+				},
+				IP: &IP{
+					Meta:  New(T, 0),
+					Value: "192.168.0.3",
 				},
 			},
 		},
@@ -49,6 +71,7 @@ acl internal {
   // This is comment
   # This is another comment
   "192.168.0.2"; // This is comment
+  ! /* inverse after */ "192.168.0.3";
 } // This is comment
 `
 

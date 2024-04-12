@@ -6,7 +6,10 @@ import (
 
 func TestTableDeclaration(t *testing.T) {
 	table := &TableDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Name: &Ident{
 			Meta:  New(T, 0),
 			Value: "example",
@@ -17,7 +20,10 @@ func TestTableDeclaration(t *testing.T) {
 		},
 		Properties: []*TableProperty{
 			{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Key: &String{
 					Meta:  New(T, 0),
 					Value: "foo",

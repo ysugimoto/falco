@@ -6,7 +6,10 @@ import (
 
 func TestFunctionCallStatement(t *testing.T) {
 	fn := &FunctionCallStatement{
-		Meta: New(T, 0, comments("/* This is comment */"), comments("/* This is comment */")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("/* This is comment */"),
+			PlaceTrailing: comments("/* This is comment */"),
+		})),
 		Function: &Ident{
 			Meta:  New(T, 0),
 			Value: "std.collect",

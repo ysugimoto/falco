@@ -6,7 +6,10 @@ import (
 
 func TestGotoStatement(t *testing.T) {
 	g := &GotoStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Destination: &Ident{
 			Meta:  New(T, 0),
 			Value: "update_and_set",

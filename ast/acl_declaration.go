@@ -7,10 +7,10 @@ import (
 // Acl declaration node
 // Comment placement specification:
 //
-// /* leading */
-// acl /* before_name */ <name> /* after_name */ {
-//   <AclCidr>
-// }  /* trailing */
+// /* PlaceLeading */
+// acl /* PlaceAclBeforeName */ <name> /* PlaceAclAfterName */ {
+//   <AclCidr>...
+// }  /* PlaceTrailing */
 type AclDeclaration struct {
 	*Meta
 	Name  *Ident
@@ -25,11 +25,11 @@ func (a *AclDeclaration) String() string {
 
 	buf.WriteString(a.LeadingComment())
 	buf.WriteString("acl ")
-	if v := a.Comment("before_name"); v != "" {
+	if v := a.Comment(PlaceAclBeforeName); v != "" {
 		buf.WriteString(v + " ")
 	}
 	buf.WriteString(a.Name.String())
-	if v := a.Comment("after_name"); v != "" {
+	if v := a.Comment(PlaceAclAfterName); v != "" {
 		buf.WriteString(v)
 	}
 	buf.WriteString(" {\n")
@@ -47,8 +47,8 @@ func (a *AclDeclaration) String() string {
 // Acl CIDR line node
 // Comment placement specification:
 //
-// /* leaging */
-// <inverse> /* after_inverse */ <IP>/<Mask>; /* trailing */
+// /* PlaceLeading */
+// <inverse> /* PlaceAclCidrAfterInverse */ <IP>/<Mask>; /* PlaceTrailing */
 //
 // Note that if inverse sign does not exist, /* after_inverse */ comment will be integrated into leading comment.
 type AclCidr struct {
@@ -67,7 +67,7 @@ func (c *AclCidr) String() string {
 	if c.Inverse != nil && c.Inverse.Value {
 		buf.WriteString("!")
 	}
-	if v := c.Comment("after_inverse"); v != "" {
+	if v := c.Comment(PlaceAclCidrAfterInverse); v != "" {
 		buf.WriteString(" " + v + " ")
 	}
 	buf.WriteString(`"` + c.IP.String() + `"`)

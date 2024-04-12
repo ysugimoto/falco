@@ -6,7 +6,10 @@ import (
 
 func TestRestartStatement(t *testing.T) {
 	restart := &RestartStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 	}
 
 	expect := `// This is comment

@@ -6,16 +6,25 @@ import (
 
 func TestSubroutineStatement(t *testing.T) {
 	sub := &SubroutineDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("/* This is comment */"),
+		})),
 		Name: &Ident{
 			Meta:  New(T, 0),
 			Value: "vcl_recv",
 		},
 		Block: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+			Meta: New(T, 0, WithComments(CommentsMap{
+				PlaceLeading:  comments("// This is comment"),
+				PlaceTrailing: comments("/* This is comment */"),
+			})),
 			Statements: []Statement{
 				&EsiStatement{
-					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+					Meta: New(T, 1, WithComments(CommentsMap{
+						PlaceLeading:  comments("// This is comment"),
+						PlaceTrailing: comments("/* This is comment */"),
+					})),
 				},
 			},
 		},

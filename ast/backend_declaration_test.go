@@ -6,14 +6,20 @@ import (
 
 func TestBackendDeclaration(t *testing.T) {
 	backend := &BackendDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Name: &Ident{
 			Meta:  New(T, 0),
 			Value: "example",
 		},
 		Properties: []*BackendProperty{
 			{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Key: &Ident{
 					Meta:  New(T, 0),
 					Value: "host",
@@ -24,16 +30,25 @@ func TestBackendDeclaration(t *testing.T) {
 				},
 			},
 			{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Key: &Ident{
 					Meta:  New(T, 0),
 					Value: "probe",
 				},
 				Value: &BackendProbeObject{
-					Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+					Meta: New(T, 1, WithComments(CommentsMap{
+						PlaceLeading:  comments("// This is comment", "# This is another comment"),
+						PlaceTrailing: comments("// This is comment"),
+					})),
 					Values: []*BackendProperty{
 						{
-							Meta: New(T, 2, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+							Meta: New(T, 2, WithComments(CommentsMap{
+								PlaceLeading:  comments("// This is comment", "# This is another comment"),
+								PlaceTrailing: comments("// This is comment"),
+							})),
 							Key: &Ident{
 								Meta:  New(T, 0),
 								Value: "request",

@@ -6,10 +6,15 @@ import (
 
 func TestBlockStatement(t *testing.T) {
 	block := &BlockStatement{
-		Meta: New(T, 1, comments(), comments(), comments("// This is comment")),
+		Meta: New(T, 1, WithComments(CommentsMap{
+			PlaceInfix: comments("// This is comment"),
+		})),
 		Statements: []Statement{
 			&SetStatement{
-				Meta: New(T, 1, comments("// This is comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Ident: &Ident{
 					Meta:  New(T, 0),
 					Value: "req.http.Host",

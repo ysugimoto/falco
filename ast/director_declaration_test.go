@@ -6,7 +6,10 @@ import (
 
 func TestDirectorDeclaration(t *testing.T) {
 	director := &DirectorDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
 		Name: &Ident{
 			Meta:  New(T, 0),
 			Value: "example",
@@ -17,7 +20,10 @@ func TestDirectorDeclaration(t *testing.T) {
 		},
 		Properties: []Expression{
 			&DirectorProperty{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Key: &Ident{
 					Meta:  New(T, 0),
 					Value: "quorum",
@@ -32,10 +38,16 @@ func TestDirectorDeclaration(t *testing.T) {
 				},
 			},
 			&DirectorBackendObject{
-				Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+				Meta: New(T, 1, WithComments(CommentsMap{
+					PlaceLeading:  comments("// This is comment", "# This is another comment"),
+					PlaceTrailing: comments("// This is comment"),
+				})),
 				Values: []*DirectorProperty{
 					{
-						Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment", "# This is another comment"),
+							PlaceTrailing: comments("// This is comment"),
+						})),
 						Key: &Ident{
 							Meta:  New(T, 0),
 							Value: "request",
@@ -46,7 +58,10 @@ func TestDirectorDeclaration(t *testing.T) {
 						},
 					},
 					{
-						Meta: New(T, 1, comments("// This is comment", "# This is another comment"), comments("// This is comment")),
+						Meta: New(T, 1, WithComments(CommentsMap{
+							PlaceLeading:  comments("// This is comment", "# This is another comment"),
+							PlaceTrailing: comments("// This is comment"),
+						})),
 						Key: &Ident{
 							Meta:  New(T, 0),
 							Value: "weight",

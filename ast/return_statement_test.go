@@ -5,14 +5,15 @@ import (
 )
 
 func TestReturnStatement(t *testing.T) {
-	var rt Expression
-	rt = &Ident{
-		Meta:  New(T, 0),
-		Value: "pass",
-	}
 	r := &ReturnStatement{
-		Meta:             New(T, 0, comments("// This is comment"), comments("// This is comment")),
-		ReturnExpression: &rt,
+		Meta: New(T, 0, WithComments(CommentsMap{
+			PlaceLeading:  comments("// This is comment"),
+			PlaceTrailing: comments("// This is comment"),
+		})),
+		ReturnExpression: &Ident{
+			Meta:  New(T, 0),
+			Value: "pass",
+		},
 	}
 
 	expect := `// This is comment
