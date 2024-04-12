@@ -58,3 +58,27 @@ func (c *Comments) Annotations() []string {
 
 	return annotations
 }
+
+// CommentsMap represents map of Comments for the token.
+// The key is placement, which indicates place of comment (e.g leading, infix, trailing, ...)
+// Or, additional placement will exists that depeneds on the statement keywords
+//
+// For example:
+// declare /* a */ local /* b */ var.Foo STRING;
+//
+// Then /* a */ comment may be placed at "before_local".
+type CommentsMap map[string]Comments
+
+// Basic comment placements
+const (
+	LeadingPlace  = "leading"
+	InfixPlace    = "infix"
+	TrailingPlace = "trailing"
+)
+
+func (c CommentsMap) Get(place string) Comments {
+	if v, ok := c[place]; ok {
+		return v
+	}
+	return Comments{}
+}

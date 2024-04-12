@@ -28,6 +28,7 @@ type Expression interface {
 // Meta struct of all nodes
 type Meta struct {
 	Token    token.Token
+	Comments CommentsMap
 	Leading  Comments
 	Trailing Comments
 	Infix    Comments
@@ -35,86 +36,93 @@ type Meta struct {
 }
 
 func (m *Meta) LeadingComment() string {
-	if len(m.Leading) == 0 {
+	leading := m.Comments.Get(PlaceLeading)
+	if len(leading) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range m.Leading {
-		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + "\n")
+	for i := range leading {
+		buf.WriteString(indent(m.Nest) + leading[i].String() + "\n")
 	}
 
 	return buf.String()
 }
 
 func (m *Meta) LeadingInlineComment() string {
-	if len(m.Leading) == 0 {
+	leading := m.Comments.Get(PlaceLeading)
+	if len(leading) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range m.Leading {
-		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + " ")
+	for i := range leading {
+		buf.WriteString(indent(m.Nest) + leading[i].String() + " ")
 	}
 
 	return buf.String()
 }
 
 func (m *Meta) TrailingComment() string {
-	if len(m.Trailing) == 0 {
+	trailing := m.Comments.Get(PlaceTrailing)
+	if len(trailing) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range m.Trailing {
-		buf.WriteString(m.Trailing[i].String())
+	for i := range trailing {
+		buf.WriteString(trailing[i].String())
 	}
 
 	return " " + buf.String()
 }
 
 func (m *Meta) InfixComment() string {
-	if len(m.Infix) == 0 {
+	infix := m.Comments.Get(PlaceInfix)
+	if len(infix) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range m.Infix {
-		buf.WriteString(indent(m.Nest) + m.Infix[i].String() + "\n")
+	for i := range infix {
+		buf.WriteString(indent(m.Nest) + infix[i].String() + "\n")
 	}
 
 	return buf.String()
 }
 
-func New(t token.Token, nest int, comments ...Comments) *Meta {
+func (m *Meta) Comment(placement CommentPlace) string {
+	cs := m.Comments.Get(placement)
+	if len(cs) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+
+	for i := range cs {
+		buf.WriteString(cs[i].String())
+	}
+
+	return buf.String()
+}
+
+func New(t token.Token, nest int, opts ...Option) *Meta {
 	m := &Meta{
 		Token:    t,
 		Nest:     nest,
-		Leading:  Comments{},
-		Trailing: Comments{},
-		Infix:    Comments{},
+		Comments: CommentsMap{},
 	}
 
-	switch len(comments) {
-	case 0:
-		break
-	case 1:
-		m.Leading = comments[0]
-	case 2:
-		m.Leading = comments[0]
-		m.Trailing = comments[1]
-	default:
-		m.Leading = comments[0]
-		m.Trailing = comments[1]
-		m.Infix = comments[2]
+	for i := range opts {
+		opts[i](m)
 	}
 
 	return m
 }
 
-type Operator struct {
-	*Meta
-	Operator string
-}
+type Option func(m *Meta)
 
-func (o *Operator) String() string { return o.Operator }
+func WithComments(cm CommentsMap) Option {
+	return func(m *Meta) {
+		m.Comments = cm
+	}
+}
