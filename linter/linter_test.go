@@ -2717,3 +2717,32 @@ sub vcl_recv {
 		assertNoError(t, input)
 	})
 }
+
+func TestGroupExpressionOnSetStatement(t *testing.T) {
+	t.Run("Linting error if left ident is STRING", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.Foo = (req.http.Host "example.com");
+}`
+		assertError(t, input)
+	})
+	t.Run("Linting error if left ident is STRING, single expression", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.Foo = (req.http.Host);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("Pass if left ident is BOOL", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+   #FASTLY RECV
+   declare local var.B BOOL;
+   set var.B = (req.http.Host == "example.com");
+}`
+		assertNoError(t, input)
+	})
+}

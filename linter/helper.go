@@ -164,12 +164,13 @@ func isValidConditionExpression(cond ast.Expression) error {
 // declare local var.Foo BOOL;
 // declare local var.Bar STRING;
 // set var.Bar = "foo" "bar";                      // -> valid, string concatenation operator can use
+// set var.Bar = (req.http.Host "example.com");    // -> invalid, right expression must be a STRING constant
 // set var.Foo = (req.http.Host == "example.com"); // -> valid, equal operator cau use inside grouped expression set statement
 // set var.Foo = !false;                           // -> invalid, could not use in set statement
 // set var.Foo = req.http.Host == "example.com";   // -> invalid, equal operator could not use in set statement
 //
 // So we'd check validity following function.
-func isValidStatementExpression(exp ast.Expression) error {
+func isValidStatementExpression(left types.Type, exp ast.Expression) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
 		if t.Operator == "!" {
@@ -178,6 +179,10 @@ func isValidStatementExpression(exp ast.Expression) error {
 	case *ast.InfixExpression:
 		if t.Operator != "+" {
 			return fmt.Errorf("could not specify %s operator in statement", t.Operator)
+		}
+	case *ast.GroupedExpression:
+		if left == types.StringType {
+			return fmt.Errorf("could not specify grouped expression if left type is STRING")
 		}
 	}
 	return nil
