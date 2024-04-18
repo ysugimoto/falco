@@ -36,16 +36,14 @@ func TestIfStatement(t *testing.T) {
 				},
 			},
 		},
-		AlternativeComments: Comments{
-			{
-				Value: "// This is comment",
-			},
-		},
-		Alternative: &BlockStatement{
+		Alternative: &ElseStatement{
 			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
-			Statements: []Statement{
-				&EsiStatement{
-					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+			Consequence: &BlockStatement{
+				Meta: New(T, 0),
+				Statements: []Statement{
+					&EsiStatement{
+						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+					},
 				},
 			},
 		},

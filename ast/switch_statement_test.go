@@ -7,9 +7,12 @@ import (
 func TestSwitchStatement(t *testing.T) {
 	switchs := &SwitchStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
-		Control: &Ident{
-			Meta:  New(T, 0),
-			Value: "req.http.host",
+		Control: &SwitchControl{
+			Meta: New(T, 0),
+			Expression: &Ident{
+				Meta:  New(T, 0),
+				Value: "req.http.host",
+			},
 		},
 		Cases: []*CaseStatement{
 			{

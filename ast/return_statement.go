@@ -6,8 +6,10 @@ import (
 
 type ReturnStatement struct {
 	*Meta
-	ReturnExpression *Expression
-	HasParenthesis   bool
+	ReturnExpression            Expression
+	HasParenthesis              bool
+	ParenthesisLeadingComments  Comments
+	ParenthesisTrailingComments Comments
 }
 
 func (r *ReturnStatement) statement()     {}
@@ -17,7 +19,19 @@ func (r *ReturnStatement) String() string {
 
 	buf.WriteString(r.LeadingComment())
 	if r.ReturnExpression != nil {
-		buf.WriteString(indent(r.Nest) + "return(" + (*r.ReturnExpression).String() + ");")
+		if r.HasParenthesis {
+			buf.WriteString(indent(r.Nest) + "return ")
+			if v := r.ParenthesisLeadingComments.String(); v != "" {
+				buf.WriteString(v + " ")
+			}
+			buf.WriteString("(" + r.ReturnExpression.String() + ")")
+			if v := r.ParenthesisTrailingComments.String(); v != "" {
+				buf.WriteString(" " + v)
+			}
+			buf.WriteString(";")
+		} else {
+			buf.WriteString(indent(r.Nest) + "return " + r.ReturnExpression.String() + ";")
+		}
 	} else {
 		buf.WriteString(indent(r.Nest) + "return;")
 	}

@@ -48,7 +48,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		cmpopts.IgnoreFields(ast.InfixExpression{}),
 		cmpopts.IgnoreFields(ast.PrefixExpression{}),
 		cmpopts.IgnoreFields(ast.GroupedExpression{}),
-		cmpopts.IgnoreFields(ast.IfStatement{}, "AlternativeComments"),
+		cmpopts.IgnoreFields(ast.IfStatement{}, "Keyword"),
 		cmpopts.IgnoreFields(ast.UnsetStatement{}),
 		cmpopts.IgnoreFields(ast.AddStatement{}),
 		cmpopts.IgnoreFields(ast.CallStatement{}),

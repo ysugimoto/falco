@@ -6,8 +6,9 @@ import (
 
 type FunctionCallStatement struct {
 	*Meta
-	Function  *Ident
-	Arguments []Expression
+	Function                   *Ident
+	Arguments                  []Expression
+	ParenthesisTrailingComment Comments
 }
 
 func (fc *FunctionCallStatement) statement()     {}
@@ -24,6 +25,10 @@ func (fc *FunctionCallStatement) String() string {
 		}
 	}
 	buf.WriteString(")")
+	if v := fc.ParenthesisTrailingComment.String(); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
 	buf.WriteString(fc.TrailingComment())
 
 	return buf.String()

@@ -6,11 +6,11 @@ import (
 
 type IfStatement struct {
 	*Meta
-	Condition           Expression
-	Consequence         *BlockStatement
-	Another             []*IfStatement
-	Alternative         *BlockStatement
-	AlternativeComments Comments
+	Keyword     string
+	Condition   Expression
+	Consequence *BlockStatement
+	Another     []*IfStatement
+	Alternative *ElseStatement
 }
 
 func (i *IfStatement) statement()     {}
@@ -19,7 +19,7 @@ func (i *IfStatement) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(i.LeadingComment())
-	buf.WriteString(indent(i.Nest) + "if (")
+	buf.WriteString(indent(i.Nest) + i.Keyword + " (")
 	buf.WriteString(i.Condition.String())
 	buf.WriteString(") ")
 	buf.WriteString(i.Consequence.String())
@@ -35,8 +35,6 @@ func (i *IfStatement) String() string {
 	}
 	if i.Alternative != nil {
 		buf.WriteString("\n")
-		buf.WriteString(i.alternativeComments())
-		buf.WriteString(indent(i.Nest) + "else ")
 		buf.WriteString(i.Alternative.String())
 	}
 	buf.WriteString(i.TrailingComment())
@@ -45,15 +43,19 @@ func (i *IfStatement) String() string {
 	return buf.String()
 }
 
-func (i *IfStatement) alternativeComments() string {
-	if len(i.AlternativeComments) == 0 {
-		return ""
-	}
+type ElseStatement struct {
+	*Meta
+	Consequence *BlockStatement
+}
+
+func (e *ElseStatement) statement()     {}
+func (e *ElseStatement) GetMeta() *Meta { return e.Meta }
+func (e *ElseStatement) String() string {
 	var buf bytes.Buffer
 
-	for _, v := range i.AlternativeComments {
-		buf.WriteString(indent(i.Nest) + v.String() + "\n")
-	}
+	buf.WriteString(e.LeadingComment())
+	buf.WriteString(indent(e.Nest) + "else ")
+	buf.WriteString(e.Consequence.String())
 
 	return buf.String()
 }

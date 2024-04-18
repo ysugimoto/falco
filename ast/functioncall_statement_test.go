@@ -23,7 +23,7 @@ func TestFunctionCallStatement(t *testing.T) {
 		},
 	}
 
-	expect := `/* This is comment */ std.collect("req.http.Cookie", ";") /* This is comment */`
+	expect := `/* This is comment */ std.collect("req.http.Cookie", ";"); /* This is comment */`
 
 	if fn.String() != expect {
 		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, fn.String())
