@@ -923,7 +923,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
-	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
+	if hasFastlyBoilerPlateMacro(sub.Block.Infix, phrase) {
 		for _, s := range scopedSnippets {
 			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 		}
@@ -933,7 +933,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var found bool
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) && !found {
+		if hasFastlyBoilerPlateMacro(stmt.GetMeta().Leading, phrase) && !found {
 			// Macro found but embedding snippets should do only once
 			for _, s := range scopedSnippets {
 				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)

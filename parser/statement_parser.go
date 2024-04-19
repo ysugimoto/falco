@@ -379,14 +379,15 @@ func (p *Parser) parseErrorStatement() (*ast.ErrorStatement, error) {
 	}
 	p.nextToken() // point to SEMICOLON
 
+	switch {
 	// If argument exists, attach comment to it as trailing
-	if stmt.Argument != nil {
+	case stmt.Argument != nil:
 		swapLeadingTrailing(p.curToken, stmt.Argument.GetMeta())
-	} else if stmt.Code != nil {
-		// If code exists, attach comment to it as trailing
+	// If code exists, attach comment to it as trailing
+	case stmt.Code != nil:
 		swapLeadingTrailing(p.curToken, stmt.Code.GetMeta())
-	} else {
-		// Otherwise, attach comment to the statement as trailing
+	// Otherwise, attach comment to the statement as trailing
+	default:
 		swapLeadingTrailing(p.curToken, stmt.Meta)
 	}
 	stmt.Meta.Trailing = p.trailing()
@@ -403,6 +404,7 @@ func (p *Parser) parseEsiStatement() (*ast.EsiStatement, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	p.nextToken() // point to SEMICOLON
+	swapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
@@ -438,6 +440,7 @@ func (p *Parser) parseRestartStatement() (*ast.RestartStatement, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	p.nextToken() // point to SEMICOLON
+	swapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil
@@ -641,6 +644,7 @@ func (p *Parser) parseAnotherIfStatement() (*ast.IfStatement, error) {
 	if !p.expectPeek(token.LEFT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
+	swapLeadingInfix(p.curToken, stmt.Meta)
 
 	p.nextToken() // point to condition expression
 	cond, err := p.parseExpression(LOWEST)
@@ -726,6 +730,7 @@ func (p *Parser) parseSwitchStatement() (*ast.SwitchStatement, error) {
 	// Parse case clauses
 	for !p.peekTokenIs(token.RIGHT_BRACE) {
 		t := p.peekToken
+		p.nextToken()
 		clause, err := p.parseCaseStatement()
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -801,7 +806,6 @@ func (p *Parser) parseFallthroughStatement() (*ast.FallthroughStatement, error) 
 }
 
 func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
-	p.nextToken()
 	stmt := &ast.CaseStatement{
 		Meta:       p.curToken,
 		Statements: []ast.Statement{},
@@ -837,6 +841,11 @@ func (p *Parser) parseCaseStatement() (*ast.CaseStatement, error) {
 		// nothing to do
 	default:
 		return nil, UnexpectedToken(p.curToken, "case", "default")
+	}
+
+	// If stmt.Test is nil, this case is "default"
+	if stmt.Test != nil {
+		swapLeadingInfix(p.curToken, stmt.Meta)
 	}
 
 	if !p.expectPeek(token.COLON) {
@@ -907,9 +916,8 @@ func (p *Parser) parseGotoDestination() (*ast.GotoDestinationStatement, error) {
 
 func (p *Parser) parseFunctionCall() (*ast.FunctionCallStatement, error) {
 	stmt := &ast.FunctionCallStatement{
-		Meta:                       p.curToken,
-		Function:                   p.parseIdent(),
-		ParenthesisTrailingComment: ast.Comments{},
+		Meta:     p.curToken,
+		Function: p.parseIdent(),
 	}
 
 	p.nextToken() // point to LEFT_PAREN
@@ -924,7 +932,7 @@ func (p *Parser) parseFunctionCall() (*ast.FunctionCallStatement, error) {
 	}
 
 	p.nextToken() // point to SEMICOLON
-	stmt.ParenthesisTrailingComment = p.curToken.Leading
+	swapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.trailing()
 
 	return stmt, nil

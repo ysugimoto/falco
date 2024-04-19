@@ -6,18 +6,15 @@ import (
 
 func TestLogStatement(t *testing.T) {
 	log := &LogStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment")),
 		Value: &String{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "foobar",
 		},
 	}
 
-	expect := `// This is comment
-log "foobar"; // This is comment
+	expect := `// leading comment
+log /* before_name */ "foobar" /* after_name */; // trailing comment
 `
-
-	if log.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, log.String())
-	}
+	assert(t, log.String(), expect)
 }

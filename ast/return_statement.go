@@ -17,7 +17,7 @@ func (r *ReturnStatement) GetMeta() *Meta { return r.Meta }
 func (r *ReturnStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(r.LeadingComment())
+	buf.WriteString(r.LeadingComment(lineFeed))
 	if r.ReturnExpression != nil {
 		if r.HasParenthesis {
 			buf.WriteString(indent(r.Nest) + "return ")
@@ -35,7 +35,7 @@ func (r *ReturnStatement) String() string {
 	} else {
 		buf.WriteString(indent(r.Nest) + "return;")
 	}
-	buf.WriteString(r.TrailingComment())
+	buf.WriteString(r.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

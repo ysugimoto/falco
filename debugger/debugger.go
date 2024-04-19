@@ -37,7 +37,7 @@ func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
 		return d.breakPoint(node.GetMeta().Token)
 	default:
 		meta := node.GetMeta()
-		if !strings.Contains(meta.LeadingComment(), debuggerMark) {
+		if !hasDebufferMark(meta.Leading) {
 			return interpreter.DebugPass
 		}
 		return d.breakPoint(meta.Token)
@@ -74,4 +74,8 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 		d.help.Highlight(helpview.F7)
 	}
 	return interpreter.DebugPass
+}
+
+func hasDebufferMark(cs ast.Comments) bool {
+	return strings.Contains(cs.String(), debuggerMark)
 }

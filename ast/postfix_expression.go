@@ -17,6 +17,7 @@ func (i *PostfixExpression) String() string {
 
 	buf.WriteString(i.Left.String())
 	buf.WriteString(i.Operator)
+	buf.WriteString(paddingLeft(i.TrailingComment(inline)))
 
 	return buf.String()
 }

@@ -974,7 +974,7 @@ sub vcl_recv {
 								},
 								Another: []*ast.IfStatement{
 									{
-										Meta: ast.New(T, 1, comments("// j")),
+										Meta: ast.New(T, 1, comments("// j"), comments(), comments("/* k */")),
 										Condition: &ast.InfixExpression{
 											Meta: ast.New(T, 1, comments(), comments("/* o */")),
 											Left: &ast.Ident{
@@ -1092,12 +1092,12 @@ sub vcl_recv {
 										Fallthrough: true,
 									},
 									{
-										Meta: ast.New(T, 2),
+										Meta: ast.New(T, 2, comments(), comments(), comments("/* infix */")),
 										Test: &ast.InfixExpression{
 											Meta:     ast.New(T, 2),
 											Operator: "~",
 											Right: &ast.String{
-												Meta:  ast.New(T, 2, comments("/* infix */")),
+												Meta:  ast.New(T, 2),
 												Value: "[2-3]"},
 										},
 										Statements: []ast.Statement{
@@ -1422,12 +1422,12 @@ sub vcl_recv {
 								Default: 1,
 								Cases: []*ast.CaseStatement{
 									{
-										Meta: ast.New(T, 2, comments("// f"), comments("// i")),
+										Meta: ast.New(T, 2, comments("// f"), comments("// i"), comments("/* g */")),
 										Test: &ast.InfixExpression{
-											Meta:     ast.New(T, 2, comments("/* g */"), comments("/* h */")),
+											Meta:     ast.New(T, 2, comments(), comments("/* h */")),
 											Operator: "==",
 											Right: &ast.String{
-												Meta:  ast.New(T, 2, comments("/* g */"), comments("/* h */")),
+												Meta:  ast.New(T, 2, comments(), comments("/* h */")),
 												Value: "1",
 											},
 										},
@@ -2639,8 +2639,7 @@ sub vcl_recv {
 									Meta:  ast.New(T, 1, comments("// Function Leading comment"), comments("// Function Trailing comment")),
 									Value: "testFun",
 								},
-								Arguments:                  []ast.Expression{},
-								ParenthesisTrailingComment: comments(),
+								Arguments: []ast.Expression{},
 							},
 						},
 					},
@@ -2691,7 +2690,6 @@ sub vcl_recv {
 										Value: 3,
 									},
 								},
-								ParenthesisTrailingComment: comments(),
 							},
 						},
 					},
@@ -2742,7 +2740,6 @@ sub vcl_recv {
 										Value: 3,
 									},
 								},
-								ParenthesisTrailingComment: comments(),
 							},
 						},
 					},
@@ -2775,9 +2772,9 @@ sub vcl_recv {
 						Meta: ast.New(T, 1),
 						Statements: []ast.Statement{
 							&ast.FunctionCallStatement{
-								Meta: ast.New(T, 1, comments("// a"), comments("// i")),
+								Meta: ast.New(T, 1, comments("// a"), comments("// i"), comments("/* h */")),
 								Function: &ast.Ident{
-									Meta:  ast.New(T, 1, comments("// a"), comments("// i")),
+									Meta:  ast.New(T, 1, comments("// a"), comments("// i"), comments("/* h */")),
 									Value: "std.collect",
 								},
 								Arguments: []ast.Expression{
@@ -2794,7 +2791,6 @@ sub vcl_recv {
 										Value: 3,
 									},
 								},
-								ParenthesisTrailingComment: comments("/* h */"),
 							},
 						},
 					},

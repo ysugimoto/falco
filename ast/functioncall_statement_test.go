@@ -6,26 +6,25 @@ import (
 
 func TestFunctionCallStatement(t *testing.T) {
 	fn := &FunctionCallStatement{
-		Meta: New(T, 0, comments("/* This is comment */"), comments("/* This is comment */")),
+		Meta: New(T, 0, comments("/* leading comment */"), comments("/* trailing comment */"), comments("/* infix comment */")),
 		Function: &Ident{
 			Meta:  New(T, 0),
 			Value: "std.collect",
 		},
 		Arguments: []Expression{
 			&String{
-				Meta:  New(T, 0),
+				Meta:  New(T, 0, comments("/* before_arg1 */"), comments("/* after_arg1 */")),
 				Value: "req.http.Cookie",
 			},
 			&String{
-				Meta:  New(T, 0),
+				Meta:  New(T, 0, comments("/* before_arg2 */"), comments("/* after_arg2 */")),
 				Value: ";",
 			},
 		},
 	}
 
-	expect := `/* This is comment */ std.collect("req.http.Cookie", ";"); /* This is comment */`
+	expect := `/* leading comment */
+std.collect(/* before_arg1 */ "req.http.Cookie" /* after_arg1 */, /* before_arg2 */ ";" /* after_arg2 */) /* infix comment */; /* trailing comment */`
 
-	if fn.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, fn.String())
-	}
+	assert(t, fn.String(), expect)
 }

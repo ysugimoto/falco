@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Ident struct {
@@ -12,7 +13,7 @@ type Ident struct {
 func (i *Ident) expression()    {}
 func (i *Ident) GetMeta() *Meta { return i.Meta }
 func (i *Ident) String() string {
-	return i.LeadingInlineComment() + i.Value + i.TrailingComment()
+	return strings.TrimSpace(i.LeadingComment(inline) + i.Value + i.TrailingComment(inline))
 }
 
 type IP struct {
@@ -23,7 +24,7 @@ type IP struct {
 func (i *IP) expression()    {}
 func (i *IP) GetMeta() *Meta { return i.Meta }
 func (i *IP) String() string {
-	return i.LeadingInlineComment() + i.Value + i.TrailingComment()
+	return strings.TrimSpace(i.LeadingComment(inline) + i.Value + i.TrailingComment(inline))
 }
 
 type Boolean struct {
@@ -34,7 +35,9 @@ type Boolean struct {
 func (b *Boolean) expression()    {}
 func (b *Boolean) GetMeta() *Meta { return b.Meta }
 func (b *Boolean) String() string {
-	return b.LeadingInlineComment() + fmt.Sprintf("%t", b.Value) + b.TrailingComment()
+	return strings.TrimSpace(
+		fmt.Sprintf("%s%t%s", b.LeadingComment(inline), b.Value, b.TrailingComment(inline)),
+	)
 }
 
 type Integer struct {
@@ -45,7 +48,9 @@ type Integer struct {
 func (i *Integer) expression()    {}
 func (i *Integer) GetMeta() *Meta { return i.Meta }
 func (i *Integer) String() string {
-	return i.LeadingInlineComment() + fmt.Sprintf("%d", i.Value) + i.TrailingComment()
+	return strings.TrimSpace(
+		fmt.Sprintf("%s%d%s", i.LeadingComment(inline), i.Value, i.TrailingComment(inline)),
+	)
 }
 
 type String struct {
@@ -57,9 +62,13 @@ func (s *String) expression()    {}
 func (s *String) GetMeta() *Meta { return s.Meta }
 func (s *String) String() string {
 	if s.Token.Offset == 4 { // offset=4 means bracket string
-		return s.LeadingComment() + fmt.Sprintf(`{"%s"}`, s.Value) + s.TrailingComment()
+		return strings.TrimSpace(
+			fmt.Sprintf(`%s{"%s"}%s`, s.LeadingComment(inline), s.Value, s.TrailingComment(inline)),
+		)
 	}
-	return s.LeadingInlineComment() + fmt.Sprintf(`"%s"`, s.Value) + s.TrailingComment()
+	return strings.TrimSpace(
+		fmt.Sprintf(`%s"%s"%s`, s.LeadingComment(inline), s.Value, s.TrailingComment(inline)),
+	)
 }
 
 type Float struct {
@@ -70,7 +79,9 @@ type Float struct {
 func (f *Float) expression()    {}
 func (f *Float) GetMeta() *Meta { return f.Meta }
 func (f *Float) String() string {
-	return f.LeadingInlineComment() + fmt.Sprintf("%f", f.Value) + f.TrailingComment()
+	return strings.TrimSpace(
+		fmt.Sprintf(`%s%f%s`, f.LeadingComment(inline), f.Value, f.TrailingComment(inline)),
+	)
 }
 
 type RTime struct {
@@ -81,5 +92,5 @@ type RTime struct {
 func (r *RTime) expression()    {}
 func (r *RTime) GetMeta() *Meta { return r.Meta }
 func (r *RTime) String() string {
-	return r.LeadingInlineComment() + r.Value + r.TrailingComment()
+	return strings.TrimSpace(r.LeadingComment(inline) + r.Value + r.TrailingComment(inline))
 }
