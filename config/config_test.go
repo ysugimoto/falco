@@ -63,6 +63,10 @@ func TestConfigFromCLI(t *testing.T) {
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
+		Console: &ConsoleConfig{
+			Scope:           "recv",
+			OverrideRequest: &RequestConfig{},
+		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}
 

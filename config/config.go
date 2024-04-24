@@ -47,6 +47,15 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Console configuration
+type ConsoleConfig struct {
+	// Initial scope string, for example, recv, pass, fetch, etc...
+	Scope string `cli:"scope" default:"recv"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
+
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
@@ -77,6 +86,8 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Console configuration
+	Console *ConsoleConfig
 }
 
 func New(args []string) (*Config, error) {
