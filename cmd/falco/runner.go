@@ -220,7 +220,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	lt := linter.New()
+	lt := linter.New(r.config.Linter)
 	lt.Lint(vcl, ctx)
 
 	for k, v := range lt.Lexers() {

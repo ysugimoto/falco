@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
@@ -21,12 +22,14 @@ type Linter struct {
 	FatalError     *FatalError
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
+	conf           *config.LinterConfig
 }
 
-func New() *Linter {
+func New(c *config.LinterConfig) *Linter {
 	return &Linter{
 		includexLexers: make(map[string]*lexer.Lexer),
 		ignore:         &ignore{},
+		conf:           c,
 	}
 }
 
@@ -809,12 +812,40 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 }
 
 func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx *context.Context) types.Type {
+	// If ignore target in configuration, skip it
+	if isIgnoredSubroutineInConfig(l.conf.IgnoreSubroutines, decl.Name.Value) {
+		return types.NeverType
+	}
+
 	// validate subroutine name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
 	}
 
 	scope := getSubroutineCallScope(decl)
+	if scope == -1 {
+		// If scope could not recognized from subroutine name or annotation,
+		// try to find from configuration
+		if enforces, ok := l.conf.EnforceSubroutineScopes[decl.Name.Value]; ok {
+			scope = enforceSubroutineCallScopeFromConfig(enforces)
+		}
+	}
+	// Raise lint error about unrecognized subroutine
+	if scope == -1 {
+		err := &LintError{
+			Severity: WARNING,
+			Token:    decl.Meta.Token,
+			Message: fmt.Sprintf(
+				`Cannot recognize subrountine call scope for "%s"`,
+				decl.Name.Value,
+			),
+		}
+		l.Error(err.Match(UNRECOGNIZE_CALL_SCOPE))
+
+		// ...but set as RECV for the basic linting
+		scope = context.RECV
+	}
+
 	var cc *context.Context
 	if decl.ReturnType != nil {
 		returnType := types.ValueTypeMap[decl.ReturnType.Value]
