@@ -954,7 +954,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
-	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
+	if hasFastlyBoilerPlateMacro(sub.Block.Infix, phrase) {
 		for _, s := range scopedSnippets {
 			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 		}
@@ -964,7 +964,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var found bool
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) && !found {
+		if hasFastlyBoilerPlateMacro(stmt.GetMeta().Leading, phrase) && !found {
 			// Macro found but embedding snippets should do only once
 			for _, s := range scopedSnippets {
 				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
@@ -1174,7 +1174,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 	}
 
 	if stmt.Alternative != nil {
-		l.lint(stmt.Alternative, ctx)
+		l.lint(stmt.Alternative.Consequence, ctx)
 	}
 
 	return types.NeverType
@@ -1209,7 +1209,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 }
 
 func (l *Linter) lintSwitchStatement(stmt *ast.SwitchStatement, ctx *context.Context) types.Type {
-	if c, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+	if c, ok := stmt.Control.Expression.(*ast.FunctionCallExpression); ok {
 		fn, err := ctx.GetFunction(c.Function.Value)
 		if err != nil {
 			l.Error(&LintError{
@@ -1410,23 +1410,23 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			return types.NeverType
 		}
 
-		err := isValidReturnExpression(*stmt.ReturnExpression)
+		err := isValidReturnExpression(stmt.ReturnExpression)
 		if err != nil {
 			lintErr := &LintError{
 				Severity: ERROR,
-				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Token:    stmt.ReturnExpression.GetMeta().Token,
 				Message:  err.Error(),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 			return types.NeverType
 		}
 
-		cc := l.lint(*stmt.ReturnExpression, ctx)
+		cc := l.lint(stmt.ReturnExpression, ctx)
 		// Condition expression return type must be BOOL or STRING
 		if !expectType(cc, *ctx.ReturnType) {
 			lintErr := &LintError{
 				Severity: ERROR,
-				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Token:    stmt.ReturnExpression.GetMeta().Token,
 				Message:  fmt.Sprintf("Function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
@@ -1481,9 +1481,9 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		return types.NeverType
 	}
 
-	if !expectState((*stmt.ReturnExpression).String(), expects...) {
+	if !expectState((stmt.ReturnExpression).String(), expects...) {
 		l.Error(InvalidReturnState(
-			(*stmt.ReturnExpression).GetMeta(), context.ScopeString(ctx.Mode()), (*stmt.ReturnExpression).String(), expects...,
+			stmt.ReturnExpression.GetMeta(), context.ScopeString(ctx.Mode()), stmt.ReturnExpression.String(), expects...,
 		).Match(RESTART_STATEMENT_SCOPE))
 	}
 	return types.NeverType

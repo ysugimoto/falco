@@ -6,14 +6,11 @@ import (
 
 func TestFallthroughStatement(t *testing.T) {
 	ft := &FallthroughStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment"), comments("/* infix comment */")),
 	}
 
-	expect := `// This is comment
-fallthrough; // This is comment
+	expect := `// leading comment
+fallthrough /* infix comment */; // trailing comment
 `
-
-	if ft.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, ft.String())
-	}
+	assert(t, ft.String(), expect)
 }

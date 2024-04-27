@@ -58,7 +58,10 @@ func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
 	}
 	cidr.IP = p.parseIP()
-	cidr.IP.Meta = clearComments(cidr.IP.Meta)
+	// If inverse is not set, leading comment should be set as CIDR node leading comment
+	if cidr.Inverse == nil {
+		cidr.IP.Meta = clearComments(cidr.IP.Meta)
+	}
 
 	// If SLASH token is found on peek token, need to parse CIDR mask bit
 	if p.peekTokenIs(token.SLASH) {
@@ -77,6 +80,13 @@ func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
 	p.nextToken() // point to semicolon
+
+	// semicolon leading comment will attach whatever IP or Mask
+	if cidr.Mask != nil {
+		swapLeadingTrailing(p.curToken, cidr.Mask.Meta)
+	} else {
+		swapLeadingTrailing(p.curToken, cidr.IP.Meta)
+	}
 	cidr.Meta.Trailing = p.trailing()
 
 	return cidr, nil
@@ -188,6 +198,8 @@ func (p *Parser) parseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 	if !p.expectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
+	swapLeadingTrailing(p.curToken, d.Name.Meta)
+
 	d.DirectorType = p.parseIdent()
 
 	if !p.expectPeek(token.LEFT_BRACE) {
@@ -317,6 +329,7 @@ func (p *Parser) parseTableDeclaration() (*ast.TableDeclaration, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
 	t.Name = p.parseIdent()
+	swapLeadingTrailing(p.peekToken, t.Name.Meta)
 
 	// Table value type is optional
 	if p.peekTokenIs(token.IDENT) {
@@ -412,6 +425,7 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 		// usual case, user should add trailing comma for east properties :)
 		prop.HasComma = true
 		p.nextToken() // point to COMMA
+		swapLeadingTrailing(p.curToken, prop.Value.GetMeta())
 		prop.Meta.Trailing = p.trailing()
 	case token.RIGHT_BRACE:
 		// if peed token is RIGHT_BRACE, it means table declaration end. if also be valid

@@ -16,7 +16,7 @@ func (p *PrefixExpression) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString("(")
-	buf.WriteString(p.LeadingInlineComment())
+	buf.WriteString(p.LeadingComment(inline))
 	buf.WriteString(p.Operator)
 	buf.WriteString(p.Right.String())
 	buf.WriteString(")")
