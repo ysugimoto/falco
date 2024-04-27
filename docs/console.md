@@ -25,7 +25,8 @@ Run console with fetch scope example:
     falco console -s fetch
 ```
 
-[screenshot]
+<img width="517" alt="CleanShot 2024-04-24 at 12 46 38@2x" src="https://github.com/ysugimoto/falco/assets/1000401/5045ff71-d2dc-4de3-a875-4a20102ed9bb">
+
 
 ## Control Commands
 
