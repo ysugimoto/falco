@@ -23,6 +23,9 @@ func Regsuball_Validate(args []value.Value) error {
 			return errors.TypeMismatch(Regsuball_Name, i+1, Regsuball_ArgumentTypes[i], args[i].Type())
 		}
 	}
+	if !args[1].IsLiteral() {
+		return errors.TypeMismatch(Regsuball_Name, 2, "STRING LITERAL", args[1].Type())
+	}
 	return nil
 }
 
@@ -48,7 +51,7 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
-	expand, _ := convertGoExpandString(replacement.Value)
+	expand := regsubExpandRE.ReplaceAllString(replacement.Value, regSubExpandReplace)
 	return &value.String{
 		Value: re.ReplaceAllString(input.Value, expand),
 	}, nil

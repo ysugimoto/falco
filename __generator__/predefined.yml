@@ -182,6 +182,21 @@ backend.socket.tcpi_total_retrans:
   on: [FETCH]
   get: INTEGER
 
+backend.%any%.connections_open:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+backend.%any%.connections_used:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-used/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+backend.%any%.healthy:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
 bereq.between_bytes_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/"
   on: [PASS, MISS]

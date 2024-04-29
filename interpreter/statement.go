@@ -203,7 +203,7 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 	if stmt.ReturnExpression == nil {
 		return BARE_RETURN
 	}
-	return State((*stmt.ReturnExpression).String())
+	return State(stmt.ReturnExpression.String())
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
@@ -547,7 +547,7 @@ func (i *Interpreter) ProcessIfStatement(
 
 	// else
 	if stmt.Alternative != nil {
-		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds, isReturnAsValue)
+		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Consequence.Statements, ds, isReturnAsValue)
 		if err != nil {
 			return value.Null, NONE, errors.WithStack(err)
 		}
@@ -565,7 +565,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 	isReturnAsValue bool,
 ) (value.Value, State, error) {
 	// User defined functions used in a switch control statement must have a STRING return type.
-	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+	if fnCall, ok := stmt.Control.Expression.(*ast.FunctionCallExpression); ok {
 		fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]
 		if ok && fn.ReturnType.Value != string(value.StringType) {
 			return value.Null, NONE, errors.WithStack(exception.Runtime(
@@ -575,7 +575,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 			))
 		}
 	}
-	expr, err := i.ProcessExpression(stmt.Control, false)
+	expr, err := i.ProcessExpression(stmt.Control.Expression, false)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}

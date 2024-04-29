@@ -6,22 +6,22 @@ import (
 
 func TestIfStatement(t *testing.T) {
 	ifs := &IfStatement{
+		Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("/* infix */")),
 		Keyword: "if",
-		Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
 		Condition: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_condition */"), comments("/* after_condition */")),
 			Value: "req.http.Host",
 		},
 		Another: []*IfStatement{
 			{
+				Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("/* infix */")),
 				Keyword: "else if",
-				Meta:    New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
 				Condition: &Ident{
-					Meta:  New(T, 0),
+					Meta:  New(T, 0, comments("/* before_condition */"), comments("/* after_condition */")),
 					Value: "req.http.Host",
 				},
 				Consequence: &BlockStatement{
-					Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+					Meta: New(T, 0, comments("/* before_block */"), comments("/* This is comment */")),
 					Statements: []Statement{
 						&EsiStatement{
 							Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
@@ -31,46 +31,42 @@ func TestIfStatement(t *testing.T) {
 			},
 		},
 		Consequence: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+			Meta: New(T, 0, comments("/* before_block */")),
 			Statements: []Statement{
 				&EsiStatement{
 					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
 				},
 			},
 		},
-		AlternativeComments: Comments{
-			{
-				Value: "// This is comment",
-			},
-		},
-		Alternative: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
-			Statements: []Statement{
-				&EsiStatement{
-					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+		Alternative: &ElseStatement{
+			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("/* infix */")),
+			Consequence: &BlockStatement{
+				Meta: New(T, 0),
+				Statements: []Statement{
+					&EsiStatement{
+						Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
+					},
 				},
 			},
 		},
 	}
 
 	expect := `// This is comment
-if (req.http.Host) {
+if /* infix */ (/* before_condition */ req.http.Host /* after_condition */) /* before_block */ {
   // This is comment
   esi; /* This is comment */
 }
 // This is comment
-else if (req.http.Host) {
+else if /* infix */ (/* before_condition */ req.http.Host /* after_condition */) /* before_block */ {
   // This is comment
   esi; /* This is comment */
 } /* This is comment */
 // This is comment
-else {
+else /* infix */ {
   // This is comment
   esi; /* This is comment */
 } /* This is comment */
 `
 
-	if ifs.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, ifs.String())
-	}
+	assert(t, ifs.String(), expect)
 }

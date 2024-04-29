@@ -14,9 +14,9 @@ func (c *CallStatement) GetMeta() *Meta { return c.Meta }
 func (c *CallStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(c.LeadingComment())
+	buf.WriteString(c.LeadingComment(lineFeed))
 	buf.WriteString(indent(c.Nest) + "call " + c.Subroutine.String() + ";")
-	buf.WriteString(c.TrailingComment())
+	buf.WriteString(c.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

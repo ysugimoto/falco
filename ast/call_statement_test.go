@@ -6,18 +6,16 @@ import (
 
 func TestCallStatement(t *testing.T) {
 	call := &CallStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment")),
 		Subroutine: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_subroutine */"), comments("/* after_subroutine */")),
 			Value: "mod_recv",
 		},
 	}
 
-	expect := `// This is comment
-call mod_recv; // This is comment
+	expect := `// leading comment
+call /* before_subroutine */ mod_recv /* after_subroutine */; // trailing comment
 `
 
-	if call.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, call.String())
-	}
+	assert(t, call.String(), expect)
 }

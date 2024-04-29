@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
+	lock      sync.Mutex
 
 	options []context.Option
 
