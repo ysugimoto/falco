@@ -276,11 +276,11 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 			&ast.SubroutineDeclaration{
 				Meta: ast.New(T, 0, comments("// subroutine leading")),
 				Name: &ast.Ident{
-					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */")),
+					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */"), comments("/* subroutine block leading */")),
 					Value: "vcl_recv",
 				},
 				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1, comments("/* subroutine block leading */"), comments("// subroutine trailing"), comments("// subroutine block infix")),
+					Meta: ast.New(T, 1, comments(), comments("// subroutine trailing"), comments("// subroutine block infix")),
 					Statements: []ast.Statement{
 						&ast.IfStatement{
 							Meta: ast.New(T, 1, comments("// if leading")),

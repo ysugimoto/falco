@@ -68,6 +68,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		} else {
 			// Could be a goto destination
 			stmt, err = p.parseGotoDestination()
+			if err != nil {
+				// raise an error on the current token
+				err = UnexpectedToken(p.curToken)
+			}
 		}
 	default:
 		err = UnexpectedToken(p.curToken)
@@ -457,9 +461,9 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	// return statement may not have argument
 	// https://developer.fastly.com/reference/vcl/statements/return/
 	if p.peekTokenIs(token.SEMICOLON) {
-		stmt.Meta.Trailing = p.trailing()
 		p.nextToken() // point to SEMICOLON
-		swapLeadingTrailing(p.curToken, stmt.Meta)
+		swapLeadingInfix(p.curToken, stmt.Meta)
+		stmt.Meta.Trailing = p.trailing()
 		return stmt, nil
 	}
 
@@ -621,7 +625,7 @@ func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
 		// Note: VCL could define "else if" statement with "elseif", "elsif" keyword
 		case token.ELSEIF, token.ELSIF: // elseif, elsif
 			p.nextToken() // point to ELSEIF/ELSIF
-			another, err := p.parseAnotherIfStatement(p.curToken.Token.Literal)
+			another, err := p.parseAnotherIfStatement(p.peekToken.Token.Literal)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

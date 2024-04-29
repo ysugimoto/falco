@@ -33,7 +33,11 @@ func (r *ReturnStatement) String() string {
 			buf.WriteString(indent(r.Nest) + "return " + r.ReturnExpression.String() + ";")
 		}
 	} else {
-		buf.WriteString(indent(r.Nest) + "return;")
+		buf.WriteString(indent(r.Nest) + "return")
+		if v := r.InfixComment(inline); v != "" {
+			buf.WriteString(paddingLeft(v))
+		}
+		buf.WriteString(";")
 	}
 	buf.WriteString(r.TrailingComment(inline))
 	buf.WriteString("\n")

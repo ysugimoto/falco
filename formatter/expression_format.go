@@ -17,6 +17,7 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 		buf.Write(v, Comment)
 	}
 
+	var isSkipTrailing bool
 	switch t := expr.(type) {
 	// Primitive types return string
 	case *ast.Ident:
@@ -45,11 +46,16 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 		buf.Append(f.formatGroupedExpression(t))
 	case *ast.InfixExpression:
 		buf.Append(f.formatInfixExpression(t))
+		// Trick: infix expression trailing comment does not be needed to format
+		// because the Right expression also has the same trailing comment
+		isSkipTrailing = true
 	}
 
 	// trailing comment
-	if v := f.formatComment(expr.GetMeta().Trailing, "", 0); v != "" {
-		buf.Write(v, Comment)
+	if !isSkipTrailing {
+		if v := f.formatComment(expr.GetMeta().Trailing, "", 0); v != "" {
+			buf.Write(v, Comment)
+		}
 	}
 
 	return buf

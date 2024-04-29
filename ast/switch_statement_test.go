@@ -6,7 +6,7 @@ import (
 
 func TestSwitchStatement(t *testing.T) {
 	switchs := &SwitchStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("// This is switch infix")),
 		Control: &SwitchControl{
 			Meta: New(T, 0, comments("/* before_paren */"), comments("/* after_paren */")),
 			Expression: &Ident{
@@ -112,6 +112,7 @@ case "5": /* This is comment */
 default: /* This is comment */
   // This is comment
   break; /* This is comment */
+  // This is switch infix
 } /* This is comment */
 `
 

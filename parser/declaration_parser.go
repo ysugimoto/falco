@@ -456,11 +456,17 @@ func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	// https://developer.fastly.com/reference/vcl/subroutines/
 	// we dont need to validate the type here, linter will do that later.
 	if p.expectPeek(token.IDENT) {
+		swapLeadingTrailing(p.curToken, s.Name.Meta)
 		s.ReturnType = p.parseIdent()
 	}
 
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
+	}
+	if s.ReturnType != nil {
+		swapLeadingTrailing(p.curToken, s.ReturnType.Meta)
+	} else {
+		swapLeadingTrailing(p.curToken, s.Name.Meta)
 	}
 
 	var err error
@@ -485,6 +491,7 @@ func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
+	swapLeadingTrailing(p.curToken, pb.Name.Meta)
 
 	var err error
 	if pb.Block, err = p.parseBlockStatement(); err != nil {
@@ -507,6 +514,7 @@ func (p *Parser) parseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	if !p.expectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
+	swapLeadingTrailing(p.curToken, r.Name.Meta)
 
 	var err error
 	if r.Block, err = p.parseBlockStatement(); err != nil {

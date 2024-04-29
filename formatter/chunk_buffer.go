@@ -75,6 +75,14 @@ func (c *ChunkBuffer) nextChunk() *Chunk {
 	return c.chunks[c.index]
 }
 
+// Get peek chunk
+func (c *ChunkBuffer) peekChunk() *Chunk {
+	if c.index+1 > len(c.chunks)-1 {
+		return nil
+	}
+	return c.chunks[c.index+1]
+}
+
 // Append buffers
 func (c *ChunkBuffer) Append(nc *ChunkBuffer) {
 	c.chunks = append(c.chunks, nc.chunks...)
@@ -96,6 +104,8 @@ func (c *ChunkBuffer) String() string {
 		buf.WriteString(c.chunks[i].buffer)
 		if c.chunks[i].isLineComment() {
 			buf.WriteString("\n")
+		} else if i < len(c.chunks)-1 {
+			buf.WriteString(" ")
 		}
 	}
 
@@ -165,17 +175,36 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 			}
 		// infix operator
 		case Infix:
-			// Or, the operator is the member os mustSingleOperators, the expression must be printed on the same line
-			if _, ok := mustSingleOperators[chunk.buffer]; ok {
-				buf.WriteString(c.chunkInfixOperator(state, chunk))
-				continue
-			}
+			// Or, the operator is the member of mustSingleOperators, the expression must be printed on the same line
+			// if _, ok := mustSingleOperators[chunk.buffer]; ok {
+			// 	buf.WriteString(c.chunkInfixOperator(state, chunk))
+			// 	continue
+			// }
 			buf.WriteString(c.chunkString(state, chunk.buffer))
 		// Otherwise (token), create chunk string
 		default:
+			chunk.buffer += c.combineInfixChunk(chunk.buffer)
 			buf.WriteString(c.chunkString(state, chunk.buffer))
 		}
 	}
+}
+
+func (c *ChunkBuffer) combineInfixChunk(b string) string {
+	peek := c.peekChunk()
+	if peek == nil || peek.Type != Infix {
+		return ""
+	}
+	// Infix operator
+	_, ok := mustSingleOperators[peek.buffer]
+	if !ok {
+		return ""
+	}
+	expr := " " + c.nextChunk().buffer
+	if next := c.nextChunk(); next != nil {
+		expr += " " + next.buffer
+	}
+
+	return expr
 }
 
 // nextLine() returns line feed and indent string
@@ -191,10 +220,10 @@ func (c *ChunkBuffer) nextLine(state *ChunkState) string {
 func (c *ChunkBuffer) chunkLineComment(state *ChunkState, chunk *Chunk) string {
 	var buf bytes.Buffer
 
-	if !state.isHead() {
-		buf.WriteString(c.nextLine(state))
-	}
-	buf.WriteString(chunk.buffer)
+	// if !state.isHead() {
+	// 	buf.WriteString(c.nextLine(state))
+	// }
+	buf.WriteString(" " + chunk.buffer)
 	buf.WriteString(c.nextLine(state))
 	state.reset()
 
@@ -231,7 +260,8 @@ func (c *ChunkBuffer) chunkInfixOperator(state *ChunkState, chunk *Chunk) string
 	for {
 		next := c.nextChunk()
 		if next == nil {
-			return c.chunkString(state, expr)
+			state.count += len(expr)
+			return expr
 		}
 
 		switch next.Type {
@@ -245,7 +275,8 @@ func (c *ChunkBuffer) chunkInfixOperator(state *ChunkState, chunk *Chunk) string
 			expr += " " + next.buffer
 		default:
 			expr += " " + next.buffer
-			return c.chunkString(state, expr)
+			state.count += len(expr)
+			return expr
 		}
 	}
 }

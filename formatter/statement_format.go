@@ -2,7 +2,6 @@ package formatter
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -46,9 +45,9 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 	case *ast.SwitchStatement:
 		line.Buffer += f.formatSwitchStatement(t)
 	case *ast.RestartStatement:
-		line.Buffer += f.formatRestartStatement()
+		line.Buffer += f.formatRestartStatement(t)
 	case *ast.EsiStatement:
-		line.Buffer += f.formatEsiStatement()
+		line.Buffer += f.formatEsiStatement(t)
 	case *ast.AddStatement:
 		line.Buffer += f.formatAddStatement(t)
 	case *ast.CallStatement:
@@ -95,7 +94,7 @@ func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
 	var buf bytes.Buffer
 
 	buf.WriteString("import ")
-	buf.WriteString(stmt.Name.Value)
+	buf.WriteString(stmt.Name.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -106,7 +105,7 @@ func (f *Formatter) formatIncludeStatement(stmt *ast.IncludeStatement) string {
 	var buf bytes.Buffer
 
 	buf.WriteString("include ")
-	buf.WriteString(f.formatString(stmt.Module))
+	buf.WriteString(stmt.Module.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -150,8 +149,12 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("declare local " + stmt.Name.Value)
-	buf.WriteString(" " + stmt.ValueType.Value)
+	buf.WriteString("declare ")
+	if v := f.formatComment(stmt.Infix, " ", 0); v != "" {
+		buf.WriteString(v)
+	}
+	buf.WriteString("local " + stmt.Name.String())
+	buf.WriteString(" " + stmt.ValueType.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -161,7 +164,7 @@ func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("set " + stmt.Ident.Value)
+	buf.WriteString("set " + stmt.Ident.String())
 	buf.WriteString(" " + stmt.Operator.Operator + " ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
 	buf.WriteString(";")
@@ -173,7 +176,7 @@ func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
 func (f *Formatter) formatUnsetStatement(stmt *ast.UnsetStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("unset " + stmt.Ident.Value)
+	buf.WriteString("unset " + stmt.Ident.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -186,9 +189,9 @@ func (f *Formatter) formatRemoveStatement(stmt *ast.RemoveStatement) string {
 	// The "remove" statement is alias of "unset" statement,
 	// so it could replaced to unset by configuration
 	if f.conf.ShouldUseUnset {
-		buf.WriteString("unset " + stmt.Ident.Value)
+		buf.WriteString("unset " + stmt.Ident.String())
 	} else {
-		buf.WriteString("remove " + stmt.Ident.Value)
+		buf.WriteString("remove " + stmt.Ident.String())
 	}
 	buf.WriteString(";")
 
@@ -199,24 +202,38 @@ func (f *Formatter) formatRemoveStatement(stmt *ast.RemoveStatement) string {
 func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(stmt.Keyword + " (")
+	buf.WriteString(stmt.Keyword)
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(" (")
 
 	// Condition expression chunk string may be printed with multi-lines.
 	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, stmt.Nest*f.conf.IndentWidth)
 	if strings.Contains(chunk, "\n") {
-		buf.WriteString(
-			fmt.Sprintf(
-				"\n%s%s\n",
-				f.indent(stmt.Nest+1),
-				chunk,
-			),
-		)
+		buf.WriteString("\n")
+		buf.WriteString(formatChunkedString(chunk, f.indent(stmt.Nest+1)))
 		buf.WriteString(f.indent(stmt.Nest) + ") ")
 	} else {
 		buf.WriteString(chunk + ") ")
 	}
 
+	if v := f.formatComment(stmt.Consequence.Leading, " ", 0); v != "" {
+		buf.WriteString(v)
+	}
+
 	buf.WriteString(f.formatBlockStatement(stmt.Consequence))
+	if v := f.formatComment(stmt.Consequence.Trailing, "", 0); v != "" {
+		// If comment is inline , concat to the same line
+		if isInlineComment(stmt.Consequence.Trailing) {
+			buf.WriteString(" " + v)
+		} else {
+			// Otherwise, print to the new line
+			buf.WriteString("\n")
+			buf.WriteString(f.indent(stmt.Consequence.Nest-1) + v)
+			buf.WriteString("\n")
+		}
+	}
 
 	// else if, elseif, elsif
 	for _, a := range stmt.Another {
@@ -231,25 +248,39 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 			buf.WriteString(" ")
 		}
 
+		// buf.WriteString(f.formatElseIfStatement(a))
 		keyword := a.Keyword
 		if f.conf.ElseIf {
 			keyword = "else if"
 		}
-		chunk := f.formatExpression(a.Condition).ChunkedString(a.Nest, a.Nest*f.conf.IndentWidth)
-		buf.WriteString(keyword + " (")
+		buf.WriteString(keyword)
+		if v := f.formatComment(a.Infix, "", 0); v != "" {
+			buf.WriteString(" " + v)
+		}
+		buf.WriteString(" (")
+		chunk := f.formatExpression(a.Condition).ChunkedString(a.Nest, getLineOffset(buf))
 		if strings.Contains(chunk, "\n") {
-			buf.WriteString(
-				fmt.Sprintf(
-					"\n%s%s\n",
-					f.indent(a.Nest+1),
-					chunk,
-				),
-			)
-			buf.WriteString(f.indent(stmt.Nest) + ") ")
+			buf.WriteString("\n")
+			buf.WriteString(formatChunkedString(chunk, f.indent(a.Nest+1)))
+			buf.WriteString(f.indent(a.Nest) + ") ")
 		} else {
 			buf.WriteString(chunk + ") ")
 		}
+		if v := f.formatComment(a.Consequence.Leading, "", 0); v != "" {
+			buf.WriteString(v + " ")
+		}
 		buf.WriteString(f.formatBlockStatement(a.Consequence))
+		if v := f.formatComment(a.Consequence.Trailing, "", 0); v != "" {
+			// If comment is inline , concat to the same line
+			if isInlineComment(a.Consequence.Trailing) {
+				buf.WriteString(" " + v)
+			} else {
+				// Otherwise, print to the new line
+				buf.WriteString("\n")
+				buf.WriteString(f.indent(a.Consequence.Nest-1) + v)
+				buf.WriteString("\n")
+			}
+		}
 	}
 
 	// else
@@ -262,7 +293,11 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 			buf.WriteString(" ")
 		}
 		buf.WriteString("else ")
-		buf.WriteString(f.formatBlockStatement(stmt.Alternative))
+		if v := f.formatComment(stmt.Alternative.Infix, "", 0); v != "" {
+			buf.WriteString(v + " ")
+		}
+		buf.WriteString(f.formatBlockStatement(stmt.Alternative.Consequence))
+		buf.WriteString(f.trailing(stmt.Alternative.Consequence.Trailing))
 	}
 
 	return buf.String()
@@ -272,7 +307,9 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("switch (" + f.formatExpression(stmt.Control).String() + ") {\n")
+	buf.WriteString("switch ")
+	buf.WriteString(strings.TrimSpace(stmt.Control.String()))
+	buf.WriteString(" {\n")
 	for _, c := range stmt.Cases {
 		// If indent_cale_labels is false, subtrat 1 nest level
 		if !f.conf.IndentCaseLabels {
@@ -283,14 +320,19 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 
 		if c.Test != nil {
 			buf.WriteString("case ")
+			if v := f.formatComment(c.Infix, " ", 0); v != "" {
+				buf.WriteString(v)
+			}
 			if c.Test.Operator == "~" {
 				buf.WriteString("~ ")
 			}
 			buf.WriteString(f.formatExpression(c.Test.Right).String())
-			buf.WriteString(":\n")
+			buf.WriteString(":")
 		} else {
-			buf.WriteString("default:\n")
+			buf.WriteString("default:")
 		}
+		buf.WriteString(f.trailing(c.Trailing))
+		buf.WriteString("\n")
 		buf.WriteString(f.formatCaseSectionStatements(c))
 	}
 	if len(stmt.Infix) > 0 {
@@ -318,15 +360,17 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 			lines = Lines{}
 		}
 		// need to plus 1 to  nested indent because parser won't increase nest level
-		line := &Line{
-			Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", meta.Nest+1),
-			Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", meta.Nest+1),
-		}
-		if _, ok := stmt.(*ast.BreakStatement); ok {
-			line.Buffer = f.indent(meta.Nest+1) + "break;"
-		} else {
-			line.Buffer = f.formatStatement(stmt).String()
-		}
+		stmt.GetMeta().Nest++
+		line := f.formatStatement(stmt)
+		// line := &Line{
+		// 	Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", meta.Nest+1),
+		// 	Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", meta.Nest+1),
+		// }
+		// if _, ok := stmt.(*ast.BreakStatement); ok {
+		// 	line.Buffer = f.indent(meta.Nest+1) + "break;"
+		// } else {
+		// 	line.Buffer = f.formatStatement(stmt).String()
+		// }
 		lines = append(lines, line)
 	}
 
@@ -349,19 +393,27 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 }
 
 // Format restart statement
-func (f *Formatter) formatRestartStatement() string {
+func (f *Formatter) formatRestartStatement(stmt *ast.RestartStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("restart;")
+	buf.WriteString("restart")
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
 
 	return buf.String()
 }
 
 // Format esi statement
-func (f *Formatter) formatEsiStatement() string {
+func (f *Formatter) formatEsiStatement(stmt *ast.EsiStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("esi;")
+	buf.WriteString("esi")
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
 
 	return buf.String()
 }
@@ -370,7 +422,7 @@ func (f *Formatter) formatEsiStatement() string {
 func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("add " + stmt.Ident.Value)
+	buf.WriteString("add " + stmt.Ident.String())
 	buf.WriteString(" " + stmt.Operator.Operator + " ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
 	buf.WriteString(";")
@@ -382,7 +434,7 @@ func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
 func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("call " + stmt.Subroutine.Value)
+	buf.WriteString("call " + stmt.Subroutine.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -392,10 +444,10 @@ func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("error " + f.formatExpression(stmt.Code).String())
+	buf.WriteString("error " + stmt.Code.String())
 	// argument is arbitrary
 	if stmt.Argument != nil {
-		buf.WriteString(" " + f.formatExpression(stmt.Argument).String())
+		buf.WriteString(" " + stmt.Argument.String())
 	}
 	buf.WriteString(";")
 
@@ -419,6 +471,9 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 
 	buf.WriteString("return")
 	if stmt.ReturnExpression != nil {
+		if v := f.formatComment(stmt.ParenthesisLeadingComments, "", 0); v != "" {
+			buf.WriteString(" " + v)
+		}
 		prefix := " "
 		suffix := ""
 		// If ReturnStatementParenthesis is enabled and inside functional subroutine,
@@ -428,9 +483,17 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 			suffix = ")"
 		}
 		buf.WriteString(prefix)
-		buf.WriteString(f.formatExpression(*stmt.ReturnExpression).String())
+		buf.WriteString(stmt.ReturnExpression.String())
 		buf.WriteString(suffix)
+		if v := f.formatComment(stmt.ParenthesisTrailingComments, "", 0); v != "" {
+			buf.WriteString(" " + v)
+		}
+	} else {
+		if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+			buf.WriteString(" " + v)
+		}
 	}
+
 	buf.WriteString(";")
 
 	return buf.String()
@@ -462,7 +525,7 @@ func (f *Formatter) formatSyntheticBase64Statement(stmt *ast.SyntheticBase64Stat
 func (f *Formatter) formatGotoStatement(stmt *ast.GotoStatement) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("goto " + stmt.Destination.Value)
+	buf.WriteString("goto " + stmt.Destination.String())
 	buf.WriteString(";")
 
 	return buf.String()
@@ -489,7 +552,11 @@ func (f *Formatter) formatFunctionCallStatement(stmt *ast.FunctionCallStatement)
 			buf.WriteString(", ")
 		}
 	}
-	buf.WriteString(");")
+	buf.WriteString(")")
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
 
 	return buf.String()
 }
