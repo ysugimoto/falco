@@ -14,9 +14,9 @@ func (i *ImportStatement) GetMeta() *Meta { return i.Meta }
 func (i *ImportStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(i.LeadingComment())
-	buf.WriteString(indent(i.Nest) + "import " + i.Name.String() + ";")
-	buf.WriteString(i.TrailingComment())
+	buf.WriteString(i.LeadingComment(lineFeed))
+	buf.WriteString(indent(i.Nest) + "import" + paddingLeft(i.Name.String()) + ";")
+	buf.WriteString(i.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/parser"
@@ -21,12 +22,14 @@ type Linter struct {
 	FatalError     *FatalError
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
+	conf           *config.LinterConfig
 }
 
-func New() *Linter {
+func New(c *config.LinterConfig) *Linter {
 	return &Linter{
 		includexLexers: make(map[string]*lexer.Lexer),
 		ignore:         &ignore{},
+		conf:           c,
 	}
 }
 
@@ -809,12 +812,40 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 }
 
 func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx *context.Context) types.Type {
+	// If ignore target in configuration, skip it
+	if isIgnoredSubroutineInConfig(l.conf.IgnoreSubroutines, decl.Name.Value) {
+		return types.NeverType
+	}
+
 	// validate subroutine name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
 	}
 
 	scope := getSubroutineCallScope(decl)
+	if scope == -1 {
+		// If scope could not recognized from subroutine name or annotation,
+		// try to find from configuration
+		if enforces, ok := l.conf.EnforceSubroutineScopes[decl.Name.Value]; ok {
+			scope = enforceSubroutineCallScopeFromConfig(enforces)
+		}
+	}
+	// Raise lint error about unrecognized subroutine
+	if scope == -1 {
+		err := &LintError{
+			Severity: WARNING,
+			Token:    decl.Meta.Token,
+			Message: fmt.Sprintf(
+				`Cannot recognize subrountine call scope for "%s"`,
+				decl.Name.Value,
+			),
+		}
+		l.Error(err.Match(UNRECOGNIZE_CALL_SCOPE))
+
+		// ...but set as RECV for the basic linting
+		scope = context.RECV
+	}
+
 	var cc *context.Context
 	if decl.ReturnType != nil {
 		returnType := types.ValueTypeMap[decl.ReturnType.Value]
@@ -923,7 +954,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
-	if hasFastlyBoilerPlateMacro(sub.Block.InfixComment(), phrase) {
+	if hasFastlyBoilerPlateMacro(sub.Block.Infix, phrase) {
 		for _, s := range scopedSnippets {
 			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 		}
@@ -933,7 +964,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var found bool
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerPlateMacro(stmt.LeadingComment(), phrase) && !found {
+		if hasFastlyBoilerPlateMacro(stmt.GetMeta().Leading, phrase) && !found {
 			// Macro found but embedding snippets should do only once
 			for _, s := range scopedSnippets {
 				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
@@ -1143,7 +1174,7 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 	}
 
 	if stmt.Alternative != nil {
-		l.lint(stmt.Alternative, ctx)
+		l.lint(stmt.Alternative.Consequence, ctx)
 	}
 
 	return types.NeverType
@@ -1178,7 +1209,7 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 }
 
 func (l *Linter) lintSwitchStatement(stmt *ast.SwitchStatement, ctx *context.Context) types.Type {
-	if c, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+	if c, ok := stmt.Control.Expression.(*ast.FunctionCallExpression); ok {
 		fn, err := ctx.GetFunction(c.Function.Value)
 		if err != nil {
 			l.Error(&LintError{
@@ -1379,23 +1410,23 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 			return types.NeverType
 		}
 
-		err := isValidReturnExpression(*stmt.ReturnExpression)
+		err := isValidReturnExpression(stmt.ReturnExpression)
 		if err != nil {
 			lintErr := &LintError{
 				Severity: ERROR,
-				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Token:    stmt.ReturnExpression.GetMeta().Token,
 				Message:  err.Error(),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 			return types.NeverType
 		}
 
-		cc := l.lint(*stmt.ReturnExpression, ctx)
+		cc := l.lint(stmt.ReturnExpression, ctx)
 		// Condition expression return type must be BOOL or STRING
 		if !expectType(cc, *ctx.ReturnType) {
 			lintErr := &LintError{
 				Severity: ERROR,
-				Token:    (*stmt.ReturnExpression).GetMeta().Token,
+				Token:    stmt.ReturnExpression.GetMeta().Token,
 				Message:  fmt.Sprintf("Function %s return type is incompatible with type %s", ctx.CurrentFunction(), cc.String()),
 			}
 			l.Error(lintErr.Match(SUBROUTINE_INVALID_RETURN_TYPE))
@@ -1450,9 +1481,9 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		return types.NeverType
 	}
 
-	if !expectState((*stmt.ReturnExpression).String(), expects...) {
+	if !expectState((stmt.ReturnExpression).String(), expects...) {
 		l.Error(InvalidReturnState(
-			(*stmt.ReturnExpression).GetMeta(), context.ScopeString(ctx.Mode()), (*stmt.ReturnExpression).String(), expects...,
+			stmt.ReturnExpression.GetMeta(), context.ScopeString(ctx.Mode()), stmt.ReturnExpression.String(), expects...,
 		).Match(RESTART_STATEMENT_SCOPE))
 	}
 	return types.NeverType
@@ -1659,10 +1690,17 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		return types.BoolType
 	case "~", "!~":
 		// Regex operator could compare only STRING,  IP or ACL type
-		if !expectType(left, types.StringType, types.IPType, types.AclType) {
+		if !expectType(left, types.StringType, types.IPType) {
 			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
-		} else if !expectType(right, types.StringType, types.IPType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
+		} else if !expectType(right, types.StringType, types.AclType) {
+			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType).Match(OPERATOR_CONDITIONAL))
+		}
+		if expectType(right, types.StringType) && !isLiteralExpression(exp.Right) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    exp.Right.GetMeta().Token,
+				Message:  "Regex patterns must be string literals.",
+			})
 		}
 		// And, if right expression is STRING, regex must be valid
 		if v, ok := exp.Right.(*ast.String); ok {

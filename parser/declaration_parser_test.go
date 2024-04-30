@@ -92,6 +92,59 @@ acl internal {
 	assert(t, vcl, expect)
 }
 
+func TestParseAclWithComplexComments(t *testing.T) {
+	input := `
+// a
+acl /* b */ internal /* c */{
+    // d
+	!/* e */"192.168.0.1" /* f */; // g
+	// h
+	"192.168.0.1"/32 /* i */ ;
+	// j
+} // k
+`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.AclDeclaration{
+				Meta: ast.New(T, 0, comments("// a"), comments("// k"), comments("// j")),
+				Name: &ast.Ident{
+					Meta:  ast.New(token.Token{}, 0, comments("/* b */"), comments("/* c */")),
+					Value: "internal",
+				},
+				CIDRs: []*ast.AclCidr{
+					{
+						Meta: ast.New(token.Token{}, 1, comments("// d"), comments("// g")),
+						Inverse: &ast.Boolean{
+							Meta:  ast.New(token.Token{}, 1),
+							Value: true,
+						},
+						IP: &ast.IP{
+							Meta:  ast.New(token.Token{}, 1, comments("/* e */"), comments("/* f */")),
+							Value: "192.168.0.1",
+						},
+					},
+					{
+						Meta: ast.New(token.Token{}, 1, comments("// h")),
+						IP: &ast.IP{
+							Meta:  ast.New(token.Token{}, 1),
+							Value: "192.168.0.1",
+						},
+						Mask: &ast.Integer{
+							Meta:  ast.New(token.Token{}, 1, comments(), comments("/* i */")),
+							Value: 32,
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
 func TestParseBackend(t *testing.T) {
 	input := `// Backend Leading comment
 backend example {
@@ -104,6 +157,7 @@ backend example {
 	} // Probe Trailing comment
 	// Backend Infix comment
 } // Backend Trailing comment`
+
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&ast.BackendDeclaration{
@@ -141,6 +195,73 @@ backend example {
 									},
 									Value: &ast.String{
 										Meta:  ast.New(T, 2),
+										Value: "GET / HTTP/1.1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParseBackendWithComplexComments(t *testing.T) {
+	input := `// a
+backend /* b */ example /* c */ {
+	// d
+	.host /* e */ = /* f */ "example.com" /* g */; // h
+	.probe /* i */ = /* j */ {
+		// k
+		.request /* l */ = /* m */ "GET / HTTP/1.1" /* n */; // o
+		// p
+	} // q
+	// r
+} // s`
+
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.BackendDeclaration{
+				Meta: ast.New(T, 0, comments("// a"), comments("// s"), comments("// r")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0, comments("/* b */"), comments("/* c */")),
+					Value: "example",
+				},
+				Properties: []*ast.BackendProperty{
+					{
+						Meta: ast.New(T, 1, comments("// d"), comments("// h")),
+						Key: &ast.Ident{
+							Meta:  ast.New(T, 1, comments(), comments("/* e */")),
+							Value: "host",
+						},
+						Value: &ast.String{
+							Meta:  ast.New(T, 1, comments("/* f */"), comments("/* g */")),
+							Value: "example.com",
+						},
+					},
+					{
+						Meta: ast.New(T, 1),
+						Key: &ast.Ident{
+							Meta:  ast.New(T, 1, comments(), comments("/* i */")),
+							Value: "probe",
+						},
+						Value: &ast.BackendProbeObject{
+							Meta: ast.New(T, 2, comments("/* j */"), comments("// q"), comments("// p")),
+							Values: []*ast.BackendProperty{
+								{
+									Meta: ast.New(T, 2, comments("// k"), comments("// o")),
+									Key: &ast.Ident{
+										Meta:  ast.New(T, 2, comments(), comments("/* l */")),
+										Value: "request",
+									},
+									Value: &ast.String{
+										Meta:  ast.New(T, 2, comments("/* m */"), comments("/* n */")),
 										Value: "GET / HTTP/1.1",
 									},
 								},
@@ -318,6 +439,65 @@ table tbl {
 	})
 }
 
+func TestParseTableWithComplexComments(t *testing.T) {
+	t.Run("with ValueType", func(t *testing.T) {
+		input := `// a
+table /* b */ tbl /* c */ STRING /* d */ {
+	/* e */
+ 	"foo" /* f */ : /* g */ "bar" /* h */, /* i */
+	// j
+ 	"lorem": "ipsum" /* k */
+	// l
+} // m`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.TableDeclaration{
+					Meta: ast.New(T, 0, comments("// a"), comments("// m"), comments("// l")),
+					Name: &ast.Ident{
+						Meta:  ast.New(T, 0, comments("/* b */"), comments("/* c */")),
+						Value: "tbl",
+					},
+					ValueType: &ast.Ident{
+						Meta:  ast.New(T, 0, comments(), comments("/* d */")),
+						Value: "STRING",
+					},
+					Properties: []*ast.TableProperty{
+						{
+							Meta: ast.New(T, 1, comments("/* e */"), comments("/* i */")),
+							Key: &ast.String{
+								Meta:  ast.New(T, 1, comments(), comments("/* f */")),
+								Value: "foo",
+							},
+							Value: &ast.String{
+								Meta:  ast.New(T, 1, comments("/* g */"), comments("/* h */")),
+								Value: "bar",
+							},
+							HasComma: true,
+						},
+						{
+							Meta: ast.New(T, 1, comments("// j"), comments("/* k */")),
+							Key: &ast.String{
+								Meta:  ast.New(T, 1),
+								Value: "lorem",
+							},
+							Value: &ast.String{
+								Meta:  ast.New(T, 1),
+								Value: "ipsum",
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+}
+
 func TestParseDirector(t *testing.T) {
 	input := `// Director Leading comment
 director example client {
@@ -377,6 +557,81 @@ director example client {
 								},
 								Value: &ast.Integer{
 									Meta:  ast.New(T, 2),
+									Value: 1,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v\n", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestParseDirectorWithComplexComments(t *testing.T) {
+	input := `// a
+director /* b */ example/* c */client /* d */{
+	// e
+	.quorum /* f */ = /* g */20 /* h */ % /* i */; // j
+	// k
+	{/* l */ .backend /* m */ = /* n */ example /* o */; /* p */.weight /* q */= /* r */ 1 /* s */; /* t */ } // u
+	// v
+} // w`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.DirectorDeclaration{
+				Meta: ast.New(T, 0, comments("// a"), comments("// w"), comments("// v")),
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0, comments("/* b */"), comments("/* c */")),
+					Value: "example",
+				},
+				DirectorType: &ast.Ident{
+					Meta:  ast.New(T, 0, comments(), comments("/* d */")),
+					Value: "client",
+				},
+				Properties: []ast.Expression{
+					&ast.DirectorProperty{
+						Meta: ast.New(T, 1, comments("// e"), comments("// j")),
+						Key: &ast.Ident{
+							Meta:  ast.New(T, 1, comments(), comments("/* f */")),
+							Value: "quorum",
+						},
+						Value: &ast.PostfixExpression{
+							Meta: ast.New(T, 1, comments("/* h */"), comments("/* i */")),
+							Left: &ast.Integer{
+								Meta:  ast.New(T, 1, comments("/* g */")),
+								Value: 20,
+							},
+							Operator: "%",
+						},
+					},
+					&ast.DirectorBackendObject{
+						Meta: ast.New(T, 2, comments("// k"), comments("// u"), comments("/* t */")),
+						Values: []*ast.DirectorProperty{
+							{
+								Meta: ast.New(T, 2, comments("/* l */")),
+								Key: &ast.Ident{
+									Meta:  ast.New(T, 2, comments(), comments("/* m */")),
+									Value: "backend",
+								},
+								Value: &ast.Ident{
+									Meta:  ast.New(T, 2, comments("/* n */"), comments("/* o */")),
+									Value: "example",
+								},
+							},
+							{
+								Meta: ast.New(T, 2, comments("/* p */")),
+								Key: &ast.Ident{
+									Meta:  ast.New(T, 2, comments(), comments("/* q */")),
+									Value: "weight",
+								},
+								Value: &ast.Integer{
+									Meta:  ast.New(T, 2, comments("/* r */"), comments("/* s */")),
 									Value: 1,
 								},
 							},

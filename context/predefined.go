@@ -20,6 +20,40 @@ func predefinedVariables() Variables {
 		},
 		"backend": &Object{
 			Items: map[string]*Object{
+				"%any%": &Object{
+					Items: map[string]*Object{
+						"connections_open": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/",
+							},
+						},
+						"connections_used": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-used/",
+							},
+						},
+						"healthy": &Object{
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-healthy/",
+							},
+						},
+					},
+				},
 				"conn": &Object{
 					Items: map[string]*Object{
 						"is_tls": &Object{

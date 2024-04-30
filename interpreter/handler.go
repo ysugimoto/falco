@@ -2,16 +2,25 @@ package interpreter
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/limitations"
+	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
 // Implements http.Handler
 func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	i.Debugger.Message("Request Incoming =========>")
 	defer i.Debugger.Message("<========= Request finished")
+	// Prevent deadlock if simulator is a backend for itself.
+	if strings.Contains(r.Header.Get("Fastly-FF"), variable.FALCO_SERVER_HOSTNAME) {
+		http.Error(w, "loop detected", http.StatusServiceUnavailable)
+		return
+	}
+	i.lock.Lock()
+	defer i.lock.Unlock()
 
 	if err := i.ProcessInit(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

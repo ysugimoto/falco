@@ -48,7 +48,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		cmpopts.IgnoreFields(ast.InfixExpression{}),
 		cmpopts.IgnoreFields(ast.PrefixExpression{}),
 		cmpopts.IgnoreFields(ast.GroupedExpression{}),
-		cmpopts.IgnoreFields(ast.IfStatement{}, "AlternativeComments", "Keyword"),
+		cmpopts.IgnoreFields(ast.IfStatement{}, "Keyword"),
 		cmpopts.IgnoreFields(ast.UnsetStatement{}),
 		cmpopts.IgnoreFields(ast.AddStatement{}),
 		cmpopts.IgnoreFields(ast.CallStatement{}),
@@ -276,11 +276,11 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 			&ast.SubroutineDeclaration{
 				Meta: ast.New(T, 0, comments("// subroutine leading")),
 				Name: &ast.Ident{
-					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */")),
+					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */"), comments("/* subroutine block leading */")),
 					Value: "vcl_recv",
 				},
 				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1, comments("/* subroutine block leading */"), comments("// subroutine trailing"), comments("// subroutine block infix")),
+					Meta: ast.New(T, 1, comments(), comments("// subroutine trailing"), comments("// subroutine block infix")),
 					Statements: []ast.Statement{
 						&ast.IfStatement{
 							Meta: ast.New(T, 1, comments("// if leading")),

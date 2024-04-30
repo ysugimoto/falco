@@ -3,12 +3,14 @@ package interpreter
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io"
-	"time"
-
-	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
@@ -18,6 +20,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
 const HTTPS_SCHEME = "https"
@@ -34,6 +37,21 @@ func getOverrideBackend(ctx *icontext.Context, backendName string) (*config.Over
 		return val, nil
 	}
 	return nil, nil
+}
+
+func setupFastlyHeaders(req *http.Request) {
+	// Fastly-FF
+	// https://www.fastly.com/documentation/reference/http/http-headers/Fastly-FF/#format
+	mac := hmac.New(sha256.New, []byte("falco"))
+	mac.Write([]byte(variable.FALCO_VIRTUAL_SERVICE_ID))
+	hash := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	ff := fmt.Sprintf("%s!%s!%s", hash, variable.FALCO_DATACENTER, variable.FALCO_SERVER_HOSTNAME)
+	if req.Header.Get("Fastly-FF") != "" {
+		req.Header.Add("Fastly-FF", ","+ff)
+	} else {
+		req.Header.Set("Fastly-FF", ff)
+	}
+	// TODO: cdn-loop, fastly-client, fastly-client-ip, x-forwarded-for, x-forwarded-host, x-forwarded-server, x-varnish,
 }
 
 func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
@@ -119,6 +137,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
 	req.Header = i.ctx.Request.Header.Clone()
+	setupFastlyHeaders(req)
 
 	if alwaysHost {
 		req.Header.Set("Host", host)

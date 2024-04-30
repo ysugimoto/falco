@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 )
@@ -24,9 +23,15 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 		if cidr.Inverse != nil && cidr.Inverse.Value {
 			buf.WriteString("!")
 		}
-		buf.WriteString(`"` + cidr.IP.String() + `"`)
+		if v := f.formatComment(cidr.IP.Leading, " ", 0); v != "" {
+			buf.WriteString(" " + v)
+		}
+		buf.WriteString(`"` + cidr.IP.Value + `"`)
 		if cidr.Mask != nil {
 			buf.WriteString("/" + cidr.Mask.String())
+		}
+		if v := f.formatComment(cidr.IP.Trailing, " ", 0); v != "" {
+			buf.WriteString(" " + v)
 		}
 		lines = append(lines, &DelclarationPropertyLine{
 			Leading:      f.formatComment(cidr.Leading, "\n", 1),
@@ -46,7 +51,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString("acl " + decl.Name.Value + " {\n")
+	buf.WriteString("acl " + decl.Name.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
 		buf.WriteString(f.indent(1))
@@ -65,7 +70,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Declaration {
 	var buf bytes.Buffer
 
-	buf.WriteString("backend " + decl.Name.Value + " {\n")
+	buf.WriteString("backend " + decl.Name.String() + " {\n")
 	buf.WriteString(f.formatBackendProperties(decl.Properties, 1))
 	if len(decl.Infix) > 0 {
 		buf.WriteString(f.indent(1))
@@ -165,13 +170,19 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 				})
 			}
 			for _, v := range t.Values {
-				line.Key += fmt.Sprintf(".%s = %s; ", v.Key.Value, f.formatExpression(v.Value))
+				if v := f.formatComment(v.Leading, " ", 0); v != "" {
+					line.Key += v
+				}
+				line.Key += fmt.Sprintf(".%s = %s; ", v.Key.String(), v.Value.String())
+			}
+			if len(t.Infix) > 0 {
+				line.Key += f.formatComment(t.Infix, " ", 0)
 			}
 			line.Key += "}"
 			// Backend property is object, semicolon is not needed
 			line.isObject = true
 		case *ast.DirectorProperty:
-			line.Key += "." + t.Key.Value
+			line.Key += "." + t.Key.String()
 			line.Operator = " = "
 			line.Value = t.Value.String()
 			line.EndCharacter = ";"
@@ -195,7 +206,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString("director " + decl.Name.Value + " " + decl.DirectorType.Value + " {\n")
+	buf.WriteString("director " + decl.Name.String() + " " + decl.DirectorType.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
 		buf.WriteString(f.indent(1))
@@ -214,9 +225,9 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declaration {
 	var buf bytes.Buffer
 
-	buf.WriteString("table " + decl.Name.Value)
+	buf.WriteString("table " + decl.Name.String())
 	if decl.ValueType != nil {
-		buf.WriteString(" " + decl.ValueType.Value)
+		buf.WriteString(" " + decl.ValueType.String())
 	}
 	buf.WriteString(" {\n")
 	buf.WriteString(f.formatTableProperties(decl.Properties))
@@ -253,8 +264,8 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 			Leading:      f.formatComment(prop.Meta.Leading, "\n", 1),
 			Trailing:     f.trailing(prop.Meta.Trailing),
 			Operator:     ": ",
-			Key:          f.indent(1) + f.formatString(prop.Key),
-			Value:        f.formatExpression(prop.Value).String(),
+			Key:          f.indent(1) + prop.Key.String(),
+			Value:        prop.Value.String(),
 			EndCharacter: ",",
 		}
 		lines = append(lines, line)
@@ -282,7 +293,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) *Declaration {
 	var buf bytes.Buffer
 
-	buf.WriteString("penaltybox " + decl.Name.Value)
+	buf.WriteString("penaltybox " + decl.Name.String())
 	buf.WriteString(" {")
 	// penaltybox does not have properties
 	if len(decl.Block.Infix) > 0 {
@@ -303,7 +314,7 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) *Declaration {
 	var buf bytes.Buffer
 
-	buf.WriteString("ratecounter " + decl.Name.Value)
+	buf.WriteString("ratecounter " + decl.Name.String())
 	buf.WriteString(" {")
 	// ratecounter does not have properties
 	if len(decl.Block.Infix) > 0 {
@@ -324,10 +335,10 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) *Declaration {
 	var buf bytes.Buffer
 
-	buf.WriteString("sub " + decl.Name.Value + " ")
+	buf.WriteString("sub " + decl.Name.String() + " ")
 	// Functional Subroutine
 	if decl.ReturnType != nil {
-		buf.WriteString(strings.ToUpper(decl.ReturnType.Value) + " ")
+		buf.WriteString(decl.ReturnType.String() + " ")
 		f.isFunctionalSubroutine = true // flag turns on
 		defer func() {
 			f.isFunctionalSubroutine = false

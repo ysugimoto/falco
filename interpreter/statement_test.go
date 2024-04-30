@@ -113,10 +113,6 @@ func TestDeclareStatement(t *testing.T) {
 }
 
 func TestReturnStatement(t *testing.T) {
-	var exp ast.Expression = &ast.Ident{
-		Value: "pass",
-		Meta:  &ast.Meta{},
-	}
 	tests := []struct {
 		name   string
 		stmt   *ast.ReturnStatement
@@ -125,7 +121,10 @@ func TestReturnStatement(t *testing.T) {
 		{
 			name: "should return pass state",
 			stmt: &ast.ReturnStatement{
-				ReturnExpression: &exp,
+				ReturnExpression: &ast.Ident{
+					Value: "pass",
+					Meta:  &ast.Meta{},
+				},
 			},
 			expect: PASS,
 		},
@@ -209,10 +208,6 @@ func TestSetStatement(t *testing.T) {
 }
 
 func TestBlockStatement(t *testing.T) {
-	var pass ast.Expression = &ast.Ident{
-		Value: "pass",
-		Meta:  &ast.Meta{},
-	}
 	tests := []struct {
 		name           string
 		scope          context.Scope
@@ -234,7 +229,10 @@ func TestBlockStatement(t *testing.T) {
 				&ast.BlockStatement{
 					Statements: []ast.Statement{
 						&ast.ReturnStatement{
-							ReturnExpression: &pass,
+							ReturnExpression: &ast.Ident{
+								Value: "pass",
+								Meta:  &ast.Meta{},
+							},
 						},
 					},
 				},
@@ -255,7 +253,10 @@ func TestBlockStatement(t *testing.T) {
 					},
 				},
 				&ast.ReturnStatement{
-					ReturnExpression: &pass,
+					ReturnExpression: &ast.Ident{
+						Value: "pass",
+						Meta:  &ast.Meta{},
+					},
 				},
 			},
 			expected_state: BARE_RETURN,
@@ -284,14 +285,6 @@ func TestBlockStatement(t *testing.T) {
 }
 
 func TestBlockStatementWithReturnValue(t *testing.T) {
-	var pass ast.Expression = &ast.Integer{
-		Value: 1,
-		Meta:  &ast.Meta{},
-	}
-	var invalid ast.Expression = &ast.String{
-		Value: "invalid",
-		Meta:  &ast.Meta{},
-	}
 	tests := []struct {
 		name  string
 		scope context.Scope
@@ -302,7 +295,10 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.ReturnStatement{
-					ReturnExpression: &pass,
+					ReturnExpression: &ast.Integer{
+						Value: 1,
+						Meta:  &ast.Meta{},
+					},
 				},
 			},
 		},
@@ -313,12 +309,18 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 				&ast.BlockStatement{
 					Statements: []ast.Statement{
 						&ast.ReturnStatement{
-							ReturnExpression: &pass,
+							ReturnExpression: &ast.Integer{
+								Value: 1,
+								Meta:  &ast.Meta{},
+							},
 						},
 					},
 				},
 				&ast.ReturnStatement{
-					ReturnExpression: &invalid,
+					ReturnExpression: &ast.String{
+						Value: "invalid",
+						Meta:  &ast.Meta{},
+					},
 				},
 			},
 		},
@@ -331,13 +333,19 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 					Consequence: &ast.BlockStatement{
 						Statements: []ast.Statement{
 							&ast.ReturnStatement{
-								ReturnExpression: &pass,
+								ReturnExpression: &ast.Integer{
+									Value: 1,
+									Meta:  &ast.Meta{},
+								},
 							},
 						},
 					},
 				},
 				&ast.ReturnStatement{
-					ReturnExpression: &invalid,
+					ReturnExpression: &ast.String{
+						Value: "invalid",
+						Meta:  &ast.Meta{},
+					},
 				},
 			},
 		},

@@ -16,10 +16,10 @@ func TestFormatImportStatement(t *testing.T) {
 		{
 			name: "basic formatting with comments",
 			input: `// import leading comment
-	import boltsort; // import trailing comment
+	import /* before_name */ boltsort /* after_name */ ; // import trailing comment
 `,
 			expect: `// import leading comment
-import boltsort;  // import trailing comment
+import /* before_name */ boltsort /* after_name */;  // import trailing comment
 `,
 		},
 	}
@@ -41,19 +41,19 @@ func TestFormatIncludeStatement(t *testing.T) {
 		{
 			name: "basic formatting with comments",
 			input: `// include leading comment
-	include "feature_mod"; // include trailing comment
+	include /* before_name */ "feature_mod" /* after_name */ ; // include trailing comment
 `,
 			expect: `// include leading comment
-include "feature_mod";  // include trailing comment
+include /* before_name */ "feature_mod" /* after_name */;  // include trailing comment
 `,
 		},
 		{
 			name: "basic formatting without semicolon",
 			input: `// include leading comment
-	include "feature_mod" // include trailing comment
+	include /* before_name */ "feature_mod" // include trailing comment
 `,
 			expect: `// include leading comment
-include "feature_mod";  // include trailing comment
+include /* before_name */ "feature_mod";  // include trailing comment
 `,
 		},
 		{
@@ -141,12 +141,12 @@ func TestFormatDeclareStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// declare leading comment
-	declare  local  var.FOO STRING ; // declare trailing comment
+	declare /* before_local */ local /* after_local */ var.FOO /* after_name */ STRING /* after_type */ ; // declare trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // declare leading comment
-  declare local var.FOO STRING;  // declare trailing comment
+  declare /* before_local */ local /* after_local */ var.FOO /* after_name */ STRING /* after_type */;  // declare trailing comment
 }
 `,
 		},
@@ -170,12 +170,13 @@ func TestFormatSetStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// set leading comment
-	set  req.http.Foo= "foo" "bar" "baz" ; // set trailing comment
+	set  /* before_ident */ req.http.Foo/* after_ident */= /* before_value1 */"foo" /* after_value1 */ "bar" "baz" /* before_semicolon */ ; // set trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // set leading comment
-  set req.http.Foo = "foo" "bar" "baz";  // set trailing comment
+  set /* before_ident */ req.http.Foo /* after_ident */ = /* before_value1 */ "foo" /* after_value1 */ "bar" "baz"
+                                                          /* before_semicolon */;  // set trailing comment
 }
 `,
 		},
@@ -199,12 +200,12 @@ func TestFormatUnsetStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// unset leading comment
-	unset  req.http.Foo ; // unset trailing comment
+	unset  /* before_ident */req.http.Foo /* after_ident */ ; // unset trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // unset leading comment
-  unset req.http.Foo;  // unset trailing comment
+  unset /* before_ident */ req.http.Foo /* after_ident */;  // unset trailing comment
 }
 `,
 		},
@@ -228,12 +229,12 @@ func TestFormatRemoveStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// remove leading comment
-	remove  req.http.Foo ; // remove trailing comment
+	remove  /* before_ident */req.http.Foo /* after_ident */ ; // remove trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // remove leading comment
-  remove req.http.Foo;  // remove trailing comment
+  remove /* before_ident */ req.http.Foo /* after_ident */;  // remove trailing comment
 }
 `,
 		},
@@ -257,12 +258,12 @@ func TestFormatRestartStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// restart leading comment
-	restart ; // restart trailing comment
+	restart /* infix_comment */ ; // restart trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // restart leading comment
-  restart;  // restart trailing comment
+  restart /* infix_comment */;  // restart trailing comment
 }
 `,
 		},
@@ -287,13 +288,13 @@ func TestFormatEsitStatement(t *testing.T) {
 			input: `sub vcl_recv {
 	// esi leading comment
 	// esi leading comment
-	esi ; // esi trailing comment
+	esi /* infix_comment */ ; // esi trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // esi leading comment
   // esi leading comment
-  esi;  // esi trailing comment
+  esi /* infix_comment */;  // esi trailing comment
 }
 `,
 		},
@@ -317,12 +318,12 @@ func TestFormatAddStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_deliver {
 	// add leading comment
-	add  resp.http.Set-Cookie= "name=foo" ; // add trailing comment
+	add  /* before_ident */resp.http.Set-Cookie /* after_ident */= /* before_value */"name=foo" /* after_value */ ; // add trailing comment
 }
 `,
 			expect: `sub vcl_deliver {
   // add leading comment
-  add resp.http.Set-Cookie = "name=foo";  // add trailing comment
+  add /* before_ident */ resp.http.Set-Cookie /* after_ident */ = /* before_value */ "name=foo" /* after_value */;  // add trailing comment
 }
 `,
 		},
@@ -346,12 +347,12 @@ func TestFormatCallStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// call leading comment
-	call  feature_recv ; // call trailing comment
+	call  /* before_subroutine */feature_recv /* after_subroutine */ ; // call trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // call leading comment
-  call feature_recv;  // call trailing comment
+  call /* before_subroutine */ feature_recv /* after_subroutine */;  // call trailing comment
 }
 `,
 		},
@@ -375,12 +376,12 @@ func TestFormatErrorStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// error leading comment
-	error  404 ; // error trailing comment
+	error /* before_code */  404 /* after_code */; // error trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // error leading comment
-  error 404;  // error trailing comment
+  error /* before_code */ 404 /* after_code */;  // error trailing comment
 }
 `,
 		},
@@ -388,12 +389,12 @@ func TestFormatErrorStatement(t *testing.T) {
 			name: "formatting with response",
 			input: `sub vcl_recv {
 	// error leading comment
-	error  404 "extra response" ; // error trailing comment
+	error  /* before_code */ 404 /* after_code */ "extra response" /* after_response */ ; // error trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // error leading comment
-  error 404 "extra response";  // error trailing comment
+  error /* before_code */ 404 /* after_code */ "extra response" /* after_response */;  // error trailing comment
 }
 `,
 		},
@@ -429,12 +430,27 @@ func TestFormatLogStatement(t *testing.T) {
 		{
 			name: "multiple expressions",
 			input: `sub vcl_log {
-	log  req.http.Host "foo"   "bar" "baz" client.ip ;
+	log  /* before_value1 */ req.http.Host /* after_value1 */ "foo"   /* after_value2 */"bar" /* after_value3 */ "baz" /* after_value4 */ client.ip /* after_value5 */;
 
 }
 `,
 			expect: `sub vcl_log {
-  log req.http.Host "foo" "bar" "baz" client.ip;
+  log /* before_value1 */ req.http.Host /* after_value1 */ "foo" /* after_value2 */ "bar" /* after_value3 */ "baz"
+      /* after_value4 */ client.ip /* after_value5 */;
+}
+`,
+		},
+		{
+			name: "multiple expressions including line comment",
+			input: `sub vcl_log {
+	log req.http.Host // request Host
+	    "foo" /* after_value2 */"bar" ;
+
+}
+`,
+			expect: `sub vcl_log {
+  log req.http.Host // request Host
+      "foo" /* after_value2 */ "bar";
 }
 `,
 		},
@@ -458,23 +474,23 @@ func TestFormatReturnStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// return leading comment
-	return lookup ; // return trailing comment
+	return /* before_state */ lookup /* after_state */; // return trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // return leading comment
-  return lookup;  // return trailing comment
+  return /* before_state */ lookup /* after_state */;  // return trailing comment
 }
 `,
 		},
 		{
 			name: "with parenthesis",
 			input: `sub vcl_recv {
-	return(lookup) ;
+	return /* before_parenthesis */ (/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
 }
 `,
 			expect: `sub vcl_recv {
-  return (lookup);
+  return /* before_parenthesis */ (/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
 }
 `,
 			conf: &config.FormatConfig{
@@ -487,11 +503,11 @@ func TestFormatReturnStatement(t *testing.T) {
 		{
 			name: "without argument",
 			input: `sub vcl_recv {
-	return ;
+	return /* before_semicolon */ ; // trailing
 }
 `,
 			expect: `sub vcl_recv {
-  return;
+  return /* before_semicolon */;  // trailing
 }
 `,
 		},
@@ -532,28 +548,28 @@ func TestFormatSynthticStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_error {
 	// synthetic leading comment
-	synthetic  "foo" ; // synthetic trailing comment
+	synthetic  /* before_value */ "foo" /* after_value */ ; // synthetic trailing comment
 }
 `,
 			expect: `sub vcl_error {
   // synthetic leading comment
-  synthetic "foo";  // synthetic trailing comment
+  synthetic /* before_value */ "foo" /* after_value */;  // synthetic trailing comment
 }
 `,
 		},
 		{
 			name: "with bracket string",
 			input: `sub vcl_error {
-	synthetic  {"foo bar baz"} ;
+	synthetic  /* before_value */ {"foo bar baz"} /* after_value */;
 }
 `,
 			expect: `sub vcl_error {
-  synthetic {"foo bar baz"};
+  synthetic /* before_value */ {"foo bar baz"} /* after_value */;
 }
 `,
 		},
 		{
-			name: "with multipel expressions",
+			name: "with multiple expressions",
 			input: `sub vcl_error {
 	synthetic  {"foo bar baz"} "lorem" "ipsum" req.http.Hoost ;
 }
@@ -583,12 +599,13 @@ func TestFormatSynthticBase64Statement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_error {
 	// synthetic.base64 leading comment
-	synthetic.base64  "ZmFsY28gaXMgdGhlIGJldHRlciB0b29sIHRvIGRldmVsb3AgRmFzdGx5IFZDTAo=" ; // synthetic.base64 trailing comment
+	synthetic.base64  /* before_value */ "ZmFsY28gaXMgdGhlIGJldHRlciB0b29sIHRvIGRldmVsb3AgRmFzdGx5IFZDTAo=" /* after_value */ ; // synthetic.base64 trailing comment
 }
 `,
 			expect: `sub vcl_error {
   // synthetic.base64 leading comment
-  synthetic.base64 "ZmFsY28gaXMgdGhlIGJldHRlciB0b29sIHRvIGRldmVsb3AgRmFzdGx5IFZDTAo=";  // synthetic.base64 trailing comment
+  synthetic.base64 /* before_value */ "ZmFsY28gaXMgdGhlIGJldHRlciB0b29sIHRvIGRldmVsb3AgRmFzdGx5IFZDTAo="
+                   /* after_value */;  // synthetic.base64 trailing comment
 }
 `,
 			conf: &config.FormatConfig{
@@ -619,12 +636,12 @@ func TestFormatGotoStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// goto leading comment
-	goto FOO ; // goto trailing comment
+	goto /* before_target */ FOO /* after_target */; // goto trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // goto leading comment
-  goto FOO;  // goto trailing comment
+  goto /* before_target */ FOO /* after_target */;  // goto trailing comment
 }
 `,
 		},
@@ -679,12 +696,12 @@ func TestFormatFunctionCallStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// function call leading comment
-	h3.alt_svc(); // function call trailing comment
+	h3.alt_svc() /* infix_comment */; // function call trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // function call leading comment
-  h3.alt_svc();  // function call trailing comment
+  h3.alt_svc() /* infix_comment */;  // function call trailing comment
 }
 `,
 		},
@@ -708,24 +725,28 @@ func TestFormatIfStatement(t *testing.T) {
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// if leading comment
-	if (req.http.Host) {
+	if /* if_infix */ (/* before_condition */ req.http.Host /* after_condition */) /* before_parenthesis */ {
 		set req.http.Foo = req.http.Host;
 		// if infix comment
-	} else {
+	} /* else_leading */
+	// else leading
+	else /* else_infix */ {
 		set req.http.Foo = "unknown";
 		// else infix comment
-	} // if trailing comment
+	} // else trailing comment
 }
 `,
 			expect: `sub vcl_recv {
   // if leading comment
-  if (req.http.Host) {
+  if /* if_infix */ (/* before_condition */ req.http.Host /* after_condition */) /* before_parenthesis */ {
     set req.http.Foo = req.http.Host;
     // if infix comment
-  } else {
+  } /* else_leading */
+  // else leading
+  else /* else_infix */ {
     set req.http.Foo = "unknown";
     // else infix comment
-  }  // if trailing comment
+  }  // else trailing comment
 }
 `,
 		},
@@ -736,7 +757,7 @@ func TestFormatIfStatement(t *testing.T) {
 	if (req.http.Host) {
 		set req.http.Foo = req.http.Host;
 		// if infix comment
-	} else if (req.http.AnotherHost) {
+	} /* elseif_leading */ else if /* elseif_infix */ (/* elseif_condition_leading */ req.http.AnotherHost /* elseif_condition_trailing */) /* else_before_parenthesis */ {
 		set req.http.Foo = "another";
 	}
 	// More complecated case
@@ -753,7 +774,10 @@ func TestFormatIfStatement(t *testing.T) {
   if (req.http.Host) {
     set req.http.Foo = req.http.Host;
     // if infix comment
-  } else if (req.http.AnotherHost) {
+  } /* elseif_leading */ else if /* elseif_infix */ (
+    /* elseif_condition_leading */ req.http.AnotherHost
+    /* elseif_condition_trailing */
+  ) /* else_before_parenthesis */ {
     set req.http.Foo = "another";
   }
   // More complecated case
@@ -787,7 +811,32 @@ func TestFormatIfStatement(t *testing.T) {
 				IndentWidth:          2,
 				IndentStyle:          "space",
 				TrailingCommentWidth: 2,
-				LineWidth:            70,
+				LineWidth:            80,
+			},
+		},
+		{
+			name: "chunked condition format with infix comments",
+			input: `sub vcl_recv {
+	if (req.http.Header1 == "1" && req.http.Header2 /* comment */  == /* comment */ "2" && req.http.Header3 == "3") {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    req.http.Header1 == "1" &&
+    req.http.Header2 /* comment */ == /* comment */ "2" &&
+    req.http.Header3 == "3"
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            80,
 			},
 		},
 	}
@@ -799,7 +848,7 @@ func TestFormatIfStatement(t *testing.T) {
 	}
 }
 
-func TestFormatSwitchStatement(t *testing.T) {
+func TestSwitchStatement(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  string
@@ -807,92 +856,35 @@ func TestFormatSwitchStatement(t *testing.T) {
 		conf   *config.FormatConfig
 	}{
 		{
-			name: "basic formatting with comments",
+			name: "basic formatting",
 			input: `sub vcl_recv {
-	// switch leading comment
-	switch(req.http.Foo) {
-		// first case comment
-		case "bar":
-			// break leading comment
-			break;
-			// second case comment
-			case "baz":
-				// break leading comment
-				break;
-		// default case comment
-		default:
-			break;
-		// switch infix comment
-	} // trailing comment
+	switch /* infix */ (/* before_control */ req.http.Host /* after_control */) /* before_block */ {
+	// case leading
+	case /* before_value */ "foo" /* after_value */: // case trailing
+		set req.http.Host = "bar";
+		// fallthrough leading
+		fallthrough /* fallthrough_infix */ ; // fallthrough trailing
+	default /* default_infix */: // default trailing
+		// break leading
+		break /* break_infix */; // break trailing
+	} // switch trailing
 }
 `,
 			expect: `sub vcl_recv {
-  // switch leading comment
-  switch (req.http.Foo) {
-  // first case comment
-  case "bar":
-    // break leading comment
-    break;
-  // second case comment
-  case "baz":
-    // break leading comment
-    break;
-  // default case comment
-  default:
-    break;
-    // switch infix comment
-  }  // trailing comment
+  switch /* infix */ (/* before_control */ req.http.Host /* after_control */) /* before_block */ {
+  // case leading
+  case /* before_value */ "foo" /* after_value */:  // case trailing
+    set req.http.Host = "bar";
+    // fallthrough leading
+    fallthrough /* fallthrough_infix */;  // fallthrough trailing
+  default /* default_infix */:  // default trailing
+    // break leading
+    break /* break_infix */;  // break trailing
+  }  // switch trailing
 }
 `,
-		},
-		{
-			name: "indent case labels",
-			input: `sub vcl_recv {
-	// switch leading comment
-	switch(req.http.Foo) {
-		// first case comment
-		case "bar":
-			// break leading comment
-			break;
-			// second case comment
-			case "baz":
-				// break leading comment
-				break;
-		// default case comment
-		default:
-			break;
-		// switch infix comment
-	} // trailing comment
-}
-`,
-			expect: `sub vcl_recv {
-  // switch leading comment
-  switch (req.http.Foo) {
-    // first case comment
-    case "bar":
-      // break leading comment
-      break;
-    // second case comment
-    case "baz":
-      // break leading comment
-      break;
-    // default case comment
-    default:
-      break;
-    // switch infix comment
-  }  // trailing comment
-}
-`,
-			conf: &config.FormatConfig{
-				IndentWidth:          2,
-				IndentStyle:          "space",
-				TrailingCommentWidth: 2,
-				LineWidth:            70,
-				IndentCaseLabels:     true,
-			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert(t, tt.input, tt.expect, tt.conf)

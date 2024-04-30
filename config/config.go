@@ -29,10 +29,12 @@ type OverrideBackend struct {
 
 // Linter configuration
 type LinterConfig struct {
-	VerboseLevel   string            `yaml:"verbose"`
-	VerboseWarning bool              `cli:"v"`
-	VerboseInfo    bool              `cli:"vv"`
-	Rules          map[string]string `yaml:"rules"`
+	VerboseLevel            string              `yaml:"verbose"`
+	VerboseWarning          bool                `cli:"v"`
+	VerboseInfo             bool                `cli:"vv"`
+	Rules                   map[string]string   `yaml:"rules"`
+	EnforceSubroutineScopes map[string][]string `yaml:"enforce_subroutine_scopes"`
+	IgnoreSubroutines       []string            `yaml:"ignore_subroutines"`
 }
 
 // Simulator configuration
