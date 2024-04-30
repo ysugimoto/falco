@@ -68,6 +68,10 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 		line.Buffer += f.formatGotoDestinationStatement(t)
 	case *ast.FunctionCallStatement:
 		line.Buffer += f.formatFunctionCallStatement(t)
+	case *ast.BreakStatement:
+		line.Buffer += f.formatBreakStatement(t)
+	case *ast.FallthroughStatement:
+		line.Buffer += f.formatFallthroughStatement(t)
 
 	// On if statement, trailing comment node depends on its declarations
 	case *ast.IfStatement:
@@ -329,7 +333,11 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 			buf.WriteString(f.formatExpression(c.Test.Right).String())
 			buf.WriteString(":")
 		} else {
-			buf.WriteString("default:")
+			buf.WriteString("default")
+			if v := f.formatComment(c.Infix, "", 0); v != "" {
+				buf.WriteString(" " + v)
+			}
+			buf.WriteString(":")
 		}
 		buf.WriteString(f.trailing(c.Trailing))
 		buf.WriteString("\n")
@@ -384,12 +392,38 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 
 	var buf bytes.Buffer
 	buf.WriteString(group.String())
-	if cs.Fallthrough {
-		buf.WriteString(f.indent(cs.Meta.Nest + 1))
-		buf.WriteString("fallthrough;")
-	}
+	// if cs.Fallthrough {
+	// 	buf.WriteString(f.indent(cs.Meta.Nest + 1))
+	// 	buf.WriteString("fallthrough;")
+	// }
 
 	return trimMutipleLineFeeds(buf.String())
+}
+
+// Format break statement
+func (f *Formatter) formatBreakStatement(stmt *ast.BreakStatement) string {
+	var buf bytes.Buffer
+
+	buf.WriteString("break")
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
+
+	return buf.String()
+}
+
+// Format fallthrough statement
+func (f *Formatter) formatFallthroughStatement(stmt *ast.FallthroughStatement) string {
+	var buf bytes.Buffer
+
+	buf.WriteString("fallthrough")
+	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
+		buf.WriteString(" " + v)
+	}
+	buf.WriteString(";")
+
+	return buf.String()
 }
 
 // Format restart statement

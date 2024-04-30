@@ -76,11 +76,11 @@ func (c *ChunkBuffer) nextChunk() *Chunk {
 }
 
 // Get peek chunk
-func (c *ChunkBuffer) peekChunk() *Chunk {
-	if c.index+1 > len(c.chunks)-1 {
+func (c *ChunkBuffer) peekChunk(i int) *Chunk {
+	if c.index+i > len(c.chunks)-1 {
 		return nil
 	}
-	return c.chunks[c.index+1]
+	return c.chunks[c.index+i]
 }
 
 // Append buffers
@@ -175,33 +175,68 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 			}
 		// infix operator
 		case Infix:
-			// Or, the operator is the member of mustSingleOperators, the expression must be printed on the same line
-			// if _, ok := mustSingleOperators[chunk.buffer]; ok {
-			// 	buf.WriteString(c.chunkInfixOperator(state, chunk))
-			// 	continue
-			// }
 			buf.WriteString(c.chunkString(state, chunk.buffer))
 		// Otherwise (token), create chunk string
 		default:
-			chunk.buffer += c.combineInfixChunk(chunk.buffer)
+			// Pre-combine infix operator that must be placed on the same line
+			chunk.buffer += c.combineInfixChunk()
 			buf.WriteString(c.chunkString(state, chunk.buffer))
 		}
 	}
 }
 
-func (c *ChunkBuffer) combineInfixChunk(b string) string {
-	peek := c.peekChunk()
-	if peek == nil || peek.Type != Infix {
-		return ""
+// Read peek chunk and combine if the chunk is placed on the same line
+func (c *ChunkBuffer) combineInfixChunk() string {
+	var peek *Chunk
+	var expr string
+	var index int
+
+	for {
+		index++
+		peek = c.peekChunk(index)
+		if peek == nil {
+			return ""
+		}
+		switch peek.Type {
+		// If peek chunk is Infix, it may combine
+		case Infix:
+			goto OUT
+		// If peek chunk is Comment, should be combined and look up next chunk
+		case Comment:
+			expr += " " + peek.buffer
+		default:
+			return ""
+		}
 	}
+OUT:
+
 	// Infix operator
 	_, ok := mustSingleOperators[peek.buffer]
 	if !ok {
 		return ""
 	}
-	expr := " " + c.nextChunk().buffer
-	if next := c.nextChunk(); next != nil {
-		expr += " " + next.buffer
+	expr += " " + peek.buffer
+
+	// Skip infix comments
+	for {
+		index++
+		peek = c.peekChunk(index)
+		if peek == nil {
+			return ""
+		}
+		if peek.Type == Comment {
+			expr += " " + peek.buffer
+			continue
+		}
+		break
+	}
+	// Finally, add token buffer
+	expr += " " + peek.buffer
+
+	// Forward index position to be read
+	for index > 0 {
+		c.nextChunk()
+		index--
 	}
 
 	return expr
@@ -249,34 +284,6 @@ func (c *ChunkBuffer) chunkGroupOperator(state *ChunkState, chunk *Chunk) string
 			return c.chunkString(state, "("+expr+")")
 		default:
 			expr += " " + next.buffer
-		}
-	}
-}
-
-// chunkInfixOperator() returns chunk infix expression string
-func (c *ChunkBuffer) chunkInfixOperator(state *ChunkState, chunk *Chunk) string {
-	expr := chunk.buffer
-
-	for {
-		next := c.nextChunk()
-		if next == nil {
-			state.count += len(expr)
-			return expr
-		}
-
-		switch next.Type {
-		case Comment:
-			if next.isLineComment() {
-				expr += next.buffer
-				expr += c.nextLine(state)
-				state.reset()
-				continue
-			}
-			expr += " " + next.buffer
-		default:
-			expr += " " + next.buffer
-			state.count += len(expr)
-			return expr
 		}
 	}
 }

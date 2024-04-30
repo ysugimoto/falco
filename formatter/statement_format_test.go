@@ -814,6 +814,31 @@ func TestFormatIfStatement(t *testing.T) {
 				LineWidth:            80,
 			},
 		},
+		{
+			name: "chunked condition format with infix comments",
+			input: `sub vcl_recv {
+	if (req.http.Header1 == "1" && req.http.Header2 /* comment */  == /* comment */ "2" && req.http.Header3 == "3") {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    req.http.Header1 == "1" &&
+    req.http.Header2 /* comment */ == /* comment */ "2" &&
+    req.http.Header3 == "3"
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            80,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -848,21 +873,21 @@ func TestSwitchStatement(t *testing.T) {
 			expect: `sub vcl_recv {
   switch /* infix */ (/* before_control */ req.http.Host /* after_control */) /* before_block */ {
   // case leading
-  case /* before_value */ "foo" /* after_value */: // case trailing
+  case /* before_value */ "foo" /* after_value */:  // case trailing
     set req.http.Host = "bar";
     // fallthrough leading
-    fallthrough /* fallthrough_infix */ ; // fallthrough trailing
-  default /* default_infix */: // default trailing
+    fallthrough /* fallthrough_infix */;  // fallthrough trailing
+  default /* default_infix */:  // default trailing
     // break leading
-    break /* break_infix */; // break trailing
-  } // switch trailing
+    break /* break_infix */;  // break trailing
+  }  // switch trailing
 }
 `,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			println(assert(t, tt.input, tt.expect, tt.conf))
+			assert(t, tt.input, tt.expect, tt.conf)
 		})
 	}
 }

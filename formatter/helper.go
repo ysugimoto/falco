@@ -55,6 +55,7 @@ func formatCommentCharacter(comment string, char rune) string {
 	return string(bs)
 }
 
+// Return comment is inline comment that has "/* ... */" syntax
 func isInlineComment(comments ast.Comments) bool {
 	if len(comments) == 0 {
 		return true
@@ -62,6 +63,7 @@ func isInlineComment(comments ast.Comments) bool {
 	return strings.HasPrefix(comments[0].Value, "/*")
 }
 
+// Get latest line offset (character length) from current buffer
 func getLineOffset(b bytes.Buffer) int {
 	s := b.String()
 	if p := strings.LastIndex(s, "\n"); p >= 0 {
@@ -70,7 +72,8 @@ func getLineOffset(b bytes.Buffer) int {
 	return len(s)
 }
 
-func formatChunkedString(chunk string, indent string) string {
+// Format multiple line chunk string with specified indent
+func formatChunkedString(chunk, indent string) string {
 	var buf bytes.Buffer
 
 	for _, line := range strings.Split(chunk, "\n") {
