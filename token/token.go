@@ -97,7 +97,7 @@ const (
 	DIRECTOR         = "DIRECTOR"         // director
 	BACKEND          = "BACKEND"          // backend
 	TABLE            = "TABLE"            // table
-	SUBROUTINE       = "SUBROUTINE"       // sub"
+	SUBROUTINE       = "SUBROUTINE"       // sub
 	ADD              = "ADD"              // add
 	CALL             = "CALL"             // call
 	DECLARE          = "DECLARE"          // declare

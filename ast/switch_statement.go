@@ -22,6 +22,9 @@ func (s *SwitchStatement) String() string {
 		buf.WriteString(stmt.String())
 	}
 
+	if v := s.InfixComment(lineFeed); v != "" {
+		buf.WriteString("  " + v)
+	}
 	buf.WriteString("}")
 	buf.WriteString(s.TrailingComment(inline))
 	buf.WriteString("\n")

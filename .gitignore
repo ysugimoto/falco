@@ -27,3 +27,6 @@ __generator__/*.csv
 debugger.log
 debug.log
 request.json
+
+.falco.yml
+.falco.yaml

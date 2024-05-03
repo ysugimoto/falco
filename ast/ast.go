@@ -30,11 +30,12 @@ type Expression interface {
 
 // Meta struct of all nodes
 type Meta struct {
-	Token    token.Token
-	Leading  Comments
-	Trailing Comments
-	Infix    Comments
-	Nest     int
+	Token              token.Token
+	Leading            Comments
+	Trailing           Comments
+	Infix              Comments
+	Nest               int
+	PreviousEmptyLines int
 }
 
 // combinationMode represents comment combination mode
