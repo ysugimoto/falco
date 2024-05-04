@@ -56,11 +56,12 @@ Supporting rules are described the following table and sections.
 | sort_declaration_property   | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetically           |
 | align_declaration_property  | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
 | else_if                     | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
+| always_next_line_else_if    | BOOL   | false   | If true, always `else if` and `else` keywords print to the next line                           |
 | return_statement_parentheis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
 | sort_declaration            | BOOL   | false   | Sort root declaration by specific order                                                        |
 | align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
 | comment_style               | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
-| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statement                                               |
+| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statement                                              |
 | indent_case_labels          | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
 
 ---
@@ -452,7 +453,7 @@ sub vcl_recv {
 }
 ```
 
-Formatted (always_nest_line_else_if: true):
+Formatted (always_next_line_else_if: true):
 
 ```vcl
 sub vcl_recv {
