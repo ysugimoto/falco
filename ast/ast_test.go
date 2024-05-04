@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -14,4 +17,10 @@ func comments(c ...string) Comments {
 		})
 	}
 	return cs
+}
+
+func assert(t *testing.T, actual, expect string) {
+	if diff := cmp.Diff(actual, expect); diff != "" {
+		t.Errorf("Stringer error, diff=%s", diff)
+	}
 }

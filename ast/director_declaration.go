@@ -16,7 +16,7 @@ func (d *DirectorDeclaration) GetMeta() *Meta { return d.Meta }
 func (d *DirectorDeclaration) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(d.LeadingComment())
+	buf.WriteString(d.LeadingComment(lineFeed))
 	buf.WriteString("director ")
 	buf.WriteString(d.Name.String())
 	if d.DirectorType != nil {
@@ -26,8 +26,11 @@ func (d *DirectorDeclaration) String() string {
 	for _, prop := range d.Properties {
 		buf.WriteString(prop.String())
 	}
+	if v := d.InfixComment(lineFeed); v != "" {
+		buf.WriteString("  " + v)
+	}
 	buf.WriteString("}")
-	buf.WriteString(d.TrailingComment())
+	buf.WriteString(d.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()
@@ -44,12 +47,12 @@ func (d *DirectorProperty) GetMeta() *Meta { return d.Meta }
 func (d *DirectorProperty) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(d.LeadingComment())
+	buf.WriteString(d.LeadingComment(lineFeed))
 	buf.WriteString(indent(d.Nest) + "." + d.Key.String())
 	buf.WriteString(" = ")
 	buf.WriteString(d.Value.String())
 	buf.WriteString(";")
-	buf.WriteString(d.TrailingComment())
+	buf.WriteString(d.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()
@@ -65,16 +68,23 @@ func (d *DirectorBackendObject) GetMeta() *Meta { return d.Meta }
 func (d *DirectorBackendObject) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(d.LeadingComment())
+	buf.WriteString(d.LeadingComment(lineFeed))
 	buf.WriteString(indent(d.Nest) + "{")
 	for _, v := range d.Values {
-		buf.WriteString(" ." + v.Key.String())
-		buf.WriteString(" = ")
-		buf.WriteString(v.Value.String())
+		buf.WriteString(paddingLeft(v.Key.LeadingComment(inline)))
+		buf.WriteString(" .")
+		buf.WriteString(paddingRight(v.Key.Value))
+		buf.WriteString(paddingRight(v.Key.TrailingComment(inline)))
+		buf.WriteString("=")
+		buf.WriteString(paddingLeft(v.Value.String()))
 		buf.WriteString(";")
+		buf.WriteString(v.TrailingComment(inline))
+	}
+	if v := d.InfixComment(inline); v != "" {
+		buf.WriteString(paddingLeft(v))
 	}
 	buf.WriteString(" }")
-	buf.WriteString(d.TrailingComment())
+	buf.WriteString(d.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

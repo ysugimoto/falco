@@ -261,6 +261,7 @@ func (p *Parser) parseFunctionArgumentExpressions() ([]ast.Expression, error) {
 
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken() // point to COMMA
+		swapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
 		p.nextToken() // point to next argument expression
 		item, err := p.parseExpression(LOWEST)
 		if err != nil {
@@ -272,6 +273,7 @@ func (p *Parser) parseFunctionArgumentExpressions() ([]ast.Expression, error) {
 	if !p.expectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	swapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
 
 	return list, nil
 }

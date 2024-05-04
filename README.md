@@ -67,6 +67,7 @@ Subcommands:
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
     console   : Run terminal console
+    fmt       : Run formatter for provided VCLs
 
 See subcommands help with:
     falco [subcommand] -h
@@ -93,6 +94,14 @@ The main feature, parse and run lint your VCL locally, and report problems.
 that you improve your VCL more robustly by passing the linter.
 
 See [linter documentation](https://github.com/ysugimoto/falco/blob/main/docs/linter.md) in detail.
+
+## Formatter
+
+Format provided VCL by our recommended styles.
+Currently we have a few options to control formatting style like [biomejs](https://github.com/biomejs/biome).
+Through the formatter, your VCL codes have unified format even multiple people are maintaining VCL.
+
+See [formatter documentation](./docs/formatter.md) in detail.
 
 ## Local Simulator / VCL Debugger
 
