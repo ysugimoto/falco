@@ -106,29 +106,29 @@ func next(r *bufio.Reader) rune {
 // * %XXXX
 // * %{...}
 func codePointEscape(r *bufio.Reader) (string, error) {
-	var min, max int
+	var minPosition, maxPosition int
 
 	// Is the escape a fixed or variable width code point escape.
 	if peek(r) == '{' {
 		next(r)
-		min, max = 1, 6
+		minPosition, maxPosition = 1, 6
 	} else {
-		min, max = 4, 4
+		minPosition, maxPosition = 4, 4
 	}
 
 	// Read at least `min` hex digits up to `max`
 	var x int
-	for n := 0; n < max; n++ {
+	for n := 0; n < maxPosition; n++ {
 		if !isHex(peek(r)) {
-			if n < min {
-				return "", fmt.Errorf("incomplete unicode escape. %d missing digits", min-n)
+			if n < minPosition {
+				return "", fmt.Errorf("incomplete unicode escape. %d missing digits", minPosition-n)
 			}
 			break
 		}
 		x = x*16 + digitVal(next(r))
 	}
 
-	if max == 6 {
+	if maxPosition == 6 {
 		if c := next(r); c != '}' {
 			return "", fmt.Errorf("incomplete %%{xxxx} escape")
 		}

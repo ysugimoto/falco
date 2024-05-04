@@ -20,15 +20,15 @@ func WithSnippets(fs *snippets.Snippets) Option {
 	}
 }
 
-func WithMaxBackends(max int) Option {
+func WithMaxBackends(maxBackends int) Option {
 	return func(c *Context) {
-		c.OverrideMaxBackends = max
+		c.OverrideMaxBackends = maxBackends
 	}
 }
 
-func WithMaxAcls(max int) Option {
+func WithMaxAcls(maxAcls int) Option {
 	return func(c *Context) {
-		c.OverrideMaxAcls = max
+		c.OverrideMaxAcls = maxAcls
 	}
 }
 
