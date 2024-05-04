@@ -53,16 +53,17 @@ Supporting rules are described the following table and sections.
 | trailing_comment_width      | INT    | 2       | Specify space size for trailing comment                                                        |
 | line_width                  | INT    | 120     | Specify max characters for each line. The overflowed characters are displayed at the next line |
 | explicit_string_concat      | BOOL   | false   | Explicitly write string concatenation operator `+` between expressions                         |
-| sort_declaration_property   | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetecally           |
+| sort_declaration_property   | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetically           |
 | align_declaration_property  | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
 | else_if                     | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
 | return_statement_parentheis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
 | sort_declaration            | BOOL   | false   | Sort root declaration by specific order                                                        |
 | align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
 | comment_style               | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
-| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statemnt                                               |
+| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statement                                               |
 | indent_case_labels          | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
 
+---
 
 ### Indent Width
 
@@ -139,11 +140,11 @@ sub vcl_recv {
 
 Specify max characters for each line. The overflowed characters are printed at the next line with the same ident.
 
-```
-Inserting line-feed is judged for each expression. It means formatter does not split in the middle of a sentence.
+> [!NOTE]
+> Inserting line-feed is judged for each expression. It means formatter does not split in the middle of a sentence.
 ```
 
-You can prevent this formatting rule by providing `-1` value to this configuration
+You can prevent this formatting rule by providing `-1` value to this configuration.
 
 ```vcl
 sub vcl_recv {
@@ -175,8 +176,8 @@ Formatted (line_width: 80):
 ```vcl
 sub vcl_recv {
   if (
-      req.http.Header1 == "1" && req.http.Header2 == "2" &&
-      req.http.Header3 == "3" && req.http.Header4 == "4"
+    req.http.Header1 == "1" && req.http.Header2 == "2" &&
+    req.http.Header3 == "3" && req.http.Header4 == "4"
   ) {
     set req.http.OK = "1";
   }
@@ -211,7 +212,7 @@ sub vcl_recv {
 
 **default: false**
 
-If true, declaration properties will be printed with alphabetecally sorted.
+If true, declaration properties will be printed with alphabetically sorted.
 This rule affects to `backend`, `director`, and `table` declarations.
 
 ```vcl
@@ -302,7 +303,7 @@ backend example {
 **default: false**
 
 VCL accepts a little kind of another if statement keyword like `else if`,  `elseif`, and `elsif`, sometimes it's annoying to recognize.
-If this rule set `true`, print these keyword as `else if`.
+If this rule set `true`, print these keywords as `else if`.
 
 ```vcl
 sub vcl_recv {
@@ -336,7 +337,7 @@ sub vcl_recv {
 
 **default: true**
 
-If true, coerce surrounding parenthesis state ident of `return` statement.
+If true, coerce the surrounding parenthesis state ident of `return` statement.
 
 ```vcl
 sub vcl_recv {
@@ -356,7 +357,7 @@ sub vcl_recv {
 
 ## Sort Declaration
 
-**default:false**
+**default: false**
 
 If true, sort root declarations by VCL directive order:
 
@@ -410,7 +411,7 @@ sub vcl_deliver {
 
 ## Align Trailing Comment
 
-**default:false**
+**default: false**
 
 If true, align the trailing comment for each statement/declaration line:
 
@@ -435,7 +436,7 @@ sub vcl_recv {
 
 ## Always Next Line ElseIf
 
-**default:false**
+**default: false**
 
 If true, the `else if` and `else` statement prints to the next line.
 
@@ -471,7 +472,7 @@ sub vcl_recv {
 
 ## Comment Style
 
-**default:none**
+**default: none**
 
 Define the comment style. `sharp` value will use `#` character, or `slash` value will use `/` character.
 Note that the inline style comment `/* ... */` does not replace.
@@ -494,7 +495,7 @@ sub vcl_recv {
 
 ## Should Use Unset
 
-**default:false**
+**default: false**
 
 The `remove` statement is alias of `unset` statement, it can be replaced if this rule is true.
 
