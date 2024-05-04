@@ -45,25 +45,28 @@ override_backends:
 falco cascades each setting from the order of `Default Setting` -> `Configuration File` -> `CLI Arguments` to override.
 All configurations of configuration files and CLI arguments are described following table:
 
-| Configuration Field                | Type          | Default | CLI Argument       | Description                                                                                                                |
-|:-----------------------------------|:-------------:|:-------:|:------------------:|:--------------------------------------------------------------------------------------------------------------------------|
-| include_paths                      | Array<String> | []      | -I, --include_path | Include VCL paths                                                                                                         |
-| remote                             | Boolean       | false   | -r, --remote       | Fetch remote resources of Fastly                                                                                          |
-| max_backends                       | Integer       | 5       | --max_backends     | Override Fastly's backend amount limitation                                                                               |
-| max_acls                           | Integer       | 1000    | --max_acls         | Override Fastly's acl amount limitation                                                                                   |
-| simulator                          | Object        | null    | -                  | Simulator configuration object                                                                                            |
-| simulator.port                     | Integer       | 3124    | -p, --port         | Simulator server listen port                                                                                              |
-| testing                            | Object        | null    | -                  | Testing configuration object                                                                                              |
-| testing.timeout                    | Integer       | 10      | -t, --timeout      | Set timeout to stop testing                                                                                               |
-| linter                             | Object        | null    | -                  | Override linter rules                                                                                                     |
-| linter.verbose                     | String        | error   | -v, -vv            | Verbose level, `warning` or `info` is valid                                                                               |
-| linter.rules                       | Object        | null    | -                  | Override linter rules                                                                                                     |
-| linter.rules.[rule_name]           | String        | -       | -                  | Override linter error level for the rule name, see [rules](https://github.com/ysugimoto/falco/blob/develop/docs/rules.md) |
-| override_backends                  | Object        | -       | -                  | Override backend settings in main VCL which correspond to the name. Key of backend name accepts glob pattern              |
-| override_backends.[name]           | Object        | -       | -                  | Backend name to override                                                                                                  |
-| override_backends.[name].host      | String        | -       | -                  | Backend host to override                                                                                                  |
-| override_backends.[name].ssl       | Boolean       | true    | -                  | Use HTTPS when set `true`                                                                                                 |
-| override_backends.[name].unhealthy | Boolean       | false   | -                  | Override backend to be unhealthy when set `true`                                                                          |
+| Configuration Field                | Type          | Default | CLI Argument       | Description                                                                                                                           |
+|:-----------------------------------|:-------------:|:-------:|:------------------:|:--------------------------------------------------------------------------------------------------------------------------------------|
+| include_paths                      | Array<String> | []      | -I, --include_path | Include VCL paths                                                                                                                     |
+| remote                             | Boolean       | false   | -r, --remote       | Fetch remote resources of Fastly                                                                                                      |
+| max_backends                       | Integer       | 5       | --max_backends     | Override Fastly's backend amount limitation                                                                                           |
+| max_acls                           | Integer       | 1000    | --max_acls         | Override Fastly's acl amount limitation                                                                                               |
+| simulator                          | Object        | null    | -                  | Simulator configuration object                                                                                                        |
+| simulator.port                     | Integer       | 3124    | -p, --port         | Simulator server listen port                                                                                                          |
+| testing                            | Object        | null    | -                  | Testing configuration object                                                                                                          |
+| testing.timeout                    | Integer       | 10      | -t, --timeout      | Set timeout to stop testing                                                                                                           |
+| linter                             | Object        | null    | -                  | Override linter rules                                                                                                                 |
+| linter.verbose                     | String        | error   | -v, -vv            | Verbose level, `warning` or `info` is valid                                                                                           |
+| linter.rules                       | Object        | null    | -                  | Override linter rules                                                                                                                 |
+| linter.rules.[rule_name]           | String        | -       | -                  | Override linter error level for the rule name, see [rules](https://github.com/ysugimoto/falco/blob/develop/docs/rules.md)             |
+| linter.enforce_subroutine_scopes   | Array<String> | []      | -                  | Coerce subroutine scope for specified list of subroutine names. will be usefull for Fastly managed snippet that cannot be modified.   |
+| linter.ignore_subroutines          | Array<String> | []      | -                  | Ignore subroutine linting for specified list of subroutine names. will be usefull for Fastly managed snippet that cannot be modified. |
+| override_backends                  | Object        | -       | -                  | Override backend settings in main VCL which correspond to the name. Key of backend name accepts glob pattern                          |
+| override_backends                  | Object        | -       | -                  | Override backend settings in main VCL which correspond to the name. Key of backend name accepts glob pattern                          |
+| override_backends.[name]           | Object        | -       | -                  | Backend name to override                                                                                                              |
+| override_backends.[name].host      | String        | -       | -                  | Backend host to override                                                                                                              |
+| override_backends.[name].ssl       | Boolean       | true    | -                  | Use HTTPS when set `true`                                                                                                             |
+| override_backends.[name].unhealthy | Boolean       | false   | -                  | Override backend to be unhealthy when set `true`                                                                                      |
 
 
 
