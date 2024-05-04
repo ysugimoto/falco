@@ -29,8 +29,8 @@ func ArgumentNotEnough(name string, expects int, args []value.Value) error {
 	return New(name, "Expects %d arguments but %d provided", expects, len(args))
 }
 
-func ArgumentNotInRange(name string, min, max int, args []value.Value) error {
-	return New(name, "Expects between %d and %d arguments but %d argument provided", min, max, len(args))
+func ArgumentNotInRange(name string, minArgs, maxArgs int, args []value.Value) error {
+	return New(name, "Expects between %d and %d arguments but %d argument provided", minArgs, maxArgs, len(args))
 }
 
 func TypeMismatch(name string, num int, expects, actual value.Type) error {

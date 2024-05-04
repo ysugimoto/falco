@@ -133,7 +133,7 @@ func removeCookieByName(r *http.Request, cookieName string) {
 
 		var sub []string
 		var part string
-		for len(line) > 0 { // continue since we have rest
+		for line != "" { // continue since we have rest
 			part, line, _ = strings.Cut(line, ";")
 			trimmedPart := textproto.TrimString(part)
 			if trimmedPart == "" {
