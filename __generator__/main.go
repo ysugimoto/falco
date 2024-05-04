@@ -40,6 +40,11 @@ func main() {
 	if err := i.generateBuiltInFunction(); err != nil {
 		panic(err)
 	}
+
+	c := newConsole()
+	if err := c.generateSuggestions(); err != nil {
+		panic(err)
+	}
 }
 
 func quote(v interface{}) string {

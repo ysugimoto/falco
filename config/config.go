@@ -58,6 +58,15 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Console configuration
+type ConsoleConfig struct {
+	// Initial scope string, for example, recv, pass, fetch, etc...
+	Scope string `cli:"scope" default:"recv"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
+
 // Format configuration
 type FormatConfig struct {
 	// CLI options
@@ -111,6 +120,8 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Console configuration
+	Console *ConsoleConfig `yaml:"console"`
 	// Format configuration
 	Format *FormatConfig `yaml:"format"`
 }

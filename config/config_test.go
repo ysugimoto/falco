@@ -63,6 +63,10 @@ func TestConfigFromCLI(t *testing.T) {
 			IncludePaths:    []string{"."},
 			OverrideRequest: &RequestConfig{},
 		},
+		Console: &ConsoleConfig{
+			Scope:           "recv",
+			OverrideRequest: &RequestConfig{},
+		},
 		Format: &FormatConfig{
 			IndentWidth:                2,
 			TrailingCommentWidth:       2,

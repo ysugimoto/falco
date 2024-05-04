@@ -15,6 +15,7 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/console"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/remote"
@@ -51,6 +52,7 @@ const (
 	subcommandSimulate  = "simulate"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
+	subcommandConsole   = "console"
 	subcommandFormat    = "fmt"
 )
 
@@ -93,6 +95,11 @@ func main() {
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
+	case subcommandConsole:
+		if err := console.Run(c.Console.Scope); err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
 	case subcommandFormat:
 		// "fmt" command accepts multiple target files
 		resolvers, err = resolver.NewGlobResolver(c.Commands[1:]...)

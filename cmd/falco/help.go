@@ -17,6 +17,8 @@ func printHelp(cmd string) {
 		printTestHelp()
 	case subcommandLint:
 		printLintHelp()
+	case subcommandConsole:
+		printConsoleHelp()
 	case subcommandFormat:
 		printFormatHelp()
 	default:
@@ -48,6 +50,7 @@ Subcommands:
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
+    console   : Run terminal console
     fmt       : Run formatter for provided VCLs
 
 See subcommands help with:
@@ -165,6 +168,20 @@ Flags:
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl
+	`))
+}
+
+func printConsoleHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco console [flags]
+
+Flags:
+    -s, --scope : Define initial scope
+    -h, --help  : Show this help
+
+Run console with fetch scope example:
+    falco console -s fetch
 	`))
 }
 

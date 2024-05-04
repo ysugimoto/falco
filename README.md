@@ -66,8 +66,8 @@ Subcommands:
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
+    console   : Run terminal console
     fmt       : Run formatter for provided VCLs
-
 
 See subcommands help with:
     falco [subcommand] -h
@@ -119,6 +119,13 @@ You can run unit testing through the `falco` runtime.
 The unit testing file also can be written in VCL, and run test for each subroutine that you want individually.
 
 See [testing documentation](https://github.com/ysugimoto/falco/blob/main/docs/testing.md) in detail.
+
+## Console
+
+Falco supports simple terminal console to evaluate line input.
+You can confirm behavior without actual VCL file.
+
+See [console documentation](./docs/console.md) in detail.
 
 ## Terraform Support
 
