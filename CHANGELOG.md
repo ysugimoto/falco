@@ -1,3 +1,15 @@
+## v1.6.0
+
+- Errors with concurrent simulator requests due to global interpreter state [#282](https://github.com/ysugimoto/falco/pull/282) (@richardmarshall)
+- Fix offset/length handling in substr & utf8.substr [#283](https://github.com/ysugimoto/falco/pull/283) (@richardmarshall)
+- Regex patterns must be literals [#284](https://github.com/ysugimoto/falco/pull/284) (@richardmarshall)
+- Add missing backend.{name}.* variables [#285](https://github.com/ysugimoto/falco/pull/285) (@richardmarshall)
+- Feature/implement formatter [#291](https://github.com/ysugimoto/falco/pull/291) (@ysugimoto)
+- Add enforcing and ignoring subroutine scope in linter config [#296](https://github.com/ysugimoto/falco/pull/296) (@ysugimoto)
+- Improve parser/ast for complex comments [#302](https://github.com/ysugimoto/falco/pull/302) (@ysugimoto)
+- Feature/console subcommand [#303](https://github.com/ysugimoto/falco/pull/303) (@ysugimoto)
+
+
 ## v1.5.0
 
 - Add assert.not_subroutine_called [#247](https://github.com/ysugimoto/falco/pull/247) (@bungoume)
