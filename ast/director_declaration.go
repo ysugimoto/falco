@@ -11,7 +11,7 @@ type DirectorDeclaration struct {
 	Properties   []Expression
 }
 
-func (d *DirectorDeclaration) statement()     {}
+func (d *DirectorDeclaration) Statement()     {}
 func (d *DirectorDeclaration) GetMeta() *Meta { return d.Meta }
 func (d *DirectorDeclaration) String() string {
 	var buf bytes.Buffer
@@ -42,7 +42,7 @@ type DirectorProperty struct {
 	Value Expression
 }
 
-func (d *DirectorProperty) expression()    {}
+func (d *DirectorProperty) Expression()    {}
 func (d *DirectorProperty) GetMeta() *Meta { return d.Meta }
 func (d *DirectorProperty) String() string {
 	var buf bytes.Buffer
@@ -63,7 +63,7 @@ type DirectorBackendObject struct {
 	Values []*DirectorProperty
 }
 
-func (d *DirectorBackendObject) expression()    {}
+func (d *DirectorBackendObject) Expression()    {}
 func (d *DirectorBackendObject) GetMeta() *Meta { return d.Meta }
 func (d *DirectorBackendObject) String() string {
 	var buf bytes.Buffer

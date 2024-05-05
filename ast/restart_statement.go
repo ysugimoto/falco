@@ -8,7 +8,7 @@ type RestartStatement struct {
 	*Meta
 }
 
-func (r *RestartStatement) statement()     {}
+func (r *RestartStatement) Statement()     {}
 func (r *RestartStatement) GetMeta() *Meta { return r.Meta }
 func (r *RestartStatement) String() string {
 	var buf bytes.Buffer

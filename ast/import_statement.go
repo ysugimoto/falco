@@ -9,7 +9,7 @@ type ImportStatement struct {
 	Name *Ident
 }
 
-func (i *ImportStatement) statement()     {}
+func (i *ImportStatement) Statement()     {}
 func (i *ImportStatement) GetMeta() *Meta { return i.Meta }
 func (i *ImportStatement) String() string {
 	var buf bytes.Buffer

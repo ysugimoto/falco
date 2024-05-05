@@ -10,8 +10,8 @@ type BackendDeclaration struct {
 	Properties []*BackendProperty
 }
 
-func (b *BackendDeclaration) statement()     {}
-func (b *BackendDeclaration) expression()    {}
+func (b *BackendDeclaration) Statement()     {}
+func (b *BackendDeclaration) Expression()    {}
 func (b *BackendDeclaration) GetMeta() *Meta { return b.Meta }
 func (b *BackendDeclaration) String() string {
 	var buf bytes.Buffer
@@ -37,7 +37,7 @@ type BackendProperty struct {
 	Value Expression
 }
 
-func (p *BackendProperty) expression()    {}
+func (p *BackendProperty) Expression()    {}
 func (p *BackendProperty) GetMeta() *Meta { return p.Meta }
 func (p *BackendProperty) String() string {
 	var buf bytes.Buffer
@@ -59,7 +59,7 @@ type BackendProbeObject struct {
 	Values []*BackendProperty
 }
 
-func (o *BackendProbeObject) expression()    {}
+func (o *BackendProbeObject) Expression()    {}
 func (o *BackendProbeObject) GetMeta() *Meta { return o.Meta }
 func (o *BackendProbeObject) String() string {
 	var buf bytes.Buffer

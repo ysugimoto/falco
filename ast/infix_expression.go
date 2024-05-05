@@ -11,7 +11,7 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (i *InfixExpression) expression()    {}
+func (i *InfixExpression) Expression()    {}
 func (i *InfixExpression) GetMeta() *Meta { return i.Meta }
 func (i *InfixExpression) String() string {
 	var buf bytes.Buffer

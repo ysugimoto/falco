@@ -8,50 +8,45 @@ import (
 
 func (p *Parser) registerExpressionParsers() {
 	p.prefixParsers = map[token.TokenType]prefixParser{
-		token.IDENT:      func() (ast.Expression, error) { return p.parseIdent(), nil },
-		token.STRING:     func() (ast.Expression, error) { return p.parseString() },
-		token.INT:        func() (ast.Expression, error) { return p.parseInteger() },
-		token.FLOAT:      func() (ast.Expression, error) { return p.parseFloat() },
-		token.RTIME:      func() (ast.Expression, error) { return p.parseRTime() },
-		token.NOT:        func() (ast.Expression, error) { return p.parsePrefixExpression() },
-		token.MINUS:      func() (ast.Expression, error) { return p.parsePrefixExpression() },
-		token.PLUS:       func() (ast.Expression, error) { return p.parsePrefixExpression() },
-		token.TRUE:       func() (ast.Expression, error) { return p.parseBoolean(), nil },
-		token.FALSE:      func() (ast.Expression, error) { return p.parseBoolean(), nil },
-		token.LEFT_PAREN: func() (ast.Expression, error) { return p.parseGroupedExpression() },
-		token.IF:         func() (ast.Expression, error) { return p.parseIfExpression() },
-		token.ERROR:      func() (ast.Expression, error) { return p.parseIdent(), nil },
-		token.RESTART:    func() (ast.Expression, error) { return p.parseIdent(), nil },
+		token.IDENT:      func() (ast.Expression, error) { return p.ParseIdent(), nil },
+		token.STRING:     func() (ast.Expression, error) { return p.ParseString() },
+		token.INT:        func() (ast.Expression, error) { return p.ParseInteger() },
+		token.FLOAT:      func() (ast.Expression, error) { return p.ParseFloat() },
+		token.RTIME:      func() (ast.Expression, error) { return p.ParseRTime() },
+		token.NOT:        func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.MINUS:      func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.PLUS:       func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.TRUE:       func() (ast.Expression, error) { return p.ParseBoolean(), nil },
+		token.FALSE:      func() (ast.Expression, error) { return p.ParseBoolean(), nil },
+		token.LEFT_PAREN: func() (ast.Expression, error) { return p.ParseGroupedExpression() },
+		token.IF:         func() (ast.Expression, error) { return p.ParseIfExpression() },
+		token.ERROR:      func() (ast.Expression, error) { return p.ParseIdent(), nil },
+		token.RESTART:    func() (ast.Expression, error) { return p.ParseIdent(), nil },
 	}
 	p.infixParsers = map[token.TokenType]infixParser{
-		token.IF:                 p.parseInfixStringConcatExpression,
-		token.PLUS:               p.parseInfixStringConcatExpression,
-		token.STRING:             p.parseInfixStringConcatExpression,
-		token.IDENT:              p.parseInfixStringConcatExpression,
-		token.MINUS:              p.parseInfixExpression,
-		token.EQUAL:              p.parseInfixExpression,
-		token.NOT_EQUAL:          p.parseInfixExpression,
-		token.GREATER_THAN:       p.parseInfixExpression,
-		token.GREATER_THAN_EQUAL: p.parseInfixExpression,
-		token.LESS_THAN:          p.parseInfixExpression,
-		token.LESS_THAN_EQUAL:    p.parseInfixExpression,
-		token.REGEX_MATCH:        p.parseInfixExpression,
-		token.NOT_REGEX_MATCH:    p.parseInfixExpression,
-		token.LEFT_PAREN:         p.parseFunctionCallExpression,
-		token.AND:                p.parseInfixExpression,
-		token.OR:                 p.parseInfixExpression,
+		token.IF:                 p.ParseInfixStringConcatExpression,
+		token.PLUS:               p.ParseInfixStringConcatExpression,
+		token.STRING:             p.ParseInfixStringConcatExpression,
+		token.IDENT:              p.ParseInfixStringConcatExpression,
+		token.MINUS:              p.ParseInfixExpression,
+		token.EQUAL:              p.ParseInfixExpression,
+		token.NOT_EQUAL:          p.ParseInfixExpression,
+		token.GREATER_THAN:       p.ParseInfixExpression,
+		token.GREATER_THAN_EQUAL: p.ParseInfixExpression,
+		token.LESS_THAN:          p.ParseInfixExpression,
+		token.LESS_THAN_EQUAL:    p.ParseInfixExpression,
+		token.REGEX_MATCH:        p.ParseInfixExpression,
+		token.NOT_REGEX_MATCH:    p.ParseInfixExpression,
+		token.LEFT_PAREN:         p.ParseFunctionCallExpression,
+		token.AND:                p.ParseInfixExpression,
+		token.OR:                 p.ParseInfixExpression,
 	}
 	p.postfixParsers = map[token.TokenType]postfixParser{
-		token.PERCENT: p.parsePostfixExpression,
+		token.PERCENT: p.ParsePostfixExpression,
 	}
 }
 
-// Expose global function to be called externally
 func (p *Parser) ParseExpression(precedence int) (ast.Expression, error) {
-	return p.parseExpression(precedence)
-}
-
-func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	// Note: trim comment inside expression list
 	// For example:
 	// if (req.http.Foo && /* comment */ req.http.Bar) { ... } // -> trim  /* comment */ token
@@ -71,11 +66,11 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 	}
 
 	// same as prefix expression
-	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+	for !p.PeekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix, ok := p.infixParsers[p.peekToken.Token.Type]
 		if !ok {
 			if postfix, ok := p.postfixParsers[p.peekToken.Token.Type]; ok {
-				p.nextToken()
+				p.NextToken()
 				left, err = postfix(left)
 				if err != nil {
 					return nil, errors.WithStack(err)
@@ -84,8 +79,8 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 			}
 			return left, nil
 		}
-		swapLeadingTrailing(p.peekToken, left.GetMeta())
-		p.nextToken()
+		SwapLeadingTrailing(p.peekToken, left.GetMeta())
+		p.NextToken()
 		left, err = infix(left)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -93,21 +88,21 @@ func (p *Parser) parseExpression(precedence int) (ast.Expression, error) {
 		continue
 	}
 
-	if p.peekTokenIs(token.SEMICOLON) {
-		swapLeadingTrailing(p.peekToken, left.GetMeta())
+	if p.PeekTokenIs(token.SEMICOLON) {
+		SwapLeadingTrailing(p.peekToken, left.GetMeta())
 	}
 
 	return left, nil
 }
 
-func (p *Parser) parsePrefixExpression() (*ast.PrefixExpression, error) {
+func (p *Parser) ParsePrefixExpression() (*ast.PrefixExpression, error) {
 	exp := &ast.PrefixExpression{
 		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
 
-	p.nextToken() // point to expression start
-	right, err := p.parseExpression(PREFIX)
+	p.NextToken() // point to expression start
+	right, err := p.ParseExpression(PREFIX)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -116,69 +111,69 @@ func (p *Parser) parsePrefixExpression() (*ast.PrefixExpression, error) {
 	return exp, nil
 }
 
-func (p *Parser) parseGroupedExpression() (*ast.GroupedExpression, error) {
+func (p *Parser) ParseGroupedExpression() (*ast.GroupedExpression, error) {
 	exp := &ast.GroupedExpression{
 		Meta: p.curToken,
 	}
 
-	p.nextToken() // point to expression start
-	right, err := p.parseExpression(LOWEST)
+	p.NextToken() // point to expression start
+	right, err := p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
 
-	if !p.expectPeek(token.RIGHT_PAREN) {
+	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
 
 	return exp, nil
 }
 
-func (p *Parser) parseIfExpression() (*ast.IfExpression, error) {
+func (p *Parser) ParseIfExpression() (*ast.IfExpression, error) {
 	exp := &ast.IfExpression{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.LEFT_PAREN) {
+	if !p.ExpectPeek(token.LEFT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_PAREN"))
 	}
 
-	p.nextToken() // point to condition expression start
-	cond, err := p.parseExpression(LOWEST)
+	p.NextToken() // point to condition expression start
+	cond, err := p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	exp.Condition = cond
 
-	if !p.expectPeek(token.COMMA) {
+	if !p.ExpectPeek(token.COMMA) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA"))
 	}
 
-	p.nextToken() // point to consequence expression
-	exp.Consequence, err = p.parseExpression(LOWEST)
+	p.NextToken() // point to consequence expression
+	exp.Consequence, err = p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if !p.expectPeek(token.COMMA) {
+	if !p.ExpectPeek(token.COMMA) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA"))
 	}
 
-	p.nextToken() // point to alternative expression
-	exp.Alternative, err = p.parseExpression(LOWEST)
+	p.NextToken() // point to alternative expression
+	exp.Alternative, err = p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if !p.expectPeek(token.RIGHT_PAREN) {
+	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
 
 	return exp, nil
 }
 
-func (p *Parser) parseInfixExpression(left ast.Expression) (ast.Expression, error) {
+func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
 		Meta:     p.curToken, // point to operator token
 		Operator: p.curToken.Token.Literal,
@@ -186,8 +181,8 @@ func (p *Parser) parseInfixExpression(left ast.Expression) (ast.Expression, erro
 	}
 
 	precedence := p.curPrecedence()
-	p.nextToken() // point to right expression start
-	right, err := p.parseExpression(precedence)
+	p.NextToken() // point to right expression start
+	right, err := p.ParseExpression(precedence)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -196,7 +191,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) (ast.Expression, erro
 	return exp, nil
 }
 
-func (p *Parser) parseInfixStringConcatExpression(left ast.Expression) (ast.Expression, error) {
+func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
 		Meta: p.curToken,
 		// VCL can concat string without "+" operator, consecutive token.
@@ -206,7 +201,7 @@ func (p *Parser) parseInfixStringConcatExpression(left ast.Expression) (ast.Expr
 	}
 
 	precedence := p.curPrecedence()
-	right, err := p.parseExpression(precedence)
+	right, err := p.ParseExpression(precedence)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -215,7 +210,7 @@ func (p *Parser) parseInfixStringConcatExpression(left ast.Expression) (ast.Expr
 	return exp, nil
 }
 
-func (p *Parser) parsePostfixExpression(left ast.Expression) (ast.Expression, error) {
+func (p *Parser) ParsePostfixExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.PostfixExpression{
 		Meta: p.curToken,
 		Left: left,
@@ -225,7 +220,7 @@ func (p *Parser) parsePostfixExpression(left ast.Expression) (ast.Expression, er
 	return exp, nil
 }
 
-func (p *Parser) parseFunctionCallExpression(fn ast.Expression) (ast.Expression, error) {
+func (p *Parser) ParseFunctionCallExpression(fn ast.Expression) (ast.Expression, error) {
 	ident, ok := fn.(*ast.Ident)
 	if !ok {
 		return nil, errors.New("Function name must be IDENT")
@@ -235,7 +230,7 @@ func (p *Parser) parseFunctionCallExpression(fn ast.Expression) (ast.Expression,
 		Function: ident,
 	}
 
-	args, err := p.parseFunctionArgumentExpressions()
+	args, err := p.ParseFunctionArgumentExpressions()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -244,36 +239,36 @@ func (p *Parser) parseFunctionCallExpression(fn ast.Expression) (ast.Expression,
 	return exp, nil
 }
 
-func (p *Parser) parseFunctionArgumentExpressions() ([]ast.Expression, error) {
+func (p *Parser) ParseFunctionArgumentExpressions() ([]ast.Expression, error) {
 	list := []ast.Expression{}
 
-	if p.peekTokenIs(token.RIGHT_PAREN) {
-		p.nextToken() // point to RIGHT_PAREN, means nothing argument is specified
+	if p.PeekTokenIs(token.RIGHT_PAREN) {
+		p.NextToken() // point to RIGHT_PAREN, means nothing argument is specified
 		return list, nil
 	}
 
-	p.nextToken() // point to first argument expression
-	item, err := p.parseExpression(LOWEST)
+	p.NextToken() // point to first argument expression
+	item, err := p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	list = append(list, item)
 
-	for p.peekTokenIs(token.COMMA) {
-		p.nextToken() // point to COMMA
-		swapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
-		p.nextToken() // point to next argument expression
-		item, err := p.parseExpression(LOWEST)
+	for p.PeekTokenIs(token.COMMA) {
+		p.NextToken() // point to COMMA
+		SwapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
+		p.NextToken() // point to next argument expression
+		item, err := p.ParseExpression(LOWEST)
 		if err != nil {
 			return nil, err
 		}
 		list = append(list, item)
 	}
 
-	if !p.expectPeek(token.RIGHT_PAREN) {
+	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
-	swapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
+	SwapLeadingTrailing(p.curToken, list[len(list)-1].GetMeta())
 
 	return list, nil
 }

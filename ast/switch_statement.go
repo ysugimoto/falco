@@ -9,7 +9,7 @@ type SwitchStatement struct {
 	Default int
 }
 
-func (s *SwitchStatement) statement()     {}
+func (s *SwitchStatement) Statement()     {}
 func (s *SwitchStatement) GetMeta() *Meta { return s.Meta }
 func (s *SwitchStatement) String() string {
 	var buf bytes.Buffer
@@ -37,7 +37,7 @@ type SwitchControl struct {
 	Expression Expression
 }
 
-func (s *SwitchControl) statement()     {}
+func (s *SwitchControl) Statement()     {}
 func (s *SwitchControl) GetMeta() *Meta { return s.Meta }
 func (s *SwitchControl) String() string {
 	var buf bytes.Buffer

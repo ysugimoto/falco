@@ -11,7 +11,7 @@ type SubroutineDeclaration struct {
 	ReturnType *Ident
 }
 
-func (s *SubroutineDeclaration) statement()     {}
+func (s *SubroutineDeclaration) Statement()     {}
 func (s *SubroutineDeclaration) GetMeta() *Meta { return s.Meta }
 func (s *SubroutineDeclaration) String() string {
 	var buf bytes.Buffer

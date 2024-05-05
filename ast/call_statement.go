@@ -9,7 +9,7 @@ type CallStatement struct {
 	Subroutine *Ident
 }
 
-func (c *CallStatement) statement()     {}
+func (c *CallStatement) Statement()     {}
 func (c *CallStatement) GetMeta() *Meta { return c.Meta }
 func (c *CallStatement) String() string {
 	var buf bytes.Buffer

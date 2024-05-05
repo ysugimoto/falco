@@ -11,7 +11,7 @@ type TableDeclaration struct {
 	Properties []*TableProperty
 }
 
-func (t *TableDeclaration) statement()     {}
+func (t *TableDeclaration) Statement()     {}
 func (t *TableDeclaration) GetMeta() *Meta { return t.Meta }
 func (t *TableDeclaration) String() string {
 	var buf bytes.Buffer

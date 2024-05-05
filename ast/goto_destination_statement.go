@@ -9,7 +9,7 @@ type GotoDestinationStatement struct {
 	Name *Ident
 }
 
-func (gd *GotoDestinationStatement) statement()     {}
+func (gd *GotoDestinationStatement) Statement()     {}
 func (gd *GotoDestinationStatement) GetMeta() *Meta { return gd.Meta }
 func (gd *GotoDestinationStatement) String() string {
 	var buf bytes.Buffer

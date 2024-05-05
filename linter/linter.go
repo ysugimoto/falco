@@ -265,6 +265,10 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.FunctionCallExpression:
 		return l.lintFunctionCallExpression(t, ctx)
 	default:
+		// Custom statement won't be linted
+		if _, ok := node.(ast.CustomStatement); ok {
+			break
+		}
 		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
 	}
 	return types.NeverType
