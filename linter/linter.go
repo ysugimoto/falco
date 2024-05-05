@@ -23,14 +23,20 @@ type Linter struct {
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
 	conf           *config.LinterConfig
+
+	customLinters map[string]CustomLinter
 }
 
-func New(c *config.LinterConfig) *Linter {
-	return &Linter{
+func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
+	l := &Linter{
 		includexLexers: make(map[string]*lexer.Lexer),
 		ignore:         &ignore{},
 		conf:           c,
 	}
+	for i := range opts {
+		opts[i](l)
+	}
+	return l
 }
 
 func (l *Linter) Lexers() map[string]*lexer.Lexer {

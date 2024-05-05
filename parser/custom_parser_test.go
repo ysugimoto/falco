@@ -230,7 +230,6 @@ describe foo {
 		&DescribeParser{},
 		&BeforeEachParser{},
 	}
-	// l := lexer.NewFromString(input, lexer.WithCustomToken("describe", "before_each"))
 	vcl, err := New(lexer.NewFromString(input), WithCustomParser(cps...)).ParseVCL()
 	if err != nil {
 		t.Errorf("%+v", err)
