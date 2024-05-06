@@ -68,6 +68,7 @@ const (
 	UNUSED_VARIABLE                      = "unused/variable"
 	UNUSED_GOTO                          = "unused/goto"
 	DISALLOW_EMPTY_RETURN                = "disallow-empty-return"
+	FORBIDDEN_BACKWARD_JUMP              = "goto/forbidden-backward-jump"
 )
 
 var references = map[Rule]string{
@@ -104,4 +105,5 @@ var references = map[Rule]string{
 	SYNTHETIC_BASE64_STATEMENT_SCOPE: "https://developer.fastly.com/reference/vcl/statements/synthetic-base64/",
 	DISALLOW_EMPTY_RETURN:            "https://developer.fastly.com/reference/vcl/subroutines#returning-a-state",
 	UNRECOGNIZE_CALL_SCOPE:           "https://github.com/ysugimoto/falco/blob/main/docs/linter.md#user-defined-subroutine",
+	FORBIDDEN_BACKWARD_JUMP:          "https://fiddle.fastly.dev/fiddle/4814c144",
 }

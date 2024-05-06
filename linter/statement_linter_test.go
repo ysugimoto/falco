@@ -676,3 +676,16 @@ sub vcl_recv {
 		assertNoError(t, input)
 	})
 }
+
+func TestGotoBackwardJump(t *testing.T) {
+	t.Run("backward jmp is forbidden", func(t *testing.T) {
+		input := `
+	sub foo {
+		BACKWARD:
+		set req.http.Foo = "bar";
+		goto BACKWARD;
+	}
+	`
+		assertError(t, input)
+	})
+}
