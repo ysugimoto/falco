@@ -128,6 +128,7 @@ type Context struct {
 	Penaltyboxes      map[string]*types.Penaltybox
 	Ratecounters      map[string]*types.Ratecounter
 	Gotos             map[string]*types.Goto
+	GotoDestinations  map[string]struct{}
 	Identifiers       map[string]struct{}
 	RegexVariables    map[string]int
 	ReturnType        *types.Type
@@ -136,20 +137,21 @@ type Context struct {
 
 func New(opts ...Option) *Context {
 	c := &Context{
-		curMode:        RECV,
-		curName:        "vcl_recv",
-		Acls:           make(map[string]*types.Acl),
-		Backends:       make(map[string]*types.Backend),
-		Tables:         make(map[string]*types.Table),
-		Directors:      make(map[string]*types.Director),
-		Subroutines:    make(map[string]*types.Subroutine),
-		Penaltyboxes:   make(map[string]*types.Penaltybox),
-		Ratecounters:   make(map[string]*types.Ratecounter),
-		Gotos:          make(map[string]*types.Goto),
-		Identifiers:    builtinIdentifiers(),
-		functions:      builtinFunctions(),
-		Variables:      predefinedVariables(),
-		RegexVariables: newRegexMatchedValues(),
+		curMode:          RECV,
+		curName:          "vcl_recv",
+		Acls:             make(map[string]*types.Acl),
+		Backends:         make(map[string]*types.Backend),
+		Tables:           make(map[string]*types.Table),
+		Directors:        make(map[string]*types.Director),
+		Subroutines:      make(map[string]*types.Subroutine),
+		Penaltyboxes:     make(map[string]*types.Penaltybox),
+		Ratecounters:     make(map[string]*types.Ratecounter),
+		Gotos:            make(map[string]*types.Goto),
+		GotoDestinations: make(map[string]struct{}),
+		Identifiers:      builtinIdentifiers(),
+		functions:        builtinFunctions(),
+		Variables:        predefinedVariables(),
+		RegexVariables:   newRegexMatchedValues(),
 	}
 
 	for i := range opts {

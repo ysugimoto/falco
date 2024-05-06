@@ -349,6 +349,17 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 	}
 }
 
+func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    gs.Meta.Token,
+		Message: fmt.Sprintf(
+			`A jump backwards is not allowed. Goto destination "%s" must be defined after this statement`,
+			gs.Destination.Value,
+		),
+	}
+}
+
 type FatalError struct {
 	Lexer *lexer.Lexer
 	Error error

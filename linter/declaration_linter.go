@@ -335,6 +335,11 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		ctx.CurrentSubroutine = nil
 	}()
 
+	// And reset goto destination statements because goto is not allowed across subroutine
+	defer func() {
+		ctx.GotoDestinations = make(map[string]struct{})
+	}()
+
 	l.lint(decl.Block, cc)
 
 	// We are done linting inside the previous scope so

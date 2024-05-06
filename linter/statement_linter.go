@@ -26,6 +26,13 @@ func (l *Linter) lintGotoStatement(stmt *ast.GotoStatement, ctx *context.Context
 		l.Error(InvalidName(stmt.Destination.GetMeta(), stmt.Destination.Value, "goto").Match(GOTO_SYNTAX))
 	}
 
+	// If goto destination is already found, it should be error
+	// because Fastly VCL forbids jmping backwards. We assume it is the reason to avoid infinite loop.
+	// @fiddle: https://fiddle.fastly.dev/fiddle/4814c144
+	if _, ok := ctx.GotoDestinations[stmt.Destination.Value]; ok {
+		l.Error(ForbiddenBackwardJump(stmt).Match(FORBIDDEN_BACKWARD_JUMP))
+	}
+
 	if err := ctx.AddGoto(stmt.Destination.Value, &types.Goto{Decl: stmt}); err != nil {
 		e := &LintError{
 			Severity: ERROR,
@@ -46,6 +53,8 @@ func (l *Linter) lintGotoDestinationStatement(stmt *ast.GotoDestinationStatement
 		}
 
 		gd.IsUsed = true
+		// Mark as found
+		ctx.GotoDestinations[stmt.Name.Value] = struct{}{}
 		return types.GotoType
 	} else {
 		l.Error(UndefinedGotoDestination(stmt.GetMeta(), stmt.Name.Value))
