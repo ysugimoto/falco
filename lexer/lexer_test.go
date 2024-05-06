@@ -678,3 +678,23 @@ func TestPeekToken(t *testing.T) {
 		t.Errorf(`Assertion failed, diff= %s`, diff)
 	}
 }
+
+func TestCustomToken(t *testing.T) {
+	input := `describe foo {}`
+	l := NewFromString(input, WithCustomTokens("describe"))
+
+	expects := []token.Token{
+		{Type: token.CUSTOM, Literal: "describe", Line: 1, Position: 1},
+		{Type: token.IDENT, Literal: "foo", Line: 1, Position: 10},
+		{Type: token.LEFT_BRACE, Literal: "{", Line: 1, Position: 14},
+		{Type: token.RIGHT_BRACE, Literal: "}", Line: 1, Position: 15},
+		{Type: token.EOF, Literal: "", Line: 1, Position: 16},
+	}
+	for i, tt := range expects {
+		tok := l.NextToken()
+
+		if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+			t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+		}
+	}
+}

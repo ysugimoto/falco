@@ -10,7 +10,7 @@ type FunctionCallStatement struct {
 	Arguments []Expression
 }
 
-func (fc *FunctionCallStatement) statement()     {}
+func (fc *FunctionCallStatement) Statement()     {}
 func (fc *FunctionCallStatement) GetMeta() *Meta { return fc.Meta }
 func (fc *FunctionCallStatement) String() string {
 	var buf bytes.Buffer

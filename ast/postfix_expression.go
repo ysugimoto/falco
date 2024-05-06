@@ -10,7 +10,7 @@ type PostfixExpression struct {
 	Operator string
 }
 
-func (i *PostfixExpression) expression()    {}
+func (i *PostfixExpression) Expression()    {}
 func (i *PostfixExpression) GetMeta() *Meta { return i.Meta }
 func (i *PostfixExpression) String() string {
 	var buf bytes.Buffer

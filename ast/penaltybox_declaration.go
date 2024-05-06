@@ -8,7 +8,7 @@ type PenaltyboxDeclaration struct {
 	Block *BlockStatement
 }
 
-func (p *PenaltyboxDeclaration) statement()     {}
+func (p *PenaltyboxDeclaration) Statement()     {}
 func (p *PenaltyboxDeclaration) GetMeta() *Meta { return p.Meta }
 func (p *PenaltyboxDeclaration) String() string {
 	var buf bytes.Buffer

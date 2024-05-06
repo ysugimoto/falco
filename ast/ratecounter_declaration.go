@@ -8,7 +8,7 @@ type RatecounterDeclaration struct {
 	Block *BlockStatement
 }
 
-func (r *RatecounterDeclaration) statement()     {}
+func (r *RatecounterDeclaration) Statement()     {}
 func (r *RatecounterDeclaration) GetMeta() *Meta { return r.Meta }
 func (r *RatecounterDeclaration) String() string {
 	var buf bytes.Buffer

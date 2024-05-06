@@ -12,7 +12,7 @@ type ReturnStatement struct {
 	ParenthesisTrailingComments Comments
 }
 
-func (r *ReturnStatement) statement()     {}
+func (r *ReturnStatement) Statement()     {}
 func (r *ReturnStatement) GetMeta() *Meta { return r.Meta }
 func (r *ReturnStatement) String() string {
 	var buf bytes.Buffer

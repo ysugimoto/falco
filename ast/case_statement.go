@@ -11,7 +11,7 @@ type CaseStatement struct {
 	Fallthrough bool
 }
 
-func (s *CaseStatement) statement()     {}
+func (s *CaseStatement) Statement()     {}
 func (s *CaseStatement) GetMeta() *Meta { return s.Meta }
 func (s *CaseStatement) String() string {
 	var buf bytes.Buffer

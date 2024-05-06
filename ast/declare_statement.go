@@ -10,7 +10,7 @@ type DeclareStatement struct {
 	ValueType *Ident
 }
 
-func (d *DeclareStatement) statement()     {}
+func (d *DeclareStatement) Statement()     {}
 func (d *DeclareStatement) GetMeta() *Meta { return d.Meta }
 func (d *DeclareStatement) String() string {
 	var buf bytes.Buffer

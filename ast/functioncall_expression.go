@@ -10,7 +10,7 @@ type FunctionCallExpression struct {
 	Arguments []Expression
 }
 
-func (f *FunctionCallExpression) expression()    {}
+func (f *FunctionCallExpression) Expression()    {}
 func (f *FunctionCallExpression) GetMeta() *Meta { return f.Meta }
 func (f *FunctionCallExpression) String() string {
 	var buf bytes.Buffer

@@ -13,7 +13,7 @@ type IfStatement struct {
 	Alternative *ElseStatement
 }
 
-func (i *IfStatement) statement()     {}
+func (i *IfStatement) Statement()     {}
 func (i *IfStatement) GetMeta() *Meta { return i.Meta }
 func (i *IfStatement) String() string {
 	var buf bytes.Buffer
@@ -62,7 +62,7 @@ type ElseStatement struct {
 	Consequence *BlockStatement
 }
 
-func (e *ElseStatement) statement()     {}
+func (e *ElseStatement) Statement()     {}
 func (e *ElseStatement) GetMeta() *Meta { return e.Meta }
 func (e *ElseStatement) String() string {
 	var buf bytes.Buffer

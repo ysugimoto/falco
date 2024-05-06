@@ -21,14 +21,20 @@ type Linter struct {
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
 	conf           *config.LinterConfig
+
+	customLinters map[string]CustomLinter
 }
 
-func New(c *config.LinterConfig) *Linter {
-	return &Linter{
+func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
+	l := &Linter{
 		includexLexers: make(map[string]*lexer.Lexer),
 		ignore:         &ignore{},
 		conf:           c,
 	}
+	for i := range opts {
+		opts[i](l)
+	}
+	return l
 }
 
 func (l *Linter) Lexers() map[string]*lexer.Lexer {
@@ -263,6 +269,10 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.FunctionCallExpression:
 		return l.lintFunctionCallExpression(t, ctx)
 	default:
+		// Custom statement won't be linted
+		if _, ok := node.(ast.CustomStatement); ok {
+			break
+		}
 		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
 	}
 	return types.NeverType

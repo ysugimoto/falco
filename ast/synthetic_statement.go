@@ -9,7 +9,7 @@ type SyntheticStatement struct {
 	Value Expression
 }
 
-func (s *SyntheticStatement) statement()     {}
+func (s *SyntheticStatement) Statement()     {}
 func (s *SyntheticStatement) GetMeta() *Meta { return s.Meta }
 func (s *SyntheticStatement) String() string {
 	var buf bytes.Buffer

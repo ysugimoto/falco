@@ -9,7 +9,7 @@ type LogStatement struct {
 	Value Expression
 }
 
-func (l *LogStatement) statement()     {}
+func (l *LogStatement) Statement()     {}
 func (l *LogStatement) GetMeta() *Meta { return l.Meta }
 func (l *LogStatement) String() string {
 	var buf bytes.Buffer

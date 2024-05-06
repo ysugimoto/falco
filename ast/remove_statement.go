@@ -9,7 +9,7 @@ type RemoveStatement struct {
 	Ident *Ident
 }
 
-func (r *RemoveStatement) statement()     {}
+func (r *RemoveStatement) Statement()     {}
 func (r *RemoveStatement) GetMeta() *Meta { return r.Meta }
 func (r *RemoveStatement) String() string {
 	var buf bytes.Buffer

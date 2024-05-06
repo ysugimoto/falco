@@ -8,7 +8,7 @@ type EsiStatement struct {
 	*Meta
 }
 
-func (e *EsiStatement) statement()     {}
+func (e *EsiStatement) Statement()     {}
 func (e *EsiStatement) GetMeta() *Meta { return e.Meta }
 func (e *EsiStatement) String() string {
 	var buf bytes.Buffer

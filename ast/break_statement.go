@@ -8,7 +8,7 @@ type BreakStatement struct {
 	*Meta
 }
 
-func (r *BreakStatement) statement()     {}
+func (r *BreakStatement) Statement()     {}
 func (r *BreakStatement) GetMeta() *Meta { return r.Meta }
 func (r *BreakStatement) String() string {
 	var buf bytes.Buffer

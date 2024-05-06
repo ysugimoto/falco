@@ -14,7 +14,7 @@ type Node interface {
 
 type Statement interface {
 	Node
-	statement()
+	Statement()
 	LeadingComment(combinationMode) string
 	TrailingComment(combinationMode) string
 	InfixComment(combinationMode) string
@@ -22,7 +22,7 @@ type Statement interface {
 
 type Expression interface {
 	Node
-	expression()
+	Expression()
 	LeadingComment(combinationMode) string
 	TrailingComment(combinationMode) string
 	InfixComment(combinationMode) string

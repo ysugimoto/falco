@@ -11,7 +11,7 @@ type AddStatement struct {
 	Value    Expression
 }
 
-func (a *AddStatement) statement()     {}
+func (a *AddStatement) Statement()     {}
 func (a *AddStatement) GetMeta() *Meta { return a.Meta }
 func (a *AddStatement) String() string {
 	var buf bytes.Buffer

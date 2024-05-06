@@ -9,7 +9,7 @@ type UnsetStatement struct {
 	Ident *Ident
 }
 
-func (u *UnsetStatement) statement()     {}
+func (u *UnsetStatement) Statement()     {}
 func (u *UnsetStatement) GetMeta() *Meta { return u.Meta }
 func (u *UnsetStatement) String() string {
 	var buf bytes.Buffer

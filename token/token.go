@@ -125,6 +125,11 @@ const (
 	DEFAULT          = "DEFAULT"          // default
 	BREAK            = "BREAK"            // break
 	FALLTHROUGH      = "FALLTHROUGH"      // fallthrough
+
+	// Custom Keywords
+	// This keyword is special usecase for extensible language definition.
+	// Token is processed via custom lexer/parser definition by literal
+	CUSTOM = "CUSTOM"
 )
 
 var keywords = map[string]TokenType{

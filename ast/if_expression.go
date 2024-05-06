@@ -11,7 +11,7 @@ type IfExpression struct {
 	Alternative Expression
 }
 
-func (i *IfExpression) expression()    {}
+func (i *IfExpression) Expression()    {}
 func (i *IfExpression) GetMeta() *Meta { return i.Meta }
 func (i *IfExpression) String() string {
 	var buf bytes.Buffer

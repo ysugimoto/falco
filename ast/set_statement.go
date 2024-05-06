@@ -11,7 +11,7 @@ type SetStatement struct {
 	Value    Expression
 }
 
-func (s *SetStatement) statement()     {}
+func (s *SetStatement) Statement()     {}
 func (s *SetStatement) GetMeta() *Meta { return s.Meta }
 func (s *SetStatement) String() string {
 	var buf bytes.Buffer
