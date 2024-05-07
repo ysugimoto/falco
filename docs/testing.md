@@ -108,8 +108,8 @@ You can see many interesting syntaxes, The test case is controlled with annotati
 
 ## Grouped Testing
 
-falco supports special syntax of `describe`, `before_xxx`, and `after_xxx` - jest-like syntax  only for the testing.
-Here is the full example of grouped testing:
+falco supports special syntax of `describe`, `before_[scope]`, and `after_[scope]` - jest like syntax - only for the testing.
+Here is the example of grouped testing:
 
 ```vcl
 // Grouping test
