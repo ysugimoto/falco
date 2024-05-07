@@ -318,7 +318,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		return nil
 	}
 
-	// shrthand indent making
+	// shorthand indent making
 	indent := func(level int) string {
 		return strings.Repeat(" ", level*2)
 	}
@@ -356,7 +356,11 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		for _, c := range r.Cases {
 			totalCount++
 			if c.Error != nil {
-				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
+				var prefix string
+				if c.Group != "" {
+					prefix = c.Group + " › "
+				}
+				writeln(redBold, "%s●  [%s] %s%s\n", indent(1), prefix, c.Scope, c.Name)
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
@@ -376,24 +380,23 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		}
 	}
 
+	passedColor := white
 	if passedCount > 0 {
-		write(green, "%d passed, ", passedCount)
-	} else {
-		write(white, "%d passed, ", passedCount)
+		passedColor = green
 	}
+	failedColor := white
 	if failedCount > 0 {
-		write(red, "%d failed, ", failedCount)
-	} else {
-		write(white, "%d failed, ", failedCount)
+		failedColor = red
 	}
+	write(passedColor, "%d passed, ", passedCount)
+	write(failedColor, "%d failed, ", failedCount)
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
 	if factory.Statistics.Fails > 0 {
 		return ErrExit
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func runFormat(runner *Runner, rslv resolver.Resolver) error {
