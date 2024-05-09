@@ -106,6 +106,36 @@ sub test_vcl_deliver {
 
 You can see many interesting syntaxes, The test case is controlled with annotation and assertion functions.
 
+## Grouped Testing
+
+falco supports special syntax of `describe`, `before_[scope]`, and `after_[scope]` - jest like syntax - only for the testing.
+Here is the example of grouped testing:
+
+```vcl
+// Grouping test
+describe grouped_tests {
+
+    // run before recv scoped subroutine
+    before_recv {
+        // you can use variables that is enable to access in RECV scope
+        set req.http.BeforeRecv = "1";
+    }
+
+    sub test_recv {
+        // ensure http header which is injected via hook
+        assert.equal(req.http.BeforeRecv, "1");
+        // Do unit testing for RECV scope
+    }
+
+    ...
+}
+```
+
+> [!NOTE]
+> Testing subroutines are stateful through the grouped testing.
+> A interpreter only be initialized for the group, the same interpreter will be used for each testing subroutine.
+> It is useful for testing across scopes but this behavior may be different from the jest one.
+
 ### Scope Recognition
 
 falco recognizes `@scope` annotation for execution scope.

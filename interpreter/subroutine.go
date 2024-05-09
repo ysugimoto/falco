@@ -12,14 +12,6 @@ import (
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
-func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
-	i.SetScope(scope)
-	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
 
