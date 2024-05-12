@@ -1,3 +1,8 @@
+## v1.7.0
+
+- Feature/testing syntax [#312](https://github.com/ysugimoto/falco/pull/312) (@ysugimoto)
+- Add linter rule of goto [#311](https://github.com/ysugimoto/falco/pull/311) (@ysugimoto)
+
 ## v1.6.0
 
 - Errors with concurrent simulator requests due to global interpreter state [#282](https://github.com/ysugimoto/falco/pull/282) (@richardmarshall)
