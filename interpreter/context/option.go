@@ -49,3 +49,9 @@ func WithOverrideHost(host string) Option {
 		c.OriginalHost = host
 	}
 }
+
+func WithOutputResponseBody(o bool) Option {
+	return func(c *Context) {
+		c.OutputResponseBody = o
+	}
+}

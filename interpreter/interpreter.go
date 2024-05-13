@@ -131,7 +131,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 		i.ctx.OriginalHost = r.Host
 	}
 
-	i.process = process.New()
+	i.process = process.New(i.ctx.OutputResponseBody)
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
