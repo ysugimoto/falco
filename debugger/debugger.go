@@ -37,7 +37,7 @@ func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
 		return d.breakPoint(node.GetMeta().Token)
 	default:
 		meta := node.GetMeta()
-		if !hasDebufferMark(meta.Leading) {
+		if !hasDebuggerMark(meta.Leading) {
 			return interpreter.DebugPass
 		}
 		return d.breakPoint(meta.Token)
@@ -76,6 +76,6 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 	return interpreter.DebugPass
 }
 
-func hasDebufferMark(cs ast.Comments) bool {
+func hasDebuggerMark(cs ast.Comments) bool {
 	return strings.Contains(cs.String(), debuggerMark)
 }

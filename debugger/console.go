@@ -114,11 +114,17 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 	return evt
 }
 
-func (c *Console) Run(port int) error {
+func (c *Console) Run(port int, isTLS bool) error {
+	protocol := "http"
+	if isTLS {
+		protocol = "https"
+	}
+
 	c.app.SetInputCapture(c.keyEventHandler)
 	c.message.Append(
 		messageview.Debugger,
-		"Waiting Request on http://localhost:%d...",
+		"Waiting Request on %s://localhost:%d...",
+		protocol,
 		port,
 	)
 	go c.startDebugServer(port)

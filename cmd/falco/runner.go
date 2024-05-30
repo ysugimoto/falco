@@ -444,9 +444,12 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 
 	i := interpreter.New(options...)
 
+	// Both key and cert file are provided, server should listen TLK
+	isTLS := sc.KeyFile != "" && sc.CertFile != ""
+
 	// If debugger flag is on, run debugger mode
 	if sc.IsDebug {
-		return debugger.New(interpreter.New(options...)).Run(sc.Port)
+		return debugger.New(interpreter.New(options...)).Run(sc.Port, isTLS)
 	}
 
 	// Otherwise, simply start simulator server
@@ -456,6 +459,10 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	s := &http.Server{
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
+	}
+	if isTLS {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
+		return s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
 	}
 	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
 	return s.ListenAndServe()
