@@ -31,3 +31,4 @@ request.json
 
 .falco.yml
 .falco.yaml
+*.pem

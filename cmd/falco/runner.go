@@ -444,21 +444,31 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 
 	i := interpreter.New(options...)
 
-	// If debugger flag is on, run debugger mode
 	if sc.IsDebug {
-		return debugger.New(interpreter.New(options...)).Run(sc.Port)
+		// If debugger flag is on, run debugger mode
+		return debugger.New(i).Run(sc)
 	}
 
 	// Otherwise, simply start simulator server
 	mux := http.NewServeMux()
 	mux.Handle("/", i)
-
 	s := &http.Server{
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
-	return s.ListenAndServe()
+
+	var err error
+	if sc.KeyFile != "" && sc.CertFile != "" {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
+		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+	} else {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
+		err = s.ListenAndServe()
+	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {

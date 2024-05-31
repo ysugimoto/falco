@@ -25,6 +25,8 @@ Flags:
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --key              : Specify TLS server key file
+    --cert             : Specify TLS cert file
 
 Local simulator example:
     falco simulate -I . /path/to/vcl/main.vcl
@@ -62,6 +64,20 @@ Particularly VCL subroutine flow is useful for debugging.
 **falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
 There are many limitations which are described below.**
 
+## TLS server
+
+Typically Fastly runs with TLS environment so your VCL may has HTTPS-related logic.
+falco supports to run as HTTPS server with your key/cert files. We recommend to use [mkcert](https://github.com/FiloSottile/mkcert) to generate key/cert file on your local machine.
+
+```shell
+# Generate certificates for localhost
+mkcert localhost
+
+# Run as HTTP server
+falco simulate /path/to/your/default.vcl --key /path/to/localhost-key.pem --cert /path/to/localhost.pem
+```
+
+Then falco serve with https://localhost:3124.
 
 ## Debug mode
 
