@@ -61,6 +61,10 @@ type Context struct {
 	OverrideRequest     *config.RequestConfig
 	OverrideBackends    map[string]*config.OverrideBackend
 
+	// Mocking subroutines map
+	MockedSubroutines            map[string]*ast.SubroutineDeclaration
+	MockedFunctioncalSubroutines map[string]*ast.SubroutineDeclaration
+
 	Request          *http.Request
 	BackendRequest   *http.Request
 	BackendResponse  *http.Response
@@ -171,6 +175,9 @@ func New(options ...Option) *Context {
 		Gotos:               make(map[string]*ast.GotoStatement),
 		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:    make(map[string]*config.OverrideBackend),
+
+		MockedSubroutines:            make(map[string]*ast.SubroutineDeclaration),
+		MockedFunctioncalSubroutines: make(map[string]*ast.SubroutineDeclaration),
 
 		CacheHitItem:                    nil,
 		RequestStartTime:                time.Now(),

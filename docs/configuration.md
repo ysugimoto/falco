@@ -29,6 +29,10 @@ simulator:
   max_acls: 100
   key_file: /path/to/key_file.pem
   cert_file: /path/to/cert_file.pem
+  edge_dictionary:
+    dict_name:
+      key1: value1
+      key2: value2
 
 ## Testing configuration
 testing:
@@ -55,6 +59,10 @@ All configurations of configuration files and CLI arguments are described follow
 | max_acls                           | Integer       | 1000    | --max_acls         | Override Fastly's acl amount limitation                                                                                               |
 | simulator                          | Object        | null    | -                  | Simulator configuration object                                                                                                        |
 | simulator.port                     | Integer       | 3124    | -p, --port         | Simulator server listen port                                                                                                          |
+| simulator.key_file                 | String        | -       | --key              | TLS server key file path                                                                                                              |
+| simulator.cert_file                | String        | -       | --cert             | TLS server cert file path                                                                                                             |
+| simulator.edge_dictionary          | Object        | null    | -                  | Local edge dictionary item definitions                                                                                                |
+| simulator.edge_dictionary.[name]   | Object        | -       | -                  | Local edge dictionary name                                                                                                            |
 | testing                            | Object        | null    | -                  | Testing configuration object                                                                                                          |
 | testing.timeout                    | Integer       | 10      | -t, --timeout      | Set timeout to stop testing                                                                                                           |
 | linter                             | Object        | null    | -                  | Override linter rules                                                                                                                 |

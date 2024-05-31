@@ -32,7 +32,7 @@ const (
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
-	UNRECOGNIZE_CALL_SCOPE               = "sburoutine/unrecognize-call-scope"
+	UNRECOGNIZE_CALL_SCOPE               = "subroutine/unrecognize-call-scope"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
 	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"

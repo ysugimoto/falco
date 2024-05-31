@@ -234,6 +234,10 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				exp.Function.Value,
 			)
 		}
+		// If mocked functional subroutine found, use it
+		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[exp.Function.Value]; ok {
+			sub = mocked
+		}
 		if _, ok := types.ValueTypeMap[sub.ReturnType.Value]; !ok {
 			return value.Null, exception.Runtime(
 				&sub.GetMeta().Token,
