@@ -107,6 +107,8 @@ Flags:
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --key              : Specify TLS server key file
+    --cert             : Specify TLS cert file
 
 Local simulator example:
     falco simulate -I . /path/to/vcl/main.vcl

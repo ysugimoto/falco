@@ -27,6 +27,8 @@ simulator:
   port: 3124
   max_backends: 100
   max_acls: 100
+  key_file: /path/to/key_file.pem
+  cert_file: /path/to/cert_file.pem
 
 ## Testing configuration
 testing:

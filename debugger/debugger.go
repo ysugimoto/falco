@@ -15,7 +15,7 @@ import (
 )
 
 const debuggerMark = "@debugger"
-const highlightDeplay = 120
+const highlightDelay = 120
 
 type Debugger struct {
 	app     *tview.Application
@@ -55,7 +55,7 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 	// Wait for keyboard input
 	d.mode = <-d.input
 
-	time.AfterFunc(time.Duration(highlightDeplay)*time.Millisecond, func() {
+	time.AfterFunc(time.Duration(highlightDelay)*time.Millisecond, func() {
 		d.help.Highlight(helpview.Default)
 		d.app.Draw()
 	})
