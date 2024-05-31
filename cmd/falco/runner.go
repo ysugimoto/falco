@@ -457,12 +457,18 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
 
+	var err error
 	if sc.KeyFile != "" && sc.CertFile != "" {
 		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
-		return s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+	} else {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
+		err = s.ListenAndServe()
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
-	return s.ListenAndServe()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {

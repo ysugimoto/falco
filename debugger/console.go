@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/pkg/errors"
 	"github.com/rivo/tview"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/debugger/codeview"
@@ -14,6 +15,7 @@ import (
 	"github.com/ysugimoto/falco/debugger/messageview"
 	"github.com/ysugimoto/falco/debugger/shellview"
 	"github.com/ysugimoto/falco/interpreter"
+	"golang.org/x/sync/errgroup"
 )
 
 type Console struct {
@@ -143,7 +145,8 @@ func (c *Console) Run(sc *config.SimulatorConfig) error {
 		sc.Port,
 	)
 
-	go func() {
+	var eg errgroup.Group
+	eg.Go(func() error {
 		mux := http.NewServeMux()
 		mux.Handle("/", c)
 		s := &http.Server{
@@ -151,14 +154,21 @@ func (c *Console) Run(sc *config.SimulatorConfig) error {
 			Addr:    fmt.Sprintf(":%d", sc.Port),
 		}
 
+		var err error
 		if isTLS {
-			s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+			err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+		} else {
+			err = s.ListenAndServe()
 		}
-		s.ListenAndServe()
-	}()
-
-	return c.app.Run()
-
+		return err
+	})
+	eg.Go(func() error {
+		return c.app.Run()
+	})
+	if err := eg.Wait(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (c *Console) activate() {
