@@ -27,6 +27,8 @@ type OverrideBackend struct {
 	Unhealthy bool   `yaml:"unhealthy" default:"false"`
 }
 
+type EdgeDictionary map[string]string
+
 // Linter configuration
 type LinterConfig struct {
 	VerboseLevel            string              `yaml:"verbose"`
@@ -46,6 +48,9 @@ type SimulatorConfig struct {
 	// HTTPS related configuration. If both fields are spcified, simulator will serve with HTTPS
 	KeyFile  string `cli:"key" yaml:"key_file"`
 	CertFile string `cli:"cert" yaml:"cert_file"`
+
+	// Inject Edge Dictionary items
+	OverrideEdgeDictionaries map[string]EdgeDictionary `yaml:"edge_dictionary"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig

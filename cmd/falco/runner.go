@@ -441,6 +441,10 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	if r.config.OverrideBackends != nil {
 		options = append(options, icontext.WithOverrideBackends(r.config.OverrideBackends))
 	}
+	// If simulator configuration has edge dictionaries, inject them
+	if sc.OverrideEdgeDictionaries != nil {
+		options = append(options, icontext.WithInjectEdgeDictionaries(sc.OverrideEdgeDictionaries))
+	}
 
 	i := interpreter.New(options...)
 
