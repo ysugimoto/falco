@@ -1291,3 +1291,9 @@ header.unset:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [ID, STRING]
+
+fastly.try_select_shield:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/miscellaneous/fastly-try-select-shield/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [BACKEND, BACKEND]

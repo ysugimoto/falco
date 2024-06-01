@@ -600,6 +600,16 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/",
 					},
 				},
+				"try_select_shield": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Arguments: [][]types.Type{
+							[]types.Type{types.BackendType, types.BackendType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/miscellaneous/fastly-try-select-shield/",
+					},
+				},
 			},
 		},
 		"h2": &FunctionSpec{
