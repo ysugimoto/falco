@@ -194,6 +194,9 @@ We describe them following table and examples:
 | testing.inspect              | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
+| testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
+| testing.resotre_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
+| testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -348,6 +351,125 @@ sub test_vcl {
 
     // Assert injected value
     assert.equal(table.lookup(example_dict, "foo", ""), "bar");
+}
+```
+
+----
+
+### testing.mock(STRING from, STRING to)
+
+Mock the subroutine with testing subroutine.
+
+> [!NOTE]
+> You cannot mock Fastly reserved (lifecycle) subroutine that starts with `vcl_` like `vcl_recv`, `vcl_fetch`, etc.
+> But you can mock the functional subroutine that returns some value.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+// @scope: recv
+sub test_vcl {
+    // Mock the subroutine
+    testing.mock("add_header", "mock_add_header");
+
+    // vcl_recv has a dependency that calls "add_header" subroutine inside.
+    testing.call_subroutine("vcl_recv");
+
+    // Assert mocked subroutine result
+    assert.equal(req.http.Mocked, "1");
+}
+```
+
+----
+
+### testing.restore_mock(STRING from)
+
+Restore mocked subroutine to the original.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    sub before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    sub after_recv {
+        // Restore mock
+        testing.restore_mock("add_header");
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
+}
+```
+
+----
+
+### testing.restore_all_mocks()
+
+Restore all mocked subroutines.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    sub before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    sub after_recv {
+        // Restore all mocks
+        testing.restore_all_mocks();
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
 }
 ```
 
