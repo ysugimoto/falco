@@ -17,9 +17,10 @@ type Counter interface {
 }
 
 type Definiions struct {
-	Tables   map[string]*ast.TableDeclaration
-	Backends map[string]*value.Backend
-	Acls     map[string]*value.Acl
+	Tables      map[string]*ast.TableDeclaration
+	Backends    map[string]*value.Backend
+	Acls        map[string]*value.Acl
+	Subroutines map[string]*ast.SubroutineDeclaration
 }
 
 type Functions map[string]*ifn.Function
@@ -106,6 +107,34 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 				return Testing_table_merge(ctx, defs, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.mock": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Testing_mock(ctx, defs, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.restore_mock": {
+			Scope:            allScope,
+			Call:             Testing_restore_mock,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.restore_all_mocks": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Testing_restore_all_mocks(ctx)
 			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {

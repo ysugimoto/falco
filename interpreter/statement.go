@@ -282,12 +282,22 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	var state State
 	var err error
 	name := stmt.Subroutine.Value
+
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
+		// If mocked functional subroutine exists, use it
+		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[name]; ok {
+			sub = mocked
+		}
+
 		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
 	} else if sub, ok = i.ctx.Subroutines[name]; ok {
+		// If mocked subroutine exists, use it
+		if mocked, ok := i.ctx.MockedSubroutines[name]; ok {
+			sub = mocked
+		}
 		state, err = i.ProcessSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)

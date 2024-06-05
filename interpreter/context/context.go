@@ -62,6 +62,10 @@ type Context struct {
 	OverrideBackends       map[string]*config.OverrideBackend
 	InjectEdgeDictionaries map[string]config.EdgeDictionary
 
+	// Mocking subroutines map
+	MockedSubroutines            map[string]*ast.SubroutineDeclaration
+	MockedFunctioncalSubroutines map[string]*ast.SubroutineDeclaration
+
 	Request          *http.Request
 	BackendRequest   *http.Request
 	BackendResponse  *http.Response
@@ -173,6 +177,9 @@ func New(options ...Option) *Context {
 		SubroutineFunctions:    make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:       make(map[string]*config.OverrideBackend),
 		InjectEdgeDictionaries: make(map[string]config.EdgeDictionary),
+
+		MockedSubroutines:            make(map[string]*ast.SubroutineDeclaration),
+		MockedFunctioncalSubroutines: make(map[string]*ast.SubroutineDeclaration),
 
 		CacheHitItem:                    nil,
 		RequestStartTime:                time.Now(),
