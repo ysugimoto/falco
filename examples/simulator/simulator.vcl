@@ -28,12 +28,16 @@ backend example_com {
   }
 }
 
+table injectable_dict STRING {
+}
+
 sub vcl_recv {
 
   #Fastly recv
   // @debugger
   set req.backend = example_com;
   set req.http.Foo = {" foo bar baz "};
+  set req.http.Item = table.lookup(injectable_dict, "virtual");
   call custom_logger;
   return (pass);
 }

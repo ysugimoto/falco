@@ -1,7 +1,7 @@
 package snippets
 
 var tableTemplate = `
-table {{ .Name }} {
+table {{ .Name }} STRING {
 	{{- range .Items }}
 	"{{ .Key }}": "{{ .Value }}",
 	{{- end }}

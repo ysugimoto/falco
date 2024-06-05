@@ -56,10 +56,11 @@ type Context struct {
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	OriginalHost        string
 
-	OverrideMaxBackends int
-	OverrideMaxAcls     int
-	OverrideRequest     *config.RequestConfig
-	OverrideBackends    map[string]*config.OverrideBackend
+	OverrideMaxBackends    int
+	OverrideMaxAcls        int
+	OverrideRequest        *config.RequestConfig
+	OverrideBackends       map[string]*config.OverrideBackend
+	InjectEdgeDictionaries map[string]config.EdgeDictionary
 
 	Request          *http.Request
 	BackendRequest   *http.Request
@@ -162,15 +163,16 @@ type Context struct {
 
 func New(options ...Option) *Context {
 	ctx := &Context{
-		Acls:                make(map[string]*value.Acl),
-		Backends:            make(map[string]*value.Backend),
-		Tables:              make(map[string]*ast.TableDeclaration),
-		Subroutines:         make(map[string]*ast.SubroutineDeclaration),
-		Penaltyboxes:        make(map[string]*ast.PenaltyboxDeclaration),
-		Ratecounters:        make(map[string]*ast.RatecounterDeclaration),
-		Gotos:               make(map[string]*ast.GotoStatement),
-		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
-		OverrideBackends:    make(map[string]*config.OverrideBackend),
+		Acls:                   make(map[string]*value.Acl),
+		Backends:               make(map[string]*value.Backend),
+		Tables:                 make(map[string]*ast.TableDeclaration),
+		Subroutines:            make(map[string]*ast.SubroutineDeclaration),
+		Penaltyboxes:           make(map[string]*ast.PenaltyboxDeclaration),
+		Ratecounters:           make(map[string]*ast.RatecounterDeclaration),
+		Gotos:                  make(map[string]*ast.GotoStatement),
+		SubroutineFunctions:    make(map[string]*ast.SubroutineDeclaration),
+		OverrideBackends:       make(map[string]*config.OverrideBackend),
+		InjectEdgeDictionaries: make(map[string]config.EdgeDictionary),
 
 		CacheHitItem:                    nil,
 		RequestStartTime:                time.Now(),
