@@ -7,7 +7,7 @@ type DecodeError struct {
 }
 
 func (d *DecodeError) Error() string {
-	return fmt.Sprintf("%s: %s", d.original.Error())
+	return fmt.Sprintf("Decode error: %s", d.original.Error())
 }
 
 func (d *DecodeError) Unwrap() error {
@@ -22,6 +22,6 @@ func decodeError(err error) *DecodeError {
 
 func typeMismatch(expect, actual AstType) *DecodeError {
 	return &DecodeError{
-		original: fmt.Errorf("Expect type %s but got %s", expect, actual),
+		original: fmt.Errorf("Expect type %s but got %s", expect.String(), actual.String()),
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (c *Codec) encodeAclDeclaration(acl *ast.AclDeclaration) []byte {
+func (c *Encoder) encodeAclDeclaration(acl *ast.AclDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -31,7 +31,7 @@ func (c *Codec) encodeAclDeclaration(acl *ast.AclDeclaration) []byte {
 	return pack(ACL_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodeBackendDeclaration(b *ast.BackendDeclaration) []byte {
+func (c *Encoder) encodeBackendDeclaration(b *ast.BackendDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -60,7 +60,7 @@ func (c *Codec) encodeBackendDeclaration(b *ast.BackendDeclaration) []byte {
 	return pack(BACKEND_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodeDirectorDeclaration(d *ast.DirectorDeclaration) []byte {
+func (c *Encoder) encodeDirectorDeclaration(d *ast.DirectorDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -93,7 +93,7 @@ func (c *Codec) encodeDirectorDeclaration(d *ast.DirectorDeclaration) []byte {
 	return pack(DIRECTOR_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) []byte {
+func (c *Encoder) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -102,7 +102,7 @@ func (c *Codec) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) []byte
 	return pack(PENALTYBOX_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) []byte {
+func (c *Encoder) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -111,7 +111,7 @@ func (c *Codec) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) []by
 	return pack(RATECOUNTER_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) []byte {
+func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -127,7 +127,7 @@ func (c *Codec) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) []by
 	return pack(SUBROUTINE_DECLARATION, w.Bytes())
 }
 
-func (c *Codec) encodeTableDeclaration(tbl *ast.TableDeclaration) []byte {
+func (c *Encoder) encodeTableDeclaration(tbl *ast.TableDeclaration) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()

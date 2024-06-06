@@ -6,7 +6,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (c *Codec) encodeAddStatement(stmt *ast.AddStatement) []byte {
+func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -18,11 +18,11 @@ func (c *Codec) encodeAddStatement(stmt *ast.AddStatement) []byte {
 	return pack(ADD_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeBreakStatement(stmt *ast.BreakStatement) []byte {
+func (c *Encoder) encodeBreakStatement(stmt *ast.BreakStatement) []byte {
 	return pack(BREAK_STATEMENT, []byte{})
 }
 
-func (c *Codec) encodeCallStatement(stmt *ast.CallStatement) []byte {
+func (c *Encoder) encodeCallStatement(stmt *ast.CallStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -31,7 +31,7 @@ func (c *Codec) encodeCallStatement(stmt *ast.CallStatement) []byte {
 	return pack(CALL_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeCaseStatement(stmt *ast.CaseStatement) []byte {
+func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -50,7 +50,7 @@ func (c *Codec) encodeCaseStatement(stmt *ast.CaseStatement) []byte {
 	return pack(CASE_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeDeclareStatement(stmt *ast.DeclareStatement) []byte {
+func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -61,7 +61,7 @@ func (c *Codec) encodeDeclareStatement(stmt *ast.DeclareStatement) []byte {
 	return pack(DECLARE_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeErrorStatement(stmt *ast.ErrorStatement) []byte {
+func (c *Encoder) encodeErrorStatement(stmt *ast.ErrorStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -74,15 +74,15 @@ func (c *Codec) encodeErrorStatement(stmt *ast.ErrorStatement) []byte {
 	return pack(ERROR_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeEsiStatement(stmt *ast.EsiStatement) []byte {
+func (c *Encoder) encodeEsiStatement(stmt *ast.EsiStatement) []byte {
 	return pack(ESI_STATEMENT, []byte{})
 }
 
-func (c *Codec) encodeFallthroughStatement(stmt *ast.FallthroughStatement) []byte {
+func (c *Encoder) encodeFallthroughStatement(stmt *ast.FallthroughStatement) []byte {
 	return pack(FALLTHROUGH_STATEMENT, []byte{})
 }
 
-func (c *Codec) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) []byte {
+func (c *Encoder) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -95,15 +95,15 @@ func (c *Codec) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) []b
 	return pack(FUNCTIONCALL_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeGotoStatement(stmt *ast.GotoStatement) []byte {
+func (c *Encoder) encodeGotoStatement(stmt *ast.GotoStatement) []byte {
 	return pack(GOTO_STATEMENT, packIdent(stmt.Destination.Value))
 }
 
-func (c *Codec) encodeGotoDestinationStatement(stmt *ast.GotoDestinationStatement) []byte {
+func (c *Encoder) encodeGotoDestinationStatement(stmt *ast.GotoDestinationStatement) []byte {
 	return pack(GOTO_DESTINATION_STATEMENT, packIdent(stmt.Name.Value))
 }
 
-func (c *Codec) encodeIfStatement(stmt *ast.IfStatement) []byte {
+func (c *Encoder) encodeIfStatement(stmt *ast.IfStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -129,27 +129,27 @@ func (c *Codec) encodeIfStatement(stmt *ast.IfStatement) []byte {
 	return pack(IF_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeImportStatement(stmt *ast.ImportStatement) []byte {
+func (c *Encoder) encodeImportStatement(stmt *ast.ImportStatement) []byte {
 	return pack(IMPORT_STATEMENT, packIdent(stmt.Name.Value))
 }
 
-func (c *Codec) encodeIncludeStatement(stmt *ast.IncludeStatement) []byte {
+func (c *Encoder) encodeIncludeStatement(stmt *ast.IncludeStatement) []byte {
 	return pack(INCLUDE_STATEMENT, packIdent(stmt.Module.Value))
 }
 
-func (c *Codec) encodeLogStatement(stmt *ast.LogStatement) []byte {
+func (c *Encoder) encodeLogStatement(stmt *ast.LogStatement) []byte {
 	return pack(LOG_STATEMENT, c.encodeExpression(stmt.Value))
 }
 
-func (c *Codec) encodeRemoveStatement(stmt *ast.RemoveStatement) []byte {
+func (c *Encoder) encodeRemoveStatement(stmt *ast.RemoveStatement) []byte {
 	return pack(REMOVE_STATEMENT, packIdent(stmt.Ident.Value))
 }
 
-func (c *Codec) encodeRestartStatement(stmt *ast.RestartStatement) []byte {
+func (c *Encoder) encodeRestartStatement(stmt *ast.RestartStatement) []byte {
 	return pack(RESTART_STATEMENT, []byte{})
 }
 
-func (c *Codec) encodeReturnStatement(stmt *ast.ReturnStatement) []byte {
+func (c *Encoder) encodeReturnStatement(stmt *ast.ReturnStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -161,7 +161,7 @@ func (c *Codec) encodeReturnStatement(stmt *ast.ReturnStatement) []byte {
 	return pack(RETURN_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeSetStatement(stmt *ast.SetStatement) []byte {
+func (c *Encoder) encodeSetStatement(stmt *ast.SetStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -173,7 +173,7 @@ func (c *Codec) encodeSetStatement(stmt *ast.SetStatement) []byte {
 	return pack(SET_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeSwitchStatement(stmt *ast.SwitchStatement) []byte {
+func (c *Encoder) encodeSwitchStatement(stmt *ast.SwitchStatement) []byte {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
@@ -187,14 +187,14 @@ func (c *Codec) encodeSwitchStatement(stmt *ast.SwitchStatement) []byte {
 	return pack(SWITCH_STATEMENT, w.Bytes())
 }
 
-func (c *Codec) encodeSyntheticStatement(stmt *ast.SyntheticStatement) []byte {
+func (c *Encoder) encodeSyntheticStatement(stmt *ast.SyntheticStatement) []byte {
 	return pack(SYNTHETIC_STATEMENT, c.encodeExpression(stmt.Value))
 }
 
-func (c *Codec) encodeSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) []byte {
+func (c *Encoder) encodeSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) []byte {
 	return pack(SYNTHETIC_BASE64_STATEMENT, c.encodeExpression(stmt.Value))
 }
 
-func (c *Codec) encodeUnsetStatement(stmt *ast.UnsetStatement) []byte {
+func (c *Encoder) encodeUnsetStatement(stmt *ast.UnsetStatement) []byte {
 	return pack(UNSET_STATEMENT, packIdent(stmt.Ident.Value))
 }

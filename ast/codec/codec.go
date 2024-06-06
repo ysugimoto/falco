@@ -1,179 +1,183 @@
 package codec
 
-import (
-	"bytes"
-	"fmt"
-	"io"
-	"sync"
+import "github.com/k0kubun/pp"
 
-	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
+type AstType uint8
+
+const (
+	UNKNOWN AstType = iota
+	END             // END means some statement (e.g block statement) should end
+
+	// Declaration/Properties
+	ACL_DECLARATION
+	ACL_CIDR
+	BACKEND_DECLARATION
+	BACKEND_PROPERTY
+	BACKEND_PROBE
+	DIRECTOR_DECLARATION
+	DIRECTOR_PROPERTY
+	DIRECTOR_BACKEND
+	PENALTYBOX_DECLARATION
+	RATECOUNTER_DECLARATION
+	SUBROUTINE_DECLARATION
+	TABLE_DECLARATION
+	TABLE_PROPERTY
+
+	// Statements
+	ADD_STATEMENT
+	BREAK_STATEMENT
+	CALL_STATEMENT
+	CASE_STATEMENT
+	DECLARE_STATEMENT
+	ELSEIF_STATEMENT
+	ELSE_STATEMENT
+	ERROR_STATEMENT
+	ESI_STATEMENT
+	FALLTHROUGH_STATEMENT
+	FUNCTIONCALL_STATEMENT
+	GOTO_STATEMENT
+	GOTO_DESTINATION_STATEMENT
+	IF_STATEMENT
+	IMPORT_STATEMENT
+	INCLUDE_STATEMENT
+	LOG_STATEMENT
+	REMOVE_STATEMENT
+	RESTART_STATEMENT
+	RETURN_STATEMENT
+	SET_STATEMENT
+	SWITCH_STATEMENT
+	SYNTHETIC_STATEMENT
+	SYNTHETIC_BASE64_STATEMENT
+	UNSET_STATEMENT
+
+	// Expressions
+	GROUPED_EXPRESSION
+	INFIX_EXPRESSION
+	POSTFIX_EXPRESSION
+	PREFIX_EXPRESSION
+
+	// Values
+	FLOAT_VALUE
+	IP_VALUE
+	IDENT_VALUE
+	BOOL_VALUE
+	INTEGER_VALUE
+	RTIME_VALUE
+	STRING_VALUE
+	OPERATOR
+
+	// Root VCL
+	VCL
 )
 
-var encodePool = sync.Pool{
-	New: func() any {
-		return &bytes.Buffer{}
-	},
-}
-
-type Codec struct {
-}
-
-func New() *Codec {
-	return &Codec{}
-}
-
-func (c *Codec) Encode(stmt ast.Statement) []byte {
-	var bin []byte
-
-	switch t := stmt.(type) {
-	// Declarations
-	case *ast.AclDeclaration:
-		bin = c.encodeAclDeclaration(t)
-	case *ast.BackendDeclaration:
-		bin = c.encodeBackendDeclaration(t)
-	case *ast.DirectorDeclaration:
-		bin = c.encodeDirectorDeclaration(t)
-	case *ast.PenaltyboxDeclaration:
-		bin = c.encodePenaltyboxDelcaration(t)
-	case *ast.RatecounterDeclaration:
-		bin = c.encodeRatecounterDeclaration(t)
-	case *ast.SubroutineDeclaration:
-		bin = c.encodeSubroutineDeclaration(t)
-	case *ast.TableDeclaration:
-		bin = c.encodeTableDeclaration(t)
-
-	// Statements
-	case *ast.AddStatement:
-		bin = c.encodeAddStatement(t)
-	case *ast.BreakStatement:
-		bin = c.encodeBreakStatement(t)
-	case *ast.CallStatement:
-		bin = c.encodeCallStatement(t)
-	case *ast.CaseStatement:
-		bin = c.encodeCaseStatement(t)
-	case *ast.DeclareStatement:
-		bin = c.encodeDeclareStatement(t)
-	case *ast.ErrorStatement:
-		bin = c.encodeErrorStatement(t)
-	case *ast.EsiStatement:
-		bin = c.encodeEsiStatement(t)
-	case *ast.FallthroughStatement:
-		bin = c.encodeFallthroughStatement(t)
-	case *ast.FunctionCallStatement:
-		bin = c.encodeFunctionCallStatement(t)
-	case *ast.GotoStatement:
-		bin = c.encodeGotoStatement(t)
-	case *ast.GotoDestinationStatement:
-		bin = c.encodeGotoDestinationStatement(t)
-	case *ast.IfStatement:
-		bin = c.encodeIfStatement(t)
-	case *ast.ImportStatement:
-		bin = c.encodeImportStatement(t)
-	case *ast.IncludeStatement:
-		bin = c.encodeIncludeStatement(t)
-	case *ast.LogStatement:
-		bin = c.encodeLogStatement(t)
-	case *ast.RemoveStatement:
-		bin = c.encodeRemoveStatement(t)
-	case *ast.RestartStatement:
-		bin = c.encodeRestartStatement(t)
-	case *ast.ReturnStatement:
-		bin = c.encodeReturnStatement(t)
-	case *ast.SetStatement:
-		bin = c.encodeSetStatement(t)
-	case *ast.SwitchStatement:
-		bin = c.encodeSwitchStatement(t)
-	case *ast.SyntheticStatement:
-		bin = c.encodeSyntheticStatement(t)
-	case *ast.SyntheticBase64Statement:
-		bin = c.encodeSyntheticBase64Statement(t)
-	case *ast.UnsetStatement:
-		bin = c.encodeUnsetStatement(t)
-	}
-
-	return bin
-}
-
-func (c *Codec) DecodeBytes(bin []byte) (ast.Statement, error) {
-	return c.Decode(bytes.NewReader(bin))
-}
-
-func (c *Codec) Decode(r io.Reader) (ast.Statement, error) {
-	astType, buf, err := unpack(r)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	switch astType {
-	// Declarations
+func (a AstType) String() string {
+	switch a {
+	case END:
+		return "END"
 	case ACL_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "ACL_DECLARATION"
+	case ACL_CIDR:
+		return "ACL_CIDR"
 	case BACKEND_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "BACKEND_DECLARATION"
+	case BACKEND_PROPERTY:
+		return "BACKEND_PROPERTY"
+	case BACKEND_PROBE:
+		return "BACKEND_PROBE"
 	case DIRECTOR_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "DIRECTOR_DECLARATION"
+	case DIRECTOR_PROPERTY:
+		return "DIRECTOR_PROPERTY"
+	case DIRECTOR_BACKEND:
+		return "DIRECTOR_BACKEND"
 	case PENALTYBOX_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "PENALTYBOX_DECLARATION"
 	case RATECOUNTER_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "RATECOUNTER_DECLARATION"
 	case SUBROUTINE_DECLARATION:
-		return c.decodeAclDeclaration(buf)
+		return "SUBROUTINE_DECLARATION"
 	case TABLE_DECLARATION:
-		return c.decodeAclDeclaration(buf)
-
-	// Statements
+		return "TABLE_DECLARATION"
+	case TABLE_PROPERTY:
+		return "TABLE_PROPERTY"
 	case ADD_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "ADD_STATEMENT"
 	case BREAK_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "BREAK_STATEMENT"
 	case CALL_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "CALL_STATEMENT"
 	case CASE_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "CASE_STATEMENT"
 	case DECLARE_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "DECLARE_STATEMENT"
 	case ELSEIF_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "ELSEIF_STATEMENT"
 	case ELSE_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "ELSE_STATEMENT"
 	case ERROR_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "ERROR_STATEMENT"
 	case ESI_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "ESI_STATEMENT"
 	case FALLTHROUGH_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "FALLTHROUGH_STATEMENT"
 	case FUNCTIONCALL_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "FUNCTIONCALL_STATEMENT"
 	case GOTO_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "GOTO_STATEMENT"
 	case GOTO_DESTINATION_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "GOTO_DESTINATION_STATEMENT"
 	case IF_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "IF_STATEMENT"
 	case IMPORT_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "IMPORT_STATEMENT"
 	case INCLUDE_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "INCLUDE_STATEMENT"
 	case LOG_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "LOG_STATEMENT"
 	case REMOVE_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "REMOVE_STATEMENT"
 	case RESTART_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "RESTART_STATEMENT"
 	case RETURN_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "RETURN_STATEMENT"
 	case SET_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "SET_STATEMENT"
 	case SWITCH_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "SWITCH_STATEMENT"
 	case SYNTHETIC_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "SYNTHETIC_STATEMENT"
 	case SYNTHETIC_BASE64_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "SYNTHETIC_BASE64_STATEMENT"
 	case UNSET_STATEMENT:
-		return c.decodeAclDeclaration(buf)
+		return "UNSET_STATEMENT"
+	case GROUPED_EXPRESSION:
+		return "GROUPED_EXPRESSION"
+	case INFIX_EXPRESSION:
+		return "INFIX_EXPRESSION"
+	case POSTFIX_EXPRESSION:
+		return "POSTFIX_EXPRESSION"
+	case PREFIX_EXPRESSION:
+		return "PREFIX_EXPRESSION"
+	case FLOAT_VALUE:
+		return "FLOAT_VALUE"
+	case IP_VALUE:
+		return "IP_VALUE"
+	case IDENT_VALUE:
+		return "IDENT_VALUE"
+	case BOOL_VALUE:
+		return "BOOL_VALUE"
+	case INTEGER_VALUE:
+		return "INTEGER_VALUE"
+	case RTIME_VALUE:
+		return "RTIME_VALUE"
+	case STRING_VALUE:
+		return "STRING_VALUE"
+	case OPERATOR:
+		return "OPERATOR"
+	case VCL:
+		return "VCL"
 	default:
-		return nil, errors.WithStack(fmt.Errorf("Unexpected type found: %d", astType))
+		pp.Println(a)
+		return "UNKNOWN"
 	}
 }

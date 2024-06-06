@@ -2,7 +2,7 @@ package codec
 
 import "github.com/ysugimoto/falco/ast"
 
-func (c *Codec) encodeExpression(expr ast.Expression) []byte {
+func (c *Encoder) encodeExpression(expr ast.Expression) []byte {
 	switch t := expr.(type) {
 	// Combination Expressions
 	case *ast.GroupedExpression:
@@ -34,11 +34,11 @@ func (c *Codec) encodeExpression(expr ast.Expression) []byte {
 	return []byte{byte(UNKNOWN)}
 }
 
-func (c *Codec) encodeGroupedExpression(expr *ast.GroupedExpression) []byte {
+func (c *Encoder) encodeGroupedExpression(expr *ast.GroupedExpression) []byte {
 	return pack(GROUPED_EXPRESSION, c.encodeExpression(expr.Right))
 }
 
-func (c *Codec) encodeInfixExpression(expr *ast.InfixExpression) []byte {
+func (c *Encoder) encodeInfixExpression(expr *ast.InfixExpression) []byte {
 	var ret []byte
 
 	ret = append(ret, c.encodeExpression(expr.Left)...)
@@ -48,7 +48,7 @@ func (c *Codec) encodeInfixExpression(expr *ast.InfixExpression) []byte {
 	return pack(INFIX_EXPRESSION, ret)
 }
 
-func (c *Codec) encodePostfixExpression(expr *ast.PostfixExpression) []byte {
+func (c *Encoder) encodePostfixExpression(expr *ast.PostfixExpression) []byte {
 	var ret []byte
 
 	ret = append(ret, c.encodeExpression(expr.Left)...)
@@ -57,7 +57,7 @@ func (c *Codec) encodePostfixExpression(expr *ast.PostfixExpression) []byte {
 	return pack(POSTFIX_EXPRESSION, ret)
 }
 
-func (c *Codec) encodePrefixExpression(expr *ast.PrefixExpression) []byte {
+func (c *Encoder) encodePrefixExpression(expr *ast.PrefixExpression) []byte {
 	var ret []byte
 
 	ret = append(ret, packString(expr.Operator)...)

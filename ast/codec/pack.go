@@ -3,6 +3,7 @@ package codec
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 	"sync"
 	"unicode/utf8"
 )
@@ -21,7 +22,7 @@ func pack(t AstType, bin []byte) []byte {
 	size := len(bin)
 
 	buf.WriteByte(byte(t))
-	buf.WriteByte(byte(size << 8))
+	buf.WriteByte(byte(size >> 8))
 	buf.WriteByte(byte(size & 0xFF))
 	buf.Write(bin)
 	return buf.Bytes()
@@ -60,27 +61,23 @@ func packIP(s string) []byte {
 }
 
 func packInteger(i int64) []byte {
-	buf := packPool.Get().(*bytes.Buffer)
-	binary.Write(buf, binary.BigEndian, i)
+	bin := make([]byte, 8)
+	binary.BigEndian.PutUint64(bin, uint64(i))
 
-	bin := buf.Bytes()
-	packPool.Put(buf)
 	return pack(INTEGER_VALUE, bin)
 }
 
 func packFloat(f float64) []byte {
-	buf := packPool.Get().(*bytes.Buffer)
-	binary.Write(buf, binary.BigEndian, f)
+	bin := make([]byte, 8)
+	binary.BigEndian.PutUint64(bin, math.Float64bits(f))
 
-	bin := buf.Bytes()
-	packPool.Put(buf)
 	return pack(FLOAT_VALUE, bin)
 }
 
 func packBoolean(b bool) []byte {
-	v := byte(0)
+	v := byte(0x00)
 	if b {
-		v = byte(1)
+		v = byte(0x01)
 	}
 
 	return pack(BOOL_VALUE, []byte{v})
