@@ -146,7 +146,6 @@ var keywords = map[string]TokenType{
 	"include":          INCLUDE,
 	"import":           IMPORT,
 	"log":              LOG,
-	"remote":           REMOVE,
 	"restart":          RESTART,
 	"return":           RETURN,
 	"set":              SET,
