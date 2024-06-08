@@ -1,49 +1,308 @@
 package codec
 
 import (
-	"bufio"
-	"io"
-
+	"github.com/k0kubun/pp"
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (c *Decoder) decodeAclDeclaration(stream io.Reader) (*ast.AclDeclaration, error) {
+func (c *Decoder) decodeAclDeclaration() (*ast.AclDeclaration, error) {
 	var err error
-
 	acl := &ast.AclDeclaration{}
-	r := bufio.NewReader(stream)
 
-	if acl.Name, err = unpackIdent(r); err != nil {
-		return nil, err
-	}
-	for !c.peekTypeIs(r, END) {
-		at, bin, err := unpack(r)
-		if err != nil {
-			return nil, err
-		}
-		if at != ACL_CIDR {
-			return nil, typeMismatch(ACL_CIDR, at)
-		}
-		cr := bufio.NewReader(bin)
-		cidr := &ast.AclCidr{}
-		if c.peekTypeIs(cr, BOOL_VALUE) {
-			if cidr.Inverse, err = unpackBoolean(cr); err != nil {
-				return nil, err
-			}
-		}
-		if cidr.IP, err = unpackIP(cr); err != nil {
-			return nil, err
-		}
-		if c.peekTypeIs(cr, INTEGER_VALUE) {
-			if cidr.Mask, err = unpackInteger(cr); err != nil {
-				return nil, err
-			}
-		}
-		acl.CIDRs = append(acl.CIDRs, cidr)
+	acl.Name, err = c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	// Discard END type
-	unpack(r) // nolint:errcheck
-
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case ACL_CIDR:
+			cidr, err := c.decodeAclCidr()
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			acl.CIDRs = append(acl.CIDRs, cidr)
+		default:
+			return nil, typeMismatch(ACL_CIDR, frame.Type())
+		}
+	}
+OUT:
 	return acl, nil
+}
+
+func (c *Decoder) decodeAclCidr() (*ast.AclCidr, error) {
+	var err error
+	cidr := &ast.AclCidr{}
+
+	if c.peekFrameIs(BOOL_VALUE) {
+		cidr.Inverse, err = c.decodeBoolean(c.nextFrame())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	cidr.IP, err = c.decodeIP(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if c.peekFrameIs(INTEGER_VALUE) {
+		cidr.Mask, err = c.decodeInteger(c.nextFrame())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return cidr, nil
+}
+
+func (c *Decoder) decodeBackendDeclaration() (*ast.BackendDeclaration, error) {
+	var err error
+	backend := &ast.BackendDeclaration{}
+
+	backend.Name, err = c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case BACKEND_PROPERTY:
+			prop := &ast.BackendProperty{}
+			prop.Key, err = c.decodeIdent(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			prop.Value, err = c.decodeExpression(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			backend.Properties = append(backend.Properties, prop)
+		case BACKEND_PROBE:
+			prop := &ast.BackendProperty{}
+			prop.Key, err = c.decodeIdent(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			prop.Value, err = c.decodeBackendProbeObject()
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			backend.Properties = append(backend.Properties, prop)
+		default:
+			return nil, typeMismatch(BACKEND_PROPERTY, frame.Type())
+		}
+	}
+OUT:
+	return backend, nil
+}
+
+func (c *Decoder) decodeBackendProbeObject() (*ast.BackendProbeObject, error) {
+	var err error
+	probe := &ast.BackendProbeObject{}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case BACKEND_PROPERTY:
+			prop := &ast.BackendProperty{}
+			prop.Key, err = c.decodeIdent(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			prop.Value, err = c.decodeExpression(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			probe.Values = append(probe.Values, prop)
+		default:
+			return nil, typeMismatch(BACKEND_PROPERTY, frame.Type())
+		}
+	}
+OUT:
+	return probe, nil
+}
+
+func (c *Decoder) decodeDirectorDeclaration() (*ast.DirectorDeclaration, error) {
+	var err error
+	director := &ast.DirectorDeclaration{}
+
+	director.Name, err = c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	director.DirectorType, err = c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case DIRECTOR_PROPERTY:
+			prop := &ast.DirectorProperty{}
+			prop.Key, err = c.decodeIdent(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			prop.Value, err = c.decodeExpression(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			director.Properties = append(director.Properties, prop)
+		case DIRECTOR_BACKEND:
+			backend, err := c.decodeDirectorBackendObject()
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			director.Properties = append(director.Properties, backend)
+		default:
+			return nil, typeMismatch(DIRECTOR_PROPERTY, frame.Type())
+		}
+	}
+OUT:
+	return director, nil
+}
+
+func (c *Decoder) decodeDirectorBackendObject() (*ast.DirectorBackendObject, error) {
+	var err error
+	backend := &ast.DirectorBackendObject{}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case DIRECTOR_PROPERTY:
+			prop := &ast.DirectorProperty{}
+			prop.Key, err = c.decodeIdent(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			prop.Value, err = c.decodeExpression(c.nextFrame())
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			backend.Values = append(backend.Values, prop)
+		default:
+			pp.Println("OK")
+			return nil, typeMismatch(DIRECTOR_PROPERTY, frame.Type())
+		}
+	}
+OUT:
+	return backend, nil
+}
+
+func (c *Decoder) decodePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error) {
+	name, err := c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &ast.PenaltyboxDeclaration{
+		Name: name,
+	}, nil
+}
+
+func (c *Decoder) decodeRatecounterDeclaration() (*ast.RatecounterDeclaration, error) {
+	name, err := c.decodeIdent(c.nextFrame())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &ast.RatecounterDeclaration{
+		Name: name,
+	}, nil
+}
+
+func (c *Decoder) decodeSubroutineDeclaration() (*ast.SubroutineDeclaration, error) {
+	var err error
+	sub := &ast.SubroutineDeclaration{
+		Block: &ast.BlockStatement{},
+	}
+
+	if sub.Name, err = c.decodeIdent(c.nextFrame()); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	// Functional subroutine has return type ident
+	if c.peekFrameIs(IDENT_VALUE) {
+		if sub.ReturnType, err = c.decodeIdent(c.nextFrame()); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		default:
+			stmt, err := c.decode(frame)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			sub.Block.Statements = append(sub.Block.Statements, stmt)
+		}
+	}
+OUT:
+
+	return sub, nil
+}
+
+func (c *Decoder) decodeTableDeclaration() (*ast.TableDeclaration, error) {
+	var err error
+	tbl := &ast.TableDeclaration{}
+
+	if tbl.Name, err = c.decodeIdent(c.nextFrame()); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if c.peekFrameIs(IDENT_VALUE) {
+		if tbl.ValueType, err = c.decodeIdent(c.nextFrame()); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		case TABLE_PROPERTY:
+			prop := &ast.TableProperty{}
+			if prop.Key, err = c.decodeString(c.nextFrame()); err != nil {
+				return nil, errors.WithStack(err)
+			}
+			if prop.Value, err = c.decodeExpression(c.nextFrame()); err != nil {
+				return nil, errors.WithStack(err)
+			}
+			tbl.Properties = append(tbl.Properties, prop)
+		default:
+			return nil, typeMismatch(TABLE_PROPERTY, frame.Type())
+		}
+	}
+OUT:
+
+	return tbl, nil
 }

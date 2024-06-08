@@ -10,96 +10,180 @@ import (
 )
 
 type Decoder struct {
+	r   *bufio.Reader
+	fin *Frame
 }
 
-func NewDecoder() *Decoder {
-	return &Decoder{}
-}
-
-func (c *Decoder) peekTypeIs(r *bufio.Reader, t AstType) bool {
-	b, err := r.Peek(1)
-	if err != nil {
-		return false
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{
+		r: bufio.NewReader(r),
 	}
-	return AstType(b[0]) == t
 }
 
-func (c *Decoder) Decode(r io.Reader) (ast.Statement, error) {
-	astType, reader, err := unpack(r)
-	if err != nil {
-		return nil, errors.WithStack(err)
+func (c *Decoder) nextFrame() *Frame {
+	if c.fin != nil {
+		return c.fin
 	}
 
-	switch astType {
+	buf := framePool.Get().(*[]byte)
+	defer framePool.Put(buf)
+
+	if _, err := io.LimitReader(c.r, 1).Read(*buf); err != nil {
+		return &Frame{
+			frameType: UNKNOWN,
+			size:      0,
+		}
+	}
+	frameType := FrameType((*buf)[0])
+	switch frameType {
+	case END:
+		return &Frame{
+			frameType: END,
+			size:      0,
+		}
+	case FIN:
+		c.fin = &Frame{
+			frameType: FIN,
+			size:      0,
+		}
+		return c.fin
+	}
+
+	if _, err := io.LimitReader(c.r, 2).Read(*buf); err != nil {
+		return &Frame{
+			frameType: UNKNOWN,
+			size:      0,
+		}
+	}
+	upper := int((*buf)[0])
+	size := (upper << 8) | int((*buf)[1])
+
+	return &Frame{
+		frameType: frameType,
+		size:      size,
+	}
+}
+
+func (c *Decoder) peekFrameIs(t FrameType) bool {
+	return c.peekFrame().Type() == t
+}
+
+func (c *Decoder) peekFrame() *Frame {
+	b, err := c.r.Peek(1)
+	if err != nil {
+		return &Frame{
+			frameType: UNKNOWN,
+			size:      0,
+		}
+	}
+	frameType := FrameType(b[0])
+	if frameType == END || frameType == FIN {
+		return &Frame{
+			frameType: frameType,
+			size:      0,
+		}
+	}
+
+	b, err = c.r.Peek(3)
+	if err != nil {
+		return &Frame{
+			frameType: UNKNOWN,
+			size:      0,
+		}
+	}
+	upper := int(b[1])
+	size := (upper << 8) | int(b[2])
+
+	return &Frame{
+		frameType: FrameType(b[0]),
+		size:      size,
+	}
+}
+
+func (c *Decoder) Decode() ([]ast.Statement, error) {
+	var statements []ast.Statement
+
+	for {
+		frame := c.nextFrame()
+		if frame.Type() == FIN {
+			break
+		}
+		stmt, err := c.decode(frame)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		statements = append(statements, stmt)
+	}
+
+	return statements, nil
+}
+
+func (c *Decoder) decode(frame *Frame) (ast.Statement, error) {
+	switch frame.Type() {
 	// Declarations
 	case ACL_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeAclDeclaration()
 	case BACKEND_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeBackendDeclaration()
 	case DIRECTOR_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeDirectorDeclaration()
 	case PENALTYBOX_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodePenaltyboxDeclaration()
 	case RATECOUNTER_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeRatecounterDeclaration()
 	case SUBROUTINE_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeSubroutineDeclaration()
 	case TABLE_DECLARATION:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeTableDeclaration()
 
 	// Statements
 	case ADD_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeAddStatement()
 	case BREAK_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeBreakStatement()
 	case CALL_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeCallStatement()
 	case CASE_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeCaseStatement()
 	case DECLARE_STATEMENT:
-		return c.decodeAclDeclaration(reader)
-	case ELSEIF_STATEMENT:
-		return c.decodeAclDeclaration(reader)
-	case ELSE_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeDeclareStatement()
 	case ERROR_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeErrorStatement()
 	case ESI_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeEsiStatement()
 	case FALLTHROUGH_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeFallthroughStatement()
 	case FUNCTIONCALL_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeFunctionCallStatement()
 	case GOTO_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeGotoStatement()
 	case GOTO_DESTINATION_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeGotoDestionationStatement()
 	case IF_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeIfStatement()
 	case IMPORT_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeImportStatement()
 	case INCLUDE_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeIncludeStatement()
 	case LOG_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeLogStatement()
 	case REMOVE_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeRemoveStatement()
 	case RESTART_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeRestartStatement()
 	case RETURN_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeReturnStatement()
 	case SET_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeSetStatement()
 	case SWITCH_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeSwitchStatement()
 	case SYNTHETIC_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeSyntheticStatement()
 	case SYNTHETIC_BASE64_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeSyntheticBase64Statement()
 	case UNSET_STATEMENT:
-		return c.decodeAclDeclaration(reader)
+		return c.decodeUnsetStatement()
 	default:
-		return nil, errors.WithStack(fmt.Errorf("Unexpected type found: %d", astType))
+		return nil, errors.WithStack(fmt.Errorf("Unexpected frame found: %s", frame.String()))
 	}
-	return nil, errors.New("Not Implemented")
 }

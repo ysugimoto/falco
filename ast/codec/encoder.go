@@ -2,8 +2,11 @@ package codec
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 )
 
@@ -14,80 +17,126 @@ var encodePool = sync.Pool{
 }
 
 type Encoder struct {
+	w io.Writer
 }
 
-func NewEncoder() *Encoder {
-	return &Encoder{}
+func NewEncoder(w io.Writer) *Encoder {
+	return &Encoder{
+		w: w,
+	}
 }
 
-func (c *Encoder) Encode(stmt ast.Statement) []byte {
-	var bin []byte
+func (c *Encoder) Encode(vcl *ast.VCL) error {
+	for i := range vcl.Statements {
+		frame, err := c.encode(vcl.Statements[i])
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if _, err := c.w.Write(frame.Encode()); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	if _, err := c.w.Write(fin()); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
 
-	switch t := stmt.(type) {
+func (c *Encoder) encode(node ast.Node) (*Frame, error) {
+	var frame *Frame
+
+	switch t := node.(type) {
 	// Declarations
 	case *ast.AclDeclaration:
-		bin = c.encodeAclDeclaration(t)
+		frame = c.encodeAclDeclaration(t)
 	case *ast.BackendDeclaration:
-		bin = c.encodeBackendDeclaration(t)
+		frame = c.encodeBackendDeclaration(t)
 	case *ast.DirectorDeclaration:
-		bin = c.encodeDirectorDeclaration(t)
+		frame = c.encodeDirectorDeclaration(t)
 	case *ast.PenaltyboxDeclaration:
-		bin = c.encodePenaltyboxDelcaration(t)
+		frame = c.encodePenaltyboxDelcaration(t)
 	case *ast.RatecounterDeclaration:
-		bin = c.encodeRatecounterDeclaration(t)
+		frame = c.encodeRatecounterDeclaration(t)
 	case *ast.SubroutineDeclaration:
-		bin = c.encodeSubroutineDeclaration(t)
+		frame = c.encodeSubroutineDeclaration(t)
 	case *ast.TableDeclaration:
-		bin = c.encodeTableDeclaration(t)
+		frame = c.encodeTableDeclaration(t)
 
 	// Statements
 	case *ast.AddStatement:
-		bin = c.encodeAddStatement(t)
+		frame = c.encodeAddStatement(t)
 	case *ast.BreakStatement:
-		bin = c.encodeBreakStatement(t)
+		frame = c.encodeBreakStatement(t)
 	case *ast.CallStatement:
-		bin = c.encodeCallStatement(t)
+		frame = c.encodeCallStatement(t)
 	case *ast.CaseStatement:
-		bin = c.encodeCaseStatement(t)
+		frame = c.encodeCaseStatement(t)
 	case *ast.DeclareStatement:
-		bin = c.encodeDeclareStatement(t)
+		frame = c.encodeDeclareStatement(t)
 	case *ast.ErrorStatement:
-		bin = c.encodeErrorStatement(t)
+		frame = c.encodeErrorStatement(t)
 	case *ast.EsiStatement:
-		bin = c.encodeEsiStatement(t)
+		frame = c.encodeEsiStatement(t)
 	case *ast.FallthroughStatement:
-		bin = c.encodeFallthroughStatement(t)
+		frame = c.encodeFallthroughStatement(t)
 	case *ast.FunctionCallStatement:
-		bin = c.encodeFunctionCallStatement(t)
+		frame = c.encodeFunctionCallStatement(t)
 	case *ast.GotoStatement:
-		bin = c.encodeGotoStatement(t)
+		frame = c.encodeGotoStatement(t)
 	case *ast.GotoDestinationStatement:
-		bin = c.encodeGotoDestinationStatement(t)
+		frame = c.encodeGotoDestinationStatement(t)
 	case *ast.IfStatement:
-		bin = c.encodeIfStatement(t)
+		frame = c.encodeIfStatement(t)
 	case *ast.ImportStatement:
-		bin = c.encodeImportStatement(t)
+		frame = c.encodeImportStatement(t)
 	case *ast.IncludeStatement:
-		bin = c.encodeIncludeStatement(t)
+		frame = c.encodeIncludeStatement(t)
 	case *ast.LogStatement:
-		bin = c.encodeLogStatement(t)
+		frame = c.encodeLogStatement(t)
 	case *ast.RemoveStatement:
-		bin = c.encodeRemoveStatement(t)
+		frame = c.encodeRemoveStatement(t)
 	case *ast.RestartStatement:
-		bin = c.encodeRestartStatement(t)
+		frame = c.encodeRestartStatement(t)
 	case *ast.ReturnStatement:
-		bin = c.encodeReturnStatement(t)
+		frame = c.encodeReturnStatement(t)
 	case *ast.SetStatement:
-		bin = c.encodeSetStatement(t)
+		frame = c.encodeSetStatement(t)
 	case *ast.SwitchStatement:
-		bin = c.encodeSwitchStatement(t)
+		frame = c.encodeSwitchStatement(t)
 	case *ast.SyntheticStatement:
-		bin = c.encodeSyntheticStatement(t)
+		frame = c.encodeSyntheticStatement(t)
 	case *ast.SyntheticBase64Statement:
-		bin = c.encodeSyntheticBase64Statement(t)
+		frame = c.encodeSyntheticBase64Statement(t)
 	case *ast.UnsetStatement:
-		bin = c.encodeUnsetStatement(t)
-	}
+		frame = c.encodeUnsetStatement(t)
 
-	return bin
+	// Combination Expressions
+	case *ast.GroupedExpression:
+		frame = c.encodeGroupedExpression(t)
+	case *ast.InfixExpression:
+		frame = c.encodeInfixExpression(t)
+	case *ast.PostfixExpression:
+		frame = c.encodePostfixExpression(t)
+	case *ast.PrefixExpression:
+		frame = c.encodePrefixExpression(t)
+
+	// Values
+	case *ast.Ident:
+		frame = c.encodeIdent(t)
+	case *ast.String:
+		frame = c.encodeString(t)
+	case *ast.IP:
+		frame = c.encodeIP(t)
+	case *ast.Integer:
+		frame = c.encodeInteger(t)
+	case *ast.Float:
+		frame = c.encodeFloat(t)
+	case *ast.Boolean:
+		frame = c.encodeBoolean(t)
+	case *ast.RTime:
+		frame = c.encodeRTime(t)
+	default:
+		return nil, fmt.Errorf("Unknown node provided: %s", node.GetMeta().Token.Literal)
+	}
+	return frame, nil
 }

@@ -6,195 +6,285 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) []byte {
+func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(stmt.Ident.Value))
-	w.Write(packString(stmt.Operator.Operator))
-	w.Write(c.encodeExpression(stmt.Value))
+	w.Write(c.encodeIdent(stmt.Ident).Encode())
+	w.Write(c.encodeOperator(stmt.Operator.Operator).Encode())
+	w.Write(c.encodeExpression(stmt.Value).Encode())
 
-	return pack(ADD_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: ADD_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeBreakStatement(stmt *ast.BreakStatement) []byte {
-	return pack(BREAK_STATEMENT, []byte{})
+func (c *Encoder) encodeBreakStatement(stmt *ast.BreakStatement) *Frame {
+	return &Frame{
+		frameType: BREAK_STATEMENT,
+		buffer:    []byte{},
+	}
 }
 
-func (c *Encoder) encodeCallStatement(stmt *ast.CallStatement) []byte {
+func (c *Encoder) encodeCallStatement(stmt *ast.CallStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(stmt.Subroutine.Value))
-	return pack(CALL_STATEMENT, w.Bytes())
+	w.Write(c.encodeIdent(stmt.Subroutine).Encode())
+
+	return &Frame{
+		frameType: CALL_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) []byte {
+func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
 	if stmt.Test != nil {
-		w.Write(c.encodeInfixExpression(stmt.Test))
-	} else {
-		w.Write(packIdent("default"))
+		w.Write(c.encodeInfixExpression(stmt.Test).Encode())
 	}
+
 	for _, s := range stmt.Statements {
-		w.Write(c.Encode(s))
+		frame, _ := c.encode(s)
+		w.Write(frame.Encode())
 	}
+	w.Write(end())
+
 	if stmt.Fallthrough {
-		w.Write(pack(FALLTHROUGH_STATEMENT, []byte{}))
+		w.Write(c.encodeBoolean(&ast.Boolean{Value: stmt.Fallthrough}).Encode())
 	}
-	return pack(CASE_STATEMENT, w.Bytes())
+
+	return &Frame{
+		frameType: CASE_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) []byte {
+func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(stmt.Name.Value))
-	w.Write(packIdent(stmt.ValueType.Value))
+	w.Write(c.encodeIdent(stmt.Name).Encode())
+	w.Write(c.encodeIdent(stmt.ValueType).Encode())
 
-	return pack(DECLARE_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: DECLARE_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeErrorStatement(stmt *ast.ErrorStatement) []byte {
+func (c *Encoder) encodeErrorStatement(stmt *ast.ErrorStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(c.encodeExpression(stmt.Code))
+	w.Write(c.encodeExpression(stmt.Code).Encode())
 	if stmt.Argument != nil {
-		w.Write(c.encodeExpression(stmt.Argument))
+		w.Write(c.encodeExpression(stmt.Argument).Encode())
 	}
 
-	return pack(ERROR_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: ERROR_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeEsiStatement(stmt *ast.EsiStatement) []byte {
-	return pack(ESI_STATEMENT, []byte{})
+func (c *Encoder) encodeEsiStatement(stmt *ast.EsiStatement) *Frame {
+	return &Frame{
+		frameType: ESI_STATEMENT,
+		buffer:    []byte{},
+	}
 }
 
-func (c *Encoder) encodeFallthroughStatement(stmt *ast.FallthroughStatement) []byte {
-	return pack(FALLTHROUGH_STATEMENT, []byte{})
+func (c *Encoder) encodeFallthroughStatement(stmt *ast.FallthroughStatement) *Frame {
+	return &Frame{
+		frameType: FALLTHROUGH_STATEMENT,
+		buffer:    []byte{},
+	}
 }
 
-func (c *Encoder) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) []byte {
+func (c *Encoder) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(stmt.Function.Value))
+	w.Write(c.encodeIdent(stmt.Function).Encode())
 	for _, arg := range stmt.Arguments {
-		w.Write(c.encodeExpression(arg))
+		w.Write(c.encodeExpression(arg).Encode())
 	}
+	w.Write(end())
 
-	return pack(FUNCTIONCALL_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: FUNCTIONCALL_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeGotoStatement(stmt *ast.GotoStatement) []byte {
-	return pack(GOTO_STATEMENT, packIdent(stmt.Destination.Value))
+func (c *Encoder) encodeGotoStatement(stmt *ast.GotoStatement) *Frame {
+	return &Frame{
+		frameType: GOTO_STATEMENT,
+		buffer:    c.encodeIdent(stmt.Destination).Encode(),
+	}
 }
 
-func (c *Encoder) encodeGotoDestinationStatement(stmt *ast.GotoDestinationStatement) []byte {
-	return pack(GOTO_DESTINATION_STATEMENT, packIdent(stmt.Name.Value))
+func (c *Encoder) encodeGotoDestinationStatement(stmt *ast.GotoDestinationStatement) *Frame {
+	return &Frame{
+		frameType: GOTO_DESTINATION_STATEMENT,
+		buffer:    c.encodeIdent(stmt.Name).Encode(),
+	}
 }
 
-func (c *Encoder) encodeIfStatement(stmt *ast.IfStatement) []byte {
+func (c *Encoder) encodeIfStatement(stmt *ast.IfStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packString(stmt.Keyword))
-	w.Write(c.encodeExpression(stmt.Condition))
+	w.Write(c.encodeString(&ast.String{Value: stmt.Keyword}).Encode())
+	w.Write(c.encodeExpression(stmt.Condition).Encode())
 	for _, s := range stmt.Consequence.Statements {
-		w.Write(c.Encode(s))
+		frame, _ := c.encode(s)
+		w.Write(frame.Encode())
 	}
 	w.Write(end())
 	for _, a := range stmt.Another {
-		w.Write(c.encodeIfStatement(a))
+		w.Write(c.encodeIfStatement(a).Encode())
 	}
+	w.Write(end())
 	if stmt.Alternative != nil {
-		alt := encodePool.Get().(*bytes.Buffer)
-		for _, s := range stmt.Alternative.Consequence.Statements {
-			alt.Write(c.Encode(s))
-		}
-		w.Write(pack(ELSE_STATEMENT, alt.Bytes()))
-		encodePool.Put(alt)
+		w.Write(c.encodeElseStatement(stmt.Alternative).Encode())
 	}
 
-	return pack(IF_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: IF_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeImportStatement(stmt *ast.ImportStatement) []byte {
-	return pack(IMPORT_STATEMENT, packIdent(stmt.Name.Value))
-}
-
-func (c *Encoder) encodeIncludeStatement(stmt *ast.IncludeStatement) []byte {
-	return pack(INCLUDE_STATEMENT, packIdent(stmt.Module.Value))
-}
-
-func (c *Encoder) encodeLogStatement(stmt *ast.LogStatement) []byte {
-	return pack(LOG_STATEMENT, c.encodeExpression(stmt.Value))
-}
-
-func (c *Encoder) encodeRemoveStatement(stmt *ast.RemoveStatement) []byte {
-	return pack(REMOVE_STATEMENT, packIdent(stmt.Ident.Value))
-}
-
-func (c *Encoder) encodeRestartStatement(stmt *ast.RestartStatement) []byte {
-	return pack(RESTART_STATEMENT, []byte{})
-}
-
-func (c *Encoder) encodeReturnStatement(stmt *ast.ReturnStatement) []byte {
+func (c *Encoder) encodeElseStatement(stmt *ast.ElseStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
+	for _, s := range stmt.Consequence.Statements {
+		frame, _ := c.encode(s)
+		w.Write(frame.Encode())
+	}
+	w.Write(end())
+
+	return &Frame{
+		frameType: ELSE_STATEMENT,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeImportStatement(stmt *ast.ImportStatement) *Frame {
+	return &Frame{
+		frameType: IMPORT_STATEMENT,
+		buffer:    c.encodeIdent(stmt.Name).Encode(),
+	}
+}
+
+func (c *Encoder) encodeIncludeStatement(stmt *ast.IncludeStatement) *Frame {
+	return &Frame{
+		frameType: INCLUDE_STATEMENT,
+		buffer:    c.encodeString(stmt.Module).Encode(),
+	}
+}
+
+func (c *Encoder) encodeLogStatement(stmt *ast.LogStatement) *Frame {
+	return &Frame{
+		frameType: LOG_STATEMENT,
+		buffer:    c.encodeExpression(stmt.Value).Encode(),
+	}
+}
+
+func (c *Encoder) encodeRemoveStatement(stmt *ast.RemoveStatement) *Frame {
+	return &Frame{
+		frameType: REMOVE_STATEMENT,
+		buffer:    c.encodeIdent(stmt.Ident).Encode(),
+	}
+}
+
+func (c *Encoder) encodeRestartStatement(stmt *ast.RestartStatement) *Frame {
+	return &Frame{
+		frameType: RESTART_STATEMENT,
+		buffer:    []byte{},
+	}
+}
+
+func (c *Encoder) encodeReturnStatement(stmt *ast.ReturnStatement) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeBoolean(&ast.Boolean{Value: stmt.HasParenthesis}).Encode())
 	if stmt.ReturnExpression != nil {
-		w.Write(packBoolean(stmt.HasParenthesis))
-		w.Write(c.encodeExpression(stmt.ReturnExpression))
+		w.Write(c.encodeExpression(stmt.ReturnExpression).Encode())
 	}
-	return pack(RETURN_STATEMENT, w.Bytes())
+
+	return &Frame{
+		frameType: RETURN_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeSetStatement(stmt *ast.SetStatement) []byte {
+func (c *Encoder) encodeSetStatement(stmt *ast.SetStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(stmt.Ident.Value))
-	w.Write(packString(stmt.Operator.Operator))
-	w.Write(c.encodeExpression(stmt.Value))
+	w.Write(c.encodeIdent(stmt.Ident).Encode())
+	w.Write(c.encodeOperator(stmt.Operator.Operator).Encode())
+	w.Write(c.encodeExpression(stmt.Value).Encode())
 
-	return pack(SET_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: SET_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeSwitchStatement(stmt *ast.SwitchStatement) []byte {
+func (c *Encoder) encodeSwitchStatement(stmt *ast.SwitchStatement) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(c.encodeExpression(stmt.Control.Expression))
+	w.Write(c.encodeExpression(stmt.Control.Expression).Encode())
 	for _, sc := range stmt.Cases {
-		w.Write(c.encodeCaseStatement(sc))
+		w.Write(c.encodeCaseStatement(sc).Encode())
 	}
-	w.Write(packInteger(int64(stmt.Default)))
+	w.Write(end())
+	w.Write(c.encodeInteger(&ast.Integer{Value: int64(stmt.Default)}).Encode())
 
-	return pack(SWITCH_STATEMENT, w.Bytes())
+	return &Frame{
+		frameType: SWITCH_STATEMENT,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeSyntheticStatement(stmt *ast.SyntheticStatement) []byte {
-	return pack(SYNTHETIC_STATEMENT, c.encodeExpression(stmt.Value))
+func (c *Encoder) encodeSyntheticStatement(stmt *ast.SyntheticStatement) *Frame {
+	return &Frame{
+		frameType: SYNTHETIC_STATEMENT,
+		buffer:    c.encodeExpression(stmt.Value).Encode(),
+	}
 }
 
-func (c *Encoder) encodeSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) []byte {
-	return pack(SYNTHETIC_BASE64_STATEMENT, c.encodeExpression(stmt.Value))
+func (c *Encoder) encodeSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) *Frame {
+	return &Frame{
+		frameType: SYNTHETIC_BASE64_STATEMENT,
+		buffer:    c.encodeExpression(stmt.Value).Encode(),
+	}
 }
 
-func (c *Encoder) encodeUnsetStatement(stmt *ast.UnsetStatement) []byte {
-	return pack(UNSET_STATEMENT, packIdent(stmt.Ident.Value))
+func (c *Encoder) encodeUnsetStatement(stmt *ast.UnsetStatement) *Frame {
+	return &Frame{
+		frameType: UNSET_STATEMENT,
+		buffer:    c.encodeExpression(stmt.Ident).Encode(),
+	}
 }

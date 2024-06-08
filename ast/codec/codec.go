@@ -1,12 +1,11 @@
 package codec
 
-import "github.com/k0kubun/pp"
-
-type AstType uint8
+type FrameType uint8
 
 const (
-	UNKNOWN AstType = iota
-	END             // END means some statement (e.g block statement) should end
+	UNKNOWN FrameType = iota
+	END               // END means some statement (e.g block statement) should end
+	FIN               // FIN means the end of encoded binary
 
 	// Declaration/Properties
 	ACL_DECLARATION
@@ -55,6 +54,8 @@ const (
 	INFIX_EXPRESSION
 	POSTFIX_EXPRESSION
 	PREFIX_EXPRESSION
+	IF_EXPRESSION
+	FUNCTIONCALL_EXPRESSION
 
 	// Values
 	FLOAT_VALUE
@@ -70,8 +71,8 @@ const (
 	VCL
 )
 
-func (a AstType) String() string {
-	switch a {
+func (ft FrameType) String() string {
+	switch ft {
 	case END:
 		return "END"
 	case ACL_DECLARATION:
@@ -177,7 +178,6 @@ func (a AstType) String() string {
 	case VCL:
 		return "VCL"
 	default:
-		pp.Println(a)
 		return "UNKNOWN"
 	}
 }

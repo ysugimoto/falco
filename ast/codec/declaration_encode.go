@@ -6,150 +6,224 @@ import (
 	"github.com/ysugimoto/falco/ast"
 )
 
-func (c *Encoder) encodeAclDeclaration(acl *ast.AclDeclaration) []byte {
+func (c *Encoder) encodeAclDeclaration(acl *ast.AclDeclaration) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(acl.Name.Value))
+	w.Write(c.encodeIdent(acl.Name).Encode())
 	for _, cidr := range acl.CIDRs {
-		b := encodePool.Get().(*bytes.Buffer)
-		b.Reset()
-
-		if cidr.Inverse != nil {
-			b.Write(packBoolean(cidr.Inverse.Value))
-		}
-		b.Write(packIP(cidr.IP.Value))
-		if cidr.Mask != nil {
-			b.Write(packInteger(cidr.Mask.Value))
-		}
-		w.Write(pack(ACL_CIDR, b.Bytes()))
-		encodePool.Put(b)
+		w.Write(c.encodeAclCidr(cidr).Encode())
 	}
 	w.Write(end())
 
-	return pack(ACL_DECLARATION, w.Bytes())
+	return &Frame{
+		frameType: ACL_DECLARATION,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeBackendDeclaration(b *ast.BackendDeclaration) []byte {
+func (c *Encoder) encodeAclCidr(cidr *ast.AclCidr) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(b.Name.Value))
+	if cidr.Inverse != nil {
+		w.Write(c.encodeBoolean(cidr.Inverse).Encode())
+	}
+	w.Write(c.encodeIP(cidr.IP).Encode())
+	if cidr.Mask != nil {
+		w.Write(c.encodeInteger(cidr.Mask).Encode())
+	}
+
+	return &Frame{
+		frameType: ACL_CIDR,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeBackendDeclaration(b *ast.BackendDeclaration) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeIdent(b.Name).Encode())
 	for _, prop := range b.Properties {
-		b := encodePool.Get().(*bytes.Buffer)
-		b.Reset()
-
-		b.Write(packIdent(prop.Key.Value))
-		if probe, ok := prop.Value.(*ast.BackendProbeObject); ok {
-			for _, p := range probe.Values {
-				b.Write(packIdent(p.Key.Value))
-				b.Write(c.encodeExpression(p.Value))
-			}
-			w.Write(pack(BACKEND_PROBE, b.Bytes()))
-			encodePool.Put(b)
-			continue
-		}
-		b.Write(c.encodeExpression(prop.Value))
-		w.Write(pack(BACKEND_PROPERTY, b.Bytes()))
-		encodePool.Put(b)
+		w.Write(c.encodeBackendProperty(prop).Encode())
 	}
 	w.Write(end())
 
-	return pack(BACKEND_DECLARATION, w.Bytes())
+	return &Frame{
+		frameType: BACKEND_DECLARATION,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeDirectorDeclaration(d *ast.DirectorDeclaration) []byte {
+func (c *Encoder) encodeBackendProperty(prop *ast.BackendProperty) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(d.Name.Value))
-	w.Write(packIdent(d.DirectorType.Value))
+	w.Write(c.encodeIdent(prop.Key).Encode())
+	if probe, ok := prop.Value.(*ast.BackendProbeObject); ok {
+		for _, p := range probe.Values {
+			var bin []byte
+			bin = append(bin, c.encodeIdent(p.Key).Encode()...)
+			bin = append(bin, c.encodeExpression(p.Value).Encode()...)
+			w.Write((&Frame{frameType: BACKEND_PROPERTY, buffer: bin}).Encode())
+		}
+		w.Write(end())
+
+		return &Frame{
+			frameType: BACKEND_PROBE,
+			buffer:    w.Bytes(),
+		}
+	}
+
+	w.Write(c.encodeExpression(prop.Value).Encode())
+
+	return &Frame{
+		frameType: BACKEND_PROPERTY,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeDirectorDeclaration(d *ast.DirectorDeclaration) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeIdent(d.Name).Encode())
+	w.Write(c.encodeIdent(d.DirectorType).Encode())
 
 	for _, prop := range d.Properties {
-		b := encodePool.Get().(*bytes.Buffer)
-		b.Reset()
+		w.Write(c.encodeDirectorProperty(prop).Encode())
+	}
+	w.Write(end())
 
-		switch t := prop.(type) {
-		case *ast.DirectorBackendObject:
-			for _, v := range t.Values {
-				b.Write(packIdent(v.Key.Value))
-				b.Write(c.encodeExpression(v.Value))
-			}
+	return &Frame{
+		frameType: DIRECTOR_DECLARATION,
+		buffer:    w.Bytes(),
+	}
+}
 
-			w.Write(pack(DIRECTOR_BACKEND, b.Bytes()))
-		case *ast.DirectorProperty:
-			b.Write(packIdent(t.Key.Value))
-			b.Write(c.encodeExpression(t.Value))
+func (c *Encoder) encodeDirectorProperty(prop ast.Expression) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
 
-			w.Write(pack(BACKEND_PROPERTY, b.Bytes()))
+	switch t := prop.(type) {
+	case *ast.DirectorBackendObject:
+		return c.encodeDirectorBackend(t)
+	case *ast.DirectorProperty:
+		w.Write(c.encodeIdent(t.Key).Encode())
+		w.Write(c.encodeExpression(t.Value).Encode())
+
+		return &Frame{
+			frameType: DIRECTOR_PROPERTY,
+			buffer:    w.Bytes(),
 		}
-		encodePool.Put(b)
+	default:
+		return &Frame{
+			frameType: UNKNOWN,
+			buffer:    w.Bytes(),
+		}
+	}
+}
+func (c *Encoder) encodeDirectorBackend(backend *ast.DirectorBackendObject) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	for _, v := range backend.Values {
+		w.Write(c.encodeDirectorProperty(v).Encode())
 	}
 	w.Write(end())
 
-	return pack(DIRECTOR_DECLARATION, w.Bytes())
-}
-
-func (c *Encoder) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) []byte {
-	w := encodePool.Get().(*bytes.Buffer)
-	defer encodePool.Put(w)
-	w.Reset()
-
-	w.Write(packIdent(p.Name.Value))
-	return pack(PENALTYBOX_DECLARATION, w.Bytes())
-}
-
-func (c *Encoder) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) []byte {
-	w := encodePool.Get().(*bytes.Buffer)
-	defer encodePool.Put(w)
-	w.Reset()
-
-	w.Write(packIdent(r.Name.Value))
-	return pack(RATECOUNTER_DECLARATION, w.Bytes())
-}
-
-func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) []byte {
-	w := encodePool.Get().(*bytes.Buffer)
-	defer encodePool.Put(w)
-	w.Reset()
-
-	w.Write(packIdent(sub.Name.Value))
-	for _, stmt := range sub.Block.Statements {
-		w.Write(c.Encode(stmt))
+	return &Frame{
+		frameType: DIRECTOR_BACKEND,
+		buffer:    w.Bytes(),
 	}
-	w.Write(end())
+}
+
+func (c *Encoder) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeIdent(p.Name).Encode())
+
+	return &Frame{
+		frameType: PENALTYBOX_DECLARATION,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeIdent(r.Name).Encode())
+
+	return &Frame{
+		frameType: RATECOUNTER_DECLARATION,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeIdent(sub.Name).Encode())
 	if sub.ReturnType != nil {
-		w.Write(packIdent(sub.ReturnType.Value))
+		w.Write(c.encodeIdent(sub.ReturnType).Encode())
 	}
-	return pack(SUBROUTINE_DECLARATION, w.Bytes())
+	for _, stmt := range sub.Block.Statements {
+		frame, _ := c.encode(stmt)
+		w.Write(frame.Encode())
+	}
+	w.Write(end())
+
+	return &Frame{
+		frameType: SUBROUTINE_DECLARATION,
+		buffer:    w.Bytes(),
+	}
 }
 
-func (c *Encoder) encodeTableDeclaration(tbl *ast.TableDeclaration) []byte {
+func (c *Encoder) encodeTableDeclaration(tbl *ast.TableDeclaration) *Frame {
 	w := encodePool.Get().(*bytes.Buffer)
 	defer encodePool.Put(w)
 	w.Reset()
 
-	w.Write(packIdent(tbl.Name.Value))
-	vt := "STRING"
+	w.Write(c.encodeIdent(tbl.Name).Encode())
 	if tbl.ValueType != nil {
-		vt = tbl.ValueType.Value
+		w.Write(c.encodeIdent(tbl.ValueType).Encode())
 	}
-	w.Write(packIdent(vt))
 
 	for _, prop := range tbl.Properties {
-		b := encodePool.Get().(*bytes.Buffer)
-		b.Reset()
-
-		b.Write(packString(prop.Key.Value))
-		b.Write(c.encodeExpression(prop.Value))
-
-		w.Write(pack(TABLE_PROPERTY, b.Bytes()))
-		encodePool.Put(b)
+		w.Write(c.encodeTableProperty(prop).Encode())
 	}
 	w.Write(end())
 
-	return pack(TABLE_DECLARATION, w.Bytes())
+	return &Frame{
+		frameType: TABLE_DECLARATION,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeTableProperty(prop *ast.TableProperty) *Frame {
+	w := encodePool.Get().(*bytes.Buffer)
+	defer encodePool.Put(w)
+	w.Reset()
+
+	w.Write(c.encodeString(prop.Key).Encode())
+	w.Write(c.encodeExpression(prop.Value).Encode())
+
+	return &Frame{
+		frameType: TABLE_PROPERTY,
+		buffer:    w.Bytes(),
+	}
 }
