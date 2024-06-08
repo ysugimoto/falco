@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +19,6 @@ import (
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/tester"
@@ -39,6 +37,11 @@ const (
 	LevelInfo
 )
 
+type VCL struct {
+	File string
+	AST  *ast.VCL
+}
+
 type RunnerResult struct {
 	Infos    int
 	Warnings int
@@ -47,7 +50,7 @@ type RunnerResult struct {
 	LintErrors  map[string][]*linter.LintError
 	ParseErrors map[string]*parser.ParseError
 
-	Vcl *plugin.VCL
+	Vcl *VCL
 }
 
 type StatsResult struct {
@@ -76,11 +79,10 @@ const (
 )
 
 type Runner struct {
-	transformers []*Transformer
-	overrides    map[string]linter.Severity
-	lexers       map[string]*lexer.Lexer
-	snippets     *snippets.Snippets
-	config       *config.Config
+	overrides map[string]linter.Severity
+	lexers    map[string]*lexer.Lexer
+	snippets  *snippets.Snippets
+	config    *config.Config
 
 	level       Level
 	lintErrors  map[string][]*linter.LintError
@@ -125,17 +127,6 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		}
 	}
 
-	// Check transformer exists and format to absolute path
-	// Transformer is provided as independent binary, named "falco-transform-[name]"
-	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
-		}
-		r.transformers = append(r.transformers, tf)
-	}
-
 	// Set verbose level
 	if c.Linter.VerboseInfo {
 		r.level = LevelInfo
@@ -160,21 +151,6 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 	}
 
 	return r, nil
-}
-
-func (r *Runner) Transform(vcl *plugin.VCL) error {
-	// VCL data is shared between parser and transformar through the falco/io package.
-	encoded, err := plugin.Encode(vcl)
-	if err != nil {
-		return fmt.Errorf("Failed to encode VCL: %w", err)
-	}
-
-	for _, t := range r.transformers {
-		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
-			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
-		}
-	}
-	return nil
 }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
@@ -206,7 +182,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*VCL, error) {
 	vcl, err := r.parseVCL(main.Name, main.Data)
 	if err != nil {
 		return nil, err
@@ -272,7 +248,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	return &plugin.VCL{
+	return &VCL{
 		File: main.Name,
 		AST:  vcl,
 	}, nil

@@ -3,7 +3,6 @@ package codec
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -17,29 +16,21 @@ var encodePool = sync.Pool{
 }
 
 type Encoder struct {
-	w io.Writer
 }
 
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{
-		w: w,
-	}
+func NewEncoder() *Encoder {
+	return &Encoder{}
 }
 
-func (c *Encoder) Encode(vcl *ast.VCL) error {
-	for i := range vcl.Statements {
-		frame, err := c.encode(vcl.Statements[i])
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		if _, err := c.w.Write(frame.Encode()); err != nil {
-			return errors.WithStack(err)
-		}
+func (c *Encoder) Encode(node ast.Node) ([]byte, error) {
+	frame, err := c.encode(node)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
-	if _, err := c.w.Write(fin()); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+
+	bin := frame.Encode()
+	bin = append(bin, fin()...)
+	return bin, nil
 }
 
 func (c *Encoder) encode(node ast.Node) (*Frame, error) {

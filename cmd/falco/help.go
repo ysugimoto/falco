@@ -46,7 +46,6 @@ Usage:
 
 Subcommands:
     lint      : Run lint (default)
-    terraform : Run lint from terraform planned JSON
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs

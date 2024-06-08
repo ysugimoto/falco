@@ -360,6 +360,26 @@ func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
 	}
 }
 
+func CustomLinterCommandNotFound(name string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`Custom linter command "%s" not found in your environment`, name,
+		),
+	}
+}
+
+func CustomLinterCommandFailed(err error, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`Custom linter command "%s" runs failed`, err.Error(),
+		),
+	}
+}
+
 type FatalError struct {
 	Lexer *lexer.Lexer
 	Error error

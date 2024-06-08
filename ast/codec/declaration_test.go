@@ -23,13 +23,12 @@ func assertStatement[T ast.Statement](t *testing.T, input string, expect T) {
 		return
 	}
 
-	buf := &bytes.Buffer{}
-	frame, err := NewEncoder(buf).encode(stmt)
+	bin, err := NewEncoder().Encode(stmt)
 	if err != nil {
 		t.Errorf("Unexpected encode error: %s", err)
 		return
 	}
-	dec := NewDecoder(bytes.NewReader(frame.Encode()))
+	dec := NewDecoder(bytes.NewReader(bin))
 	actual, err := dec.decode(dec.nextFrame())
 	if err != nil {
 		t.Errorf("Unexpected decoding error: %s", err)

@@ -226,18 +226,6 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 		}
 	}
 
-	// if lint error is not zero, stop process
-	if result.Errors > 0 {
-		if len(runner.transformers) > 0 {
-			writeln(white, "Program aborted. Please fix lint errors before transforming.")
-		}
-		return ErrExit
-	}
-
-	if err := runner.Transform(result.Vcl); err != nil {
-		writeln(red, err.Error())
-		return ErrExit
-	}
 	return nil
 }
 
