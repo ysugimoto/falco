@@ -17,6 +17,7 @@ type RepoExampleTestMetadata struct {
 	errors   int
 	warnings int
 	infos    int
+	runError bool
 }
 
 func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
@@ -34,6 +35,7 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			errors:   1,
 			warnings: 0,
 			infos:    0,
+			runError: true,
 		},
 		{
 			name:     "example 3",
@@ -226,9 +228,9 @@ func TestRepositoryExamples(t *testing.T) {
 			}
 
 			ret, err := NewRunner(c, nil).Run(resolvers[0])
-			if tt.errors != 0 {
-				if err == nil {
-					t.Errorf("Expected Run() to generate an error")
+			if err != nil {
+				if !tt.runError {
+					t.Errorf("Unexpected runner error: %s", err)
 				}
 				return
 			}
