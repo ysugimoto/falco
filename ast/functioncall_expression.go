@@ -10,6 +10,7 @@ type FunctionCallExpression struct {
 	Arguments []Expression
 }
 
+func (f *FunctionCallExpression) ID() uint64     { return f.Meta.ID }
 func (f *FunctionCallExpression) Expression()    {}
 func (f *FunctionCallExpression) GetMeta() *Meta { return f.Meta }
 func (f *FunctionCallExpression) String() string {

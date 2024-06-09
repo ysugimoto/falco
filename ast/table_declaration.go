@@ -11,6 +11,7 @@ type TableDeclaration struct {
 	Properties []*TableProperty
 }
 
+func (t *TableDeclaration) ID() uint64     { return t.Meta.ID }
 func (t *TableDeclaration) Statement()     {}
 func (t *TableDeclaration) GetMeta() *Meta { return t.Meta }
 func (t *TableDeclaration) String() string {
@@ -40,6 +41,7 @@ type TableProperty struct {
 	HasComma bool
 }
 
+func (t *TableProperty) ID() uint64 { return t.Meta.ID }
 func (t *TableProperty) String() string {
 	var buf bytes.Buffer
 

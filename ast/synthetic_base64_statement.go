@@ -9,6 +9,7 @@ type SyntheticBase64Statement struct {
 	Value Expression
 }
 
+func (s *SyntheticBase64Statement) ID() uint64     { return s.Meta.ID }
 func (s *SyntheticBase64Statement) Statement()     {}
 func (s *SyntheticBase64Statement) GetMeta() *Meta { return s.Meta }
 func (s *SyntheticBase64Statement) String() string {

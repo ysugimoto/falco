@@ -9,6 +9,7 @@ type IncludeStatement struct {
 	Module *String
 }
 
+func (i *IncludeStatement) ID() uint64     { return i.Meta.ID }
 func (i *IncludeStatement) Statement()     {}
 func (i *IncludeStatement) GetMeta() *Meta { return i.Meta }
 func (i *IncludeStatement) String() string {

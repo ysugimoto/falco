@@ -10,6 +10,7 @@ type DeclareStatement struct {
 	ValueType *Ident
 }
 
+func (d *DeclareStatement) ID() uint64     { return d.Meta.ID }
 func (d *DeclareStatement) Statement()     {}
 func (d *DeclareStatement) GetMeta() *Meta { return d.Meta }
 func (d *DeclareStatement) String() string {

@@ -8,6 +8,7 @@ type EsiStatement struct {
 	*Meta
 }
 
+func (e *EsiStatement) ID() uint64     { return e.Meta.ID }
 func (e *EsiStatement) Statement()     {}
 func (e *EsiStatement) GetMeta() *Meta { return e.Meta }
 func (e *EsiStatement) String() string {

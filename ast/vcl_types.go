@@ -10,6 +10,7 @@ type Ident struct {
 	Value string
 }
 
+func (i *Ident) ID() uint64     { return i.Meta.ID }
 func (i *Ident) Expression()    {}
 func (i *Ident) GetMeta() *Meta { return i.Meta }
 func (i *Ident) String() string {
@@ -21,6 +22,7 @@ type IP struct {
 	Value string
 }
 
+func (i *IP) ID() uint64     { return i.Meta.ID }
 func (i *IP) Expression()    {}
 func (i *IP) GetMeta() *Meta { return i.Meta }
 func (i *IP) String() string {
@@ -32,6 +34,7 @@ type Boolean struct {
 	Value bool
 }
 
+func (b *Boolean) ID() uint64     { return b.Meta.ID }
 func (b *Boolean) Expression()    {}
 func (b *Boolean) GetMeta() *Meta { return b.Meta }
 func (b *Boolean) String() string {
@@ -45,6 +48,7 @@ type Integer struct {
 	Value int64
 }
 
+func (i *Integer) ID() uint64     { return i.Meta.ID }
 func (i *Integer) Expression()    {}
 func (i *Integer) GetMeta() *Meta { return i.Meta }
 func (i *Integer) String() string {
@@ -58,6 +62,7 @@ type String struct {
 	Value string
 }
 
+func (s *String) ID() uint64     { return s.Meta.ID }
 func (s *String) Expression()    {}
 func (s *String) GetMeta() *Meta { return s.Meta }
 func (s *String) String() string {
@@ -76,6 +81,7 @@ type Float struct {
 	Value float64
 }
 
+func (f *Float) ID() uint64     { return f.Meta.ID }
 func (f *Float) Expression()    {}
 func (f *Float) GetMeta() *Meta { return f.Meta }
 func (f *Float) String() string {
@@ -89,6 +95,7 @@ type RTime struct {
 	Value string
 }
 
+func (r *RTime) ID() uint64     { return r.Meta.ID }
 func (r *RTime) Expression()    {}
 func (r *RTime) GetMeta() *Meta { return r.Meta }
 func (r *RTime) String() string {

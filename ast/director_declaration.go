@@ -11,6 +11,7 @@ type DirectorDeclaration struct {
 	Properties   []Expression
 }
 
+func (d *DirectorDeclaration) ID() uint64     { return d.Meta.ID }
 func (d *DirectorDeclaration) Statement()     {}
 func (d *DirectorDeclaration) GetMeta() *Meta { return d.Meta }
 func (d *DirectorDeclaration) String() string {
@@ -42,6 +43,7 @@ type DirectorProperty struct {
 	Value Expression
 }
 
+func (d *DirectorProperty) ID() uint64     { return d.Meta.ID }
 func (d *DirectorProperty) Expression()    {}
 func (d *DirectorProperty) GetMeta() *Meta { return d.Meta }
 func (d *DirectorProperty) String() string {
@@ -63,6 +65,7 @@ type DirectorBackendObject struct {
 	Values []*DirectorProperty
 }
 
+func (d *DirectorBackendObject) ID() uint64     { return d.Meta.ID }
 func (d *DirectorBackendObject) Expression()    {}
 func (d *DirectorBackendObject) GetMeta() *Meta { return d.Meta }
 func (d *DirectorBackendObject) String() string {

@@ -11,6 +11,7 @@ type IfExpression struct {
 	Alternative Expression
 }
 
+func (i *IfExpression) ID() uint64     { return i.Meta.ID }
 func (i *IfExpression) Expression()    {}
 func (i *IfExpression) GetMeta() *Meta { return i.Meta }
 func (i *IfExpression) String() string {

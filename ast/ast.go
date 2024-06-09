@@ -10,6 +10,7 @@ import (
 type Node interface {
 	String() string
 	GetMeta() *Meta
+	ID() uint64
 }
 
 type Statement interface {

@@ -8,6 +8,7 @@ type PenaltyboxDeclaration struct {
 	Block *BlockStatement
 }
 
+func (p *PenaltyboxDeclaration) ID() uint64     { return p.Meta.ID }
 func (p *PenaltyboxDeclaration) Statement()     {}
 func (p *PenaltyboxDeclaration) GetMeta() *Meta { return p.Meta }
 func (p *PenaltyboxDeclaration) String() string {

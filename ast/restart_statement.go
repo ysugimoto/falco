@@ -8,6 +8,7 @@ type RestartStatement struct {
 	*Meta
 }
 
+func (r *RestartStatement) ID() uint64     { return r.Meta.ID }
 func (r *RestartStatement) Statement()     {}
 func (r *RestartStatement) GetMeta() *Meta { return r.Meta }
 func (r *RestartStatement) String() string {

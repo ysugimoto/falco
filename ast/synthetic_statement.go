@@ -9,6 +9,7 @@ type SyntheticStatement struct {
 	Value Expression
 }
 
+func (s *SyntheticStatement) ID() uint64     { return s.Meta.ID }
 func (s *SyntheticStatement) Statement()     {}
 func (s *SyntheticStatement) GetMeta() *Meta { return s.Meta }
 func (s *SyntheticStatement) String() string {

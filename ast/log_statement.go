@@ -9,6 +9,7 @@ type LogStatement struct {
 	Value Expression
 }
 
+func (l *LogStatement) ID() uint64     { return l.Meta.ID }
 func (l *LogStatement) Statement()     {}
 func (l *LogStatement) GetMeta() *Meta { return l.Meta }
 func (l *LogStatement) String() string {

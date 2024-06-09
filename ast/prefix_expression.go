@@ -10,6 +10,7 @@ type PrefixExpression struct {
 	Right    Expression
 }
 
+func (p *PrefixExpression) ID() uint64     { return p.Meta.ID }
 func (p *PrefixExpression) Expression()    {}
 func (p *PrefixExpression) GetMeta() *Meta { return p.Meta }
 func (p *PrefixExpression) String() string {

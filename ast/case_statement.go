@@ -11,6 +11,7 @@ type CaseStatement struct {
 	Fallthrough bool
 }
 
+func (s *CaseStatement) ID() uint64     { return s.Meta.ID }
 func (s *CaseStatement) Statement()     {}
 func (s *CaseStatement) GetMeta() *Meta { return s.Meta }
 func (s *CaseStatement) String() string {

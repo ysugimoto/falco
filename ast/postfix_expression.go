@@ -10,6 +10,7 @@ type PostfixExpression struct {
 	Operator string
 }
 
+func (i *PostfixExpression) ID() uint64     { return i.Meta.ID }
 func (i *PostfixExpression) Expression()    {}
 func (i *PostfixExpression) GetMeta() *Meta { return i.Meta }
 func (i *PostfixExpression) String() string {
