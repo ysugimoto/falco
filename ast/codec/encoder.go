@@ -22,6 +22,23 @@ func NewEncoder() *Encoder {
 	return &Encoder{}
 }
 
+func (c *Encoder) Encodes(statements []ast.Statement) ([]byte, error) {
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer encodePool.Put(buf)
+	buf.Reset()
+
+	for i := range statements {
+		frame, err := c.encode(statements[i])
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		buf.Write(frame.Encode())
+	}
+	buf.Write(fin())
+	return buf.Bytes(), nil
+}
+
 func (c *Encoder) Encode(stmt ast.Statement) ([]byte, error) {
 	frame, err := c.encode(stmt)
 	if err != nil {
