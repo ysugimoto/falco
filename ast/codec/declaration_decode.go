@@ -218,7 +218,8 @@ func (c *Decoder) decodePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, err
 	}
 
 	return &ast.PenaltyboxDeclaration{
-		Name: name,
+		Name:  name,
+		Block: &ast.BlockStatement{},
 	}, nil
 }
 
@@ -229,7 +230,8 @@ func (c *Decoder) decodeRatecounterDeclaration() (*ast.RatecounterDeclaration, e
 	}
 
 	return &ast.RatecounterDeclaration{
-		Name: name,
+		Name:  name,
+		Block: &ast.BlockStatement{},
 	}, nil
 }
 
@@ -249,22 +251,14 @@ func (c *Decoder) decodeSubroutineDeclaration() (*ast.SubroutineDeclaration, err
 		}
 	}
 
-	for {
-		frame := c.nextFrame()
-		switch frame.Type() {
-		case END:
-			goto OUT
-		case FIN:
-			return nil, unexpectedFinByte()
-		default:
-			stmt, err := c.decode(frame)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			sub.Block.Statements = append(sub.Block.Statements, stmt)
-		}
+	if !c.peekFrameIs(BLOCK_STATEMENT) {
+		return nil, typeMismatch(BLOCK_STATEMENT, c.peekFrame().Type())
 	}
-OUT:
+	c.nextFrame() // point to BLOCK_STATEMENT frame
+
+	if sub.Block, err = c.decodeBlockStatement(); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	return sub, nil
 }

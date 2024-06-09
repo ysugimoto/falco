@@ -19,7 +19,9 @@ jobs:
       with:
         go-version: 1.22.2
     - name: Run tests
-      run: make test
+      run: |
+        make plugin_ci
+        make test
     - name: Lint programs
       uses: golangci/golangci-lint-action@v5
       with:

@@ -25,7 +25,7 @@ func (c *Decoder) nextFrame() *Frame {
 		return c.fin
 	}
 
-	buf := framePool.Get().(*[]byte)
+	buf := framePool.Get().(*[]byte) // nolint:errcheck
 	defer framePool.Put(buf)
 
 	if _, err := io.LimitReader(c.r, 1).Read(*buf); err != nil {
@@ -139,6 +139,8 @@ func (c *Decoder) decode(frame *Frame) (ast.Statement, error) {
 	// Statements
 	case ADD_STATEMENT:
 		return c.decodeAddStatement()
+	case BLOCK_STATEMENT:
+		return c.decodeBlockStatement()
 	case BREAK_STATEMENT:
 		return c.decodeBreakStatement()
 	case CALL_STATEMENT:

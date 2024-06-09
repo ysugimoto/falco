@@ -105,7 +105,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -150,7 +150,7 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		}
 	}
 
-	return r, nil
+	return r
 }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {

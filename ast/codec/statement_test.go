@@ -44,6 +44,41 @@ sub vcl_deliver {
 	}
 }
 
+func TestBlockStatement(t *testing.T) {
+	tests := []statementTest{
+		{
+			name: "basic block statement",
+			input: `
+sub vcl_recv {
+	{
+		declare local var.V STRING;
+	}
+}`,
+			expect: &ast.SubroutineDeclaration{
+				Name: &ast.Ident{Value: "vcl_recv"},
+				Block: &ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.BlockStatement{
+							Statements: []ast.Statement{
+								&ast.DeclareStatement{
+									Name:      &ast.Ident{Value: "var.V"},
+									ValueType: &ast.Ident{Value: "STRING"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertStatement(t, tt.input, tt.expect)
+		})
+	}
+}
+
 func TestCallStatement(t *testing.T) {
 	tests := []statementTest{
 		{

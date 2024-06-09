@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -21,7 +21,24 @@ func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) *Frame {
 	}
 }
 
-func (c *Encoder) encodeBreakStatement(stmt *ast.BreakStatement) *Frame {
+func (c *Encoder) encodeBlockStatement(stmt *ast.BlockStatement) *Frame {
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer encodePool.Put(w)
+	w.Reset()
+
+	for _, s := range stmt.Statements {
+		frame, _ := c.encode(s) // nolint:errcheck
+		w.Write(frame.Encode())
+	}
+	w.Write(end())
+
+	return &Frame{
+		frameType: BLOCK_STATEMENT,
+		buffer:    w.Bytes(),
+	}
+}
+
+func (c *Encoder) encodeBreakStatement() *Frame {
 	return &Frame{
 		frameType: BREAK_STATEMENT,
 		buffer:    []byte{},
@@ -29,7 +46,7 @@ func (c *Encoder) encodeBreakStatement(stmt *ast.BreakStatement) *Frame {
 }
 
 func (c *Encoder) encodeCallStatement(stmt *ast.CallStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -42,7 +59,7 @@ func (c *Encoder) encodeCallStatement(stmt *ast.CallStatement) *Frame {
 }
 
 func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -51,7 +68,7 @@ func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) *Frame {
 	}
 
 	for _, s := range stmt.Statements {
-		frame, _ := c.encode(s)
+		frame, _ := c.encode(s) // nolint:errcheck
 		w.Write(frame.Encode())
 	}
 	w.Write(end())
@@ -67,7 +84,7 @@ func (c *Encoder) encodeCaseStatement(stmt *ast.CaseStatement) *Frame {
 }
 
 func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -81,7 +98,7 @@ func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) *Frame {
 }
 
 func (c *Encoder) encodeErrorStatement(stmt *ast.ErrorStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -96,14 +113,14 @@ func (c *Encoder) encodeErrorStatement(stmt *ast.ErrorStatement) *Frame {
 	}
 }
 
-func (c *Encoder) encodeEsiStatement(stmt *ast.EsiStatement) *Frame {
+func (c *Encoder) encodeEsiStatement() *Frame {
 	return &Frame{
 		frameType: ESI_STATEMENT,
 		buffer:    []byte{},
 	}
 }
 
-func (c *Encoder) encodeFallthroughStatement(stmt *ast.FallthroughStatement) *Frame {
+func (c *Encoder) encodeFallthroughStatement() *Frame {
 	return &Frame{
 		frameType: FALLTHROUGH_STATEMENT,
 		buffer:    []byte{},
@@ -111,7 +128,7 @@ func (c *Encoder) encodeFallthroughStatement(stmt *ast.FallthroughStatement) *Fr
 }
 
 func (c *Encoder) encodeFunctionCallStatement(stmt *ast.FunctionCallStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -142,21 +159,21 @@ func (c *Encoder) encodeGotoDestinationStatement(stmt *ast.GotoDestinationStatem
 }
 
 func (c *Encoder) encodeIfStatement(stmt *ast.IfStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
 	w.Write(c.encodeString(&ast.String{Value: stmt.Keyword}).Encode())
 	w.Write(c.encodeExpression(stmt.Condition).Encode())
-	for _, s := range stmt.Consequence.Statements {
-		frame, _ := c.encode(s)
-		w.Write(frame.Encode())
-	}
-	w.Write(end())
+	w.Write(c.encodeBlockStatement(stmt.Consequence).Encode())
+
+	// Else if
 	for _, a := range stmt.Another {
 		w.Write(c.encodeIfStatement(a).Encode())
 	}
 	w.Write(end())
+
+	// Else
 	if stmt.Alternative != nil {
 		w.Write(c.encodeElseStatement(stmt.Alternative).Encode())
 	}
@@ -168,15 +185,11 @@ func (c *Encoder) encodeIfStatement(stmt *ast.IfStatement) *Frame {
 }
 
 func (c *Encoder) encodeElseStatement(stmt *ast.ElseStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
-	for _, s := range stmt.Consequence.Statements {
-		frame, _ := c.encode(s)
-		w.Write(frame.Encode())
-	}
-	w.Write(end())
+	w.Write(c.encodeBlockStatement(stmt.Consequence).Encode())
 
 	return &Frame{
 		frameType: ELSE_STATEMENT,
@@ -212,7 +225,7 @@ func (c *Encoder) encodeRemoveStatement(stmt *ast.RemoveStatement) *Frame {
 	}
 }
 
-func (c *Encoder) encodeRestartStatement(stmt *ast.RestartStatement) *Frame {
+func (c *Encoder) encodeRestartStatement() *Frame {
 	return &Frame{
 		frameType: RESTART_STATEMENT,
 		buffer:    []byte{},
@@ -220,7 +233,7 @@ func (c *Encoder) encodeRestartStatement(stmt *ast.RestartStatement) *Frame {
 }
 
 func (c *Encoder) encodeReturnStatement(stmt *ast.ReturnStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -236,7 +249,7 @@ func (c *Encoder) encodeReturnStatement(stmt *ast.ReturnStatement) *Frame {
 }
 
 func (c *Encoder) encodeSetStatement(stmt *ast.SetStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -251,7 +264,7 @@ func (c *Encoder) encodeSetStatement(stmt *ast.SetStatement) *Frame {
 }
 
 func (c *Encoder) encodeSwitchStatement(stmt *ast.SwitchStatement) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 

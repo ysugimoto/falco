@@ -175,7 +175,7 @@ func (l *Linter) lintUnusedGotos(ctx *context.Context) {
 func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	// Custom linter can be called only in ast.Statement
 	if stmt, ok := node.(ast.Statement); ok {
-		l.customLint(stmt, ctx)
+		l.customLint(stmt)
 	}
 
 	switch t := node.(type) {

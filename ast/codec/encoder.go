@@ -56,8 +56,10 @@ func (c *Encoder) encode(node ast.Node) (*Frame, error) {
 	// Statements
 	case *ast.AddStatement:
 		frame = c.encodeAddStatement(t)
+	case *ast.BlockStatement:
+		frame = c.encodeBlockStatement(t)
 	case *ast.BreakStatement:
-		frame = c.encodeBreakStatement(t)
+		frame = c.encodeBreakStatement()
 	case *ast.CallStatement:
 		frame = c.encodeCallStatement(t)
 	case *ast.CaseStatement:
@@ -67,9 +69,9 @@ func (c *Encoder) encode(node ast.Node) (*Frame, error) {
 	case *ast.ErrorStatement:
 		frame = c.encodeErrorStatement(t)
 	case *ast.EsiStatement:
-		frame = c.encodeEsiStatement(t)
+		frame = c.encodeEsiStatement()
 	case *ast.FallthroughStatement:
-		frame = c.encodeFallthroughStatement(t)
+		frame = c.encodeFallthroughStatement()
 	case *ast.FunctionCallStatement:
 		frame = c.encodeFunctionCallStatement(t)
 	case *ast.GotoStatement:
@@ -87,7 +89,7 @@ func (c *Encoder) encode(node ast.Node) (*Frame, error) {
 	case *ast.RemoveStatement:
 		frame = c.encodeRemoveStatement(t)
 	case *ast.RestartStatement:
-		frame = c.encodeRestartStatement(t)
+		frame = c.encodeRestartStatement()
 	case *ast.ReturnStatement:
 		frame = c.encodeReturnStatement(t)
 	case *ast.SetStatement:

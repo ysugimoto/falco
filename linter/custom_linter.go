@@ -12,7 +12,6 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/ast/codec"
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/plugin"
 )
 
@@ -56,7 +55,7 @@ func parseCustomLinterCall(meta *ast.Meta) []CustomLinterCall {
 	return calls
 }
 
-func (l *Linter) customLint(stmt ast.Statement, ctx *context.Context) {
+func (l *Linter) customLint(stmt ast.Statement) {
 	// If custom linter found, call it
 	customs := parseCustomLinterCall(stmt.GetMeta())
 	if len(customs) == 0 {
@@ -89,31 +88,28 @@ func (l *Linter) customLint(stmt ast.Statement, ctx *context.Context) {
 			cc, timeout := gocontext.WithTimeout(c, 5*time.Second)
 			defer timeout()
 
+			stderr := &bytes.Buffer{}
 			cmd := exec.CommandContext(cc, custom, call.arguments...)
 			cmd.Stdin = bytes.NewReader(bin)
+			cmd.Stderr = stderr
 			result, err := cmd.Output()
 			if err != nil {
-				l.Error(CustomLinterCommandFailed(err, stmt.GetMeta()))
+				l.Error(CustomLinterCommandFailed(stderr.String(), stmt.GetMeta()))
 				return
 			}
 			var resp plugin.LinterResponse
 			if err := json.Unmarshal(result, &resp); err != nil {
 				l.Error(CustomLinterCommandFailed(
-					fmt.Errorf("Custom Linter %s did not respond correct message", custom),
+					fmt.Sprintf("Custom Linter %s did not respond correct message", custom),
 					stmt.GetMeta(),
 				))
 				return
 			}
 			for i := range resp.Errors {
-				l.Error(&LintError{
-					Severity: ERROR,
-					Token:    stmt.GetMeta().Token,
-					Message:  resp.Errors[i].Error(),
-				})
+				l.Error(FromPluginError(resp.Errors[i], stmt.GetMeta()))
 			}
 		}(customs[i])
 	}
 
 	wg.Wait()
-
 }

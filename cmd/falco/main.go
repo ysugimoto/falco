@@ -156,11 +156,7 @@ func main() {
 				}
 			}
 		}
-		runner, err := NewRunner(c, fetcher)
-		if err != nil {
-			writeln(red, err.Error())
-			os.Exit(1)
-		}
+		runner := NewRunner(c, fetcher)
 
 		var exitErr error
 		switch action {

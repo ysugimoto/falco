@@ -217,7 +217,8 @@ penaltybox example {
 }`
 
 	assertStatement(t, input, &ast.PenaltyboxDeclaration{
-		Name: &ast.Ident{Value: "example"},
+		Name:  &ast.Ident{Value: "example"},
+		Block: &ast.BlockStatement{},
 	})
 }
 
@@ -227,7 +228,8 @@ ratecounter example {
 }`
 
 	assertStatement(t, input, &ast.RatecounterDeclaration{
-		Name: &ast.Ident{Value: "example"},
+		Name:  &ast.Ident{Value: "example"},
+		Block: &ast.BlockStatement{},
 	})
 }
 

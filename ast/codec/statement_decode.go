@@ -26,6 +26,28 @@ func (c *Decoder) decodeAddStatement() (*ast.AddStatement, error) {
 	return stmt, nil
 }
 
+func (c *Decoder) decodeBlockStatement() (*ast.BlockStatement, error) {
+	stmt := &ast.BlockStatement{}
+
+	for {
+		frame := c.nextFrame()
+		switch frame.Type() {
+		case END:
+			goto OUT
+		case FIN:
+			return nil, unexpectedFinByte()
+		default:
+			s, err := c.decode(frame)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			stmt.Statements = append(stmt.Statements, s)
+		}
+	}
+OUT:
+	return stmt, nil
+}
+
 func (c *Decoder) decodeBreakStatement() (*ast.BreakStatement, error) {
 	return &ast.BreakStatement{}, nil
 }
@@ -172,8 +194,7 @@ func (c *Decoder) decodeGotoDestionationStatement() (*ast.GotoDestinationStateme
 func (c *Decoder) decodeIfStatement() (*ast.IfStatement, error) {
 	var err error
 	stmt := &ast.IfStatement{
-		Consequence: &ast.BlockStatement{},
-		Another:     []*ast.IfStatement{},
+		Another: []*ast.IfStatement{},
 	}
 
 	keyword, err := c.decodeString(c.nextFrame())
@@ -186,23 +207,15 @@ func (c *Decoder) decodeIfStatement() (*ast.IfStatement, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	// Decode consequence
-	for {
-		frame := c.nextFrame()
-		switch frame.Type() {
-		case END:
-			goto CONSEQUENCE_END
-		case FIN:
-			return nil, unexpectedFinByte()
-		default:
-			s, err := c.decode(frame)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			stmt.Consequence.Statements = append(stmt.Consequence.Statements, s)
-		}
+	// Consequence is block statemen
+	if !c.peekFrameIs(BLOCK_STATEMENT) {
+		return nil, typeMismatch(BLOCK_STATEMENT, c.peekFrame().Type())
 	}
-CONSEQUENCE_END:
+	c.nextFrame() // point to BLOCK_STATEMENT frame
+
+	if stmt.Consequence, err = c.decodeBlockStatement(); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	// Another
 	for {
@@ -223,26 +236,18 @@ CONSEQUENCE_END:
 ANOTHER_END:
 
 	if c.peekFrameIs(ELSE_STATEMENT) {
-		alternative := &ast.ElseStatement{
-			Consequence: &ast.BlockStatement{},
+		c.nextFrame() // point to ELSE_STATEMENT frame
+
+		if !c.peekFrameIs(BLOCK_STATEMENT) {
+			return nil, typeMismatch(BLOCK_STATEMENT, c.peekFrame().Type())
 		}
-		c.nextFrame()
-		for {
-			frame := c.nextFrame()
-			switch frame.Type() {
-			case END:
-				goto ALTERNATIVE_END
-			case FIN:
-				return nil, unexpectedFinByte()
-			default:
-				s, err := c.decode(frame)
-				if err != nil {
-					return nil, errors.WithStack(err)
-				}
-				alternative.Consequence.Statements = append(alternative.Consequence.Statements, s)
-			}
+		c.nextFrame() // point to BLOCK_STATEMENT frame
+
+		alternative := &ast.ElseStatement{}
+		if alternative.Consequence, err = c.decodeBlockStatement(); err != nil {
+			return nil, errors.WithStack(err)
 		}
-	ALTERNATIVE_END:
+
 		stmt.Alternative = alternative
 	}
 

@@ -47,7 +47,6 @@ func (c *Encoder) encodeExpression(expr ast.Expression) *Frame {
 			buffer:    []byte{},
 		}
 	}
-
 }
 
 func (c *Encoder) encodeGroupedExpression(expr *ast.GroupedExpression) *Frame {
@@ -58,7 +57,7 @@ func (c *Encoder) encodeGroupedExpression(expr *ast.GroupedExpression) *Frame {
 }
 
 func (c *Encoder) encodeInfixExpression(expr *ast.InfixExpression) *Frame {
-	buf := encodePool.Get().(*bytes.Buffer)
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(buf)
 
 	buf.Reset()
@@ -76,7 +75,7 @@ func (c *Encoder) encodeInfixExpression(expr *ast.InfixExpression) *Frame {
 }
 
 func (c *Encoder) encodePostfixExpression(expr *ast.PostfixExpression) *Frame {
-	buf := encodePool.Get().(*bytes.Buffer)
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(buf)
 
 	buf.Reset()
@@ -90,7 +89,7 @@ func (c *Encoder) encodePostfixExpression(expr *ast.PostfixExpression) *Frame {
 }
 
 func (c *Encoder) encodePrefixExpression(expr *ast.PrefixExpression) *Frame {
-	buf := encodePool.Get().(*bytes.Buffer)
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(buf)
 
 	buf.Reset()
@@ -104,7 +103,7 @@ func (c *Encoder) encodePrefixExpression(expr *ast.PrefixExpression) *Frame {
 }
 
 func (c *Encoder) encodeIfExpression(expr *ast.IfExpression) *Frame {
-	buf := encodePool.Get().(*bytes.Buffer)
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(buf)
 	buf.Reset()
 
@@ -119,7 +118,7 @@ func (c *Encoder) encodeIfExpression(expr *ast.IfExpression) *Frame {
 }
 
 func (c *Encoder) encodeFunctionCallExpression(expr *ast.FunctionCallExpression) *Frame {
-	buf := encodePool.Get().(*bytes.Buffer)
+	buf := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(buf)
 	buf.Reset()
 

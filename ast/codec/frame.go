@@ -27,7 +27,7 @@ func (f *Frame) String() string {
 }
 
 func (f *Frame) Read(r io.Reader) ([]byte, error) {
-	buf := framePool.Get().(*[]byte)
+	buf := framePool.Get().(*[]byte) // nolint:errcheck
 	defer framePool.Put(buf)
 
 	lr := io.LimitReader(r, int64(f.size))

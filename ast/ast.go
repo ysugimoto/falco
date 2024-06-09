@@ -30,6 +30,7 @@ type Expression interface {
 
 // Meta struct of all nodes
 type Meta struct {
+	ID                 uint64
 	Token              token.Token
 	Leading            Comments
 	Trailing           Comments
@@ -71,8 +72,12 @@ func (m *Meta) InfixComment(cm combinationMode) string {
 	return m.comment(m.Infix, cm)
 }
 
+var idCounter uint64
+
 func New(t token.Token, nest int, comments ...Comments) *Meta {
+	idCounter++
 	m := &Meta{
+		ID:       idCounter,
 		Token:    t,
 		Nest:     nest,
 		Leading:  Comments{},

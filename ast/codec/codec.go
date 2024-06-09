@@ -24,6 +24,7 @@ const (
 
 	// Statements
 	ADD_STATEMENT
+	BLOCK_STATEMENT
 	BREAK_STATEMENT
 	CALL_STATEMENT
 	CASE_STATEMENT
@@ -71,6 +72,7 @@ const (
 	VCL
 )
 
+// nolint:funlen,gocyclo
 func (ft FrameType) String() string {
 	switch ft {
 	case END:

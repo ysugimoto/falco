@@ -8,7 +8,7 @@ func stringToBytes(s string) []byte {
 	bin := make([]byte, 4)
 	encoded := []byte{}
 
-	for _, r := range []rune(s) {
+	for _, r := range s {
 		n := utf8.EncodeRune(bin, r)
 		encoded = append(encoded, bin[:n]...)
 	}

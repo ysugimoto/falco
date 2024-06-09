@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Encoder) encodeAclDeclaration(acl *ast.AclDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -24,7 +24,7 @@ func (c *Encoder) encodeAclDeclaration(acl *ast.AclDeclaration) *Frame {
 }
 
 func (c *Encoder) encodeAclCidr(cidr *ast.AclCidr) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -43,7 +43,7 @@ func (c *Encoder) encodeAclCidr(cidr *ast.AclCidr) *Frame {
 }
 
 func (c *Encoder) encodeBackendDeclaration(b *ast.BackendDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -60,7 +60,7 @@ func (c *Encoder) encodeBackendDeclaration(b *ast.BackendDeclaration) *Frame {
 }
 
 func (c *Encoder) encodeBackendProperty(prop *ast.BackendProperty) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -89,7 +89,7 @@ func (c *Encoder) encodeBackendProperty(prop *ast.BackendProperty) *Frame {
 }
 
 func (c *Encoder) encodeDirectorDeclaration(d *ast.DirectorDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -108,7 +108,7 @@ func (c *Encoder) encodeDirectorDeclaration(d *ast.DirectorDeclaration) *Frame {
 }
 
 func (c *Encoder) encodeDirectorProperty(prop ast.Expression) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -131,7 +131,7 @@ func (c *Encoder) encodeDirectorProperty(prop ast.Expression) *Frame {
 	}
 }
 func (c *Encoder) encodeDirectorBackend(backend *ast.DirectorBackendObject) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -147,11 +147,13 @@ func (c *Encoder) encodeDirectorBackend(backend *ast.DirectorBackendObject) *Fra
 }
 
 func (c *Encoder) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
 	w.Write(c.encodeIdent(p.Name).Encode())
+
+	// Block statement must be empty so skip encode
 
 	return &Frame{
 		frameType: PENALTYBOX_DECLARATION,
@@ -160,11 +162,13 @@ func (c *Encoder) encodePenaltyboxDelcaration(p *ast.PenaltyboxDeclaration) *Fra
 }
 
 func (c *Encoder) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
 	w.Write(c.encodeIdent(r.Name).Encode())
+
+	// Block statement must be empty so skip encode
 
 	return &Frame{
 		frameType: RATECOUNTER_DECLARATION,
@@ -173,7 +177,7 @@ func (c *Encoder) encodeRatecounterDeclaration(r *ast.RatecounterDeclaration) *F
 }
 
 func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -181,11 +185,7 @@ func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) *F
 	if sub.ReturnType != nil {
 		w.Write(c.encodeIdent(sub.ReturnType).Encode())
 	}
-	for _, stmt := range sub.Block.Statements {
-		frame, _ := c.encode(stmt)
-		w.Write(frame.Encode())
-	}
-	w.Write(end())
+	w.Write(c.encodeBlockStatement(sub.Block).Encode())
 
 	return &Frame{
 		frameType: SUBROUTINE_DECLARATION,
@@ -194,7 +194,7 @@ func (c *Encoder) encodeSubroutineDeclaration(sub *ast.SubroutineDeclaration) *F
 }
 
 func (c *Encoder) encodeTableDeclaration(tbl *ast.TableDeclaration) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
@@ -215,7 +215,7 @@ func (c *Encoder) encodeTableDeclaration(tbl *ast.TableDeclaration) *Frame {
 }
 
 func (c *Encoder) encodeTableProperty(prop *ast.TableProperty) *Frame {
-	w := encodePool.Get().(*bytes.Buffer)
+	w := encodePool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer encodePool.Put(w)
 	w.Reset()
 
