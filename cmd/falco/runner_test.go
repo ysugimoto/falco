@@ -338,6 +338,12 @@ func TestTester(t *testing.T) {
 			filter: "*group.test.vcl",
 			passes: 3,
 		},
+		{
+			name:   "mockging test",
+			main:   "../../examples/testing/mock_subroutine.vcl",
+			filter: "*mock_subroutine.test.vcl",
+			passes: 6,
+		},
 	}
 
 	for _, tt := range tests {

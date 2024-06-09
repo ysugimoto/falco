@@ -79,6 +79,13 @@ falco simulate /path/to/your/default.vcl --key /path/to/localhost-key.pem --cert
 
 Then falco serve with https://localhost:3124.
 
+## Override Edge Dictionary Items
+
+Edge Dictionary values are managed in Fastly cloud but often we have some logics that relates to its value (e.g flag true/false), and write-only dictionary items could access via remote API.
+To simulate its behavior with specific value, falco supports overriding edge dictionary item locally from configuration.
+
+See `simulator.edge_dictionary` field in [configuration.md](./configuration.md).
+
 ## Debug mode
 
 `falco` also includes TUI debugger so that you can debug VCL with step execution.

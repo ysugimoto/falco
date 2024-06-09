@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
@@ -23,9 +23,9 @@ jobs:
         make plugin_ci
         make test
     - name: Lint programs
-      uses: golangci/golangci-lint-action@v5
+      uses: golangci/golangci-lint-action@v6
       with:
         version: v1.58
-        skip-pkg-cache: true
-        skip-build-cache: true
-        skip-go-installation: true
+        skip-cache: true
+        skip-save-cache: true
+        install-mode: binary

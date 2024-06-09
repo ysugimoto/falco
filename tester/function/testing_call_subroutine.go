@@ -7,7 +7,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Testing_call_subroutine_Name = "assert"
+const Testing_call_subroutine_Name = "testing.call_subroutine"
 
 var Testing_call_subroutine_ArgumentTypes = []value.Type{value.StringType}
 

@@ -192,6 +192,18 @@ func (t *Tester) runDescribedTests(
 		return cases, err
 	}
 
+	defer func() {
+		// Remove all stored subroutines
+		for _, sub := range d.Subroutines {
+			delete(defs.Subroutines, sub.Name.Value)
+		}
+	}()
+
+	// Prepare to add subroutine definitions inside describe statement
+	for _, sub := range d.Subroutines {
+		defs.Subroutines[sub.Name.Value] = sub
+	}
+
 	for _, sub := range d.Subroutines {
 		suite, scopes := t.findTestSuites(sub)
 		for _, s := range scopes {
@@ -260,7 +272,10 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 			an = strings.Split(strings.TrimPrefix(l, "@"), ",")
 		}
 		for _, s := range an {
-			scopes = append(scopes, icontext.ScopeByString(strings.TrimSpace(s)))
+			scope := icontext.ScopeByString(strings.TrimSpace(s))
+			if scope != icontext.UnknownScope {
+				scopes = append(scopes, scope)
+			}
 		}
 	}
 
@@ -268,7 +283,7 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 		return suiteName, scopes
 	}
 
-	// If we could not determine scope from annotation, try to find from subroutine name
+	// If we could not determine scope from annotation, try to find from subroutine name.
 	switch {
 	case strings.HasSuffix(sub.Name.Value, "_recv"):
 		scopes = append(scopes, icontext.RecvScope)
@@ -320,9 +335,10 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 // Factory declarations in testing VCL
 func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
 	defs := &tf.Definiions{
-		Tables:   make(map[string]*ast.TableDeclaration),
-		Backends: make(map[string]*value.Backend),
-		Acls:     make(map[string]*value.Acl),
+		Tables:      make(map[string]*ast.TableDeclaration),
+		Backends:    make(map[string]*value.Backend),
+		Acls:        make(map[string]*value.Acl),
+		Subroutines: make(map[string]*ast.SubroutineDeclaration),
 	}
 
 	for _, stmt := range vcl.Statements {
@@ -340,6 +356,8 @@ func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
 			defs.Acls[t.Name.Value] = &value.Acl{
 				Value: t,
 			}
+		case *ast.SubroutineDeclaration:
+			defs.Subroutines[t.Name.Value] = t
 		}
 	}
 	return defs
