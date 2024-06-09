@@ -116,7 +116,7 @@ And then you can receive these arguments via `(*plugin.LinterRequest).Arguments`
 ```go
 req, err := plugin.ReadLinterRequest[*ast.BackendDeclaration](os.Stdin)
 fmt.Println(req.Arguments[0]) // arg1
-fmt.Println(req.Arguments[2]) // arg2
+fmt.Println(req.Arguments[1]) // arg2
 ```
 
 This is useful for switch or control linting behavior in your plugin without implementing another plugin.
@@ -127,3 +127,4 @@ This is useful for switch or control linting behavior in your plugin without imp
 2. From performance reason, we omit AST meta informations like filename, line number and position and all comments. Typically you don't need to read AST meta informations on linting but the falco main process displays plugin error with AST meta informations.
 3. AST is read-only on the plugin so your plugin cannot modify AST tree.
 4. You can everythin in your plugin. It means you can do network access, reading local file, etc... that as possible as the programming language can if you don't mind the linting performance.
+5. Binary messsaging is just raw binary treating so you can implement plugin not only Go but also other languages that can process binary.
