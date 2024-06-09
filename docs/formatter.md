@@ -143,7 +143,6 @@ Specify max characters for each line. The overflowed characters are printed at t
 
 > [!NOTE]
 > Inserting line-feed is judged for each expression. It means formatter does not split in the middle of a sentence.
-```
 
 You can prevent this formatting rule by providing `-1` value to this configuration.
 
@@ -166,7 +165,7 @@ If condition example:
 
 ```vcl
 sub vcl_recv {
-  if (req.http.Foo == "bar" && req.http.Bar = "baz" && req.http.Baz == "foo") {
+  if (req.http.Header1 == "1" && req.http.Header2 = "2" && req.http.Header3 == "3" && req.http.Header4 == "4") {
       req.http.OK = "1";
   }
 }
@@ -187,7 +186,7 @@ sub vcl_recv {
 
 ---
 
-### Explicit Declaration Concat
+### Explicit String Concat
 
 **default: false**
 
