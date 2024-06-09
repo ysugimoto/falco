@@ -1,6 +1,6 @@
 # Plugin system
 
-`falco` provides plugin system by calling external CLI command that name has `falco-` prefix.
+`falco` provides plugin system by calling external CLI command.
 
 ## Custom Linter Execution
 
