@@ -125,5 +125,5 @@ This is useful for switch or control linting behavior in your plugin without imp
 
 1. To reduce binary message between falco linter and plugin, we enable custom linter for each *statement* only. You often want to access all declarations on your plugin, but it cannot do for now. Therefore if you want to do linting for all backends, you need to put annotation comment to all backend declarations.
 2. From performance reason, we omit AST meta informations like filename, line number and position and all comments. Typically you don't need to read AST meta informations on linting but the falco main process displays plugin error with AST meta informations.
-3. AST is read-only on the pluging. The plugin cannot modify AST tree.
+3. AST is read-only on the plugin so your plugin cannot modify AST tree.
 4. You can everythin in your plugin. It means you can do network access, reading local file, etc... that as possible as the programming language can if you don't mind the linting performance.
