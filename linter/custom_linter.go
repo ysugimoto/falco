@@ -37,10 +37,10 @@ func parseCustomLinterCall(meta *ast.Meta) []CustomLinterCall {
 	for i := range meta.Leading {
 		l := strings.TrimLeft(meta.Leading[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
-			if !strings.HasPrefix(l, "@custom:") {
+			if !strings.HasPrefix(l, "@plugin:") {
 				continue
 			}
-			normalized := strings.TrimSpace(strings.TrimPrefix(l, "@custom:"))
+			normalized := strings.TrimSpace(strings.TrimPrefix(l, "@plugin:"))
 			parsed := strings.Split(normalized, " ")
 			call := CustomLinterCall{
 				name: CustomCommandPrefix + parsed[0],

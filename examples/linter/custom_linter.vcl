@@ -1,4 +1,4 @@
-// @custom: backend-name
+// @plugin: backend-name
 backend F_httpbin_org {
   .connect_timeout = 1s;
   .dynamic = true;
