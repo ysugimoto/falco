@@ -22,8 +22,8 @@ func NewEncoder() *Encoder {
 	return &Encoder{}
 }
 
-func (c *Encoder) Encode(node ast.Node) ([]byte, error) {
-	frame, err := c.encode(node)
+func (c *Encoder) Encode(stmt ast.Statement) ([]byte, error) {
+	frame, err := c.encode(stmt)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -33,10 +33,10 @@ func (c *Encoder) Encode(node ast.Node) ([]byte, error) {
 	return bin, nil
 }
 
-func (c *Encoder) encode(node ast.Node) (*Frame, error) {
+func (c *Encoder) encode(stmt ast.Statement) (*Frame, error) {
 	var frame *Frame
 
-	switch t := node.(type) {
+	switch t := stmt.(type) {
 	// Declarations
 	case *ast.AclDeclaration:
 		frame = c.encodeAclDeclaration(t)
@@ -102,34 +102,8 @@ func (c *Encoder) encode(node ast.Node) (*Frame, error) {
 		frame = c.encodeSyntheticBase64Statement(t)
 	case *ast.UnsetStatement:
 		frame = c.encodeUnsetStatement(t)
-
-	// Combination Expressions
-	case *ast.GroupedExpression:
-		frame = c.encodeGroupedExpression(t)
-	case *ast.InfixExpression:
-		frame = c.encodeInfixExpression(t)
-	case *ast.PostfixExpression:
-		frame = c.encodePostfixExpression(t)
-	case *ast.PrefixExpression:
-		frame = c.encodePrefixExpression(t)
-
-	// Values
-	case *ast.Ident:
-		frame = c.encodeIdent(t)
-	case *ast.String:
-		frame = c.encodeString(t)
-	case *ast.IP:
-		frame = c.encodeIP(t)
-	case *ast.Integer:
-		frame = c.encodeInteger(t)
-	case *ast.Float:
-		frame = c.encodeFloat(t)
-	case *ast.Boolean:
-		frame = c.encodeBoolean(t)
-	case *ast.RTime:
-		frame = c.encodeRTime(t)
 	default:
-		return nil, fmt.Errorf("Unknown node provided: %s", node.GetMeta().Token.Literal)
+		return nil, fmt.Errorf("Unknown node provided: %s", stmt.GetMeta().Token.Literal)
 	}
 	return frame, nil
 }
