@@ -54,28 +54,28 @@ func ReadLinterRequest[T LintStatement](r io.Reader) (*LinterRequest[T], error) 
 		return nil, &LinterRequestError{
 			Message: fmt.Sprintf("Failed to decode from input stream: %s", err),
 		}
-	}
-
-	req := &LinterRequest[T]{
-		Arguments: os.Args[1:],
-	}
-	if len(statements) > 0 {
-		stmt, ok := statements[0].(T)
-		if !ok {
-			var name string
-			if t := reflect.TypeOf(statements[0]); t.Kind() == reflect.Ptr {
-				name = t.Elem().Name()
-			} else {
-				name = t.Name()
-			}
-			return nil, &LinterRequestError{
-				Message: fmt.Sprintf("Type conversion failed, cannot convert %s statement", name),
-			}
+	} else if len(statements) == 0 {
+		return nil, &LinterRequestError{
+			Message: "Nothing statement from decoded AST",
 		}
-		req.Statement = stmt
+	}
+	stmt, ok := statements[0].(T)
+	if !ok {
+		var name string
+		if t := reflect.TypeOf(statements[0]); t.Kind() == reflect.Ptr {
+			name = t.Elem().Name()
+		} else {
+			name = t.Name()
+		}
+		return nil, &LinterRequestError{
+			Message: fmt.Sprintf("Type conversion failed, cannot convert %s statement", name),
+		}
 	}
 
-	return req, nil
+	return &LinterRequest[T]{
+		Arguments: os.Args[1:],
+		Statement: stmt,
+	}, nil
 }
 
 type LinterResponse struct {

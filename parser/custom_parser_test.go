@@ -17,6 +17,7 @@ type DescribeStatement struct {
 	Subroutines []*ast.SubroutineDeclaration
 }
 
+func (d *DescribeStatement) ID() uint64 { return d.Meta.ID }
 func (d *DescribeStatement) Statement() {}
 func (d *DescribeStatement) Literal() string {
 	return "describe"
@@ -99,6 +100,7 @@ type BeforeEachStatement struct {
 	Block *ast.BlockStatement
 }
 
+func (b *BeforeEachStatement) ID() uint64 { return b.Meta.ID }
 func (b *BeforeEachStatement) Statement() {}
 func (b *BeforeEachStatement) Literal() string {
 	return "before_each"

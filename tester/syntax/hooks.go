@@ -15,6 +15,7 @@ type HookStatement struct {
 	keyword string
 }
 
+func (s *HookStatement) ID() uint64 { return s.Meta.ID }
 func (s *HookStatement) Statement() {}
 func (s *HookStatement) Literal() string {
 	return s.keyword
