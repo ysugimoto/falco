@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -31,4 +32,33 @@ func assert(t *testing.T, input, expect string, conf *config.FormatConfig) strin
 		t.Errorf("Format result has diff: %s", diff)
 	}
 	return string(v) // return formatted result for debugging
+}
+
+func BenchmarkFormatter(b *testing.B) {
+	b.ResetTimer()
+
+	c := &config.FormatConfig{
+		IndentWidth:              2,
+		TrailingCommentWidth:     2,
+		IndentStyle:              "space",
+		SortDeclarationProperty:  true,
+		AlignDeclarationProperty: true,
+		AlwaysNextLineElseIf:     true,
+	}
+	fp, err := os.Open("../examples/formatter/formatter.vcl")
+	if err != nil {
+		b.Errorf("File open error: %s", err)
+		return
+	}
+	defer fp.Close()
+
+	vcl, err := parser.New(lexer.New(fp)).ParseVCL()
+	if err != nil {
+		b.Errorf("Unexpected parser error: %s", err)
+		return
+	}
+
+	for i := 0; i < b.N; i++ {
+		New(c).Format(vcl)
+	}
 }

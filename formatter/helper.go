@@ -64,7 +64,7 @@ func isInlineComment(comments ast.Comments) bool {
 }
 
 // Get latest line offset (character length) from current buffer
-func getLineOffset(b bytes.Buffer) int {
+func getLineOffset(b *bytes.Buffer) int {
 	s := b.String()
 	if p := strings.LastIndex(s, "\n"); p >= 0 {
 		return len(s[p:])
@@ -74,8 +74,10 @@ func getLineOffset(b bytes.Buffer) int {
 
 // Format multiple line chunk string with specified indent
 func formatChunkedString(chunk, indent string) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for _, line := range strings.Split(chunk, "\n") {
 		buf.WriteString(indent + strings.TrimSpace(line) + "\n")
 	}

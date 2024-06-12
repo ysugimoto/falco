@@ -98,8 +98,10 @@ func (c *ChunkBuffer) Write(s string, t ChunkType) {
 
 // Get "No" chunked string
 func (c *ChunkBuffer) String() string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for i := range c.chunks {
 		buf.WriteString(c.chunks[i].buffer)
 		if c.chunks[i].isLineComment() {
@@ -146,8 +148,10 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 		count:     offset + level*c.conf.IndentWidth,
 	}
 
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for {
 		chunk := c.nextChunk()
 		if chunk == nil {
@@ -253,11 +257,13 @@ func (c *ChunkBuffer) nextLine(state *ChunkState) string {
 
 // chunkLineComment() returns chunk string of line comment
 func (c *ChunkBuffer) chunkLineComment(state *ChunkState, chunk *Chunk) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
 	// if !state.isHead() {
 	// 	buf.WriteString(c.nextLine(state))
 	// }
+	buf.Reset()
 	buf.WriteString(" " + chunk.buffer)
 	buf.WriteString(c.nextLine(state))
 	state.reset()
@@ -290,9 +296,11 @@ func (c *ChunkBuffer) chunkGroupOperator(state *ChunkState, chunk *Chunk) string
 
 // chunkString() returns chunked string
 func (c *ChunkBuffer) chunkString(state *ChunkState, expr string) string {
-	var buf bytes.Buffer
 	var prefix string
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	if !state.isHead() {
 		prefix = " "
 	}
