@@ -1,3 +1,12 @@
+## v1.8.0
+
+- HTTPS server Support [#319](https://github.com/ysugimoto/falco/pull/319) (@ysugimoto)
+- Support fastly.try_select_shield new function [#320](https://github.com/ysugimoto/falco/pull/320) (@ysugimoto)
+- Injectable Edge Dictionary on Simulator [#321](https://github.com/ysugimoto/falco/pull/321) (@ysugimoto)
+- Subroutine mocking feature [#322](https://github.com/ysugimoto/falco/pull/322) (@ysugimoto)
+- Bump versions on CI [#323](https://github.com/ysugimoto/falco/pull/323) (@ysugimoto)
+- Implement plugin system [#324](https://github.com/ysugimoto/falco/pull/324) (@ysugimoto)
+
 ## v1.7.0
 
 - Feature/testing syntax [#312](https://github.com/ysugimoto/falco/pull/312) (@ysugimoto)
