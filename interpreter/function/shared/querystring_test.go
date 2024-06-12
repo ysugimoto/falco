@@ -287,3 +287,96 @@ func TestQueryStringsSort(t *testing.T) {
 		}
 	}
 }
+
+func TestQueryStringsString(t *testing.T) {
+	unreservedChars := "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+	reservedChars := " !\"#$%&'()*+,/:;<=>?@[\\]^`{|}"
+	reservedEncoded := "%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3C%3D%3E%3F%40%5B%5C%5D%5E%60%7B%7C%7D"
+
+	tests := []struct {
+		input  *QueryStrings
+		expect string
+	}{
+		{
+			input: &QueryStrings{
+				Prefix: "/foo",
+				Items: []*QueryString{
+					{
+						Key:   "a",
+						Value: []string{"b"},
+					},
+				},
+			},
+			expect: "/foo?a=b",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/foo",
+				Items: []*QueryString{
+					{
+						Key:   "a",
+						Value: []string{"b"},
+					},
+					{
+						Key:   "a",
+						Value: []string{"c"},
+					},
+				},
+			},
+			expect: "/foo?a=b&a=c",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/",
+				Items: []*QueryString{
+					{
+						Key:   unreservedChars,
+						Value: []string{"value"},
+					},
+				},
+			},
+			expect: "/?" + unreservedChars + "=value",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/",
+				Items: []*QueryString{
+					{
+						Key:   reservedChars,
+						Value: []string{"value"},
+					},
+				},
+			},
+			expect: "/?" + reservedEncoded + "=value",
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/",
+				Items: []*QueryString{
+					{
+						Key:   "key",
+						Value: []string{unreservedChars},
+					},
+				},
+			},
+			expect: "/?key=" + unreservedChars,
+		},
+		{
+			input: &QueryStrings{
+				Prefix: "/",
+				Items: []*QueryString{
+					{
+						Key:   "key",
+						Value: []string{reservedChars},
+					},
+				},
+			},
+			expect: "/?key=" + reservedEncoded,
+		},
+	}
+	for i, test := range tests {
+		if diff := cmp.Diff(test.expect, test.input.String()); diff != "" {
+			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
+		}
+	}
+}
