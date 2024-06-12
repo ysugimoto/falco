@@ -20,6 +20,7 @@ type DescribeStatement struct {
 	Subroutines []*ast.SubroutineDeclaration
 }
 
+func (d *DescribeStatement) ID() uint64 { return d.Meta.ID }
 func (d *DescribeStatement) Statement() {}
 func (d *DescribeStatement) Literal() string {
 	return "describe"

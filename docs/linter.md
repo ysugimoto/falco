@@ -105,6 +105,11 @@ Following table describes annotation name and recognizing scope:
 | @deliver    | DELIVER | // @deliver<br>sub custom {} |
 | @log        | LOG     | // @log<br>sub custom {}     |
 
+
+## Linter Plugin
+
+You can provide custom linter rule by writing your plugin. See [Plugin](./plugin.md) documentation in detail.
+
 ## Fastly related features
 
 Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.

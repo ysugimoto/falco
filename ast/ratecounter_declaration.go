@@ -8,6 +8,7 @@ type RatecounterDeclaration struct {
 	Block *BlockStatement
 }
 
+func (r *RatecounterDeclaration) ID() uint64     { return r.Meta.ID }
 func (r *RatecounterDeclaration) Statement()     {}
 func (r *RatecounterDeclaration) GetMeta() *Meta { return r.Meta }
 func (r *RatecounterDeclaration) String() string {

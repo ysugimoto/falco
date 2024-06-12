@@ -17,7 +17,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 	if diff := cmp.Diff(expect, actual,
 		// Meta structs ignores Token info
 		cmpopts.IgnoreFields(ast.Comment{}, "Token", "PrefixedLineFeed"),
-		cmpopts.IgnoreFields(ast.Meta{}, "Token"),
+		cmpopts.IgnoreFields(ast.Meta{}, "Token", "ID"),
 		cmpopts.IgnoreFields(ast.Operator{}),
 
 		// VCL type struct ignores Meta info

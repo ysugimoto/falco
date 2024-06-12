@@ -21,8 +21,6 @@ type Linter struct {
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
 	conf           *config.LinterConfig
-
-	customLinters map[string]CustomLinter
 }
 
 func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
@@ -175,6 +173,11 @@ func (l *Linter) lintUnusedGotos(ctx *context.Context) {
 }
 
 func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
+	// Custom linter can be called only in ast.Statement
+	if stmt, ok := node.(ast.Statement); ok {
+		l.customLint(stmt)
+	}
+
 	switch t := node.(type) {
 	// Root program
 	case *ast.VCL:

@@ -218,7 +218,7 @@ sub test_recv {}
 	}
 
 	if diff := cmp.Diff(vcl, expect,
-		cmpopts.IgnoreFields(ast.Meta{}, "Token"),
+		cmpopts.IgnoreFields(ast.Meta{}, "Token", "ID"),
 		cmpopts.IgnoreFields(ast.Comment{}, "Token", "PrefixedLineFeed", "PreviousEmptyLines"),
 		cmpopts.IgnoreFields(ast.Ident{}),
 		cmpopts.IgnoreFields(ast.String{}),

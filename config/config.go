@@ -102,7 +102,6 @@ type FormatConfig struct {
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
-	Transforms   []string `cli:"t,transformer" yaml:"transformers"`
 	Help         bool     `cli:"h,help"`
 	Version      bool     `cli:"V"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`

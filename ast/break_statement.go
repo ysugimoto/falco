@@ -8,6 +8,7 @@ type BreakStatement struct {
 	*Meta
 }
 
+func (r *BreakStatement) ID() uint64     { return r.Meta.ID }
 func (r *BreakStatement) Statement()     {}
 func (r *BreakStatement) GetMeta() *Meta { return r.Meta }
 func (r *BreakStatement) String() string {

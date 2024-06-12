@@ -12,6 +12,7 @@ type ReturnStatement struct {
 	ParenthesisTrailingComments Comments
 }
 
+func (r *ReturnStatement) ID() uint64     { return r.Meta.ID }
 func (r *ReturnStatement) Statement()     {}
 func (r *ReturnStatement) GetMeta() *Meta { return r.Meta }
 func (r *ReturnStatement) String() string {

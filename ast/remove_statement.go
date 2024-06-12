@@ -9,6 +9,7 @@ type RemoveStatement struct {
 	Ident *Ident
 }
 
+func (r *RemoveStatement) ID() uint64     { return r.Meta.ID }
 func (r *RemoveStatement) Statement()     {}
 func (r *RemoveStatement) GetMeta() *Meta { return r.Meta }
 func (r *RemoveStatement) String() string {

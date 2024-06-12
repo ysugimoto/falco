@@ -9,6 +9,7 @@ type CallStatement struct {
 	Subroutine *Ident
 }
 
+func (c *CallStatement) ID() uint64     { return c.Meta.ID }
 func (c *CallStatement) Statement()     {}
 func (c *CallStatement) GetMeta() *Meta { return c.Meta }
 func (c *CallStatement) String() string {

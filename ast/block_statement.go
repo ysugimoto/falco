@@ -9,6 +9,7 @@ type BlockStatement struct {
 	Statements []Statement
 }
 
+func (b *BlockStatement) ID() uint64     { return b.Meta.ID }
 func (b *BlockStatement) Statement()     {}
 func (b *BlockStatement) GetMeta() *Meta { return b.Meta }
 func (b *BlockStatement) String() string {

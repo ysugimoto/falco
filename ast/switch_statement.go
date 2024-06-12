@@ -9,6 +9,7 @@ type SwitchStatement struct {
 	Default int
 }
 
+func (s *SwitchStatement) ID() uint64     { return s.Meta.ID }
 func (s *SwitchStatement) Statement()     {}
 func (s *SwitchStatement) GetMeta() *Meta { return s.Meta }
 func (s *SwitchStatement) String() string {
@@ -37,6 +38,7 @@ type SwitchControl struct {
 	Expression Expression
 }
 
+func (s *SwitchControl) ID() uint64     { return s.Meta.ID }
 func (s *SwitchControl) Statement()     {}
 func (s *SwitchControl) GetMeta() *Meta { return s.Meta }
 func (s *SwitchControl) String() string {

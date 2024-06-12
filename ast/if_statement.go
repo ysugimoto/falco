@@ -13,6 +13,7 @@ type IfStatement struct {
 	Alternative *ElseStatement
 }
 
+func (i *IfStatement) ID() uint64     { return i.Meta.ID }
 func (i *IfStatement) Statement()     {}
 func (i *IfStatement) GetMeta() *Meta { return i.Meta }
 func (i *IfStatement) String() string {
@@ -62,6 +63,7 @@ type ElseStatement struct {
 	Consequence *BlockStatement
 }
 
+func (e *ElseStatement) ID() uint64     { return e.Meta.ID }
 func (e *ElseStatement) Statement()     {}
 func (e *ElseStatement) GetMeta() *Meta { return e.Meta }
 func (e *ElseStatement) String() string {

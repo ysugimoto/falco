@@ -8,6 +8,7 @@ type FallthroughStatement struct {
 	*Meta
 }
 
+func (r *FallthroughStatement) ID() uint64     { return r.Meta.ID }
 func (r *FallthroughStatement) Statement()     {}
 func (r *FallthroughStatement) GetMeta() *Meta { return r.Meta }
 func (r *FallthroughStatement) String() string {

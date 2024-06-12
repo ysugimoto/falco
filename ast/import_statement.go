@@ -9,6 +9,7 @@ type ImportStatement struct {
 	Name *Ident
 }
 
+func (i *ImportStatement) ID() uint64     { return i.Meta.ID }
 func (i *ImportStatement) Statement()     {}
 func (i *ImportStatement) GetMeta() *Meta { return i.Meta }
 func (i *ImportStatement) String() string {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
@@ -358,6 +359,40 @@ func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
 			gs.Destination.Value,
 		),
 	}
+}
+
+func CustomLinterCommandNotFound(name string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Custom linter command "%s" not found in your environment`, name),
+	}
+}
+
+func CustomLinterCommandFailed(message string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Custom linter command "%s" runs failed`, message),
+	}
+}
+
+func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {
+	e := &LintError{
+		Token:   m.Token,
+		Message: pe.Message,
+	}
+
+	// Convert severity
+	switch pe.Severity {
+	case plugin.ERROR:
+		e.Severity = ERROR
+	case plugin.WARNING:
+		e.Severity = WARNING
+	case plugin.INFO:
+		e.Severity = INFO
+	}
+	return e
 }
 
 type FatalError struct {

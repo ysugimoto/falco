@@ -10,6 +10,7 @@ type AclDeclaration struct {
 	CIDRs []*AclCidr
 }
 
+func (a *AclDeclaration) ID() uint64     { return a.Meta.ID }
 func (a *AclDeclaration) Statement()     {}
 func (a *AclDeclaration) Expression()    {}
 func (a *AclDeclaration) GetMeta() *Meta { return a.Meta }
@@ -39,6 +40,7 @@ type AclCidr struct {
 	Mask    *Integer
 }
 
+func (c *AclCidr) ID() uint64     { return c.Meta.ID }
 func (c *AclCidr) GetMeta() *Meta { return c.Meta }
 func (c *AclCidr) String() string {
 	var buf bytes.Buffer

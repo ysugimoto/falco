@@ -11,6 +11,7 @@ type AddStatement struct {
 	Value    Expression
 }
 
+func (a *AddStatement) ID() uint64     { return a.Meta.ID }
 func (a *AddStatement) Statement()     {}
 func (a *AddStatement) GetMeta() *Meta { return a.Meta }
 func (a *AddStatement) String() string {

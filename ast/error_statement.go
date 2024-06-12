@@ -10,6 +10,7 @@ type ErrorStatement struct {
 	Argument Expression
 }
 
+func (e *ErrorStatement) ID() uint64     { return e.Meta.ID }
 func (e *ErrorStatement) Statement()     {}
 func (e *ErrorStatement) GetMeta() *Meta { return e.Meta }
 func (e *ErrorStatement) String() string {
