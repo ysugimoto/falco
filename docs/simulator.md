@@ -21,6 +21,7 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
+    --proxy            : Enable actual proxy behavior
     -request           : Simulate request config
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
@@ -64,7 +65,7 @@ Particularly VCL subroutine flow is useful for debugging.
 **falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
 There are many limitations which are described below.**
 
-## TLS server
+## TLS Server
 
 Typically Fastly runs with TLS environment so your VCL may has HTTPS-related logic.
 falco supports to run as HTTPS server with your key/cert files. We recommend to use [mkcert](https://github.com/FiloSottile/mkcert) to generate key/cert file on your local machine.
@@ -86,7 +87,7 @@ To simulate its behavior with specific value, falco supports overriding edge dic
 
 See `simulator.edge_dictionary` field in [configuration.md](./configuration.md).
 
-## Debug mode
+## Debug Mode
 
 `falco` also includes TUI debugger so that you can debug VCL with step execution.
 You can run the debugger by providing `-debug` option on the simulator:
@@ -95,7 +96,17 @@ You can run the debugger by providing `-debug` option on the simulator:
 falco local -debug /path/to/your/default.vcl
 ```
 
-### Start debugging
+## Actual Proxy Behavior
+
+In default, falco simulator responds process flow JSON for a HTTP request on http://localhost:3124 - protocol and port may be changed - but falco also can respond actual HTTP proxy response (e.g origin or edge response), it's useful for E2E testing via example HTTP request.
+
+To be enable the actual HTTP proxy, provide `--proxy` option to `simulator` subcommand:
+
+```shell
+falco simulate --proxy /path/to/your/default.vcl
+```
+
+### Start Debugging
 
 When falco runs the simulator with the debugger, falco finds `@debugger` leading annotation comment in your VCL.
 If the comment is found, stop execution on the statement, for example:
