@@ -37,6 +37,7 @@ sub vcl_recv {
   // @debugger
   set req.backend = example_com;
   set req.http.Foo = {" foo bar baz "};
+  // @process inject dict
   set req.http.Item = table.lookup(injectable_dict, "virtual");
   call custom_logger;
   return (pass);

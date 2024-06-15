@@ -3,7 +3,6 @@ package process
 import (
 	"context"
 
-	"github.com/ysugimoto/falco/ast"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 )
 
@@ -11,7 +10,9 @@ type Flow struct {
 	File            string    `json:"file"`
 	Line            int       `json:"line"`
 	Position        int       `json:"position"`
-	Subroutine      string    `json:"subroutine"`
+	Subroutine      string    `json:"subroutine,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	Scope           string    `json:"scope"`
 	Request         *HttpFlow `json:"req,omitempty"`
 	BackendRequest  *HttpFlow `json:"bereq,omitempty"`
 	BackendResponse *HttpFlow `json:"beresp,omitempty"`
@@ -19,15 +20,14 @@ type Flow struct {
 	Object          *HttpFlow `json:"object,omitempty"`
 }
 
-func NewFlow(ctx *icontext.Context, sub *ast.SubroutineDeclaration) *Flow {
+func NewFlow(ctx *icontext.Context, opts ...Option) *Flow {
 	c := context.Background()
 
-	token := sub.GetMeta().Token
 	f := &Flow{
-		File:       token.File,
-		Line:       token.Line,
-		Position:   token.Position,
-		Subroutine: sub.Name.Value,
+		Scope: ctx.Scope.String(),
+	}
+	for i := range opts {
+		opts[i](f)
 	}
 	if ctx.Request != nil {
 		f.Request = newFlowRequest(ctx.Request.Clone(c))

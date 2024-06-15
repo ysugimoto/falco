@@ -13,7 +13,7 @@ import (
 )
 
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -44,7 +44,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 
 // nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -65,6 +65,14 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {

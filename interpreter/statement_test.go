@@ -154,6 +154,7 @@ func TestSetStatement(t *testing.T) {
 			name:  "set local variable",
 			scope: context.RecvScope,
 			stmt: &ast.SetStatement{
+				Meta:     &ast.Meta{},
 				Ident:    &ast.Ident{Value: "var.foo"},
 				Operator: &ast.Operator{Operator: "="},
 				Value:    &ast.Integer{Value: 100},
@@ -163,6 +164,7 @@ func TestSetStatement(t *testing.T) {
 			name:  "set client.geo.ip_override in vcl_recv",
 			scope: context.RecvScope,
 			stmt: &ast.SetStatement{
+				Meta:     &ast.Meta{},
 				Ident:    &ast.Ident{Value: "client.geo.ip_override"},
 				Operator: &ast.Operator{Operator: "="},
 				Value:    &ast.String{Value: "127.0.0.1"},
@@ -172,6 +174,7 @@ func TestSetStatement(t *testing.T) {
 			name:  "set bereq.http.Foo in vcl_miss",
 			scope: context.MissScope,
 			stmt: &ast.SetStatement{
+				Meta:     &ast.Meta{},
 				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
 				Operator: &ast.Operator{Operator: "="},
 				Value:    &ast.String{Value: "test"},
@@ -181,6 +184,7 @@ func TestSetStatement(t *testing.T) {
 			name:  "set bereq.http.Foo in vcl_pass",
 			scope: context.PassScope,
 			stmt: &ast.SetStatement{
+				Meta:     &ast.Meta{},
 				Ident:    &ast.Ident{Value: "bereq.http.Foo"},
 				Operator: &ast.Operator{Operator: "="},
 				Value:    &ast.String{Value: "test"},
@@ -218,7 +222,9 @@ func TestBlockStatement(t *testing.T) {
 			name:  "block statement with bare return",
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
-				&ast.ReturnStatement{},
+				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
+				},
 			},
 			expected_state: BARE_RETURN,
 		},
@@ -227,8 +233,10 @@ func TestBlockStatement(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.BlockStatement{
+					Meta: &ast.Meta{},
 					Statements: []ast.Statement{
 						&ast.ReturnStatement{
+							Meta: &ast.Meta{},
 							ReturnExpression: &ast.Ident{
 								Value: "pass",
 								Meta:  &ast.Meta{},
@@ -236,7 +244,9 @@ func TestBlockStatement(t *testing.T) {
 						},
 					},
 				},
-				&ast.ReturnStatement{},
+				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
+				},
 			},
 			expected_state: PASS,
 		},
@@ -245,14 +255,19 @@ func TestBlockStatement(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.IfStatement{
+					Meta:      &ast.Meta{},
 					Condition: &ast.Boolean{Value: true},
 					Consequence: &ast.BlockStatement{
+						Meta: &ast.Meta{},
 						Statements: []ast.Statement{
-							&ast.ReturnStatement{},
+							&ast.ReturnStatement{
+								Meta: &ast.Meta{},
+							},
 						},
 					},
 				},
 				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
 					ReturnExpression: &ast.Ident{
 						Value: "pass",
 						Meta:  &ast.Meta{},
@@ -295,6 +310,7 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
 					ReturnExpression: &ast.Integer{
 						Value: 1,
 						Meta:  &ast.Meta{},
@@ -307,8 +323,10 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.BlockStatement{
+					Meta: &ast.Meta{},
 					Statements: []ast.Statement{
 						&ast.ReturnStatement{
+							Meta: &ast.Meta{},
 							ReturnExpression: &ast.Integer{
 								Value: 1,
 								Meta:  &ast.Meta{},
@@ -317,6 +335,7 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 					},
 				},
 				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
 					ReturnExpression: &ast.String{
 						Value: "invalid",
 						Meta:  &ast.Meta{},
@@ -329,10 +348,12 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 			scope: context.RecvScope,
 			stmts: []ast.Statement{
 				&ast.IfStatement{
+					Meta:      &ast.Meta{},
 					Condition: &ast.Boolean{Value: true},
 					Consequence: &ast.BlockStatement{
 						Statements: []ast.Statement{
 							&ast.ReturnStatement{
+								Meta: &ast.Meta{},
 								ReturnExpression: &ast.Integer{
 									Value: 1,
 									Meta:  &ast.Meta{},
@@ -342,6 +363,7 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 					},
 				},
 				&ast.ReturnStatement{
+					Meta: &ast.Meta{},
 					ReturnExpression: &ast.String{
 						Value: "invalid",
 						Meta:  &ast.Meta{},

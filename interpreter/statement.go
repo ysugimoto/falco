@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
@@ -33,6 +34,17 @@ func (i *Interpreter) ProcessBlockStatement(
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if stmt.GetMeta() == nil {
+			pp.Println(stmt)
+		}
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {
