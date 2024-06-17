@@ -21,8 +21,10 @@ type Line struct {
 
 // Get Line string
 func (l Line) String() string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString(l.Leading)
 	buf.WriteString(l.Buffer)
 	buf.WriteString(l.Trailing)
@@ -53,8 +55,10 @@ func (l Lines) Align() {
 
 // Implements Alignable interface
 func (l Lines) String() string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for i := range l {
 		buf.WriteString(l[i].String())
 		buf.WriteString("\n")
@@ -63,7 +67,7 @@ func (l Lines) String() string {
 	return buf.String()
 }
 
-// Check satisfieng Alignable interface
+// Check satisfying Alignable interface
 var _ Alignable = (*Lines)(nil)
 
 // DelclarationPropertyLine represents a single line of declaration properties.
@@ -140,8 +144,10 @@ func (l DelclarationPropertyLines) Align() {
 
 // Implement Alignable interface
 func (l DelclarationPropertyLines) String() string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for i := range l {
 		buf.WriteString(l[i].Leading)
 		v := l[i].Key
@@ -161,7 +167,7 @@ func (l DelclarationPropertyLines) String() string {
 	return buf.String()
 }
 
-// Check satisfieng Alignable interface
+// Check satisfying Alignable interface
 var _ Alignable = (*DelclarationPropertyLines)(nil)
 
 // GroupedLines represents grouped lines
@@ -188,8 +194,10 @@ func (g *GroupedLines) Align() {
 
 // GroupedLines also satisfies Alignable interface
 func (g *GroupedLines) String() string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	for i := range g.Lines {
 		buf.WriteString(g.Lines[i].String())
 		if i != len(g.Lines)-1 {

@@ -18,8 +18,10 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 			group.Lines = append(group.Lines, lines)
 			lines = DelclarationPropertyLines{}
 		}
-		var buf bytes.Buffer
+		buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+		buf.Reset()
 		buf.WriteString(f.indent(1))
+
 		if cidr.Inverse != nil && cidr.Inverse.Value {
 			buf.WriteString("!")
 		}
@@ -39,6 +41,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 			Key:          buf.String(),
 			EndCharacter: ";",
 		})
+		bufferPool.Put(buf)
 	}
 
 	// Append remaining lines
@@ -50,7 +53,10 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 		group.Align()
 	}
 
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
+
+	buf.Reset()
 	buf.WriteString("acl " + decl.Name.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
@@ -68,8 +74,10 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 
 // Format backend declaration
 func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Declaration {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("backend " + decl.Name.String() + " {\n")
 	buf.WriteString(f.formatBackendProperties(decl.Properties, 1))
 	if len(decl.Infix) > 0 {
@@ -205,7 +213,10 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 		group.Align()
 	}
 
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
+
+	buf.Reset()
 	buf.WriteString("director " + decl.Name.String() + " " + decl.DirectorType.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
@@ -223,8 +234,10 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 
 // Format table declaration
 func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declaration {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("table " + decl.Name.String())
 	if decl.ValueType != nil {
 		buf.WriteString(" " + decl.ValueType.String())
@@ -291,8 +304,10 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 
 // Format penaltybox delclaration
 func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) *Declaration {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("penaltybox " + decl.Name.String())
 	buf.WriteString(" {")
 	// penaltybox does not have properties
@@ -312,8 +327,10 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 
 // Format ratecounter delclaration
 func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) *Declaration {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("ratecounter " + decl.Name.String())
 	buf.WriteString(" {")
 	// ratecounter does not have properties
@@ -333,8 +350,10 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 
 // Format subroutine declaration
 func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration) *Declaration {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("sub " + decl.Name.String() + " ")
 	// Functional Subroutine
 	if decl.ReturnType != nil {

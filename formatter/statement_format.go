@@ -95,8 +95,10 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 
 // Format import statement
 func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("import ")
 	buf.WriteString(stmt.Name.String())
 	buf.WriteString(";")
@@ -106,8 +108,10 @@ func (f *Formatter) formatImportStatement(stmt *ast.ImportStatement) string {
 
 // Format include statement
 func (f *Formatter) formatIncludeStatement(stmt *ast.IncludeStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("include ")
 	buf.WriteString(stmt.Module.String())
 	buf.WriteString(";")
@@ -136,7 +140,10 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 		group.Align()
 	}
 
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
+
+	buf.Reset()
 	buf.WriteString("{\n")
 	buf.WriteString(group.String())
 	if len(stmt.Infix) > 0 {
@@ -151,8 +158,10 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 
 // Format delclare local varialbe statement
 func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("declare ")
 	if v := f.formatComment(stmt.Infix, " ", 0); v != "" {
 		buf.WriteString(v)
@@ -166,8 +175,10 @@ func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 
 // Format set statement
 func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("set " + stmt.Ident.String())
 	buf.WriteString(" " + stmt.Operator.Operator + " ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
@@ -178,8 +189,10 @@ func (f *Formatter) formatSetStatement(stmt *ast.SetStatement) string {
 
 // Format unset statement
 func (f *Formatter) formatUnsetStatement(stmt *ast.UnsetStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("unset " + stmt.Ident.String())
 	buf.WriteString(";")
 
@@ -188,7 +201,10 @@ func (f *Formatter) formatUnsetStatement(stmt *ast.UnsetStatement) string {
 
 // Format remove statement.
 func (f *Formatter) formatRemoveStatement(stmt *ast.RemoveStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
+
+	buf.Reset()
 
 	// The "remove" statement is alias of "unset" statement,
 	// so it could replaced to unset by configuration
@@ -204,8 +220,10 @@ func (f *Formatter) formatRemoveStatement(stmt *ast.RemoveStatement) string {
 
 // Format if statement
 func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString(stmt.Keyword)
 	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
 		buf.WriteString(" " + v)
@@ -309,8 +327,10 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 
 // Format switch statement
 func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("switch ")
 	buf.WriteString(strings.TrimSpace(stmt.Control.String()))
 	buf.WriteString(" {\n")
@@ -370,15 +390,6 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 		// need to plus 1 to  nested indent because parser won't increase nest level
 		stmt.GetMeta().Nest++
 		line := f.formatStatement(stmt)
-		// line := &Line{
-		// 	Leading:  f.formatComment(stmt.GetMeta().Leading, "\n", meta.Nest+1),
-		// 	Trailing: f.formatComment(stmt.GetMeta().Trailing, "\n", meta.Nest+1),
-		// }
-		// if _, ok := stmt.(*ast.BreakStatement); ok {
-		// 	line.Buffer = f.indent(meta.Nest+1) + "break;"
-		// } else {
-		// 	line.Buffer = f.formatStatement(stmt).String()
-		// }
 		lines = append(lines, line)
 	}
 
@@ -390,20 +401,15 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 		group.Align()
 	}
 
-	var buf bytes.Buffer
-	buf.WriteString(group.String())
-	// if cs.Fallthrough {
-	// 	buf.WriteString(f.indent(cs.Meta.Nest + 1))
-	// 	buf.WriteString("fallthrough;")
-	// }
-
-	return trimMutipleLineFeeds(buf.String())
+	return trimMutipleLineFeeds(group.String())
 }
 
 // Format break statement
 func (f *Formatter) formatBreakStatement(stmt *ast.BreakStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("break")
 	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
 		buf.WriteString(" " + v)
@@ -415,8 +421,10 @@ func (f *Formatter) formatBreakStatement(stmt *ast.BreakStatement) string {
 
 // Format fallthrough statement
 func (f *Formatter) formatFallthroughStatement(stmt *ast.FallthroughStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("fallthrough")
 	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
 		buf.WriteString(" " + v)
@@ -428,8 +436,10 @@ func (f *Formatter) formatFallthroughStatement(stmt *ast.FallthroughStatement) s
 
 // Format restart statement
 func (f *Formatter) formatRestartStatement(stmt *ast.RestartStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("restart")
 	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
 		buf.WriteString(" " + v)
@@ -441,8 +451,10 @@ func (f *Formatter) formatRestartStatement(stmt *ast.RestartStatement) string {
 
 // Format esi statement
 func (f *Formatter) formatEsiStatement(stmt *ast.EsiStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("esi")
 	if v := f.formatComment(stmt.Infix, "", 0); v != "" {
 		buf.WriteString(" " + v)
@@ -454,8 +466,10 @@ func (f *Formatter) formatEsiStatement(stmt *ast.EsiStatement) string {
 
 // Format add statement
 func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("add " + stmt.Ident.String())
 	buf.WriteString(" " + stmt.Operator.Operator + " ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
@@ -466,8 +480,10 @@ func (f *Formatter) formatAddStatement(stmt *ast.AddStatement) string {
 
 // Format call statement
 func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("call " + stmt.Subroutine.String())
 	buf.WriteString(";")
 
@@ -476,8 +492,10 @@ func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 
 // Fromat error statement
 func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("error " + stmt.Code.String())
 	// argument is arbitrary
 	if stmt.Argument != nil {
@@ -490,8 +508,10 @@ func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 
 // Format log statement
 func (f *Formatter) formatLogStatement(stmt *ast.LogStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("log ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
 	buf.WriteString(";")
@@ -501,8 +521,10 @@ func (f *Formatter) formatLogStatement(stmt *ast.LogStatement) string {
 
 // Format return statement
 func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("return")
 	if stmt.ReturnExpression != nil {
 		if v := f.formatComment(stmt.ParenthesisLeadingComments, "", 0); v != "" {
@@ -535,8 +557,10 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 
 // Format synthetic statement
 func (f *Formatter) formatSyntheticStatement(stmt *ast.SyntheticStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("synthetic ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
 	buf.WriteString(";")
@@ -546,8 +570,10 @@ func (f *Formatter) formatSyntheticStatement(stmt *ast.SyntheticStatement) strin
 
 // Format synthetic.base64 statement
 func (f *Formatter) formatSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("synthetic.base64 ")
 	buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
 	buf.WriteString(";")
@@ -557,8 +583,10 @@ func (f *Formatter) formatSyntheticBase64Statement(stmt *ast.SyntheticBase64Stat
 
 // Format goto statement
 func (f *Formatter) formatGotoStatement(stmt *ast.GotoStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("goto " + stmt.Destination.String())
 	buf.WriteString(";")
 
@@ -567,8 +595,10 @@ func (f *Formatter) formatGotoStatement(stmt *ast.GotoStatement) string {
 
 // Format goto destination statement
 func (f *Formatter) formatGotoDestinationStatement(stmt *ast.GotoDestinationStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString(stmt.Name.Value)
 
 	return buf.String()
@@ -576,8 +606,10 @@ func (f *Formatter) formatGotoDestinationStatement(stmt *ast.GotoDestinationStat
 
 // Format function calling statement
 func (f *Formatter) formatFunctionCallStatement(stmt *ast.FunctionCallStatement) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString(stmt.Function.Value + "(")
 	length := buf.Len()
 	for i, a := range stmt.Arguments {

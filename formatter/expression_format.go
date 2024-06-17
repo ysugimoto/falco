@@ -129,8 +129,10 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 
 // Format prefix expression like `if(req.http.Foo, "foo", "bar")`
 func (f *Formatter) formatIfExpression(expr *ast.IfExpression) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString("if(")
 	buf.WriteString(f.formatExpression(expr.Condition).String())
 	buf.WriteString(", ")
@@ -155,8 +157,10 @@ func (f *Formatter) formatGroupedExpression(expr *ast.GroupedExpression) *ChunkB
 
 // Format function call expression like `regsuball(req.http.Foo, ".*", "$1")`
 func (f *Formatter) formatFunctionCallExpression(expr *ast.FunctionCallExpression) string {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
 
+	buf.Reset()
 	buf.WriteString(expr.Function.Value + "(")
 	for i, arg := range expr.Arguments {
 		buf.WriteString(f.formatExpression(arg).String())
