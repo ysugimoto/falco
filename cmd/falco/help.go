@@ -102,6 +102,7 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
+    --proxy            : Enable actual proxy behavior
     -request           : Simulate request config
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation

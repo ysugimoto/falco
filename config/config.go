@@ -41,9 +41,10 @@ type LinterConfig struct {
 
 // Simulator configuration
 type SimulatorConfig struct {
-	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
-	IsDebug      bool     `cli:"debug"` // Enable only in CLI option
-	IncludePaths []string // Copy from root field
+	Port            int      `cli:"p,port" yaml:"port" default:"3124"`
+	IsDebug         bool     `cli:"debug"` // Enable only in CLI option
+	IsProxyResponse bool     `cli:"proxy"` // Enable only in CLI option
+	IncludePaths    []string // Copy from root field
 
 	// HTTPS related configuration. If both fields are spcified, simulator will serve with HTTPS
 	KeyFile  string `cli:"key" yaml:"key_file"`

@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"io"
 	"net/http"
 	"strings"
 
@@ -45,15 +46,38 @@ func (i *Interpreter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	i.process.Restarts = i.ctx.Restarts
 	i.process.Backend = i.ctx.Backend
+
+	if i.ctx.IsActualResponse {
+		// If we need to respond actual response, send it
+		i.sendResponse(w)
+		return
+	}
+	// Otherwise, responds process flow JSON
+	i.sendProcessResponse(w)
+}
+
+func (i *Interpreter) sendProcessResponse(w http.ResponseWriter) {
 	if i.process.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
+
 	out, err := i.process.Finalize(i.ctx.Response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Write(out) // nolint:errcheck
+}
+
+func (i *Interpreter) sendResponse(w http.ResponseWriter) {
+	h := w.Header()
+	for key, val := range i.ctx.Response.Header {
+		for i := range val {
+			h.Add(key, val[i])
+		}
+	}
+	w.WriteHeader(i.ctx.Response.StatusCode)
+	io.Copy(w, i.ctx.Response.Body) // nolint:errcheck
 }

@@ -55,6 +55,7 @@ type Context struct {
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	OriginalHost        string
+	IsActualResponse    bool
 
 	OverrideMaxBackends    int
 	OverrideMaxAcls        int
