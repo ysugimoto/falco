@@ -1,3 +1,9 @@
+## v1.9.0
+
+- Arbitrary process flow marking [#327](https://github.com/ysugimoto/falco/pull/327) (@ysugimoto)
+- Actual proxy behavior in simulator [#328](https://github.com/ysugimoto/falco/pull/328) (@ysugimoto)
+- Reduce memory allocation using pool [#329](https://github.com/ysugimoto/falco/pull/329) (@ysugimoto)
+
 ## v1.8.0
 
 - HTTPS server Support [#319](https://github.com/ysugimoto/falco/pull/319) (@ysugimoto)
