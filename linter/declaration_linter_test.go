@@ -76,7 +76,7 @@ backend foo-bar {
 
 	t.Run("invalid type", func(t *testing.T) {
 		input := `
-backend foo-bar {
+backend foo {
   .host = 1s;
 }`
 		assertError(t, input)
