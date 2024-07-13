@@ -111,13 +111,13 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 }
 
 func isAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_'
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 // isValidName validates ident name has only [0-9a-zA-Z_]+
 func isValidName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) {
+		if isAlphaNumeric(r) || r == '_'{
 			continue
 		}
 		return false
@@ -128,7 +128,7 @@ func isValidName(name string) bool {
 // isValidVariableName validates ident name has only [0-9a-zA-Z_\.-:]+
 func isValidVariableName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) || r == '.' || r == '-' || r == ':' {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' {
 			continue
 		}
 		return false
@@ -446,6 +446,17 @@ func hasFastlyBoilerPlateMacro(cs ast.Comments, phrase string) bool {
 		}
 	}
 	return false
+}
+
+// According to fastly share_key must be alphanumeric and ASCII only
+func isValidBackendShareKey(shareKey string) bool {
+  for _, c := range shareKey {
+    if isAlphaNumeric(c) {
+      continue
+    }
+    return false
+  }
+  return true
 }
 
 // According to fastly if a prober is configured with initial < threshold
