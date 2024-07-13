@@ -344,7 +344,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				if c.Group != "" {
 					prefix = c.Group + " › "
 				}
-				writeln(redBold, "%s●  [%s] %s%s\n", indent(1), prefix, c.Scope, c.Name)
+				writeln(redBold, "%s● [%s] %s%s\n", indent(1), c.Scope, prefix, c.Name)
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
