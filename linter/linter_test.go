@@ -704,6 +704,27 @@ sub vcl_recv {
 	assertNoError(t, input)
 }
 
+func TestIgnoreErrorNextLineWithRuleSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   # function/arguments is ignored, but there is also a function/argument-type error
+   # falco-ignore-next-line function/arguments
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+}`
+	assertError(t, input)
+}
+
+func TestIgnoreErrorNextLineWithMultipleRulesSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   # falco-ignore-next-line function/arguments, function/argument-type
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+}`
+	assertNoError(t, input)
+}
+
 func TestIgnoreErrorNextLineOnly(t *testing.T) {
 	input := `
 sub vcl_recv {
@@ -724,6 +745,25 @@ sub vcl_recv {
 	assertNoError(t, input)
 }
 
+func TestIgnoreErrorThisLineWithRuleSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   # function/arguments is ignored, but there is also a function/argument-type error
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2); # falco-ignore function/arguments
+}`
+	assertError(t, input)
+}
+
+func TestIgnoreErrorThisLineWithMultipleRulesSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   #FASTLY RECV
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2); # falco-ignore function/arguments, function/argument-type
+}`
+	assertNoError(t, input)
+}
+
 func TestIgnoreErrorStartEnd(t *testing.T) {
 	input := `
 sub vcl_recv {
@@ -736,6 +776,29 @@ sub vcl_recv {
 	assertNoError(t, input)
 }
 
+func TestIgnoreErrorStartEndWithRuleSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   # falco-ignore-start function/arguments
+   #FASTLY RECV
+   # function/arguments is ignored, but there is also a function/argument-type error
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+   # falco-ignore-end function/arguments
+}`
+	assertError(t, input)
+}
+
+func TestIgnoreErrorStartEndWithMultipleRulesSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   # falco-ignore-start function/arguments, function/argument-type
+   #FASTLY RECV
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+   # falco-ignore-end function/arguments, function/argument-type
+}`
+	assertNoError(t, input)
+}
+
 func TestIgnoreErrorStartEndRangeOnly(t *testing.T) {
 	input := `
 sub vcl_recv {
@@ -744,6 +807,32 @@ sub vcl_recv {
    set req.http.H2-Fingerprint = fastly_info.h2.undefined;
 	// falco-ignore-end
    set req.http.H2-Fingerprint = fastly_info.h2.undefined;
+}`
+	assertError(t, input)
+}
+
+func TestIgnoreErrorStartEndRangeOnlyWithRuleSpecified(t *testing.T) {
+	input := `
+sub vcl_recv {
+   # falco-ignore-start function/arguments, function/argument-type
+   #FASTLY RECV
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+   # falco-ignore-end function/arguments
+   set req.http.foo = std.itoa(req.http.bar);
+}`
+	assertNoError(t, input)
+}
+
+func TestIgnoreErrorStartEndRangeOnly_EndWithNoRulesSpecifiedUnignoresAllRules(t *testing.T) {
+	input := `
+sub vcl_recv {
+   # falco-ignore-start function/arguments
+   #FASTLY RECV
+   set req.http.foo = std.itoa(0, 1, 2);
+   # falco-ignore-start function/argument-type
+   set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+   # falco-ignore-end
+   set req.http.foo = std.itoa(0, 1, 2);
 }`
 	assertError(t, input)
 }

@@ -41,7 +41,7 @@ func (l *Linter) Lexers() map[string]*lexer.Lexer {
 
 func (l *Linter) Error(err error) {
 	if le, ok := err.(*LintError); ok {
-		if !l.ignore.IsEnable() {
+		if !l.ignore.IsEnable(le.Rule) {
 			l.Errors = append(l.Errors, le)
 		}
 	} else {
@@ -300,7 +300,7 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 func (l *Linter) lintStatement(s ast.Statement, ctx *context.Context) {
 	// Any statements may have ignoring comments so we do setup and teardown
 	l.ignore.SetupStatement(s.GetMeta())
-	defer l.ignore.TeardownStatement()
+	defer l.ignore.TeardownStatement(s.GetMeta())
 	l.lint(s, ctx)
 }
 
