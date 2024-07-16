@@ -204,25 +204,25 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	write(yellow, ":exclamation:%d warnings, ", result.Warnings)
 	writeln(cyan, ":speaker:%d recommendations.", result.Infos)
 
-  if result.Errors > 0 {
-    return ErrExit
-  }
+	if result.Errors > 0 {
+		return ErrExit
+	}
 
 	// Display message corresponds to runner result
-  switch {
-  case result.Warnings > 0:
-    writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
-    if runner.level < LevelWarning {
-      writeln(white, "Run command with the -v option to output warnings.")
-    }
-  case result.Infos > 0:
-    writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
-    if runner.level < LevelInfo {
-      writeln(white, "Run command with the -vv option to output recommendations.")
-    }
-  default:
-    writeln(green, "VCL looks great :sparkles:")
-  }
+	switch {
+	case result.Warnings > 0:
+		writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
+		if runner.level < LevelWarning {
+			writeln(white, "Run command with the -v option to output warnings.")
+		}
+	case result.Infos > 0:
+		writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
+		if runner.level < LevelInfo {
+			writeln(white, "Run command with the -vv option to output recommendations.")
+		}
+	default:
+		writeln(green, "VCL looks great :sparkles:")
+	}
 
 	return nil
 }
