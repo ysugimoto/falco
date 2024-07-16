@@ -15,6 +15,13 @@ const (
 	falcoIgnoreEnd      = "falco-ignore-end"
 )
 
+var supportedIgnoreTypes = map[string]bool{
+  falcoIgnoreNextLine: true,
+  falcoIgnoreThisLine: true,
+  falcoIgnoreStart:    true,
+  falcoIgnoreEnd:      true,
+}
+
 type ignore struct {
 	ignoreNextLine ignoredRules
 	ignoreThisLine ignoredRules
@@ -63,7 +70,7 @@ func parseIgnoreComment(comment string) (string, []Rule) {
 	body := strings.TrimLeft(comment, "#@*/ ")
 	ignoreType, body, _ := strings.Cut(body, " ")
 
-	if ignoreType != falcoIgnoreNextLine && ignoreType != falcoIgnoreThisLine && ignoreType != falcoIgnoreStart && ignoreType != falcoIgnoreEnd {
+	if supported, ok := supportedIgnoreTypes[ignoreType]; !ok || !supported {
 		return "", []Rule{}
 	}
 
