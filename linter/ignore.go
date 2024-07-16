@@ -15,10 +15,10 @@ const (
 )
 
 var supportedIgnoreTypes = map[string]bool{
-  falcoIgnoreNextLine: true,
-  falcoIgnoreThisLine: true,
-  falcoIgnoreStart:    true,
-  falcoIgnoreEnd:      true,
+	falcoIgnoreNextLine: true,
+	falcoIgnoreThisLine: true,
+	falcoIgnoreStart:    true,
+	falcoIgnoreEnd:      true,
 }
 
 type ignore struct {
