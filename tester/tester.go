@@ -223,6 +223,7 @@ func (t *Tester) runDescribedTests(
 			err := i.ProcessTestSubroutine(s, sub)
 			cases = append(cases, &TestCase{
 				Name:  suite,
+				Group: d.Name.String(),
 				Error: errors.Cause(err),
 				Scope: s.String(),
 				Time:  time.Since(start).Milliseconds(),
