@@ -60,7 +60,7 @@ backend foo {
     .request = "GET / HTTP/1.1";
     .threshold = 1;
     .timeout = 2s;
-    .window = 4; 
+    .window = 4;
   }
 }`
 		assertNoError(t, input)
@@ -76,8 +76,16 @@ backend foo-bar {
 
 	t.Run("invalid type", func(t *testing.T) {
 		input := `
-backend foo-bar {
+backend foo {
   .host = 1s;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("invalid share_key", func(t *testing.T) {
+		input := `
+backend foo {
+  .share_key = "example.com";
 }`
 		assertError(t, input)
 	})
