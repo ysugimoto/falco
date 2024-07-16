@@ -76,7 +76,7 @@ func parseIgnoreComment(comment string) (string, []Rule) {
 	var rules []Rule
 	for _, r := range strings.Split(body, ",") {
 		trimmed := strings.TrimSpace(r)
-		if len(trimmed) != 0 {
+		if trimmed != "" {
 			rules = append(rules, Rule(trimmed))
 		}
 	}
@@ -107,8 +107,8 @@ func (i *ignore) SetupStatement(meta *ast.Meta) {
 
 	// Find ignore signature in trailing comments
 	for _, c := range meta.Trailing {
-		switch ignoreType, rules := parseIgnoreComment(c.String()); ignoreType {
-		case falcoIgnoreThisLine:
+		ignoreType, rules := parseIgnoreComment(c.String())
+		if ignoreType == falcoIgnoreThisLine {
 			ignoreRules(&i.ignoreThisLine, rules)
 		}
 	}
@@ -117,15 +117,15 @@ func (i *ignore) SetupStatement(meta *ast.Meta) {
 // Clean up common statements, declarations
 func (i *ignore) TeardownStatement(meta *ast.Meta) {
 	for _, c := range meta.Leading {
-		switch ignoreType, rules := parseIgnoreComment(c.String()); ignoreType {
-		case falcoIgnoreNextLine:
+		ignoreType, rules := parseIgnoreComment(c.String())
+		if ignoreType == falcoIgnoreNextLine {
 			unignoreRules(&i.ignoreNextLine, rules)
 		}
 	}
 
 	for _, c := range meta.Trailing {
-		switch ignoreType, rules := parseIgnoreComment(c.String()); ignoreType {
-		case falcoIgnoreThisLine:
+		ignoreType, rules := parseIgnoreComment(c.String())
+		if ignoreType == falcoIgnoreThisLine {
 			unignoreRules(&i.ignoreThisLine, rules)
 		}
 	}
@@ -156,8 +156,8 @@ func (i *ignore) SetupBlockStatement(meta *ast.Meta) {
 }
 func (i *ignore) TeardownBlockStatement(meta *ast.Meta) {
 	for _, c := range meta.Leading {
-		switch ignoreType, rules := parseIgnoreComment(c.String()); ignoreType {
-		case falcoIgnoreNextLine:
+		ignoreType, rules := parseIgnoreComment(c.String())
+		if ignoreType == falcoIgnoreNextLine {
 			unignoreRules(&i.ignoreNextLine, rules)
 		}
 	}
@@ -173,5 +173,10 @@ func (i *ignore) TeardownBlockStatement(meta *ast.Meta) {
 }
 
 func (i *ignore) IsEnable(rule Rule) bool {
-	return i.ignoreNextLine.all || i.ignoreThisLine.all || i.ignoreRange.all || i.ignoreNextLine.rules[rule] || i.ignoreThisLine.rules[rule] || i.ignoreRange.rules[rule]
+	return i.ignoreNextLine.all ||
+		i.ignoreThisLine.all ||
+		i.ignoreRange.all ||
+		i.ignoreNextLine.rules[rule] ||
+		i.ignoreThisLine.rules[rule] ||
+		i.ignoreRange.rules[rule]
 }
