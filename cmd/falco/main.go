@@ -339,9 +339,9 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 
 		for _, c := range r.Cases {
 			totalCount++
-      var prefix string
-				if c.Group != "" {
-					prefix = c.Group + " › "
+			var prefix string
+			if c.Group != "" {
+				prefix = c.Group + " › "
 			}
 			if c.Error != nil {
 				writeln(redBold, "%s● [%s] %s%s\n", indent(1), c.Scope, prefix, c.Name)
