@@ -1,7 +1,6 @@
 package linter
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
@@ -75,7 +74,7 @@ func parseIgnoreComment(comment string) (string, []Rule) {
 	}
 
 	var rules []Rule
-	for _, r := range regexp.MustCompile(`\s*,\s*`).Split(body, -1) {
+	for _, r := range strings.Split(body, ",") {
 		trimmed := strings.TrimSpace(r)
 		if len(trimmed) != 0 {
 			rules = append(rules, Rule(trimmed))
