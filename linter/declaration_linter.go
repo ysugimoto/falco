@@ -98,13 +98,13 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
 		}
 
-    // share_key must consist of alphanumeric or ASCII characters
-    if prop.Key.Value == "share_key" {
-      v := prop.Value.(*ast.String).Value
-      if !isValidBackendShareKey(v) {
-        l.Error(InvalidValue(prop.Value.GetMeta(), "share_key", v).Match(BACKEND_SYNTAX))
-      }
-    }
+		// share_key must consist of alphanumeric or ASCII characters
+		if prop.Key.Value == "share_key" {
+			v := prop.Value.(*ast.String).Value
+			if !isValidBackendShareKey(v) {
+				l.Error(InvalidValue(prop.Value.GetMeta(), "share_key", v).Match(BACKEND_SYNTAX))
+			}
+		}
 	}
 }
 

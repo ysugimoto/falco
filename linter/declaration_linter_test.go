@@ -82,7 +82,7 @@ backend foo {
 		assertError(t, input)
 	})
 
-  t.Run("invalid share_key", func(t *testing.T) {
+	t.Run("invalid share_key", func(t *testing.T) {
 		input := `
 backend foo {
   .share_key = "example.com";

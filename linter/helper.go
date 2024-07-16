@@ -117,7 +117,7 @@ func isAlphaNumeric(r rune) bool {
 // isValidName validates ident name has only [0-9a-zA-Z_]+
 func isValidName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) || r == '_'{
+		if isAlphaNumeric(r) || r == '_' {
 			continue
 		}
 		return false
@@ -450,13 +450,13 @@ func hasFastlyBoilerPlateMacro(cs ast.Comments, phrase string) bool {
 
 // According to fastly share_key must be alphanumeric and ASCII only
 func isValidBackendShareKey(shareKey string) bool {
-  for _, c := range shareKey {
-    if isAlphaNumeric(c) {
-      continue
-    }
-    return false
-  }
-  return true
+	for _, c := range shareKey {
+		if isAlphaNumeric(c) {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // According to fastly if a prober is configured with initial < threshold
