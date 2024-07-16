@@ -471,6 +471,21 @@ func TestFormatReturnStatement(t *testing.T) {
 		conf   *config.FormatConfig
 	}{
 		{
+			name: "simple case",
+			input: `sub vcl_recv {
+	return(pass);
+}
+`,
+			expect: `sub vcl_recv {
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:                2,
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
 			name: "basic formatting with comments",
 			input: `sub vcl_recv {
 	// return leading comment
@@ -486,11 +501,11 @@ func TestFormatReturnStatement(t *testing.T) {
 		{
 			name: "with parenthesis",
 			input: `sub vcl_recv {
-	return /* before_parenthesis */ (/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
+	return/* before_parenthesis */ (/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
 }
 `,
 			expect: `sub vcl_recv {
-  return /* before_parenthesis */ (/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
+  return /* before_parenthesis */(/* inside_parenthesis */ lookup /* inside_parenthesis */) /* after_parenthesis */;
 }
 `,
 			conf: &config.FormatConfig{
@@ -503,7 +518,7 @@ func TestFormatReturnStatement(t *testing.T) {
 		{
 			name: "without argument",
 			input: `sub vcl_recv {
-	return /* before_semicolon */ ; // trailing
+	return/* before_semicolon */ ; // trailing
 }
 `,
 			expect: `sub vcl_recv {

@@ -535,7 +535,7 @@ func (f *Formatter) formatReturnStatement(stmt *ast.ReturnStatement) string {
 		// If ReturnStatementParenthesis is enabled and inside functional subroutine,
 		// the return argument must be surrounded by parenthesis
 		if f.conf.ReturnStatementParenthesis && !f.isFunctionalSubroutine {
-			prefix = " ("
+			prefix = "("
 			suffix = ")"
 		}
 		buf.WriteString(prefix)
