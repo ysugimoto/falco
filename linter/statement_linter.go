@@ -71,7 +71,7 @@ func (l *Linter) lintBlockStatement(block *ast.BlockStatement, ctx *context.Cont
 	for _, stmt := range statements {
 		func(v ast.Statement, c *context.Context) {
 			l.ignore.SetupStatement(v.GetMeta())
-			defer l.ignore.TeardownStatement()
+			defer l.ignore.TeardownStatement(v.GetMeta())
 			l.lint(v, c)
 		}(stmt, ctx)
 	}
