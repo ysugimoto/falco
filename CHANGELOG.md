@@ -1,3 +1,13 @@
+## v1.9.1
+
+- strict macro linting [#336](https://github.com/ysugimoto/falco/336) (@ysugimoto)
+- feat(formatter): prevent indentation of #FASTLY macros [#335](https://github.com/ysugimoto/falco/335) (@acme)
+- fix(formatter): remove space between return and parenthesis [#334](https://github.com/ysugimoto/falco/334) (@acme)
+- Add feature to disable only specific lint rules with ignore comment [#333](https://github.com/ysugimoto/falco/333) (@nodaguti)
+- Set exit code to 1 when there are one or more lint errors [#332](https://github.com/ysugimoto/falco/332) (@nodaguti)
+- Add extra format check for backend.share_key [#331](https://github.com/ysugimoto/falco/331) (@nodaguti)
+- Fix broken result message of tester and use exactly the same format for both passed and failed tests [#330](https://github.com/ysugimoto/falco/330) (@nodaguti)
+
 ## v1.9.0
 
 - Arbitrary process flow marking [#327](https://github.com/ysugimoto/falco/pull/327) (@ysugimoto)
