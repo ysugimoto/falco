@@ -33,7 +33,7 @@ sub custom_logger {
 
 sub vcl_recv {
 
-  #Fastly recv
+  #FASTLY recv
   set req.backend = httpbin_org;
   set req.http.Foo = {" foo bar baz "};
   call custom_logger;
@@ -42,7 +42,7 @@ sub vcl_recv {
 
 sub vcl_deliver {
 
-  #Fastly deliver
+  #FASTLY deliver
   set resp.http.X-Custom-Header = "Custom Header";
   call custom_logger;
   return (deliver);
@@ -50,7 +50,7 @@ sub vcl_deliver {
 
 sub vcl_fetch {
 
-  #Fastly fetch
+  #FASTLY fetch
   call custom_logger;
   return(deliver);
 }

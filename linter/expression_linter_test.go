@@ -202,7 +202,7 @@ sub foo {
 	t.Run("pass: with argument", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	return (pass);
 }`
 		assertNoError(t, input)
@@ -211,7 +211,7 @@ sub vcl_recv {
 	t.Run("pass: with reserved word", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	return (restart);
 }`
 		assertNoError(t, input)
@@ -220,7 +220,7 @@ sub vcl_recv {
 	t.Run("sub: return correct type", func(t *testing.T) {
 		input := `
 sub custom_sub INTEGER {
-	#Fastly recv
+	#FASTLY recv
 	return 1;
 }`
 		assertNoError(t, input)
@@ -303,7 +303,7 @@ sub get_bool BOOL {
 func TestBlockSyntaxInsideBlockStatement(t *testing.T) {
 	input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	{
 		log "vcl_recv";
 	}
@@ -314,7 +314,7 @@ sub vcl_recv {
 func TestBlockSyntaxInsideBlockStatementmultiply(t *testing.T) {
 	input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	{
 		{
 			log "vcl_recv";
@@ -328,7 +328,7 @@ func TestRegexExpressionIsInvalid(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	if (req.url ~ "^/([^\?]*)?(\?.*)?$") {
 		restart;
 	}
@@ -339,7 +339,7 @@ sub vcl_recv {
 	t.Run("error: invalid regex", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	#Fastly recv
+	#FASTLY recv
 	if (req.url ~ "^/([^\?]*)?(\?.*?$") {
 		restart;
 	}

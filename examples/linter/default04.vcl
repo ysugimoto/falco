@@ -27,7 +27,7 @@ backend httpbin_org {
 
 sub vcl_recv {
 
-  #Fastly recv
+  #FASTLY recv
   set req.backend = httpbin_org;
 
   return (pass);
@@ -35,7 +35,7 @@ sub vcl_recv {
 
 sub vcl_deliver {
 
-  #Fastly deliver
+  #FASTLY deliver
   set resp.http.X-Custom-Header = "Custom Header";
   return (deliver);
 }
@@ -44,13 +44,13 @@ sub vcl_fetch {
 
   error 755 "/login?s=error";
 
-  #Fastly fetch
+  #FASTLY fetch
   return(deliver);
 }
 
 sub vcl_error {
 
-  #Fastly error
+  #FASTLY error
   if (obj.status == 755) {
     set obj.http.Location = regsub(obj.response, "^([^;]*)(;.*)?$", "\1");
     set obj.response = "Found";

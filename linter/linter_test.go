@@ -128,14 +128,14 @@ func TestLintStuff(t *testing.T) {
 			}
 
 			sub vcl_log {
-				# FASTLY log
+				#FASTLY log
 				if (example()) {
 					log "foo";
 				}
 			}
 
 			sub vcl_deliver {
-			# FASTLY deliver
+			#FASTLY deliver
 				if (example()) {
 					log "foo";
 				}
@@ -398,7 +398,7 @@ func TestPassIssue39(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		input := `
 sub vcl_fetch {
-	### FASTLY fetch
+	#FASTLY fetch
     if (parse_time_delta(beresp.http.Edge-Control:cache-maxage) >= 0) {
       set beresp.ttl = parse_time_delta(beresp.http.Edge-Control:cache-maxage);
     }
@@ -413,7 +413,7 @@ func TestSubroutineHoisting(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
 		input := `
 sub vcl_recv {
-	### FASTLY recv
+	#FASTLY recv
 	call hoisted_subroutine;
 	return(lookup);
 }

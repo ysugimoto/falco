@@ -549,8 +549,6 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 }
 
 func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx *context.Context, scope string) {
-	phrase := strings.ToUpper("FASTLY " + scope)
-
 	// prepare scoped snippets
 	scopedSnippets, ok := ctx.Snippets().ScopedSnippets[scope]
 	if !ok {
@@ -559,7 +557,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var resolved []ast.Statement
 	// visit all statement comments and find "FASTLY [phase]" comment
-	if hasFastlyBoilerPlateMacro(sub.Block.Infix, phrase) {
+	if hasFastlyBoilerPlateMacro(sub.Block.Infix, scope) {
 		for _, s := range scopedSnippets {
 			resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
 		}
@@ -569,7 +567,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 
 	var found bool
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerPlateMacro(stmt.GetMeta().Leading, phrase) && !found {
+		if hasFastlyBoilerPlateMacro(stmt.GetMeta().Leading, scope) && !found {
 			// Macro found but embedding snippets should do only once
 			for _, s := range scopedSnippets {
 				resolved = append(resolved, l.loadSnippetVCL("snippet::"+s.Name, s.Data)...)
@@ -590,7 +588,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 		Severity: WARNING,
 		Token:    sub.GetMeta().Token,
 		Message: fmt.Sprintf(
-			`Subroutine "%s" is missing Fastly boilerplate comment "%s" inside definition`, sub.Name.Value, phrase,
+			`Subroutine "%s" is missing Fastly boilerplate comment "#FASTLY %s" inside definition`, sub.Name.Value, strings.ToUpper(scope),
 		),
 	}
 	l.Error(err.Match(SUBROUTINE_BOILERPLATE_MACRO))
