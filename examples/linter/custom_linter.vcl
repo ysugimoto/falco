@@ -28,7 +28,7 @@ backend F_httpbin_org {
 }
 
 sub vcl_recv {
-  #Fastly recv
+  #FASTLY recv
   set req.backend = F_httpbin_org;
   return (lookup);
 }

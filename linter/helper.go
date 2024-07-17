@@ -438,10 +438,19 @@ func getFastlySubroutineScope(name string) string {
 	return ""
 }
 
-func hasFastlyBoilerPlateMacro(cs ast.Comments, phrase string) bool {
+// Fastly macro format Must be "#FASTLY [scope]"
+// - Comment sign must starts with single "#". "/" sign is not accepted
+// - Fixed "FASTLY" string must exactly present without whitespace after comment sign
+// - [scope] string is case-insensitive (recv/RECV can be accepcted, typically uppercase)
+// - Additional comment is also accepted like "#FASTLY RECV some extra comment"
+func hasFastlyBoilerPlateMacro(cs ast.Comments, scope string) bool {
 	for _, c := range cs {
-		line := strings.TrimLeft(c.String(), " */#")
-		if strings.HasPrefix(strings.ToUpper(line), phrase) {
+		// Uppercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToUpper(scope)) {
+			return true
+		}
+		// lowercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToLower(scope)) {
 			return true
 		}
 	}
