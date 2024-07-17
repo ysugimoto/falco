@@ -62,3 +62,77 @@ func BenchmarkFormatter(b *testing.B) {
 		New(c).Format(vcl)
 	}
 }
+
+func TestFormatComment(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		conf   *config.FormatConfig
+		expect string
+	}{
+		{
+			name: "Regular comment",
+			input: `sub recv {
+// This is a single comment
+return(pass);
+}`,
+			expect: `sub recv {
+  // This is a single comment
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "slash",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
+			name: "Comment starting with #FASTLY",
+			input: `sub recv {
+#FASTLY recv
+return(pass);
+}`,
+			expect: `sub recv {
+#FASTLY recv
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "sharp",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
+			name: "Multiple comments",
+			input: `sub recv {
+# Regular comment 1
+#FASTLY recv
+  # Regular comment 2
+return(pass);
+}`,
+			expect: `sub recv {
+  # Regular comment 1
+#FASTLY recv
+  # Regular comment 2
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "sharp",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}

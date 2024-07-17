@@ -154,7 +154,10 @@ func (f *Formatter) formatComment(comments ast.Comments, sep string, level int) 
 		if comments[i].PreviousEmptyLines > 0 {
 			buf.WriteString("\n")
 		}
-		buf.WriteString(f.indent(level))
+		// #FASTLY macros are not indented
+		if !strings.HasPrefix(comments[i].String(), "#FASTLY") {
+			buf.WriteString(f.indent(level))
+		}
 		switch f.conf.CommentStyle {
 		case config.CommentStyleSharp, config.CommentStyleSlash:
 			r := '#' // default as sharp style comment
