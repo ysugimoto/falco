@@ -3,16 +3,18 @@ package tester
 import (
 	"encoding/json"
 
+	i "github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
 )
 
 type TestCase struct {
-	Name  string
-	Group string
-	Error error
-	Scope string
-	Time  int64 // msec order
+	Name     string
+	Group    string
+	Error    error
+	Scope    string
+	Time     int64 // msec order
+	Coverage i.Coverage
 }
 
 func (t *TestCase) MarshalJSON() ([]byte, error) {
@@ -59,6 +61,7 @@ func (t *TestResult) IsPassed() bool {
 type TestFactory struct {
 	Results    []*TestResult
 	Statistics *TestCounter
+	Coverage   *TestCoverage
 	Logs       []string
 }
 

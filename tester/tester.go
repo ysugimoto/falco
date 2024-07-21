@@ -82,10 +82,16 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 		}
 		results = append(results, result)
 	}
+	// Calculate coverage
+	var coverage *TestCoverage
+	if t.config.Coverage {
+		coverage = getCoverage(results)
+	}
 
 	return &TestFactory{
 		Results:    results,
 		Statistics: t.counter,
+		Coverage:   coverage,
 		Logs:       t.debugger.stack,
 	}, nil
 }
@@ -147,10 +153,11 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					start := time.Now()
 					err := i.ProcessTestSubroutine(s, st)
 					cases = append(cases, &TestCase{
-						Name:  suite,
-						Error: errors.Cause(err),
-						Scope: s.String(),
-						Time:  time.Since(start).Milliseconds(),
+						Name:     suite,
+						Error:    errors.Cause(err),
+						Scope:    s.String(),
+						Time:     time.Since(start).Milliseconds(),
+						Coverage: i.GetCoverage(),
 					})
 					if err != nil {
 						t.counter.Fail()
@@ -222,11 +229,12 @@ func (t *Tester) runDescribedTests(
 			start := time.Now()
 			err := i.ProcessTestSubroutine(s, sub)
 			cases = append(cases, &TestCase{
-				Name:  suite,
-				Group: d.Name.String(),
-				Error: errors.Cause(err),
-				Scope: s.String(),
-				Time:  time.Since(start).Milliseconds(),
+				Name:     suite,
+				Group:    d.Name.String(),
+				Error:    errors.Cause(err),
+				Scope:    s.String(),
+				Time:     time.Since(start).Milliseconds(),
+				Coverage: i.GetCoverage(),
 			})
 			if err != nil {
 				t.counter.Fail()

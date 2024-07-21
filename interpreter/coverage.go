@@ -397,3 +397,33 @@ func createMarkAsBranchCovered(condition ast.Expression, baseId string) *ast.IfS
 		},
 	}
 }
+
+type Coverage struct {
+	Function  CoverageTable
+	Statement CoverageTable
+	Branch    CoverageTable
+}
+
+type CoverageTable map[string]bool
+
+func (i *Interpreter) GetCoverage() Coverage {
+	if i.ctx.Tables[FUNCTION_COVERAGE] == nil || i.ctx.Tables[STATEMENT_COVERAGE] == nil || i.ctx.Tables[BRANCH_COVERAGE] == nil {
+		return Coverage{}
+	}
+
+	return Coverage{
+		Function:  convertToCoverageTable(i.ctx.Tables[FUNCTION_COVERAGE]),
+		Statement: convertToCoverageTable(i.ctx.Tables[STATEMENT_COVERAGE]),
+		Branch:    convertToCoverageTable(i.ctx.Tables[BRANCH_COVERAGE]),
+	}
+}
+
+func convertToCoverageTable(decl *ast.TableDeclaration) CoverageTable {
+	table := make(CoverageTable)
+
+	for _, prop := range decl.Properties {
+		table[prop.Key.Value] = prop.Value.(*ast.String).Value == "true"
+	}
+
+	return table
+}
