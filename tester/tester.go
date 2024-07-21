@@ -138,7 +138,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				i := t.setupInterpreter(defs)
 
 				mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
-				if err := i.TestProcessInit(mockRequest); err != nil {
+				if err := i.TestProcessInit(mockRequest, t.config); err != nil {
 					errChan <- errors.WithStack(err)
 					return
 				}
@@ -188,7 +188,7 @@ func (t *Tester) runDescribedTests(
 	// describe should run as group testing, create interpreter once through tests
 	i := t.setupInterpreter(defs)
 
-	if err := i.TestProcessInit(mockRequest); err != nil {
+	if err := i.TestProcessInit(mockRequest, t.config); err != nil {
 		return cases, err
 	}
 
