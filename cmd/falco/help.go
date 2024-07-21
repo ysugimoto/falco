@@ -30,7 +30,7 @@ func printSplash() {
 	writeln(white, strings.TrimSpace(`
 =========================================================
     ____        __
-   / __/______ / /_____ ____ 
+   / __/______ / /_____ ____
   / /_ / __ `+` // //  __// __ \
  / __// /_/ // // /__ / /_/ /
 /_/   \____//_/ \___/ \____/  Fastly VCL developer tool
@@ -145,6 +145,7 @@ Flags:
     -r, --remote       : Connect with Fastly API
     -t, --timeout      : Set timeout to running test
     -f, --filter       : Override glob filter to find test files
+    -c, --coverage     : Collect test coverage information and report it in the output
     -json              : Output results as JSON
     -request           : Override request config
     --max_backends     : Override max backends limitation

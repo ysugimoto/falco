@@ -62,6 +62,7 @@ type SimulatorConfig struct {
 type TestConfig struct {
 	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
 	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
+	Coverage     bool     `cli:"c,coverage" yaml:"coverage" default:"false"`
 	IncludePaths []string // Copy from root field
 	OverrideHost string   `yaml:"host"`
 

@@ -11,7 +11,7 @@ Here is a full configuration file example:
 // .falco.yaml
 
 ## Basic configurations
-include_paths: [".", "/path/to/include"] 
+include_paths: [".", "/path/to/include"]
 remote: true
 max_backends: 5
 max_acls: 1000
@@ -65,6 +65,7 @@ All configurations of configuration files and CLI arguments are described follow
 | simulator.edge_dictionary.[name]   | Object        | -       | -                  | Local edge dictionary name                                                                                                            |
 | testing                            | Object        | null    | -                  | Testing configuration object                                                                                                          |
 | testing.timeout                    | Integer       | 10      | -t, --timeout      | Set timeout to stop testing                                                                                                           |
+| testing.coverage                   | Boolean       | false   | -c, --coverage     | Collect test coverage information and report it in the output                                                                         |
 | linter                             | Object        | null    | -                  | Override linter rules                                                                                                                 |
 | linter.verbose                     | String        | error   | -v, -vv            | Verbose level, `warning` or `info` is valid                                                                                           |
 | linter.rules                       | Object        | null    | -                  | Override linter rules                                                                                                                 |
