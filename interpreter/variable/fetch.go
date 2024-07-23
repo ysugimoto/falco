@@ -280,7 +280,8 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		// Update request URLs
 		bereq.URL.Path = parsed.Path
-		bereq.URL.RawQuery = parsed.RawPath
+		bereq.URL.RawPath = parsed.RawPath
+		bereq.URL.RawQuery = parsed.RawQuery
 		bereq.URL.RawFragment = parsed.RawFragment
 		return nil
 	case BERESP_BROTLI:
