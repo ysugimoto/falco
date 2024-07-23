@@ -12,25 +12,46 @@ var (
 	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
 
+// Formatting value constants
+const (
+	IndentStyleSpace  = "space"
+	IndentStyleTab    = "tab"
+	CommentStyleNone  = "none"
+	CommentStyleSlash = "slash"
+	CommentStyleSharp = "sharp"
+)
+
 type OverrideBackend struct {
 	Host      string `yaml:"host"`
 	SSL       bool   `yaml:"ssl" default:"true"`
 	Unhealthy bool   `yaml:"unhealthy" default:"false"`
 }
 
+type EdgeDictionary map[string]string
+
 // Linter configuration
 type LinterConfig struct {
-	VerboseLevel   string            `yaml:"verbose"`
-	VerboseWarning bool              `cli:"v"`
-	VerboseInfo    bool              `cli:"vv"`
-	Rules          map[string]string `yaml:"rules"`
+	VerboseLevel            string              `yaml:"verbose"`
+	VerboseWarning          bool                `cli:"v"`
+	VerboseInfo             bool                `cli:"vv"`
+	Rules                   map[string]string   `yaml:"rules"`
+	EnforceSubroutineScopes map[string][]string `yaml:"enforce_subroutine_scopes"`
+	IgnoreSubroutines       []string            `yaml:"ignore_subroutines"`
 }
 
 // Simulator configuration
 type SimulatorConfig struct {
-	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
-	IsDebug      bool     `cli:"debug"` // Enable only in CLI option
-	IncludePaths []string // Copy from root field
+	Port            int      `cli:"p,port" yaml:"port" default:"3124"`
+	IsDebug         bool     `cli:"debug"` // Enable only in CLI option
+	IsProxyResponse bool     `cli:"proxy"` // Enable only in CLI option
+	IncludePaths    []string // Copy from root field
+
+	// HTTPS related configuration. If both fields are spcified, simulator will serve with HTTPS
+	KeyFile  string `cli:"key" yaml:"key_file"`
+	CertFile string `cli:"cert" yaml:"cert_file"`
+
+	// Inject Edge Dictionary items
+	OverrideEdgeDictionaries map[string]EdgeDictionary `yaml:"edge_dictionary"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
@@ -47,10 +68,41 @@ type TestConfig struct {
 	OverrideRequest *RequestConfig
 }
 
+// Console configuration
+type ConsoleConfig struct {
+	// Initial scope string, for example, recv, pass, fetch, etc...
+	Scope string `cli:"scope" default:"recv"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+}
+
+// Format configuration
+type FormatConfig struct {
+	// CLI options
+	Overwrite bool `cli:"w,write" default:"false"`
+
+	// Formatter options
+	IndentWidth                int    `yaml:"indent_width" default:"2"`
+	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"2"`
+	IndentStyle                string `yaml:"indent_style" default:"space"`
+	LineWidth                  int    `yaml:"line_width" default:"120"`
+	ExplicitStringConat        bool   `yaml:"explicit_string_concat" default:"false"`
+	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
+	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
+	ElseIf                     bool   `yaml:"else_if" default:"false"`
+	AlwaysNextLineElseIf       bool   `yaml:"always_next_line_else_if" default:"false"`
+	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
+	SortDeclaration            bool   `yaml:"sort_declaration" defaul:"false"`
+	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
+	CommentStyle               string `yaml:"comment_style" default:"none"`
+	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
+	IndentCaseLabels           bool   `yaml:"indent_case_labels" default:"false"`
+}
+
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
-	Transforms   []string `cli:"t,transformer" yaml:"transformers"`
 	Help         bool     `cli:"h,help"`
 	Version      bool     `cli:"V"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`
@@ -77,6 +129,10 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Console configuration
+	Console *ConsoleConfig `yaml:"console"`
+	// Format configuration
+	Format *FormatConfig `yaml:"format"`
 }
 
 func New(args []string) (*Config, error) {
@@ -92,12 +148,6 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		OverrideBackends: make(map[string]*OverrideBackend),
-		// Simulator: &SimulatorConfig{
-		// 	OverrideRequest:  &RequestConfig{},
-		// },
-		// Testing: &TestConfig{
-		// 	OverrideRequest: &RequestConfig{},
-		// },
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
@@ -123,6 +173,10 @@ func New(args []string) (*Config, error) {
 	// Copy common fields
 	c.Simulator.IncludePaths = c.IncludePaths
 	c.Testing.IncludePaths = c.IncludePaths
+
+	// On Fastly generated VCL, "vcl_pipe" subroutine will present internally.
+	// The "vcl_pipe" subroutine looks fastly managed but undocumented, so we will ignore linting
+	c.Linter.IgnoreSubroutines = append(c.Linter.IgnoreSubroutines, "vcl_pipe")
 
 	return c, nil
 }

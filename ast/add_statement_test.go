@@ -8,23 +8,21 @@ func TestAddStatement(t *testing.T) {
 	add := &AddStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Ident: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* a */"), comments("/* b */")),
 			Value: "req.http.Host",
 		},
 		Operator: &Operator{
 			Operator: "=",
 		},
 		Value: &String{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* c */"), comments("/* d */")),
 			Value: "example.com",
 		},
 	}
 
 	expect := `// This is comment
-add req.http.Host = "example.com"; // This is comment
+add /* a */ req.http.Host /* b */ = /* c */ "example.com" /* d */; // This is comment
 `
 
-	if add.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, add.String())
-	}
+	assert(t, add.String(), expect)
 }

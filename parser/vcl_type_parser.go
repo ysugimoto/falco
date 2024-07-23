@@ -9,26 +9,26 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-func (p *Parser) parseIdent() *ast.Ident {
+func (p *Parser) ParseIdent() *ast.Ident {
 	return &ast.Ident{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
 }
 
-func (p *Parser) parseIP() *ast.IP {
+func (p *Parser) ParseIP() *ast.IP {
 	return &ast.IP{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
 }
 
-func (p *Parser) parseString() (*ast.String, error) {
+func (p *Parser) ParseString() (*ast.String, error) {
 	var err error
-	parsed := p.curToken.Token.Literal
+	Parsed := p.curToken.Token.Literal
 	// Escapes are only expanded in double-quoted strings.
 	if p.curToken.Token.Offset == 2 {
-		parsed, err = decodeStringEscapes(parsed)
+		Parsed, err = decodeStringEscapes(Parsed)
 		if err != nil {
 			return nil, errors.WithStack(InvalidEscape(p.curToken, err.Error()))
 		}
@@ -36,11 +36,11 @@ func (p *Parser) parseString() (*ast.String, error) {
 
 	return &ast.String{
 		Meta:  p.curToken,
-		Value: parsed,
+		Value: Parsed,
 	}, nil
 }
 
-func (p *Parser) parseInteger() (*ast.Integer, error) {
+func (p *Parser) ParseInteger() (*ast.Integer, error) {
 	v, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
@@ -52,7 +52,7 @@ func (p *Parser) parseInteger() (*ast.Integer, error) {
 	}, nil
 }
 
-func (p *Parser) parseFloat() (*ast.Float, error) {
+func (p *Parser) ParseFloat() (*ast.Float, error) {
 	v, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "FLOAT"))
@@ -65,14 +65,14 @@ func (p *Parser) parseFloat() (*ast.Float, error) {
 }
 
 // nolint: unparam
-func (p *Parser) parseBoolean() *ast.Boolean {
+func (p *Parser) ParseBoolean() *ast.Boolean {
 	return &ast.Boolean{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Type == token.TRUE,
 	}
 }
 
-func (p *Parser) parseRTime() (*ast.RTime, error) {
+func (p *Parser) ParseRTime() (*ast.RTime, error) {
 	var value string
 
 	literal := p.curToken.Token.Literal

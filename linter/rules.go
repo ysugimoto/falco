@@ -32,6 +32,7 @@ const (
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
+	UNRECOGNIZE_CALL_SCOPE               = "subroutine/unrecognize-call-scope"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
 	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"
@@ -67,6 +68,7 @@ const (
 	UNUSED_VARIABLE                      = "unused/variable"
 	UNUSED_GOTO                          = "unused/goto"
 	DISALLOW_EMPTY_RETURN                = "disallow-empty-return"
+	FORBIDDEN_BACKWARD_JUMP              = "goto/forbidden-backward-jump"
 )
 
 var references = map[Rule]string{
@@ -102,4 +104,6 @@ var references = map[Rule]string{
 	SYNTHETIC_STATEMENT_SCOPE:        "https://developer.fastly.com/reference/vcl/statements/synthetic/",
 	SYNTHETIC_BASE64_STATEMENT_SCOPE: "https://developer.fastly.com/reference/vcl/statements/synthetic-base64/",
 	DISALLOW_EMPTY_RETURN:            "https://developer.fastly.com/reference/vcl/subroutines#returning-a-state",
+	UNRECOGNIZE_CALL_SCOPE:           "https://github.com/ysugimoto/falco/blob/main/docs/linter.md#user-defined-subroutine",
+	FORBIDDEN_BACKWARD_JUMP:          "https://fiddle.fastly.dev/fiddle/4814c144",
 }

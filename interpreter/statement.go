@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
@@ -33,6 +34,17 @@ func (i *Interpreter) ProcessBlockStatement(
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if stmt.GetMeta() == nil {
+			pp.Println(stmt)
+		}
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {
@@ -203,7 +215,7 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 	if stmt.ReturnExpression == nil {
 		return BARE_RETURN
 	}
-	return State((*stmt.ReturnExpression).String())
+	return State(stmt.ReturnExpression.String())
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
@@ -282,12 +294,22 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	var state State
 	var err error
 	name := stmt.Subroutine.Value
+
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
+		// If mocked functional subroutine exists, use it
+		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[name]; ok {
+			sub = mocked
+		}
+
 		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
 	} else if sub, ok = i.ctx.Subroutines[name]; ok {
+		// If mocked subroutine exists, use it
+		if mocked, ok := i.ctx.MockedSubroutines[name]; ok {
+			sub = mocked
+		}
 		state, err = i.ProcessSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
@@ -547,7 +569,7 @@ func (i *Interpreter) ProcessIfStatement(
 
 	// else
 	if stmt.Alternative != nil {
-		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds, isReturnAsValue)
+		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Consequence.Statements, ds, isReturnAsValue)
 		if err != nil {
 			return value.Null, NONE, errors.WithStack(err)
 		}
@@ -565,7 +587,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 	isReturnAsValue bool,
 ) (value.Value, State, error) {
 	// User defined functions used in a switch control statement must have a STRING return type.
-	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+	if fnCall, ok := stmt.Control.Expression.(*ast.FunctionCallExpression); ok {
 		fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]
 		if ok && fn.ReturnType.Value != string(value.StringType) {
 			return value.Null, NONE, errors.WithStack(exception.Runtime(
@@ -575,7 +597,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 			))
 		}
 	}
-	expr, err := i.ProcessExpression(stmt.Control, false)
+	expr, err := i.ProcessExpression(stmt.Control.Expression, false)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}

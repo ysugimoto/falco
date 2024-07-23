@@ -8,16 +8,14 @@ func TestUnsetStatement(t *testing.T) {
 	unset := &UnsetStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Ident: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "req.http.Foo",
 		},
 	}
 
 	expect := `// This is comment
-unset req.http.Foo; // This is comment
+unset /* before_name */ req.http.Foo /* after_name */; // This is comment
 `
 
-	if unset.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, unset.String())
-	}
+	assert(t, unset.String(), expect)
 }

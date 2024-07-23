@@ -15,7 +15,7 @@ import (
 )
 
 const debuggerMark = "@debugger"
-const highlightDeplay = 120
+const highlightDelay = 120
 
 type Debugger struct {
 	app     *tview.Application
@@ -37,7 +37,7 @@ func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
 		return d.breakPoint(node.GetMeta().Token)
 	default:
 		meta := node.GetMeta()
-		if !strings.Contains(meta.LeadingComment(), debuggerMark) {
+		if !hasDebuggerMark(meta.Leading) {
 			return interpreter.DebugPass
 		}
 		return d.breakPoint(meta.Token)
@@ -55,7 +55,7 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 	// Wait for keyboard input
 	d.mode = <-d.input
 
-	time.AfterFunc(time.Duration(highlightDeplay)*time.Millisecond, func() {
+	time.AfterFunc(time.Duration(highlightDelay)*time.Millisecond, func() {
 		d.help.Highlight(helpview.Default)
 		d.app.Draw()
 	})
@@ -74,4 +74,8 @@ func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 		d.help.Highlight(helpview.F7)
 	}
 	return interpreter.DebugPass
+}
+
+func hasDebuggerMark(cs ast.Comments) bool {
+	return strings.Contains(cs.String(), debuggerMark)
 }

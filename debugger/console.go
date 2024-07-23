@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/debugger/codeview"
 	"github.com/ysugimoto/falco/debugger/colors"
 	"github.com/ysugimoto/falco/debugger/helpview"
@@ -114,14 +115,48 @@ func (c *Console) keyEventHandler(evt *tcell.EventKey) *tcell.EventKey {
 	return evt
 }
 
-func (c *Console) Run(port int) error {
+func (c *Console) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if c.isDebugging.Load() {
+		http.Error(w, "Other debugging process is running.", http.StatusLocked)
+		return
+	}
+
+	c.activate()
+	defer c.deactivate()
+
+	c.interpreter.ServeHTTP(w, r)
+}
+
+func (c *Console) Run(sc *config.SimulatorConfig) error {
+	isTLS := sc.KeyFile != "" && sc.CertFile != ""
+
+	protocol := "http"
+	if isTLS {
+		protocol = "https"
+	}
+
 	c.app.SetInputCapture(c.keyEventHandler)
 	c.message.Append(
 		messageview.Debugger,
-		"Waiting Request on http://localhost:%d...",
-		port,
+		"Waiting Request on %s://localhost:%d...",
+		protocol,
+		sc.Port,
 	)
-	go c.startDebugServer(port)
+
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/", c)
+		s := &http.Server{
+			Handler: mux,
+			Addr:    fmt.Sprintf(":%d", sc.Port),
+		}
+
+		if isTLS {
+			s.ListenAndServeTLS(sc.CertFile, sc.KeyFile) // nolint: errcheck
+		} else {
+			s.ListenAndServe() // nolint: errcheck
+		}
+	}()
 	return c.app.Run()
 }
 
@@ -137,25 +172,4 @@ func (c *Console) deactivate() {
 	c.shell.IsActivated = false
 	c.message.Append(messageview.Debugger, "Debugger session has finished.")
 	c.app.Draw()
-}
-
-func (c *Console) startDebugServer(port int) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if c.isDebugging.Load() {
-			http.Error(w, "Other debugging process is running.", http.StatusLocked)
-			return
-		}
-
-		c.activate()
-		defer c.deactivate()
-
-		c.interpreter.ServeHTTP(w, r)
-	})
-
-	s := &http.Server{
-		Handler: mux,
-		Addr:    fmt.Sprintf(":%d", port),
-	}
-	s.ListenAndServe() // nolint:errcheck
 }

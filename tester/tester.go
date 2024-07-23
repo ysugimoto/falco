@@ -1,7 +1,6 @@
 package tester
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -21,6 +20,7 @@ import (
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
 	tf "github.com/ysugimoto/falco/tester/function"
+	"github.com/ysugimoto/falco/tester/syntax"
 	tv "github.com/ysugimoto/falco/tester/variable"
 )
 
@@ -103,14 +103,10 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 	}
 
 	l := lexer.NewFromString(main.Data, lexer.WithFile(main.Name))
-	vcl, err := parser.New(l).ParseVCL()
+	vcl, err := parser.New(l, parser.WithCustomParser(syntax.CustomParsers()...)).ParseVCL()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
-	// On testing, incoming HTTP request always mocked
-	mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
-	ctx := context.Background()
 
 	errChan := make(chan error)
 	finishChan := make(chan []*TestCase)
@@ -126,35 +122,43 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 		defs := t.factoryDefinitions(vcl)
 		var cases []*TestCase
 		for _, stmt := range vcl.Statements {
-			// We treat subroutine as testing
-			sub, ok := stmt.(*ast.SubroutineDeclaration)
-			if !ok {
-				continue
-			}
-
-			// Some functions like "testing.table_set()" will take side-effect for another testing subroutine
-			// so we always initialize interpreter, inject testing functions for each subroutine
-			i := t.setupInterpreter(defs)
-
-			if err := i.TestProcessInit(mockRequest.Clone(ctx)); err != nil {
-				errChan <- errors.WithStack(err)
-				return
-			}
-			suite, scopes := t.findTestSuites(sub)
-			for _, s := range scopes {
-				start := time.Now()
-				err := i.ProcessTestSubroutine(s, sub)
-				cases = append(cases, &TestCase{
-					Name:  suite,
-					Error: errors.Cause(err),
-					Scope: s.String(),
-					Time:  time.Since(start).Milliseconds(),
-				})
+			switch st := stmt.(type) {
+			case *syntax.DescribeStatement:
+				results, err := t.runDescribedTests(defs, st)
+				if len(results) > 0 {
+					cases = append(cases, results...)
+				}
 				if err != nil {
-					t.counter.Fail()
+					errChan <- errors.WithStack(err)
+					return
+				}
+			case *ast.SubroutineDeclaration:
+				// Some functions like "testing.table_set()" will take side-effect for another testing subroutine
+				// so we always initialize interpreter, inject testing functions for each subroutine
+				i := t.setupInterpreter(defs)
+
+				mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+				if err := i.TestProcessInit(mockRequest); err != nil {
+					errChan <- errors.WithStack(err)
+					return
+				}
+				suite, scopes := t.findTestSuites(st)
+				for _, s := range scopes {
+					start := time.Now()
+					err := i.ProcessTestSubroutine(s, st)
+					cases = append(cases, &TestCase{
+						Name:  suite,
+						Error: errors.Cause(err),
+						Scope: s.String(),
+						Time:  time.Since(start).Milliseconds(),
+					})
+					if err != nil {
+						t.counter.Fail()
+					}
 				}
 			}
 		}
+
 		finishChan <- cases
 	}(vcl)
 
@@ -171,6 +175,78 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 			Lexer:    l,
 		}, nil
 	}
+}
+
+func (t *Tester) runDescribedTests(
+	defs *tf.Definiions,
+	d *syntax.DescribeStatement,
+) ([]*TestCase, error) {
+
+	var cases []*TestCase
+	mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+
+	// describe should run as group testing, create interpreter once through tests
+	i := t.setupInterpreter(defs)
+
+	if err := i.TestProcessInit(mockRequest); err != nil {
+		return cases, err
+	}
+
+	defer func() {
+		// Remove all stored subroutines
+		for _, sub := range d.Subroutines {
+			delete(defs.Subroutines, sub.Name.Value)
+		}
+	}()
+
+	// Prepare to add subroutine definitions inside describe statement
+	for _, sub := range d.Subroutines {
+		defs.Subroutines[sub.Name.Value] = sub
+	}
+
+	for _, sub := range d.Subroutines {
+		suite, scopes := t.findTestSuites(sub)
+		for _, s := range scopes {
+			// Run before_xxx hook that corresponds to scope is exists
+			if hook, ok := d.Befores[strings.ToLower("before_"+s.String())]; ok {
+				i.SetScope(s)
+				if _, _, _, err := i.ProcessBlockStatement(
+					hook.Block.Statements,
+					interpreter.DebugPass,
+					false,
+				); err != nil {
+					return cases, err
+				}
+			}
+
+			start := time.Now()
+			err := i.ProcessTestSubroutine(s, sub)
+			cases = append(cases, &TestCase{
+				Name:  suite,
+				Group: d.Name.String(),
+				Error: errors.Cause(err),
+				Scope: s.String(),
+				Time:  time.Since(start).Milliseconds(),
+			})
+			if err != nil {
+				t.counter.Fail()
+			}
+
+			// Run after_xxx hook that corresponds to scope is exists
+			if hook, ok := d.Afters[strings.ToLower("after_"+s.String())]; ok {
+				i.SetScope(s)
+				if _, _, _, err := i.ProcessBlockStatement(
+					hook.Block.Statements,
+					interpreter.DebugPass,
+					false,
+				); err != nil {
+					return cases, err
+				}
+			}
+		}
+	}
+
+	return cases, nil
 }
 
 // Find test suite name and may multile scopes
@@ -197,7 +273,10 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 			an = strings.Split(strings.TrimPrefix(l, "@"), ",")
 		}
 		for _, s := range an {
-			scopes = append(scopes, icontext.ScopeByString(strings.TrimSpace(s)))
+			scope := icontext.ScopeByString(strings.TrimSpace(s))
+			if scope != icontext.UnknownScope {
+				scopes = append(scopes, scope)
+			}
 		}
 	}
 
@@ -205,7 +284,7 @@ func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icont
 		return suiteName, scopes
 	}
 
-	// If we could not determine scope from annotation, try to find from subroutine name
+	// If we could not determine scope from annotation, try to find from subroutine name.
 	switch {
 	case strings.HasSuffix(sub.Name.Value, "_recv"):
 		scopes = append(scopes, icontext.RecvScope)
@@ -257,9 +336,10 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 // Factory declarations in testing VCL
 func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
 	defs := &tf.Definiions{
-		Tables:   make(map[string]*ast.TableDeclaration),
-		Backends: make(map[string]*value.Backend),
-		Acls:     make(map[string]*value.Acl),
+		Tables:      make(map[string]*ast.TableDeclaration),
+		Backends:    make(map[string]*value.Backend),
+		Acls:        make(map[string]*value.Acl),
+		Subroutines: make(map[string]*ast.SubroutineDeclaration),
 	}
 
 	for _, stmt := range vcl.Statements {
@@ -277,6 +357,8 @@ func (t *Tester) factoryDefinitions(vcl *ast.VCL) *tf.Definiions {
 			defs.Acls[t.Name.Value] = &value.Acl{
 				Value: t,
 			}
+		case *ast.SubroutineDeclaration:
+			defs.Subroutines[t.Name.Value] = t
 		}
 	}
 	return defs

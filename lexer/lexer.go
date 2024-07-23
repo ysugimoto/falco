@@ -19,22 +19,32 @@ type Lexer struct {
 	file   string
 	peeks  []token.Token
 	isEOF  bool
+
+	customs map[string]struct{}
 }
 
 func New(r io.Reader, opts ...OptionFunc) *Lexer {
 	o := collect(opts)
 	l := &Lexer{
-		r:      bufio.NewReader(r),
-		line:   1,
-		buffer: new(bytes.Buffer),
-		file:   o.Filename,
+		r:       bufio.NewReader(r),
+		line:    1,
+		buffer:  new(bytes.Buffer),
+		customs: map[string]struct{}{},
 	}
+	l.file = o.Filename
+	l.customs = o.Customs
 	l.readChar()
 	return l
 }
 
 func NewFromString(input string, opts ...OptionFunc) *Lexer {
 	return New(strings.NewReader(input), opts...)
+}
+
+func (l *Lexer) RegisterCustomTokens(tokens ...string) {
+	for i := range tokens {
+		l.customs[tokens[i]] = struct{}{}
+	}
 }
 
 func (l *Lexer) readChar() {
@@ -291,6 +301,17 @@ func (l *Lexer) NextToken() token.Token {
 	case 0x0A: // '\n'
 		t = newToken(token.LF, l.char, line, index)
 	default:
+		// Fastly control syntaxes
+		if l.char == 0x43 || l.char == 0x57 { // "C" or "W"
+			c := l.char
+			if l.peekChar() == '!' { // "C!" or "W!"
+				l.readChar()
+				t = newToken(token.FASTLY_CONTROL, l.char, line, index)
+				t.Literal = string(c) + "!"
+				break
+			}
+		}
+
 		switch {
 		case l.isLetter(l.char):
 			literal := l.readIdentifier()
@@ -339,7 +360,12 @@ func (l *Lexer) NextToken() token.Token {
 				}
 			default:
 				t.Literal = literal
-				t.Type = token.LookupIdent(t.Literal)
+				// If custom token found, mark as CUSTOM
+				if _, ok := l.customs[literal]; ok {
+					t.Type = token.CUSTOM
+				} else {
+					t.Type = token.LookupIdent(t.Literal)
+				}
 				t.Line = line
 				t.Position = index
 				t.File = l.file

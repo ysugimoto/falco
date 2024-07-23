@@ -105,19 +105,20 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		// We should do linting loughly because this type is only provided via Faslty Origin-Shielding
 		Props: map[string]types.Type{
 			"shield": types.StringType,
+			"is_ssl": types.BoolType,
 		},
 		Requires: []string{"shield"},
 	},
 }
 
 func isAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_'
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 // isValidName validates ident name has only [0-9a-zA-Z_]+
 func isValidName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) {
+		if isAlphaNumeric(r) || r == '_' {
 			continue
 		}
 		return false
@@ -128,7 +129,7 @@ func isValidName(name string) bool {
 // isValidVariableName validates ident name has only [0-9a-zA-Z_\.-:]+
 func isValidVariableName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) || r == '.' || r == '-' || r == ':' {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' {
 			continue
 		}
 		return false
@@ -343,7 +344,7 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	}
 
 	// If could not via subroutine name, find by annotations
-	// typically defined is module file
+	// typically defined in module file
 	scopes := 0
 	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
@@ -368,9 +369,50 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 		}
 	}
 	if scopes == 0 {
-		return context.RECV
+		// Unknown scope
+		return -1
 	}
 	return scopes
+}
+
+func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
+	var scopes int
+	for i := range scopeNames {
+		switch strings.ToUpper(scopeNames[i]) {
+		case "RECV":
+			scopes |= context.RECV
+		case "HASH":
+			scopes |= context.HASH
+		case "HIT":
+			scopes |= context.HIT
+		case "MISS":
+			scopes |= context.MISS
+		case "PASS":
+			scopes |= context.PASS
+		case "FETCH":
+			scopes |= context.FETCH
+		case "ERROR":
+			scopes |= context.ERROR
+		case "DELIVER":
+			scopes |= context.DELIVER
+		case "LOG":
+			scopes |= context.LOG
+		}
+	}
+	if scopes == 0 {
+		// Unknown scope
+		return -1
+	}
+	return scopes
+}
+
+func isIgnoredSubroutineInConfig(ignores []string, subroutineName string) bool {
+	for i := range ignores {
+		if ignores[i] == subroutineName {
+			return true
+		}
+	}
+	return false
 }
 
 func getFastlySubroutineScope(name string) string {
@@ -397,15 +439,34 @@ func getFastlySubroutineScope(name string) string {
 	return ""
 }
 
-func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
-	comments := strings.Split(commentText, "\n")
-	for _, c := range comments {
-		c = strings.TrimLeft(c, " */#")
-		if strings.HasPrefix(strings.ToUpper(c), phrase) {
+// Fastly macro format Must be "#FASTLY [scope]"
+// - Comment sign must starts with single "#". "/" sign is not accepted
+// - Fixed "FASTLY" string must exactly present without whitespace after comment sign
+// - [scope] string is case-insensitive (recv/RECV can be accepcted, typically uppercase)
+// - Additional comment is also accepted like "#FASTLY RECV some extra comment"
+func hasFastlyBoilerPlateMacro(cs ast.Comments, scope string) bool {
+	for _, c := range cs {
+		// Uppercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToUpper(scope)) {
+			return true
+		}
+		// lowercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToLower(scope)) {
 			return true
 		}
 	}
 	return false
+}
+
+// According to fastly share_key must be alphanumeric and ASCII only
+func isValidBackendShareKey(shareKey string) bool {
+	for _, c := range shareKey {
+		if isAlphaNumeric(c) {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // According to fastly if a prober is configured with initial < threshold

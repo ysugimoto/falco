@@ -10,12 +10,13 @@ type FunctionCallExpression struct {
 	Arguments []Expression
 }
 
-func (f *FunctionCallExpression) expression()    {}
+func (f *FunctionCallExpression) ID() uint64     { return f.Meta.ID }
+func (f *FunctionCallExpression) Expression()    {}
 func (f *FunctionCallExpression) GetMeta() *Meta { return f.Meta }
 func (f *FunctionCallExpression) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(f.LeadingInlineComment())
+	buf.WriteString(f.LeadingComment(inline))
 	buf.WriteString(f.Function.String() + "(")
 	for i, a := range f.Arguments {
 		buf.WriteString(a.String())
@@ -24,7 +25,7 @@ func (f *FunctionCallExpression) String() string {
 		}
 	}
 	buf.WriteString(")")
-	buf.WriteString(f.TrailingComment())
+	buf.WriteString(f.TrailingComment(inline))
 
 	return buf.String()
 }

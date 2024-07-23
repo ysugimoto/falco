@@ -509,6 +509,16 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"fastly.try_select_shield": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Fastly_try_select_shield(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"h2.disable_header_compression": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

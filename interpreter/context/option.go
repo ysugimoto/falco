@@ -20,15 +20,15 @@ func WithSnippets(fs *snippets.Snippets) Option {
 	}
 }
 
-func WithMaxBackends(max int) Option {
+func WithMaxBackends(maxBackends int) Option {
 	return func(c *Context) {
-		c.OverrideMaxBackends = max
+		c.OverrideMaxBackends = maxBackends
 	}
 }
 
-func WithMaxAcls(max int) Option {
+func WithMaxAcls(maxAcls int) Option {
 	return func(c *Context) {
-		c.OverrideMaxAcls = max
+		c.OverrideMaxAcls = maxAcls
 	}
 }
 
@@ -47,5 +47,17 @@ func WithOverrideBackends(ov map[string]*config.OverrideBackend) Option {
 func WithOverrideHost(host string) Option {
 	return func(c *Context) {
 		c.OriginalHost = host
+	}
+}
+
+func WithInjectEdgeDictionaries(ed map[string]config.EdgeDictionary) Option {
+	return func(c *Context) {
+		c.InjectEdgeDictionaries = ed
+	}
+}
+
+func WithActualResponse(is bool) Option {
+	return func(c *Context) {
+		c.IsActualResponse = is
 	}
 }

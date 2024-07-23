@@ -17,7 +17,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 	if diff := cmp.Diff(expect, actual,
 		// Meta structs ignores Token info
 		cmpopts.IgnoreFields(ast.Comment{}, "Token", "PrefixedLineFeed"),
-		cmpopts.IgnoreFields(ast.Meta{}, "Token"),
+		cmpopts.IgnoreFields(ast.Meta{}, "Token", "ID"),
 		cmpopts.IgnoreFields(ast.Operator{}),
 
 		// VCL type struct ignores Meta info
@@ -48,7 +48,7 @@ func assert(t *testing.T, actual, expect interface{}) {
 		cmpopts.IgnoreFields(ast.InfixExpression{}),
 		cmpopts.IgnoreFields(ast.PrefixExpression{}),
 		cmpopts.IgnoreFields(ast.GroupedExpression{}),
-		cmpopts.IgnoreFields(ast.IfStatement{}, "AlternativeComments"),
+		cmpopts.IgnoreFields(ast.IfStatement{}, "Keyword"),
 		cmpopts.IgnoreFields(ast.UnsetStatement{}),
 		cmpopts.IgnoreFields(ast.AddStatement{}),
 		cmpopts.IgnoreFields(ast.CallStatement{}),
@@ -276,11 +276,11 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 			&ast.SubroutineDeclaration{
 				Meta: ast.New(T, 0, comments("// subroutine leading")),
 				Name: &ast.Ident{
-					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */")),
+					Meta:  ast.New(T, 0, comments("/* subroutine ident leading */"), comments("/* subroutine block leading */")),
 					Value: "vcl_recv",
 				},
 				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1, comments("/* subroutine block leading */"), comments("// subroutine trailing"), comments("// subroutine block infix")),
+					Meta: ast.New(T, 1, comments(), comments("// subroutine trailing"), comments("// subroutine block infix")),
 					Statements: []ast.Statement{
 						&ast.IfStatement{
 							Meta: ast.New(T, 1, comments("// if leading")),
@@ -347,6 +347,135 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestCountPreviousEmptyLines(t *testing.T) {
+	input := `
+sub vcl_recv {
+
+
+	set req.http.Foo = "bar";
+}`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.SubroutineDeclaration{
+				Meta: &ast.Meta{
+					Token:              T,
+					Nest:               0,
+					PreviousEmptyLines: 0,
+					Leading:            ast.Comments{},
+					Infix:              ast.Comments{},
+					Trailing:           ast.Comments{},
+				},
+				Name: &ast.Ident{
+					Meta: &ast.Meta{
+						Token:              T,
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						Leading:            ast.Comments{},
+						Infix:              ast.Comments{},
+						Trailing:           ast.Comments{},
+					},
+					Value: "vcl_recv",
+				},
+				Block: &ast.BlockStatement{
+					Meta: &ast.Meta{
+						Token:              T,
+						Nest:               1,
+						PreviousEmptyLines: 0,
+						Leading:            ast.Comments{},
+						Infix:              ast.Comments{},
+						Trailing:           ast.Comments{},
+					},
+					Statements: []ast.Statement{
+						&ast.SetStatement{
+							Meta: &ast.Meta{
+								Token:              T,
+								Nest:               1,
+								PreviousEmptyLines: 2,
+								Leading:            ast.Comments{},
+								Infix:              ast.Comments{},
+								Trailing:           ast.Comments{},
+							},
+							Ident: &ast.Ident{
+								Meta:  ast.New(T, 1),
+								Value: "req.http.Foo",
+							},
+							Operator: &ast.Operator{
+								Meta:     ast.New(T, 1),
+								Operator: "=",
+							},
+							Value: &ast.String{
+								Meta:  ast.New(T, 1),
+								Value: "bar",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
+}
+
+func TestSkipFastlyControlSyntaxes(t *testing.T) {
+	input := `
+pragma optional_param geoip_opt_in true;
+pragma optional_param max_object_size 2147483648;
+pragma optional_param smiss_max_object_size 5368709120;
+pragma optional_param fetchless_purge_all 1;
+pragma optional_param chash_randomize_on_pass true;
+pragma optional_param default_ssl_check_cert 1;
+pragma optional_param max_backends 20;
+pragma optional_param customer_id "bwIxaoVzhiEJrt4SIaIvT";
+C!
+W!
+# Backends
+
+backend F_Host_1 {
+	.host = "example.com";
+}
+`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.BackendDeclaration{
+				Meta: &ast.Meta{
+					Token:              T,
+					Nest:               0,
+					PreviousEmptyLines: 1,
+					Leading:            comments("# Backends"),
+					Infix:              ast.Comments{},
+					Trailing:           ast.Comments{},
+				},
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "F_Host_1",
+				},
+				Properties: []*ast.BackendProperty{
+					{
+						Meta: ast.New(T, 1),
+						Key: &ast.Ident{
+							Meta:  ast.New(T, 1),
+							Value: "host",
+						},
+						Value: &ast.String{
+							Meta:  ast.New(T, 1),
+							Value: "example.com",
 						},
 					},
 				},

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/fatih/color"
@@ -12,12 +13,12 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/debugger"
+	"github.com/ysugimoto/falco/formatter"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/tester"
@@ -36,6 +37,11 @@ const (
 	LevelInfo
 )
 
+type VCL struct {
+	File string
+	AST  *ast.VCL
+}
+
 type RunnerResult struct {
 	Infos    int
 	Warnings int
@@ -44,7 +50,7 @@ type RunnerResult struct {
 	LintErrors  map[string][]*linter.LintError
 	ParseErrors map[string]*parser.ParseError
 
-	Vcl *plugin.VCL
+	Vcl *VCL
 }
 
 type StatsResult struct {
@@ -73,11 +79,10 @@ const (
 )
 
 type Runner struct {
-	transformers []*Transformer
-	overrides    map[string]linter.Severity
-	lexers       map[string]*lexer.Lexer
-	snippets     *snippets.Snippets
-	config       *config.Config
+	overrides map[string]linter.Severity
+	lexers    map[string]*lexer.Lexer
+	snippets  *snippets.Snippets
+	config    *config.Config
 
 	level       Level
 	lintErrors  map[string][]*linter.LintError
@@ -100,7 +105,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -120,17 +125,6 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
 			r.message(red, err.Error()+"\n")
 		}
-	}
-
-	// Check transformer exists and format to absolute path
-	// Transformer is provided as independent binary, named "falco-transform-[name]"
-	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
-		}
-		r.transformers = append(r.transformers, tf)
 	}
 
 	// Set verbose level
@@ -156,22 +150,7 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		}
 	}
 
-	return r, nil
-}
-
-func (r *Runner) Transform(vcl *plugin.VCL) error {
-	// VCL data is shared between parser and transformar through the falco/io package.
-	encoded, err := plugin.Encode(vcl)
-	if err != nil {
-		return fmt.Errorf("Failed to encode VCL: %w", err)
-	}
-
-	for _, t := range r.transformers {
-		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
-			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
-		}
-	}
-	return nil
+	return r
 }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
@@ -203,7 +182,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*VCL, error) {
 	vcl, err := r.parseVCL(main.Name, main.Data)
 	if err != nil {
 		return nil, err
@@ -220,7 +199,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	lt := linter.New()
+	lt := linter.New(r.config.Linter)
 	lt.Lint(vcl, ctx)
 
 	for k, v := range lt.Lexers() {
@@ -269,7 +248,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	return &plugin.VCL{
+	return &VCL{
 		File: main.Name,
 		AST:  vcl,
 	}, nil
@@ -428,6 +407,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithActualResponse(sc.IsProxyResponse),
 	}
 	if r.snippets != nil {
 		options = append(options, icontext.WithSnippets(r.snippets))
@@ -438,24 +418,38 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	if r.config.OverrideBackends != nil {
 		options = append(options, icontext.WithOverrideBackends(r.config.OverrideBackends))
 	}
+	// If simulator configuration has edge dictionaries, inject them
+	if sc.OverrideEdgeDictionaries != nil {
+		options = append(options, icontext.WithInjectEdgeDictionaries(sc.OverrideEdgeDictionaries))
+	}
 
 	i := interpreter.New(options...)
 
-	// If debugger flag is on, run debugger mode
 	if sc.IsDebug {
-		return debugger.New(interpreter.New(options...)).Run(sc.Port)
+		// If debugger flag is on, run debugger mode
+		return debugger.New(i).Run(sc)
 	}
 
 	// Otherwise, simply start simulator server
 	mux := http.NewServeMux()
 	mux.Handle("/", i)
-
 	s := &http.Server{
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
-	return s.ListenAndServe()
+
+	var err error
+	if sc.KeyFile != "" && sc.CertFile != "" {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
+		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+	} else {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
+		err = s.ListenAndServe()
+	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
@@ -484,4 +478,33 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	}
 	r.message(white, " Done.\n")
 	return factory, nil
+}
+
+func (r *Runner) Format(rslv resolver.Resolver) error {
+	main, err := rslv.MainVCL()
+	if err != nil {
+		return err
+	}
+	vcl, err := r.parseVCL(main.Name, main.Data)
+	if err != nil {
+		return err
+	}
+
+	formatted := formatter.New(r.config.Format).Format(vcl)
+	var w io.Writer
+	if r.config.Format.Overwrite {
+		writeln(cyan, "Formatted %s.", main.Name)
+		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		defer fp.Close()
+		w = fp
+	} else {
+		w = os.Stdout
+	}
+	if _, err := io.Copy(w, formatted); err != nil {
+		return err
+	}
+	return nil
 }

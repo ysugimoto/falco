@@ -9,6 +9,7 @@ import (
 
 type TestCase struct {
 	Name  string
+	Group string
 	Error error
 	Scope string
 	Time  int64 // msec order
@@ -18,10 +19,12 @@ func (t *TestCase) MarshalJSON() ([]byte, error) {
 	v := struct {
 		Name  string `json:"name"`
 		Error string `json:"error,omitempty"`
+		Group string `json:"group,omitempty"`
 		Scope string `json:"scope"`
 		Time  int64  `json:"elapsed_time"`
 	}{
 		Name:  t.Name,
+		Group: t.Group,
 		Scope: t.Scope,
 		Time:  t.Time,
 	}

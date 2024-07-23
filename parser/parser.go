@@ -57,56 +57,94 @@ type Parser struct {
 	prefixParsers  map[token.TokenType]prefixParser
 	infixParsers   map[token.TokenType]infixParser
 	postfixParsers map[token.TokenType]postfixParser
+	customParsers  map[string]CustomParser
 }
 
-func New(l *lexer.Lexer) *Parser {
+func New(l *lexer.Lexer, opts ...ParserOption) *Parser {
 	p := &Parser{
-		l: l,
+		l:             l,
+		customParsers: make(map[string]CustomParser),
+	}
+	for i := range opts {
+		opts[i](p)
 	}
 
 	p.registerExpressionParsers()
 
-	p.nextToken()
-	p.nextToken()
+	// Register custom lexer tokens for each custom parsers
+	var literals []string
+	for literal := range p.customParsers {
+		literals = append(literals, literal)
+	}
+	l.RegisterCustomTokens(literals...)
+
+	p.NextToken()
+	p.NextToken()
 
 	return p
 }
 
-func (p *Parser) nextToken() {
+func (p *Parser) NextToken() {
 	p.prevToken = p.curToken
 	p.curToken = p.peekToken
 
-	p.readPeek()
+	p.ReadPeek()
 }
 
-func (p *Parser) readPeek() {
+func (p *Parser) ReadPeek() {
 	leading := ast.Comments{}
 	var prefixedLineFeed bool
+	var previousEmptyLines int
 
 	for {
 		t := p.l.NextToken()
 		switch t.Type {
 		case token.LF:
 			prefixedLineFeed = true
+			// Count empty lines between the next token
+			for {
+				peek := p.l.PeekToken()
+				if peek.Type != token.LF {
+					break
+				}
+				previousEmptyLines++
+				p.l.NextToken()
+			}
 			continue
 		case token.COMMENT:
 			leading = append(leading, &ast.Comment{
-				Token:            t,
-				Value:            t.Literal,
-				PrefixedLineFeed: prefixedLineFeed,
+				Token:              t,
+				Value:              t.Literal,
+				PrefixedLineFeed:   prefixedLineFeed,
+				PreviousEmptyLines: previousEmptyLines,
 			})
+			previousEmptyLines = 0
 			continue
 		case token.LEFT_BRACE:
 			p.level++
 		case token.RIGHT_BRACE:
 			p.level--
+		case token.FASTLY_CONTROL:
+			// Skip Fastly control syntaxes
+			continue
+		case token.PRAGMA:
+			// Skip Fastly pgrama embedded data
+			for {
+				t = p.l.NextToken()
+				if t.Type == token.SEMICOLON {
+					break
+				}
+			}
+			continue
 		}
-		p.peekToken = ast.New(t, p.level, leading)
+		meta := ast.New(t, p.level, leading)
+		meta.PreviousEmptyLines = previousEmptyLines
+		p.peekToken = meta
 		break
 	}
 }
 
-func (p *Parser) trailing() ast.Comments {
+func (p *Parser) Trailing() ast.Comments {
 	cs := ast.Comments{}
 	// Divide trailing comment for current node and leading comment for next node
 	if len(p.peekToken.Leading) > 0 {
@@ -123,23 +161,31 @@ func (p *Parser) trailing() ast.Comments {
 	return cs
 }
 
-func (p *Parser) prevTokenIs(t token.TokenType) bool {
+func (p *Parser) PeekToken() *ast.Meta {
+	return p.peekToken
+}
+
+func (p *Parser) CurToken() *ast.Meta {
+	return p.curToken
+}
+
+func (p *Parser) PrevTokenIs(t token.TokenType) bool {
 	return p.prevToken.Token.Type == t
 }
 
-func (p *Parser) curTokenIs(t token.TokenType) bool {
+func (p *Parser) CurTokenIs(t token.TokenType) bool {
 	return p.curToken.Token.Type == t
 }
 
-func (p *Parser) peekTokenIs(t token.TokenType) bool {
+func (p *Parser) PeekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Token.Type == t
 }
 
-func (p *Parser) expectPeek(t token.TokenType) bool {
-	if !p.peekTokenIs(t) {
+func (p *Parser) ExpectPeek(t token.TokenType) bool {
+	if !p.PeekTokenIs(t) {
 		return false
 	}
-	p.nextToken()
+	p.NextToken()
 	return true
 }
 
@@ -160,8 +206,8 @@ func (p *Parser) peekPrecedence() int {
 func (p *Parser) ParseVCL() (*ast.VCL, error) {
 	vcl := &ast.VCL{}
 
-	for !p.curTokenIs(token.EOF) {
-		stmt, err := p.parse()
+	for !p.CurTokenIs(token.EOF) {
+		stmt, err := p.Parse()
 		if err != nil {
 			return nil, err
 		} else if stmt != nil {
@@ -172,29 +218,31 @@ func (p *Parser) ParseVCL() (*ast.VCL, error) {
 	return vcl, nil
 }
 
-func (p *Parser) parse() (ast.Statement, error) {
+func (p *Parser) Parse() (ast.Statement, error) {
 	var stmt ast.Statement
 	var err error
 
 	switch p.curToken.Token.Type {
 	case token.ACL:
-		stmt, err = p.parseAclDeclaration()
+		stmt, err = p.ParseAclDeclaration()
 	case token.IMPORT:
-		stmt, err = p.parseImportStatement()
+		stmt, err = p.ParseImportStatement()
 	case token.INCLUDE:
-		stmt, err = p.parseIncludeStatement()
+		stmt, err = p.ParseIncludeStatement()
 	case token.BACKEND:
-		stmt, err = p.parseBackendDeclaration()
+		stmt, err = p.ParseBackendDeclaration()
 	case token.DIRECTOR:
-		stmt, err = p.parseDirectorDeclaration()
+		stmt, err = p.ParseDirectorDeclaration()
 	case token.TABLE:
-		stmt, err = p.parseTableDeclaration()
+		stmt, err = p.ParseTableDeclaration()
 	case token.SUBROUTINE:
-		stmt, err = p.parseSubroutineDeclaration()
+		stmt, err = p.ParseSubroutineDeclaration()
 	case token.PENALTYBOX:
-		stmt, err = p.parsePenaltyboxDeclaration()
+		stmt, err = p.ParsePenaltyboxDeclaration()
 	case token.RATECOUNTER:
-		stmt, err = p.parseRatecounterDeclaration()
+		stmt, err = p.ParseRatecounterDeclaration()
+	case token.CUSTOM:
+		stmt, err = p.ParseCustomToken()
 	default:
 		err = UnexpectedToken(p.curToken)
 	}
@@ -202,17 +250,17 @@ func (p *Parser) parse() (ast.Statement, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	p.nextToken()
+	p.NextToken()
 	return stmt, nil
 }
 
 // ParseSnippetVCL is used for snippet parsing.
-// VCL snippet is a piece of vcl code so we should parse like BlockStatement inside,
+// VCL snippet is a piece of vcl code so we should Parse like BlockStatement inside,
 // and returns slice of statement.
 func (p *Parser) ParseSnippetVCL() ([]ast.Statement, error) {
 	var statements []ast.Statement
 
-	for !p.peekTokenIs(token.EOF) {
+	for !p.PeekTokenIs(token.EOF) {
 		var stmt ast.Statement
 		var err error
 
@@ -227,46 +275,46 @@ func (p *Parser) ParseSnippetVCL() ([]ast.Statement, error) {
 		// }
 		// ```
 		case token.LEFT_BRACE:
-			stmt, err = p.parseBlockStatement()
+			stmt, err = p.ParseBlockStatement()
 		case token.SET:
-			stmt, err = p.parseSetStatement()
+			stmt, err = p.ParseSetStatement()
 		case token.UNSET:
-			stmt, err = p.parseUnsetStatement()
+			stmt, err = p.ParseUnsetStatement()
 		case token.REMOVE:
-			stmt, err = p.parseRemoveStatement()
+			stmt, err = p.ParseRemoveStatement()
 		case token.ADD:
-			stmt, err = p.parseAddStatement()
+			stmt, err = p.ParseAddStatement()
 		case token.CALL:
-			stmt, err = p.parseCallStatement()
+			stmt, err = p.ParseCallStatement()
 		case token.DECLARE:
-			stmt, err = p.parseDeclareStatement()
+			stmt, err = p.ParseDeclareStatement()
 		case token.ERROR:
-			stmt, err = p.parseErrorStatement()
+			stmt, err = p.ParseErrorStatement()
 		case token.ESI:
-			stmt, err = p.parseEsiStatement()
+			stmt, err = p.ParseEsiStatement()
 		case token.LOG:
-			stmt, err = p.parseLogStatement()
+			stmt, err = p.ParseLogStatement()
 		case token.RESTART:
-			stmt, err = p.parseRestartStatement()
+			stmt, err = p.ParseRestartStatement()
 		case token.RETURN:
-			stmt, err = p.parseReturnStatement()
+			stmt, err = p.ParseReturnStatement()
 		case token.SYNTHETIC:
-			stmt, err = p.parseSyntheticStatement()
+			stmt, err = p.ParseSyntheticStatement()
 		case token.SYNTHETIC_BASE64:
-			stmt, err = p.parseSyntheticBase64Statement()
+			stmt, err = p.ParseSyntheticBase64Statement()
 		case token.IF:
-			stmt, err = p.parseIfStatement()
+			stmt, err = p.ParseIfStatement()
 		case token.GOTO:
-			stmt, err = p.parseGotoStatement()
+			stmt, err = p.ParseGotoStatement()
 		case token.INCLUDE:
-			stmt, err = p.parseIncludeStatement()
+			stmt, err = p.ParseIncludeStatement()
 		case token.IDENT:
 			// Check if the current ident is a function call
-			if p.peekTokenIs(token.LEFT_PAREN) {
-				stmt, err = p.parseFunctionCall()
+			if p.PeekTokenIs(token.LEFT_PAREN) {
+				stmt, err = p.ParseFunctionCall()
 			} else {
 				// Could be a goto destination
-				stmt, err = p.parseGotoDestination()
+				stmt, err = p.ParseGotoDestination()
 			}
 		default:
 			err = UnexpectedToken(p.peekToken)
@@ -276,9 +324,9 @@ func (p *Parser) ParseSnippetVCL() ([]ast.Statement, error) {
 			return nil, errors.WithStack(err)
 		}
 		statements = append(statements, stmt)
-		p.nextToken() // point to statement
+		p.NextToken() // point to statement
 	}
 
-	p.nextToken() // point to EOF
+	p.NextToken() // point to EOF
 	return statements, nil
 }

@@ -192,6 +192,17 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
+
+			// Set items if injected edge dictionaries exists
+			if inject, ok := i.ctx.InjectEdgeDictionaries[t.Name.Value]; ok {
+				// Edge Dictionary value type must be STRING
+				if t.ValueType.Value != "STRING" {
+					return exception.System("EdgeDictionary injection error: %s value type is not STRING", t.Name.Value)
+				}
+				if err := i.InjectEdgeDictionaryItem(t, inject); err != nil {
+					return errors.WithStack(err)
+				}
+			}
 		case *ast.SubroutineDeclaration:
 			i.Debugger.Run(stmt)
 			if t.ReturnType != nil {
