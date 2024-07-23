@@ -1297,3 +1297,4 @@ fastly.try_select_shield:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [BACKEND, BACKEND]
+  return: BACKEND

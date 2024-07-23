@@ -301,6 +301,17 @@ func (l *Lexer) NextToken() token.Token {
 	case 0x0A: // '\n'
 		t = newToken(token.LF, l.char, line, index)
 	default:
+		// Fastly control syntaxes
+		if l.char == 0x43 || l.char == 0x57 { // "C" or "W"
+			c := l.char
+			if l.peekChar() == '!' { // "C!" or "W!"
+				l.readChar()
+				t = newToken(token.FASTLY_CONTROL, l.char, line, index)
+				t.Literal = string(c) + "!"
+				break
+			}
+		}
+
 		switch {
 		case l.isLetter(l.char):
 			literal := l.readIdentifier()

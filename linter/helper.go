@@ -105,6 +105,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		// We should do linting loughly because this type is only provided via Faslty Origin-Shielding
 		Props: map[string]types.Type{
 			"shield": types.StringType,
+			"is_ssl": types.BoolType,
 		},
 		Requires: []string{"shield"},
 	},

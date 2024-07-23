@@ -157,9 +157,25 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		// Special string assignment - normally "+=" operator cannot use for STRING type,
 		// But the exception case that "+=" operation can use for the "req.hash".
 		// See: https://fiddle.fastly.dev/fiddle/0f3fc0aa
-		if stmt.Ident.Value == "req.hash" && right == types.StringType {
-			break
+		if stmt.Ident.Value == "req.hash" {
+			switch right {
+			// allows both variable and literal
+			case types.StringType, types.BoolType:
+				goto PASS
+			// allows variable only, disallow literal
+			case types.IntegerType, types.FloatType, types.RTimeType, types.TimeType, types.IPType, types.ReqBackendType:
+				if isLiteralExpression(stmt.Value) {
+					l.Error(InvalidTypeOperator(stmt.Operator.Meta, stmt.Operator.Operator, left, right).Match(OPERATOR_CONDITIONAL))
+				} else {
+					goto PASS
+				}
+			// disallow
+			default:
+				l.Error(InvalidTypeOperator(stmt.Operator.Meta, stmt.Operator.Operator, left, right).Match(OPERATOR_CONDITIONAL))
+			}
+			goto PASS
 		}
+
 		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
 	case "-=":
 		l.lintAddSubOperator(stmt.Operator, left, right, isLiteralExpression(stmt.Value))
@@ -172,6 +188,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	default: // "="
 		l.lintAssignOperator(stmt.Operator, stmt.Ident.Value, left, right, isLiteralExpression(stmt.Value))
 	}
+PASS:
 
 	return types.NeverType
 }

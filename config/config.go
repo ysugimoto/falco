@@ -174,6 +174,10 @@ func New(args []string) (*Config, error) {
 	c.Simulator.IncludePaths = c.IncludePaths
 	c.Testing.IncludePaths = c.IncludePaths
 
+	// On Fastly generated VCL, "vcl_pipe" subroutine will present internally.
+	// The "vcl_pipe" subroutine looks fastly managed but undocumented, so we will ignore linting
+	c.Linter.IgnoreSubroutines = append(c.Linter.IgnoreSubroutines, "vcl_pipe")
+
 	return c, nil
 }
 

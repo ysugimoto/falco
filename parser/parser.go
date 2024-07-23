@@ -124,6 +124,18 @@ func (p *Parser) ReadPeek() {
 			p.level++
 		case token.RIGHT_BRACE:
 			p.level--
+		case token.FASTLY_CONTROL:
+			// Skip Fastly control syntaxes
+			continue
+		case token.PRAGMA:
+			// Skip Fastly pgrama embedded data
+			for {
+				t = p.l.NextToken()
+				if t.Type == token.SEMICOLON {
+					break
+				}
+			}
+			continue
 		}
 		meta := ast.New(t, p.level, leading)
 		meta.PreviousEmptyLines = previousEmptyLines

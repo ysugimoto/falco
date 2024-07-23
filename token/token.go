@@ -130,6 +130,12 @@ const (
 	// This keyword is special usecase for extensible language definition.
 	// Token is processed via custom lexer/parser definition by literal
 	CUSTOM = "CUSTOM"
+
+	// Fastly Generated control syntaxes
+	// Fastly automatically generates some control syntaxes like "pragma".
+	// falco should lex them
+	PRAGMA         = "PRAGMA"
+	FASTLY_CONTROL = "CONTROL" // Presents as "C!" or "W!" character
 )
 
 var keywords = map[string]TokenType{
@@ -167,6 +173,7 @@ var keywords = map[string]TokenType{
 	"default":          DEFAULT,
 	"break":            BREAK,
 	"fallthrough":      FALLTHROUGH,
+	"pragma":           PRAGMA,
 }
 
 func LookupIdent(ident string) TokenType {
