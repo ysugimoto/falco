@@ -49,9 +49,10 @@ func TestConfigFromCLI(t *testing.T) {
 		Json:     true,
 		Commands: Commands{"lint"},
 		Linter: &LinterConfig{
-			VerboseLevel:   "",
-			VerboseWarning: true,
-			VerboseInfo:    true,
+			VerboseLevel:      "",
+			VerboseWarning:    true,
+			VerboseInfo:       true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 		Simulator: &SimulatorConfig{
 			Port:            3124,

@@ -431,5 +431,60 @@ sub vcl_recv {
 		t.Errorf("%+v", err)
 	}
 	assert(t, vcl, expect)
+}
 
+func TestSkipFastlyControlSyntaxes(t *testing.T) {
+	input := `
+pragma optional_param geoip_opt_in true;
+pragma optional_param max_object_size 2147483648;
+pragma optional_param smiss_max_object_size 5368709120;
+pragma optional_param fetchless_purge_all 1;
+pragma optional_param chash_randomize_on_pass true;
+pragma optional_param default_ssl_check_cert 1;
+pragma optional_param max_backends 20;
+pragma optional_param customer_id "bwIxaoVzhiEJrt4SIaIvT";
+C!
+W!
+# Backends
+
+backend F_Host_1 {
+	.host = "example.com";
+}
+`
+	expect := &ast.VCL{
+		Statements: []ast.Statement{
+			&ast.BackendDeclaration{
+				Meta: &ast.Meta{
+					Token:              T,
+					Nest:               0,
+					PreviousEmptyLines: 1,
+					Leading:            comments("# Backends"),
+					Infix:              ast.Comments{},
+					Trailing:           ast.Comments{},
+				},
+				Name: &ast.Ident{
+					Meta:  ast.New(T, 0),
+					Value: "F_Host_1",
+				},
+				Properties: []*ast.BackendProperty{
+					{
+						Meta: ast.New(T, 1),
+						Key: &ast.Ident{
+							Meta:  ast.New(T, 1),
+							Value: "host",
+						},
+						Value: &ast.String{
+							Meta:  ast.New(T, 1),
+							Value: "example.com",
+						},
+					},
+				},
+			},
+		},
+	}
+	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("%+v", err)
+	}
+	assert(t, vcl, expect)
 }

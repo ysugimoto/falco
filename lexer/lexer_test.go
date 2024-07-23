@@ -698,3 +698,57 @@ func TestCustomToken(t *testing.T) {
 		}
 	}
 }
+
+func TestFastlyControlSyntaxes(t *testing.T) {
+	t.Run("pragma syntax", func(t *testing.T) {
+		input := "pragma optional_param geoip_opt_in true;"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.PRAGMA, Literal: "pragma", Line: 1, Position: 1},
+			{Type: token.IDENT, Literal: "optional_param", Line: 1, Position: 8},
+			{Type: token.IDENT, Literal: "geoip_opt_in", Line: 1, Position: 23},
+			{Type: token.TRUE, Literal: "true", Line: 1, Position: 36},
+			{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 40},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 41},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
+
+	t.Run("other control syntax of C!", func(t *testing.T) {
+		input := "C!"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.FASTLY_CONTROL, Literal: "C!", Line: 1, Position: 1},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
+
+	t.Run("other control syntax of W!", func(t *testing.T) {
+		input := "W!"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.FASTLY_CONTROL, Literal: "W!", Line: 1, Position: 1},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
+}

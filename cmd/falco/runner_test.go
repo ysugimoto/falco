@@ -51,6 +51,13 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			warnings: 0,
 			infos:    1,
 		},
+		{
+			name:     "Fastly Generated",
+			fileName: "../../examples/linter/fastly_generated.vcl",
+			errors:   0,
+			warnings: 12,
+			infos:    2,
+		},
 	}
 
 	// Run custom linter testing only in CI env
@@ -216,7 +223,8 @@ func TestRepositoryExamples(t *testing.T) {
 	tests := loadRepoExampleTestMetadata()
 	c := &config.Config{
 		Linter: &config.LinterConfig{
-			VerboseWarning: true,
+			VerboseWarning:    true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 	}
 	for _, tt := range tests {
@@ -254,7 +262,8 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 	c := &config.Config{
 		Json: true,
 		Linter: &config.LinterConfig{
-			VerboseWarning: true,
+			VerboseWarning:    true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 	}
 
@@ -281,8 +290,12 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 			if ret.Errors != tt.errors {
 				t.Errorf("Errors expects %d, got %d", tt.errors, ret.Errors)
 			}
-			if len(ret.LintErrors) != tt.infos+tt.warnings+tt.errors {
-				t.Errorf("Expected %d linting errors, got %d", tt.infos+tt.warnings+tt.errors, len(ret.LintErrors))
+			var c int
+			for _, v := range ret.LintErrors {
+				c += len(v)
+			}
+			if c != tt.infos+tt.warnings+tt.errors {
+				t.Errorf("Expected %d linting errors, got %d", tt.infos+tt.warnings+tt.errors, c)
 			}
 
 			countLintErrorsWithSeverity := func(sev linter.Severity) int {

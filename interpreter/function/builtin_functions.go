@@ -514,7 +514,7 @@ var builtinFunctions = map[string]*Function{
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			return builtin.Fastly_try_select_shield(ctx, args...)
 		},
-		CanStatementCall: true,
+		CanStatementCall: false,
 		IsIdentArgument: func(i int) bool {
 			return false
 		},

@@ -126,6 +126,10 @@ func (l *Linter) lintUnusedSubroutines(ctx *context.Context) {
 		if context.IsFastlySubroutine(s.Decl.Name.Value) {
 			continue
 		}
+		// Or, subroutine is ignored to lint, skip it
+		if isIgnoredSubroutineInConfig(l.conf.IgnoreSubroutines, s.Decl.Name.Value) {
+			continue
+		}
 		l.Error(UnusedDeclaration(s.Decl.GetMeta(), s.Decl.Name.Value, "subroutine").Match(UNUSED_DECLARATION))
 	}
 }

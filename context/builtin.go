@@ -603,6 +603,7 @@ func builtinFunctions() Functions {
 				"try_select_shield": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
+						Return: types.BackendType,
 						Arguments: [][]types.Type{
 							[]types.Type{types.BackendType, types.BackendType},
 						},
