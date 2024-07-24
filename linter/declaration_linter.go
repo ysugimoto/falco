@@ -290,6 +290,16 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "sub").Match(SUBROUTINE_SYNTAX))
 	}
+	// vcl_pipe lifecycle subroutine is reserved in Fastly generated VCL.
+	// When the user specify this name of subroutine, Fastly prevents to generated their own vcl_pipe subroutine.
+	// It causes unexpected behavior so falco should report it to not to break original behavior (switch to pipe-mode in Varnish).
+	if decl.Name.Value == "vcl_pipe" {
+		l.Error((&LintError{
+			Severity: WARNING,
+			Token:    decl.Name.GetMeta().Token,
+			Message:  "user-defiend vcl_pipe subroutine may cause unexpected behavior in Fastly actual runtime",
+		}).Match(FORBID_VCL_PIPE))
+	}
 
 	scope := getSubroutineCallScope(decl)
 	if scope == -1 {

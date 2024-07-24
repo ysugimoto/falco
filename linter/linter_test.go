@@ -869,3 +869,10 @@ sub ignored_subroutine {
 		assertNoError(t, input)
 	})
 }
+
+func TestForbidVclPipeSubroutine(t *testing.T) {
+	input := `
+sub vcl_pipe {}
+`
+	assertError(t, input)
+}

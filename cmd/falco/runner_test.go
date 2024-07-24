@@ -51,13 +51,6 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			warnings: 0,
 			infos:    1,
 		},
-		{
-			name:     "Fastly Generated",
-			fileName: "../../examples/linter/fastly_generated.vcl",
-			errors:   0,
-			warnings: 12,
-			infos:    2,
-		},
 	}
 
 	// Run custom linter testing only in CI env
@@ -404,5 +397,33 @@ func TestTester(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+func TestFastlyGeneratedVCLLinting(t *testing.T) {
+	c, err := config.New([]string{"--generated"})
+	if err != nil {
+		t.Errorf("Unexpected config pointer generation error: %s", err)
+		return
+	}
+
+	resolvers, err := resolver.NewFileResolvers("../../examples/linter/fastly_generated.vcl", c.IncludePaths)
+	if err != nil {
+		t.Errorf("Unexpected runner creation error: %s", err)
+		return
+	}
+	ret, err := NewRunner(c, nil).Run(resolvers[0])
+	if err != nil {
+		t.Errorf("Unexpected linting error: %s", err)
+		return
+	}
+	if ret.Infos != 2 {
+		t.Errorf("Infos expects 2, got %d", ret.Infos)
+	}
+	if ret.Warnings != 3 {
+		t.Errorf("Warning expects 3, got %d", ret.Warnings)
+	}
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
 	}
 }

@@ -167,6 +167,7 @@ Flags:
     -v                 : Output lint warnings (verbose)
     -vv                : Output all lint results (very verbose)
     -json              : Output results as JSON (very verbose)
+	--generated        : Lint for Fastly generated VCL
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl
