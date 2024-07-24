@@ -33,6 +33,7 @@ const (
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
 	UNRECOGNIZE_CALL_SCOPE               = "subroutine/unrecognize-call-scope"
+	FORBID_VCL_PIPE                      = "subroutine/forbid-vcl-pipe"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
 	PENALTYBOX_NONEMPTY_BLOCK            = "penaltybox/nonempty-block"

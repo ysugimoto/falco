@@ -37,6 +37,7 @@ type LinterConfig struct {
 	Rules                   map[string]string   `yaml:"rules"`
 	EnforceSubroutineScopes map[string][]string `yaml:"enforce_subroutine_scopes"`
 	IgnoreSubroutines       []string            `yaml:"ignore_subroutines"`
+	IsGenerated             bool                `cli:"generated"`
 }
 
 // Simulator configuration
@@ -177,6 +178,14 @@ func New(args []string) (*Config, error) {
 	// On Fastly generated VCL, "vcl_pipe" subroutine will present internally.
 	// The "vcl_pipe" subroutine looks fastly managed but undocumented, so we will ignore linting
 	c.Linter.IgnoreSubroutines = append(c.Linter.IgnoreSubroutines, "vcl_pipe")
+	// If generated option provided for linter, modify default rules
+	if c.Linter.IsGenerated {
+		if c.Linter.Rules == nil {
+			c.Linter.Rules = make(map[string]string)
+		}
+		// Fastly generated VCL no longer has boiler-plate marco due to extracted so ignore it
+		c.Linter.Rules["subroutine/boilerplate-macro"] = "IGNORE" // TODO: use linter rule constants instead of string hard-coded
+	}
 
 	return c, nil
 }
