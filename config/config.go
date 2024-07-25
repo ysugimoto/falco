@@ -94,7 +94,7 @@ type FormatConfig struct {
 	ElseIf                     bool   `yaml:"else_if" default:"false"`
 	AlwaysNextLineElseIf       bool   `yaml:"always_next_line_else_if" default:"false"`
 	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
-	SortDeclaration            bool   `yaml:"sort_declaration" defaul:"false"`
+	SortDeclaration            bool   `yaml:"sort_declaration" default:"false"`
 	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
 	CommentStyle               string `yaml:"comment_style" default:"none"`
 	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
