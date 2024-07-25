@@ -85,7 +85,7 @@ type FormatConfig struct {
 
 	// Formatter options
 	IndentWidth                int    `yaml:"indent_width" default:"2"`
-	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"2"`
+	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"1"`
 	IndentStyle                string `yaml:"indent_style" default:"space"`
 	LineWidth                  int    `yaml:"line_width" default:"120"`
 	ExplicitStringConat        bool   `yaml:"explicit_string_concat" default:"false"`
