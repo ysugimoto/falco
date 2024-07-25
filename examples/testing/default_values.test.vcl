@@ -75,7 +75,7 @@ sub test_default_local_var_recv {
   assert.false(var.bool);
   assert.equal(var.integer, 0);
   assert.equal(var.float, 0.000);
-  assert.equal(var.time, std.time("Thu, 01 Jan 1970 00:00:00 GMT", now));
+  assert.equal(var.time, std.time("Thu, 01 Jan 1970 00:00:00 UTC", now));
   assert.equal(var.rtime, 0s);
 
   if (!var.string) {
