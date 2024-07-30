@@ -636,6 +636,7 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		if val, ok := v.ctx.RegexMatchedValues[match[1]]; ok {
 			return val
 		}
+		return &value.String{IsNotSet: true}
 	}
 
 	// HTTP request header matching
