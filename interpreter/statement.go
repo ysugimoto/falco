@@ -4,7 +4,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/assign"
@@ -37,9 +36,6 @@ func (i *Interpreter) ProcessBlockStatement(
 		}
 
 		// Find process marker and add flow if found
-		if stmt.GetMeta() == nil {
-			pp.Println(stmt)
-		}
 		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
 			i.process.Flows = append(
 				i.process.Flows,

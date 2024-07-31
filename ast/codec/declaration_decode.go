@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 )
@@ -203,7 +202,6 @@ func (c *Decoder) decodeDirectorBackendObject() (*ast.DirectorBackendObject, err
 			}
 			backend.Values = append(backend.Values, prop)
 		default:
-			pp.Println("OK")
 			return nil, typeMismatch(DIRECTOR_PROPERTY, frame.Type())
 		}
 	}

@@ -27,18 +27,31 @@ func NewErrorScopeVariables(ctx *context.Context) *ErrorScopeVariables {
 	}
 }
 
+//nolint:funlen,gocyclo
 func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
 	case CLIENT_SOCKET_CWND:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
 	case CLIENT_SOCKET_NEXTHOP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case CLIENT_SOCKET_PACE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case CLIENT_SOCKET_PLOSS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0}, nil
 
 	case ESI_ALLOW_INSIDE_CDATA:
@@ -87,8 +100,14 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return v.ctx.ObjectTTL, nil
 
 	case REQ_BACKEND_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case REQ_BACKEND_IS_CLUSTER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case REQ_BACKEND_NAME:
 		var name string
@@ -137,7 +156,7 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	}
 
 	// Look up shared variables
-	if val, err := GetTCPInfoVariable(name); err != nil {
+	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

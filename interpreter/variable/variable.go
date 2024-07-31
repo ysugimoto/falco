@@ -62,3 +62,10 @@ func doAssign(left value.Value, operator string, right value.Value) error {
 		return assign.Assign(left, right.Copy())
 	}
 }
+
+func lookupOverride(ctx *context.Context, name string) value.Value {
+	if v, ok := ctx.OverrideVariables[name]; ok {
+		return v
+	}
+	return nil
+}

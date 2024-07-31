@@ -141,6 +141,14 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 				return false
 			},
 		},
+		"testing.inject_variable": {
+			Scope:            allScope,
+			Call:             Testing_inject_variable,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 	}
 }
 

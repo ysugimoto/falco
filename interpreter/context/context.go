@@ -164,6 +164,8 @@ type Context struct {
 	// However, Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
 	// see: https://developer.fastly.com/reference/vcl/statements/esi/
 	TriggerESI bool
+
+	OverrideVariables map[string]value.Value
 }
 
 func New(options ...Option) *Context {
@@ -258,6 +260,8 @@ func New(options ...Option) *Context {
 
 		RegexMatchedValues: make(map[string]*value.String),
 		SubroutineCalls:    make(map[string]int),
+
+		OverrideVariables: make(map[string]value.Value),
 	}
 
 	// collect options
