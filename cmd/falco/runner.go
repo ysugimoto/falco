@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -469,6 +470,25 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
 	}
 
+	// Factory override variables.
+	// The order is imporotant, should do yaml -> cli order because cli could override yaml configuration
+	overrides := make(map[string]any)
+	if tc.YamlOverrideVariables != nil {
+		for key, val := range tc.YamlOverrideVariables {
+			overrides[key] = val
+		}
+	}
+	if tc.CLIOverrideVariables != nil {
+		for _, v := range tc.CLIOverrideVariables {
+			key, val, parsed := r.parseOverrideVariables(v)
+			if !parsed {
+				continue
+			}
+			overrides[key] = val
+		}
+	}
+	options = append(options, icontext.WithOverrideVariales(overrides))
+
 	r.message(white, "Running tests...")
 	factory, err := tester.New(tc, options).Run(r.config.Commands.At(1))
 	if err != nil {
@@ -478,6 +498,28 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	}
 	r.message(white, " Done.\n")
 	return factory, nil
+}
+
+func (r *Runner) parseOverrideVariables(v string) (string, any, bool) {
+	sep := strings.SplitN(v, "=", 2)
+	if len(sep) != 2 {
+		return "", "", false
+	}
+	key := strings.TrimSpace(sep[0])
+	val := strings.TrimSpace(sep[1])
+
+	// Simple type assertion of primitive value
+	if strings.EqualFold(val, "true") {
+		return key, true, true // bool:true
+	} else if strings.EqualFold(val, "false") {
+		return key, false, true // bool:true
+	} else if v, err := strconv.ParseInt(val, 10, 64); err != nil {
+		return key, v, true // integer
+	} else if v, err := strconv.ParseFloat(val, 64); err != nil {
+		return key, v, true // float
+	} else {
+		return key, val, true // string
+	}
 }
 
 func (r *Runner) Format(rslv resolver.Resolver) error {

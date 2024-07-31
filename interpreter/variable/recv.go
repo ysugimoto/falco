@@ -32,13 +32,25 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
 	case CLIENT_SOCKET_CWND:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
 	case CLIENT_SOCKET_NEXTHOP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case CLIENT_SOCKET_PACE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case CLIENT_SOCKET_PLOSS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0}, nil
 
 	case ESI_ALLOW_INSIDE_CDATA:
@@ -73,22 +85,22 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	}
 
 	// Look up shared variables
-	if val, err := GetTCPInfoVariable(name); err != nil {
+	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetQuicVariable(name); err != nil {
+	if val, err := GetQuicVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetTLSVariable(v.ctx.Request.TLS, name); err != nil {
+	if val, err := GetTLSVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVariable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil

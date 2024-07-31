@@ -69,9 +69,15 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return &value.String{Value: bereq.URL.RawQuery}, nil
 	// We simulate request is always pass to the origin, not consider shielding
 	case REQ_BACKEND_IS_ORIGIN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: true}, nil
 	// Digest ratio will return fixed value
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 	}
 

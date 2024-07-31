@@ -43,17 +43,17 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	}
 
 	// Look up shared variables
-	if val, err := GetQuicVariable(name); err != nil {
+	if val, err := GetQuicVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetTLSVariable(v.ctx.Request.TLS, name); err != nil {
+	if val, err := GetTLSVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVariable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
