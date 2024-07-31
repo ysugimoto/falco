@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/limitations"
@@ -106,7 +105,6 @@ func GetTCPInfoVariable(ctx *context.Context, name string) (value.Value, error) 
 		TLS_CLIENT_CERTIFICATE_IS_CERT_UNKNOWN,
 		TLS_CLIENT_CERTIFICATE_IS_UNKNOWN_CA:
 		if v := lookupOverride(ctx, name); v != nil {
-			pp.Println(name)
 			return v, nil
 		}
 		return &value.Boolean{Value: false}, nil
