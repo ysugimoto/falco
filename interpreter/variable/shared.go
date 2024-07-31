@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/limitations"
@@ -89,22 +90,23 @@ func GetTCPInfoVariable(ctx *context.Context, name string) (value.Value, error) 
 			return v, nil
 		}
 		return &value.Integer{Value: 0}, nil
-	case TLS_CLIENT_CERTIFICATE_DN:
-	case TLS_CLIENT_CERTIFICATE_ISSUER_DN:
-	case TLS_CLIENT_CERTIFICATE_RAW_CERTIFICATE_B64:
-	case TLS_CLIENT_CERTIFICATE_SERIAL_NUMBER:
+	case TLS_CLIENT_CERTIFICATE_DN,
+		TLS_CLIENT_CERTIFICATE_ISSUER_DN,
+		TLS_CLIENT_CERTIFICATE_RAW_CERTIFICATE_B64,
+		TLS_CLIENT_CERTIFICATE_SERIAL_NUMBER:
 		if v := lookupOverride(ctx, name); v != nil {
 			return v, nil
 		}
 		return &value.String{Value: ""}, nil
 
-	case TLS_CLIENT_CERTIFICATE_IS_CERT_BAD:
-	case TLS_CLIENT_CERTIFICATE_IS_CERT_EXPIRED:
-	case TLS_CLIENT_CERTIFICATE_IS_CERT_MISSING:
-	case TLS_CLIENT_CERTIFICATE_IS_CERT_REVOKED:
-	case TLS_CLIENT_CERTIFICATE_IS_CERT_UNKNOWN:
-	case TLS_CLIENT_CERTIFICATE_IS_UNKNOWN_CA:
+	case TLS_CLIENT_CERTIFICATE_IS_CERT_BAD,
+		TLS_CLIENT_CERTIFICATE_IS_CERT_EXPIRED,
+		TLS_CLIENT_CERTIFICATE_IS_CERT_MISSING,
+		TLS_CLIENT_CERTIFICATE_IS_CERT_REVOKED,
+		TLS_CLIENT_CERTIFICATE_IS_CERT_UNKNOWN,
+		TLS_CLIENT_CERTIFICATE_IS_UNKNOWN_CA:
 		if v := lookupOverride(ctx, name); v != nil {
+			pp.Println(name)
 			return v, nil
 		}
 		return &value.Boolean{Value: false}, nil
