@@ -352,6 +352,12 @@ func TestTester(t *testing.T) {
 			filter: "*mock_subroutine.test.vcl",
 			passes: 6,
 		},
+		{
+			name:   "overriding variables test",
+			main:   "../../examples/testing/override_variables.vcl",
+			filter: "*override_variables.test.vcl",
+			passes: 6,
+		},
 	}
 
 	for _, tt := range tests {
@@ -367,6 +373,15 @@ func TestTester(t *testing.T) {
 				},
 				Testing: &config.TestConfig{
 					Filter: tt.filter,
+					YamlOverrideVariables: map[string]any{
+						"tls.client.certificate.is_cert_missing": true,
+						"client.geo.area_code":                   100,
+						"req.digest.ratio":                       0.8,
+						"client.as.name":                         "Foobar",
+					},
+					CLIOverrideVariables: []string{
+						"client.geo.area_code=200", // will be overridden
+					},
 				},
 				Commands: config.Commands{"test", main},
 			}

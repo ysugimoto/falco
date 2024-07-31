@@ -52,7 +52,7 @@ func Test_inject_variable(t *testing.T) {
 			}
 			av := value.Unwrap[*value.String](after)
 			if diff := cmp.Diff(av.Value, tt.override); diff != "" {
-				t.Errorf("overriden value is different, diff=%s", diff)
+				t.Errorf("Overridden value is different, diff=%s", diff)
 			}
 		}
 	})
