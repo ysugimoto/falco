@@ -15,8 +15,8 @@ Will be updated when we find or implement a way to get accurate values.
 | client.platform.mediaplayer                | false                              |
 | client.geo.latitude                        | 37.7786941                         |
 | client.geo.longitude                       | -122.3981452                       |
-| client.as_number                           | 4294967294                         |
-| client.as_name                             | "Reserved"                         |
+| client.as.number                           | 4294967294                         |
+| client.as.name                             | "Reserved"                         |
 | client.display.height                      | -1                                 |
 | client.display.ppi                         | -1                                 |
 | client.display.width                       | -1                                 |
@@ -67,7 +67,7 @@ Will be updated when we find or implement a way to get accurate values.
 | obj.is_pci                                 | false                              |
 | req.backend.is_cluster                     | false                              |
 | resp.is_locally_generated                  | false                              |
-| req.digest_ratio                           | 0.4                                |
+| req.digest.ratio                           | 0.4                                |
 | obj.stale_white_revalidate                 | 60s                                |
 | backend.socket.congestion_algorithm        | "cubic"                            |
 | backend.socket.cwnd                        | 60                                 |
