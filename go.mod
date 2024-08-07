@@ -7,7 +7,7 @@ require (
 	github.com/fatih/color v1.12.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.8
 	github.com/pkg/errors v0.9.1
