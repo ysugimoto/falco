@@ -2084,6 +2084,17 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-is-version5/",
 					},
 				},
+				"is_version7": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-is-version7/",
+					},
+				},
 				"oid": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
@@ -2128,6 +2139,14 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version5/",
+					},
+				},
+				"version7": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return:    types.StringType,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-version7/",
 					},
 				},
 				"x500": &FunctionSpec{
