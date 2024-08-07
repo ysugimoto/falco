@@ -289,11 +289,13 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(struct {
-			Tests   []*tester.TestResult `json:"tests"`
-			Summary *tester.TestCounter  `json:"summary"`
+			Tests    []*tester.TestResult `json:"tests"`
+			Summary  *tester.TestCounter  `json:"summary"`
+			Coverage *tester.TestCoverage `json:"coverage,omitempty"`
 		}{
-			Tests:   factory.Results,
-			Summary: factory.Statistics,
+			Tests:    factory.Results,
+			Summary:  factory.Statistics,
+			Coverage: factory.Coverage,
 		}); err != nil {
 			writeln(red, err.Error())
 			return ErrExit
@@ -378,6 +380,13 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	write(failedColor, "%d failed, ", failedCount)
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
+
+	if factory.Coverage != nil {
+		write(white, "Coverage: ")
+		write(white, "%% Stmts: %.2f, ", factory.Coverage.Statement*100)
+		write(white, "%% Branch: %.2f, ", factory.Coverage.Branch*100)
+		writeln(white, "%% Funcs: %.2f", factory.Coverage.Function*100)
+	}
 
 	if factory.Statistics.Fails > 0 {
 		return ErrExit
