@@ -681,10 +681,12 @@ func TestPeekToken(t *testing.T) {
 
 func TestCustomToken(t *testing.T) {
 	input := `describe foo {}`
-	l := NewFromString(input, WithCustomTokens("describe"))
+	l := NewFromString(input, WithCustomTokens(map[string]token.TokenType{
+		"describe": token.Custom("DESCRIBE"),
+	}))
 
 	expects := []token.Token{
-		{Type: token.CUSTOM, Literal: "describe", Line: 1, Position: 1},
+		{Type: token.TokenType("DESCRIBE"), Literal: "describe", Line: 1, Position: 1},
 		{Type: token.IDENT, Literal: "foo", Line: 1, Position: 10},
 		{Type: token.LEFT_BRACE, Literal: "{", Line: 1, Position: 14},
 		{Type: token.RIGHT_BRACE, Literal: "}", Line: 1, Position: 15},
