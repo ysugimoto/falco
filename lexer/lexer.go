@@ -20,7 +20,7 @@ type Lexer struct {
 	peeks  []token.Token
 	isEOF  bool
 
-	customs map[string]struct{}
+	customs map[string]token.TokenType
 }
 
 func New(r io.Reader, opts ...OptionFunc) *Lexer {
@@ -29,10 +29,9 @@ func New(r io.Reader, opts ...OptionFunc) *Lexer {
 		r:       bufio.NewReader(r),
 		line:    1,
 		buffer:  new(bytes.Buffer),
-		customs: map[string]struct{}{},
+		file:    o.Filename,
+		customs: o.Customs,
 	}
-	l.file = o.Filename
-	l.customs = o.Customs
 	l.readChar()
 	return l
 }
@@ -41,9 +40,9 @@ func NewFromString(input string, opts ...OptionFunc) *Lexer {
 	return New(strings.NewReader(input), opts...)
 }
 
-func (l *Lexer) RegisterCustomTokens(tokens ...string) {
-	for i := range tokens {
-		l.customs[tokens[i]] = struct{}{}
+func (l *Lexer) RegisterCustomTokens(tokenMap map[string]token.TokenType) {
+	for k, v := range tokenMap {
+		l.customs[k] = v
 	}
 }
 
@@ -360,9 +359,9 @@ func (l *Lexer) NextToken() token.Token {
 				}
 			default:
 				t.Literal = literal
-				// If custom token found, mark as CUSTOM
-				if _, ok := l.customs[literal]; ok {
-					t.Type = token.CUSTOM
+				// If custom token found, use it
+				if custom, ok := l.customs[literal]; ok {
+					t.Type = custom
 				} else {
 					t.Type = token.LookupIdent(t.Literal)
 				}

@@ -2,15 +2,17 @@ package parser
 
 import (
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/token"
 )
 
 type CustomParser interface {
-	Literal() string
+	Ident() string
+	Token() token.TokenType
 	Parse(*Parser) (ast.CustomStatement, error)
 }
 
 func (p *Parser) ParseCustomToken() (ast.CustomStatement, error) {
-	v, ok := p.customParsers[p.curToken.Token.Literal]
+	v, ok := p.customParsers[p.curToken.Token.Type]
 	if !ok {
 		return nil, UnexpectedToken(p.curToken)
 	}

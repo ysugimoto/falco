@@ -61,8 +61,6 @@ func (p *Parser) ParseStatement() (ast.Statement, error) {
 		stmt, err = p.ParseBreakStatement()
 	case token.FALLTHROUGH:
 		stmt, err = p.ParseFallthroughStatement()
-	case token.CUSTOM:
-		stmt, err = p.ParseCustomToken()
 	case token.IDENT:
 		// Check if the current ident is a function call
 		if p.PeekTokenIs(token.LEFT_PAREN) {
@@ -76,7 +74,11 @@ func (p *Parser) ParseStatement() (ast.Statement, error) {
 			}
 		}
 	default:
-		err = UnexpectedToken(p.curToken)
+		if custom, ok := p.customParsers[p.curToken.Token.Type]; ok {
+			stmt, err = custom.Parse(p)
+		} else {
+			err = UnexpectedToken(p.curToken)
+		}
 	}
 	if err != nil {
 		return nil, errors.WithStack(err)

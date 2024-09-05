@@ -57,13 +57,13 @@ type Parser struct {
 	prefixParsers  map[token.TokenType]prefixParser
 	infixParsers   map[token.TokenType]infixParser
 	postfixParsers map[token.TokenType]postfixParser
-	customParsers  map[string]CustomParser
+	customParsers  map[token.TokenType]CustomParser
 }
 
 func New(l *lexer.Lexer, opts ...ParserOption) *Parser {
 	p := &Parser{
 		l:             l,
-		customParsers: make(map[string]CustomParser),
+		customParsers: make(map[token.TokenType]CustomParser),
 	}
 	for i := range opts {
 		opts[i](p)
@@ -72,11 +72,11 @@ func New(l *lexer.Lexer, opts ...ParserOption) *Parser {
 	p.registerExpressionParsers()
 
 	// Register custom lexer tokens for each custom parsers
-	var literals []string
-	for literal := range p.customParsers {
-		literals = append(literals, literal)
+	customTokenMap := make(map[string]token.TokenType)
+	for _, v := range p.customParsers {
+		customTokenMap[v.Ident()] = v.Token()
 	}
-	l.RegisterCustomTokens(literals...)
+	l.RegisterCustomTokens(customTokenMap)
 
 	p.NextToken()
 	p.NextToken()
@@ -241,10 +241,12 @@ func (p *Parser) Parse() (ast.Statement, error) {
 		stmt, err = p.ParsePenaltyboxDeclaration()
 	case token.RATECOUNTER:
 		stmt, err = p.ParseRatecounterDeclaration()
-	case token.CUSTOM:
-		stmt, err = p.ParseCustomToken()
 	default:
-		err = UnexpectedToken(p.curToken)
+		if custom, ok := p.customParsers[p.curToken.Token.Type]; ok {
+			stmt, err = custom.Parse(p)
+		} else {
+			err = UnexpectedToken(p.curToken)
+		}
 	}
 
 	if err != nil {

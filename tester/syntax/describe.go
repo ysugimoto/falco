@@ -57,8 +57,11 @@ func (d *DescribeStatement) String() string {
 // Custome parser implementation for "describe" keyword
 type DescribeParser struct{}
 
-func (d *DescribeParser) Literal() string {
+func (d *DescribeParser) Ident() string {
 	return "describe"
+}
+func (d *DescribeParser) Token() token.TokenType {
+	return token.Custom("DESCRIBE")
 }
 func (d *DescribeParser) Parse(p *parser.Parser) (ast.CustomStatement, error) {
 	stmt := &DescribeStatement{
@@ -86,38 +89,39 @@ func (d *DescribeParser) Parse(p *parser.Parser) (ast.CustomStatement, error) {
 			}
 			stmt.Subroutines = append(stmt.Subroutines, sub)
 			p.NextToken()
-		case token.CUSTOM:
-			cs, err := p.ParseCustomToken()
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			if t, ok := cs.(*HookStatement); ok {
-				switch {
-				case strings.HasPrefix(t.keyword, "before"):
-					if _, ok := stmt.Befores[t.keyword]; ok {
-						return nil, &parser.ParseError{
-							Token:   t.GetMeta().Token,
-							Message: fmt.Sprintf("%s hook is duplicated", cs.Literal()),
-						}
-					}
-					stmt.Befores[t.keyword] = t
-				case strings.HasPrefix(t.keyword, "after"):
-					if _, ok := stmt.Afters[t.keyword]; ok {
-						return nil, &parser.ParseError{
-							Token:   t.GetMeta().Token,
-							Message: fmt.Sprintf("%s hook is duplicated", cs.Literal()),
-						}
-					}
-					stmt.Afters[t.keyword] = t
-				}
-				p.NextToken()
-				continue
-			}
-			return nil, &parser.ParseError{
-				Token:   p.CurToken().Token,
-				Message: fmt.Sprintf("%s statement could not be placed inside describe", cs.Literal()),
-			}
 		default:
+			if hookParser, ok := hookParsers[tok.Token.Type]; ok {
+				hook, err := hookParser.Parse(p)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+				if t, ok := hook.(*HookStatement); ok {
+					switch {
+					case strings.HasPrefix(t.keyword, "before"):
+						if _, ok := stmt.Befores[t.keyword]; ok {
+							return nil, &parser.ParseError{
+								Token:   t.GetMeta().Token,
+								Message: fmt.Sprintf("%s hook is duplicated", hook.Literal()),
+							}
+						}
+						stmt.Befores[t.keyword] = t
+					case strings.HasPrefix(t.keyword, "after"):
+						if _, ok := stmt.Afters[t.keyword]; ok {
+							return nil, &parser.ParseError{
+								Token:   t.GetMeta().Token,
+								Message: fmt.Sprintf("%s hook is duplicated", hook.Literal()),
+							}
+						}
+						stmt.Afters[t.keyword] = t
+					}
+					p.NextToken()
+					continue
+				}
+				return nil, &parser.ParseError{
+					Token:   p.CurToken().Token,
+					Message: fmt.Sprintf("%s statement could not be placed inside describe", hook.Literal()),
+				}
+			}
 			return nil, parser.UnexpectedToken(p.CurToken())
 		}
 	}

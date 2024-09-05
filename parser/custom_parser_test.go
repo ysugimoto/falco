@@ -49,9 +49,13 @@ func (d *DescribeStatement) String() string {
 
 type DescribeParser struct{}
 
-func (d *DescribeParser) Literal() string {
+func (d *DescribeParser) Ident() string {
 	return "describe"
 }
+func (d *DescribeParser) Token() token.TokenType {
+	return token.Custom("DESCRIBE")
+}
+
 func (d *DescribeParser) Parse(p *Parser) (ast.CustomStatement, error) {
 	stmt := &DescribeStatement{
 		Meta: p.curToken,
@@ -75,7 +79,7 @@ func (d *DescribeParser) Parse(p *Parser) (ast.CustomStatement, error) {
 				return nil, errors.WithStack(err)
 			}
 			stmt.Subroutines = append(stmt.Subroutines, sub)
-		case token.CUSTOM:
+		case token.TokenType("BEFORE_EACH"):
 			cs, err := p.ParseCustomToken()
 			if err != nil {
 				return nil, errors.WithStack(err)
@@ -125,8 +129,11 @@ func (b *BeforeEachStatement) String() string {
 
 type BeforeEachParser struct{}
 
-func (b *BeforeEachParser) Literal() string {
+func (b *BeforeEachParser) Ident() string {
 	return "before_each"
+}
+func (b *BeforeEachParser) Token() token.TokenType {
+	return token.Custom("BEFORE_EACH")
 }
 func (b *BeforeEachParser) Parse(p *Parser) (ast.CustomStatement, error) {
 	stmt := &BeforeEachStatement{

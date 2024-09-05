@@ -28,6 +28,10 @@ var Null = Token{
 	Literal: "NULL",
 }
 
+func Custom(name string) TokenType {
+	return TokenType(name)
+}
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
@@ -125,11 +129,6 @@ const (
 	DEFAULT          = "DEFAULT"          // default
 	BREAK            = "BREAK"            // break
 	FALLTHROUGH      = "FALLTHROUGH"      // fallthrough
-
-	// Custom Keywords
-	// This keyword is special usecase for extensible language definition.
-	// Token is processed via custom lexer/parser definition by literal
-	CUSTOM = "CUSTOM"
 
 	// Fastly Generated control syntaxes
 	// Fastly automatically generates some control syntaxes like "pragma".
