@@ -29,6 +29,7 @@ Flags:
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acl limitation
+    --watch            : Watch VCL file changes and run test
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl
@@ -77,6 +78,17 @@ falco test -I vcl_tests ./vcl/default.vcl
 ```
 
 falco finds `default.test.vcl` as testing file for both case.
+
+## Incremental Testing
+
+If you provide `--watch` option for testing command, test runner watches source and testing VCL file change and run tests.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --watch
+```
+
+Then falco observes `vcl_tests/*` and `vcl/*` file changes and run test incrementally.
 
 ## Testing Subroutine
 
