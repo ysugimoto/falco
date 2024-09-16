@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"encoding/json"
 
 	"github.com/fatih/color"
+	"github.com/fsnotify/fsnotify"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
@@ -161,7 +166,12 @@ func main() {
 		var exitErr error
 		switch action {
 		case subcommandTest:
-			exitErr = runTest(runner, v)
+			// test can accept watch
+			if c.Testing.Watch {
+				exitErr = watchRunTest(runner, v)
+			} else {
+				exitErr = runTest(runner, v)
+			}
 		case subcommandSimulate:
 			exitErr = runSimulate(runner, v)
 		case subcommandStats:
@@ -277,6 +287,79 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 	printStats("| %-22s | %51d |", "Directors", stats.Directors)
 	printStats(strings.Repeat("-", 80))
 	return nil
+}
+
+func watchRunTest(runner *Runner, rslv resolver.Resolver) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		writeln(red, err.Error())
+		return ErrExit
+	}
+	defer watcher.Close()
+
+	doneCh := make(chan struct{})
+	errCh := make(chan error)
+
+	clearTerminal := func() {
+		if runtime.GOOS == "windows" {
+			// Clear terminal, we're not sure Window could clear termina by following command...
+			exec.Command("cmd", "/c", "cls").Run() // nolint:errcheck
+		} else {
+			// Darwin, Linux could clear by sending escape sequence
+			fmt.Print("\033[H\033[2J")
+		}
+	}
+
+	go func() {
+		clearTerminal()
+		// Run test at least once
+		runTest(runner, rslv) // nolint:errcheck
+
+		writeln(cyan, "waiting for file changes...")
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					doneCh <- struct{}{}
+					return
+				}
+				switch event.Op {
+				case fsnotify.Create, fsnotify.Rename:
+					clearTerminal()
+					runTest(runner, rslv) // nolint:errcheck
+					writeln(cyan, "waiting for file changes...")
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					doneCh <- struct{}{}
+					return
+				}
+				writeln(red, err.Error())
+				errCh <- ErrExit
+				return
+			}
+		}
+	}()
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+
+		<-sig
+		doneCh <- struct{}{}
+	}()
+
+	for _, p := range rslv.IncludePaths() {
+		if err := watcher.Add(p); err != nil {
+			return ErrExit
+		}
+	}
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-doneCh:
+		return nil
+	}
 }
 
 func runTest(runner *Runner, rslv resolver.Resolver) error {

@@ -49,9 +49,9 @@ func New(c *config.TestConfig, opts []icontext.Option) *Tester {
 // Note that:
 // - Test files must have ".test.vcl" extension e.g default.test.vcl
 // - Tester finds files from all include paths
-func (t *Tester) listTestFiles(mainVCL string) ([]string, error) {
+func (t *Tester) listTestFiles(main string) ([]string, error) {
 	// correct include paths
-	searchDirs := []string{filepath.Dir(mainVCL)}
+	searchDirs := []string{filepath.Dir(main)}
 	searchDirs = append(searchDirs, t.config.IncludePaths...)
 
 	var testFiles []string

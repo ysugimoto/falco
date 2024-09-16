@@ -149,6 +149,7 @@ Flags:
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --watch            : Watch VCL file changes and run test
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl

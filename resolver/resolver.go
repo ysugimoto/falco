@@ -20,6 +20,7 @@ type Resolver interface {
 	MainVCL() (*VCL, error)
 	Resolve(stmt *ast.IncludeStatement) (*VCL, error)
 	Name() string
+	IncludePaths() []string
 	// TODO: implement
 	// ResolveScopeSnippet(scope string) (*VCL, error)
 }

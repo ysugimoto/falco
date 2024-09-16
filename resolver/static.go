@@ -26,4 +26,5 @@ func (s *StaticResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
 	return nil, errors.New("Static Resolver returns error")
 }
 
-func (s *StaticResolver) Name() string { return "__STATIC__" }
+func (s *StaticResolver) Name() string           { return "__STATIC__" }
+func (s *StaticResolver) IncludePaths() []string { return []string{} }
