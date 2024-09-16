@@ -542,6 +542,10 @@ func (m *mockResolver) Name() string {
 	return ""
 }
 
+func (m *mockResolver) IncludePaths() []string {
+	return []string{}
+}
+
 func TestResolveRootIncludeStatement(t *testing.T) {
 	mock := &mockResolver{
 		dependency: map[string]string{

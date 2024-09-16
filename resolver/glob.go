@@ -41,6 +41,10 @@ func (g *GlobResolver) Name() string {
 	return ""
 }
 
+func (g *GlobResolver) IncludePaths() []string {
+	return []string{}
+}
+
 func (g *GlobResolver) MainVCL() (*VCL, error) {
 	return getVCL(g.main)
 }

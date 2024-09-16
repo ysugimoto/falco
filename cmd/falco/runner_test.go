@@ -324,37 +324,37 @@ func TestTester(t *testing.T) {
 	}{
 		{
 			name:   "table manipulation test",
-			main:   "../../examples/testing/table_manipulation.vcl",
+			main:   "../../examples/testing/table_manipulation/table_manipulation.vcl",
 			filter: "*table_*.test.vcl",
 			passes: 2,
 		},
 		{
 			name:   "empty and notset value test",
-			main:   "../../examples/testing/default_values.vcl",
+			main:   "../../examples/testing/default_values/default_values.vcl",
 			filter: "*values.test.vcl",
 			passes: 16,
 		},
 		{
 			name:   "assertions test",
-			main:   "../../examples/testing/assertion.vcl",
+			main:   "../../examples/testing/assertion/assertion.vcl",
 			filter: "*assertion.test.vcl",
 			passes: 5,
 		},
 		{
 			name:   "grouping test",
-			main:   "../../examples/testing/group.vcl",
+			main:   "../../examples/testing/group/group.vcl",
 			filter: "*group.test.vcl",
 			passes: 3,
 		},
 		{
 			name:   "mockging test",
-			main:   "../../examples/testing/mock_subroutine.vcl",
+			main:   "../../examples/testing/mock_subroutine/mock_subroutine.vcl",
 			filter: "*mock_subroutine.test.vcl",
 			passes: 6,
 		},
 		{
 			name:   "overriding variables test",
-			main:   "../../examples/testing/override_variables.vcl",
+			main:   "../../examples/testing/override_variables/override_variables.vcl",
 			filter: "*override_variables.test.vcl",
 			passes: 6,
 		},

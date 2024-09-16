@@ -57,6 +57,10 @@ func (f *FileResolver) Name() string {
 	return ""
 }
 
+func (f *FileResolver) IncludePaths() []string {
+	return f.includePaths
+}
+
 func getVCL(file string) (*VCL, error) {
 	if _, err := os.Stat(file); err != nil {
 		return nil, err
