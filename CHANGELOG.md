@@ -1,3 +1,15 @@
+## v1.10.0
+
+- add watch option for incremental testing [#347](https://github.com/ysugimoto/falco/347) (@ysugimoto)
+- exact custom token [#346](https://github.com/ysugimoto/falco/346) (@ysugimoto)
+- implement uuid version7 related new functions [#345](https://github.com/ysugimoto/falco/345) (@ysugimoto)
+- inject value for tentative in simulator [#344](https://github.com/ysugimoto/falco/344) (@ysugimoto)
+- correct typo in SortDeclaration default tag [#342](https://github.com/ysugimoto/falco/342) (@acme)
+- adjust default TrailingCommentWidth to 1 [#341](https://github.com/ysugimoto/falco/341) (@acme)
+- update timezone in test [#340](https://github.com/ysugimoto/falco/340) (@acme)
+- add `--genearted` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/339) (@ysugimoto)
+- support Fastly generated specific syntaxes [#338](https://github.com/ysugimoto/falco/338) (@ysugimoto)
+
 ## v1.9.1
 
 - strict macro linting [#336](https://github.com/ysugimoto/falco/336) (@ysugimoto)
