@@ -8,10 +8,22 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+func doImplicitTypeConversion(args []value.Value, argTypes []value.Type) {
+	for i := range args {
+		if argTypes[i] == value.StringType && args[i].Type() != value.StringType {
+			// Handle implicit conversion to string
+			// "These types all have implicit conversions to strings, such that their values may be used in contexts where a STRING value is necessary."
+			// https://www.fastly.com/documentation/reference/vcl/types/"
+			args[i] = &value.String{Value: args[i].String()}
+		}
+	}
+}
+
 var builtinFunctions = map[string]*Function{
 	"accept.charset_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Accept_charset_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -22,6 +34,7 @@ var builtinFunctions = map[string]*Function{
 	"accept.encoding_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Accept_encoding_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -32,6 +45,7 @@ var builtinFunctions = map[string]*Function{
 	"accept.language_filter_basic": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType, value.IntegerType})
 			return builtin.Accept_language_filter_basic(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -42,6 +56,7 @@ var builtinFunctions = map[string]*Function{
 	"accept.language_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Accept_language_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -52,6 +67,7 @@ var builtinFunctions = map[string]*Function{
 	"accept.media_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType, value.StringType})
 			return builtin.Accept_media_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -62,6 +78,7 @@ var builtinFunctions = map[string]*Function{
 	"addr.extract_bits": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IpType, value.IntegerType, value.IntegerType})
 			return builtin.Addr_extract_bits(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -72,6 +89,7 @@ var builtinFunctions = map[string]*Function{
 	"addr.is_ipv4": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IpType})
 			return builtin.Addr_is_ipv4(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -82,6 +100,7 @@ var builtinFunctions = map[string]*Function{
 	"addr.is_ipv6": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IpType})
 			return builtin.Addr_is_ipv6(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -92,6 +111,7 @@ var builtinFunctions = map[string]*Function{
 	"bin.base64_to_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Bin_base64_to_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -102,6 +122,7 @@ var builtinFunctions = map[string]*Function{
 	"bin.hex_to_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Bin_hex_to_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -112,6 +133,7 @@ var builtinFunctions = map[string]*Function{
 	"boltsort.sort": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Boltsort_sort(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -122,6 +144,7 @@ var builtinFunctions = map[string]*Function{
 	"crypto.decrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType})
 			return builtin.Crypto_decrypt_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -132,6 +155,7 @@ var builtinFunctions = map[string]*Function{
 	"crypto.decrypt_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType})
 			return builtin.Crypto_decrypt_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -142,6 +166,7 @@ var builtinFunctions = map[string]*Function{
 	"crypto.encrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType})
 			return builtin.Crypto_encrypt_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -152,6 +177,7 @@ var builtinFunctions = map[string]*Function{
 	"crypto.encrypt_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.IdentType, value.IdentType, value.StringType, value.StringType, value.StringType})
 			return builtin.Crypto_encrypt_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -162,6 +188,7 @@ var builtinFunctions = map[string]*Function{
 	"cstr_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Cstr_escape(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -172,6 +199,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.awsv4_hmac": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType, value.StringType, value.StringType})
 			return builtin.Digest_awsv4_hmac(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -182,6 +210,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -192,6 +221,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -202,6 +232,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64url(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -212,6 +243,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64url_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -222,6 +254,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_nopad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64url_nopad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -232,6 +265,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_nopad_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_base64url_nopad_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -242,6 +276,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_crc32": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_crc32(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -252,6 +287,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_crc32b": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_crc32b(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -262,6 +298,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -272,6 +309,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -282,6 +320,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha1_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha1_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -292,6 +331,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha224": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha224(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -302,6 +342,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -312,6 +353,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha256_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha256_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -322,6 +364,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha384": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha384(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -332,6 +375,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -342,6 +386,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha512_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Digest_hash_sha512_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -352,6 +397,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -362,6 +408,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_md5_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_md5_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -372,6 +419,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -382,6 +430,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha1_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha1_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -392,6 +441,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -402,6 +452,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha256_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha256_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -412,6 +463,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -422,6 +474,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha512_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_hmac_sha512_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -432,6 +485,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.rsa_verify": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.StringType, value.StringType, value.IdentType})
 			return builtin.Digest_rsa_verify(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -442,6 +496,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.secure_is_equal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Digest_secure_is_equal(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -452,6 +507,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Digest_time_hmac_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -462,6 +518,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Digest_time_hmac_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -472,6 +529,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Digest_time_hmac_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -482,6 +540,7 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Digest_time_hmac_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -492,6 +551,7 @@ var builtinFunctions = map[string]*Function{
 	"early_hints": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Early_hints(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -502,6 +562,7 @@ var builtinFunctions = map[string]*Function{
 	"fastly.hash": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType, value.IntegerType})
 			return builtin.Fastly_hash(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -522,6 +583,7 @@ var builtinFunctions = map[string]*Function{
 	"h2.disable_header_compression": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.H2_disable_header_compression(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -532,6 +594,7 @@ var builtinFunctions = map[string]*Function{
 	"h2.push": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.H2_push(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -542,6 +605,7 @@ var builtinFunctions = map[string]*Function{
 	"h3.alt_svc": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.H3_alt_svc(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -552,6 +616,7 @@ var builtinFunctions = map[string]*Function{
 	"header.filter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType})
 			return builtin.Header_filter(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -562,6 +627,7 @@ var builtinFunctions = map[string]*Function{
 	"header.filter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType})
 			return builtin.Header_filter_except(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -572,6 +638,7 @@ var builtinFunctions = map[string]*Function{
 	"header.get": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Header_get(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -582,6 +649,7 @@ var builtinFunctions = map[string]*Function{
 	"header.set": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.StringType})
 			return builtin.Header_set(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -592,6 +660,7 @@ var builtinFunctions = map[string]*Function{
 	"header.unset": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Header_unset(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -602,6 +671,7 @@ var builtinFunctions = map[string]*Function{
 	"http_status_matches": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.StringType})
 			return builtin.Http_status_matches(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -612,6 +682,7 @@ var builtinFunctions = map[string]*Function{
 	"json.escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Json_escape(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -622,6 +693,7 @@ var builtinFunctions = map[string]*Function{
 	"math.acos": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_acos(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -632,6 +704,7 @@ var builtinFunctions = map[string]*Function{
 	"math.acosh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_acosh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -642,6 +715,7 @@ var builtinFunctions = map[string]*Function{
 	"math.asin": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_asin(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -652,6 +726,7 @@ var builtinFunctions = map[string]*Function{
 	"math.asinh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_asinh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -662,6 +737,7 @@ var builtinFunctions = map[string]*Function{
 	"math.atan": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_atan(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -672,6 +748,7 @@ var builtinFunctions = map[string]*Function{
 	"math.atan2": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType, value.FloatType})
 			return builtin.Math_atan2(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -682,6 +759,7 @@ var builtinFunctions = map[string]*Function{
 	"math.atanh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_atanh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -692,6 +770,7 @@ var builtinFunctions = map[string]*Function{
 	"math.ceil": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_ceil(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -702,6 +781,7 @@ var builtinFunctions = map[string]*Function{
 	"math.cos": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_cos(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -712,6 +792,7 @@ var builtinFunctions = map[string]*Function{
 	"math.cosh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_cosh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -722,6 +803,7 @@ var builtinFunctions = map[string]*Function{
 	"math.exp": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_exp(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -732,6 +814,7 @@ var builtinFunctions = map[string]*Function{
 	"math.exp2": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_exp2(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -742,6 +825,7 @@ var builtinFunctions = map[string]*Function{
 	"math.floor": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_floor(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -752,6 +836,7 @@ var builtinFunctions = map[string]*Function{
 	"math.is_finite": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_is_finite(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -762,6 +847,7 @@ var builtinFunctions = map[string]*Function{
 	"math.is_infinite": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_is_infinite(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -772,6 +858,7 @@ var builtinFunctions = map[string]*Function{
 	"math.is_nan": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_is_nan(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -782,6 +869,7 @@ var builtinFunctions = map[string]*Function{
 	"math.is_normal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_is_normal(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -792,6 +880,7 @@ var builtinFunctions = map[string]*Function{
 	"math.is_subnormal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_is_subnormal(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -802,6 +891,7 @@ var builtinFunctions = map[string]*Function{
 	"math.log": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_log(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -812,6 +902,7 @@ var builtinFunctions = map[string]*Function{
 	"math.log10": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_log10(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -822,6 +913,7 @@ var builtinFunctions = map[string]*Function{
 	"math.log2": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_log2(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -832,6 +924,7 @@ var builtinFunctions = map[string]*Function{
 	"math.round": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_round(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -842,6 +935,7 @@ var builtinFunctions = map[string]*Function{
 	"math.roundeven": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_roundeven(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -852,6 +946,7 @@ var builtinFunctions = map[string]*Function{
 	"math.roundhalfdown": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_roundhalfdown(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -862,6 +957,7 @@ var builtinFunctions = map[string]*Function{
 	"math.roundhalfup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_roundhalfup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -872,6 +968,7 @@ var builtinFunctions = map[string]*Function{
 	"math.sin": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_sin(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -882,6 +979,7 @@ var builtinFunctions = map[string]*Function{
 	"math.sinh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_sinh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -892,6 +990,7 @@ var builtinFunctions = map[string]*Function{
 	"math.sqrt": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_sqrt(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -902,6 +1001,7 @@ var builtinFunctions = map[string]*Function{
 	"math.tan": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_tan(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -912,6 +1012,7 @@ var builtinFunctions = map[string]*Function{
 	"math.tanh": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_tanh(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -922,6 +1023,7 @@ var builtinFunctions = map[string]*Function{
 	"math.trunc": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.FloatType})
 			return builtin.Math_trunc(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -932,6 +1034,7 @@ var builtinFunctions = map[string]*Function{
 	"parse_time_delta": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Parse_time_delta(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -942,6 +1045,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Querystring_add(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -952,6 +1056,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.clean": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Querystring_clean(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -962,6 +1067,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.filter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_filter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -972,6 +1078,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.filter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_filter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -982,6 +1089,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.filtersep": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Querystring_filtersep(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -992,6 +1100,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.get": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_get(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1002,6 +1111,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.globfilter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_globfilter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1012,6 +1122,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.globfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_globfilter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1022,6 +1133,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.regfilter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_regfilter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1032,6 +1144,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.regfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Querystring_regfilter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1042,6 +1155,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.remove": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Querystring_remove(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1052,6 +1166,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.set": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Querystring_set(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1062,6 +1177,7 @@ var builtinFunctions = map[string]*Function{
 	"querystring.sort": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Querystring_sort(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1072,6 +1188,7 @@ var builtinFunctions = map[string]*Function{
 	"randombool": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType})
 			return builtin.Randombool(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1082,6 +1199,7 @@ var builtinFunctions = map[string]*Function{
 	"randombool_seeded": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType, value.IntegerType})
 			return builtin.Randombool_seeded(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1092,6 +1210,7 @@ var builtinFunctions = map[string]*Function{
 	"randomint": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType})
 			return builtin.Randomint(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1102,6 +1221,7 @@ var builtinFunctions = map[string]*Function{
 	"randomint_seeded": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType, value.IntegerType})
 			return builtin.Randomint_seeded(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1112,6 +1232,7 @@ var builtinFunctions = map[string]*Function{
 	"randomstr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.StringType})
 			return builtin.Randomstr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1122,6 +1243,7 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.check_rate": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IdentType, value.IntegerType, value.IntegerType, value.IntegerType, value.IdentType, value.RTimeType})
 			return builtin.Ratelimit_check_rate(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1132,6 +1254,7 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.check_rates": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IdentType, value.IntegerType, value.IntegerType, value.IntegerType, value.IdentType, value.IntegerType, value.IntegerType, value.IntegerType, value.IdentType, value.RTimeType})
 			return builtin.Ratelimit_check_rates(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1142,6 +1265,7 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.penaltybox_add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.RTimeType})
 			return builtin.Ratelimit_penaltybox_add(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -1152,6 +1276,7 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.penaltybox_has": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Ratelimit_penaltybox_has(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1162,6 +1287,7 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.ratecounter_increment": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.IntegerType})
 			return builtin.Ratelimit_ratecounter_increment(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1172,6 +1298,7 @@ var builtinFunctions = map[string]*Function{
 	"regsub": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Regsub(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1182,6 +1309,7 @@ var builtinFunctions = map[string]*Function{
 	"regsuball": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Regsuball(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1192,6 +1320,7 @@ var builtinFunctions = map[string]*Function{
 	"resp.tarpit": {
 		Scope: context.DeliverScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType})
 			return builtin.Resp_tarpit(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -1202,6 +1331,7 @@ var builtinFunctions = map[string]*Function{
 	"setcookie.delete_by_name": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Setcookie_delete_by_name(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1212,6 +1342,7 @@ var builtinFunctions = map[string]*Function{
 	"setcookie.get_value_by_name": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Setcookie_get_value_by_name(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1222,6 +1353,7 @@ var builtinFunctions = map[string]*Function{
 	"std.anystr2ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_anystr2ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1232,6 +1364,7 @@ var builtinFunctions = map[string]*Function{
 	"std.atof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_atof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1242,6 +1375,7 @@ var builtinFunctions = map[string]*Function{
 	"std.atoi": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_atoi(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1252,6 +1386,7 @@ var builtinFunctions = map[string]*Function{
 	"std.basename": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_basename(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1262,6 +1397,7 @@ var builtinFunctions = map[string]*Function{
 	"std.collect": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Std_collect(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -1272,6 +1408,7 @@ var builtinFunctions = map[string]*Function{
 	"std.count": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType})
 			return builtin.Std_count(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1282,6 +1419,7 @@ var builtinFunctions = map[string]*Function{
 	"std.dirname": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_dirname(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1292,6 +1430,7 @@ var builtinFunctions = map[string]*Function{
 	"std.integer2time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType})
 			return builtin.Std_integer2time(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1302,6 +1441,7 @@ var builtinFunctions = map[string]*Function{
 	"std.ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1312,6 +1452,7 @@ var builtinFunctions = map[string]*Function{
 	"std.ip2str": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IpType})
 			return builtin.Std_ip2str(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1322,6 +1463,7 @@ var builtinFunctions = map[string]*Function{
 	"std.itoa": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.IntegerType})
 			return builtin.Std_itoa(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1332,6 +1474,7 @@ var builtinFunctions = map[string]*Function{
 	"std.itoa_charset": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.StringType})
 			return builtin.Std_itoa_charset(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1342,6 +1485,7 @@ var builtinFunctions = map[string]*Function{
 	"std.prefixof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_prefixof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1352,6 +1496,7 @@ var builtinFunctions = map[string]*Function{
 	"std.replace": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Std_replace(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1362,6 +1507,7 @@ var builtinFunctions = map[string]*Function{
 	"std.replace_prefix": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Std_replace_prefix(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1372,6 +1518,7 @@ var builtinFunctions = map[string]*Function{
 	"std.replace_suffix": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Std_replace_suffix(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1382,6 +1529,7 @@ var builtinFunctions = map[string]*Function{
 	"std.replaceall": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Std_replaceall(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1392,6 +1540,7 @@ var builtinFunctions = map[string]*Function{
 	"std.str2ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_str2ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1402,6 +1551,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strlen": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_strlen(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1412,6 +1562,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.StringType})
 			return builtin.Std_strpad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1422,6 +1573,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strrep": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType})
 			return builtin.Std_strrep(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1432,6 +1584,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strrev": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_strrev(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1442,6 +1595,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strstr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_strstr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1452,6 +1606,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strtof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType})
 			return builtin.Std_strtof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1462,6 +1617,7 @@ var builtinFunctions = map[string]*Function{
 	"std.strtol": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType})
 			return builtin.Std_strtol(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1472,6 +1628,7 @@ var builtinFunctions = map[string]*Function{
 	"std.suffixof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Std_suffixof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1482,6 +1639,7 @@ var builtinFunctions = map[string]*Function{
 	"std.time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.TimeType})
 			return builtin.Std_time(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1492,6 +1650,7 @@ var builtinFunctions = map[string]*Function{
 	"std.tolower": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_tolower(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1502,6 +1661,7 @@ var builtinFunctions = map[string]*Function{
 	"std.toupper": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Std_toupper(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1512,6 +1672,7 @@ var builtinFunctions = map[string]*Function{
 	"strftime": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.TimeType})
 			return builtin.Strftime(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1522,6 +1683,7 @@ var builtinFunctions = map[string]*Function{
 	"subfield": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType, value.StringType})
 			return builtin.Subfield(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1532,6 +1694,7 @@ var builtinFunctions = map[string]*Function{
 	"substr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Substr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1542,6 +1705,7 @@ var builtinFunctions = map[string]*Function{
 	"table.contains": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType})
 			return builtin.Table_contains(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1552,6 +1716,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.StringType})
 			return builtin.Table_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1562,6 +1727,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_acl": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.AclType})
 			return builtin.Table_lookup_acl(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1572,6 +1738,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_backend": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.BackendType})
 			return builtin.Table_lookup_backend(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1582,6 +1749,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_bool": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.BooleanType})
 			return builtin.Table_lookup_bool(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1592,6 +1760,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_float": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.FloatType})
 			return builtin.Table_lookup_float(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1602,6 +1771,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_integer": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.IntegerType})
 			return builtin.Table_lookup_integer(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1612,6 +1782,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.IpType})
 			return builtin.Table_lookup_ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1622,6 +1793,7 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_rtime": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IdentType, value.StringType, value.RTimeType})
 			return builtin.Table_lookup_rtime(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1632,6 +1804,7 @@ var builtinFunctions = map[string]*Function{
 	"time.add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.TimeType, value.RTimeType})
 			return builtin.Time_add(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1642,6 +1815,7 @@ var builtinFunctions = map[string]*Function{
 	"time.hex_to_time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.IntegerType, value.StringType})
 			return builtin.Time_hex_to_time(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1652,6 +1826,7 @@ var builtinFunctions = map[string]*Function{
 	"time.interval_elapsed_ratio": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.TimeType, value.TimeType, value.TimeType})
 			return builtin.Time_interval_elapsed_ratio(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1662,6 +1837,7 @@ var builtinFunctions = map[string]*Function{
 	"time.is_after": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.TimeType, value.TimeType})
 			return builtin.Time_is_after(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1672,6 +1848,7 @@ var builtinFunctions = map[string]*Function{
 	"time.runits": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.RTimeType})
 			return builtin.Time_runits(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1682,6 +1859,7 @@ var builtinFunctions = map[string]*Function{
 	"time.sub": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.TimeType, value.RTimeType})
 			return builtin.Time_sub(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1692,6 +1870,7 @@ var builtinFunctions = map[string]*Function{
 	"time.units": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.TimeType})
 			return builtin.Time_units(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1702,6 +1881,7 @@ var builtinFunctions = map[string]*Function{
 	"urldecode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Urldecode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1712,6 +1892,7 @@ var builtinFunctions = map[string]*Function{
 	"urlencode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Urlencode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1722,6 +1903,7 @@ var builtinFunctions = map[string]*Function{
 	"utf8.codepoint_count": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Utf8_codepoint_count(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1732,6 +1914,7 @@ var builtinFunctions = map[string]*Function{
 	"utf8.is_valid": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Utf8_is_valid(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1742,6 +1925,7 @@ var builtinFunctions = map[string]*Function{
 	"utf8.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.StringType})
 			return builtin.Utf8_strpad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1752,6 +1936,7 @@ var builtinFunctions = map[string]*Function{
 	"utf8.substr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.IntegerType, value.IntegerType})
 			return builtin.Utf8_substr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1762,6 +1947,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.dns": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Uuid_dns(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1772,6 +1958,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_valid": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Uuid_is_valid(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1782,6 +1969,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version3": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Uuid_is_version3(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1792,6 +1980,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version4": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Uuid_is_version4(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1802,6 +1991,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Uuid_is_version5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1822,6 +2012,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.oid": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Uuid_oid(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1832,6 +2023,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.url": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Uuid_url(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1842,6 +2034,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.version3": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Uuid_version3(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1852,6 +2045,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.version4": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Uuid_version4(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1862,6 +2056,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.version5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType, value.StringType})
 			return builtin.Uuid_version5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1882,6 +2077,7 @@ var builtinFunctions = map[string]*Function{
 	"uuid.x500": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{})
 			return builtin.Uuid_x500(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1892,6 +2088,7 @@ var builtinFunctions = map[string]*Function{
 	"xml_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			doImplicitTypeConversion(args, []value.Type{value.StringType})
 			return builtin.Xml_escape(ctx, args...)
 		},
 		CanStatementCall: false,
