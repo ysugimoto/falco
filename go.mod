@@ -35,6 +35,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/google/go-dap v0.12.0
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
