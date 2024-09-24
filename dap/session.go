@@ -105,33 +105,33 @@ func (s *session) dispatch(_ context.Context, msg godap.RequestMessage) {
 	case *godap.AttachRequest:
 		err = s.onAttachRequest(req)
 	case *godap.BreakpointLocationsRequest:
-		err = s.onBreakpointLocationsRequest(req)
+		s.onBreakpointLocationsRequest(req)
 	case *godap.ConfigurationDoneRequest:
-		err = s.onConfigurationDoneRequest(req)
+		s.onConfigurationDoneRequest(req)
 	case *godap.ContinueRequest:
-		err = s.onContinueRequest(req)
+		s.onContinueRequest(req)
 	case *godap.EvaluateRequest:
 		err = s.onEvaluateRequest(req)
 	case *godap.InitializeRequest:
-		err = s.onInitializeRequest(req)
+		s.onInitializeRequest(req)
 	case *godap.LaunchRequest:
 		err = s.onLaunchRequest(req)
 	case *godap.NextRequest:
-		err = s.onNextRequest(req)
+		s.onNextRequest(req)
 	case *godap.SetBreakpointsRequest:
 		err = s.onSetBreakpointsRequest(req)
 	case *godap.StackTraceRequest:
-		err = s.onStackTraceRequest(req)
+		s.onStackTraceRequest(req)
 	case *godap.StepInRequest:
-		err = s.onStepInRequest(req)
+		s.onStepInRequest(req)
 	case *godap.StepOutRequest:
-		err = s.onStepOutRequest(req)
+		s.onStepOutRequest(req)
 	case *godap.TerminateRequest:
 		err = s.onTerminateRequest(req)
 	case *godap.ThreadsRequest:
-		err = s.onThreadsRequest(req)
+		s.onThreadsRequest(req)
 	case *godap.VariablesRequest:
-		err = s.onVariablesRequest(req)
+		s.onVariablesRequest(req)
 	default:
 		err = fmt.Errorf("handler not found for request")
 	}
@@ -231,7 +231,7 @@ func (s *session) onAttachRequest(req *godap.AttachRequest) error {
 	return fmt.Errorf("attach not supported")
 }
 
-func (s *session) onBreakpointLocationsRequest(req *godap.BreakpointLocationsRequest) error {
+func (s *session) onBreakpointLocationsRequest(req *godap.BreakpointLocationsRequest) {
 	bps := s.debugger.listBreakpoints(req.Arguments.Source.Path)
 	bpls := make([]godap.BreakpointLocation, 0, len(bps))
 
@@ -247,33 +247,27 @@ func (s *session) onBreakpointLocationsRequest(req *godap.BreakpointLocationsReq
 			Breakpoints: bpls,
 		},
 	})
-
-	return nil
 }
 
-func (s *session) onConfigurationDoneRequest(req *godap.ConfigurationDoneRequest) error {
+func (s *session) onConfigurationDoneRequest(req *godap.ConfigurationDoneRequest) {
 	s.send(&godap.ConfigurationDoneResponse{
 		Response: newResponse(req),
 	})
-
-	return nil
 }
 
-func (s *session) onContinueRequest(req *godap.ContinueRequest) error {
+func (s *session) onContinueRequest(req *godap.ContinueRequest) {
 	s.stateCh <- interpreter.DebugPass
 
 	s.send(&godap.ContinueResponse{
 		Response: newResponse(req),
 	})
-
-	return nil
 }
 
 func (s *session) onEvaluateRequest(req *godap.EvaluateRequest) error {
 	return fmt.Errorf("attach not supported")
 }
 
-func (s *session) onInitializeRequest(req *godap.InitializeRequest) error {
+func (s *session) onInitializeRequest(req *godap.InitializeRequest) {
 	s.send(&godap.InitializedEvent{
 		Event: newEvent("initialized"),
 	}, &godap.InitializeResponse{
@@ -285,8 +279,6 @@ func (s *session) onInitializeRequest(req *godap.InitializeRequest) error {
 			SupportsTerminateRequest:           true,
 		},
 	})
-
-	return nil
 }
 
 type LaunchArguments struct {
@@ -377,14 +369,12 @@ func (s *session) launchServer() {
 	)
 }
 
-func (s *session) onNextRequest(req *godap.NextRequest) error {
+func (s *session) onNextRequest(req *godap.NextRequest) {
 	s.stateCh <- interpreter.DebugStepOver
 
 	s.send(&godap.NextResponse{
 		Response: newResponse(req),
 	})
-
-	return nil
 }
 
 func (s *session) onSetBreakpointsRequest(req *godap.SetBreakpointsRequest) error {
@@ -417,7 +407,7 @@ func (s *session) onSetBreakpointsRequest(req *godap.SetBreakpointsRequest) erro
 	return nil
 }
 
-func (s *session) onStackTraceRequest(req *godap.StackTraceRequest) error {
+func (s *session) onStackTraceRequest(req *godap.StackTraceRequest) {
 	stacks := s.debugger.listStacks()
 
 	frames := make([]godap.StackFrame, len(stacks))
@@ -441,28 +431,22 @@ func (s *session) onStackTraceRequest(req *godap.StackTraceRequest) error {
 			TotalFrames: len(frames),
 		},
 	})
-
-	return nil
 }
 
-func (s *session) onStepInRequest(req *godap.StepInRequest) error {
+func (s *session) onStepInRequest(req *godap.StepInRequest) {
 	s.stateCh <- interpreter.DebugStepIn
 
 	s.send(&godap.StepInResponse{
 		Response: newResponse(req),
 	})
-
-	return nil
 }
 
-func (s *session) onStepOutRequest(req *godap.StepOutRequest) error {
+func (s *session) onStepOutRequest(req *godap.StepOutRequest) {
 	s.stateCh <- interpreter.DebugStepOut
 
 	s.send(&godap.StepOutResponse{
 		Response: newResponse(req),
 	})
-
-	return nil
 }
 
 func (s *session) onTerminateRequest(req *godap.TerminateRequest) error {
@@ -473,7 +457,7 @@ func (s *session) onTerminateRequest(req *godap.TerminateRequest) error {
 	return s.close()
 }
 
-func (s *session) onThreadsRequest(req *godap.ThreadsRequest) error {
+func (s *session) onThreadsRequest(req *godap.ThreadsRequest) {
 	s.send(&godap.ThreadsResponse{
 		Response: newResponse(req),
 		Body: godap.ThreadsResponseBody{
@@ -483,17 +467,13 @@ func (s *session) onThreadsRequest(req *godap.ThreadsRequest) error {
 			}},
 		},
 	})
-
-	return nil
 }
 
-func (s *session) onVariablesRequest(req *godap.VariablesRequest) error {
+func (s *session) onVariablesRequest(req *godap.VariablesRequest) {
 	s.send(&godap.VariablesResponse{
 		Response: newResponse(req),
 		Body: godap.VariablesResponseBody{
 			Variables: []godap.Variable{},
 		},
 	})
-
-	return nil
 }
