@@ -98,7 +98,7 @@ func (s *session) handler(ctx context.Context) error {
 	return nil
 }
 
-func (s *session) dispatch(ctx context.Context, msg godap.RequestMessage) {
+func (s *session) dispatch(_ context.Context, msg godap.RequestMessage) {
 	var err error
 
 	switch req := msg.(type) {
@@ -355,12 +355,16 @@ func (s *session) launchServer() {
 
 	go func() {
 		if isTLS {
-			s.server.ListenAndServeTLS(
+			if err := s.server.ListenAndServeTLS(
 				s.config.CertFile,
 				s.config.KeyFile,
-			)
+			); err != nil {
+				s.cancel()
+			}
 		} else {
-			s.server.ListenAndServe()
+			if err := s.server.ListenAndServe(); err != nil {
+				s.cancel()
+			}
 		}
 	}()
 
