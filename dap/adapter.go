@@ -11,7 +11,7 @@ import (
 )
 
 type Adapter struct {
-	config *config.SimulatorConfig
+	config  *config.SimulatorConfig
 	session *session
 }
 
@@ -26,12 +26,12 @@ func (a *Adapter) Run() error {
 	defer cancel()
 
 	a.session = &session{
- 		conn: bufio.NewReadWriter(
- 			bufio.NewReader(os.Stdin),
- 			bufio.NewWriter(os.Stdout),
- 		),
+		conn: bufio.NewReadWriter(
+			bufio.NewReader(os.Stdin),
+			bufio.NewWriter(os.Stdout),
+		),
 		config: a.config,
- 	}
+	}
 
 	log.SetOutput(io.Discard)
 

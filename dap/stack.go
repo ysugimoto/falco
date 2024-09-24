@@ -30,7 +30,7 @@ func (sc *stackColl) append(name, path string, line int) {
 		name: name,
 		path: path,
 		line: line,
-		id: sc.newID(),
+		id:   sc.newID(),
 	})
 }
 
