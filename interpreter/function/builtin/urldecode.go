@@ -3,10 +3,9 @@
 package builtin
 
 import (
-	"net/url"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -37,11 +36,9 @@ func Urldecode(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	input := value.Unwrap[*value.String](args[0]).Value
-	dec, err := url.QueryUnescape(input)
+	dec, err := shared.UrlDecode(input)
 	if err != nil {
-		return &value.String{IsNotSet: true}, errors.New(Urldecode_Name,
-			"Failed to urldecode string: %s", input,
-		)
+		return &value.String{IsNotSet: true}, errors.New(Urldecode_Name, err.Error())
 	}
 
 	return &value.String{Value: dec}, nil
