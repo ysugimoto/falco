@@ -32,6 +32,10 @@ func Test_Urldecode(t *testing.T) {
 			expect: "あ",
 		},
 		{
+			input:  "%F0%A0%AE%B7%F0%9F%98%AF",
+			expect: "𠮷😯",
+		},
+		{
 			input:  "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F",
 			expect: string([]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}),
 		},

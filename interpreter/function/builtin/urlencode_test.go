@@ -32,6 +32,10 @@ func Test_Urlencode(t *testing.T) {
 			expect: "%E3%81%82",
 		},
 		{
+			input:  "𠮷😯",
+			expect: "%F0%A0%AE%B7%F0%9F%98%AF",
+		},
+		{
 			input:  "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F",
 			expect: "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F",
 		},
