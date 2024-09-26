@@ -52,7 +52,7 @@ func UrlEncode(src string) (string, error) {
 				return "", errors.WithStack(errors.New("Failed to encode bytes to rune"))
 			}
 			for _, v := range sb {
-				encoded = append(encoded, fmt.Sprintf("%%%X", v)...)
+				encoded = append(encoded, fmt.Sprintf("%%%02X", v)...)
 			}
 			continue
 		}
@@ -69,7 +69,7 @@ func UrlEncode(src string) (string, error) {
 
 			// Check 2 bytes are HEXDIG
 			if !isHexBytes(hex[0]) || !isHexBytes(hex[1]) {
-				encoded = append(encoded, fmt.Sprintf("%%%X", b)...)
+				encoded = append(encoded, fmt.Sprintf("%%%02X", b)...)
 				continue
 			}
 
@@ -91,7 +91,7 @@ func UrlEncode(src string) (string, error) {
 			encoded = append(encoded, byte(b))
 		default:
 			// Percent encoding
-			encoded = append(encoded, fmt.Sprintf("%%%X", b)...)
+			encoded = append(encoded, fmt.Sprintf("%%%02X", b)...)
 		}
 	}
 OUT:
