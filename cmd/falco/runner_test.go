@@ -358,6 +358,12 @@ func TestTester(t *testing.T) {
 			filter: "*override_variables.test.vcl",
 			passes: 6,
 		},
+		{
+			name:   "base64 functional test",
+			main:   "../../examples/testing/base64/main.vcl",
+			filter: "*base64.test.vcl",
+			passes: 12,
+		},
 	}
 
 	for _, tt := range tests {
