@@ -61,7 +61,7 @@ func Digest_base64url_nopad_decode_removeInvalidCharacters(input string) string 
 			removed.WriteByte(b)
 		case b >= 0x61 && b <= 0x7A: // a-z
 			removed.WriteByte(b)
-		case b >= 0x31 && b <= 0x39: // 0-9
+		case b >= 0x30 && b <= 0x39: // 0-9
 			removed.WriteByte(b)
 		case b == 0x2B: // + should replace to -
 			removed.WriteByte(0x2D)

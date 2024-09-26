@@ -78,7 +78,7 @@ func Digest_base64_decode_removeInvalidCharacters(input string) string {
 			removed.WriteByte(b)
 		case b >= 0x61 && b <= 0x7A: // a-z
 			removed.WriteByte(b)
-		case b >= 0x31 && b <= 0x39: // 0-9
+		case b >= 0x30 && b <= 0x39: // 0-9
 			removed.WriteByte(b)
 		case b == 0x2B || b == 0x2F: // + or /
 			removed.WriteByte(b)

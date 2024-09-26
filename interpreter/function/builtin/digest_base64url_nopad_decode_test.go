@@ -49,6 +49,11 @@ func Test_Digest_base64url_nopad_decode(t *testing.T) {
 			input:  "YWJjZB==",
 			expect: "abcd",
 		},
+		{
+			name:   "Skip padding sign/2",
+			input:  "aGVsbG8=0",
+			expect: "hello4",
+		},
 	}
 
 	for _, tt := range tests {
