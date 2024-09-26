@@ -19,7 +19,50 @@ func Test_Urlencode(t *testing.T) {
 		input  string
 		expect string
 	}{
-		{input: "hello world", expect: "hello%20world"},
+		{
+			input:  "%00",
+			expect: "",
+		},
+		{
+			input:  "ab%00c",
+			expect: "ab",
+		},
+		{
+			input:  "あ",
+			expect: "%E3%81%82",
+		},
+		{
+			input:  "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F",
+			expect: "%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F",
+		},
+		{
+			input:  "%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F",
+			expect: "%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F",
+		},
+		{
+			input:  " !\"#$%&'()*+,-./",
+			expect: "%20%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F",
+		},
+		{
+			input:  "0123456789:;<=>?",
+			expect: "0123456789%3A%3B%3C%3D%3E%3F",
+		},
+		{
+			input:  "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_",
+			expect: "%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5D%5E_",
+		},
+		{
+			input:  "`abcdefghijklmnopqrstuvwxyz{|}~",
+			expect: "%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~",
+		},
+		{
+			input:  "%7F",
+			expect: "%7F",
+		},
+		{
+			input:  "hello world",
+			expect: "hello%20world",
+		},
 	}
 
 	for i, tt := range tests {
