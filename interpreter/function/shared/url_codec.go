@@ -19,8 +19,9 @@ var ErrInvalidMultiByteSequence = errors.New("Invalid multi-byte sequence")
 // implement our own logic that is almost checked by actual Fastly behavior on the fiddle.
 // ref https://fiddle.fastly.dev/fiddle/bf3e21e5
 
-// Check byte is reserved byte
+// Check byte is unreserved byte
 func isUnreservedByte(b byte) bool {
+	// Ascii bytes, "-", ".", "_", "~"
 	return isHexBytes(b) || b == 0x2D || b == 0x2E || b == 0x5F || b == 0x7E
 }
 
