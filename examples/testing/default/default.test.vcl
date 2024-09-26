@@ -26,3 +26,19 @@ sub test_check_auth {
   assert.equal(testing.state, "ERROR");
   assert.equal(testing.inspect("obj.status"), 401);
 }
+
+// @scope: recv
+// @suite: condition with not set string header
+sub test_header_value {
+  declare local var.exists BOOL;
+  if (req.http.Check-Auth) {
+    set var.exists = true;
+  }
+  assert.false(var.exists);
+  set req.http.Check-Auth = "";
+  if (req.http.Check-Auth) {
+    set var.exists = true;
+  }
+  assert.true(var.exists);
+}
+

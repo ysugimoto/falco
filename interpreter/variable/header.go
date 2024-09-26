@@ -12,11 +12,11 @@ import (
 func getRequestHeaderValue(r *http.Request, name string) *value.String {
 	// Header name can contain ":" for object-like value
 	if !strings.Contains(name, ":") {
-		v := strings.Join(r.Header.Values(name), ", ")
-		if v == "" {
-			return &value.String{IsNotSet: true}
+		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey(name)]; ok {
+			v := strings.Join(r.Header.Values(name), ", ")
+			return &value.String{Value: v}
 		}
-		return &value.String{Value: v}
+		return &value.String{IsNotSet: true}
 	}
 	spl := strings.SplitN(name, ":", 2)
 	// Request header can modify cookie, then we need to retrieve value from Cookie pointer
@@ -40,11 +40,11 @@ func getRequestHeaderValue(r *http.Request, name string) *value.String {
 func getResponseHeaderValue(r *http.Response, name string) *value.String {
 	// Header name can contain ":" for object-like value
 	if !strings.Contains(name, ":") {
-		v := strings.Join(r.Header.Values(name), ", ")
-		if v == "" {
-			return &value.String{IsNotSet: true}
+		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey(name)]; ok {
+			v := strings.Join(r.Header.Values(name), ", ")
+			return &value.String{Value: v}
 		}
-		return &value.String{Value: v}
+		return &value.String{IsNotSet: true}
 	}
 
 	spl := strings.SplitN(name, ":", 2)
