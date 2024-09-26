@@ -28,6 +28,33 @@ func Testing_inject_variable(
 	}
 
 	name := value.Unwrap[*value.String](args[0])
+
+	// Important: second argument will be provided as literal
+	// but overrided value must not be literal in the interpreter process
+	// so we turn off the literal flag to false.
+	// Unfortunately value.Value interface does not have to change the literal flag
+	// so need type assertion for primitive values - it's annoying but just special case.
+	switch t := args[1].(type) {
+	case *value.Acl:
+		t.Literal = false
+	case *value.Backend:
+		t.Literal = false
+	case *value.Boolean:
+		t.Literal = false
+	case *value.Float:
+		t.Literal = false
+	case *value.IP:
+		t.Literal = false
+	case *value.Ident:
+		t.Literal = false
+	case *value.Integer:
+		t.Literal = false
+	case *value.RTime:
+		t.Literal = false
+	case *value.String:
+		t.Literal = false
+		// Note: *value.Time value could not be specified as literal
+	}
 	ctx.OverrideVariables[name.Value] = args[1]
 	return value.Null, nil
 }
