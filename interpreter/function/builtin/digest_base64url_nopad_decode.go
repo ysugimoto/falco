@@ -3,14 +3,9 @@
 package builtin
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/base64"
-	"io"
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -41,39 +36,8 @@ func Digest_base64url_nopad_decode(ctx *context.Context, args ...value.Value) (v
 	}
 
 	input := value.Unwrap[*value.String](args[0])
-	removed := Digest_base64url_nopad_decode_removeInvalidCharacters(input.Value)
-	dec, _ := base64.RawURLEncoding.DecodeString(removed)
 
-	return &value.String{Value: string(terminateNullByte(dec))}, nil
-}
-
-func Digest_base64url_nopad_decode_removeInvalidCharacters(input string) string {
-	removed := new(bytes.Buffer)
-	r := bufio.NewReader(strings.NewReader(input))
-
-	for {
-		b, err := r.ReadByte()
-		if err == io.EOF {
-			break
-		}
-		switch {
-		case b >= 0x41 && b <= 0x5A: // A-Z
-			removed.WriteByte(b)
-		case b >= 0x61 && b <= 0x7A: // a-z
-			removed.WriteByte(b)
-		case b >= 0x30 && b <= 0x39: // 0-9
-			removed.WriteByte(b)
-		case b == 0x2B: // + should replace to -
-			removed.WriteByte(0x2D)
-		case b == 0x2F: // / should replace to _
-			removed.WriteByte(0x5F)
-		case b == 0x2D || b == 0x5F: // + or /
-			removed.WriteByte(b)
-		default:
-			// Note: the "=" sign also treats as invalid character
-			// Invalid characters, skip it
-		}
-	}
-
-	return removed.String()
+	return &value.String{
+		Value: shared.Base64UrlDecodeNoPad(input.Value),
+	}, nil
 }

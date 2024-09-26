@@ -45,7 +45,7 @@ sub test_base64_decode_recv {
 // @scope: recv
 // @suite: Test base64 decode BOM string
 sub test_base64_decode_recv {
-  // Skip tests because we suspects Fastly has a tiny bug in base64 decoding with BOM 
+    // Skip tests because we suspects Fastly has a tiny bug in base64 decoding with BOM 
     declare local var.input STRING;
     declare local var.decoded STRING;
 
