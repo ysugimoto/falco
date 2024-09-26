@@ -229,6 +229,7 @@ We describe them following table and examples:
 | assert.restart               | FUNCTION   | Assert restart statement has called                                                          |
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
+| assert.not_error             | FUNCTION   | Assert runtime state will not move to error status                                           |
 
 ----
 
@@ -865,6 +866,22 @@ sub test_vcl {
 
     // Assert error statement has called with expected status and response text
     assert.error(900, "Fastly Internal");
+}
+```
+
+----
+
+### assert.not_error([STRING message])
+
+Assert runtime state will not move to error status.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will call error statement with status code and response
+    testing.call_subroutine("vcl_recv");
+
+    // Assert error statement has not called
+    assert.not_error();
 }
 ```
 
