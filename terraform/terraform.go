@@ -47,12 +47,21 @@ type TerraformBackend struct {
 	Address *string
 }
 
+type TerraformDirector struct {
+	Type     int
+	Name     string
+	Backends []string
+	Retries  *int
+	Quorum   *int
+}
+
 type FastlyService struct {
 	Name             string
 	Vcls             []*TerraformVcl
 	Backends         []*TerraformBackend
 	Acls             []*TerraformAcl
 	Dictionaries     []*TerraformDictionary
+	Directors        []*TerraformDirector
 	Snippets         []*TerraformSnippet
 	LoggingEndpoints []string
 }
@@ -62,6 +71,7 @@ type FastlyServiceValues struct {
 	Vcl        []*TerraformVcl        `json:"vcl"`
 	Acl        []*TerraformAcl        `json:"acl"`
 	Backend    []*TerraformBackend    `json:"backend"`
+	Director   []*TerraformDirector   `json:"director"`
 	Dictionary []*TerraformDictionary `json:"dictionary"`
 	Snippets   []*TerraformSnippet    `json:"snippet"`
 
@@ -144,6 +154,7 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 				Acls:             serviceValues.Acl,
 				Backends:         serviceValues.Backend,
 				Dictionaries:     serviceValues.Dictionary,
+				Directors:        serviceValues.Director,
 				Snippets:         serviceValues.Snippets,
 				LoggingEndpoints: factoryLoggingEndpoints(serviceValues),
 			})
@@ -167,6 +178,7 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 				Acls:             serviceValues.Acl,
 				Backends:         serviceValues.Backend,
 				Dictionaries:     serviceValues.Dictionary,
+				Directors:        serviceValues.Director,
 				Snippets:         serviceValues.Snippets,
 				LoggingEndpoints: factoryLoggingEndpoints(serviceValues),
 			})

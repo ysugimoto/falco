@@ -69,6 +69,22 @@ func (f *TerraformFetcher) Acls() ([]*types.RemoteAcl, error) {
 	return a, nil
 }
 
+func (f *TerraformFetcher) Directors() ([]*types.RemoteDirector, error) {
+	var d []*types.RemoteDirector
+	for _, s := range f.filterService() {
+		for _, director := range s.Directors {
+			d = append(d, &types.RemoteDirector{
+				Type:     director.Type,
+				Name:     director.Name,
+				Backends: director.Backends,
+				Retries:  *director.Retries,
+				Quorum:   *director.Quorum,
+			})
+		}
+	}
+	return d, nil
+}
+
 func (f *TerraformFetcher) Snippets() ([]*types.RemoteVCL, error) {
 	var v []*types.RemoteVCL
 	for _, s := range f.filterService() {
