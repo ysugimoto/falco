@@ -41,6 +41,7 @@ const (
 	BEREQ_FIRST_BYTE_TIMEOUT                   = "bereq.first_byte_timeout"
 	BEREQ_HEADER_BYTES_WRITTEN                 = "bereq.header_bytes_written"
 	BEREQ_IS_CLUSTERING                        = "bereq.is_clustering"
+	BEREQ_MAX_REUSE_IDLE_TIME                  = "bereq.max_reuse_idle_time"
 	BEREQ_METHOD                               = "bereq.method"
 	BEREQ_PROTO                                = "bereq.proto"
 	BEREQ_REQUEST                              = "bereq.request"
