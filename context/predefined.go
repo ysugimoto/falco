@@ -450,6 +450,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-is-clustering/",
 					},
 				},
+				"max_reuse_idle_time": &Object{
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    MISS | PASS,
+						Reference: "",
+					},
+				},
 				"method": &Object{
 					Items: map[string]*Object{},
 					Value: &Accessor{

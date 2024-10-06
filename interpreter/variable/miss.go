@@ -70,6 +70,8 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return &value.String{Value: bereq.URL.Path}, nil
 	case BEREQ_URL_QS:
 		return &value.String{Value: bereq.URL.RawQuery}, nil
+	case BEREQ_MAX_REUSE_IDLE_TIME:
+		return v.ctx.BackendRequestMaxReuseIdleTime, nil
 
 	// Always 1 because simulator could not simulate pop behavior
 	case FASTLY_FF_VISITS_THIS_POP_THIS_SERVICE:
@@ -172,6 +174,11 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 		bereq.URL.Path = parsed.Path
 		bereq.URL.RawQuery = parsed.RawPath
 		bereq.URL.RawFragment = parsed.RawFragment
+		return nil
+	case BEREQ_MAX_REUSE_IDLE_TIME:
+		if err := doAssign(v.ctx.BackendRequestMaxReuseIdleTime, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
 		return nil
 	}
 

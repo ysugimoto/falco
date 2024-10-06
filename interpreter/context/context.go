@@ -144,6 +144,7 @@ type Context struct {
 	ObjectStatus                        *value.Integer
 	ObjectResponse                      *value.String
 	IsLocallyGenerated                  *value.Boolean
+	BackendRequestMaxReuseIdleTime      *value.RTime
 
 	// For testing fields
 	// Stored subroutine return state
@@ -215,7 +216,8 @@ func New(options ...Option) *Context {
 		// Observations indicate that it is a zero padded hex representation of two
 		// 64-bit values The first 64-bits are seemingly random, the nature of the
 		// apparent randomness is unknown. The second 64-bit value is always 1.
-		RequestID:                           &value.String{Value: fmt.Sprintf("%016x0000000000000001", rand.Int63())},
+		RequestID: &value.String{Value: fmt.Sprintf("%016x0000000000000001", rand.Int63())},
+
 		WafAnomalyScore:                     &value.Integer{},
 		WafBlocked:                          &value.Boolean{},
 		WafCounter:                          &value.Integer{},
@@ -257,6 +259,7 @@ func New(options ...Option) *Context {
 		ObjectResponse:                      &value.String{Value: "error"},
 		ReturnState:                         &value.String{IsNotSet: true},
 		IsLocallyGenerated:                  &value.Boolean{},
+		BackendRequestMaxReuseIdleTime:      &value.RTime{},
 
 		RegexMatchedValues: make(map[string]*value.String),
 		SubroutineCalls:    make(map[string]int),

@@ -31,6 +31,12 @@ client.sess_timeout:
   get: RTIME
   set: RTIME
 
+bereq.max_reuse_idle_time:
+  reference: # no references for this variable seem to exist.
+  on: [MISS, PASS]
+  get: RTIME
+  set: RTIME
+
 ## Following variables are documented.
 backend.conn.is_tls:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/"

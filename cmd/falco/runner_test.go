@@ -51,6 +51,13 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			warnings: 0,
 			infos:    1,
 		},
+		{
+			name:     "undocumented",
+			fileName: "../../examples/linter/undocumented.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    0,
+		},
 	}
 
 	// Run custom linter testing only in CI env
