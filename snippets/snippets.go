@@ -9,6 +9,7 @@ type Snippets struct {
 	Dictionaries     []SnippetItem
 	Acls             []SnippetItem
 	Backends         []SnippetItem
+	Directors        []SnippetItem
 	ScopedSnippets   map[string][]SnippetItem
 	IncludeSnippets  map[string]SnippetItem
 	LoggingEndpoints map[string]struct{}
@@ -23,6 +24,10 @@ func (s *Snippets) EmbedSnippets() []SnippetItem {
 	snippets = append(snippets, s.Acls...)
 	// Embed Backends
 	snippets = append(snippets, s.Backends...)
+	// Embed Directors
+	// Note that director must be placed after backends
+	// because director refers to backend
+	snippets = append(snippets, s.Directors...)
 
 	// And also we need to embed VCL snippets which is registered as "init" type
 	if scoped, ok := s.ScopedSnippets["init"]; ok {

@@ -247,7 +247,8 @@ func (s *Subroutine) Token() token.Token { return s.Decl.Token }
 func (s *Subroutine) String() string     { return s.Decl.String() }
 
 type Director struct {
-	Decl *ast.DirectorDeclaration
+	Decl   *ast.DirectorDeclaration
+	IsUsed bool // mark this backend is accessed at least once
 }
 
 func (d *Director) Type() Type         { return DirectorType }
@@ -316,4 +317,12 @@ type RemoteVCL struct {
 	Type     string
 	Content  string
 	Priority int64
+}
+
+type RemoteDirector struct {
+	Type     int
+	Name     string
+	Backends []string
+	Retries  int
+	Quorum   int
 }

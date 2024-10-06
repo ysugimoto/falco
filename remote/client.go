@@ -185,6 +185,16 @@ func (c *FastlyClient) ListBackends(ctx context.Context, version int64) ([]*Back
 	return backends, nil
 }
 
+func (c *FastlyClient) ListDirectors(ctx context.Context, version int64) ([]*Director, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/director", c.serviceId, version)
+	var directors []*Director
+	if err := c.request(ctx, endpoint, &directors); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return directors, nil
+}
+
 func (c *FastlyClient) ListSnippets(ctx context.Context, version int64) ([]*VCLSnippet, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/snippet", c.serviceId, version)
 	var snippets []*VCLSnippet

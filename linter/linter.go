@@ -106,13 +106,16 @@ func (l *Linter) lintUnusedBackends(ctx *context.Context) {
 			continue
 		}
 		if b.DirectorDecl != nil {
-			l.Error(UnusedDeclaration(b.DirectorDecl.GetMeta(), b.DirectorDecl.Name.Value, "director").Match(UNUSED_DECLARATION))
-		} else {
-			if b.BackendDecl == nil {
-				l.Error(UnusedExternalDeclaration(key, "backend").Match(UNUSED_DECLARATION))
-			} else {
-				l.Error(UnusedDeclaration(b.BackendDecl.GetMeta(), b.BackendDecl.Name.Value, "backend").Match(UNUSED_DECLARATION))
+			// Check director is used
+			if !ctx.Directors[b.DirectorDecl.Name.Value].IsUsed {
+				l.Error(UnusedDeclaration(b.DirectorDecl.GetMeta(), b.DirectorDecl.Name.Value, "director").Match(UNUSED_DECLARATION))
 			}
+			continue
+		}
+		if b.BackendDecl == nil {
+			l.Error(UnusedExternalDeclaration(key, "backend").Match(UNUSED_DECLARATION))
+		} else {
+			l.Error(UnusedDeclaration(b.BackendDecl.GetMeta(), b.BackendDecl.Name.Value, "backend").Match(UNUSED_DECLARATION))
 		}
 	}
 }
@@ -190,7 +193,7 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	// Declarations
 	// Note: root declaration has already added in linter context.
 	case *ast.AclDeclaration:
-		return l.lintAclDeclaration(t)
+		return l.lintAclDeclaration(t, ctx)
 	case *ast.BackendDeclaration:
 		return l.lintBackendDeclaration(t, ctx)
 	case *ast.DirectorDeclaration:
@@ -291,7 +294,7 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 
 	// https://github.com/ysugimoto/falco/issues/50
 	// To support subroutine hoisting, add root statements to context firstly and lint each statements after that.
-	statements = l.factoryRootDeclarations(statements, ctx)
+	l.factoryRootDeclarations(statements, ctx)
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
@@ -419,6 +422,7 @@ func (l *Linter) resolveFileInclusion(
 //nolint:gocognit,funlen
 func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *context.Context) []ast.Statement {
 	var factory []ast.Statement
+
 	for _, stmt := range statements {
 		switch t := stmt.(type) {
 		case *ast.AclDeclaration:

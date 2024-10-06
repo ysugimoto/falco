@@ -9,7 +9,7 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration) types.Type {
+func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Context) types.Type {
 	// validate ACL name
 	if !isValidName(decl.Name.Value) {
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "acl").Match(ACL_SYNTAX))
@@ -34,6 +34,11 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration) types.Type {
 		}
 	}
 
+	// Check ignored UNUSED_DECLARATION rule and mark as used
+	if l.ignore.IsEnable(UNUSED_DECLARATION) {
+		ctx.Acls[decl.Name.Value].IsUsed = true
+	}
+
 	return types.NeverType
 }
 
@@ -46,6 +51,11 @@ func (l *Linter) lintBackendDeclaration(decl *ast.BackendDeclaration, ctx *conte
 	// lint property definitions
 	for i := range decl.Properties {
 		l.lintBackendProperty(decl.Properties[i], ctx)
+	}
+
+	// Check ignored UNUSED_DECLARATION rule and mark as used
+	if l.ignore.IsEnable(UNUSED_DECLARATION) {
+		ctx.Backends[decl.Name.Value].IsUsed = true
 	}
 
 	return types.NeverType
@@ -115,6 +125,11 @@ func (l *Linter) lintDirectorDeclaration(decl *ast.DirectorDeclaration, ctx *con
 	}
 
 	l.lintDirectorProperty(decl, ctx)
+
+	// Check ignored UNUSED_DECLARATION rule and mark as used
+	if l.ignore.IsEnable(UNUSED_DECLARATION) {
+		ctx.Directors[decl.Name.Value].IsUsed = true
+	}
 
 	return types.NeverType
 }
@@ -245,6 +260,11 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 		l.lintTableProperty(p, valueType, ctx)
 	}
 
+	// Check ignored UNUSED_DECLARATION rule and mark as used
+	if l.ignore.IsEnable(UNUSED_DECLARATION) {
+		ctx.Tables[decl.Name.Value].IsUsed = true
+	}
+
 	return types.NeverType
 }
 
@@ -363,6 +383,11 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	// We are done linting inside the previous scope so
 	// we dont need the return type anymore
 	cc.ReturnType = nil
+
+	// Check ignored UNUSED_DECLARATION rule and mark as used
+	if l.ignore.IsEnable(UNUSED_DECLARATION) {
+		ctx.Subroutines[decl.Name.Value].IsUsed = true
+	}
 
 	return types.NeverType
 }
