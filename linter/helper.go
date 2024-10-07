@@ -549,3 +549,57 @@ func isProtectedHTTPHeaderName(name string) bool {
 	}
 	return false
 }
+
+// Series expresses the series of string concatenation.
+type Series struct {
+	Operator   string // Operator will accept either of "+" or "-" or empty string.
+	Expression ast.Expression
+}
+
+func toSeriesExpressions(expr ast.Expression, ctx *context.Context) ([]*Series, *LintError) {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// If expression is ident, must be a variable
+		// e.g req.http.Header, var.declaredVariable
+		if _, err := ctx.Get(t.Value); err != nil {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
+		}
+	case *ast.PrefixExpression:
+		if t.Operator != "+" && t.Operator != "-" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "PrefixExpression")
+		}
+		s, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		s[0].Operator = t.Operator
+		return s, nil
+	case *ast.GroupedExpression:
+		return nil, InvalidStringConcatenation(expr.GetMeta(), "GroupedExpression")
+	case *ast.InfixExpression:
+		if t.Operator != "+" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "InfixExpression")
+		}
+		var series []*Series
+		left, err := toSeriesExpressions(t.Left, ctx)
+		if err != nil {
+			return nil, err
+		}
+		series = append(series, left...)
+
+		right, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if t.Explicit {
+			right[0].Operator = t.Operator
+		}
+		series = append(series, right...)
+		return series, nil
+	}
+
+	// Concatenatable expression
+	return []*Series{
+		{Expression: expr},
+	}, nil
+}

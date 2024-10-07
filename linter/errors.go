@@ -212,6 +212,22 @@ func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	}
 }
 
+func InvalidStringConcatenation(m *ast.Meta, ts string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Cannot use %s for string concatenation", ts),
+	}
+}
+
+func TimeCalculatation(m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  "Time calculation found, it should be precalculated before the variable",
+	}
+}
+
 func UndefinedBackendProperty(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,

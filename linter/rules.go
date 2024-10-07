@@ -70,6 +70,7 @@ const (
 	UNUSED_GOTO                          = "unused/goto"
 	DISALLOW_EMPTY_RETURN                = "disallow-empty-return"
 	FORBIDDEN_BACKWARD_JUMP              = "goto/forbidden-backward-jump"
+	TIME_CALCULATION                     = "operator/time-calculation"
 )
 
 var references = map[Rule]string{

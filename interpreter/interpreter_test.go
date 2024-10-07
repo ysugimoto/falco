@@ -45,10 +45,17 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 	ip := New(context.WithResolver(
 		resolver.NewStaticResolver("main", vcl),
 	))
-	ip.ServeHTTP(
-		httptest.NewRecorder(),
-		httptest.NewRequest(http.MethodGet, "http://localhost", nil),
-	)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	ip.ServeHTTP(rec, req)
+
+	if rec.Result().StatusCode != 200 {
+		if !isError {
+			t.Errorf("Interpreter responds not 200 code")
+			t.FailNow()
+		}
+		return
+	}
 
 	for name, val := range assertions {
 		v, err := ip.vars.Get(scope, name)

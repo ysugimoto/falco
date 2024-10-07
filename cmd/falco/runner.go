@@ -230,11 +230,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*V
 	}
 
 	if len(lt.Errors) > 0 {
-		for _, err := range lt.Errors {
-			le, ok := err.(*linter.LintError)
-			if !ok {
-				continue
-			}
+		for _, le := range lt.Errors {
 			// check severity with overrides
 			severity := le.Severity
 			if v, ok := r.overrides[string(le.Rule)]; ok {

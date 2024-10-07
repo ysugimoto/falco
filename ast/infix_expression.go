@@ -8,6 +8,7 @@ type InfixExpression struct {
 	*Meta
 	Left     Expression
 	Operator string
+	Explicit bool
 	Right    Expression
 }
 
@@ -19,7 +20,9 @@ func (i *InfixExpression) String() string {
 
 	buf.WriteString("(")
 	buf.WriteString(i.Left.String())
-	buf.WriteString(" " + i.Operator + " ")
+	if i.Explicit {
+		buf.WriteString(" " + i.Operator + " ")
+	}
 	buf.WriteString(i.Right.String())
 	buf.WriteString(")")
 
