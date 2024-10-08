@@ -11,6 +11,8 @@ func printHelp(cmd string) {
 		printTerraformHelp()
 	case subcommandSimulate:
 		printSimulateHelp()
+	case subcommandDAP:
+		printDAPHelp()
 	case subcommandStats:
 		printStatsHelp()
 	case subcommandTest:
@@ -48,6 +50,7 @@ Subcommands:
     lint      : Run lint (default)
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
+    dap       : Launch DAP server to debug VCLs
     test      : Run local testing for provided VCLs
     console   : Run terminal console
     fmt       : Run formatter for provided VCLs
@@ -90,6 +93,19 @@ Flags:
 Linting with terraform:
     terraform plan -out planned.out
     terraform show -json planned.out | falco -vv terraform
+	`))
+}
+
+func printDAPHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco dap
+
+Flags:
+    -h, --help         : Show this help
+
+This command launches Debug Adapter Protocol server.
+Execute this command by using your editor's DAP support.
 	`))
 }
 

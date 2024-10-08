@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/console"
+	"github.com/ysugimoto/falco/dap"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/remote"
@@ -55,6 +56,7 @@ const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
 	subcommandSimulate  = "simulate"
+	subcommandDAP       = "dap"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
 	subcommandConsole   = "console"
@@ -102,6 +104,11 @@ func main() {
 		action = c.Commands.At(0)
 	case subcommandConsole:
 		if err := console.Run(c.Console.Scope); err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	case subcommandDAP:
+		if err := dap.New(c.Simulator).Run(); err != nil {
 			os.Exit(1)
 		}
 		os.Exit(0)
