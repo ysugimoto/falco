@@ -16,3 +16,8 @@ func findProcessMark(comments ast.Comments) (string, bool) {
 
 	return "", false
 }
+
+type series struct {
+	Operator   string
+	Expression ast.Expression
+}

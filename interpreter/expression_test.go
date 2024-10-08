@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -337,6 +339,173 @@ func TestProcessExpression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestProcessStringConcat(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "normal concatenation",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + "bar" "baz"; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foobarbaz"},
+			},
+		},
+		{
+			name:    "invalid group expression",
+			vcl:     `sub vcl_recv { set req.http.Foo = ("foo" + "bar") + "baz"; }`,
+			isError: true,
+		},
+		{
+			name:    "invalid group expression 2",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + (now + 5m) + "; bar"; }`,
+			isError: true,
+		},
+		{
+			name:    "INTEGER concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 1; }`,
+			isError: true,
+		},
+		{
+			name:    "INTEGER concatenation 2",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + -1; }`,
+			isError: true,
+		},
+		{
+			name:    "FLOAT concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 0.5; }`,
+			isError: true,
+		},
+		{
+			name:    "RTIME concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 6s; }`,
+			isError: true,
+		},
+		{
+			name: "TIME concatenation",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + now; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo" + now.Format(http.TimeFormat)},
+			},
+		},
+		{
+			name:    "FunctionCall expression concatenation with not string",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + std.atoi("foo"); }`,
+			isError: true,
+		},
+		{
+			name: "FunctionCall expression concatenation with string",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.itoa(10); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo10"},
+			},
+		},
+		{
+			name: "if expression concatenation, returns string",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + if(req.http.Bar, "1", "0"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo0"},
+			},
+		},
+		{
+			name:    "if expression concatenation, returns not string",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + if(req.http.Bar, 1, 0); }`,
+			isError: true,
+		},
+		{
+			name:    "prefix expression concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + !req.http.Bar; }`,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+// https://github.com/ysugimoto/falco/issues/360
+func TestProcessStringConcatIssue360(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "concat RTIME to left string",
+			vcl: `
+ sub vcl_deliver {
+ 	#FASTLY deliver
+ 	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" 5m ";";
+ }
+ `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME to left string with explicit plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" + 5m ";";
+  }
+  `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME to left TIME with explicit plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now + 5m ";";
+  }
+  `,
+			assertions: map[string]value.Value{
+				"resp.http.Set-Cookie": &value.String{
+					Value: fmt.Sprintf(
+						`test=abc; domain=fiddle.fastly.dev; path=/; expires=%s;`,
+						now.Add(5*time.Minute).Format(http.TimeFormat),
+					),
+				},
+			},
+		},
+		{
+			name: "concat RTIME to left TIME without plus sign",
+			vcl: `
+   sub vcl_deliver {
+   	#FASTLY deliver
+   	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now 5m ";";
+   }
+   `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME variable to left TIME with plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	declare local var.R RTIME;
+  	set var.R = 5m;
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now + var.R ";";
+  }
+   `,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.DeliverScope, tt.assertions, tt.isError)
 		})
 	}
 }

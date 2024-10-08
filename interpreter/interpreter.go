@@ -45,6 +45,7 @@ func New(options ...context.Option) *Interpreter {
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
+		process:      process.New(),
 	}
 }
 

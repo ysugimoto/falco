@@ -90,8 +90,130 @@ func (l *Linter) lintGroupedExpression(exp *ast.GroupedExpression, ctx *context.
 	return right
 }
 
+// InfixExpression linting, but special case for string concatenation.
+// string cocatenation has special type checking rule.
+// left and right expression must be following expressions:
+// - STRING                  - both literal and ident
+// - IDENT                   - common variables like req.*, var.*, now, etc
+// - PrefixExpression        - the operator must be "+"
+// - InfixExpression(nested) - same rule for left and right expression, and operator must be "+"
+// - FunctionCallExpression  - return value must be STRING
+// - IfExpression            - return value must be STRING
+//
+// Other expressions (e.g GroupedExpression) is invalid. For example:
+// set req.http.SomeHeader = "a" + "b" + "c";   // valid
+// set req.http.SomeHeader = "a" + ("b" + "c"); // invalid
+//
+// And we need to consider about "time calculation" - calculate between TIME and RTIME - as following rules:
+// 1. RTIME literal with explicit plus or minus sign should be accepted for concatenating to previous TIME expression
+// 2. And previous TIME expression must be an IDENT - invalid for return type of FunctionCallExpression like std.time()
+//
+// Above two rules are satisfied, if should be "time calculation", add RTIME duration to the TIME.
+// For example syntaxes:
+// set req.http.Foo = now + 5m;                             // valid, time calculation(plus) between now(TIME) and 5m(RTIME literal)
+// set req.http.Foo = now - 5m;                             // valid, time calculation(minus) between now(TIME) and 5m(RTIME literal)
+// set req.http.Foo = now + var.someRTime;                  // invalid, plus sign will be time calculation but accept only literal
+// set req.http.Foo = now var.someRTime;                    // valid, string concatenation
+// set req.http.Foo = now 5m;                               // invalid, time calculate syntax error
+// set req.http.Foo = std.time("xxx", now) + 5m;            // invalid, left expression is TIME type but not an ident
+// set req.http.Foo = std.time("xxx", now) + var.someRTime; // valid, string concatenation
+//
+// See Fastly fiddle: https://fiddle.fastly.dev/fiddle/befec89e
+func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *context.Context) types.Type {
+	var series []*Series
+
+	// Convert to expression series
+	left, err := toSeriesExpressions(exp.Left, ctx)
+	if err != nil {
+		l.Error(err.Match(OPERATOR_CONDITIONAL))
+		return types.NeverType
+	}
+	series = append(series, left...)
+
+	right, err := toSeriesExpressions(exp.Right, ctx)
+	if err != nil {
+		l.Error(err.Match(OPERATOR_CONDITIONAL))
+		return types.NeverType
+	}
+	if exp.Explicit {
+		right[0].Operator = exp.Operator
+	}
+	series = append(series, right...)
+
+	// Note:
+	// VCL variables accepts other types with implicit type conversion as following:
+	// IDENT   -> point value
+	// STRING  -> raw string
+	// INTEGER -> stringify
+	// FLOAT   -> stringify
+	// IP      -> stringify
+	// TIME    -> stringify (GMT string)
+	// RTIME   -> stringify (GMT string)
+	// BOOL    -> 0 (false) or 1 (true)
+	// And any literals except STRING could not accept.
+	ct := types.NeverType
+	for i := 0; i < len(series); i++ {
+		s := series[i]
+		nt := l.lint(s.Expression, ctx)
+
+		switch s.Expression.(type) {
+		case *ast.String:
+			break
+		case *ast.IfExpression:
+			if nt != types.StringType {
+				l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+			}
+		case *ast.FunctionCallExpression:
+			if nt != types.StringType {
+				l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+			}
+		case *ast.Ident:
+			switch nt {
+			case types.StringType:
+				goto OUT
+			case types.TimeType:
+				// If ident value type is TIME, check the next expression is RTIME literal.
+				// If so, it is time addition so suppress ImplicitTypeConversionError.
+				if i+1 < len(series)-1 {
+					next := series[i+1]
+					if _, ok := next.Expression.(*ast.RTime); ok {
+						goto OUT
+					}
+				}
+			case types.RTimeType:
+				// If ident value type is RTIME with plus sign, previous type must no TIME type (string concatenation)
+				if s.Operator == "+" || s.Operator == "-" {
+					if ct == types.TimeType {
+						l.Error(InvalidStringConcatenation(exp.GetMeta(), "RTIME").Match(OPERATOR_CONDITIONAL))
+					}
+				}
+			}
+			l.Error(ImplicitTypeConversion(exp.GetMeta(), nt, types.StringType))
+		case *ast.RTime:
+			// If expression is RTIME literal, follwing condition must be satisfied:
+			// - previous expression is IDENT and the value if TIME type
+			// - explicitly calculation sign ("+" or "-") must be present
+			if ct == types.TimeType {
+				if s.Operator == "+" || s.Operator == "-" {
+					if _, ok := series[i-1].Expression.(*ast.Ident); ok {
+						// Valid for time addition but we will report as WARNING
+						l.Error(TimeCalculatation(s.Expression.GetMeta()).Match(TIME_CALCULATION))
+						goto OUT
+					}
+				}
+			}
+			l.Error(InvalidStringConcatenation(exp.GetMeta(), "RTIME").Match(OPERATOR_CONDITIONAL))
+		default:
+			l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+		}
+	OUT:
+		ct = nt
+	}
+
+	return types.StringType
+}
+
 func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Context) types.Type {
-	// Type comparison
 	left := l.lint(exp.Left, ctx)
 	if left == types.NeverType {
 		return left
@@ -101,6 +223,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		return right
 	}
 
+	// Opereator should be comparison operator.
 	switch exp.Operator {
 	case "==", "!=":
 		// Cast req.backend to standard backend type for comparisons
@@ -160,44 +283,6 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			}
 		}
 		return types.BoolType
-	case "+":
-		// Plus operator behaves string concatenation.
-		// VCL accepts other types with implicit type conversion as following:
-		// IDENT   -> point value
-		// STRING  -> raw string
-		// INTEGER -> stringify
-		// FLOAT   -> stringify
-		// IP      -> stringify
-		// TIME    -> stringify (GMT string)
-		// RTIME   -> stringify (GMT string)
-		// BOOL    -> 0 (false) or 1 (true)
-		switch left {
-		case types.AclType, types.BackendType:
-			err := &LintError{
-				Severity: ERROR,
-				Token:    exp.GetMeta().Token,
-				Message:  "ACL or BACKEND type cannot use in string concatenation",
-			}
-			l.Error(err.Match(OPERATOR_CONDITIONAL))
-		case types.StringType:
-			break
-		default:
-			l.Error(ImplicitTypeConversion(exp.GetMeta(), left, types.StringType))
-		}
-
-		switch right {
-		case types.AclType, types.BackendType:
-			l.Error(&LintError{
-				Severity: ERROR,
-				Token:    exp.GetMeta().Token,
-				Message:  "ACL or BACKEND type cannot use in string concatenation",
-			})
-		case types.StringType:
-			break
-		default:
-			l.Error(ImplicitTypeConversion(exp.GetMeta(), right, types.StringType))
-		}
-		return types.StringType
 	case "&&", "||":
 		// AND / OR operator compares left and right with truthy or falsy
 		return types.BoolType

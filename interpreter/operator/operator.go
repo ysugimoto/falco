@@ -846,3 +846,34 @@ func Concat(left, right value.Value) (value.Value, error) {
 		Value: left.String() + right.String(),
 	}, nil
 }
+
+func TimeCalculation(left, right value.Value, operator string) (value.Value, error) {
+	if left.Type() != value.TimeType {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("%s type could not use as literal for minus time calculation", left.Type()),
+		)
+	}
+	if right.Type() != value.RTimeType {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("%s type could not use as literal for minus time calculation", left.Type()),
+		)
+	}
+	if !right.IsLiteral() {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("RTime literal could not use as literal for minus time calculation"),
+		)
+	}
+
+	lv := value.Unwrap[*value.Time](left)
+	rv := value.Unwrap[*value.RTime](right)
+
+	// If operator is "-", subtract from left time.
+	if operator == "-" {
+		return &value.Time{
+			Value: lv.Value.Add(-rv.Value),
+		}, nil
+	}
+	return &value.Time{
+		Value: lv.Value.Add(rv.Value),
+	}, nil
+}

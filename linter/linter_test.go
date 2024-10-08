@@ -81,10 +81,7 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
 	}
-	le, ok := l.Errors[0].(*LintError)
-	if !ok {
-		t.Errorf("Failed type conversion of *LintError")
-	}
+	le := l.Errors[0]
 	if le.Severity != severity {
 		t.Errorf("Severity expects %s but got %s with: %s", severity, le.Severity, le)
 	}

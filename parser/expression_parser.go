@@ -24,10 +24,19 @@ func (p *Parser) registerExpressionParsers() {
 		token.RESTART:    func() (ast.Expression, error) { return p.ParseIdent(), nil },
 	}
 	p.infixParsers = map[token.TokenType]infixParser{
-		token.IF:                 p.ParseInfixStringConcatExpression,
-		token.PLUS:               p.ParseInfixStringConcatExpression,
-		token.STRING:             p.ParseInfixStringConcatExpression,
-		token.IDENT:              p.ParseInfixStringConcatExpression,
+		// If VCL has Plus sign, explicitly concatenation.
+		token.PLUS: func(left ast.Expression) (ast.Expression, error) {
+			return p.ParseInfixStringConcatExpression(left, true)
+		},
+		token.IF: func(left ast.Expression) (ast.Expression, error) {
+			return p.ParseInfixStringConcatExpression(left, false)
+		},
+		token.STRING: func(left ast.Expression) (ast.Expression, error) {
+			return p.ParseInfixStringConcatExpression(left, false)
+		},
+		token.IDENT: func(left ast.Expression) (ast.Expression, error) {
+			return p.ParseInfixStringConcatExpression(left, false)
+		},
 		token.MINUS:              p.ParseInfixExpression,
 		token.EQUAL:              p.ParseInfixExpression,
 		token.NOT_EQUAL:          p.ParseInfixExpression,
@@ -191,12 +200,13 @@ func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, erro
 	return exp, nil
 }
 
-func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression) (ast.Expression, error) {
+func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit bool) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
 		Meta: p.curToken,
 		// VCL can concat string without "+" operator, consecutive token.
 		// But we explicitly define as "+" operator to make clearly
 		Operator: "+",
+		Explicit: explicit,
 		Left:     left,
 	}
 

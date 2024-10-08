@@ -16,7 +16,7 @@ import (
 )
 
 type Linter struct {
-	Errors         []error
+	Errors         []*LintError
 	FatalError     *FatalError
 	includexLexers map[string]*lexer.Lexer
 	ignore         *ignore
@@ -273,6 +273,10 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.GroupedExpression:
 		return l.lintGroupedExpression(t, ctx)
 	case *ast.InfixExpression:
+		if t.Operator == "+" {
+			// Special dealing - string concatenation for "+" operator
+			return l.lintStringConcatInfixExpression(t, ctx)
+		}
 		return l.lintInfixExpression(t, ctx)
 	case *ast.IfExpression:
 		return l.lintIfExpression(t, ctx)
