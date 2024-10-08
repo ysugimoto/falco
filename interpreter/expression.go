@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/exception"
@@ -446,7 +445,6 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 						}
 						cv, opErr = operator.TimeCalculation(cv, nv, next.Operator)
 						if opErr != nil {
-							pp.Println(opErr)
 							return value.Null, errors.WithStack(err)
 						}
 						// String concat with left and time-calculated value (TIME type)
