@@ -82,10 +82,16 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 		}
 		results = append(results, result)
 	}
+	// Calculate coverage
+	var coverage *TestCoverage
+	if t.config.Coverage {
+		coverage = getCoverage(results)
+	}
 
 	return &TestFactory{
 		Results:    results,
 		Statistics: t.counter,
+		Coverage:   coverage,
 		Logs:       t.debugger.stack,
 	}, nil
 }
@@ -138,7 +144,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				i := t.setupInterpreter(defs)
 
 				mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
-				if err := i.TestProcessInit(mockRequest); err != nil {
+				if err := i.TestProcessInit(mockRequest, t.config); err != nil {
 					errChan <- errors.WithStack(err)
 					return
 				}
@@ -147,10 +153,11 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					start := time.Now()
 					err := i.ProcessTestSubroutine(s, st)
 					cases = append(cases, &TestCase{
-						Name:  suite,
-						Error: errors.Cause(err),
-						Scope: s.String(),
-						Time:  time.Since(start).Milliseconds(),
+						Name:     suite,
+						Error:    errors.Cause(err),
+						Scope:    s.String(),
+						Time:     time.Since(start).Milliseconds(),
+						Coverage: i.GetCoverage(),
 					})
 					if err != nil {
 						t.counter.Fail()
@@ -188,7 +195,7 @@ func (t *Tester) runDescribedTests(
 	// describe should run as group testing, create interpreter once through tests
 	i := t.setupInterpreter(defs)
 
-	if err := i.TestProcessInit(mockRequest); err != nil {
+	if err := i.TestProcessInit(mockRequest, t.config); err != nil {
 		return cases, err
 	}
 
@@ -222,11 +229,12 @@ func (t *Tester) runDescribedTests(
 			start := time.Now()
 			err := i.ProcessTestSubroutine(s, sub)
 			cases = append(cases, &TestCase{
-				Name:  suite,
-				Group: d.Name.String(),
-				Error: errors.Cause(err),
-				Scope: s.String(),
-				Time:  time.Since(start).Milliseconds(),
+				Name:     suite,
+				Group:    d.Name.String(),
+				Error:    errors.Cause(err),
+				Scope:    s.String(),
+				Time:     time.Since(start).Milliseconds(),
+				Coverage: i.GetCoverage(),
 			})
 			if err != nil {
 				t.counter.Fail()
