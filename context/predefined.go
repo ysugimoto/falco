@@ -3,8 +3,11 @@
 package context
 
 import (
+	"errors"
 	"github.com/ysugimoto/falco/types"
 )
+
+var ErrDeprecated = errors.New("deprecated")
 
 func predefinedVariables() Variables {
 	return Variables{
@@ -20,9 +23,9 @@ func predefinedVariables() Variables {
 		},
 		"backend": &Object{
 			Items: map[string]*Object{
-				"%any%": &Object{
+				"%any%": {
 					Items: map[string]*Object{
-						"connections_open": &Object{
+						"connections_open": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -32,7 +35,7 @@ func predefinedVariables() Variables {
 								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/",
 							},
 						},
-						"connections_used": &Object{
+						"connections_used": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -42,7 +45,7 @@ func predefinedVariables() Variables {
 								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-used/",
 							},
 						},
-						"healthy": &Object{
+						"healthy": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -54,9 +57,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"conn": &Object{
+				"conn": {
 					Items: map[string]*Object{
-						"is_tls": &Object{
+						"is_tls": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -66,7 +69,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/",
 							},
 						},
-						"tls_protocol": &Object{
+						"tls_protocol": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -78,9 +81,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"socket": &Object{
+				"socket": {
 					Items: map[string]*Object{
-						"congestion_algorithm": &Object{
+						"congestion_algorithm": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -90,7 +93,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-congestion-algorithm/",
 							},
 						},
-						"cwnd": &Object{
+						"cwnd": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -100,7 +103,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-cwnd/",
 							},
 						},
-						"tcpi_advmss": &Object{
+						"tcpi_advmss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -110,7 +113,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-advmss/",
 							},
 						},
-						"tcpi_bytes_acked": &Object{
+						"tcpi_bytes_acked": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -120,7 +123,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-acked/",
 							},
 						},
-						"tcpi_bytes_received": &Object{
+						"tcpi_bytes_received": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -130,7 +133,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-bytes-received/",
 							},
 						},
-						"tcpi_data_segs_in": &Object{
+						"tcpi_data_segs_in": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -140,7 +143,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-in/",
 							},
 						},
-						"tcpi_data_segs_out": &Object{
+						"tcpi_data_segs_out": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -150,7 +153,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-data-segs-out/",
 							},
 						},
-						"tcpi_delivery_rate": &Object{
+						"tcpi_delivery_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -160,7 +163,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delivery-rate/",
 							},
 						},
-						"tcpi_delta_retrans": &Object{
+						"tcpi_delta_retrans": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -170,7 +173,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-delta-retrans/",
 							},
 						},
-						"tcpi_last_data_sent": &Object{
+						"tcpi_last_data_sent": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -180,7 +183,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-last-data-sent/",
 							},
 						},
-						"tcpi_max_pacing_rate": &Object{
+						"tcpi_max_pacing_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -190,7 +193,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-max-pacing-rate/",
 							},
 						},
-						"tcpi_min_rtt": &Object{
+						"tcpi_min_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -200,7 +203,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-min-rtt/",
 							},
 						},
-						"tcpi_notsent_bytes": &Object{
+						"tcpi_notsent_bytes": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -210,7 +213,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-notsent-bytes/",
 							},
 						},
-						"tcpi_pacing_rate": &Object{
+						"tcpi_pacing_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -220,7 +223,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pacing-rate/",
 							},
 						},
-						"tcpi_pmtu": &Object{
+						"tcpi_pmtu": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -230,7 +233,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-pmtu/",
 							},
 						},
-						"tcpi_rcv_mss": &Object{
+						"tcpi_rcv_mss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -240,7 +243,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-mss/",
 							},
 						},
-						"tcpi_rcv_rtt": &Object{
+						"tcpi_rcv_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -250,7 +253,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-rtt/",
 							},
 						},
-						"tcpi_rcv_space": &Object{
+						"tcpi_rcv_space": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -260,7 +263,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-space/",
 							},
 						},
-						"tcpi_rcv_ssthresh": &Object{
+						"tcpi_rcv_ssthresh": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -270,7 +273,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rcv-ssthresh/",
 							},
 						},
-						"tcpi_reordering": &Object{
+						"tcpi_reordering": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -280,7 +283,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-reordering/",
 							},
 						},
-						"tcpi_rtt": &Object{
+						"tcpi_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -290,7 +293,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rtt/",
 							},
 						},
-						"tcpi_rttvar": &Object{
+						"tcpi_rttvar": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -300,7 +303,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-rttvar/",
 							},
 						},
-						"tcpi_segs_in": &Object{
+						"tcpi_segs_in": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -310,7 +313,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-in/",
 							},
 						},
-						"tcpi_segs_out": &Object{
+						"tcpi_segs_out": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -320,7 +323,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-segs-out/",
 							},
 						},
-						"tcpi_snd_cwnd": &Object{
+						"tcpi_snd_cwnd": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -330,7 +333,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-cwnd/",
 							},
 						},
-						"tcpi_snd_mss": &Object{
+						"tcpi_snd_mss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -340,7 +343,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-mss/",
 							},
 						},
-						"tcpi_snd_ssthresh": &Object{
+						"tcpi_snd_ssthresh": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -350,7 +353,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-snd-ssthresh/",
 							},
 						},
-						"tcpi_total_retrans": &Object{
+						"tcpi_total_retrans": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -366,7 +369,7 @@ func predefinedVariables() Variables {
 		},
 		"bereq": &Object{
 			Items: map[string]*Object{
-				"between_bytes_timeout": &Object{
+				"between_bytes_timeout": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -376,7 +379,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/",
 					},
 				},
-				"body_bytes_written": &Object{
+				"body_bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -386,7 +389,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-body-bytes-written/",
 					},
 				},
-				"bytes_written": &Object{
+				"bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -396,7 +399,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-bytes-written/",
 					},
 				},
-				"connect_timeout": &Object{
+				"connect_timeout": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -406,7 +409,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/",
 					},
 				},
-				"first_byte_timeout": &Object{
+				"first_byte_timeout": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -416,7 +419,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-first-byte-timeout/",
 					},
 				},
-				"header_bytes_written": &Object{
+				"header_bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -426,9 +429,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-header-bytes-written/",
 					},
 				},
-				"http": &Object{
+				"http": {
 					Items: map[string]*Object{
-						"%any%": &Object{
+						"%any%": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -440,7 +443,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"is_clustering": &Object{
+				"is_clustering": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -450,7 +453,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-is-clustering/",
 					},
 				},
-				"max_reuse_idle_time": &Object{
+				"max_reuse_idle_time": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -460,7 +463,7 @@ func predefinedVariables() Variables {
 						Reference: "",
 					},
 				},
-				"method": &Object{
+				"method": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -470,7 +473,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/",
 					},
 				},
-				"proto": &Object{
+				"proto": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -480,7 +483,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/",
 					},
 				},
-				"request": &Object{
+				"request": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -490,9 +493,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/",
 					},
 				},
-				"url": &Object{
+				"url": {
 					Items: map[string]*Object{
-						"basename": &Object{
+						"basename": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -502,7 +505,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/",
 							},
 						},
-						"dirname": &Object{
+						"dirname": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -512,7 +515,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-dirname/",
 							},
 						},
-						"ext": &Object{
+						"ext": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -522,7 +525,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-ext/",
 							},
 						},
-						"path": &Object{
+						"path": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -532,7 +535,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-path/",
 							},
 						},
-						"qs": &Object{
+						"qs": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -555,9 +558,9 @@ func predefinedVariables() Variables {
 		},
 		"beresp": &Object{
 			Items: map[string]*Object{
-				"backend": &Object{
+				"backend": {
 					Items: map[string]*Object{
-						"alternate_ips": &Object{
+						"alternate_ips": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -567,7 +570,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-alternate-ips/",
 							},
 						},
-						"ip": &Object{
+						"ip": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IPType,
@@ -577,7 +580,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-ip/",
 							},
 						},
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -587,7 +590,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-backend-name/",
 							},
 						},
-						"port": &Object{
+						"port": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -597,7 +600,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-port/",
 							},
 						},
-						"requests": &Object{
+						"requests": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -607,7 +610,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-requests/",
 							},
 						},
-						"src_ip": &Object{
+						"src_ip": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IPType,
@@ -619,7 +622,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"brotli": &Object{
+				"brotli": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -629,7 +632,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-brotli/",
 					},
 				},
-				"cacheable": &Object{
+				"cacheable": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -639,7 +642,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-cacheable/",
 					},
 				},
-				"do_esi": &Object{
+				"do_esi": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -649,7 +652,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/beresp-do-esi/",
 					},
 				},
-				"do_stream": &Object{
+				"do_stream": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -659,7 +662,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-do-stream/",
 					},
 				},
-				"grace": &Object{
+				"grace": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -669,7 +672,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-grace/",
 					},
 				},
-				"gzip": &Object{
+				"gzip": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -679,7 +682,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-gzip/",
 					},
 				},
-				"handshake_time_to_origin_ms": &Object{
+				"handshake_time_to_origin_ms": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -689,7 +692,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-handshake-time-to-origin-ms/",
 					},
 				},
-				"hipaa": &Object{
+				"hipaa": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -699,9 +702,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-hipaa/",
 					},
 				},
-				"http": &Object{
+				"http": {
 					Items: map[string]*Object{
-						"%any%": &Object{
+						"%any%": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -713,7 +716,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"pci": &Object{
+				"pci": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -723,7 +726,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-pci/",
 					},
 				},
-				"proto": &Object{
+				"proto": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -733,7 +736,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-proto/",
 					},
 				},
-				"response": &Object{
+				"response": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -743,7 +746,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-response/",
 					},
 				},
-				"saintmode": &Object{
+				"saintmode": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.NeverType,
@@ -753,7 +756,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-saintmode/",
 					},
 				},
-				"stale_if_error": &Object{
+				"stale_if_error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -763,7 +766,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-if-error/",
 					},
 				},
-				"stale_while_revalidate": &Object{
+				"stale_while_revalidate": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -773,7 +776,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-stale-while-revalidate/",
 					},
 				},
-				"status": &Object{
+				"status": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -783,7 +786,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-status/",
 					},
 				},
-				"ttl": &Object{
+				"ttl": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -793,7 +796,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-ttl/",
 					},
 				},
-				"used_alternate_path_to_origin": &Object{
+				"used_alternate_path_to_origin": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -807,9 +810,9 @@ func predefinedVariables() Variables {
 		},
 		"client": &Object{
 			Items: map[string]*Object{
-				"as": &Object{
+				"as": {
 					Items: map[string]*Object{
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -819,7 +822,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-as-name/",
 							},
 						},
-						"number": &Object{
+						"number": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -831,9 +834,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"bot": &Object{
+				"bot": {
 					Items: map[string]*Object{
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -845,9 +848,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"browser": &Object{
+				"browser": {
 					Items: map[string]*Object{
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -857,7 +860,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-browser-name/",
 							},
 						},
-						"version": &Object{
+						"version": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -869,9 +872,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"class": &Object{
+				"class": {
 					Items: map[string]*Object{
-						"bot": &Object{
+						"bot": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -881,7 +884,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-bot/",
 							},
 						},
-						"browser": &Object{
+						"browser": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -891,91 +894,99 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-browser/",
 							},
 						},
-						"checker": &Object{
+						"checker": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/",
+								Deprecated: true,
 							},
 						},
-						"downloader": &Object{
+						"downloader": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/",
+								Deprecated: true,
 							},
 						},
-						"feedreader": &Object{
+						"feedreader": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/",
+								Deprecated: true,
 							},
 						},
-						"filter": &Object{
+						"filter": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/",
+								Deprecated: true,
 							},
 						},
-						"masquerading": &Object{
+						"masquerading": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/",
+								Deprecated: true,
 							},
 						},
-						"spam": &Object{
+						"spam": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/",
+								Deprecated: true,
 							},
 						},
 					},
 				},
-				"display": &Object{
+				"display": {
 					Items: map[string]*Object{
-						"height": &Object{
+						"height": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/",
+								Get:        types.IntegerType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/",
+								Deprecated: true,
 							},
 						},
-						"ppi": &Object{
+						"ppi": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/",
+								Get:        types.IntegerType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/",
+								Deprecated: true,
 							},
 						},
-						"touchscreen": &Object{
+						"touchscreen": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -985,21 +996,22 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/",
 							},
 						},
-						"width": &Object{
+						"width": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.IntegerType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/",
+								Get:        types.IntegerType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/",
+								Deprecated: true,
 							},
 						},
 					},
 				},
-				"geo": &Object{
+				"geo": {
 					Items: map[string]*Object{
-						"area_code": &Object{
+						"area_code": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1009,9 +1021,9 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-area-code/",
 							},
 						},
-						"city": &Object{
+						"city": {
 							Items: map[string]*Object{
-								"ascii": &Object{
+								"ascii": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1021,7 +1033,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-ascii/",
 									},
 								},
-								"latin1": &Object{
+								"latin1": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1031,7 +1043,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city-latin1/",
 									},
 								},
-								"utf8": &Object{
+								"utf8": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1050,7 +1062,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-city/",
 							},
 						},
-						"conn_speed": &Object{
+						"conn_speed": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1060,7 +1072,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-speed/",
 							},
 						},
-						"conn_type": &Object{
+						"conn_type": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1070,7 +1082,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-conn-type/",
 							},
 						},
-						"continent_code": &Object{
+						"continent_code": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1080,7 +1092,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-continent-code/",
 							},
 						},
-						"country_code": &Object{
+						"country_code": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1090,7 +1102,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code/",
 							},
 						},
-						"country_code3": &Object{
+						"country_code3": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1100,9 +1112,9 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-code3/",
 							},
 						},
-						"country_name": &Object{
+						"country_name": {
 							Items: map[string]*Object{
-								"ascii": &Object{
+								"ascii": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1112,7 +1124,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-ascii/",
 									},
 								},
-								"latin1": &Object{
+								"latin1": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1122,7 +1134,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name-latin1/",
 									},
 								},
-								"utf8": &Object{
+								"utf8": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1141,7 +1153,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-country-name/",
 							},
 						},
-						"gmt_offset": &Object{
+						"gmt_offset": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1151,7 +1163,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-gmt-offset/",
 							},
 						},
-						"ip_override": &Object{
+						"ip_override": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1161,7 +1173,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-ip-override/",
 							},
 						},
-						"latitude": &Object{
+						"latitude": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.FloatType,
@@ -1171,7 +1183,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-latitude/",
 							},
 						},
-						"longitude": &Object{
+						"longitude": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.FloatType,
@@ -1181,7 +1193,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-longitude/",
 							},
 						},
-						"metro_code": &Object{
+						"metro_code": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1191,7 +1203,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-metro-code/",
 							},
 						},
-						"postal_code": &Object{
+						"postal_code": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1201,7 +1213,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-postal-code/",
 							},
 						},
-						"proxy_description": &Object{
+						"proxy_description": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1211,7 +1223,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-description/",
 							},
 						},
-						"proxy_type": &Object{
+						"proxy_type": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1221,9 +1233,9 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-proxy-type/",
 							},
 						},
-						"region": &Object{
+						"region": {
 							Items: map[string]*Object{
-								"ascii": &Object{
+								"ascii": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1233,7 +1245,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-ascii/",
 									},
 								},
-								"latin1": &Object{
+								"latin1": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1243,7 +1255,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region-latin1/",
 									},
 								},
-								"utf8": &Object{
+								"utf8": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -1262,7 +1274,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/client-geo-region/",
 							},
 						},
-						"utc_offset": &Object{
+						"utc_offset": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1274,7 +1286,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"identified": &Object{
+				"identified": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -1284,7 +1296,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/",
 					},
 				},
-				"identity": &Object{
+				"identity": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -1294,7 +1306,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-identity/",
 					},
 				},
-				"ip": &Object{
+				"ip": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -1304,9 +1316,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-ip/",
 					},
 				},
-				"os": &Object{
+				"os": {
 					Items: map[string]*Object{
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1316,7 +1328,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-os-name/",
 							},
 						},
-						"version": &Object{
+						"version": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1328,19 +1340,20 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"platform": &Object{
+				"platform": {
 					Items: map[string]*Object{
-						"ereader": &Object{
+						"ereader": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/",
+								Deprecated: true,
 							},
 						},
-						"gameconsole": &Object{
+						"gameconsole": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1350,7 +1363,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/",
 							},
 						},
-						"hwtype": &Object{
+						"hwtype": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1360,7 +1373,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-hwtype/",
 							},
 						},
-						"mediaplayer": &Object{
+						"mediaplayer": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1370,7 +1383,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mediaplayer/",
 							},
 						},
-						"mobile": &Object{
+						"mobile": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1380,7 +1393,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mobile/",
 							},
 						},
-						"smarttv": &Object{
+						"smarttv": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1390,7 +1403,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-smarttv/",
 							},
 						},
-						"tablet": &Object{
+						"tablet": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1400,19 +1413,20 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tablet/",
 							},
 						},
-						"tvplayer": &Object{
+						"tvplayer": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
-								Get:       types.BoolType,
-								Set:       types.NeverType,
-								Unset:     false,
-								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/",
+								Get:        types.BoolType,
+								Set:        types.NeverType,
+								Unset:      false,
+								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/",
+								Deprecated: true,
 							},
 						},
 					},
 				},
-				"port": &Object{
+				"port": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -1422,7 +1436,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-port/",
 					},
 				},
-				"requests": &Object{
+				"requests": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -1432,7 +1446,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-requests/",
 					},
 				},
-				"sess_timeout": &Object{
+				"sess_timeout": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -1442,9 +1456,9 @@ func predefinedVariables() Variables {
 						Reference: "https://web.archive.org/web/20210306052653/https://developer.fastly.com/reference/vcl/variables/client-connection/client-sess-timeout/",
 					},
 				},
-				"socket": &Object{
+				"socket": {
 					Items: map[string]*Object{
-						"congestion_algorithm": &Object{
+						"congestion_algorithm": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1454,7 +1468,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-congestion-algorithm/",
 							},
 						},
-						"cwnd": &Object{
+						"cwnd": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1464,7 +1478,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-cwnd/",
 							},
 						},
-						"nexthop": &Object{
+						"nexthop": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IPType,
@@ -1474,7 +1488,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-nexthop/",
 							},
 						},
-						"pace": &Object{
+						"pace": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1484,7 +1498,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-pace/",
 							},
 						},
-						"ploss": &Object{
+						"ploss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.FloatType,
@@ -1494,7 +1508,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-ploss/",
 							},
 						},
-						"tcp_info": &Object{
+						"tcp_info": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1504,7 +1518,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcp-info/",
 							},
 						},
-						"tcpi_advmss": &Object{
+						"tcpi_advmss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1514,7 +1528,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-advmss/",
 							},
 						},
-						"tcpi_bytes_acked": &Object{
+						"tcpi_bytes_acked": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1524,7 +1538,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-acked/",
 							},
 						},
-						"tcpi_bytes_received": &Object{
+						"tcpi_bytes_received": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1534,7 +1548,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-bytes-received/",
 							},
 						},
-						"tcpi_data_segs_in": &Object{
+						"tcpi_data_segs_in": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1544,7 +1558,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-in/",
 							},
 						},
-						"tcpi_data_segs_out": &Object{
+						"tcpi_data_segs_out": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1554,7 +1568,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-data-segs-out/",
 							},
 						},
-						"tcpi_delivery_rate": &Object{
+						"tcpi_delivery_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1564,7 +1578,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delivery-rate/",
 							},
 						},
-						"tcpi_delta_retrans": &Object{
+						"tcpi_delta_retrans": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1574,7 +1588,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-delta-retrans/",
 							},
 						},
-						"tcpi_last_data_sent": &Object{
+						"tcpi_last_data_sent": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1584,7 +1598,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-last-data-sent/",
 							},
 						},
-						"tcpi_max_pacing_rate": &Object{
+						"tcpi_max_pacing_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1594,7 +1608,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-max-pacing-rate/",
 							},
 						},
-						"tcpi_min_rtt": &Object{
+						"tcpi_min_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1604,7 +1618,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-min-rtt/",
 							},
 						},
-						"tcpi_notsent_bytes": &Object{
+						"tcpi_notsent_bytes": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1614,7 +1628,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-notsent-bytes/",
 							},
 						},
-						"tcpi_pacing_rate": &Object{
+						"tcpi_pacing_rate": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1624,7 +1638,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pacing-rate/",
 							},
 						},
-						"tcpi_pmtu": &Object{
+						"tcpi_pmtu": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1634,7 +1648,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-pmtu/",
 							},
 						},
-						"tcpi_rcv_mss": &Object{
+						"tcpi_rcv_mss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1644,7 +1658,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-mss/",
 							},
 						},
-						"tcpi_rcv_rtt": &Object{
+						"tcpi_rcv_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1654,7 +1668,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-rtt/",
 							},
 						},
-						"tcpi_rcv_space": &Object{
+						"tcpi_rcv_space": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1664,7 +1678,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-space/",
 							},
 						},
-						"tcpi_rcv_ssthresh": &Object{
+						"tcpi_rcv_ssthresh": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1674,7 +1688,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rcv-ssthresh/",
 							},
 						},
-						"tcpi_reordering": &Object{
+						"tcpi_reordering": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1684,7 +1698,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-reordering/",
 							},
 						},
-						"tcpi_rtt": &Object{
+						"tcpi_rtt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1694,7 +1708,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rtt/",
 							},
 						},
-						"tcpi_rttvar": &Object{
+						"tcpi_rttvar": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1704,7 +1718,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-rttvar/",
 							},
 						},
-						"tcpi_segs_in": &Object{
+						"tcpi_segs_in": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1714,7 +1728,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-in/",
 							},
 						},
-						"tcpi_segs_out": &Object{
+						"tcpi_segs_out": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1724,7 +1738,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-segs-out/",
 							},
 						},
-						"tcpi_snd_cwnd": &Object{
+						"tcpi_snd_cwnd": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1734,7 +1748,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-cwnd/",
 							},
 						},
-						"tcpi_snd_mss": &Object{
+						"tcpi_snd_mss": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1744,7 +1758,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-mss/",
 							},
 						},
-						"tcpi_snd_ssthresh": &Object{
+						"tcpi_snd_ssthresh": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1754,7 +1768,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/client-socket-tcpi-snd-ssthresh/",
 							},
 						},
-						"tcpi_total_retrans": &Object{
+						"tcpi_total_retrans": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1770,7 +1784,7 @@ func predefinedVariables() Variables {
 		},
 		"esi": &Object{
 			Items: map[string]*Object{
-				"allow_inside_cdata": &Object{
+				"allow_inside_cdata": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -1784,7 +1798,7 @@ func predefinedVariables() Variables {
 		},
 		"fastly": &Object{
 			Items: map[string]*Object{
-				"error": &Object{
+				"error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -1794,9 +1808,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/",
 					},
 				},
-				"ff": &Object{
+				"ff": {
 					Items: map[string]*Object{
-						"visits_this_pop": &Object{
+						"visits_this_pop": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1806,7 +1820,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop/",
 							},
 						},
-						"visits_this_pop_this_service": &Object{
+						"visits_this_pop_this_service": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1816,7 +1830,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-pop-this-service/",
 							},
 						},
-						"visits_this_service": &Object{
+						"visits_this_service": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1832,9 +1846,9 @@ func predefinedVariables() Variables {
 		},
 		"fastly_info": &Object{
 			Items: map[string]*Object{
-				"edge": &Object{
+				"edge": {
 					Items: map[string]*Object{
-						"is_tls": &Object{
+						"is_tls": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1846,9 +1860,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"h2": &Object{
+				"h2": {
 					Items: map[string]*Object{
-						"fingerprint": &Object{
+						"fingerprint": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1858,7 +1872,7 @@ func predefinedVariables() Variables {
 								Reference: "",
 							},
 						},
-						"is_push": &Object{
+						"is_push": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -1868,7 +1882,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/",
 							},
 						},
-						"stream_id": &Object{
+						"stream_id": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -1880,7 +1894,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"host_header": &Object{
+				"host_header": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -1890,7 +1904,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-host-header/",
 					},
 				},
-				"is_cluster_edge": &Object{
+				"is_cluster_edge": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -1900,7 +1914,7 @@ func predefinedVariables() Variables {
 						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
 					},
 				},
-				"is_cluster_shield": &Object{
+				"is_cluster_shield": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -1910,7 +1924,7 @@ func predefinedVariables() Variables {
 						Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
 					},
 				},
-				"is_h2": &Object{
+				"is_h2": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -1920,7 +1934,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h2/",
 					},
 				},
-				"is_h3": &Object{
+				"is_h3": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -1930,7 +1944,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/",
 					},
 				},
-				"request_id": &Object{
+				"request_id": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -1940,7 +1954,7 @@ func predefinedVariables() Variables {
 						Reference: "",
 					},
 				},
-				"state": &Object{
+				"state": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -1954,7 +1968,7 @@ func predefinedVariables() Variables {
 		},
 		"geoip": &Object{
 			Items: map[string]*Object{
-				"area_code": &Object{
+				"area_code": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -1964,9 +1978,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-area-code/",
 					},
 				},
-				"city": &Object{
+				"city": {
 					Items: map[string]*Object{
-						"ascii": &Object{
+						"ascii": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1976,7 +1990,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-ascii/",
 							},
 						},
-						"latin1": &Object{
+						"latin1": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -1986,7 +2000,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city-latin1/",
 							},
 						},
-						"utf8": &Object{
+						"utf8": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2005,7 +2019,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-city/",
 					},
 				},
-				"continent_code": &Object{
+				"continent_code": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2015,7 +2029,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-continent-code/",
 					},
 				},
-				"country_code": &Object{
+				"country_code": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2025,7 +2039,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code/",
 					},
 				},
-				"country_code3": &Object{
+				"country_code3": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2035,9 +2049,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-code3/",
 					},
 				},
-				"country_name": &Object{
+				"country_name": {
 					Items: map[string]*Object{
-						"ascii": &Object{
+						"ascii": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2047,7 +2061,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-ascii/",
 							},
 						},
-						"latin1": &Object{
+						"latin1": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2057,7 +2071,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name-latin1/",
 							},
 						},
-						"utf8": &Object{
+						"utf8": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2076,7 +2090,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-country-name/",
 					},
 				},
-				"ip_override": &Object{
+				"ip_override": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2086,7 +2100,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-ip-override/",
 					},
 				},
-				"latitude": &Object{
+				"latitude": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2096,7 +2110,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-latitude/",
 					},
 				},
-				"longitude": &Object{
+				"longitude": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2106,7 +2120,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-longitude/",
 					},
 				},
-				"metro_code": &Object{
+				"metro_code": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2116,7 +2130,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-metro-code/",
 					},
 				},
-				"postal_code": &Object{
+				"postal_code": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2126,9 +2140,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-postal-code/",
 					},
 				},
-				"region": &Object{
+				"region": {
 					Items: map[string]*Object{
-						"ascii": &Object{
+						"ascii": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2138,7 +2152,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-ascii/",
 							},
 						},
-						"latin1": &Object{
+						"latin1": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2148,7 +2162,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region-latin1/",
 							},
 						},
-						"utf8": &Object{
+						"utf8": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2167,7 +2181,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/geolocation/geoip-region/",
 					},
 				},
-				"use_x_forwarded_for": &Object{
+				"use_x_forwarded_for": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -2181,7 +2195,7 @@ func predefinedVariables() Variables {
 		},
 		"math": &Object{
 			Items: map[string]*Object{
-				"1_PI": &Object{
+				"1_PI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2191,7 +2205,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-1-pi/",
 					},
 				},
-				"2PI": &Object{
+				"2PI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2201,7 +2215,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2pi/",
 					},
 				},
-				"2_PI": &Object{
+				"2_PI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2211,7 +2225,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-pi/",
 					},
 				},
-				"2_SQRTPI": &Object{
+				"2_SQRTPI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2221,7 +2235,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-2-sqrtpi/",
 					},
 				},
-				"E": &Object{
+				"E": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2231,7 +2245,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-e/",
 					},
 				},
-				"FLOAT_DIG": &Object{
+				"FLOAT_DIG": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2241,7 +2255,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-dig/",
 					},
 				},
-				"FLOAT_EPSILON": &Object{
+				"FLOAT_EPSILON": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2251,7 +2265,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-epsilon/",
 					},
 				},
-				"FLOAT_MANT_DIG": &Object{
+				"FLOAT_MANT_DIG": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2261,7 +2275,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-mant-dig/",
 					},
 				},
-				"FLOAT_MAX": &Object{
+				"FLOAT_MAX": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2271,7 +2285,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max/",
 					},
 				},
-				"FLOAT_MAX_10_EXP": &Object{
+				"FLOAT_MAX_10_EXP": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2281,7 +2295,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-10-exp/",
 					},
 				},
-				"FLOAT_MAX_EXP": &Object{
+				"FLOAT_MAX_EXP": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2291,7 +2305,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-max-exp/",
 					},
 				},
-				"FLOAT_MIN": &Object{
+				"FLOAT_MIN": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2301,7 +2315,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min/",
 					},
 				},
-				"FLOAT_MIN_10_EXP": &Object{
+				"FLOAT_MIN_10_EXP": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2311,7 +2325,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-10-exp/",
 					},
 				},
-				"FLOAT_MIN_EXP": &Object{
+				"FLOAT_MIN_EXP": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2321,7 +2335,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-min-exp/",
 					},
 				},
-				"FLOAT_RADIX": &Object{
+				"FLOAT_RADIX": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2331,7 +2345,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-float-radix/",
 					},
 				},
-				"INTEGER_BIT": &Object{
+				"INTEGER_BIT": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2341,7 +2355,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-bit/",
 					},
 				},
-				"INTEGER_MAX": &Object{
+				"INTEGER_MAX": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2351,7 +2365,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-max/",
 					},
 				},
-				"INTEGER_MIN": &Object{
+				"INTEGER_MIN": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2361,7 +2375,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-integer-min/",
 					},
 				},
-				"LN10": &Object{
+				"LN10": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2371,7 +2385,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln10/",
 					},
 				},
-				"LN2": &Object{
+				"LN2": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2381,7 +2395,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-ln2/",
 					},
 				},
-				"LOG10E": &Object{
+				"LOG10E": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2391,7 +2405,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log10e/",
 					},
 				},
-				"LOG2E": &Object{
+				"LOG2E": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2401,7 +2415,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-log2e/",
 					},
 				},
-				"NAN": &Object{
+				"NAN": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2411,7 +2425,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-nan/",
 					},
 				},
-				"NEG_HUGE_VAL": &Object{
+				"NEG_HUGE_VAL": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2421,7 +2435,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-huge-val/",
 					},
 				},
-				"NEG_INFINITY": &Object{
+				"NEG_INFINITY": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2431,7 +2445,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-neg-infinity/",
 					},
 				},
-				"PHI": &Object{
+				"PHI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2441,7 +2455,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-phi/",
 					},
 				},
-				"PI": &Object{
+				"PI": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2451,7 +2465,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi/",
 					},
 				},
-				"PI_2": &Object{
+				"PI_2": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2461,7 +2475,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-2/",
 					},
 				},
-				"PI_4": &Object{
+				"PI_4": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2471,7 +2485,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pi-4/",
 					},
 				},
-				"POS_HUGE_VAL": &Object{
+				"POS_HUGE_VAL": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2481,7 +2495,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-huge-val/",
 					},
 				},
-				"POS_INFINITY": &Object{
+				"POS_INFINITY": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2491,7 +2505,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-pos-infinity/",
 					},
 				},
-				"SQRT1_2": &Object{
+				"SQRT1_2": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2501,7 +2515,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt1-2/",
 					},
 				},
-				"SQRT2": &Object{
+				"SQRT2": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2511,7 +2525,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/math-constants-limits/math-sqrt2/",
 					},
 				},
-				"TAU": &Object{
+				"TAU": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -2525,7 +2539,7 @@ func predefinedVariables() Variables {
 		},
 		"now": &Object{
 			Items: map[string]*Object{
-				"sec": &Object{
+				"sec": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2546,7 +2560,7 @@ func predefinedVariables() Variables {
 		},
 		"obj": &Object{
 			Items: map[string]*Object{
-				"age": &Object{
+				"age": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2556,7 +2570,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-age/",
 					},
 				},
-				"cacheable": &Object{
+				"cacheable": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -2566,7 +2580,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-cacheable/",
 					},
 				},
-				"entered": &Object{
+				"entered": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2576,7 +2590,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-entered/",
 					},
 				},
-				"grace": &Object{
+				"grace": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2586,7 +2600,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
 					},
 				},
-				"hits": &Object{
+				"hits": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2596,9 +2610,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/",
 					},
 				},
-				"http": &Object{
+				"http": {
 					Items: map[string]*Object{
-						"%any%": &Object{
+						"%any%": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -2610,7 +2624,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"is_pci": &Object{
+				"is_pci": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -2620,7 +2634,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/",
 					},
 				},
-				"lastuse": &Object{
+				"lastuse": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2630,7 +2644,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-lastuse/",
 					},
 				},
-				"proto": &Object{
+				"proto": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2640,7 +2654,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-proto/",
 					},
 				},
-				"response": &Object{
+				"response": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -2650,7 +2664,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-response/",
 					},
 				},
-				"stale_if_error": &Object{
+				"stale_if_error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2660,7 +2674,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-if-error/",
 					},
 				},
-				"stale_while_revalidate": &Object{
+				"stale_while_revalidate": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2670,7 +2684,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-stale-while-revalidate/",
 					},
 				},
-				"status": &Object{
+				"status": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -2680,7 +2694,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-status/",
 					},
 				},
-				"ttl": &Object{
+				"ttl": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -2694,9 +2708,9 @@ func predefinedVariables() Variables {
 		},
 		"quic": &Object{
 			Items: map[string]*Object{
-				"cc": &Object{
+				"cc": {
 					Items: map[string]*Object{
-						"cwnd": &Object{
+						"cwnd": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2706,7 +2720,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/",
 							},
 						},
-						"ssthresh": &Object{
+						"ssthresh": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2718,9 +2732,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"num_bytes": &Object{
+				"num_bytes": {
 					Items: map[string]*Object{
-						"received": &Object{
+						"received": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2730,7 +2744,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-bytes-received/",
 							},
 						},
-						"sent": &Object{
+						"sent": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2742,9 +2756,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"num_packets": &Object{
+				"num_packets": {
 					Items: map[string]*Object{
-						"ack_received": &Object{
+						"ack_received": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2754,7 +2768,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-ack-received/",
 							},
 						},
-						"decryption_failed": &Object{
+						"decryption_failed": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2764,7 +2778,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-decryption-failed/",
 							},
 						},
-						"late_acked": &Object{
+						"late_acked": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2774,7 +2788,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-late-acked/",
 							},
 						},
-						"lost": &Object{
+						"lost": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2784,7 +2798,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-lost/",
 							},
 						},
-						"received": &Object{
+						"received": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2794,7 +2808,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-num-packets-received/",
 							},
 						},
-						"sent": &Object{
+						"sent": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2806,9 +2820,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"rtt": &Object{
+				"rtt": {
 					Items: map[string]*Object{
-						"latest": &Object{
+						"latest": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2818,7 +2832,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-latest/",
 							},
 						},
-						"minimum": &Object{
+						"minimum": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2828,7 +2842,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-minimum/",
 							},
 						},
-						"smoothed": &Object{
+						"smoothed": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2838,7 +2852,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-rtt-smoothed/",
 							},
 						},
-						"variance": &Object{
+						"variance": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -2854,11 +2868,11 @@ func predefinedVariables() Variables {
 		},
 		"ratecounter": &Object{
 			Items: map[string]*Object{
-				"%any%": &Object{
+				"%any%": {
 					Items: map[string]*Object{
-						"bucket": &Object{
+						"bucket": {
 							Items: map[string]*Object{
-								"10s": &Object{
+								"10s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2868,7 +2882,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-10s/",
 									},
 								},
-								"20s": &Object{
+								"20s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2878,7 +2892,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-20s/",
 									},
 								},
-								"30s": &Object{
+								"30s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2888,7 +2902,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-30s/",
 									},
 								},
-								"40s": &Object{
+								"40s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2898,7 +2912,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-40s/",
 									},
 								},
-								"50s": &Object{
+								"50s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2908,7 +2922,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-bucket-50s/",
 									},
 								},
-								"60s": &Object{
+								"60s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.IntegerType,
@@ -2920,9 +2934,9 @@ func predefinedVariables() Variables {
 								},
 							},
 						},
-						"rate": &Object{
+						"rate": {
 							Items: map[string]*Object{
-								"10s": &Object{
+								"10s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.FloatType,
@@ -2932,7 +2946,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-10s/",
 									},
 								},
-								"1s": &Object{
+								"1s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.FloatType,
@@ -2942,7 +2956,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-1s/",
 									},
 								},
-								"60s": &Object{
+								"60s": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.FloatType,
@@ -2960,9 +2974,9 @@ func predefinedVariables() Variables {
 		},
 		"req": &Object{
 			Items: map[string]*Object{
-				"backend": &Object{
+				"backend": {
 					Items: map[string]*Object{
-						"healthy": &Object{
+						"healthy": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -2972,7 +2986,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-healthy/",
 							},
 						},
-						"ip": &Object{
+						"ip": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IPType,
@@ -2982,7 +2996,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-ip/",
 							},
 						},
-						"is_cluster": &Object{
+						"is_cluster": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -2992,7 +3006,7 @@ func predefinedVariables() Variables {
 								Reference: "https://www.integralist.co.uk/posts/fastly-varnish/",
 							},
 						},
-						"is_origin": &Object{
+						"is_origin": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3002,7 +3016,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-origin/",
 							},
 						},
-						"is_shield": &Object{
+						"is_shield": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3012,7 +3026,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend-is-shield/",
 							},
 						},
-						"name": &Object{
+						"name": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3022,7 +3036,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-name/",
 							},
 						},
-						"port": &Object{
+						"port": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3041,9 +3055,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/req-backend/",
 					},
 				},
-				"body": &Object{
+				"body": {
 					Items: map[string]*Object{
-						"base64": &Object{
+						"base64": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3062,7 +3076,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body/",
 					},
 				},
-				"body_bytes_read": &Object{
+				"body_bytes_read": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3072,7 +3086,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-body-bytes-read/",
 					},
 				},
-				"bytes_read": &Object{
+				"bytes_read": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3082,7 +3096,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-bytes-read/",
 					},
 				},
-				"customer_id": &Object{
+				"customer_id": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3092,9 +3106,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-customer-id/",
 					},
 				},
-				"digest": &Object{
+				"digest": {
 					Items: map[string]*Object{
-						"ratio": &Object{
+						"ratio": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.FloatType,
@@ -3113,7 +3127,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-digest/",
 					},
 				},
-				"enable_range_on_pass": &Object{
+				"enable_range_on_pass": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3123,7 +3137,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-range-on-pass/",
 					},
 				},
-				"enable_segmented_caching": &Object{
+				"enable_segmented_caching": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3133,7 +3147,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-enable-segmented-caching/",
 					},
 				},
-				"esi": &Object{
+				"esi": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3143,7 +3157,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi/",
 					},
 				},
-				"esi_level": &Object{
+				"esi_level": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3153,7 +3167,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-esi-level/",
 					},
 				},
-				"grace": &Object{
+				"grace": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -3163,7 +3177,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-grace/",
 					},
 				},
-				"hash": &Object{
+				"hash": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3173,7 +3187,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/req-hash/",
 					},
 				},
-				"hash_always_miss": &Object{
+				"hash_always_miss": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3183,7 +3197,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-always-miss/",
 					},
 				},
-				"hash_ignore_busy": &Object{
+				"hash_ignore_busy": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3193,7 +3207,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-hash-ignore-busy/",
 					},
 				},
-				"header_bytes_read": &Object{
+				"header_bytes_read": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3203,9 +3217,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-header-bytes-read/",
 					},
 				},
-				"http": &Object{
+				"http": {
 					Items: map[string]*Object{
-						"%any%": &Object{
+						"%any%": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3217,7 +3231,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"is_background_fetch": &Object{
+				"is_background_fetch": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3227,7 +3241,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-background-fetch/",
 					},
 				},
-				"is_clustering": &Object{
+				"is_clustering": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3237,7 +3251,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-is-clustering/",
 					},
 				},
-				"is_esi_subreq": &Object{
+				"is_esi_subreq": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3247,7 +3261,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-is-esi-subreq/",
 					},
 				},
-				"is_ipv6": &Object{
+				"is_ipv6": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3257,7 +3271,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ipv6/",
 					},
 				},
-				"is_purge": &Object{
+				"is_purge": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3267,7 +3281,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-is-purge/",
 					},
 				},
-				"is_ssl": &Object{
+				"is_ssl": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3277,7 +3291,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-is-ssl/",
 					},
 				},
-				"max_stale_if_error": &Object{
+				"max_stale_if_error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -3287,7 +3301,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-if-error/",
 					},
 				},
-				"max_stale_while_revalidate": &Object{
+				"max_stale_while_revalidate": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -3297,7 +3311,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-max-stale-while-revalidate/",
 					},
 				},
-				"method": &Object{
+				"method": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3307,7 +3321,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-method/",
 					},
 				},
-				"postbody": &Object{
+				"postbody": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3317,7 +3331,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-postbody/",
 					},
 				},
-				"proto": &Object{
+				"proto": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3327,7 +3341,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-proto/",
 					},
 				},
-				"protocol": &Object{
+				"protocol": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3337,7 +3351,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-protocol/",
 					},
 				},
-				"request": &Object{
+				"request": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3347,7 +3361,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-request/",
 					},
 				},
-				"restarts": &Object{
+				"restarts": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3357,7 +3371,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/req-restarts/",
 					},
 				},
-				"service_id": &Object{
+				"service_id": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3367,7 +3381,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-service-id/",
 					},
 				},
-				"topurl": &Object{
+				"topurl": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3377,9 +3391,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/esi/req-topurl/",
 					},
 				},
-				"url": &Object{
+				"url": {
 					Items: map[string]*Object{
-						"basename": &Object{
+						"basename": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3389,7 +3403,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-basename/",
 							},
 						},
-						"dirname": &Object{
+						"dirname": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3399,7 +3413,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-dirname/",
 							},
 						},
-						"ext": &Object{
+						"ext": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3409,7 +3423,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-ext/",
 							},
 						},
-						"path": &Object{
+						"path": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3419,7 +3433,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url-path/",
 							},
 						},
-						"qs": &Object{
+						"qs": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3438,9 +3452,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-url/",
 					},
 				},
-				"vcl": &Object{
+				"vcl": {
 					Items: map[string]*Object{
-						"generation": &Object{
+						"generation": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3450,7 +3464,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-generation/",
 							},
 						},
-						"md5": &Object{
+						"md5": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3460,7 +3474,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl-md5/",
 							},
 						},
-						"version": &Object{
+						"version": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3479,7 +3493,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-vcl/",
 					},
 				},
-				"xid": &Object{
+				"xid": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3493,7 +3507,7 @@ func predefinedVariables() Variables {
 		},
 		"resp": &Object{
 			Items: map[string]*Object{
-				"body_bytes_written": &Object{
+				"body_bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3503,7 +3517,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-body-bytes-written/",
 					},
 				},
-				"bytes_written": &Object{
+				"bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3513,7 +3527,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-bytes-written/",
 					},
 				},
-				"completed": &Object{
+				"completed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3523,7 +3537,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-completed/",
 					},
 				},
-				"header_bytes_written": &Object{
+				"header_bytes_written": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3533,9 +3547,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-header-bytes-written/",
 					},
 				},
-				"http": &Object{
+				"http": {
 					Items: map[string]*Object{
-						"%any%": &Object{
+						"%any%": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3547,7 +3561,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"is_locally_generated": &Object{
+				"is_locally_generated": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3557,7 +3571,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/",
 					},
 				},
-				"proto": &Object{
+				"proto": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3567,7 +3581,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-proto/",
 					},
 				},
-				"response": &Object{
+				"response": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3577,9 +3591,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-response/",
 					},
 				},
-				"stale": &Object{
+				"stale": {
 					Items: map[string]*Object{
-						"is_error": &Object{
+						"is_error": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3589,7 +3603,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale-is-error/",
 							},
 						},
-						"is_revalidating": &Object{
+						"is_revalidating": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3608,7 +3622,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/resp-stale/",
 					},
 				},
-				"status": &Object{
+				"status": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3622,7 +3636,7 @@ func predefinedVariables() Variables {
 		},
 		"segmented_caching": &Object{
 			Items: map[string]*Object{
-				"autopurged": &Object{
+				"autopurged": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3632,7 +3646,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-autopurged/",
 					},
 				},
-				"block_number": &Object{
+				"block_number": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3642,7 +3656,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-number/",
 					},
 				},
-				"block_size": &Object{
+				"block_size": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3652,7 +3666,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-block-size/",
 					},
 				},
-				"cancelled": &Object{
+				"cancelled": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3662,9 +3676,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-cancelled/",
 					},
 				},
-				"client_req": &Object{
+				"client_req": {
 					Items: map[string]*Object{
-						"is_open_ended": &Object{
+						"is_open_ended": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3674,7 +3688,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-open-ended/",
 							},
 						},
-						"is_range": &Object{
+						"is_range": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.BoolType,
@@ -3684,7 +3698,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-is-range/",
 							},
 						},
-						"range_high": &Object{
+						"range_high": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3694,7 +3708,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-client-req-range-high/",
 							},
 						},
-						"range_low": &Object{
+						"range_low": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3706,7 +3720,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"completed": &Object{
+				"completed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3716,7 +3730,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-completed/",
 					},
 				},
-				"error": &Object{
+				"error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3726,7 +3740,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-error/",
 					},
 				},
-				"failed": &Object{
+				"failed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3736,7 +3750,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-failed/",
 					},
 				},
-				"is_inner_req": &Object{
+				"is_inner_req": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3746,7 +3760,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-inner-req/",
 					},
 				},
-				"is_outer_req": &Object{
+				"is_outer_req": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -3756,9 +3770,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-is-outer-req/",
 					},
 				},
-				"obj": &Object{
+				"obj": {
 					Items: map[string]*Object{
-						"complete_length": &Object{
+						"complete_length": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3770,9 +3784,9 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"rounded_req": &Object{
+				"rounded_req": {
 					Items: map[string]*Object{
-						"range_high": &Object{
+						"range_high": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3782,7 +3796,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/segmented-caching/segmented-caching-rounded-req-range-high/",
 							},
 						},
-						"range_low": &Object{
+						"range_low": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -3794,7 +3808,7 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
-				"total_blocks": &Object{
+				"total_blocks": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3808,7 +3822,7 @@ func predefinedVariables() Variables {
 		},
 		"server": &Object{
 			Items: map[string]*Object{
-				"billing_region": &Object{
+				"billing_region": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3818,7 +3832,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-billing-region/",
 					},
 				},
-				"datacenter": &Object{
+				"datacenter": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3828,7 +3842,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-datacenter/",
 					},
 				},
-				"hostname": &Object{
+				"hostname": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3838,7 +3852,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-hostname/",
 					},
 				},
-				"identity": &Object{
+				"identity": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3848,7 +3862,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-identity/",
 					},
 				},
-				"ip": &Object{
+				"ip": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IPType,
@@ -3858,7 +3872,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-ip/",
 					},
 				},
-				"pop": &Object{
+				"pop": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3868,7 +3882,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-pop/",
 					},
 				},
-				"port": &Object{
+				"port": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -3878,7 +3892,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/server/server-port/",
 					},
 				},
-				"region": &Object{
+				"region": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3892,7 +3906,7 @@ func predefinedVariables() Variables {
 		},
 		"stale": &Object{
 			Items: map[string]*Object{
-				"exists": &Object{
+				"exists": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -3906,9 +3920,9 @@ func predefinedVariables() Variables {
 		},
 		"time": &Object{
 			Items: map[string]*Object{
-				"elapsed": &Object{
+				"elapsed": {
 					Items: map[string]*Object{
-						"msec": &Object{
+						"msec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3918,7 +3932,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-msec/",
 							},
 						},
-						"msec_frac": &Object{
+						"msec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3928,7 +3942,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-msec-frac/",
 							},
 						},
-						"sec": &Object{
+						"sec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3938,7 +3952,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-sec/",
 							},
 						},
-						"usec": &Object{
+						"usec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3948,7 +3962,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed-usec/",
 							},
 						},
-						"usec_frac": &Object{
+						"usec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3967,9 +3981,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-elapsed/",
 					},
 				},
-				"end": &Object{
+				"end": {
 					Items: map[string]*Object{
-						"msec": &Object{
+						"msec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3979,7 +3993,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec/",
 							},
 						},
-						"msec_frac": &Object{
+						"msec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3989,7 +4003,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-msec-frac/",
 							},
 						},
-						"sec": &Object{
+						"sec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -3999,7 +4013,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-sec/",
 							},
 						},
-						"usec": &Object{
+						"usec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4009,7 +4023,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end-usec/",
 							},
 						},
-						"usec_frac": &Object{
+						"usec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4028,9 +4042,9 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-end/",
 					},
 				},
-				"start": &Object{
+				"start": {
 					Items: map[string]*Object{
-						"msec": &Object{
+						"msec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4040,7 +4054,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec/",
 							},
 						},
-						"msec_frac": &Object{
+						"msec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4050,7 +4064,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-msec-frac/",
 							},
 						},
-						"sec": &Object{
+						"sec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4060,7 +4074,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-sec/",
 							},
 						},
-						"usec": &Object{
+						"usec": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4070,7 +4084,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start-usec/",
 							},
 						},
-						"usec_frac": &Object{
+						"usec_frac": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4089,7 +4103,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/time-start/",
 					},
 				},
-				"to_first_byte": &Object{
+				"to_first_byte": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.RTimeType,
@@ -4103,11 +4117,11 @@ func predefinedVariables() Variables {
 		},
 		"tls": &Object{
 			Items: map[string]*Object{
-				"client": &Object{
+				"client": {
 					Items: map[string]*Object{
-						"certificate": &Object{
+						"certificate": {
 							Items: map[string]*Object{
-								"dn": &Object{
+								"dn": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -4117,7 +4131,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-dn/",
 									},
 								},
-								"is_cert_bad": &Object{
+								"is_cert_bad": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4127,7 +4141,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-bad/",
 									},
 								},
-								"is_cert_expired": &Object{
+								"is_cert_expired": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4137,7 +4151,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-expired/",
 									},
 								},
-								"is_cert_missing": &Object{
+								"is_cert_missing": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4147,7 +4161,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-missing/",
 									},
 								},
-								"is_cert_revoked": &Object{
+								"is_cert_revoked": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4157,7 +4171,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-revoked/",
 									},
 								},
-								"is_cert_unknown": &Object{
+								"is_cert_unknown": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4167,7 +4181,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-cert-unknown/",
 									},
 								},
-								"is_unknown_ca": &Object{
+								"is_unknown_ca": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4177,7 +4191,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-unknown-ca/",
 									},
 								},
-								"is_verified": &Object{
+								"is_verified": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.BoolType,
@@ -4187,7 +4201,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-is-verified/",
 									},
 								},
-								"issuer_dn": &Object{
+								"issuer_dn": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -4197,7 +4211,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-issuer-dn/",
 									},
 								},
-								"not_after": &Object{
+								"not_after": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.TimeType,
@@ -4207,7 +4221,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-after/",
 									},
 								},
-								"not_before": &Object{
+								"not_before": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.TimeType,
@@ -4217,7 +4231,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-not-before/",
 									},
 								},
-								"raw_certificate_b64": &Object{
+								"raw_certificate_b64": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -4227,7 +4241,7 @@ func predefinedVariables() Variables {
 										Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-raw-certificate-b64/",
 									},
 								},
-								"serial_number": &Object{
+								"serial_number": {
 									Items: map[string]*Object{},
 									Value: &Accessor{
 										Get:       types.StringType,
@@ -4239,7 +4253,7 @@ func predefinedVariables() Variables {
 								},
 							},
 						},
-						"cipher": &Object{
+						"cipher": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4249,7 +4263,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-cipher/",
 							},
 						},
-						"ciphers_list": &Object{
+						"ciphers_list": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4259,7 +4273,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list/",
 							},
 						},
-						"ciphers_list_sha": &Object{
+						"ciphers_list_sha": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4269,7 +4283,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-sha/",
 							},
 						},
-						"ciphers_list_txt": &Object{
+						"ciphers_list_txt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4279,7 +4293,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-list-txt/",
 							},
 						},
-						"ciphers_sha": &Object{
+						"ciphers_sha": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4289,7 +4303,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ciphers-sha/",
 							},
 						},
-						"handshake_sent_bytes": &Object{
+						"handshake_sent_bytes": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -4299,7 +4313,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-handshake-sent-bytes/",
 							},
 						},
-						"iana_chosen_cipher_id": &Object{
+						"iana_chosen_cipher_id": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.IntegerType,
@@ -4309,7 +4323,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-iana-chosen-cipher-id/",
 							},
 						},
-						"ja3_md5": &Object{
+						"ja3_md5": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4319,7 +4333,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-ja3-md5/",
 							},
 						},
-						"ja4": &Object{
+						"ja4": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4329,7 +4343,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/documentation/reference/vcl/variables/client-connection/tls-client-ja4/",
 							},
 						},
-						"protocol": &Object{
+						"protocol": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4339,7 +4353,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-protocol/",
 							},
 						},
-						"servername": &Object{
+						"servername": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4349,7 +4363,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-servername/",
 							},
 						},
-						"tlsexts_list": &Object{
+						"tlsexts_list": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4359,7 +4373,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list/",
 							},
 						},
-						"tlsexts_list_sha": &Object{
+						"tlsexts_list_sha": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4369,7 +4383,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-sha/",
 							},
 						},
-						"tlsexts_list_txt": &Object{
+						"tlsexts_list_txt": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4379,7 +4393,7 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-tlsexts-list-txt/",
 							},
 						},
-						"tlsexts_sha": &Object{
+						"tlsexts_sha": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
 								Get:       types.StringType,
@@ -4395,7 +4409,7 @@ func predefinedVariables() Variables {
 		},
 		"transport": &Object{
 			Items: map[string]*Object{
-				"bw_estimate": &Object{
+				"bw_estimate": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4405,7 +4419,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-bw-estimate/",
 					},
 				},
-				"type": &Object{
+				"type": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -4419,7 +4433,7 @@ func predefinedVariables() Variables {
 		},
 		"waf": &Object{
 			Items: map[string]*Object{
-				"anomaly_score": &Object{
+				"anomaly_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4429,7 +4443,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-anomaly-score/",
 					},
 				},
-				"blocked": &Object{
+				"blocked": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -4439,7 +4453,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-blocked/",
 					},
 				},
-				"counter": &Object{
+				"counter": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4449,7 +4463,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-counter/",
 					},
 				},
-				"executed": &Object{
+				"executed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -4459,7 +4473,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-executed/",
 					},
 				},
-				"failures": &Object{
+				"failures": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4469,7 +4483,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-failures/",
 					},
 				},
-				"http_violation_score": &Object{
+				"http_violation_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4479,7 +4493,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-http-violation-score/",
 					},
 				},
-				"inbound_anomaly_score": &Object{
+				"inbound_anomaly_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4489,7 +4503,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-inbound-anomaly-score/",
 					},
 				},
-				"lfi_score": &Object{
+				"lfi_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4499,7 +4513,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-lfi-score/",
 					},
 				},
-				"logdata": &Object{
+				"logdata": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -4509,7 +4523,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-logdata/",
 					},
 				},
-				"logged": &Object{
+				"logged": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -4519,7 +4533,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-logged/",
 					},
 				},
-				"message": &Object{
+				"message": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.StringType,
@@ -4529,7 +4543,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-message/",
 					},
 				},
-				"passed": &Object{
+				"passed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,
@@ -4539,7 +4553,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-passed/",
 					},
 				},
-				"php_injection_score": &Object{
+				"php_injection_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4549,7 +4563,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-php-injection-score/",
 					},
 				},
-				"rce_score": &Object{
+				"rce_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4559,7 +4573,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rce-score/",
 					},
 				},
-				"rfi_score": &Object{
+				"rfi_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4569,7 +4583,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rfi-score/",
 					},
 				},
-				"rule_id": &Object{
+				"rule_id": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4579,7 +4593,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-rule-id/",
 					},
 				},
-				"session_fixation_score": &Object{
+				"session_fixation_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4589,7 +4603,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-session-fixation-score/",
 					},
 				},
-				"severity": &Object{
+				"severity": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4599,7 +4613,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-severity/",
 					},
 				},
-				"sql_injection_score": &Object{
+				"sql_injection_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.FloatType,
@@ -4609,7 +4623,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/waf/waf-sql-injection-score/",
 					},
 				},
-				"xss_score": &Object{
+				"xss_score": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4623,7 +4637,7 @@ func predefinedVariables() Variables {
 		},
 		"workspace": &Object{
 			Items: map[string]*Object{
-				"bytes_free": &Object{
+				"bytes_free": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4633,7 +4647,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-free/",
 					},
 				},
-				"bytes_total": &Object{
+				"bytes_total": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.IntegerType,
@@ -4643,7 +4657,7 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/workspace-bytes-total/",
 					},
 				},
-				"overflowed": &Object{
+				"overflowed": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
 						Get:       types.BoolType,

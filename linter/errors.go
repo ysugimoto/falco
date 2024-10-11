@@ -393,6 +393,14 @@ func CustomLinterCommandFailed(message string, m *ast.Meta) *LintError {
 	}
 }
 
+func DeprecatedVariable(name string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Variable "%s" is deprecated`, name),
+	}
+}
+
 func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {
 	e := &LintError{
 		Token:   m.Token,

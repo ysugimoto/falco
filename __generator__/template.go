@@ -6,8 +6,11 @@ const linterPredefinedVariables = `
 package context
 
 import (
+	"errors"
 	"github.com/ysugimoto/falco/types"
 )
+
+var ErrDeprecated = errors.New("deprecated")
 
 func predefinedVariables() Variables {
 	return {{ .Variables }}

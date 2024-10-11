@@ -148,7 +148,7 @@ func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *
 	// FLOAT   -> stringify
 	// IP      -> stringify
 	// TIME    -> stringify (GMT string)
-	// RTIME   -> stringify (GMT string)
+	// RTIME   -> stringify (Float value of duration)
 	// BOOL    -> 0 (false) or 1 (true)
 	// And any literals except STRING could not accept.
 	ct := types.NeverType

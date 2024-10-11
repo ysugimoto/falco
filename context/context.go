@@ -102,11 +102,12 @@ type Object struct {
 }
 
 type Accessor struct {
-	Get       types.Type
-	Set       types.Type
-	Unset     bool
-	Scopes    int
-	Reference string
+	Get        types.Type
+	Set        types.Type
+	Unset      bool
+	Scopes     int
+	Reference  string
+	Deprecated bool
 }
 
 type Context struct {
@@ -505,6 +506,11 @@ func (c *Context) Get(name string) (types.Type, error) {
 
 	// Mark as accessed
 	obj.IsUsed = true
+
+	// Check deprecation
+	if obj.Value.Deprecated {
+		return obj.Value.Get, ErrDeprecated
+	}
 
 	return obj.Value.Get, nil
 }
