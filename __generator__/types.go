@@ -48,11 +48,12 @@ type Spec struct {
 }
 
 type Definition struct {
-	Get   string   `yaml:"get"`
-	Set   string   `yaml:"set"`
-	Unset bool     `yaml:"unset"`
-	On    []string `yaml:"on"`
-	Ref   string   `yaml:"reference"`
+	Get        string   `yaml:"get"`
+	Set        string   `yaml:"set"`
+	Unset      bool     `yaml:"unset"`
+	On         []string `yaml:"on"`
+	Ref        string   `yaml:"reference"`
+	Deprecated bool     `yaml:"deprecated"`
 }
 
 func (d *Definition) String() string {
@@ -72,6 +73,9 @@ func (d *Definition) String() string {
 	buf.WriteString(fmt.Sprintf("Unset: %t,\n", d.Unset))
 	buf.WriteString(fmt.Sprintf("Scopes: %s,\n", strings.Join(d.On, "|")))
 	buf.WriteString(fmt.Sprintf(`Reference: "%s"`+",\n", d.Ref))
+	if d.Deprecated {
+		buf.WriteString("Deprecated: true,\n")
+	}
 	buf.WriteString("},\n")
 	return buf.String()
 }

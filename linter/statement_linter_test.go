@@ -2,7 +2,12 @@ package linter
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/parser"
 )
 
 func TestLintDeclareStatement(t *testing.T) {
@@ -688,4 +693,54 @@ func TestGotoBackwardJump(t *testing.T) {
 	`
 		assertError(t, input)
 	})
+}
+
+func TestDeprecatedVariable(t *testing.T) {
+	tests := []string{
+		"client.class.checker",
+		"client.class.filter",
+		"client.class.masquerading",
+		"client.class.spam",
+		"client.display.height",
+		"client.display.width",
+		"client.display.ppi",
+		"client.class.downloader",
+		"client.class.feedreader",
+		"client.platform.ereader",
+		"client.platform.tvplayer",
+	}
+
+	for _, tt := range tests {
+		input := fmt.Sprintf(`
+sub vcl_recv {
+  #FASTLY recv
+  set req.http.Foo = "deprecated: " %s;
+}`, tt)
+
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if l.FatalError != nil {
+			t.Errorf("Fatal error: %s", l.FatalError.Error)
+			continue
+		}
+		if len(l.Errors) == 0 {
+			t.Errorf("Expect one lint error but empty returned")
+			continue
+		}
+		e := l.Errors[0]
+		if e.Severity != WARNING {
+			t.Errorf("Error should be Warning but got %s", e.Severity)
+			continue
+		}
+		if !strings.Contains(e.Message, "deprecated") {
+			t.Errorf(`Error message should contains "deprecated", got %s`, e.Message)
+			continue
+		}
+	}
 }

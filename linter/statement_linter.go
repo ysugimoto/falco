@@ -379,11 +379,17 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 
 	left, err := ctx.Get(stmt.Ident.Value)
 	if err != nil {
-		l.Error(&LintError{
-			Severity: ERROR,
-			Token:    stmt.Ident.GetMeta().Token,
-			Message:  err.Error(),
-		})
+		if err == context.ErrDeprecated {
+			l.Error(DeprecatedVariable(
+				stmt.Ident.Value, stmt.Ident.GetMeta(),
+			).Match(DEPRECATED))
+		} else {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    stmt.Ident.GetMeta().Token,
+				Message:  err.Error(),
+			})
+		}
 	}
 
 	if err := isValidStatementExpression(stmt.Value); err != nil {
@@ -596,6 +602,12 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 	v, err := ctx.Get(exp.Value)
 	if err != nil {
+		// If error is deprecation error, report error but return value type
+		if err == context.ErrDeprecated {
+			l.Error(DeprecatedVariable(exp.Value, exp.GetMeta()).Match(DEPRECATED))
+			return v
+		}
+
 		if b, ok := ctx.Backends[exp.Value]; ok {
 			// mark backend is used
 			b.IsUsed = true

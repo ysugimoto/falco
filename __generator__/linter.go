@@ -185,7 +185,7 @@ func (l *Linter) generateSpec(buf *bytes.Buffer, s *Spec) {
 func (l *Linter) generateObject(buf *bytes.Buffer, value *Object) {
 	for _, k := range keySort[Object](value.Items) {
 		v := value.Items[k]
-		buf.WriteString(quote(k) + ": &Object{\n")
+		buf.WriteString(quote(k) + ": {\n")
 		buf.WriteString("Items: map[string]*Object{\n")
 		l.generateObject(buf, v)
 		buf.WriteString("},\n")

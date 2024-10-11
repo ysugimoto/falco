@@ -71,6 +71,7 @@ const (
 	DISALLOW_EMPTY_RETURN                = "disallow-empty-return"
 	FORBIDDEN_BACKWARD_JUMP              = "goto/forbidden-backward-jump"
 	TIME_CALCULATION                     = "operator/time-calculation"
+	DEPRECATED                           = "deprecated"
 )
 
 var references = map[Rule]string{

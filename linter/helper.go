@@ -562,7 +562,9 @@ func toSeriesExpressions(expr ast.Expression, ctx *context.Context) ([]*Series, 
 		// If expression is ident, must be a variable
 		// e.g req.http.Header, var.declaredVariable
 		if _, err := ctx.Get(t.Value); err != nil {
-			return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
+			if err != context.ErrDeprecated {
+				return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
+			}
 		}
 	case *ast.PrefixExpression:
 		if t.Operator != "+" && t.Operator != "-" {
