@@ -1,7 +1,6 @@
 package dap
 
 import (
-	"path/filepath"
 	"sync"
 
 	"github.com/ysugimoto/falco/ast"
@@ -78,13 +77,7 @@ func (d *Debugger) waitForNewState() interpreter.DebugState {
 func (d *Debugger) getBreakpoint(node ast.Node) *breakpoint {
 	meta := node.GetMeta()
 
-	path, err := filepath.Abs(meta.Token.File)
-	if err != nil {
-		// TODO: handle error
-		path = meta.Token.File
-	}
-
-	return d.breakpoints.getBreakpoint(path, meta.Token.Line)
+	return d.breakpoints.getBreakpoint(meta.Token.File, meta.Token.Line)
 }
 
 func (d *Debugger) clearBreakpoints(path string) {
