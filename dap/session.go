@@ -362,7 +362,7 @@ func (s *session) launchServer() {
 
 	s.printConsole(
 		fmt.Sprintf(
-			"Waiting Request on %s://loalhost:%d...",
+			"Waiting Request on %s://localhost:%d...",
 			protocol,
 			s.config.Port,
 		),
