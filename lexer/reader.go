@@ -28,27 +28,30 @@ func (l *Lexer) readString() string {
 	return buf.String()
 }
 
-func (l *Lexer) readBracketString() string {
-	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
+func (l *Lexer) readBracketString(delimiter string) string {
+	var rs []rune
+	end := []byte(delimiter + "}")
 	l.readChar()
 	for {
 		if l.char == 0x00 {
 			break
 		}
 		if l.char == '"' {
-			if l.peekChar() == '}' {
-				l.readChar()
+			n, err := l.r.Peek(len(end))
+			if err != nil {
+				break
+			}
+
+			if bytes.Equal(end, n) {
+				l.skipBytes(len(end))
 				break
 			}
 		}
-		buf.WriteRune(l.char)
+		rs = append(rs, l.char)
 		l.readChar()
 	}
 
-	return buf.String()
+	return string(rs)
 }
 
 func (l *Lexer) readNumber() string {
@@ -105,7 +108,7 @@ func (l *Lexer) readIdentifier() string {
 	defer pool.Put(buf)
 	buf.Reset()
 
-	for l.isLetter(l.char) {
+	for isLetter(l.char) {
 		buf.WriteRune(l.char)
 		l.readChar()
 	}

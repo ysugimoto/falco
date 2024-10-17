@@ -81,6 +81,10 @@ sub vcl_recv {
 	return(pass);
 	synthetic.base64 {"foo bar"};
 
+	synthetic.base64 {JSON"
+      {"foo": "bar"}
+"JSON};
+
 	switch (req.url) {
 	case "/":
 		esi;
@@ -448,6 +452,12 @@ sub vcl_recv {
 
 		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
 		{Type: token.STRING, Literal: "foo bar"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.LF, Literal: "\n"},
+
+		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
+		{Type: token.STRING, Literal: "\n      {\"foo\": \"bar\"}\n"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LF, Literal: "\n"},
