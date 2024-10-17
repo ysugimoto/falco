@@ -132,6 +132,35 @@ You can type other keys to dump the variable in the debugger shell.
 
 <img width="1128" alt="debugger example" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
 
+### Debug Adapter Protocol support
+
+`falco` supports [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/).
+You can launch falco's debugger by calling `falco dap` subcommand from your editor.
+
+> [!NOTE]
+> Currently, `falco dap` doesn't support Fastly remote resources.
+
+For Neovim with [nvim-dap](https://github.com/mfussenegger/nvim-dap), the configurations below can be used to launch debugging session.
+
+```lua
+local dap = require('dap')
+dap.adapters.vcl = {
+  name = 'falco',
+  type = 'executable',
+  command = 'falco',
+  args = { 'dap' },
+}
+dap.configurations.vcl = {
+  {
+    type = 'vcl',
+    request = 'launch',
+    name = "Debug VCL by falco",
+    mainVCL = "${file}",
+    includePaths = { "${workspaceFolder}" },
+  },
+}
+```
+
 ## Simulator Limitations
 
 The simulator has a lot of limitations, of course, Fastly Edge Behaviors is undocumented and it comes from local environmental reasons.
