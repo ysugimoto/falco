@@ -167,6 +167,9 @@ func (l *Lexer) NextToken() token.Token {
 		l.skipBytes(len(delimiter))
 		t = newToken(token.STRING, l.char, line, index)
 		t.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
+		// 2 for the enclosing braces plus the length of the pairs of delimiters
+		// which are "" at a minimum, or SOMEDELIMITER""SOMEDELIMITER for
+		// heredoc-style long strings.
 		t.Offset = 2 + len(delimiter)*2
 	case '}':
 		t = newToken(token.RIGHT_BRACE, l.char, line, index)
