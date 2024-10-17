@@ -155,32 +155,19 @@ func (l *Lexer) NextToken() token.Token {
 		// with custom delimiters like {JSON" {"foo": "bar"} "JSON}. It is
 		// convenient for constructing strings thats include whitespace,
 		// creating JSON responses, etc.
-		c := l.peekChar()
-		switch {
-		case c == '"':
-			l.readChar()
-			t = newToken(token.STRING, l.char, line, index)
-			t.Literal = l.readBracketString("")
-			t.Offset = 4 // {" and "}
-		case isLongStringDelimiter(c):
-			h, err := l.peekUntil(func(b byte) bool {
-				return !isLongStringDelimiter(rune(b))
-			})
+		delimiter, err := l.peekUntil(func(b byte) bool {
+			return !isLongStringDelimiter(rune(b))
+		})
 
-			if err != nil || h[len(h)-1] != '"' {
-				goto notLongString
-			}
-
-			l.skipBytes(len(h))
-			t = newToken(token.STRING, l.char, line, index)
-			t.Literal = l.readBracketString(h[:len(h)-1])
-			t.Offset = 2 + len(h)*2
-			break
-		notLongString:
-			fallthrough
-		default:
+		if err != nil || delimiter[len(delimiter)-1] != '"' {
 			t = newToken(token.LEFT_BRACE, l.char, line, index)
+			break
 		}
+
+		l.skipBytes(len(delimiter))
+		t = newToken(token.STRING, l.char, line, index)
+		t.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
+		t.Offset = 2 + len(delimiter)*2
 	case '}':
 		t = newToken(token.RIGHT_BRACE, l.char, line, index)
 	case '(':
