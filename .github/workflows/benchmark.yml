@@ -3,7 +3,7 @@ name: Run benchmark between base branch
 on:
   pull_request:
     branches:
-      - "feature/benchmark-performance"
+      - "main"
 
 jobs:
   benchmark-base:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: feature/benchmark-performance
+          ref: main
       - name: Run benchmark for base branch
         run: make benchmark > bench.base.txt
       - name: Upload base benchmark result
