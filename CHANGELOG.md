@@ -1,3 +1,19 @@
+## v1.11.0
+
+- add dap subcommand and support basic DAP features [#349](https://github.com/ysugimoto/falco/349) (@rinx)
+- Fix tiny bug of base64 decode functions [#351](https://github.com/ysugimoto/falco/351) (@ysugimoto)
+- implement `assert.not_error` assertion method [#352](https://github.com/ysugimoto/falco/352) (@ysugimoto)
+- fix header existence logic, exactly treat as null or empty string [#353](https://github.com/ysugimoto/falco/353) (@ysugimoto)
+- improve url encode and decode built-in functions [#354](https://github.com/ysugimoto/falco/354) (@ysugimoto)
+- move base64 related logic to shared codec [#355](https://github.com/ysugimoto/falco/355) (@ysugimoto)
+- Fix hex display: pad 01-0F values to two digits [#356](https://github.com/ysugimoto/falco/356) (@bungoume)
+- fix literal comparing issue for injected variables [#357](https://github.com/ysugimoto/falco/357) (@ysugimoto)
+- add `bereq.max_reuse_idle_time` variable support [#362](https://github.com/ysugimoto/falco/362) (@ysugimoto)
+- add remote director resource to lint [#363](https://github.com/ysugimoto/falco/363) (@ysugimoto)
+- Improve string concatenation logic [#364](https://github.com/ysugimoto/falco/364) (@ysugimoto)
+- implement raising deprecated error [#366](https://github.com/ysugimoto/falco/366) (@ysugimoto)
+- docs(dap): add a brief documentation about dap subcommand [#367](https://github.com/ysugimoto/falco/367) (@rinx)
+
 ## v1.10.0
 
 - add watch option for incremental testing [#347](https://github.com/ysugimoto/falco/347) (@ysugimoto)
