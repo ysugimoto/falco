@@ -9,8 +9,6 @@ import (
 
 const Assert_not_error_Name = "assert.not_error"
 
-var Assert_not_error_ArgumentTypes = []value.Type{value.IntegerType}
-
 func Assert_not_error_Validate(args []value.Value) error {
 	if len(args) > 1 {
 		return errors.ArgumentNotInRange(Assert_not_error_Name, 0, 1, args)
