@@ -1,3 +1,7 @@
+## v1.11.1
+
+- add assert.not_error function to function table [#368](https://github.com/ysugimoto/falco/368) (@ysugimoto)
+
 ## v1.11.0
 
 - add dap subcommand and support basic DAP features [#349](https://github.com/ysugimoto/falco/349) (@rinx)
