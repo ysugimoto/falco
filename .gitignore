@@ -32,4 +32,4 @@ request.json
 .falco.yml
 .falco.yaml
 *.pem
-falco-backend-name
+bench.*.txt
