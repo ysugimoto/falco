@@ -119,6 +119,7 @@ func (l *Linter) lintGroupedExpression(exp *ast.GroupedExpression, ctx *context.
 // set req.http.Foo = std.time("xxx", now) + var.someRTime; // valid, string concatenation
 //
 // See Fastly fiddle: https://fiddle.fastly.dev/fiddle/befec89e
+// nolint: gocognit
 func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *context.Context) types.Type {
 	var series []*Series
 
@@ -155,17 +156,39 @@ func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *
 	for i := 0; i < len(series); i++ {
 		s := series[i]
 		nt := l.lint(s.Expression, ctx)
+		meta := s.Expression.GetMeta()
 
-		switch s.Expression.(type) {
+		switch t := s.Expression.(type) {
 		case *ast.String:
 			break
 		case *ast.IfExpression:
-			if nt != types.StringType {
-				l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+			switch nt {
+			case types.AclType, types.BackendType:
+				l.Error(InvalidStringConcatenation(meta, nt.String()).Match(OPERATOR_CONDITIONAL))
+			case types.StringType:
+				break
+			default:
+				// If consequence and alternative expression is not STRING type (e.g. INTEGER, FLOAT, BOOL) in if expression,
+				// The expression must not be a literal
+				switch {
+				case isConstantExpression(t.Consequence):
+					l.Error(InvalidStringConcatenation(t.Consequence.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+				case isConstantExpression(t.Alternative):
+					l.Error(InvalidStringConcatenation(t.Alternative.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+				default:
+					l.Error(ImplicitTypeConversion(meta, nt, types.StringType))
+				}
 			}
 		case *ast.FunctionCallExpression:
-			if nt != types.StringType {
-				l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+			// If function call expression, arbitrary type except ACL and BACKEND can be used.
+			// However, without STRING type (e.g INTEGER, FLOAT) will be implicit type conversion
+			switch nt {
+			case types.AclType, types.BackendType:
+				l.Error(InvalidStringConcatenation(meta, nt.String()).Match(OPERATOR_CONDITIONAL))
+			case types.StringType:
+				break
+			default:
+				l.Error(ImplicitTypeConversion(meta, nt, types.StringType))
 			}
 		case *ast.Ident:
 			switch nt {
@@ -184,11 +207,12 @@ func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *
 				// If ident value type is RTIME with plus sign, previous type must no TIME type (string concatenation)
 				if s.Operator == "+" || s.Operator == "-" {
 					if ct == types.TimeType {
-						l.Error(InvalidStringConcatenation(exp.GetMeta(), "RTIME").Match(OPERATOR_CONDITIONAL))
+						l.Error(InvalidStringConcatenation(meta, "RTIME").Match(OPERATOR_CONDITIONAL))
+						goto OUT
 					}
 				}
 			}
-			l.Error(ImplicitTypeConversion(exp.GetMeta(), nt, types.StringType))
+			l.Error(ImplicitTypeConversion(meta, nt, types.StringType))
 		case *ast.RTime:
 			// If expression is RTIME literal, follwing condition must be satisfied:
 			// - previous expression is IDENT and the value if TIME type
@@ -197,14 +221,14 @@ func (l *Linter) lintStringConcatInfixExpression(exp *ast.InfixExpression, ctx *
 				if s.Operator == "+" || s.Operator == "-" {
 					if _, ok := series[i-1].Expression.(*ast.Ident); ok {
 						// Valid for time addition but we will report as WARNING
-						l.Error(TimeCalculatation(s.Expression.GetMeta()).Match(TIME_CALCULATION))
+						l.Error(TimeCalculatation(meta).Match(TIME_CALCULATION))
 						goto OUT
 					}
 				}
 			}
-			l.Error(InvalidStringConcatenation(exp.GetMeta(), "RTIME").Match(OPERATOR_CONDITIONAL))
+			l.Error(InvalidStringConcatenation(meta, "RTIME").Match(OPERATOR_CONDITIONAL))
 		default:
-			l.Error(InvalidStringConcatenation(exp.GetMeta(), nt.String()).Match(OPERATOR_CONDITIONAL))
+			l.Error(InvalidStringConcatenation(meta, nt.String()).Match(OPERATOR_CONDITIONAL))
 		}
 	OUT:
 		ct = nt
