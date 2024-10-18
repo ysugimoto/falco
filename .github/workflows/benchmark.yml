@@ -1,0 +1,37 @@
+name: Run benchmark between base branch
+
+on:
+  pull_request:
+    branches:
+      - "feature/benchmark-performance"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.2
+      - name: Run benchmark for head branch
+        run: make benchmark > bench.head.txt
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: feature/benchmark-performance
+      - name: Run benchmark for base branch
+        run: make benchmark > bench.base.txt
+      - name: Compare benchmarks and put comment
+        run: |
+          cd cmd/benchmark
+          go run main.go > comment.md
+          gh pr comment ${{ github.event.number }} --body-text ./comment.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+

@@ -33,3 +33,4 @@ request.json
 .falco.yaml
 *.pem
 falco-backend-name
+cmd/benchmark/*.txt
