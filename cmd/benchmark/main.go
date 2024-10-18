@@ -20,7 +20,7 @@ type BenchmarkScore struct {
 }
 
 func main() {
-	base, err := parseBenchmarkScore("./bench.txt")
+	base, err := parseBenchmarkScore("./bench.base.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse benchmark score: %s\n", err)
 		os.Exit(1)
