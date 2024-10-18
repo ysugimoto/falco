@@ -1,44 +1,48 @@
+## v1.11.2
+
+- fix string concatenation problem for functioncall and if expression [#369](https://github.com/ysugimoto/falco/pull/369) (@ysugimoto)
+
 ## v1.11.1
 
-- add assert.not_error function to function table [#368](https://github.com/ysugimoto/falco/368) (@ysugimoto)
+- add assert.not_error function to function table [#368](https://github.com/ysugimoto/falco/pull/368) (@ysugimoto)
 
 ## v1.11.0
 
-- add dap subcommand and support basic DAP features [#349](https://github.com/ysugimoto/falco/349) (@rinx)
-- Fix tiny bug of base64 decode functions [#351](https://github.com/ysugimoto/falco/351) (@ysugimoto)
-- implement `assert.not_error` assertion method [#352](https://github.com/ysugimoto/falco/352) (@ysugimoto)
-- fix header existence logic, exactly treat as null or empty string [#353](https://github.com/ysugimoto/falco/353) (@ysugimoto)
-- improve url encode and decode built-in functions [#354](https://github.com/ysugimoto/falco/354) (@ysugimoto)
-- move base64 related logic to shared codec [#355](https://github.com/ysugimoto/falco/355) (@ysugimoto)
-- Fix hex display: pad 01-0F values to two digits [#356](https://github.com/ysugimoto/falco/356) (@bungoume)
-- fix literal comparing issue for injected variables [#357](https://github.com/ysugimoto/falco/357) (@ysugimoto)
-- add `bereq.max_reuse_idle_time` variable support [#362](https://github.com/ysugimoto/falco/362) (@ysugimoto)
-- add remote director resource to lint [#363](https://github.com/ysugimoto/falco/363) (@ysugimoto)
-- Improve string concatenation logic [#364](https://github.com/ysugimoto/falco/364) (@ysugimoto)
-- implement raising deprecated error [#366](https://github.com/ysugimoto/falco/366) (@ysugimoto)
-- docs(dap): add a brief documentation about dap subcommand [#367](https://github.com/ysugimoto/falco/367) (@rinx)
+- add dap subcommand and support basic DAP features [#349](https://github.com/ysugimoto/falco/pull/349) (@rinx)
+- Fix tiny bug of base64 decode functions [#351](https://github.com/ysugimoto/falco/pull/351) (@ysugimoto)
+- implement `assert.not_error` assertion method [#352](https://github.com/ysugimoto/falco/pull/352) (@ysugimoto)
+- fix header existence logic, exactly treat as null or empty string [#353](https://github.com/ysugimoto/falco/pull/353) (@ysugimoto)
+- improve url encode and decode built-in functions [#354](https://github.com/ysugimoto/falco/pull/354) (@ysugimoto)
+- move base64 related logic to shared codec [#355](https://github.com/ysugimoto/falco/pull/355) (@ysugimoto)
+- Fix hex display: pad 01-0F values to two digits [#356](https://github.com/ysugimoto/falco/pull/356) (@bungoume)
+- fix literal comparing issue for injected variables [#357](https://github.com/ysugimoto/falco/pull/357) (@ysugimoto)
+- add `bereq.max_reuse_idle_time` variable support [#362](https://github.com/ysugimoto/falco/pull/362) (@ysugimoto)
+- add remote director resource to lint [#363](https://github.com/ysugimoto/falco/pull/363) (@ysugimoto)
+- Improve string concatenation logic [#364](https://github.com/ysugimoto/falco/pull/364) (@ysugimoto)
+- implement raising deprecated error [#366](https://github.com/ysugimoto/falco/pull/366) (@ysugimoto)
+- docs(dap): add a brief documentation about dap subcommand [#367](https://github.com/ysugimoto/falco/pull/367) (@rinx)
 
 ## v1.10.0
 
-- add watch option for incremental testing [#347](https://github.com/ysugimoto/falco/347) (@ysugimoto)
-- exact custom token [#346](https://github.com/ysugimoto/falco/346) (@ysugimoto)
-- implement uuid version7 related new functions [#345](https://github.com/ysugimoto/falco/345) (@ysugimoto)
-- inject value for tentative in simulator [#344](https://github.com/ysugimoto/falco/344) (@ysugimoto)
-- correct typo in SortDeclaration default tag [#342](https://github.com/ysugimoto/falco/342) (@acme)
-- adjust default TrailingCommentWidth to 1 [#341](https://github.com/ysugimoto/falco/341) (@acme)
-- update timezone in test [#340](https://github.com/ysugimoto/falco/340) (@acme)
-- add `--genearted` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/339) (@ysugimoto)
-- support Fastly generated specific syntaxes [#338](https://github.com/ysugimoto/falco/338) (@ysugimoto)
+- add watch option for incremental testing [#347](https://github.com/ysugimoto/falco/pull/347) (@ysugimoto)
+- exact custom token [#346](https://github.com/ysugimoto/falco/pull/346) (@ysugimoto)
+- implement uuid version7 related new functions [#345](https://github.com/ysugimoto/falco/pull/345) (@ysugimoto)
+- inject value for tentative in simulator [#344](https://github.com/ysugimoto/falco/pull/344) (@ysugimoto)
+- correct typo in SortDeclaration default tag [#342](https://github.com/ysugimoto/falco/pull/342) (@acme)
+- adjust default TrailingCommentWidth to 1 [#341](https://github.com/ysugimoto/falco/pull/341) (@acme)
+- update timezone in test [#340](https://github.com/ysugimoto/falco/pull/340) (@acme)
+- add `--genearted` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/pull/339) (@ysugimoto)
+- support Fastly generated specific syntaxes [#338](https://github.com/ysugimoto/falco/pull/338) (@ysugimoto)
 
 ## v1.9.1
 
-- strict macro linting [#336](https://github.com/ysugimoto/falco/336) (@ysugimoto)
-- feat(formatter): prevent indentation of #FASTLY macros [#335](https://github.com/ysugimoto/falco/335) (@acme)
-- fix(formatter): remove space between return and parenthesis [#334](https://github.com/ysugimoto/falco/334) (@acme)
-- Add feature to disable only specific lint rules with ignore comment [#333](https://github.com/ysugimoto/falco/333) (@nodaguti)
-- Set exit code to 1 when there are one or more lint errors [#332](https://github.com/ysugimoto/falco/332) (@nodaguti)
-- Add extra format check for backend.share_key [#331](https://github.com/ysugimoto/falco/331) (@nodaguti)
-- Fix broken result message of tester and use exactly the same format for both passed and failed tests [#330](https://github.com/ysugimoto/falco/330) (@nodaguti)
+- strict macro linting [#336](https://github.com/ysugimoto/falco/pull/336) (@ysugimoto)
+- feat(formatter): prevent indentation of #FASTLY macros [#335](https://github.com/ysugimoto/falco/pull/335) (@acme)
+- fix(formatter): remove space between return and parenthesis [#334](https://github.com/ysugimoto/falco/pull/334) (@acme)
+- Add feature to disable only specific lint rules with ignore comment [#333](https://github.com/ysugimoto/falco/pull/333) (@nodaguti)
+- Set exit code to 1 when there are one or more lint errors [#332](https://github.com/ysugimoto/falco/pull/332) (@nodaguti)
+- Add extra format check for backend.share_key [#331](https://github.com/ysugimoto/falco/pull/331) (@nodaguti)
+- Fix broken result message of tester and use exactly the same format for both passed and failed tests [#330](https://github.com/ysugimoto/falco/pull/330) (@nodaguti)
 
 ## v1.9.0
 
