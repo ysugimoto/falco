@@ -6,32 +6,74 @@ on:
       - "feature/benchmark-performance"
 
 jobs:
-  benchmark:
+  benchmark-base:
+    if: startsWith(github.head_ref, 'perf/')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.2
-      - name: Run benchmark for head branch
-        run: make benchmark > bench.head.txt
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: feature/benchmark-performance
       - name: Run benchmark for base branch
         run: make benchmark > bench.base.txt
+      - name: Upload base benchmark result
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-base
+          path: bench.base.txt
+  benchmark-head:
+    if: startsWith(github.head_ref, 'perf/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run benchmark for head branch
+        run: make benchmark > bench.head.txt
+      - name: Upload base benchmark result
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-head
+          path: bench.head.txt
+  compare:
+    if: startsWith(github.head_ref, 'perf/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    needs: [ benchmark-base, benchmark-head ]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download base benchmark result
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-base
+      - name: Download head benchmark result
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-head
       - name: Compare benchmarks and put comment
         run: |
-          cd cmd/benchmark
-          go run main.go > comment.md
-          gh pr comment ${{ github.event.number }} --body-text ./comment.txt
+          go run cmd/benchmark/main.go ./bench.base.txt ./bench.head.txt > comment.md
+          gh pr comment ${{ github.event.number }} --body-file ./comment.md
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

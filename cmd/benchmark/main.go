@@ -20,12 +20,12 @@ type BenchmarkScore struct {
 }
 
 func main() {
-	base, err := parseBenchmarkScore("./bench.txt")
+	base, err := parseBenchmarkScore(os.Args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse benchmark score: %s\n", err)
 		os.Exit(1)
 	}
-	head, err := parseBenchmarkScore("./bench.head.txt")
+	head, err := parseBenchmarkScore(os.Args[2])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse benchmark score: %s\n", err)
 		os.Exit(1)
@@ -74,8 +74,8 @@ func parseBenchmarkScore(input string) (map[string]BenchmarkScore, error) {
 func compareScores(base, head map[string]BenchmarkScore) string {
 	var buf bytes.Buffer
 
-	buf.WriteString("## Benchmark improvements\n\n")
-	buf.WriteString("| Name | NanoSeconds per operation (ns/op) | Memory Size (B/op) | Memory Allocations (allocs/op) |\n")
+	buf.WriteString("## Benchmark Comparison\n\n")
+	buf.WriteString("| Name | Nanoseconds per operation (ns/op) | Memory Size (B/op) | Memory Allocation Times (allocs/op) |\n")
 	buf.WriteString("|:-----|--------------------------:|------------:|-------------------:|\n")
 
 	for name, score := range head {
@@ -99,8 +99,8 @@ func compare(base, head int64) string {
 	case rate == 100:
 		return ""
 	case rate > 100:
-		return fmt.Sprintf("<br>(%3d%% worsen :-1:)", rate)
+		return fmt.Sprintf("<br>(%3d%% worsen :-1:)", rate-100)
 	default:
-		return fmt.Sprintf("<br>**(%3d%% improved :+1:)**", rate)
+		return fmt.Sprintf("<br>**(%3d%% improved :+1:)**", 100-rate)
 	}
 }
