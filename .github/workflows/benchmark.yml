@@ -7,7 +7,7 @@ on:
 
 jobs:
   benchmark:
-    if: startsWith(github.head_ref, 'pref/')
+    if: startsWith(github.head_ref, 'perf/')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
