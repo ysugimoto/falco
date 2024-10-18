@@ -75,4 +75,4 @@ jobs:
           go run cmd/benchmark/main.go ./bench.base.txt ./bench.head.txt > comment.md
           gh pr comment ${{ github.event.number }} --body-file ./comment.md
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
