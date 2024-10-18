@@ -29,9 +29,8 @@ jobs:
         run: make benchmark > bench.head.txt
       - name: Compare benchmarks and put comment
         run: |
-          cd cmd/benchmark
-          go run main.go > comment.md
-          gh pr comment ${{ github.event.number }} --body-text ./comment.txt
+          go run cmd/benchamark/main.go ./bench.base.txt ./bench.head.txt > comment.md
+          gh pr comment ${{ github.event.number }} --body-text ./comment.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
