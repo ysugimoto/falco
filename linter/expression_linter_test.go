@@ -399,11 +399,15 @@ func TestStringConcatenation(t *testing.T) {
 		{
 			name:      "FunctionCall expression concatenation",
 			statement: `set req.http.Foo = "foo" + std.atoi("foo");`,
-			isError:   true,
 		},
 		{
 			name:      "if expression concatenation, returns string",
 			statement: `set req.http.Foo = "foo" + if(req.http.Bar, "1", "0");`,
+		},
+		{
+			name:      "if expression concatenation, returns constant",
+			statement: `set req.http.Foo = "foo" + if(req.http.Bar, 1, 0);`,
+			isError:   true,
 		},
 		{
 			name:      "if expression concatenation, returns not string",
@@ -525,6 +529,15 @@ func TestStringConcatenationIssue360(t *testing.T) {
  }
  `,
 			isError: true,
+		},
+		{
+			name: "complicated concatenation for common set-cookie expression",
+			input: `
+ sub vcl_deliver {
+ 	#FASTLY deliver
+	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" time.add(now, 3600s) if(req.http.Foo == "bar", std.atoi("1"), std.atoi("2")) ";";
+ }
+ `,
 		},
 	}
 
