@@ -84,9 +84,30 @@ func compareScores(base, head map[string]BenchmarkScore) string {
 			v = score
 		}
 		buf.WriteString(fmt.Sprintf("|%s", name))
-		buf.WriteString(fmt.Sprintf("|%d -> %d%s", v.OperationNanoSeconds, score.OperationNanoSeconds, compare(v.OperationNanoSeconds, score.OperationNanoSeconds)))
-		buf.WriteString(fmt.Sprintf("|%d -> %d%s", v.MemorySize, score.MemorySize, compare(v.MemorySize, score.MemorySize)))
-		buf.WriteString(fmt.Sprintf("|%d -> %d%s", v.MemoryAllocationTimes, score.MemoryAllocationTimes, compare(v.MemoryAllocationTimes, score.MemoryAllocationTimes)))
+		buf.WriteString(
+			fmt.Sprintf(
+				"|%d -> %d%s",
+				v.OperationNanoSeconds,
+				score.OperationNanoSeconds,
+				compare(v.OperationNanoSeconds, score.OperationNanoSeconds),
+			),
+		)
+		buf.WriteString(
+			fmt.Sprintf(
+				"|%d -> %d%s",
+				v.MemorySize,
+				score.MemorySize,
+				compare(v.MemorySize, score.MemorySize),
+			),
+		)
+		buf.WriteString(
+			fmt.Sprintf(
+				"|%d -> %d%s",
+				v.MemoryAllocationTimes,
+				score.MemoryAllocationTimes,
+				compare(v.MemoryAllocationTimes, score.MemoryAllocationTimes),
+			),
+		)
 		buf.WriteString("|\n")
 	}
 
