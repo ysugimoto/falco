@@ -12,7 +12,7 @@ var pool = sync.Pool{
 }
 
 func (l *Lexer) readString() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
@@ -29,7 +29,7 @@ func (l *Lexer) readString() string {
 }
 
 func (l *Lexer) readBracketString() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
@@ -52,7 +52,7 @@ func (l *Lexer) readBracketString() string {
 }
 
 func (l *Lexer) readNumber() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
@@ -64,7 +64,7 @@ func (l *Lexer) readNumber() string {
 }
 
 func (l *Lexer) readEOL() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
@@ -79,7 +79,7 @@ func (l *Lexer) readEOL() string {
 }
 
 func (l *Lexer) readMultiComment() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
@@ -101,7 +101,7 @@ func (l *Lexer) readMultiComment() string {
 }
 
 func (l *Lexer) readIdentifier() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
