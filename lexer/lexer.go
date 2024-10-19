@@ -29,6 +29,8 @@ func New(r io.Reader, opts ...OptionFunc) *Lexer {
 		r:       bufio.NewReader(r),
 		line:    1,
 		buffer:  new(bytes.Buffer),
+		stack:   make([]string, 0, 512),
+		peeks:   make([]token.Token, 0, 8),
 		file:    o.Filename,
 		customs: o.Customs,
 	}
@@ -416,111 +418,8 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) readString() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	l.readChar()
-	for {
-		if l.char == '"' || l.char == 0x00 {
-			break
-		}
-		buf.WriteRune(l.char)
-		l.readChar()
-	}
-
-	return buf.String()
-}
-
-func (l *Lexer) readBracketString() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	l.readChar()
-	for {
-		if l.char == 0x00 {
-			break
-		}
-		if l.char == '"' {
-			if l.peekChar() == '}' {
-				l.readChar()
-				break
-			}
-		}
-		buf.WriteRune(l.char)
-		l.readChar()
-	}
-
-	return buf.String()
-}
-
-func (l *Lexer) readNumber() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	for isDigit(l.char) {
-		buf.WriteRune(l.char)
-		l.readChar()
-	}
-	return buf.String()
-}
-
-func (l *Lexer) readEOL() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	for {
-		buf.WriteRune(l.char)
-		if l.peekChar() == 0x00 || l.peekChar() == '\n' {
-			break
-		}
-		l.readChar()
-	}
-	return buf.String()
-}
-
-func (l *Lexer) readMultiComment() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	for {
-		if l.char == 0x00 {
-			break
-		}
-		if l.char == '*' && l.peekChar() == '/' {
-			buf.WriteRune(l.char)
-			l.readChar()
-			buf.WriteRune(l.char)
-			break
-		}
-		buf.WriteRune(l.char)
-		l.readChar()
-	}
-
-	return buf.String()
-}
-
-func (l *Lexer) readIdentifier() string {
-	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
-	defer pool.Put(buf)
-	buf.Reset()
-
-	for l.isLetter(l.char) {
-		buf.WriteRune(l.char)
-		l.readChar()
-	}
-	return buf.String()
-}
-
 func (l *Lexer) isLetter(r rune) bool {
-	// Letter allows "-", "." and ":" character to parse ident http header name like `req.http.X-Forwarded-For`
-	// but in some name definitions (e.g. acl name, backend name), parser must check "-" IS NOT included.
-	// return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r == '_' || r == '-' || r == '.' || r == ':'
+	// Letter allows [a-zA-Z_] character to parse ident of http header name like `req`, `http`, `X-Forwarded-For`.
 	return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_'
 }
 
