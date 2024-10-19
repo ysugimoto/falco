@@ -417,21 +417,27 @@ func (l *Lexer) skipWhitespace() {
 }
 
 func (l *Lexer) readString() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	l.readChar()
 	for {
 		if l.char == '"' || l.char == 0x00 {
 			break
 		}
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		l.readChar()
 	}
 
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) readBracketString() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	l.readChar()
 	for {
 		if l.char == 0x00 {
@@ -443,60 +449,72 @@ func (l *Lexer) readBracketString() string {
 				break
 			}
 		}
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		l.readChar()
 	}
 
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) readNumber() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	for isDigit(l.char) {
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		l.readChar()
 	}
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) readEOL() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	for {
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		if l.peekChar() == 0x00 || l.peekChar() == '\n' {
 			break
 		}
 		l.readChar()
 	}
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) readMultiComment() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	for {
 		if l.char == 0x00 {
 			break
 		}
 		if l.char == '*' && l.peekChar() == '/' {
-			rs = append(rs, l.char)
+			buf.WriteRune(l.char)
 			l.readChar()
-			rs = append(rs, l.char)
+			buf.WriteRune(l.char)
 			break
 		}
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		l.readChar()
 	}
 
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) readIdentifier() string {
-	var rs []rune
+	buf := pool.Get().(*bytes.Buffer) // notlint:errcheck
+	defer pool.Put(buf)
+	buf.Reset()
+
 	for l.isLetter(l.char) {
-		rs = append(rs, l.char)
+		buf.WriteRune(l.char)
 		l.readChar()
 	}
-	return string(rs)
+	return buf.String()
 }
 
 func (l *Lexer) isLetter(r rune) bool {
