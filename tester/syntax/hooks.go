@@ -38,6 +38,9 @@ func (s *HookStatement) String() string {
 
 	return buf.String()
 }
+func (h *HookStatement) Lint(nodeLinter func(node ast.Node)) error {
+	return nil
+}
 
 type HookParser struct {
 	keyword string

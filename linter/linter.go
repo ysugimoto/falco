@@ -283,8 +283,14 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 	case *ast.FunctionCallExpression:
 		return l.lintFunctionCallExpression(t, ctx)
 	default:
-		// Custom statement won't be linted
-		if _, ok := node.(ast.CustomStatement); ok {
+		// lint for custom statement.
+		// Note: we'd like to pass linter pointer to custom statement but it causes cyclic package import.
+		// so we pass the wrapped function that do linting in this package.
+		// If the wrapped function returns error, add it as *LintError.
+		if cs, ok := node.(ast.CustomStatement); ok {
+			if err := cs.Lint(func(n ast.Node) { l.lint(n, ctx) }); err != nil {
+				l.Error(err)
+			}
 			break
 		}
 		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))

@@ -3,13 +3,15 @@ package syntax
 import "github.com/ysugimoto/falco/parser"
 
 func CustomParsers() []parser.CustomParser {
-	customs := []parser.CustomParser{
-		// describe keyword
-		&DescribeParser{},
-	}
-	// hooks
+	var i int
+	customs := make([]parser.CustomParser, len(hookParsers)+1)
+
+	customs[i] = &DescribeParser{}
+	i++
+
 	for _, v := range hookParsers {
-		customs = append(customs, v)
+		customs[i] = v
+		i++
 	}
 	return customs
 }
