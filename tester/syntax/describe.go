@@ -53,6 +53,9 @@ func (d *DescribeStatement) String() string {
 
 	return buf.String()
 }
+func (d *DescribeStatement) Lint(nodeLinter func(node ast.Node)) error {
+	return nil
+}
 
 // Custome parser implementation for "describe" keyword
 type DescribeParser struct{}

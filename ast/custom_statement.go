@@ -6,4 +6,5 @@ package ast
 type CustomStatement interface {
 	Statement
 	Literal() string
+	Lint(func(Node)) error
 }

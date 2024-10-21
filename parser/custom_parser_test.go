@@ -46,6 +46,9 @@ func (d *DescribeStatement) String() string {
 
 	return buf.String()
 }
+func (d *DescribeStatement) Lint(nodeLinter func(ast.Node)) error {
+	return nil
+}
 
 type DescribeParser struct{}
 
@@ -125,6 +128,10 @@ func (b *BeforeEachStatement) String() string {
 	buf.WriteString(b.TrailingComment(" "))
 
 	return buf.String()
+}
+
+func (b *BeforeEachStatement) Lint(nodeLinter func(ast.Node)) error {
+	return nil
 }
 
 type BeforeEachParser struct{}
