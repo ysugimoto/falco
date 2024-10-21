@@ -16,18 +16,18 @@ import (
 )
 
 type Linter struct {
-	Errors         []*LintError
-	FatalError     *FatalError
-	includexLexers map[string]*lexer.Lexer
-	ignore         *ignore
-	conf           *config.LinterConfig
+	Errors     []*LintError
+	FatalError *FatalError
+	lexers     map[string]*lexer.Lexer
+	ignore     *ignore
+	conf       *config.LinterConfig
 }
 
 func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
 	l := &Linter{
-		includexLexers: make(map[string]*lexer.Lexer),
-		ignore:         &ignore{},
-		conf:           c,
+		lexers: make(map[string]*lexer.Lexer),
+		ignore: &ignore{},
+		conf:   c,
 	}
 	for i := range opts {
 		opts[i](l)
@@ -36,7 +36,7 @@ func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
 }
 
 func (l *Linter) Lexers() map[string]*lexer.Lexer {
-	return l.includexLexers
+	return l.lexers
 }
 
 func (l *Linter) Error(err error) {
@@ -317,7 +317,7 @@ func (l *Linter) lintStatement(s ast.Statement, ctx *context.Context) {
 
 func (l *Linter) loadSnippetVCL(file, content string) []ast.Statement {
 	lx := lexer.NewFromString(content, lexer.WithFile(file))
-	l.includexLexers[file] = lx
+	l.lexers[file] = lx
 	statements, err := parser.New(lx).ParseSnippetVCL()
 	if err != nil {
 		lx.NewLine()
@@ -332,7 +332,7 @@ func (l *Linter) loadSnippetVCL(file, content string) []ast.Statement {
 
 func (l *Linter) loadVCL(file, content string) []ast.Statement {
 	lx := lexer.NewFromString(content, lexer.WithFile(file))
-	l.includexLexers[file] = lx
+	l.lexers[file] = lx
 	vcl, err := parser.New(lx).ParseVCL()
 	if err != nil {
 		lx.NewLine()

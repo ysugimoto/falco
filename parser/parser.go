@@ -3,7 +3,6 @@ package parser
 import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -46,8 +45,14 @@ type (
 	postfixParser func(ast.Expression) (ast.Expression, error)
 )
 
+type Tokenizer interface {
+	NextToken() token.Token
+	PeekToken() token.Token
+	RegisterCustomTokens(map[string]token.TokenType)
+}
+
 type Parser struct {
-	l *lexer.Lexer
+	tk Tokenizer
 
 	prevToken *ast.Meta
 	curToken  *ast.Meta
@@ -60,9 +65,9 @@ type Parser struct {
 	customParsers  map[token.TokenType]CustomParser
 }
 
-func New(l *lexer.Lexer, opts ...ParserOption) *Parser {
+func New(tk Tokenizer, opts ...ParserOption) *Parser {
 	p := &Parser{
-		l:             l,
+		tk:            tk,
 		customParsers: make(map[token.TokenType]CustomParser),
 	}
 	for i := range opts {
@@ -76,7 +81,7 @@ func New(l *lexer.Lexer, opts ...ParserOption) *Parser {
 	for _, v := range p.customParsers {
 		customTokenMap[v.Ident()] = v.Token()
 	}
-	l.RegisterCustomTokens(customTokenMap)
+	tk.RegisterCustomTokens(customTokenMap)
 
 	p.NextToken()
 	p.NextToken()
@@ -97,18 +102,18 @@ func (p *Parser) ReadPeek() {
 	var previousEmptyLines int
 
 	for {
-		t := p.l.NextToken()
+		t := p.tk.NextToken()
 		switch t.Type {
 		case token.LF:
 			prefixedLineFeed = true
 			// Count empty lines between the next token
 			for {
-				peek := p.l.PeekToken()
+				peek := p.tk.PeekToken()
 				if peek.Type != token.LF {
 					break
 				}
 				previousEmptyLines++
-				p.l.NextToken()
+				p.tk.NextToken()
 			}
 			continue
 		case token.COMMENT:
@@ -130,7 +135,7 @@ func (p *Parser) ReadPeek() {
 		case token.PRAGMA:
 			// Skip Fastly pgrama embedded data
 			for {
-				t = p.l.NextToken()
+				t = p.tk.NextToken()
 				if t.Type == token.SEMICOLON {
 					break
 				}
@@ -146,6 +151,7 @@ func (p *Parser) ReadPeek() {
 
 func (p *Parser) Trailing() ast.Comments {
 	cs := ast.Comments{}
+
 	// Divide trailing comment for current node and leading comment for next node
 	if len(p.peekToken.Leading) > 0 {
 		updated := []*ast.Comment{}
