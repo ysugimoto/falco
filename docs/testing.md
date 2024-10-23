@@ -411,12 +411,12 @@ sub mock_add_header {
 
 describe add_header_mock {
 
-    sub before_recv {
+    before_recv {
         // Mock subroutine
         testing.mock("add_header", "mock_add_header");
     }
 
-    sub after_recv {
+    after_recv {
         // Restore mock
         testing.restore_mock("add_header");
     }
@@ -456,12 +456,12 @@ sub mock_add_header {
 
 describe add_header_mock {
 
-    sub before_recv {
+    before_recv {
         // Mock subroutine
         testing.mock("add_header", "mock_add_header");
     }
 
-    sub after_recv {
+    after_recv {
         // Restore all mocks
         testing.restore_all_mocks();
     }
