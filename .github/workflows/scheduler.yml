@@ -1,0 +1,40 @@
+name: Check lacked predefined variable and functions 
+
+on:
+  schedule:
+    # 0:00 UTC (9:00 JST)
+    - cron: "0 0 * * *"
+
+jobs:
+  check-documentation-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.2
+      - name: run checker
+        id: checking
+        working-directory: cmd/documentation-checker
+        run:
+          echo "diff=$(go run .)" >> $GITHUB_OUTPUT
+      - name: create issue if exists
+        if: ${{ steps.checking.outputs.diff != "" }}
+        run: |
+          ISSUE=$(gh issue list -l automated --json title)
+          if [ "$ISSUE" == "[]" ]; then
+            gh issue create \
+              -b "${{ steps.checking.outputs.diff }}" \
+              -a ysugimoto \
+              -t "[Automated] Need to implement new variables/functions" \
+              -l automated
+          fi
+

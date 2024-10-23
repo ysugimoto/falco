@@ -2,62 +2,69 @@ package main
 
 import (
 	"context"
-	"strings"
+	"fmt"
+	"os"
 	"time"
 
-	"github.com/fatih/color"
-	"github.com/kyokomi/emoji"
-	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 )
-
-var (
-	output = colorable.NewColorableStderr()
-	yellow = color.New(color.FgYellow)
-	white  = color.New(color.FgWhite)
-	cyan   = color.New(color.FgCyan)
-
-	ErrExit = errors.New("exit")
-)
-
-func write(c *color.Color, format string, args ...interface{}) {
-	c.Fprint(output, emoji.Sprintf(format, args...))
-}
-func writeln(c *color.Color, format string, args ...interface{}) {
-	write(c, format+"\n", args...)
-}
 
 const (
 	fastlyDocDomain = "https://developer.fastly.com"
 )
 
+type Variable struct {
+	name string
+	url  string
+}
+
+type Function struct {
+	name string
+	url  string
+}
+
 func main() {
 	ctx, timeout := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer timeout()
 
-	if err := _main(ctx); err != nil {
+	variables, functions, err := _main(ctx)
+	if err != nil {
 		panic(err)
+	}
+
+	if len(variables) > 0 {
+		fmt.Fprintln(os.Stdout, "====== Lacked predefiend variables found ======")
+		for _, v := range variables {
+			fmt.Fprintf(os.Stdout, "%s: %s\n", v.name, v.url)
+		}
+		fmt.Fprintln(os.Stdout, "")
+	}
+	if len(functions) > 0 {
+		fmt.Fprintln(os.Stdout, "====== Lacked builtin functions found ======")
+		for _, v := range variables {
+			fmt.Fprintf(os.Stdout, "%s: %s\n", v.name, v.url)
+		}
+		fmt.Fprintln(os.Stdout, "")
 	}
 }
 
-func _main(ctx context.Context) error {
-	writeln(cyan, "Variable Checking %s\n", strings.Repeat("=", 20))
+func _main(ctx context.Context) ([]Variable, []Function, error) {
 	variables, err := factoryVariables(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
-	if err := checkVariables(variables); err != nil {
-		return errors.WithStack(err)
+	lackedVariables, err := checkVariables(variables)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
 	}
-	writeln(white, "")
-	writeln(cyan, "Function Checking %s\n", strings.Repeat("=", 20))
 	functions, err := factoryFunctions(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
-	if err := checkFunctions(functions); err != nil {
-		return errors.WithStack(err)
+	lackedFunctions, err := checkFunctions(functions)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
 	}
-	writeln(white, "")
-	return nil
+
+	return lackedVariables, lackedFunctions, nil
 }
