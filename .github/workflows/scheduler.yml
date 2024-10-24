@@ -27,7 +27,7 @@ jobs:
         run:
           echo "diff=$(go run .)" >> $GITHUB_OUTPUT
       - name: create issue if exists
-        if: ${{ steps.checking.outputs.diff != "" }}
+        if: ${{ steps.checking.outputs.diff != '' }}
         run: |
           ISSUE=$(gh issue list -l automated --json title)
           if [ "$ISSUE" == "[]" ]; then
