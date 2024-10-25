@@ -102,9 +102,13 @@ sub vcl_recv {
 
 	expects := []token.Token{
 		{Type: token.LF, Literal: "\n"},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
 		{Type: token.STRING, Literal: " foobar "},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.LF, Literal: "\n"},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
 		{Type: token.STRING, Literal: ` foo\"bar `},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.LF, Literal: "\n"},
 
 		// import
@@ -451,13 +455,17 @@ sub vcl_recv {
 		{Type: token.LF, Literal: "\n"},
 
 		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
 		{Type: token.STRING, Literal: "foo bar"},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LF, Literal: "\n"},
 
 		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
+		{Type: token.OPEN_LONG_STRING, Literal: `JSON`},
 		{Type: token.STRING, Literal: "\n      {\"foo\": \"bar\"}\n"},
+		{Type: token.CLOSE_LONG_STRING, Literal: `JSON`},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LF, Literal: "\n"},
@@ -630,7 +638,9 @@ func TestComplecatedStatement(t *testing.T) {
 		{Type: token.LEFT_PAREN, Literal: "(", Line: 1, Position: 25},
 		{Type: token.IDENT, Literal: "var.payload", Line: 1, Position: 26},
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 37},
-		{Type: token.STRING, Literal: `^.*?"exp"\s*:\s*(\d+).*?$`, Line: 1, Position: 39},
+		{Type: token.OPEN_LONG_STRING, Literal: "", Line: 1, Position: 39},
+		{Type: token.STRING, Literal: `^.*?"exp"\s*:\s*(\d+).*?$`, Line: 1, Position: 40},
+		{Type: token.CLOSE_LONG_STRING, Literal: "", Line: 1, Position: 67},
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 68},
 		{Type: token.STRING, Literal: `\1`, Line: 1, Position: 70},
 		{Type: token.RIGHT_PAREN, Literal: ")", Line: 1, Position: 74},

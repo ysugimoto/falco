@@ -114,9 +114,11 @@ func (l *Lexer) LineCount() int {
 }
 
 func (l *Lexer) PeekToken() token.Token {
+	if len(l.peeks) > 0 {
+		return l.peeks[0]
+	}
 	t := l.NextToken()
-	// peek token stack works FIFO queue
-	l.peeks = append(l.peeks, t)
+	l.peeks = append([]token.Token{t}, l.peeks...)
 	return t
 }
 
@@ -164,13 +166,19 @@ func (l *Lexer) NextToken() token.Token {
 			break
 		}
 
+		t = newToken(token.OPEN_LONG_STRING, l.char, line, index)
+		t.Literal = delimiter[:len(delimiter)-1]
+
 		l.skipBytes(len(delimiter))
-		t = newToken(token.STRING, l.char, line, index)
-		t.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
-		// 2 for the enclosing braces plus the length of the pairs of delimiters
-		// which are "" at a minimum, or SOMEDELIMITER""SOMEDELIMITER for
-		// heredoc-style long strings.
-		t.Offset = 2 + len(delimiter)*2
+
+		st := newToken(token.STRING, l.char, l.line, l.index)
+		st.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
+		st.Offset = 2 + len(delimiter)*2
+		l.pushToken(st)
+
+		ct := newToken(token.CLOSE_LONG_STRING, l.char, l.line, l.index)
+		ct.Literal = delimiter[:len(delimiter)-1]
+		l.pushToken(ct)
 	case '}':
 		t = newToken(token.RIGHT_BRACE, l.char, line, index)
 	case '(':
@@ -442,7 +450,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	t.File = l.file
+
 	return t
+}
+
+func (l *Lexer) pushToken(t token.Token) {
+	t.File = l.file
+	l.peeks = append(l.peeks, t)
 }
 
 func (l *Lexer) skipWhitespace() {

@@ -60,6 +60,11 @@ func (i *Integer) String() string {
 type String struct {
 	*Meta
 	Value string
+	// Whether or not this string was parsed as a "long string", which has
+	// different output than a regular string.
+	LongString bool
+	// The optional delimiter for a "long string".
+	Delimiter string
 }
 
 func (s *String) ID() uint64     { return s.Meta.ID }

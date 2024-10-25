@@ -81,7 +81,7 @@ func TestParseStringConcatExpression(t *testing.T) {
 	input := `// Subroutine
 sub vcl_recv {
 	declare local var.S STRING;
-	set var.S = "foo" "bar" + "baz";
+	set var.S = "foo" "bar" + "baz" {"long"} {delimited"long"delimited};
 }`
 	_, err := New(lexer.NewFromString(input)).ParseVCL()
 	if err != nil {
@@ -133,8 +133,9 @@ sub vcl_recv {
 								Operator: "=",
 							},
 							Value: &ast.String{
-								Meta:  ast.New(T, 1),
-								Value: "foo%20bar",
+								Meta:       ast.New(T, 1),
+								Value:      "foo%20bar",
+								LongString: true,
 							},
 						},
 					},
