@@ -71,7 +71,7 @@ func (s *String) ID() uint64     { return s.Meta.ID }
 func (s *String) Expression()    {}
 func (s *String) GetMeta() *Meta { return s.Meta }
 func (s *String) String() string {
-	if s.LongString { // offset=4 means bracket string
+	if s.LongString {
 		return strings.TrimSpace(
 			fmt.Sprintf(`%s{%s"%s"%s}%s`, s.LeadingComment(inline), s.Delimiter, s.Value, s.Delimiter, s.TrailingComment(inline)),
 		)
