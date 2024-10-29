@@ -6,6 +6,10 @@ sub force_error {
   error 800 "FORCE ERROR";
 }
 
+sub noop {
+
+}
+
 sub nested {
   set req.http.Foo = "1";
 }

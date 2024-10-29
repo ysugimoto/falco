@@ -11,6 +11,12 @@ sub test_error {
 }
 
 // @scope: recv
+sub test_not_error {
+  testing.call_subroutine("noop");
+  assert.not_error();
+}
+
+// @scope: recv
 sub test_call_nested {
   testing.call_subroutine("call_nested");
   assert.subroutine_called("nested");
