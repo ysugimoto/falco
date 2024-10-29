@@ -1787,7 +1787,7 @@ func predefinedVariables() Variables {
 				"error": &Object{
 					Items: map[string]*Object{},
 					Value: &Accessor{
-						Get:       types.FloatType,
+						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     true,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,

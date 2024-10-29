@@ -1864,7 +1864,7 @@ math.TAU:
 fastly.error:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
-  get: FLOAT
+  get: STRING
   unset: true
 
 fastly.ff.visits_this_pop:
