@@ -31,6 +31,11 @@ sub custom_logger {
   log req.http.header;
 }
 
+//@scope: error
+sub error_response {
+  synthetic "foobar";
+}
+
 sub vcl_recv {
 
   #Fastly recv

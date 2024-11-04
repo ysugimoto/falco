@@ -200,6 +200,7 @@ We describe them following table and examples:
 | Name                         | Type       | Description                                                                                  |
 |:-----------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
+| testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
@@ -207,7 +208,7 @@ We describe them following table and examples:
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
 | testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
-| testing.resotre_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
+| testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
@@ -230,6 +231,26 @@ We describe them following table and examples:
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
 | assert.not_error             | FUNCTION   | Assert runtime state will not move to error status                                           |
+
+----
+
+### testing.synthetic_body STRING
+
+Returns the response body as set by a call to `synthetic` or `synthetic.base64`.
+Only valid in the `error` scope.
+
+```vcl
+// @scope: error
+sub generate_response {
+    synthetic "No dice.";
+}
+
+// @scope: error
+sub test_vcl {
+    testing.call_subroutine("generate_response");
+    assert.equal(testing.synthetic_body, "No dice.");
+}
+```
 
 ----
 
