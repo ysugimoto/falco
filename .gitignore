@@ -33,3 +33,6 @@ request.json
 .falco.yaml
 *.pem
 bench.*.txt
+
+# nix
+result
