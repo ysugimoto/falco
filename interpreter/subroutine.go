@@ -204,12 +204,6 @@ func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}
-	if !val.IsLiteral() {
-		return value.Null, NONE, exception.Runtime(
-			&stmt.GetMeta().Token,
-			"Functional subroutine only can return value only accepts a literal value",
-		)
-	}
 
 	switch t := val.(type) {
 	case *value.Ident:
