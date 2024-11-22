@@ -74,6 +74,8 @@ func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 		r.AddCookie(c)
 		return
 	}
+
+	unsetRequestHeaderValue(r, name)
 	r.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
 }
 
@@ -84,6 +86,7 @@ func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 	}
 
 	// If name contains ":" like req.http.VARS:xxx, add with key-value format
+	unsetResponseHeaderValue(r, name)
 	spl := strings.SplitN(name, ":", 2)
 	r.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
 }
@@ -114,7 +117,7 @@ func unsetRequestHeaderValue(r *http.Request, name string) {
 	if len(filtered) > 0 {
 		r.Header[spl[0]] = filtered
 	} else {
-		r.Header.Del(name)
+		r.Header.Del(spl[0])
 	}
 }
 
@@ -178,6 +181,6 @@ func unsetResponseHeaderValue(r *http.Response, name string) {
 	if len(filtered) > 0 {
 		r.Header[spl[0]] = filtered
 	} else {
-		r.Header.Del(name)
+		r.Header.Del(spl[0])
 	}
 }
