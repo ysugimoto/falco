@@ -22,6 +22,24 @@ linter:
   rules:
     acl/syntax: error
 
+## Formatter configurations
+format:
+  indent_width: 2
+  indent_style: space
+  trailing_comment_width: 2                                                        |
+  line_width: 120
+  explicit_string_concat: false
+  sort_declaration_property: false
+  align_declaration_property: false
+  else_if: false
+  always_next_line_else_if:  false
+  return_statement_parentheis: false
+  sort_declaration: false
+  align_trailing_comment: false
+  comment_style: none
+  should_use_unset: false
+  indent_case_labels: false
+
 ## Simulator configuration
 simulator:
   port: 3124
