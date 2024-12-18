@@ -113,7 +113,7 @@ type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
 	Help         bool     `cli:"h,help"`
-	Version      bool     `cli:"V"`
+	Version      bool     `cli:"V,version"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`
 	Json         bool     `cli:"json"`
 	Request      string   `cli:"request"`
