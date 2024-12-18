@@ -806,6 +806,46 @@ func TestFormatIfStatement(t *testing.T) {
 `,
 		},
 		{
+			name: "elseif and elsif",
+			input: `sub vcl_recv {
+	// if leading comment
+	if (req.http.Host) {
+		set req.http.Foo = req.http.Host;
+		// if infix comment
+	} /* elseif_leading */ elseif /* elseif_infix */ (/* elseif_condition_leading */ req.http.AnotherHost /* elseif_condition_trailing */) /* else_before_parenthesis */ {
+		set req.http.Foo = "another";
+	}
+	// More complecated case
+	elsif (req.http.Other) {
+		set req.http.Foo = "other";
+	} else {
+		set req.http.Foo = "unknown";
+		// else infix comment
+	} // if trailing comment
+}
+`,
+			expect: `sub vcl_recv {
+  // if leading comment
+  if (req.http.Host) {
+    set req.http.Foo = req.http.Host;
+    // if infix comment
+  } /* elseif_leading */ elseif /* elseif_infix */ (
+    /* elseif_condition_leading */ req.http.AnotherHost
+    /* elseif_condition_trailing */
+  ) /* else_before_parenthesis */ {
+    set req.http.Foo = "another";
+  }
+  // More complecated case
+  elsif (req.http.Other) {
+    set req.http.Foo = "other";
+  } else {
+    set req.http.Foo = "unknown";
+    // else infix comment
+  }  // if trailing comment
+}
+`,
+		},
+		{
 			name: "chunked condition format",
 			input: `sub vcl_recv {
 	if (req.http.Header1 == "1" && req.http.Header2 == "2" && req.http.Header3 == "3" && req.http.Header4 == "4") {

@@ -629,7 +629,7 @@ func (p *Parser) ParseIfStatement() (*ast.IfStatement, error) {
 		// Note: VCL could define "else if" statement with "elseif", "elsif" keyword
 		case token.ELSEIF, token.ELSIF: // elseif, elsif
 			p.NextToken() // point to ELSEIF/ELSIF
-			another, err := p.ParseAnotherIfStatement(p.peekToken.Token.Literal)
+			another, err := p.ParseAnotherIfStatement(p.curToken.Token.Literal)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
