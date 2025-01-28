@@ -157,6 +157,7 @@ func (l *Lexer) NextToken() token.Token {
 		// with custom delimiters like {JSON" {"foo": "bar"} "JSON}. It is
 		// convenient for constructing strings thats include whitespace,
 		// creating JSON responses, etc.
+		// see: https://www.fastly.com/documentation/reference/vcl/types/string/
 		delimiter, err := l.peekUntil(func(b byte) bool {
 			return !isLongStringDelimiter(rune(b))
 		})
