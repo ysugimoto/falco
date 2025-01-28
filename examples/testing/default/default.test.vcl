@@ -42,3 +42,11 @@ sub test_header_value {
   assert.true(var.exists);
 }
 
+// @scope: error
+// @suite: synthetic response available in testing
+sub test_synthetic_response_available {
+  testing.call_subroutine("error_response");
+  assert.equal(testing.synthetic_body, "foobar");
+  // Two var accesses in a row should return the same string
+  assert.equal(testing.synthetic_body, "foobar");
+}

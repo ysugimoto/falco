@@ -18,6 +18,17 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
+// _nopSeekCloser is like io.NopCloser, but for wrapping io.ReadSeeker.
+type _nopSeekCloser struct {
+	io.ReadSeeker
+}
+
+func (_nopSeekCloser) Close() error { return nil }
+
+func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return _nopSeekCloser{r}
+}
+
 // nolint: gocognit
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
@@ -393,7 +404,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 	if err := assign.Assign(v, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
 }
 
@@ -406,7 +417,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	if err := assign.Assign(v, val); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
 }
 
