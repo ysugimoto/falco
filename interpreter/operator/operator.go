@@ -56,6 +56,19 @@ func Equal(left, right value.Value) (value.Value, error) {
 			return &value.Boolean{Value: false}, nil
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) == 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(
@@ -208,6 +221,19 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) > 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -336,6 +362,19 @@ func LessThan(left, right value.Value) (value.Value, error) {
 
 			return &value.Boolean{
 				Value: lv.Value < rv.Value,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) < 0,
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -479,6 +518,19 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) >= 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -610,6 +662,19 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 
 			return &value.Boolean{
 				Value: lv.Value <= rv.Value,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) <= 0,
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
