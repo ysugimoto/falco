@@ -93,7 +93,7 @@ See `simulator.edge_dictionary` field in [configuration.md](./configuration.md).
 You can run the debugger by providing `-debug` option on the simulator:
 
 ```
-falco local -debug /path/to/your/default.vcl
+falco simulate -debug /path/to/your/default.vcl
 ```
 
 ## Actual Proxy Behavior
