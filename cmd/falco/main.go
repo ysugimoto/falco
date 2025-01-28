@@ -79,10 +79,10 @@ func main() {
 	}
 	if c.Help {
 		printHelp(c.Commands.At(0))
-		os.Exit(1)
+		os.Exit(0)
 	} else if c.Version {
 		writeln(white, version)
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	var fetcher snippets.Fetcher
