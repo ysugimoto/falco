@@ -8,20 +8,21 @@ import (
 
 func (p *Parser) registerExpressionParsers() {
 	p.prefixParsers = map[token.TokenType]prefixParser{
-		token.IDENT:      func() (ast.Expression, error) { return p.ParseIdent(), nil },
-		token.STRING:     func() (ast.Expression, error) { return p.ParseString() },
-		token.INT:        func() (ast.Expression, error) { return p.ParseInteger() },
-		token.FLOAT:      func() (ast.Expression, error) { return p.ParseFloat() },
-		token.RTIME:      func() (ast.Expression, error) { return p.ParseRTime() },
-		token.NOT:        func() (ast.Expression, error) { return p.ParsePrefixExpression() },
-		token.MINUS:      func() (ast.Expression, error) { return p.ParsePrefixExpression() },
-		token.PLUS:       func() (ast.Expression, error) { return p.ParsePrefixExpression() },
-		token.TRUE:       func() (ast.Expression, error) { return p.ParseBoolean(), nil },
-		token.FALSE:      func() (ast.Expression, error) { return p.ParseBoolean(), nil },
-		token.LEFT_PAREN: func() (ast.Expression, error) { return p.ParseGroupedExpression() },
-		token.IF:         func() (ast.Expression, error) { return p.ParseIfExpression() },
-		token.ERROR:      func() (ast.Expression, error) { return p.ParseIdent(), nil },
-		token.RESTART:    func() (ast.Expression, error) { return p.ParseIdent(), nil },
+		token.IDENT:            func() (ast.Expression, error) { return p.ParseIdent(), nil },
+		token.STRING:           func() (ast.Expression, error) { return p.ParseString() },
+		token.OPEN_LONG_STRING: func() (ast.Expression, error) { return p.ParseLongString() },
+		token.INT:              func() (ast.Expression, error) { return p.ParseInteger() },
+		token.FLOAT:            func() (ast.Expression, error) { return p.ParseFloat() },
+		token.RTIME:            func() (ast.Expression, error) { return p.ParseRTime() },
+		token.NOT:              func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.MINUS:            func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.PLUS:             func() (ast.Expression, error) { return p.ParsePrefixExpression() },
+		token.TRUE:             func() (ast.Expression, error) { return p.ParseBoolean(), nil },
+		token.FALSE:            func() (ast.Expression, error) { return p.ParseBoolean(), nil },
+		token.LEFT_PAREN:       func() (ast.Expression, error) { return p.ParseGroupedExpression() },
+		token.IF:               func() (ast.Expression, error) { return p.ParseIfExpression() },
+		token.ERROR:            func() (ast.Expression, error) { return p.ParseIdent(), nil },
+		token.RESTART:          func() (ast.Expression, error) { return p.ParseIdent(), nil },
 	}
 	p.infixParsers = map[token.TokenType]infixParser{
 		// If VCL has Plus sign, explicitly concatenation.
@@ -32,6 +33,9 @@ func (p *Parser) registerExpressionParsers() {
 			return p.ParseInfixStringConcatExpression(left, false)
 		},
 		token.STRING: func(left ast.Expression) (ast.Expression, error) {
+			return p.ParseInfixStringConcatExpression(left, false)
+		},
+		token.OPEN_LONG_STRING: func(left ast.Expression) (ast.Expression, error) {
 			return p.ParseInfixStringConcatExpression(left, false)
 		},
 		token.IDENT: func(left ast.Expression) (ast.Expression, error) {
@@ -88,6 +92,7 @@ func (p *Parser) ParseExpression(precedence int) (ast.Expression, error) {
 			}
 			return left, nil
 		}
+
 		SwapLeadingTrailing(p.peekToken, left.GetMeta())
 		p.NextToken()
 		left, err = infix(left)
@@ -201,8 +206,21 @@ func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, erro
 }
 
 func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit bool) (ast.Expression, error) {
+	var meta *ast.Meta
+
+	// Unsure if this is a bug, but previous versions of this code carried over
+	// all of the ast.String's Meta field. This means that trailing comments on
+	// the ast.String end up on the ast.InfixExpression as well. The tests
+	// validated this so assuming it's intentional behaviour for now and
+	// carrying it across with the new long string parsing.
+	if p.CurTokenIs(token.OPEN_LONG_STRING) && p.PeekTokenIs(token.STRING) {
+		meta = p.peekToken
+	} else {
+		meta = p.curToken
+	}
+
 	exp := &ast.InfixExpression{
-		Meta: p.curToken,
+		Meta: meta,
 		// VCL can concat string without "+" operator, consecutive token.
 		// But we explicitly define as "+" operator to make clearly
 		Operator: "+",

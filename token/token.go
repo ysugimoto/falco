@@ -37,16 +37,18 @@ const (
 	EOF     = "EOF"
 
 	// Language idents
-	IDENT   = "IDENT"
-	INT     = "INT"
-	STRING  = "STRING"
-	FLOAT   = "FLOAT"
-	RTIME   = "RTIME"
-	COMMENT = "COMMENT"
-	TRUE    = "TRUE"
-	FALSE   = "FALSE"
-	PERCENT = "PERCENT"
-	LF      = "LF" // "\n"
+	IDENT             = "IDENT"
+	INT               = "INT"
+	STRING            = "STRING"
+	OPEN_LONG_STRING  = "OPEN_LONG_STRING"
+	CLOSE_LONG_STRING = "CLOSE_LONG_STRING"
+	FLOAT             = "FLOAT"
+	RTIME             = "RTIME"
+	COMMENT           = "COMMENT"
+	TRUE              = "TRUE"
+	FALSE             = "FALSE"
+	PERCENT           = "PERCENT"
+	LF                = "LF" // "\n"
 
 	// Operators
 	// https://developer.fastly.com/reference/vcl/operators/

@@ -584,13 +584,24 @@ func TestFormatSynthticStatement(t *testing.T) {
 `,
 		},
 		{
-			name: "with multiple expressions",
+			name: "with bracket string with delimiter",
 			input: `sub vcl_error {
-	synthetic  {"foo bar baz"} "lorem" "ipsum" req.http.Hoost ;
+	synthetic  /* before_value */ {delimiter"foo bar baz"delimiter} /* after_value */;
 }
 `,
 			expect: `sub vcl_error {
-  synthetic {"foo bar baz"} "lorem" "ipsum" req.http.Hoost;
+  synthetic /* before_value */ {delimiter"foo bar baz"delimiter} /* after_value */;
+}
+`,
+		},
+		{
+			name: "with multiple expressions",
+			input: `sub vcl_error {
+	synthetic  {"foo bar baz"} "lorem" "ipsum" {delimiter"foo"delimiter} req.http.Hoost ;
+}
+`,
+			expect: `sub vcl_error {
+  synthetic {"foo bar baz"} "lorem" "ipsum" {delimiter"foo"delimiter} req.http.Hoost;
 }
 `,
 		},

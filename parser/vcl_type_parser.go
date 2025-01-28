@@ -23,6 +23,30 @@ func (p *Parser) ParseIP() *ast.IP {
 	}
 }
 
+func (p *Parser) ParseLongString() (*ast.String, error) {
+	if !p.PeekTokenIs(token.STRING) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
+	}
+
+	openToken := p.curToken
+	delimiter := p.curToken.Token.Literal
+	p.NextToken()
+
+	str, err := p.ParseString()
+	str.LongString = true
+	str.Delimiter = delimiter
+
+	if !p.PeekTokenIs(token.CLOSE_LONG_STRING) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
+	}
+
+	str.GetMeta().Leading = openToken.Leading
+	str.GetMeta().Trailing = p.peekToken.Trailing
+	p.NextToken()
+
+	return str, err
+}
+
 func (p *Parser) ParseString() (*ast.String, error) {
 	var err error
 	Parsed := p.curToken.Token.Literal

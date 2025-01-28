@@ -31,6 +31,7 @@ var precedences = map[token.TokenType]int{
 	token.NOT_REGEX_MATCH:    REGEX,
 	token.PLUS:               CONCAT,
 	token.STRING:             CONCAT,
+	token.OPEN_LONG_STRING:   CONCAT,
 	token.IDENT:              CONCAT,
 	token.IF:                 CONCAT,
 	token.LEFT_PAREN:         CALL,

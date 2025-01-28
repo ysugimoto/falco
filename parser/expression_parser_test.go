@@ -89,15 +89,17 @@ sub vcl_recv {
 								Meta:     ast.New(T, 1),
 								Operator: "+",
 								Right: &ast.String{
-									Meta:  ast.New(T, 1),
-									Value: "baz",
+									Meta:       ast.New(T, 1),
+									Value:      "baz",
+									LongString: true,
 								},
 								Left: &ast.InfixExpression{
 									Meta:     ast.New(T, 1),
 									Operator: "+",
 									Left: &ast.String{
-										Meta:  ast.New(T, 1),
-										Value: "foo bar",
+										Meta:       ast.New(T, 1),
+										Value:      "foo bar",
+										LongString: true,
 									},
 									Right: &ast.IfExpression{
 										Meta: ast.New(T, 1),

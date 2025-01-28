@@ -84,9 +84,8 @@ func (f *Formatter) formatFloat(expr *ast.Float) string {
 }
 
 func (f *Formatter) formatString(expr *ast.String) string {
-	if expr.Token.Offset == 4 {
-		// offset=4 means bracket string like {"..."}
-		return fmt.Sprintf(`{"%s"}`, expr.Value)
+	if expr.LongString {
+		return fmt.Sprintf(`{%s"%s"%s}`, expr.Delimiter, expr.Value, expr.Delimiter)
 	}
 	// Otherwise, double-quoted string
 	return fmt.Sprintf(`"%s"`, expr.Value)

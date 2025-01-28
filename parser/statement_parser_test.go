@@ -2057,19 +2057,22 @@ sub vcl_recv {
 									Meta:     ast.New(T, 1),
 									Operator: "+",
 									Right: &ast.String{
-										Meta: ast.New(T, 1),
-										Value: "	timestamp:",
+										Meta:       ast.New(T, 1),
+										Value:      "	timestamp:",
+										LongString: true,
 									},
 									Left: &ast.InfixExpression{
 										Meta:     ast.New(T, 1, comments(), comments("/* c */")),
 										Operator: "+",
 										Right: &ast.String{
-											Meta:  ast.New(T, 1, comments(), comments("/* c */")),
-											Value: " fastly-log :: ",
+											Meta:       ast.New(T, 1, comments(), comments("/* c */")),
+											Value:      " fastly-log :: ",
+											LongString: true,
 										},
 										Left: &ast.String{
-											Meta:  ast.New(T, 1, comments("/* a */"), comments("// b")),
-											Value: "syslog ",
+											Meta:       ast.New(T, 1, comments("/* a */"), comments("// b")),
+											Value:      "syslog ",
+											LongString: true,
 										},
 									},
 								},
@@ -2190,13 +2193,15 @@ sub vcl_recv {
 								Value: &ast.InfixExpression{
 									Meta: ast.New(T, 1),
 									Left: &ast.String{
-										Meta:  ast.New(T, 1),
-										Value: "Access ",
+										Meta:       ast.New(T, 1),
+										Value:      "Access ",
+										LongString: true,
 									},
 									Operator: "+",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
-										Value: "denied",
+										Meta:       ast.New(T, 1),
+										Value:      "denied",
+										LongString: true,
 									},
 								},
 							},
@@ -2234,13 +2239,15 @@ sub vcl_recv {
 								Value: &ast.InfixExpression{
 									Meta: ast.New(T, 1, comments(), comments("/* e */")),
 									Left: &ast.String{
-										Meta:  ast.New(T, 1, comments("/* b */"), comments("// c", "/* d */")),
-										Value: "Access ",
+										Meta:       ast.New(T, 1, comments("/* b */"), comments("// c", "/* d */")),
+										Value:      "Access ",
+										LongString: true,
 									},
 									Operator: "+",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1, comments(), comments("/* e */")),
-										Value: "denied",
+										Meta:       ast.New(T, 1, comments(), comments("/* e */")),
+										Value:      "denied",
+										LongString: true,
 									},
 								},
 							},
@@ -2281,13 +2288,15 @@ sub vcl_recv {
 								Value: &ast.InfixExpression{
 									Meta: ast.New(T, 1),
 									Left: &ast.String{
-										Meta:  ast.New(T, 1),
-										Value: "Access ",
+										Meta:       ast.New(T, 1),
+										Value:      "Access ",
+										LongString: true,
 									},
 									Operator: "+",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
-										Value: "denied",
+										Meta:       ast.New(T, 1),
+										Value:      "denied",
+										LongString: true,
 									},
 								},
 							},
@@ -2325,13 +2334,15 @@ sub vcl_recv {
 								Value: &ast.InfixExpression{
 									Meta: ast.New(T, 1, comments(), comments("/* e */")),
 									Left: &ast.String{
-										Meta:  ast.New(T, 1, comments("/* b */"), comments("// c", "/* d */")),
-										Value: "Access ",
+										Meta:       ast.New(T, 1, comments("/* b */"), comments("// c", "/* d */")),
+										Value:      "Access ",
+										LongString: true,
 									},
 									Operator: "+",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1, comments(), comments("/* e */")),
-										Value: "denied",
+										Meta:       ast.New(T, 1, comments(), comments("/* e */")),
+										Value:      "denied",
+										LongString: true,
 									},
 								},
 							},
@@ -2344,6 +2355,7 @@ sub vcl_recv {
 		if err != nil {
 			t.Errorf("%+v", err)
 		}
+
 		assert(t, vcl, expect)
 	})
 }

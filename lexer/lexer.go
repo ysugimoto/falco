@@ -48,6 +48,14 @@ func (l *Lexer) RegisterCustomTokens(tokenMap map[string]token.TokenType) {
 	}
 }
 
+func (l *Lexer) skipBytes(n int) {
+	discarded, err := l.r.Discard(n)
+	if err != nil {
+		l.char = 0x00
+	}
+	l.index += discarded
+}
+
 func (l *Lexer) readChar() {
 	r, _, err := l.r.ReadRune()
 	if err != nil {
@@ -71,6 +79,22 @@ func (l *Lexer) peekChar() rune {
 	return rune(b[0])
 }
 
+func (l *Lexer) peekUntil(cond func(b byte) bool) (string, error) {
+	var peekBytes int
+	for {
+		r, err := l.r.Peek(peekBytes + 1)
+		if err != nil {
+			return "", err
+		}
+
+		peekBytes++
+
+		if cond(r[peekBytes-1]) {
+			return string(r), nil
+		}
+	}
+}
+
 func (l *Lexer) NewLine() {
 	l.stack = append(l.stack, strings.TrimRight(l.buffer.String(), "\n"))
 	l.buffer = new(bytes.Buffer)
@@ -90,9 +114,11 @@ func (l *Lexer) LineCount() int {
 }
 
 func (l *Lexer) PeekToken() token.Token {
+	if len(l.peeks) > 0 {
+		return l.peeks[0]
+	}
 	t := l.NextToken()
-	// peek token stack works FIFO queue
-	l.peeks = append(l.peeks, t)
+	l.peeks = append([]token.Token{t}, l.peeks...)
 	return t
 }
 
@@ -127,17 +153,32 @@ func (l *Lexer) NextToken() token.Token {
 			t = newToken(token.MINUS, l.char, line, index)
 		}
 	case '{':
-		// VCL allows bracket enclosed string like {" foobar "},
-		// it is convenient to make string that includes whitespace, TAB, etc.
-		// So, lexer should lex it.
-		if l.peekChar() == '"' {
-			l.readChar()
-			t = newToken(token.STRING, l.char, line, index)
-			t.Literal = l.readBracketString()
-			t.Offset = 4 // {" and "}
-		} else {
+		// Fastly VCL allows bracket enclosed strings like {" foobar "}, along
+		// with custom delimiters like {JSON" {"foo": "bar"} "JSON}. It is
+		// convenient for constructing strings thats include whitespace,
+		// creating JSON responses, etc.
+		delimiter, err := l.peekUntil(func(b byte) bool {
+			return !isLongStringDelimiter(rune(b))
+		})
+
+		if err != nil || delimiter[len(delimiter)-1] != '"' {
 			t = newToken(token.LEFT_BRACE, l.char, line, index)
+			break
 		}
+
+		t = newToken(token.OPEN_LONG_STRING, l.char, line, index)
+		t.Literal = delimiter[:len(delimiter)-1]
+
+		l.skipBytes(len(delimiter))
+
+		st := newToken(token.STRING, l.char, l.line, l.index)
+		st.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
+		st.Offset = 2 + len(delimiter)*2
+		l.pushToken(st)
+
+		ct := newToken(token.CLOSE_LONG_STRING, l.char, l.line, l.index)
+		ct.Literal = delimiter[:len(delimiter)-1]
+		l.pushToken(ct)
 	case '}':
 		t = newToken(token.RIGHT_BRACE, l.char, line, index)
 	case '(':
@@ -314,7 +355,7 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 		switch {
-		case l.isLetter(l.char):
+		case isLetter(l.char):
 			literal := l.readIdentifier()
 
 			// Switch's default case keyword needs special handling due to the header
@@ -409,7 +450,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	t.File = l.file
+
 	return t
+}
+
+func (l *Lexer) pushToken(t token.Token) {
+	t.File = l.file
+	l.peeks = append(l.peeks, t)
 }
 
 func (l *Lexer) skipWhitespace() {
@@ -418,7 +465,7 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) isLetter(r rune) bool {
+func isLetter(r rune) bool {
 	// Letter allows [a-zA-Z_] character to parse ident of http header name like `req`, `http`, `X-Forwarded-For`.
 	return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_'
 }
@@ -426,6 +473,12 @@ func (l *Lexer) isLetter(r rune) bool {
 func isDigit(r rune) bool {
 	// Digit allows "." character to parse literal is INTEGER of FLOAT.
 	return (r >= '0' && r <= '9') || r == '.'
+}
+
+func isLongStringDelimiter(r rune) bool {
+	// Long string delimiters appear to be the valid isLetter and isDigit
+	// characters, except for '.'.
+	return (r != '.' && (isLetter(r) || isDigit(r)))
 }
 
 func newToken(tokenType token.TokenType, literal rune, line, index int) token.Token {
