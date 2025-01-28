@@ -211,7 +211,7 @@ func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit 
 	// Unsure if this is a bug, but previous versions of this code carried over
 	// all of the ast.String's Meta field. This means that trailing comments on
 	// the ast.String end up on the ast.InfixExpression as well. The tests
-	// validated this so assuming it's intentional behaviour for now and
+	// validated this so assuming it's intentional behavior for now and
 	// carrying it across with the new long string parsing.
 	if p.CurTokenIs(token.OPEN_LONG_STRING) && p.PeekTokenIs(token.STRING) {
 		meta = p.peekToken
