@@ -80,6 +80,24 @@ func TestSetRequestHeaderValue(t *testing.T) {
 	}
 
 }
+
+func TestSetRequestHeaderValueOverwrite(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	setRequestHeaderValue(req, "Foo:abc", &value.String{Value: "123"})
+	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "baz"})
+	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "snafu"})
+
+	ret := getRequestHeaderValue(req, "Foo:bar")
+	if ret.Value != "snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "snafu", ret.Value)
+	}
+
+	ret = getRequestHeaderValue(req, "Foo")
+	if ret.Value != "abc=123, bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123, bar=snafu", ret.Value)
+	}
+}
+
 func TestSetResponseHeaderValue(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -99,6 +117,24 @@ func TestSetResponseHeaderValue(t *testing.T) {
 	}
 
 }
+
+func TestSetResponseHeaderValueOverwrite(t *testing.T) {
+	resp := &http.Response{Header: http.Header{}}
+	setResponseHeaderValue(resp, "Foo:abc", &value.String{Value: "123"})
+	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "baz"})
+	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "snafu"})
+
+	ret := getResponseHeaderValue(resp, "Foo:bar")
+	if ret.Value != "snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "snafu", ret.Value)
+	}
+
+	ret = getResponseHeaderValue(resp, "Foo")
+	if ret.Value != "abc=123, bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123, bar=snafu", ret.Value)
+	}
+}
+
 func TestUnsetRequestHeaderValue(t *testing.T) {
 	tests := []struct {
 		name string
