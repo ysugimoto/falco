@@ -89,6 +89,18 @@ sub vcl_recv {
 	}
 }
 
+func TestLongStringDelimiterMismatch(t *testing.T) {
+	input := `// Subroutine
+sub vcl_recv {
+	declare local var.S STRING;
+	set var.S = {delimited"long"mismatch};
+}`
+	_, err := New(lexer.NewFromString(input)).ParseVCL()
+	if err == nil {
+		t.Errorf("expects error but got nil")
+	}
+}
+
 func TestStringLiteralEscapes(t *testing.T) {
 	// % escapes are only expanded in double-quote strings.
 	input := `

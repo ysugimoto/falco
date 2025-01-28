@@ -39,6 +39,10 @@ func (p *Parser) ParseLongString() (*ast.String, error) {
 	if !p.PeekTokenIs(token.CLOSE_LONG_STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
 	}
+	// Check open and close delimiter string is the same
+	if delimiter != p.peekToken.Token.Literal {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
+	}
 
 	str.GetMeta().Leading = openToken.Leading
 	str.GetMeta().Trailing = p.peekToken.Trailing
