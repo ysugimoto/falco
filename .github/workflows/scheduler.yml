@@ -29,19 +29,14 @@ jobs:
           go run . > ./lacked.txt
           LACKED=$(cat ./lacked.txt)
           if [ "$LACKED" != "" ]; then
-            echo "lacked=1" >> $GITHUB_OUTPUT
-          fi
-      - name: create issue if exists
-        if: ${{ steps.checking.outputs.lacked == '1' }}
-        run: |
-          ISSUE=$(gh issue list -l automated --json title)
-          LACKED=$(cat ./lacked.txt)
-          if [ "$ISSUE" == "[]" ]; then
-            gh issue create \
-              -b "$LACKED" \
-              -a ysugimoto \
-              -t "[Automated] Need to implement new variables/functions" \
-              -l automated
+            ISSUE=$(gh issue list -l automated --json title)
+            if [ "$ISSUE" == "[]" ]; then
+              gh issue create \
+                -F ./lacked.txt \
+                -a ysugimoto \
+                -t "[Automated] Need to implement new variables/functions" \
+                -l automated
+            fi
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

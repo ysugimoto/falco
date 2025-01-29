@@ -31,6 +31,17 @@ var fastlyVariableCategoryPageUrls = []string{
 
 const predefinedPath = "../../__generator__/predefined.yml"
 
+// Following predefined variables are documented in Fastly docs but actually could not use in VCL statement,
+// only could use in an argument of std.count function.
+// Therefore these variables do not treat as lacked variables.
+// var ignorePredefinedVariables = map[string]struct{}{
+// 	"req.headers":    {},
+// 	"bereq.headers":  {},
+// 	"beresp.headers": {},
+// 	"resp.headers":   {},
+// 	"obj.headers":    {},
+// }
+
 func factoryVariables(ctx context.Context) (*sync.Map, error) {
 	var eg errgroup.Group
 	var m sync.Map
@@ -62,6 +73,11 @@ func checkVariables(m *sync.Map) ([]Variable, error) {
 	m.Range(func(key, val interface{}) bool {
 		k := key.(string) //nolint:errcheck
 		v := val.(string) //nolint:errcheck
+
+		// Check ignore varibles
+		// if _, ok := ignorePredefinedVariables[k]; ok {
+		// 	return true
+		// }
 
 		if _, ok := defined[k]; ok {
 			return true
