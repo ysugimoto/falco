@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/types"
 )
 

@@ -12,13 +12,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/debugger"
 	"github.com/ysugimoto/falco/formatter"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
+	"github.com/ysugimoto/falco/linter/context"
+	lcontext "github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
@@ -155,7 +156,7 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
-	options := []context.Option{context.WithResolver(rslv)}
+	options := []lcontext.Option{lcontext.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
 		options = append(options, context.WithSnippets(r.snippets))
@@ -166,8 +167,8 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 		return nil, err
 	}
 
-	// Note: this context is not Go context, our parsing context :)
-	ctx := context.New(options...)
+	// Note: this context is not Go context, our linter context :)
+	ctx := lcontext.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
 	if err != nil && !r.config.Json {
 		return nil, err
@@ -183,7 +184,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*VCL, error) {
+func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*VCL, error) {
 	vcl, err := r.parseVCL(main.Name, main.Data)
 	if err != nil {
 		return nil, err
