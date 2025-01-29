@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 )
 

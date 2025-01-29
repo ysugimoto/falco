@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/types"
 	regexp "go.elara.ws/pcre"
 )

@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/formatter"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/token"
 )
