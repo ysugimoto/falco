@@ -4,6 +4,7 @@ on:
   schedule:
     # 0:00 UTC (9:00 JST)
     - cron: "0 0 * * *"
+  workflow_dispatch:
 
 jobs:
   check-documentation-update:
@@ -24,15 +25,20 @@ jobs:
       - name: run checker
         id: checking
         working-directory: cmd/documentation-checker
-        run:
-          echo "diff=$(go run .)" >> $GITHUB_OUTPUT
+        run: |
+          go run . > ./lacked.txt
+          LACKED=$(cat ./lacked.txt)
+          if [ "$LACKED" != "" ]; then
+            echo "lacked=1" >> $GITHUB_OUTPUT
+          fi
       - name: create issue if exists
-        if: ${{ steps.checking.outputs.diff != '' }}
+        if: ${{ steps.checking.outputs.lacked == '1' }}
         run: |
           ISSUE=$(gh issue list -l automated --json title)
+          LACKED=$(cat ./lacked.txt)
           if [ "$ISSUE" == "[]" ]; then
             gh issue create \
-              -b "${{ steps.checking.outputs.diff }}" \
+              -b "$LACKED" \
               -a ysugimoto \
               -t "[Automated] Need to implement new variables/functions" \
               -l automated
