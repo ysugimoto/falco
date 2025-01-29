@@ -1,3 +1,23 @@
+## v1.12.0
+
+- Add more logic and error definition for long string parsing [#394](https://github.com/ysugimoto/falco/pull/394) (@ysugimoto)
+- fix: formatting is broken if using elseif or elsif [#393](https://github.com/ysugimoto/falco/pull/393) (@ronnnnn)
+- fix: support --version option [#392](https://github.com/ysugimoto/falco/pull/392) (@ronnnnn)
+- Add TIME type support for conditional operators to interpreter [#390](https://github.com/ysugimoto/falco/pull/390) (@Co9xs)
+- Update falco simulate command in README [#389](https://github.com/ysugimoto/falco/pull/389) (@TakeshiOnishi)
+- Write formatter configuration in docs [#388](https://github.com/ysugimoto/falco/pull/388) (@ysugimoto)
+- Fix header subfield handling [#385](https://github.com/ysugimoto/falco/pull/385) (@gabrielg)
+- Allows subroutine calls in return statements [#384](https://github.com/ysugimoto/falco/pull/384) (@gabrielg)
+- Allow access to body set bu synthetic in tests [#382](https://github.com/ysugimoto/falco/pull/382) (@gabrielg)
+- Change fastly.error from FLOAT to STRING [#380](https://github.com/ysugimoto/falco/pull/380) (@gabrielg)
+- Add support for long strings with heredoc delimiters [#379](https://github.com/ysugimoto/falco/pull/379) (@gabrielg)
+- Implement scheduler for documentation-check [#377](https://github.com/ysugimoto/falco/pull/377) (@ysugimoto)
+- Fix grouped testing syntax [#376](https://github.com/ysugimoto/falco/pull/376) (@bungoume)
+- Fix fastly services recursively in terraform planned JSON [#375](https://github.com/ysugimoto/falco/pull/375) (@ysugimoto)
+- Lint custom statement [#374](https://github.com/ysugimoto/falco/pull/374) (@ysugimoto)
+- Lexer performance improvement [#372](https://github.com/ysugimoto/falco/pull/372) (@ysugimoto)
+- Benchmark Performance [#371](https://github.com/ysugimoto/falco/pull/371) (@ysugimoto)
+
 ## v1.11.2
 
 - fix string concatenation problem for functioncall and if expression [#369](https://github.com/ysugimoto/falco/pull/369) (@ysugimoto)
