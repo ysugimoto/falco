@@ -31,8 +31,8 @@ var fastlyVariableCategoryPageUrls = []string{
 
 const predefinedPath = "../../__generator__/predefined.yml"
 
-// Following predefine variables is documented in Fastly doc,
-// but actually could not use in VCL statement, only could use in an argument of std.count function.
+// Following predefined variables are documented in Fastly docs but actually could not use in VCL statement,
+// only could use in an argument of std.count function.
 // Therefore these variables do not treat as lacked variables.
 var ignorePredefinedVariables = map[string]struct{}{
 	"req.headers":    {},
