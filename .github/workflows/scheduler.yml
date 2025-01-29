@@ -43,4 +43,6 @@ jobs:
               -t "[Automated] Need to implement new variables/functions" \
               -l automated
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
