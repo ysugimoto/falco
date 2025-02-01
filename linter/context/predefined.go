@@ -3,7 +3,7 @@
 package context
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/types"
 )
 

@@ -1,10 +1,10 @@
 package linter
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/lexer"

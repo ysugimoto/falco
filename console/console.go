@@ -8,6 +8,7 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/mattn/go-colorable"
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
@@ -168,7 +169,7 @@ func evaluateExpression(ip *interpreter.Interpreter, line string) (string, error
 	val, err := ip.ProcessExpression(exp, false)
 	if err != nil {
 		if re, ok := err.(*exception.Exception); ok {
-			return "", fmt.Errorf(re.Message) // DO NOT diplay line and position info
+			return "", errors.New(re.Message) // DO NOT diplay line and position info
 		}
 		return "", err
 	}

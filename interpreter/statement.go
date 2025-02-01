@@ -263,7 +263,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		return errors.WithStack(err)
 	}
 	if err := i.vars.Add(i.ctx.Scope, stmt.Ident.Value, right); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -277,7 +277,7 @@ func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	}
 
 	if err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -292,7 +292,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	}
 
 	if err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -343,7 +343,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 		}
 		// set obj.status and obj.response variable internally
 		if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
-			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	// Possibility error response is not defined
@@ -354,7 +354,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 		}
 
 		if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
-			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	return nil
@@ -402,7 +402,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
@@ -415,7 +415,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	}
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
@@ -433,7 +433,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	// Builtin function will not change any state
 	fn, err := function.Exists(i.ctx.Scope, stmt.Function.Value)
 	if err != nil {
-		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return NONE, exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	// Check the function can call in statement (means a function that returns VOID type can call)
 	if !fn.CanStatementCall {
@@ -480,7 +480,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			t.Token = stmt.GetMeta().Token
 			return NONE, errors.WithStack(t)
 		default:
-			return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	return NONE, nil

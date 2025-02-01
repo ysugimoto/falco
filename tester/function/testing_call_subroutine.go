@@ -35,7 +35,7 @@ func Testing_call_subroutine(
 ) (value.Value, error) {
 
 	if err := Testing_call_subroutine_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	var state interpreter.State
@@ -53,7 +53,7 @@ func Testing_call_subroutine(
 		return value.Null, errors.NewTestingError("subroutine %s is not defined in VCL", name)
 	}
 	if err != nil {
-		return value.Null, errors.NewTestingError(err.Error())
+		return value.Null, errors.NewTestingError("%s", err.Error())
 	}
 	return &value.String{Value: string(state)}, nil
 }

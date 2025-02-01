@@ -21,7 +21,7 @@ jobs:
       - name: setup go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.2
+          go-version: 1.23.5
       - name: run checker
         id: checking
         working-directory: cmd/documentation-checker

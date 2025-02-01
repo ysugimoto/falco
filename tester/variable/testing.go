@@ -1,10 +1,10 @@
 package variable
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	iv "github.com/ysugimoto/falco/interpreter/variable"
@@ -28,16 +28,20 @@ func (v *TestingVariables) Get(ctx *context.Context, scope context.Scope, name s
 		if b, err := io.ReadAll(ctx.Object.Body); err == nil {
 			// Just assuming that seeking it back to the start is fine. Nothing
 			// else _should_ have left this in a weird state.
-			if _, err := ctx.Object.Body.(io.Seeker).Seek(0, io.SeekStart); err != nil {
-				return nil, err
+			if seeker, ok := ctx.Object.Body.(io.Seeker); ok {
+				if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+					return nil, err
+				}
+				return &value.String{Value: string(b)}, nil
+			} else {
+				return nil, errors.New("cannot assert ctx.Object.Body to io.Seeker")
 			}
-			return &value.String{Value: string(b)}, nil
 		} else {
 			return nil, err
 		}
 	}
 
-	return nil, fmt.Errorf("Not Found")
+	return nil, errors.New("Not Found")
 }
 
 func (v *TestingVariables) Set(
@@ -48,5 +52,5 @@ func (v *TestingVariables) Set(
 	val value.Value,
 ) error {
 
-	return fmt.Errorf("Not Found")
+	return errors.New("Not Found")
 }

@@ -45,7 +45,7 @@ func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
 }
 
 func (d *Debugger) Message(msg string) {
-	d.message.Append(messageview.Runtime, msg)
+	d.message.Append(messageview.Runtime, "%s", msg)
 }
 
 func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {

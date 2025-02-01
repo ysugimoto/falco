@@ -33,7 +33,7 @@ func Assert_match_Validate(args []value.Value) error {
 
 func Assert_match(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_match_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message
@@ -55,7 +55,7 @@ func Assert_match(ctx *context.Context, args ...value.Value) (value.Value, error
 	ret := &value.Boolean{Value: re.MatchString(actual.Value)}
 	if !ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(actual, message)
+			return ret, errors.NewAssertionError(actual, "%s", message)
 		}
 		return ret, errors.NewAssertionError(
 			actual,

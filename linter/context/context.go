@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
@@ -71,7 +72,7 @@ func CanAccessVariableInScope(objScope int, objReference, name string, currentSc
 		if objReference != "" {
 			message += "\nSee reference documentation: " + objReference
 		}
-		return fmt.Errorf(message)
+		return errors.New(message)
 	}
 	return nil
 }
@@ -501,7 +502,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 		if obj.Value.Reference != "" {
 			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
-		return types.NullType, fmt.Errorf(message)
+		return types.NullType, errors.New(message)
 	}
 
 	// Mark as accessed
@@ -564,7 +565,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 		if obj.Value.Reference != "" {
 			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
-		return types.NullType, fmt.Errorf(message)
+		return types.NullType, errors.New(message)
 	}
 
 	// Mark as accessed
@@ -662,7 +663,7 @@ func (c *Context) Unset(name string) error {
 		if obj.Value.Reference != "" {
 			message += "\nSee reference documentation: " + obj.Value.Reference
 		}
-		return fmt.Errorf(message)
+		return errors.New(message)
 	}
 
 	// Mark as accessed

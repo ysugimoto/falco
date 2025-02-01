@@ -24,7 +24,7 @@ func Testing_inject_variable(
 ) (value.Value, error) {
 
 	if err := Testing_inject_variable_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	name := value.Unwrap[*value.String](args[0])

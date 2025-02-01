@@ -32,7 +32,7 @@ func Testing_mock(
 ) (value.Value, error) {
 
 	if err := Testing_mock_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	from := value.Unwrap[*value.String](args[0]).Value
