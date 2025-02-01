@@ -229,6 +229,7 @@ We describe them following table and examples:
 | assert.not_subroutine_called | FUNCTION   | Assert subroutine has not called in testing subroutine                                       |
 | assert.restart               | FUNCTION   | Assert restart statement has called                                                          |
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
+| assert.not_state             | FUNCTION   | Assert after state is not expected one                                                       |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
 | assert.not_error             | FUNCTION   | Assert runtime state will not move to error status                                           |
 
@@ -868,6 +869,22 @@ sub test_vcl {
 
     // Assert state moves to lookup
     assert.state(lookup);
+}
+```
+
+----
+
+### assert.not_state(ID state [, STRING message])
+
+Assert current state is not expected one.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will move state to lookup to lookup cache
+    testing.call_subroutine("vcl_recv");
+
+    // Assert state does not move to lookup
+    assert.not_state(lookup);
 }
 ```
 
