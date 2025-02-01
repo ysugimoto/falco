@@ -330,7 +330,7 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 
 	if opErr != nil {
 		return value.Null, errors.WithStack(
-			exception.Runtime(&exp.GetMeta().Token, opErr.Error()),
+			exception.Runtime(&exp.GetMeta().Token, "%s", opErr.Error()),
 		)
 	}
 

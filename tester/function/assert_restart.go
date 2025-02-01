@@ -30,7 +30,7 @@ func Assert_restart(
 ) (value.Value, error) {
 
 	if err := Assert_restart_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	var message string
@@ -41,7 +41,7 @@ func Assert_restart(
 	}
 
 	if i.TestingState != interpreter.RESTART {
-		return &value.Boolean{}, errors.NewAssertionError(&value.String{Value: ""}, message)
+		return &value.Boolean{}, errors.NewAssertionError(&value.String{Value: ""}, "%s", message)
 	}
 	return &value.Boolean{Value: true}, nil
 }

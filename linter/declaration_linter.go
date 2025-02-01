@@ -110,9 +110,16 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 
 		// share_key must consist of alphanumeric or ASCII characters
 		if prop.Key.Value == "share_key" {
-			v := prop.Value.(*ast.String).Value
-			if !isValidBackendShareKey(v) {
-				l.Error(InvalidValue(prop.Value.GetMeta(), "share_key", v).Match(BACKEND_SYNTAX))
+			if v, ok := prop.Value.(*ast.String); ok {
+				if !isValidBackendShareKey(v.Value) {
+					l.Error(InvalidValue(prop.Value.GetMeta(), "share_key", v.Value).Match(BACKEND_SYNTAX))
+				}
+			} else {
+				l.Error(&LintError{
+					Severity: ERROR,
+					Token:    prop.Value.GetMeta().Token,
+					Message:  "share_key field value must be STRING",
+				})
 			}
 		}
 	}

@@ -177,7 +177,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) ([]*FastlyService
 	}
 
 	// Check child_modules existence and return found services if not found
-	if mod.ChildModules == nil || len(mod.ChildModules) == 0 {
+	if len(mod.ChildModules) == 0 {
 		return services, nil
 	}
 	// If module has child_modules, find Fastly service recursively

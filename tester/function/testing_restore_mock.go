@@ -30,7 +30,7 @@ func Testing_restore_mock(
 ) (value.Value, error) {
 
 	if err := Testing_restore_mock_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	for i := range args {

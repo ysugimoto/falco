@@ -13,7 +13,7 @@ func assert[T assertable](v value.Value, actual, expect T, message string) (*val
 	ok := &value.Boolean{Value: actual == expect}
 	if !ok.Value {
 		if message != "" {
-			return ok, errors.NewAssertionError(v, message)
+			return ok, errors.NewAssertionError(v, "%s", message)
 		}
 		return ok, errors.NewAssertionError(v,
 			"Assertion error: expect=%v, actual=%v", expect, actual)
@@ -25,7 +25,7 @@ func assert_not[T assertable](v value.Value, actual, expect T, message string) (
 	ok := &value.Boolean{Value: actual != expect}
 	if !ok.Value {
 		if message != "" {
-			return ok, errors.NewAssertionError(v, message)
+			return ok, errors.NewAssertionError(v, "%s", message)
 		}
 		return ok, errors.NewAssertionError(v,
 			"Assertion error: expect=%v, actual=%v", expect, actual)

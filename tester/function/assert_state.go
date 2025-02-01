@@ -34,7 +34,7 @@ func Assert_state(
 ) (value.Value, error) {
 
 	if err := Assert_state_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	state := value.Unwrap[*value.Ident](args[0])

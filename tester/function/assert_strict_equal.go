@@ -22,7 +22,7 @@ func Assert_strict_equal_Validate(args []value.Value) error {
 
 func Assert_strict_equal(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_strict_equal_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	return assert_strict_equal(args...)
@@ -45,7 +45,7 @@ func assert_strict_equal(args ...value.Value) (value.Value, error) {
 				actual.Type(),
 			)
 		}
-		return &value.Boolean{}, errors.NewAssertionError(actual, message)
+		return &value.Boolean{}, errors.NewAssertionError(actual, "%s", message)
 	}
 
 	return assert(actual, actual.String(), expect.String(), message)

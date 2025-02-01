@@ -22,7 +22,7 @@ func Testing_restore_all_mocks(
 ) (value.Value, error) {
 
 	if err := Testing_restore_all_mocks_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// clear all mocked subroutines

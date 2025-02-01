@@ -21,7 +21,7 @@ func Testing_override_host(
 ) (value.Value, error) {
 
 	if err := Testing_override_host_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	switch args[0].Type() {
