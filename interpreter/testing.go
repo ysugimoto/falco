@@ -8,13 +8,14 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/config"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 const testBackendResponseBody = "falco_test_response"
 
-func (i *Interpreter) TestProcessInit(r *http.Request) error {
+func (i *Interpreter) TestProcessInit(r *http.Request, c *config.TestConfig) error {
 	var err error
 	if err = i.ProcessInit(r); err != nil {
 		return errors.WithStack(err)
@@ -56,6 +57,11 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	}
 	i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
+
+	if c.Coverage {
+		i.instrument()
+	}
+
 	return nil
 }
 
