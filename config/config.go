@@ -66,7 +66,7 @@ type TestConfig struct {
 	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
 	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
 	IncludePaths []string // Copy from root field
-	OverrideHost string   `yaml:"host"`
+	OverrideHost string   `yaml:"host" cli:"host"`
 	Watch        bool     `cli:"watch"` // Enable only in CLI option
 
 	// Override Request configuration
