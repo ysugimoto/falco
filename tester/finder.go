@@ -21,6 +21,9 @@ func (f *finder) find(path string, entry fs.DirEntry, err error) error {
 		}
 		return err
 	}
+	if entry.IsDir() {
+		return nil
+	}
 	if !f.filter.Match(path) {
 		return nil
 	}

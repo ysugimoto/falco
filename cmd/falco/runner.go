@@ -466,6 +466,9 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	if tc.OverrideHost != "" {
 		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
 	}
+	if tc.OverrideEdgeDictionaries != nil {
+		options = append(options, icontext.WithInjectEdgeDictionaries(tc.OverrideEdgeDictionaries))
+	}
 
 	// Factory override variables.
 	// The order is imporotant, should do yaml -> cli order because cli could override yaml configuration

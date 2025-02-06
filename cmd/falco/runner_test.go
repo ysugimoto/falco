@@ -455,3 +455,75 @@ func TestFastlyGeneratedVCLLinting(t *testing.T) {
 		t.Errorf("Errors expects 0, got %d", ret.Errors)
 	}
 }
+
+func TestInjectDictionaryTesting(t *testing.T) {
+	tests := []struct {
+		name    string
+		main    string
+		inject  bool
+		passes  int
+		isError bool
+	}{
+		{
+			name:   "inject dictionary",
+			main:   "../../examples/testing/inject_dictionary/inject_dictionary.vcl",
+			inject: true,
+			passes: 1,
+		},
+		{
+			name:    "inject dictionary",
+			main:    "../../examples/testing/inject_dictionary/inject_dictionary.vcl",
+			passes:  0,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			main, err := filepath.Abs(tt.main)
+			if err != nil {
+				t.Errorf("Unexpected making absolute path error: %s", err)
+				return
+			}
+			c := &config.Config{
+				Linter: &config.LinterConfig{
+					VerboseWarning: true,
+				},
+				Testing: &config.TestConfig{
+					Filter: "*.test.vcl",
+				},
+				Commands: config.Commands{"test", main},
+			}
+			if tt.inject {
+				c.Testing.OverrideEdgeDictionaries = map[string]config.EdgeDictionary{
+					"injected_dictionary": map[string]string{
+						"is_maintenance": "1",
+					},
+				}
+			}
+			resolvers, err := resolver.NewFileResolvers(main, c.IncludePaths)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			ret, err := NewRunner(c, nil).Test(resolvers[0])
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+			}
+			for _, v := range ret.Results {
+				for _, c := range v.Cases {
+					if c.Error != nil {
+						if !tt.isError {
+							t.Errorf(`Test case "%s" raises error: %s`, c.Name, c.Error)
+						}
+						return
+					}
+				}
+			}
+			if ret.Statistics.Passes != tt.passes {
+				t.Errorf("Testing passes should be %d, got: %d", tt.passes, ret.Statistics.Passes)
+				return
+			}
+		})
+	}
+}
