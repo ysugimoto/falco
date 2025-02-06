@@ -72,6 +72,9 @@ type TestConfig struct {
 	// Override Request configuration
 	OverrideRequest *RequestConfig
 
+	// Inject Edge Dictionary items
+	OverrideEdgeDictionaries map[string]EdgeDictionary `yaml:"edge_dictionary"`
+
 	// Override tentative variable values
 	CLIOverrideVariables  []string       `cli:"o,override"` // from CLI
 	YamlOverrideVariables map[string]any `yaml:"overrides"` // from .falco.yaml
