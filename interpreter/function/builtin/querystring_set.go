@@ -39,13 +39,6 @@ func Querystring_set(ctx *context.Context, args ...value.Value) (value.Value, er
 	name := value.Unwrap[*value.String](args[1])
 	val := value.Unwrap[*value.String](args[2])
 
-	query, err := shared.ParseQuery(u.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_set_Name, "Failed to parse urquery: %s, error: %s", u.Value, err.Error(),
-		)
-	}
-
-	query.Set(name.Value, val.Value)
-	return &value.String{Value: query.String()}, nil
+	result := shared.QueryStringSet(u.Value, name.Value, val.Value)
+	return &value.String{Value: result}, nil
 }
