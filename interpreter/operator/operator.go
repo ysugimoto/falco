@@ -3,12 +3,12 @@ package operator
 import (
 	"fmt"
 	"net"
-	"regexp"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
+	regexp "go.elara.ws/pcre"
 )
 
 func Equal(left, right value.Value) (value.Value, error) {
@@ -711,7 +711,7 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); matches != nil {
+			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
 				}
