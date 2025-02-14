@@ -1,4 +1,4 @@
-name: Release with archifact
+name: Release with artifact
 
 on:
   push:
