@@ -500,17 +500,17 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "String control value",
 			vcl: `
-			sub vcl_recv {
-				set req.http.control = "2";
-				switch (req.http.control) {
-				case "1":
-					set req.http.case = "1";
-					break;
-				case "2":
-					set req.http.case = "2";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					set req.http.control = "2";
+					switch (req.http.control) {
+					case "1":
+						set req.http.case = "1";
+						break;
+					case "2":
+						set req.http.case = "2";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "2"},
 			},
@@ -519,18 +519,18 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "Integer control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control INTEGER;
-				set var.control = 2;
-				switch (var.control) {
-				case "1":
-					set req.http.case = "1";
-					break;
-				case "2":
-					set req.http.case = "2";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control INTEGER;
+					set var.control = 2;
+					switch (var.control) {
+					case "1":
+						set req.http.case = "1";
+						break;
+					case "2":
+						set req.http.case = "2";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "2"},
 			},
@@ -539,18 +539,18 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "Bool control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control BOOL;
-				set var.control = true;
-				switch (var.control) {
-				case "0":
-					set req.http.case = "0";
-					break;
-				case "1":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control BOOL;
+					set var.control = true;
+					switch (var.control) {
+					case "0":
+						set req.http.case = "0";
+						break;
+					case "1":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -559,16 +559,16 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "Backend control value",
 			vcl: `
-			sub vcl_recv {
-				switch (req.backend) {
-				case "test":
-					set req.http.case = "0";
-					break;
-				case "example":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch (req.backend) {
+					case "test":
+						set req.http.case = "0";
+						break;
+					case "example":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -577,18 +577,18 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "Float control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control FLOAT;
-				set var.control = 1.03;
-				switch (var.control) {
-				case "0.000":
-					set req.http.case = "0";
-					break;
-				case "1.030":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control FLOAT;
+					set var.control = 1.03;
+					switch (var.control) {
+					case "0.000":
+						set req.http.case = "0";
+						break;
+					case "1.030":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -597,18 +597,18 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "IP control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control IP;
-				set var.control = "127.0.0.1";
-				switch (var.control) {
-				case "10.10.0.5":
-					set req.http.case = "0";
-					break;
-				case "127.0.0.1":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control IP;
+					set var.control = "127.0.0.1";
+					switch (var.control) {
+					case "10.10.0.5":
+						set req.http.case = "0";
+						break;
+					case "127.0.0.1":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -617,19 +617,19 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "RTIME control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control RTIME;
-				set var.control = 5s;
-				set req.http.case = "";
-				switch (var.control) {
-				case "2.000":
-					set req.http.case = "0";
-					break;
-				case "5.000":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control RTIME;
+					set var.control = 5s;
+					set req.http.case = "";
+					switch (var.control) {
+					case "2.000":
+						set req.http.case = "0";
+						break;
+					case "5.000":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -638,18 +638,18 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "TIME control value",
 			vcl: `
-			sub vcl_recv {
-				declare local var.control TIME;
-				set var.control = std.time("Mon, 02 Jan 2006 22:04:05 GMT", now);
-				switch (var.control) {
-				case "Mon, 02 Jan 2006 22:04:06 GMT":
-					set req.http.case = "0";
-					break;
-				case "Mon, 02 Jan 2006 22:04:05 GMT":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					declare local var.control TIME;
+					set var.control = std.time("Mon, 02 Jan 2006 22:04:05 GMT", now);
+					switch (var.control) {
+					case "Mon, 02 Jan 2006 22:04:06 GMT":
+						set req.http.case = "0";
+						break;
+					case "Mon, 02 Jan 2006 22:04:05 GMT":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -658,16 +658,16 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "Builtin function call control value",
 			vcl: `
-			sub vcl_recv {
-				switch (randomint(1,1)) {
-				case "0":
-					set req.http.case = "0";
-					break;
-				case "1":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch (randomint(1,1)) {
+					case "0":
+						set req.http.case = "0";
+						break;
+					case "1":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -676,17 +676,17 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "User defined function call control value",
 			vcl: `
-			sub fn STRING { return "1"; }
-			sub vcl_recv {
-				switch (fn()) {
-				case "0":
-					set req.http.case = "0";
-					break;
-				case "1":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub fn STRING { return "1"; }
+				sub vcl_recv {
+					switch (fn()) {
+					case "0":
+						set req.http.case = "0";
+						break;
+					case "1":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -695,16 +695,16 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "literal control value",
 			vcl: `
-			sub vcl_recv {
-				switch ("1") {
-				case "0":
-					set req.http.case = "0";
-					break;
-				case "1":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch ("1") {
+					case "0":
+						set req.http.case = "0";
+						break;
+					case "1":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "1"},
 			},
@@ -731,16 +731,16 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "case ordering",
 			vcl: `
-			sub vcl_recv {
-				switch ("foo") {
-				case "foo":
-					set req.http.case = "0";
-					break;
-				case ~"oo$":
-					set req.http.case = "1";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch ("foo") {
+					case "foo":
+						set req.http.case = "0";
+						break;
+					case ~"oo$":
+						set req.http.case = "1";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "0"},
 			},
@@ -749,19 +749,19 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "default case",
 			vcl: `
-			sub vcl_recv {
-				switch ("foo") {
-				case "bar":
-					set req.http.case = "0";
-					break;
-				case ~"az$":
-					set req.http.case = "1";
-					break;
-				default:
-					set req.http.case = "2";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch ("foo") {
+					case "bar":
+						set req.http.case = "0";
+						break;
+					case ~"az$":
+						set req.http.case = "1";
+						break;
+					default:
+						set req.http.case = "2";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case": &value.String{Value: "2"},
 			},
@@ -770,20 +770,20 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "fallthrough case",
 			vcl: `
-			sub vcl_recv {
-				switch ("baz") {
-				case "bar":
-					set req.http.case = "0";
-					break;
-				case ~"az$":
-					set req.http.case = "1";
-					set req.http.fallthrough = "1";
-					fallthrough;
-				case "foo":
-					set req.http.case = "2";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch ("baz") {
+					case "bar":
+						set req.http.case = "0";
+						break;
+					case ~"az$":
+						set req.http.case = "1";
+						set req.http.fallthrough = "1";
+						fallthrough;
+					case "foo":
+						set req.http.case = "2";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case":        &value.String{Value: "2"},
 				"req.http.fallthrough": &value.String{Value: "1"},
@@ -793,21 +793,21 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "return in fallthrough case",
 			vcl: `
-			sub vcl_recv {
-				switch ("baz") {
-				case "bar":
-					set req.http.case = "0";
-					break;
-				case ~"az$":
-					set req.http.case = "1";
-					set req.http.fallthrough = "1";
-					return (pass);
-					fallthrough;
-				case "foo":
-					set req.http.case = "2";
-					break;
-				}
-			}`,
+				sub vcl_recv {
+					switch ("baz") {
+					case "bar":
+						set req.http.case = "0";
+						break;
+					case ~"az$":
+						set req.http.case = "1";
+						set req.http.fallthrough = "1";
+						return (pass);
+						fallthrough;
+					case "foo":
+						set req.http.case = "2";
+						break;
+					}
+				}`,
 			assertions: map[string]value.Value{
 				"req.http.case":        &value.String{Value: "1"},
 				"req.http.fallthrough": &value.String{Value: "1"},
@@ -817,25 +817,25 @@ func TestSwitchStatement(t *testing.T) {
 		{
 			name: "ID control value",
 			vcl: `
-			table foo {}
-			sub vcl_recv {
-				switch (foo) {
-				case "1":
-					break;
-				}
-			}`,
+				table foo {}
+				sub vcl_recv {
+					switch (foo) {
+					case "1":
+						break;
+					}
+				}`,
 			isError: true,
 		},
 		{
 			name: "user defined function with non-string return type control value",
 			vcl: `
-			sub string_fn INTEGER { return 1; }
-			sub vcl_recv {
-				switch (string_fn()) {
-				case "1":
-					break;
-				}
-			}`,
+				sub string_fn INTEGER { return 1; }
+				sub vcl_recv {
+					switch (string_fn()) {
+					case "1":
+						break;
+					}
+				}`,
 			isError: true,
 		},
 	}

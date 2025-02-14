@@ -8,6 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	pcre "go.elara.ws/pcre"
 )
 
 const (
@@ -22,7 +23,7 @@ var (
 	regsubExpandRE = regexp.MustCompile(`\\([0-9]+)`)
 )
 
-func replaceOneString(re *regexp.Regexp, input, replacement string) string {
+func replaceOneString(re *pcre.Regexp, input, replacement string) string {
 	replace := true
 	return re.ReplaceAllStringFunc(input, func(m string) string {
 		if !replace {
@@ -62,7 +63,7 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	pattern := value.Unwrap[*value.String](args[1])
 	replacement := value.Unwrap[*value.String](args[2])
 
-	re, err := regexp.Compile(pattern.Value)
+	re, err := pcre.Compile(pattern.Value)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 		return &value.String{Value: input.Value}, errors.New(
