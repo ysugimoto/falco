@@ -711,7 +711,6 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			// v := re.FindStringSubmatch(lv.Value)
 			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
