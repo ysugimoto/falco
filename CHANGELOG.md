@@ -1,3 +1,12 @@
+## v1.13.0
+
+- list all configuration fields [#406](https://github.com/ysugimoto/falco/pull/406) (@ysugimoto)
+- implement edge dictionary injectable for testing process [#405](https://github.com/ysugimoto/falco/pull/405) (@ysugimoto)
+- implement assert.not_state assertion function [#403](https://github.com/ysugimoto/falco/pull/403) (@ysugimoto)
+- update golang 1.23.5 and golangci-lint v1.63, fix new reports [#402](https://github.com/ysugimoto/falco/pull/402) (@ysugimoto)
+- refactor linter context package [#401](https://github.com/ysugimoto/falco/pull/401) (@ysugimoto)
+- Fix scheduler action [#396](https://github.com/ysugimoto/falco/pull/396) (@ysugimoto)
+
 ## v1.12.0
 
 - Add more logic and error definition for long string parsing [#394](https://github.com/ysugimoto/falco/pull/394) (@ysugimoto)
