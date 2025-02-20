@@ -42,7 +42,7 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			fileName: "../../examples/linter/default03.vcl",
 			errors:   0,
 			warnings: 0,
-			infos:    1,
+			infos:    2,
 		},
 		{
 			name:     "example 4",
@@ -370,6 +370,12 @@ func TestTester(t *testing.T) {
 			main:   "../../examples/testing/base64/main.vcl",
 			filter: "*base64.test.vcl",
 			passes: 12,
+		},
+		{
+			name:   "regex grouped variables test",
+			main:   "../../examples/testing/regex/regex.vcl",
+			filter: "*regex.test.vcl",
+			passes: 4,
 		},
 	}
 

@@ -150,10 +150,10 @@ func New(opts ...Option) *Context {
 		Ratecounters:     make(map[string]*types.Ratecounter),
 		Gotos:            make(map[string]*types.Goto),
 		GotoDestinations: make(map[string]struct{}),
+		RegexVariables:   newRegexMatchedValues(),
 		Identifiers:      builtinIdentifiers(),
 		functions:        builtinFunctions(),
 		Variables:        predefinedVariables(),
-		RegexVariables:   newRegexMatchedValues(),
 	}
 
 	for i := range opts {
@@ -207,26 +207,40 @@ func (c *Context) Restore() *Context {
 func (c *Context) Scope(mode int) *Context {
 	c.prevMode = c.curMode
 	c.curMode = mode
-	// reset regex matched value
-	c.RegexVariables = newRegexMatchedValues()
+	c.ResetRegexVariables()
 	return c
 }
 
 func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType types.Type) *Context {
 	c.prevMode = c.curMode
 	c.curMode = mode
-	// reset regex matched value
-	c.RegexVariables = newRegexMatchedValues()
 	c.ReturnType = &returnType
 	c.curName = name
+	c.ResetRegexVariables()
 	return c
 }
 
+func (c *Context) PushRegexVariables(matchN int) {
+	for i := 0; i < matchN; i++ {
+		c.RegexVariables[fmt.Sprintf("re.group.%d", i)]++
+	}
+	// Reset unused grouped variable numbers
+	for i := 10; i >= matchN; i-- {
+		c.RegexVariables[fmt.Sprintf("re.group.%d", i)] = 0
+	}
+}
+
+// Reset regex matched value
+func (c *Context) ResetRegexVariables() {
+	c.RegexVariables = newRegexMatchedValues()
+}
+
+// Get regex group variable.
 // Regex variables, "re.group.N" is a special variable in VCL.
 // These variables could use if(else) block statement when condition has regex operator like "~" or "!~".
 // Note that group matched variable has potential of making bugs due to its spec:
 // 1. re.group.N variable scope is subroutine-global, does not have block scope
-// 2. matched value may override on second regex matching
+// 2. matched value will be reset on next regex matching in the same subroutine scope
 //
 // For example:
 //
@@ -237,41 +251,35 @@ func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType typ
 //	if (req.http.Host) {
 //		if (var.S) {
 //			if (var.S !~ "(foo)\s(bar)\s(baz)") { // make matched values first (1)
-//				set req.http.First = "1";
+//				set req.http.First = re.group.2; // bar
 //			}
 //			set var.S = "hoge huga";
-//			if (var.S ~ "(hoge)\s(huga)") { // override matched values (2)
-//				set req.http.First = re.group.1;
+//			if (var.S ~ "(hoge)\s(huga)") { // reset and override matched values (2)
+//				set req.http.First = re.group.1; // hoge
 //			}
 //		}
-//		set req.http.Third = re.group.2; // difficult to know which (1) or (2) matched result is used
+//		// Difficult to know which (1) or (2) matched result is used
+//		set req.http.Third = re.group.2; // huga
 //	}
 //
 //	if (req.http.Host) {
-//		set req.http.Fourth = re.group.3; // difficult to know which (1) or (2) matched result is used or empty
+//		// Difficult to know which (1) or (2) matched result is used or empty
+//		set req.http.Fourth = re.group.3; // null
 //	}
 //
 // ```
-//
-// Therefore we will raise warning if matched value is overridden in subroutine.
-func (c *Context) PushRegexVariables(matchN int) error {
-	for i := 0; i < matchN; i++ {
-		c.RegexVariables[fmt.Sprintf("re.group.%d", i)]++
-	}
-
-	// If pushed count is greater than 1, variable is overridden in the subroutine statement
-	if c.RegexVariables["re.group.0"] > 1 {
-		return fmt.Errorf("Regex captured variable may override older one")
-	}
-	return nil
-}
-
-// Get regex group variable
+// So the linter will report error if the captured variable is assumed to be overridden
 func (c *Context) GetRegexGroupVariable(name string) (types.Type, error) {
-	if _, ok := c.RegexVariables[name]; !ok {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+	if cnt, ok := c.RegexVariables[name]; !ok || cnt == 0 {
+		// the `re.group.N` variable is always accessible but get notset string if not captured.
+		// It's correct spec in Faslty but we should raise as uncaptured variable error because it may causes a potencial bug.
+		return types.StringType, ErrUncapturedRegexVariable
+	} else if cnt > 1 {
+		// If group matched count is greater than 1, the matched variable may be overridden
+		return types.StringType, ErrRegexVariableOverridden
 	}
-	// group matched value is always STRING
+
+	// Group matched value is always STRING
 	return types.StringType, nil
 }
 

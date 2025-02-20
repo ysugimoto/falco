@@ -10,7 +10,11 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-var ErrDeprecated = errors.New("deprecated")
+var (
+	ErrDeprecated              = errors.New("deprecated")
+	ErrUncapturedRegexVariable = errors.New("uncaptured-regex-variable")
+	ErrRegexVariableOverridden = errors.New("overridden-regex-variable")
+)
 
 func predefinedVariables() Variables {
 	return {{ .Variables }}

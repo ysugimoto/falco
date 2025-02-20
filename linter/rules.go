@@ -72,6 +72,7 @@ const (
 	FORBIDDEN_BACKWARD_JUMP              = "goto/forbidden-backward-jump"
 	TIME_CALCULATION                     = "operator/time-calculation"
 	DEPRECATED                           = "deprecated"
+	UNCAPTURED_REGEX_VARIABLE            = "regex/uncaptured-variable"
 )
 
 var references = map[Rule]string{

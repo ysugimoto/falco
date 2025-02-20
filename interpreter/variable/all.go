@@ -705,6 +705,9 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		if val, ok := v.ctx.RegexMatchedValues[match[1]]; ok {
 			return val
 		}
+		// regex captured variable always returns string values even nothing capturing
+		// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+		return &value.String{IsNotSet: true}
 	}
 
 	// HTTP request header matching

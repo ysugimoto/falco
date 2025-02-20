@@ -201,21 +201,25 @@ func isValidReturnExpression(exp ast.Expression) error {
 	return nil
 }
 
-func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) error {
+// Push regex captured variable to the context if needed
+func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
-		return pushRegexGroupVars(t.Right, ctx)
+		pushRegexGroupVars(t.Right, ctx)
+	case *ast.GroupedExpression:
+		pushRegexGroupVars(t.Right, ctx)
 	case *ast.InfixExpression:
 		if t.Operator == "~" || t.Operator == "!~" {
 			m := captureRegex.FindAllStringSubmatch(t.Right.String(), -1)
-			if m != nil {
-				return ctx.PushRegexVariables(len(m) + 1)
+			if len(m) > 0 {
+				ctx.PushRegexVariables(len(m) + 1)
+			} else {
+				ctx.ResetRegexVariables()
 			}
 		} else {
-			return pushRegexGroupVars(t.Right, ctx)
+			pushRegexGroupVars(t.Right, ctx)
 		}
 	}
-	return nil
 }
 
 func isBooleanOperator(operator string) bool {
@@ -562,7 +566,10 @@ func toSeriesExpressions(expr ast.Expression, ctx *context.Context) ([]*Series, 
 		// If expression is ident, must be a variable
 		// e.g req.http.Header, var.declaredVariable
 		if _, err := ctx.Get(t.Value); err != nil {
-			if err != context.ErrDeprecated {
+			switch err {
+			case context.ErrDeprecated, context.ErrUncapturedRegexVariable, context.ErrRegexVariableOverridden:
+				break
+			default:
 				return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
 			}
 		}
