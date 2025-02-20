@@ -80,6 +80,7 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts
 	l.lint(vcl, context.New(opts...))
 	if len(l.Errors) == 0 {
 		t.Errorf("Expect one lint error but empty returned")
+		return
 	}
 	le := l.Errors[0]
 	if le.Severity != severity {

@@ -317,14 +317,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 
 func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) types.Type {
 	l.lintIfCondition(exp.Condition, ctx)
-	if err := pushRegexGroupVars(exp.Condition, ctx); err != nil {
-		err := &LintError{
-			Severity: INFO,
-			Token:    exp.Condition.GetMeta().Token,
-			Message:  err.Error(),
-		}
-		l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
-	}
+	pushRegexGroupVars(exp.Condition, ctx)
 
 	if isConstantExpression(exp.Consequence) {
 		l.Error(&LintError{

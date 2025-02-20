@@ -42,7 +42,7 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			fileName: "../../examples/linter/default03.vcl",
 			errors:   0,
 			warnings: 0,
-			infos:    1,
+			infos:    2,
 		},
 		{
 			name:     "example 4",

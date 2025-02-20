@@ -237,28 +237,10 @@ func (l *Linter) lintRemoveStatement(stmt *ast.RemoveStatement, ctx *context.Con
 
 func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) types.Type {
 	l.lintIfCondition(stmt.Condition, ctx)
-
-	// push regex captured variables
-	if err := pushRegexGroupVars(stmt.Condition, ctx); err != nil {
-		err := &LintError{
-			Severity: INFO,
-			Token:    stmt.Condition.GetMeta().Token,
-			Message:  err.Error(),
-		}
-		l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
-	}
 	l.lint(stmt.Consequence, ctx)
 
 	for _, a := range stmt.Another {
 		l.lintIfCondition(a.Condition, ctx)
-		if err := pushRegexGroupVars(a.Condition, ctx); err != nil {
-			err := &LintError{
-				Severity: INFO,
-				Token:    a.Condition.GetMeta().Token,
-				Message:  err.Error(),
-			}
-			l.Error(err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE))
-		}
 		l.lint(a.Consequence, ctx)
 	}
 
@@ -295,6 +277,9 @@ func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
 			Message:  fmt.Sprintf("Condition return type %s may not be used in boolean comparison", cc.String()),
 		})
 	}
+
+	// Prepare dealing regex captured variable if "~" of "!~" operator is included in condition
+	pushRegexGroupVars(cond, ctx)
 }
 
 func (l *Linter) lintSwitchStatement(stmt *ast.SwitchStatement, ctx *context.Context) types.Type {
@@ -602,9 +587,18 @@ func (l *Linter) lintSyntheticStatement(stmt *ast.SyntheticStatement, ctx *conte
 func (l *Linter) lintIdent(exp *ast.Ident, ctx *context.Context) types.Type {
 	v, err := ctx.Get(exp.Value)
 	if err != nil {
-		// If error is deprecation error, report error but return value type
-		if err == context.ErrDeprecated {
-			l.Error(DeprecatedVariable(exp.Value, exp.GetMeta()).Match(DEPRECATED))
+		switch err {
+		case context.ErrDeprecated:
+			// If error is deprecation error, report error but return value type
+			l.Error(DeprecatedVariable(exp.Value, exp.GetMeta()))
+			return v
+		case context.ErrUncapturedRegexVariable:
+			// If error is uncaptured regex variable error, report error as WARNING severity
+			l.Error(UncapturedRegexVariable(exp.Value, exp.GetMeta()))
+			return v
+		case context.ErrRegexVariableOverridden:
+			// If error is regex variable overridden error, report error as INFO severity
+			l.Error(CapturedRegexVariableOverridden(exp.Value, exp.GetMeta()))
 			return v
 		}
 

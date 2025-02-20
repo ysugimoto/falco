@@ -401,6 +401,24 @@ func DeprecatedVariable(name string, m *ast.Meta) *LintError {
 	}
 }
 
+func UncapturedRegexVariable(name string, m *ast.Meta) *LintError {
+	err := &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Regex captured variable "%s" is uncaptured`, name),
+	}
+	return err.Match(DEPRECATED)
+}
+
+func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
+	err := &LintError{
+		Severity: INFO,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Regex captured variable "%s" may be overridden in previous expression`, name),
+	}
+	return err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE)
+}
+
 func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {
 	e := &LintError{
 		Token:   m.Token,
