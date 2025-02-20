@@ -213,6 +213,8 @@ func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) {
 			m := captureRegex.FindAllStringSubmatch(t.Right.String(), -1)
 			if len(m) > 0 {
 				ctx.PushRegexVariables(len(m) + 1)
+			} else {
+				ctx.ResetRegexVariables()
 			}
 		} else {
 			pushRegexGroupVars(t.Right, ctx)

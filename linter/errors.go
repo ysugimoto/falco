@@ -405,7 +405,10 @@ func UncapturedRegexVariable(name string, m *ast.Meta) *LintError {
 	err := &LintError{
 		Severity: WARNING,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`Regex captured variable "%s" is uncaptured`, name),
+		Message: fmt.Sprintf(
+			`Regex captured variable "%s" is uncaptured or reset on previous regular expression matching`,
+			name,
+		),
 	}
 	return err.Match(DEPRECATED)
 }
@@ -414,7 +417,10 @@ func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
 	err := &LintError{
 		Severity: INFO,
 		Token:    m.Token,
-		Message:  fmt.Sprintf(`Regex captured variable "%s" may be overridden in previous expression`, name),
+		Message: fmt.Sprintf(
+			`Regex captured variable "%s" may be overridden in previous expression`,
+			name,
+		),
 	}
 	return err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE)
 }

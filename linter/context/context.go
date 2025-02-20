@@ -207,18 +207,16 @@ func (c *Context) Restore() *Context {
 func (c *Context) Scope(mode int) *Context {
 	c.prevMode = c.curMode
 	c.curMode = mode
-	// reset regex matched value
-	c.RegexVariables = newRegexMatchedValues()
+	c.ResetRegexVariables()
 	return c
 }
 
 func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType types.Type) *Context {
 	c.prevMode = c.curMode
 	c.curMode = mode
-	// reset regex matched value
-	c.RegexVariables = newRegexMatchedValues()
 	c.ReturnType = &returnType
 	c.curName = name
+	c.ResetRegexVariables()
 	return c
 }
 
@@ -226,6 +224,15 @@ func (c *Context) PushRegexVariables(matchN int) {
 	for i := 0; i < matchN; i++ {
 		c.RegexVariables[fmt.Sprintf("re.group.%d", i)]++
 	}
+	// Reset unused grouped variable numbers
+	for i := 10; i >= matchN; i-- {
+		c.RegexVariables[fmt.Sprintf("re.group.%d", i)] = 0
+	}
+}
+
+// Reset regex matched value
+func (c *Context) ResetRegexVariables() {
+	c.RegexVariables = newRegexMatchedValues()
 }
 
 // Get regex group variable.
@@ -263,7 +270,7 @@ func (c *Context) PushRegexVariables(matchN int) {
 // ```
 // So the linter will report error if the captured variable is assumed to be overridden
 func (c *Context) GetRegexGroupVariable(name string) (types.Type, error) {
-	if cnt, ok := c.RegexVariables[name]; !ok {
+	if cnt, ok := c.RegexVariables[name]; !ok || cnt == 0 {
 		// the `re.group.N` variable is always accessible but get notset string if not captured.
 		// It's correct spec in Faslty but we should raise as uncaptured variable error because it may causes a potencial bug.
 		return types.StringType, ErrUncapturedRegexVariable

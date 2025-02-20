@@ -387,6 +387,8 @@ sub foo {
 		assertErrorWithSeverity(t, input, INFO)
 	})
 
+	// insert
+
 	t.Run("condition type is not expected", func(t *testing.T) {
 		input := `
 sub foo {
@@ -742,5 +744,42 @@ sub vcl_recv {
 			t.Errorf(`Error message should contains "deprecated", got %s`, e.Message)
 			continue
 		}
+	}
+}
+
+func TestRegexGroupedVariables(t *testing.T) {
+	tests := []string{
+		`
+sub foo {
+	declare local var.S STRING;
+	declare local var.R STRING;
+	set var.S = "foo.bar.baz.example.com";
+	if (var.S ~ "foo\.(^[.]+)\.(^[.]+)") {
+		set var.R = re.group.1;
+	}
+	if (var.S ~ "foo\.(^[.]+)") {
+		set var.R = "";
+	}
+	set var.R = re.group.2; // notset
+}`,
+		`
+sub foo {
+	declare local var.S STRING;
+	declare local var.R STRING;
+	set var.S = "foo.bar.baz.example.com";
+	if (var.S ~ "foo\.(^[.]+)\.(^[.]+)") {
+		set var.R = re.group.1;
+	}
+	// with nothing capture
+	if (var.S ~ "foo\.+") {
+		set var.R = "";
+	}
+	set var.R = re.group.1; // notset
+
+}`,
+	}
+
+	for _, input := range tests {
+		assertErrorWithSeverity(t, input, WARNING)
 	}
 }
