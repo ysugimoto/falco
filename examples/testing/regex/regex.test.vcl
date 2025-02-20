@@ -17,7 +17,7 @@ sub test_regex_recv {
 
 // @scope: recv
 // @suite: Test regex match without reset groups
-sub test_regex_recv {
+sub test_regex_no_reset_recv {
     declare local var.input STRING;
     declare local var.group1 STRING;
     set var.input = "abc";
