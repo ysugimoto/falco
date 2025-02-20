@@ -90,8 +90,6 @@ linters-settings:
     min-complexity: 50
   gofmt:
     simplify: true
-  golint:
-    min-confidence: 0.8
   lll:
     line-length: 150
   misspell:
