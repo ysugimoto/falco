@@ -371,6 +371,12 @@ func TestTester(t *testing.T) {
 			filter: "*base64.test.vcl",
 			passes: 12,
 		},
+		{
+			name:   "regex grouped variables test",
+			main:   "../../examples/testing/regex/regex.vcl",
+			filter: "*regex.test.vcl",
+			passes: 2,
+		},
 	}
 
 	for _, tt := range tests {
