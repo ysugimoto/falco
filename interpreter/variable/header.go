@@ -105,19 +105,15 @@ func unsetRequestHeaderValue(r *http.Request, name string) {
 		return
 	}
 
-	var filtered []string
-	for _, hv := range r.Header.Values(spl[0]) {
+	// Store old header values, clear header, and add filtered values only
+	oldHeaders := r.Header.Values(spl[0])
+	r.Header.Del(spl[0])
+	for _, hv := range oldHeaders {
 		kvs := strings.SplitN(hv, "=", 2)
 		if kvs[0] == spl[1] {
 			continue
 		}
-		filtered = append(filtered, hv)
-	}
-
-	if len(filtered) > 0 {
-		r.Header[spl[0]] = filtered
-	} else {
-		r.Header.Del(spl[0])
+		r.Header.Add(spl[0], hv)
 	}
 }
 
@@ -169,18 +165,15 @@ func unsetResponseHeaderValue(r *http.Response, name string) {
 
 	// Header name contains ":" character, then filter value by key
 	spl := strings.SplitN(name, ":", 2)
-	var filtered []string
-	for _, hv := range r.Header.Values(spl[0]) {
+
+	// Store old header values, delete header, and add filtered values
+	oldHeaders := r.Header.Values(spl[0])
+	r.Header.Del(spl[0])
+	for _, hv := range oldHeaders {
 		kvs := strings.SplitN(hv, "=", 2)
 		if kvs[0] == spl[1] {
 			continue
 		}
-		filtered = append(filtered, hv)
-	}
-
-	if len(filtered) > 0 {
-		r.Header[spl[0]] = filtered
-	} else {
-		r.Header.Del(spl[0])
+		r.Header.Add(spl[0], hv)
 	}
 }
