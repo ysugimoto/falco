@@ -711,10 +711,10 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			// Important: regex matched group variables are always reset for each matching
-			// see: https://fiddle.fastly.dev/fiddle/3e5320ef
-			ctx.RegexMatchedValues = make(map[string]*value.String)
 			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
+				// Important: regex matched group variables are reset if matching is succeeded
+				// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+				ctx.RegexMatchedValues = make(map[string]*value.String)
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
 				}
