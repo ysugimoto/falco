@@ -7,14 +7,10 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	ifn "github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 const allScope = context.AnyScope
-
-type Counter interface {
-	Pass()
-	Fail()
-}
 
 type Definiions struct {
 	Tables      map[string]*ast.TableDeclaration
@@ -25,7 +21,7 @@ type Definiions struct {
 
 type Functions map[string]*ifn.Function
 
-func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) Functions {
+func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c *shared.Counter, cv *shared.Coverage) Functions {
 	functions := Functions{}
 	for key, val := range testingFunctions(i, defs) {
 		functions[key] = val
@@ -33,7 +29,47 @@ func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c Counter) F
 	for key, val := range assertionFunctions(i, c) {
 		functions[key] = val
 	}
+	if cv != nil {
+		for key, val := range coverageFunctions(cv) {
+			functions[key] = val
+		}
+	}
 	return functions
+}
+
+func coverageFunctions(c *shared.Coverage) Functions {
+	return Functions{
+		"coverage.subroutine": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Coverage(c, CoverageTypeSubroutine, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"coverage.statement": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Coverage(c, CoverageTypeStatement, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"coverage.branch": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				return Coverage(c, CoverageTypeBranch, args...)
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+	}
 }
 
 // nolint: funlen,gocognit
@@ -56,9 +92,7 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 			IsIdentArgument: func(i int) bool {
 				return false
 			},
-		},
-		"testing.fixed_time": {
-			Scope: allScope,
+		}, "testing.fixed_time": {Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 				unwrapped, err := unwrapIdentArguments(i, args)
 				if err != nil {
@@ -153,7 +187,7 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 }
 
 // nolint: funlen,gocognit
-func assertionFunctions(i *interpreter.Interpreter, c Counter) Functions {
+func assertionFunctions(i *interpreter.Interpreter, c *shared.Counter) Functions {
 	return Functions{
 		"assert": {
 			Scope: allScope,
