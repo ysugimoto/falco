@@ -98,6 +98,8 @@ func (d *DescribeParser) Parse(p *Parser) (ast.CustomStatement, error) {
 	p.NextToken() // point to RIGHT_BRACE
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 
 	return stmt, nil
 }
@@ -154,6 +156,8 @@ func (b *BeforeEachParser) Parse(p *Parser) (ast.CustomStatement, error) {
 	if stmt.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 
 	// point to next declaretion/statement start
 	p.NextToken()
@@ -163,39 +167,151 @@ func (b *BeforeEachParser) Parse(p *Parser) (ast.CustomStatement, error) {
 func TestParseCustomToken(t *testing.T) {
 	input := `// Leading comment
 describe foo {
-  before_each {
-	set req.http.Foo = "bar";
-  }
+	before_each {
+		set req.http.Foo = "bar";
+	}
 
-  sub test_foo_recv {
-	set req.http.Bar = "baz";
-  }
+	sub test_foo_recv {
+		set req.http.Bar = "baz";
+	}
 } // Trailing comment`
 	expect := &ast.VCL{
 		Statements: []ast.Statement{
 			&DescribeStatement{
-				Meta: ast.New(T, 0, comments("// Leading comment"), comments("// Trailing comment")),
+				Meta: &ast.Meta{
+					Token: token.Token{
+						Type:     token.Custom("DESCRIBE"),
+						Literal:  "describe",
+						Line:     2,
+						Position: 1,
+					},
+					Leading:            comments("// Leading comment"),
+					Trailing:           comments("// Trailing comment"),
+					Infix:              comments(),
+					Nest:               0,
+					PreviousEmptyLines: 0,
+					EndLine:            10,
+					EndPosition:        1,
+				},
 				Name: &ast.Ident{
-					Meta:  ast.New(T, 0),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.IDENT,
+							Literal:  "foo",
+							Line:     2,
+							Position: 10,
+						},
+						Leading:            comments(),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            2,
+						EndPosition:        12,
+					},
 					Value: "foo",
 				},
 				BeforeEach: &BeforeEachStatement{
-					Meta: ast.New(T, 1),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.Custom("BEFORE_EACH"),
+							Literal:  "before_each",
+							Line:     3,
+							Position: 2,
+						},
+						Leading:            comments(),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               1,
+						PreviousEmptyLines: 0,
+						EndLine:            5,
+						EndPosition:        2,
+					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 2),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     3,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               2,
+							PreviousEmptyLines: 0,
+							EndLine:            5,
+							EndPosition:        2,
+						},
 						Statements: []ast.Statement{
 							&ast.SetStatement{
-								Meta: ast.New(T, 2),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.SET,
+										Literal:  "set",
+										Line:     4,
+										Position: 3,
+									},
+									Leading:            comments(),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               2,
+									PreviousEmptyLines: 0,
+									EndLine:            4,
+									EndPosition:        26,
+								},
 								Ident: &ast.Ident{
-									Meta:  ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Foo",
+											Line:     4,
+											Position: 7,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        18,
+									},
 									Value: "req.http.Foo",
 								},
 								Operator: &ast.Operator{
-									Meta:     ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ASSIGN,
+											Literal:  "=",
+											Line:     4,
+											Position: 20,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        20,
+									},
 									Operator: "=",
 								},
 								Value: &ast.String{
-									Meta:  ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.STRING,
+											Literal:  "bar",
+											Line:     4,
+											Position: 22,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        26,
+									},
 									Value: "bar",
 								},
 							},
@@ -203,34 +319,125 @@ describe foo {
 					},
 				},
 				Subroutines: []*ast.SubroutineDeclaration{
-					&ast.SubroutineDeclaration{
+					{
 						Meta: &ast.Meta{
-							Token:              T,
+							Token: token.Token{
+								Type:     token.SUBROUTINE,
+								Literal:  "sub",
+								Line:     7,
+								Position: 2,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
 							Nest:               1,
 							PreviousEmptyLines: 1,
-							Leading:            ast.Comments{},
-							Infix:              ast.Comments{},
-							Trailing:           ast.Comments{},
+							EndLine:            9,
+							EndPosition:        2,
 						},
 						Name: &ast.Ident{
-							Meta:  ast.New(T, 1),
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.IDENT,
+									Literal:  "test_foo_recv",
+									Line:     7,
+									Position: 6,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            7,
+								EndPosition:        18,
+							},
 							Value: "test_foo_recv",
 						},
 						Block: &ast.BlockStatement{
-							Meta: ast.New(T, 2),
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.LEFT_BRACE,
+									Literal:  "{",
+									Line:     7,
+									Position: 20,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               2,
+								PreviousEmptyLines: 0,
+								EndLine:            9,
+								EndPosition:        2,
+							},
 							Statements: []ast.Statement{
 								&ast.SetStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.SET,
+											Literal:  "set",
+											Line:     8,
+											Position: 3,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            8,
+										EndPosition:        26,
+									},
 									Ident: &ast.Ident{
-										Meta:  ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Bar",
+												Line:     8,
+												Position: 7,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        18,
+										},
 										Value: "req.http.Bar",
 									},
 									Operator: &ast.Operator{
-										Meta:     ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.ASSIGN,
+												Literal:  "=",
+												Line:     8,
+												Position: 20,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        20,
+										},
 										Operator: "=",
 									},
 									Value: &ast.String{
-										Meta:  ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "baz",
+												Line:     8,
+												Position: 22,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        26,
+										},
 										Value: "baz",
 									},
 								},

@@ -183,6 +183,9 @@ func (p *Parser) ParseSetStatement() (*ast.SetStatement, error) {
 		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
+	stmt.Operator.Meta.EndLine = p.curToken.Token.Line
+	stmt.Operator.Meta.EndPosition = p.curToken.Token.Position
+
 	p.NextToken() // point to right expression start
 
 	exp, err := p.ParseExpression(LOWEST)
@@ -194,6 +197,9 @@ func (p *Parser) ParseSetStatement() (*ast.SetStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = exp.GetMeta().EndLine
+	stmt.Meta.EndPosition = exp.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Value.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()

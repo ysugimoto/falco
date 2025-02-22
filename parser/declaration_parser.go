@@ -503,6 +503,8 @@ func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if s.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	s.Meta.EndLine = p.curToken.Token.Line
+	s.Meta.EndPosition = p.curToken.Token.Position
 	// After block statement is Parsed, cursor should point to RIGHT_BRACE, end of block statement
 
 	return s, nil
