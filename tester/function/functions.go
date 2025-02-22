@@ -42,7 +42,7 @@ func coverageFunctions(c *shared.Coverage) Functions {
 		"coverage.subroutine": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-				return Coverage(c, CoverageTypeSubroutine, args...)
+				return Coverage(c, shared.CoverageTypeSubroutine, args...)
 			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {
@@ -52,7 +52,7 @@ func coverageFunctions(c *shared.Coverage) Functions {
 		"coverage.statement": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-				return Coverage(c, CoverageTypeStatement, args...)
+				return Coverage(c, shared.CoverageTypeStatement, args...)
 			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {
@@ -62,7 +62,7 @@ func coverageFunctions(c *shared.Coverage) Functions {
 		"coverage.branch": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-				return Coverage(c, CoverageTypeBranch, args...)
+				return Coverage(c, shared.CoverageTypeBranch, args...)
 			},
 			CanStatementCall: true,
 			IsIdentArgument: func(i int) bool {

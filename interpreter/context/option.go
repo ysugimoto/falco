@@ -5,6 +5,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 type Option func(c *Context)
@@ -77,5 +78,11 @@ func WithOverrideVariales(variables map[string]any) Option {
 				c.OverrideVariables[k] = &value.Boolean{Value: t}
 			}
 		}
+	}
+}
+
+func WithCoverage(cv *shared.Coverage) Option {
+	return func(c *Context) {
+		c.Coverage = cv
 	}
 }

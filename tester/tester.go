@@ -47,6 +47,7 @@ func New(c *config.TestConfig, opts []icontext.Option) *Tester {
 	}
 	if c.Coverage {
 		t.coverage = shared.NewCoverage()
+		t.interpreterOptions = append(t.interpreterOptions, icontext.WithCoverage(t.coverage))
 	}
 	return t
 }

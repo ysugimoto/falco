@@ -29,6 +29,7 @@ import (
 	"github.com/ysugimoto/falco/snippets"
 	"github.com/ysugimoto/falco/terraform"
 	"github.com/ysugimoto/falco/tester"
+	"github.com/ysugimoto/falco/tester/shared"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -380,7 +381,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(struct {
 			Tests   []*tester.TestResult `json:"tests"`
-			Summary *tester.TestCounter  `json:"summary"`
+			Summary *shared.Counter      `json:"summary"`
 		}{
 			Tests:   factory.Results,
 			Summary: factory.Statistics,
