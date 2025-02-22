@@ -189,7 +189,7 @@ func (p *Parser) ParseBackendProperty() (*ast.BackendProperty, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.EndLine = prop.Value.GetMeta().Token.Line
+	prop.Meta.EndLine = prop.Value.GetMeta().EndLine
 	prop.Meta.EndPosition = prop.Value.GetMeta().EndPosition
 	p.NextToken() // point to SEMICOLON
 	prop.Meta.Trailing = p.Trailing()
@@ -247,6 +247,8 @@ func (p *Parser) ParseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 	SwapLeadingInfix(p.peekToken, d.Meta)
 	p.NextToken() // point to RIGHT_BRACE
 	d.Meta.Trailing = p.Trailing()
+	d.Meta.EndLine = p.curToken.Token.Line
+	d.Meta.EndPosition = p.curToken.Token.Position
 
 	return d, nil
 }
@@ -278,6 +280,8 @@ func (p *Parser) ParseDirectorProperty() (ast.Expression, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	prop.Meta.EndLine = exp.GetMeta().EndLine
+	prop.Meta.EndPosition = exp.GetMeta().EndPosition
 	p.NextToken() // point to SEMICOLON
 	prop.Meta.Trailing = p.Trailing()
 
@@ -320,6 +324,8 @@ func (p *Parser) ParseDirectorBackend() (ast.Expression, error) {
 		if !p.PeekTokenIs(token.SEMICOLON) {
 			return nil, errors.WithStack(MissingSemicolon(p.curToken))
 		}
+		prop.Meta.EndLine = exp.GetMeta().EndLine
+		prop.Meta.EndPosition = exp.GetMeta().EndPosition
 		prop.Meta.Trailing = p.Trailing()
 		p.NextToken() // point to SEMICOLON
 
@@ -329,6 +335,8 @@ func (p *Parser) ParseDirectorBackend() (ast.Expression, error) {
 	SwapLeadingInfix(p.peekToken, backend.Meta)
 	p.NextToken() // point to RIGHT_BRACE
 	backend.Meta.Trailing = p.Trailing()
+	backend.Meta.EndLine = p.curToken.Token.Line
+	backend.Meta.EndPosition = p.curToken.Token.Position
 
 	return backend, nil
 }
@@ -519,6 +527,8 @@ func (p *Parser) ParsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	if pb.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	pb.Meta.EndLine = p.curToken.Token.Line
+	pb.Meta.EndPosition = p.curToken.Token.Position
 
 	return pb, nil
 }
@@ -542,6 +552,8 @@ func (p *Parser) ParseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	if r.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	r.Meta.EndLine = p.curToken.Token.Line
+	r.Meta.EndPosition = p.curToken.Token.Position
 
 	return r, nil
 }

@@ -245,6 +245,12 @@ func (p *Parser) ParsePostfixExpression(left ast.Expression) (ast.Expression, er
 	}
 	exp.Operator = p.curToken.Token.Literal
 
+	// Swap start/end line and position
+	exp.Meta.EndLine = p.curToken.Token.Line
+	exp.Meta.EndPosition = p.curToken.Token.Position
+	exp.Meta.Token.Line = left.GetMeta().Token.Line
+	exp.Meta.Token.Position = left.GetMeta().Token.Position
+
 	return exp, nil
 }
 

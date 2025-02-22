@@ -154,6 +154,8 @@ func (p *Parser) ParseBlockStatement() (*ast.BlockStatement, error) {
 
 	p.NextToken() // point to RIGHT_BRACE
 	b.Meta.Trailing = p.Trailing()
+	b.Meta.EndLine = p.curToken.Token.Line
+	b.Meta.EndPosition = p.curToken.Token.Position
 
 	// RIGHT_BRACE leading comments are block infix comments
 	SwapLeadingInfix(p.curToken, b.Meta)
