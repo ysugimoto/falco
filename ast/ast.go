@@ -38,6 +38,8 @@ type Meta struct {
 	Infix              Comments
 	Nest               int
 	PreviousEmptyLines int
+	EndLine            int
+	EndPosition        int
 }
 
 // combinationMode represents comment combination mode
