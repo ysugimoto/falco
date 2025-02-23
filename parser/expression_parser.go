@@ -187,6 +187,8 @@ func (p *Parser) ParseIfExpression() (*ast.IfExpression, error) {
 	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	exp.Meta.EndLine = p.curToken.Token.Line
+	exp.Meta.EndPosition = p.curToken.Token.Position
 
 	return exp, nil
 }
