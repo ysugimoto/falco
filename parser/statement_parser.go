@@ -473,7 +473,9 @@ func (p *Parser) ParseRestartStatement() (*ast.RestartStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	p.NextToken() // point to SEMICOLON
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position + 6 // point "t" position of "restart" characters
+	p.NextToken()                                         // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
 
@@ -638,18 +640,21 @@ func (p *Parser) ParseIfStatement() (*ast.IfStatement, error) {
 			}
 
 			// Otherwise, it is else statement
-			stmt.Alternative = &ast.ElseStatement{
+			alternative := &ast.ElseStatement{
 				Meta: p.curToken,
 			}
 			// Next token must be LEFT_BRACE
 			if !p.ExpectPeek(token.LEFT_BRACE) {
 				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 			}
-			SwapLeadingInfix(p.curToken, stmt.Alternative.Meta)
-			stmt.Alternative.Consequence, err = p.ParseBlockStatement()
+			SwapLeadingInfix(p.curToken, alternative.Meta)
+			alternative.Consequence, err = p.ParseBlockStatement()
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
+			alternative.Meta.EndLine = p.curToken.Token.Line
+			alternative.Meta.EndPosition = p.curToken.Token.Position
+			stmt.Alternative = alternative
 			// exit for loop
 			goto FINISH
 		// Note: VCL could define "else if" statement with "elseif", "elsif" keyword
@@ -706,6 +711,8 @@ func (p *Parser) ParseAnotherIfStatement(keyword string) (*ast.IfStatement, erro
 		return nil, errors.WithStack(err)
 	}
 	// cursor must be on RIGHT_BRACE
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 	return stmt, nil
 }
 

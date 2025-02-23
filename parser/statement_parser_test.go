@@ -908,33 +908,160 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            7,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            7,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            6,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        45,
+									},
 									Operator: "~",
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        18,
+										},
 										Value: "req.http.Host",
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1, comments("/* infix */")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 33,
+											},
+											Leading:            comments("/* infix */"),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        45,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2, comments(), comments("// Trailing comment")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 48,
+										},
+										Leading:            comments(),
+										Trailing:           comments("// Trailing comment"),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
@@ -962,49 +1089,232 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            7,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            7,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            6,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        74,
+									},
 									Operator: "&&",
 									Left: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Operator: "~",
 										Left: &ast.Ident{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.Host",
+													Line:     4,
+													Position: 6,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        18,
+											},
 											Value: "req.http.Host",
 										},
 										Right: &ast.String{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.STRING,
+													Literal:  "example.com",
+													Line:     4,
+													Position: 22,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        34,
+											},
 											Value: "example.com",
 										},
 									},
 									Right: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 50,
+											},
+											Leading:            comments("/* infix */"),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        74,
+										},
 										Operator: "==",
 										Left: &ast.Ident{
-											Meta:  ast.New(T, 1, comments("/* infix */")),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.Host",
+													Line:     4,
+													Position: 50,
+												},
+												Leading:            comments("/* infix */"),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        62,
+											},
 											Value: "req.http.Host",
 										},
 										Right: &ast.String{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.STRING,
+													Literal:  "foobar",
+													Line:     4,
+													Position: 67,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        74,
+											},
 											Value: "foobar",
 										},
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2, comments(), comments("// Trailing comment")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 77,
+										},
+										Leading:            comments(),
+										Trailing:           comments("// Trailing comment"),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
@@ -1032,49 +1342,232 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            7,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            7,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            6,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        63,
+									},
 									Operator: "||",
 									Left: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Operator: "~",
 										Left: &ast.Ident{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.Host",
+													Line:     4,
+													Position: 6,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        18,
+											},
 											Value: "req.http.Host",
 										},
 										Right: &ast.String{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.STRING,
+													Literal:  "example.com",
+													Line:     4,
+													Position: 22,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        34,
+											},
 											Value: "example.com",
 										},
 									},
 									Right: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 39,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        63,
+										},
 										Operator: "==",
 										Left: &ast.Ident{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.Host",
+													Line:     4,
+													Position: 39,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        51,
+											},
 											Value: "req.http.Host",
 										},
 										Right: &ast.String{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.STRING,
+													Literal:  "foobar",
+													Line:     4,
+													Position: 56,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        63,
+											},
 											Value: "foobar",
 										},
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 66,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
@@ -1102,41 +1595,196 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            7,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            7,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            6,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.TRUE,
+											Literal:  "true",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        27,
+									},
 									Operator: "||",
 									Left: &ast.Boolean{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.TRUE,
+												Literal:  "true",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        9,
+										},
 										Value: true,
 									},
 									Right: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.FALSE,
+												Literal:  "false",
+												Line:     4,
+												Position: 14,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        27,
+										},
 										Operator: "&&",
 										Left: &ast.Boolean{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.FALSE,
+													Literal:  "false",
+													Line:     4,
+													Position: 14,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        18,
+											},
 											Value: false,
 										},
 										Right: &ast.Boolean{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.FALSE,
+													Literal:  "false",
+													Line:     4,
+													Position: 23,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            4,
+												EndPosition:        27,
+											},
 											Value: false,
 										},
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 30,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
@@ -1168,43 +1816,212 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            11,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            11,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        34,
+									},
 									Operator: "~",
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        18,
+										},
 										Value: "req.http.Host",
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 22,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 37,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
 								Alternative: &ast.ElseStatement{
-									Meta: ast.New(T, 1, comments("// Leading comment")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ELSE,
+											Literal:  "else",
+											Line:     8,
+											Position: 2,
+										},
+										Leading:            comments("// Leading comment"),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            10,
+										EndPosition:        2,
+									},
 									Consequence: &ast.BlockStatement{
-										Meta: ast.New(T, 2, comments(), comments("// Trailing comment")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.LEFT_BRACE,
+												Literal:  "{",
+												Line:     8,
+												Position: 7,
+											},
+											Leading:            comments(),
+											Trailing:           comments("// Trailing comment"),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            10,
+											EndPosition:        2,
+										},
 										Statements: []ast.Statement{
 											&ast.RestartStatement{
-												Meta: ast.New(T, 2),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.RESTART,
+														Literal:  "restart",
+														Line:     9,
+														Position: 3,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               2,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        9,
+												},
 											},
 										},
 									},
@@ -1222,83 +2039,337 @@ sub vcl_recv {
 		assert(t, vcl, expect)
 	})
 
-	t.Run("if else if else ", func(t *testing.T) {
+	t.Run("if else if else", func(t *testing.T) {
 		input := `// Subroutine
- sub vcl_recv {
- 	// Leading comment
- 	if (req.http.Host ~ "example.com") {
- 		restart;
- 	} else if (req.http.X-Forwarded-For ~ "192.168.0.1") {
- 		restart;
- 	} else {
- 		restart;
- 	}
- }`
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} else if (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            11,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            11,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        34,
+									},
 									Operator: "~",
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        18,
+										},
 										Value: "req.http.Host",
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 22,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 37,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
 								Another: []*ast.IfStatement{
 									{
-										Meta: ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IF,
+												Literal:  "if",
+												Line:     6,
+												Position: 9,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        2,
+										},
+										Keyword: "else if",
 										Condition: &ast.InfixExpression{
-											Meta:     ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.X-Forwarded-For",
+													Line:     6,
+													Position: 13,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            6,
+												EndPosition:        52,
+											},
 											Operator: "~",
 											Left: &ast.Ident{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.IDENT,
+														Literal:  "req.http.X-Forwarded-For",
+														Line:     6,
+														Position: 13,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        36,
+												},
 												Value: "req.http.X-Forwarded-For",
 											},
 											Right: &ast.String{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.STRING,
+														Literal:  "192.168.0.1",
+														Line:     6,
+														Position: 40,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        52,
+												},
 												Value: "192.168.0.1",
 											},
 										},
 										Consequence: &ast.BlockStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.LEFT_BRACE,
+													Literal:  "{",
+													Line:     6,
+													Position: 55,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            8,
+												EndPosition:        2,
+											},
 											Statements: []ast.Statement{
 												&ast.RestartStatement{
-													Meta: ast.New(T, 2),
+													Meta: &ast.Meta{
+														Token: token.Token{
+															Type:     token.RESTART,
+															Literal:  "restart",
+															Line:     7,
+															Position: 3,
+														},
+														Leading:            comments(),
+														Trailing:           comments(),
+														Infix:              comments(),
+														Nest:               2,
+														PreviousEmptyLines: 0,
+														EndLine:            7,
+														EndPosition:        9,
+													},
 												},
 											},
 										},
 									},
 								},
 								Alternative: &ast.ElseStatement{
-									Meta: ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ELSE,
+											Literal:  "else",
+											Line:     8,
+											Position: 4,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            10,
+										EndPosition:        2,
+									},
 									Consequence: &ast.BlockStatement{
-										Meta: ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.LEFT_BRACE,
+												Literal:  "{",
+												Line:     8,
+												Position: 9,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            10,
+											EndPosition:        2,
+										},
 										Statements: []ast.Statement{
 											&ast.RestartStatement{
-												Meta: ast.New(T, 2),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.RESTART,
+														Literal:  "restart",
+														Line:     9,
+														Position: 3,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               2,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        9,
+												},
 											},
 										},
 									},
@@ -1316,83 +2387,337 @@ sub vcl_recv {
 		assert(t, vcl, expect)
 	})
 
-	t.Run("if elseif else ", func(t *testing.T) {
+	t.Run("if elseif else", func(t *testing.T) {
 		input := `// Subroutine
- sub vcl_recv {
- 	// Leading comment
- 	if (req.http.Host ~ "example.com") {
- 		restart;
- 	} elseif (req.http.X-Forwarded-For ~ "192.168.0.1") {
- 		restart;
- 	} else {
- 		restart;
- 	}
- }`
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} elseif (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            11,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            11,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        34,
+									},
 									Operator: "~",
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        18,
+										},
 										Value: "req.http.Host",
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 22,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 37,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
 								Another: []*ast.IfStatement{
 									{
-										Meta: ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.ELSEIF,
+												Literal:  "elseif",
+												Line:     6,
+												Position: 4,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        2,
+										},
+										Keyword: "elseif",
 										Condition: &ast.InfixExpression{
-											Meta:     ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.X-Forwarded-For",
+													Line:     6,
+													Position: 12,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            6,
+												EndPosition:        51,
+											},
 											Operator: "~",
 											Left: &ast.Ident{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.IDENT,
+														Literal:  "req.http.X-Forwarded-For",
+														Line:     6,
+														Position: 12,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        35,
+												},
 												Value: "req.http.X-Forwarded-For",
 											},
 											Right: &ast.String{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.STRING,
+														Literal:  "192.168.0.1",
+														Line:     6,
+														Position: 39,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        51,
+												},
 												Value: "192.168.0.1",
 											},
 										},
 										Consequence: &ast.BlockStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.LEFT_BRACE,
+													Literal:  "{",
+													Line:     6,
+													Position: 54,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            8,
+												EndPosition:        2,
+											},
 											Statements: []ast.Statement{
 												&ast.RestartStatement{
-													Meta: ast.New(T, 2),
+													Meta: &ast.Meta{
+														Token: token.Token{
+															Type:     token.RESTART,
+															Literal:  "restart",
+															Line:     7,
+															Position: 3,
+														},
+														Leading:            comments(),
+														Trailing:           comments(),
+														Infix:              comments(),
+														Nest:               2,
+														PreviousEmptyLines: 0,
+														EndLine:            7,
+														EndPosition:        9,
+													},
 												},
 											},
 										},
 									},
 								},
 								Alternative: &ast.ElseStatement{
-									Meta: ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ELSE,
+											Literal:  "else",
+											Line:     8,
+											Position: 4,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            10,
+										EndPosition:        2,
+									},
 									Consequence: &ast.BlockStatement{
-										Meta: ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.LEFT_BRACE,
+												Literal:  "{",
+												Line:     8,
+												Position: 9,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            10,
+											EndPosition:        2,
+										},
 										Statements: []ast.Statement{
 											&ast.RestartStatement{
-												Meta: ast.New(T, 2),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.RESTART,
+														Literal:  "restart",
+														Line:     9,
+														Position: 3,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               2,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        9,
+												},
 											},
 										},
 									},
@@ -1412,81 +2737,335 @@ sub vcl_recv {
 
 	t.Run("if elsif else ", func(t *testing.T) {
 		input := `// Subroutine
- sub vcl_recv {
- 	// Leading comment
- 	if (req.http.Host ~ "example.com") {
- 		restart;
- 	} elsif (req.http.X-Forwarded-For ~ "192.168.0.1") {
- 		restart;
- 	} else {
- 		restart;
- 	}
- }`
+sub vcl_recv {
+	// Leading comment
+	if (req.http.Host ~ "example.com") {
+		restart;
+	} elsif (req.http.X-Forwarded-For ~ "192.168.0.1") {
+		restart;
+	} else {
+		restart;
+	}
+}`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            11,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            11,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 6,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        34,
+									},
 									Operator: "~",
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 6,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        18,
+										},
 										Value: "req.http.Host",
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 22,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        34,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 37,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            6,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
 								Another: []*ast.IfStatement{
 									{
-										Meta: ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.ELSIF,
+												Literal:  "elsif",
+												Line:     6,
+												Position: 4,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            8,
+											EndPosition:        2,
+										},
+										Keyword: "elsif",
 										Condition: &ast.InfixExpression{
-											Meta:     ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.X-Forwarded-For",
+													Line:     6,
+													Position: 11,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            6,
+												EndPosition:        50,
+											},
 											Operator: "~",
 											Left: &ast.Ident{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.IDENT,
+														Literal:  "req.http.X-Forwarded-For",
+														Line:     6,
+														Position: 11,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        34,
+												},
 												Value: "req.http.X-Forwarded-For",
 											},
 											Right: &ast.String{
-												Meta:  ast.New(T, 1),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.STRING,
+														Literal:  "192.168.0.1",
+														Line:     6,
+														Position: 38,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            6,
+													EndPosition:        50,
+												},
 												Value: "192.168.0.1",
 											},
 										},
 										Consequence: &ast.BlockStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.LEFT_BRACE,
+													Literal:  "{",
+													Line:     6,
+													Position: 53,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            8,
+												EndPosition:        2,
+											},
 											Statements: []ast.Statement{
 												&ast.RestartStatement{
-													Meta: ast.New(T, 2),
+													Meta: &ast.Meta{
+														Token: token.Token{
+															Type:     token.RESTART,
+															Literal:  "restart",
+															Line:     7,
+															Position: 3,
+														},
+														Leading:            comments(),
+														Trailing:           comments(),
+														Infix:              comments(),
+														Nest:               2,
+														PreviousEmptyLines: 0,
+														EndLine:            7,
+														EndPosition:        9,
+													},
 												},
 											},
 										},
 									},
 								},
 								Alternative: &ast.ElseStatement{
-									Meta: ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ELSE,
+											Literal:  "else",
+											Line:     8,
+											Position: 4,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            10,
+										EndPosition:        2,
+									},
 									Consequence: &ast.BlockStatement{
-										Meta: ast.New(T, 2),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.LEFT_BRACE,
+												Literal:  "{",
+												Line:     8,
+												Position: 9,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            10,
+											EndPosition:        2,
+										},
 										Statements: []ast.Statement{
 											&ast.RestartStatement{
-												Meta: ast.New(T, 2),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.RESTART,
+														Literal:  "restart",
+														Line:     9,
+														Position: 3,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               2,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        9,
+												},
 											},
 										},
 									},
@@ -1527,68 +3106,322 @@ sub vcl_recv {
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments(),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            19,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            19,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.IfStatement{
-								Meta: ast.New(T, 1, comments("// a"), comments(), comments("/* b */")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.IF,
+										Literal:  "if",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// a"),
+									Trailing:           comments(),
+									Infix:              comments("/* b */"),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            18,
+									EndPosition:        2,
+								},
+								Keyword: "if",
 								Condition: &ast.InfixExpression{
-									Meta: ast.New(T, 1, comments(), comments("/* f */")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 21,
+										},
+										Leading:            comments("/* c */"),
+										Trailing:           comments("/* d */", "/* f */"),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        63,
+									},
 									Left: &ast.Ident{
-										Meta:  ast.New(T, 1, comments("/* c */"), comments("/* d */")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     4,
+												Position: 21,
+											},
+											Leading:            comments("/* c */"),
+											Trailing:           comments("/* d */"),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        33,
+										},
 										Value: "req.http.Host",
 									},
 									Operator: "~",
 									Right: &ast.String{
-										Meta:  ast.New(T, 1, comments("/* e */")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     4,
+												Position: 51,
+											},
+											Leading:            comments("/* e */"),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        63,
+										},
 										Value: "example.com",
 									},
 								},
 								Consequence: &ast.BlockStatement{
-									Meta: ast.New(T, 2, comments("/* g */"), comments("// i"), comments("// h")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.LEFT_BRACE,
+											Literal:  "{",
+											Line:     4,
+											Position: 80,
+										},
+										Leading:            comments("/* g */"),
+										Trailing:           comments("// i"),
+										Infix:              comments("// h"),
+										Nest:               2,
+										PreviousEmptyLines: 0,
+										EndLine:            7,
+										EndPosition:        2,
+									},
 									Statements: []ast.Statement{
 										&ast.RestartStatement{
-											Meta: ast.New(T, 2),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.RESTART,
+													Literal:  "restart",
+													Line:     5,
+													Position: 3,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        9,
+											},
 										},
 									},
 								},
 								Another: []*ast.IfStatement{
 									{
-										Meta: ast.New(T, 1, comments("// j"), comments(), comments("/* k */")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.ELSIF,
+												Literal:  "elsif",
+												Line:     9,
+												Position: 2,
+											},
+											Leading:            comments("// j"),
+											Trailing:           comments(),
+											Infix:              comments("/* k */"),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            13,
+											EndPosition:        2,
+										},
+										Keyword: "elsif",
 										Condition: &ast.InfixExpression{
-											Meta: ast.New(T, 1, comments(), comments("/* o */")),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.X-Forwarded-For",
+													Line:     9,
+													Position: 23,
+												},
+												Leading:            comments("/* l */"),
+												Trailing:           comments("/* m */", "/* o */"),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            9,
+												EndPosition:        77,
+											},
 											Left: &ast.Ident{
-												Meta:  ast.New(T, 1, comments("/* l */"), comments("/* m */")),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.IDENT,
+														Literal:  "req.http.X-Forwarded-For",
+														Line:     9,
+														Position: 23,
+													},
+													Leading:            comments("/* l */"),
+													Trailing:           comments("/* m */"),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        46,
+												},
 												Value: "req.http.X-Forwarded-For",
 											},
 											Operator: "~",
 											Right: &ast.String{
-												Meta:  ast.New(T, 1, comments("/* n */")),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.STRING,
+														Literal:  "192.168.0.1",
+														Line:     9,
+														Position: 65,
+													},
+													Leading:            comments("/* n */"),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               1,
+													PreviousEmptyLines: 0,
+													EndLine:            9,
+													EndPosition:        77,
+												},
 												Value: "192.168.0.1",
 											},
 										},
 										Consequence: &ast.BlockStatement{
-											Meta: ast.New(T, 2, comments("// p"), comments(), comments("// q")),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.LEFT_BRACE,
+													Literal:  "{",
+													Line:     10,
+													Position: 2,
+												},
+												Leading:            comments("// p"),
+												Trailing:           comments(),
+												Infix:              comments("// q"),
+												Nest:               2,
+												PreviousEmptyLines: 0,
+												EndLine:            13,
+												EndPosition:        2,
+											},
 											Statements: []ast.Statement{
 												&ast.RestartStatement{
-													Meta: ast.New(T, 2),
+													Meta: &ast.Meta{
+														Token: token.Token{
+															Type:     token.RESTART,
+															Literal:  "restart",
+															Line:     11,
+															Position: 3,
+														},
+														Leading:            comments(),
+														Trailing:           comments(),
+														Infix:              comments(),
+														Nest:               2,
+														PreviousEmptyLines: 0,
+														EndLine:            11,
+														EndPosition:        9,
+													},
 												},
 											},
 										},
 									},
 								},
 								Alternative: &ast.ElseStatement{
-									Meta: ast.New(T, 1, comments("// r"), comments(), comments("/* s */")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ELSE,
+											Literal:  "else",
+											Line:     15,
+											Position: 2,
+										},
+										Leading:            comments("// r"),
+										Trailing:           comments(),
+										Infix:              comments("/* s */"),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            18,
+										EndPosition:        2,
+									},
 									Consequence: &ast.BlockStatement{
-										Meta: ast.New(T, 2, comments(), comments("// u"), comments("// t")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.LEFT_BRACE,
+												Literal:  "{",
+												Line:     15,
+												Position: 15,
+											},
+											Leading:            comments(),
+											Trailing:           comments("// u"),
+											Infix:              comments("// t"),
+											Nest:               2,
+											PreviousEmptyLines: 0,
+											EndLine:            18,
+											EndPosition:        2,
+										},
 										Statements: []ast.Statement{
 											&ast.RestartStatement{
-												Meta: ast.New(T, 2),
+												Meta: &ast.Meta{
+													Token: token.Token{
+														Type:     token.RESTART,
+														Literal:  "restart",
+														Line:     16,
+														Position: 3,
+													},
+													Leading:            comments(),
+													Trailing:           comments(),
+													Infix:              comments(),
+													Nest:               2,
+													PreviousEmptyLines: 0,
+													EndLine:            16,
+													EndPosition:        9,
+												},
 											},
 										},
 									},
