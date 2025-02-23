@@ -131,6 +131,8 @@ func (d *DescribeParser) Parse(p *parser.Parser) (ast.CustomStatement, error) {
 
 	parser.SwapLeadingInfix(p.CurToken(), stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = p.CurToken().Token.Line
+	stmt.Meta.EndPosition = p.CurToken().Token.Position
 
 	return stmt, nil
 }
