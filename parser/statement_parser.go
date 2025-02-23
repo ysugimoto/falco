@@ -481,6 +481,9 @@ func (p *Parser) ParseLogStatement() (*ast.LogStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = value.GetMeta().EndLine
+	stmt.Meta.EndPosition = value.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	stmt.Meta.Trailing = p.Trailing()
 
