@@ -121,6 +121,8 @@ func (p *Parser) ParsePrefixExpression() (*ast.PrefixExpression, error) {
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
+	exp.Meta.EndLine = right.GetMeta().EndLine
+	exp.Meta.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }
@@ -253,7 +255,7 @@ func (p *Parser) ParseFunctionCallExpression(fn ast.Expression) (ast.Expression,
 		return nil, errors.New("Function name must be IDENT")
 	}
 	exp := &ast.FunctionCallExpression{
-		Meta:     p.curToken,
+		Meta:     ident.GetMeta().Clone(),
 		Function: ident,
 	}
 
@@ -262,6 +264,8 @@ func (p *Parser) ParseFunctionCallExpression(fn ast.Expression) (ast.Expression,
 		return nil, errors.WithStack(err)
 	}
 	exp.Arguments = args
+	exp.Meta.EndLine = p.curToken.Token.Line
+	exp.Meta.EndPosition = p.curToken.Token.Position
 
 	return exp, nil
 }
