@@ -331,7 +331,7 @@ acl /* b */ internal /* c */{
 				Meta: &ast.Meta{
 					Token: token.Token{
 						Type:     token.ACL,
-						Literal:  "3",
+						Literal:  "acl",
 						Line:     3,
 						Position: 1,
 					},
@@ -349,7 +349,7 @@ acl /* b */ internal /* c */{
 							Type:     token.IDENT,
 							Literal:  "internal",
 							Line:     3,
-							Position: 5,
+							Position: 13,
 						},
 						Leading:            comments("/* b */"),
 						Trailing:           comments("/* c */"),
@@ -400,7 +400,7 @@ acl /* b */ internal /* c */{
 									Type:     token.STRING,
 									Literal:  "192.168.0.1",
 									Line:     5,
-									Position: 3,
+									Position: 10,
 								},
 								Leading:            comments("/* e */"),
 								Trailing:           comments("/* f */"),

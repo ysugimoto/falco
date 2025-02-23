@@ -704,6 +704,7 @@ sub /* subroutine ident leading */ vcl_recv /* subroutine block leading */ {
 								EndLine:            14,
 								EndPosition:        2,
 							},
+							Keyword: "if",
 							Condition: &ast.InfixExpression{
 								Meta: &ast.Meta{
 									Token: token.Token{

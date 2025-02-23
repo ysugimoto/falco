@@ -224,6 +224,9 @@ func (p *Parser) ParseUnsetStatement() (*ast.UnsetStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.Ident.EndLine
+	stmt.Meta.EndPosition = stmt.Ident.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Ident.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()
@@ -244,6 +247,8 @@ func (p *Parser) ParseRemoveStatement() (*ast.RemoveStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.Ident.EndLine
+	stmt.Meta.EndPosition = stmt.Ident.EndPosition
 
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Ident.GetMeta())
@@ -368,6 +373,9 @@ func (p *Parser) ParseDeclareStatement() (*ast.DeclareStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.ValueType.Meta.EndLine
+	stmt.Meta.EndPosition = stmt.ValueType.Meta.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.ValueType.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -1018,7 +1026,7 @@ func (p *Parser) ParseGotoDestination() (*ast.GotoDestinationStatement, error) {
 
 func (p *Parser) ParseFunctionCall() (*ast.FunctionCallStatement, error) {
 	stmt := &ast.FunctionCallStatement{
-		Meta:     p.curToken,
+		Meta:     p.curToken.Clone(),
 		Function: p.ParseIdent(),
 	}
 
