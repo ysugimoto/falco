@@ -325,43 +325,160 @@ include /* b */"feature_mod"/* c */ // d
 
 func TestParseSetStatement(t *testing.T) {
 	t.Run("simple assign", func(t *testing.T) {
-		operators := []string{
-			"=",                    // simple assign
-			"+=", "-=", "*=", "/=", // arithmetic ops
-			"%=", "|=", "&=", "^=", // bitwise ops
-			"<<=", ">>=", "rol=", "ror=", // bitwise shifts
-			"||=", "&&=", // boolean
+		operators := map[string]token.TokenType{
+			// simple assign
+			"=": token.ASSIGN,
+			// arithmetic operator
+			"+=": token.ADDITION,
+			"-=": token.SUBTRACTION,
+			"*=": token.MULTIPLICATION,
+			"/=": token.DIVISION,
+			// bitwise operator
+			"%=": token.REMAINDER,
+			"|=": token.BITWISE_OR,
+			"&=": token.BITWISE_AND,
+			"^=": token.BITWISE_XOR,
+			// bit shifts operator
+			"<<=":  token.LEFT_SHIFT,
+			">>=":  token.RIGHT_SHIFT,
+			"rol=": token.LEFT_ROTATE,
+			"ror=": token.RIGHT_ROTATE,
+			// logical operator
+			"||=": token.LOGICAL_OR,
+			"&&=": token.LOGICAL_AND,
 		}
-		for _, op := range operators {
-			input := fmt.Sprintf(`// Subroutine
-				sub vcl_recv {
-					// Leading comment
-					set /* Host */ req.http.Host %s "example.com"; // Trailing comment
-				}`,
+
+		for op, tt := range operators {
+			input := fmt.Sprintf(`
+// Subroutine
+sub vcl_recv {
+	// Leading comment
+	set /* Host */ req.http.Host %s "example.com"; // Trailing comment
+}
+`,
 				op)
+			size := len(op)
 			expect := &ast.VCL{
 				Statements: []ast.Statement{
 					&ast.SubroutineDeclaration{
-						Meta: ast.New(T, 0, comments("// Subroutine")),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.SUBROUTINE,
+								Literal:  "sub",
+								Line:     3,
+								Position: 1,
+							},
+							Leading:            comments("// Subroutine"),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            6,
+							EndPosition:        1,
+						},
 						Name: &ast.Ident{
-							Meta:  ast.New(T, 0),
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.IDENT,
+									Literal:  "vcl_recv",
+									Line:     3,
+									Position: 5,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               0,
+								PreviousEmptyLines: 0,
+								EndLine:            3,
+								EndPosition:        12,
+							},
 							Value: "vcl_recv",
 						},
 						Block: &ast.BlockStatement{
-							Meta: ast.New(T, 1),
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.LEFT_BRACE,
+									Literal:  "{",
+									Line:     3,
+									Position: 14,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            6,
+								EndPosition:        1,
+							},
 							Statements: []ast.Statement{
 								&ast.SetStatement{
-									Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.SET,
+											Literal:  "set",
+											Line:     5,
+											Position: 2,
+										},
+										Leading:            comments("// Leading comment"),
+										Trailing:           comments("// Trailing comment"),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            5,
+										EndPosition:        44 + size,
+									},
 									Ident: &ast.Ident{
-										Meta:  ast.New(T, 1, comments("/* Host */")),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.Host",
+												Line:     5,
+												Position: 17,
+											},
+											Leading:            comments("/* Host */"),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            5,
+											EndPosition:        29,
+										},
 										Value: "req.http.Host",
 									},
 									Operator: &ast.Operator{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     tt,
+												Literal:  op,
+												Line:     5,
+												Position: 31,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            5,
+											EndPosition:        31 + size - 1,
+										},
 										Operator: op,
 									},
 									Value: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.com",
+												Line:     5,
+												Position: 31 + size - 1 + 2,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            5,
+											EndPosition:        31 + size - 1 + 2 + 12,
+										},
 										Value: "example.com",
 									},
 								},
@@ -380,49 +497,205 @@ func TestParseSetStatement(t *testing.T) {
 	})
 
 	t.Run("with string concatenation", func(t *testing.T) {
-		input := `// Subroutine
-	sub vcl_recv {
-		// Leading comment
-		set /* Host */ req.http.Host = "example." req.http.User-Agent ".com"; // Trailing comment
-	}`
+		input := `
+// Subroutine
+sub vcl_recv {
+	// Leading comment
+	set /* Host */ req.http.Host = "example." req.http.User-Agent ".com"; // Trailing comment
+}
+`
 		expect := &ast.VCL{
 			Statements: []ast.Statement{
 				&ast.SubroutineDeclaration{
-					Meta: ast.New(T, 0, comments("// Subroutine")),
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     3,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            6,
+						EndPosition:        1,
+					},
 					Name: &ast.Ident{
-						Meta:  ast.New(T, 0),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     3,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            3,
+							EndPosition:        12,
+						},
 						Value: "vcl_recv",
 					},
 					Block: &ast.BlockStatement{
-						Meta: ast.New(T, 1),
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     3,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            6,
+							EndPosition:        1,
+						},
 						Statements: []ast.Statement{
 							&ast.SetStatement{
-								Meta: ast.New(T, 1, comments("// Leading comment"), comments("// Trailing comment")),
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.SET,
+										Literal:  "set",
+										Line:     5,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments("// Trailing comment"),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            5,
+									EndPosition:        69,
+								},
 								Ident: &ast.Ident{
-									Meta:  ast.New(T, 1, comments("/* Host */")),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     5,
+											Position: 17,
+										},
+										Leading:            comments("/* Host */"),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            5,
+										EndPosition:        29,
+									},
 									Value: "req.http.Host",
 								},
 								Operator: &ast.Operator{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ASSIGN,
+											Literal:  "=",
+											Line:     5,
+											Position: 31,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            5,
+										EndPosition:        31,
+									},
 									Operator: "=",
 								},
 								Value: &ast.InfixExpression{
-									Meta:     ast.New(T, 1),
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.STRING,
+											Literal:  "example.",
+											Line:     5,
+											Position: 33,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            5,
+										EndPosition:        69,
+									},
 									Operator: "+",
 									Left: &ast.InfixExpression{
-										Meta:     ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.",
+												Line:     5,
+												Position: 33,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            5,
+											EndPosition:        62,
+										},
 										Operator: "+",
 										Left: &ast.String{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.STRING,
+													Literal:  "example.",
+													Line:     5,
+													Position: 33,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        42,
+											},
 											Value: "example.",
 										},
 										Right: &ast.Ident{
-											Meta:  ast.New(T, 1),
+											Meta: &ast.Meta{
+												Token: token.Token{
+													Type:     token.IDENT,
+													Literal:  "req.http.User-Agent",
+													Line:     5,
+													Position: 44,
+												},
+												Leading:            comments(),
+												Trailing:           comments(),
+												Infix:              comments(),
+												Nest:               1,
+												PreviousEmptyLines: 0,
+												EndLine:            5,
+												EndPosition:        62,
+											},
 											Value: "req.http.User-Agent",
 										},
 									},
 									Right: &ast.String{
-										Meta:  ast.New(T, 1),
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  ".com",
+												Line:     5,
+												Position: 64,
+											},
+											Leading:            comments(),
+											Trailing:           comments(),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            5,
+											EndPosition:        69,
+										},
 										Value: ".com",
 									},
 								},
@@ -438,57 +711,185 @@ func TestParseSetStatement(t *testing.T) {
 		}
 		assert(t, vcl, expect)
 	})
-}
 
-func TestParseSetStatementWithComplexComment(t *testing.T) {
-	input := `sub vcl_recv {
+	t.Run("complex comments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
 	// a
 	set /* a */ req.http.Host /* b */= /* c */"example." /* d */req.http.User-Agent /* e */; // f
-}`
-	expect := &ast.VCL{
-		Statements: []ast.Statement{
-			&ast.SubroutineDeclaration{
-				Meta: ast.New(T, 0),
-				Name: &ast.Ident{
-					Meta:  ast.New(T, 0),
-					Value: "vcl_recv",
-				},
-				Block: &ast.BlockStatement{
-					Meta: ast.New(T, 1),
-					Statements: []ast.Statement{
-						&ast.SetStatement{
-							Meta: ast.New(T, 1, comments("// a"), comments("// f")),
-							Ident: &ast.Ident{
-								Meta:  ast.New(T, 1, comments("/* a */"), comments("/* b */")),
-								Value: "req.http.Host",
+}
+`
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments(),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            5,
+						EndPosition:        1,
+					},
+					Name: &ast.Ident{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
 							},
-							Operator: &ast.Operator{
-								Meta:     ast.New(T, 1),
-								Operator: "=",
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
 							},
-							Value: &ast.InfixExpression{
-								Meta:     ast.New(T, 1, comments(), comments("/* e */")),
-								Operator: "+",
-								Left: &ast.String{
-									Meta:  ast.New(T, 1, comments("/* c */"), comments("/* d */")),
-									Value: "example.",
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            5,
+							EndPosition:        1,
+						},
+						Statements: []ast.Statement{
+							&ast.SetStatement{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.SET,
+										Literal:  "set",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// a"),
+									Trailing:           comments("// f"),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            4,
+									EndPosition:        80,
 								},
-								Right: &ast.Ident{
-									Meta:  ast.New(T, 1, comments(), comments("/* e */")),
-									Value: "req.http.User-Agent",
+								Ident: &ast.Ident{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "req.http.Host",
+											Line:     4,
+											Position: 14,
+										},
+										Leading:            comments("/* a */"),
+										Trailing:           comments("/* b */"),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        26,
+									},
+									Value: "req.http.Host",
+								},
+								Operator: &ast.Operator{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.ASSIGN,
+											Literal:  "=",
+											Line:     4,
+											Position: 35,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        35,
+									},
+									Operator: "=",
+								},
+								Value: &ast.InfixExpression{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.STRING,
+											Literal:  "example.",
+											Line:     4,
+											Position: 44,
+										},
+										Leading:            comments("/* c */"),
+										Trailing:           comments("/* d */"),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        80,
+									},
+									Operator: "+",
+									Left: &ast.String{
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.STRING,
+												Literal:  "example.",
+												Line:     4,
+												Position: 44,
+											},
+											Leading:            comments("/* c */"),
+											Trailing:           comments("/* d */"),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        53,
+										},
+										Value: "example.",
+									},
+									Right: &ast.Ident{
+										Meta: &ast.Meta{
+											Token: token.Token{
+												Type:     token.IDENT,
+												Literal:  "req.http.User-Agent",
+												Line:     4,
+												Position: 62,
+											},
+											Leading:            comments(),
+											Trailing:           comments("/* e */"),
+											Infix:              comments(),
+											Nest:               1,
+											PreviousEmptyLines: 0,
+											EndLine:            4,
+											EndPosition:        80,
+										},
+										Value: "req.http.User-Agent",
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-		},
-	}
-	vcl, err := New(lexer.NewFromString(input)).ParseVCL()
-	if err != nil {
-		t.Errorf("%+v", err)
-	}
-	assert(t, vcl, expect)
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
 }
 
 func TestParseIfStatement(t *testing.T) {

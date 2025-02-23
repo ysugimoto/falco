@@ -188,7 +188,7 @@ func (p *Parser) ParseSetStatement() (*ast.SetStatement, error) {
 		Operator: p.curToken.Token.Literal,
 	}
 	stmt.Operator.Meta.EndLine = p.curToken.Token.Line
-	stmt.Operator.Meta.EndPosition = p.curToken.Token.Position
+	stmt.Operator.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 
 	p.NextToken() // point to right expression start
 
