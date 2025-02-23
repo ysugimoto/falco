@@ -99,6 +99,8 @@ func (p *Parser) ParseImportStatement() (*ast.ImportStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	i.Meta.EndLine = i.Name.EndLine
+	i.Meta.EndPosition = i.Name.EndPosition
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, i.Name.Meta)
 	i.Meta.Trailing = p.Trailing()
@@ -127,6 +129,8 @@ func (p *Parser) ParseIncludeStatement() (ast.Statement, error) {
 		SwapLeadingTrailing(p.curToken, i.Module.Meta)
 	}
 	i.Meta.Trailing = p.Trailing()
+	i.Meta.EndLine = i.Module.EndLine
+	i.Meta.EndPosition = i.Module.EndPosition
 
 	return i, nil
 }
