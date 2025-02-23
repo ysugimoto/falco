@@ -140,6 +140,8 @@ func (p *Parser) ParseGroupedExpression() (*ast.GroupedExpression, error) {
 	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
+	exp.Meta.EndLine = right.GetMeta().EndLine
+	exp.Meta.EndPosition = right.GetMeta().EndPosition + 1
 
 	return exp, nil
 }
@@ -189,7 +191,7 @@ func (p *Parser) ParseIfExpression() (*ast.IfExpression, error) {
 
 func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
-		Meta:     p.curToken, // point to operator token
+		Meta:     left.GetMeta().Clone(),
 		Operator: p.curToken.Token.Literal,
 		Left:     left,
 	}
@@ -201,26 +203,15 @@ func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, erro
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
+	exp.Meta.EndLine = right.GetMeta().EndLine
+	exp.Meta.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }
 
 func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit bool) (ast.Expression, error) {
-	var meta *ast.Meta
-
-	// Unsure if this is a bug, but previous versions of this code carried over
-	// all of the ast.String's Meta field. This means that trailing comments on
-	// the ast.String end up on the ast.InfixExpression as well. The tests
-	// validated this so assuming it's intentional behavior for now and
-	// carrying it across with the new long string parsing.
-	if p.CurTokenIs(token.OPEN_LONG_STRING) && p.PeekTokenIs(token.STRING) {
-		meta = p.peekToken
-	} else {
-		meta = p.curToken
-	}
-
 	exp := &ast.InfixExpression{
-		Meta: meta,
+		Meta: left.GetMeta().Clone(),
 		// VCL can concat string without "+" operator, consecutive token.
 		// But we explicitly define as "+" operator to make clearly
 		Operator: "+",
@@ -234,6 +225,8 @@ func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit 
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
+	exp.Meta.EndLine = right.GetMeta().EndLine
+	exp.Meta.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }

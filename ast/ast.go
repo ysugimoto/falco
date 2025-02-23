@@ -75,6 +75,20 @@ func (m *Meta) InfixComment(cm combinationMode) string {
 	return m.comment(m.Infix, cm)
 }
 
+func (m *Meta) Clone() *Meta {
+	return &Meta{
+		ID:                 m.ID,
+		Token:              m.Token,
+		Nest:               m.Nest,
+		Leading:            m.Leading,
+		Trailing:           m.Trailing,
+		Infix:              m.Infix,
+		PreviousEmptyLines: m.PreviousEmptyLines,
+		EndLine:            m.EndLine,
+		EndPosition:        m.EndPosition,
+	}
+}
+
 var idCounter uint64
 
 func New(t token.Token, nest int, comments ...Comments) *Meta {

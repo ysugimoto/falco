@@ -393,6 +393,20 @@ func (p *Parser) ParseErrorStatement() (*ast.ErrorStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+
+	// Calculate end line and position
+	switch {
+	case stmt.Argument != nil:
+		stmt.Meta.EndLine = stmt.Argument.GetMeta().EndLine
+		stmt.Meta.EndPosition = stmt.Argument.GetMeta().EndPosition
+	case stmt.Code != nil:
+		stmt.Meta.EndLine = stmt.Code.GetMeta().EndLine
+		stmt.Meta.EndPosition = stmt.Code.GetMeta().EndPosition
+	default:
+		stmt.Meta.EndLine = stmt.GetMeta().Token.Line
+		stmt.Meta.EndPosition = stmt.GetMeta().Token.Position + len(stmt.GetMeta().Token.Literal) - 1
+	}
+
 	p.NextToken() // point to SEMICOLON
 
 	switch {
@@ -649,6 +663,8 @@ func (p *Parser) ParseIfStatement() (*ast.IfStatement, error) {
 	}
 FINISH:
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 	return stmt, nil
 }
 
