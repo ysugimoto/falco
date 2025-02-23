@@ -195,7 +195,7 @@ func (p *Parser) ParseIfExpression() (*ast.IfExpression, error) {
 
 func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
-		Meta:     left.GetMeta().Clone(),
+		Meta:     left.GetMeta().CloneWithoutComments(),
 		Operator: p.curToken.Token.Literal,
 		Left:     left,
 	}
@@ -215,7 +215,7 @@ func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, erro
 
 func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit bool) (ast.Expression, error) {
 	exp := &ast.InfixExpression{
-		Meta: left.GetMeta().Clone(),
+		Meta: left.GetMeta().CloneWithoutComments(),
 		// VCL can concat string without "+" operator, consecutive token.
 		// But we explicitly define as "+" operator to make clearly
 		Operator: "+",

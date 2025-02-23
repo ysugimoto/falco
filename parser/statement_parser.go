@@ -919,7 +919,7 @@ func (p *Parser) ParseCaseStatement() (*ast.CaseStatement, error) {
 		p.NextToken() // match expression
 
 		matchExp := &ast.InfixExpression{
-			Meta: p.curToken,
+			Meta: p.curToken.CloneWithoutComments(),
 		}
 		switch p.curToken.Token.Type {
 		case token.STRING:
@@ -939,6 +939,8 @@ func (p *Parser) ParseCaseStatement() (*ast.CaseStatement, error) {
 		default:
 			return nil, UnexpectedToken(p.curToken, "string", "~")
 		}
+		matchExp.Meta.EndLine = matchExp.Right.GetMeta().EndLine
+		matchExp.Meta.EndPosition = matchExp.Right.GetMeta().EndPosition
 		stmt.Test = matchExp
 	case token.DEFAULT:
 		// nothing to do
