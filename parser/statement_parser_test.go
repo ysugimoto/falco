@@ -328,21 +328,25 @@ func TestParseSetStatement(t *testing.T) {
 		operators := map[string]token.TokenType{
 			// simple assign
 			"=": token.ASSIGN,
+
 			// arithmetic operator
 			"+=": token.ADDITION,
 			"-=": token.SUBTRACTION,
 			"*=": token.MULTIPLICATION,
 			"/=": token.DIVISION,
+
 			// bitwise operator
 			"%=": token.REMAINDER,
 			"|=": token.BITWISE_OR,
 			"&=": token.BITWISE_AND,
 			"^=": token.BITWISE_XOR,
+
 			// bit shifts operator
 			"<<=":  token.LEFT_SHIFT,
 			">>=":  token.RIGHT_SHIFT,
 			"rol=": token.LEFT_ROTATE,
 			"ror=": token.RIGHT_ROTATE,
+
 			// logical operator
 			"||=": token.LOGICAL_OR,
 			"&&=": token.LOGICAL_AND,
