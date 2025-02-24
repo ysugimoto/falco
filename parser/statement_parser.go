@@ -101,6 +101,7 @@ func (p *Parser) ParseImportStatement() (*ast.ImportStatement, error) {
 	}
 	i.Meta.EndLine = i.Name.EndLine
 	i.Meta.EndPosition = i.Name.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, i.Name.Meta)
 	i.Meta.Trailing = p.Trailing()
@@ -526,6 +527,9 @@ func (p *Parser) ParseReturnStatement() (*ast.ReturnStatement, error) {
 	// return statement may not have argument
 	// https://developer.fastly.com/reference/vcl/statements/return/
 	if p.PeekTokenIs(token.SEMICOLON) {
+		stmt.Meta.EndLine = p.curToken.Token.Line
+		stmt.Meta.EndPosition = p.curToken.Token.Position + 5 // point "n" position of "return" characters
+
 		p.NextToken() // point to SEMICOLON
 		SwapLeadingInfix(p.curToken, stmt.Meta)
 		stmt.Meta.Trailing = p.Trailing()
