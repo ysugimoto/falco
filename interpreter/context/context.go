@@ -12,6 +12,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 // Reserved vcl names in Fastly
@@ -151,6 +152,9 @@ type Context struct {
 	ReturnState     *value.String
 	FixedTime       *time.Time
 	SubroutineCalls map[string]int
+
+	// Coverage marker pointer. not nil if testing with coverage measurement
+	Coverage *shared.Coverage
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines

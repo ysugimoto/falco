@@ -20,6 +20,7 @@ import (
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
 	tf "github.com/ysugimoto/falco/tester/function"
+	"github.com/ysugimoto/falco/tester/shared"
 	"github.com/ysugimoto/falco/tester/syntax"
 	tv "github.com/ysugimoto/falco/tester/variable"
 )
@@ -32,17 +33,23 @@ var (
 type Tester struct {
 	interpreterOptions []icontext.Option
 	config             *config.TestConfig
-	counter            *TestCounter
+	counter            *shared.Counter
 	debugger           *Debugger
+	coverage           *shared.Coverage
 }
 
 func New(c *config.TestConfig, opts []icontext.Option) *Tester {
-	return &Tester{
+	t := &Tester{
 		interpreterOptions: opts,
 		config:             c,
-		counter:            NewTestCounter(),
+		counter:            shared.NewCounter(),
 		debugger:           NewDebugger(),
 	}
+	if c.Coverage {
+		t.coverage = shared.NewCoverage()
+		t.interpreterOptions = append(t.interpreterOptions, icontext.WithCoverage(t.coverage))
+	}
+	return t
 }
 
 // Find test target VCL files
@@ -83,11 +90,15 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 		results = append(results, result)
 	}
 
-	return &TestFactory{
+	factory := &TestFactory{
 		Results:    results,
 		Statistics: t.counter,
 		Logs:       t.debugger.stack,
-	}, nil
+	}
+	if t.coverage != nil {
+		factory.Coverage = t.coverage.Factory().Report()
+	}
+	return factory, nil
 }
 
 // Actually run testing method
@@ -328,7 +339,7 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 		return nil
 	}
 	variable.Inject(&tv.TestingVariables{})
-	function.Inject(tf.TestingFunctions(i, defs, t.counter))
+	function.Inject(tf.TestingFunctions(i, defs, t.counter, t.coverage))
 
 	return i
 }

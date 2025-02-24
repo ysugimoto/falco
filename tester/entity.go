@@ -5,6 +5,7 @@ import (
 
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 type TestCase struct {
@@ -58,26 +59,7 @@ func (t *TestResult) IsPassed() bool {
 
 type TestFactory struct {
 	Results    []*TestResult
-	Statistics *TestCounter
+	Statistics *shared.Counter
 	Logs       []string
-}
-
-type TestCounter struct {
-	Asserts int `json:"asserts"`
-	Passes  int `json:"passes"`
-	Fails   int `json:"fails"`
-}
-
-func NewTestCounter() *TestCounter {
-	return &TestCounter{}
-}
-
-func (c *TestCounter) Pass() {
-	c.Asserts++
-	c.Passes++
-}
-
-func (c *TestCounter) Fail() {
-	c.Asserts++
-	c.Fails++
+	Coverage   *shared.CoverageReport
 }

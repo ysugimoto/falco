@@ -136,16 +136,21 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
+	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
 	}
-	if err := i.ProcessDeclarations(statements); err != nil {
+	// instrumenting if coverage measurement is enabled
+	if i.ctx.Coverage != nil {
+		i.instrument(vcl)
+	}
+	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
 		return err
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -192,6 +197,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				i.ctx.SubroutineFunctions[t.Name.Value] = t
 				continue
 			}
+
 			exists, ok := i.ctx.Subroutines[t.Name.Value]
 			if !ok {
 				i.ctx.Subroutines[t.Name.Value] = t
