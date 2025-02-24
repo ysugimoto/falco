@@ -38,6 +38,8 @@ type Meta struct {
 	Infix              Comments
 	Nest               int
 	PreviousEmptyLines int
+	EndLine            int
+	EndPosition        int
 }
 
 // combinationMode represents comment combination mode
@@ -71,6 +73,34 @@ func (m *Meta) TrailingComment(cm combinationMode) string {
 
 func (m *Meta) InfixComment(cm combinationMode) string {
 	return m.comment(m.Infix, cm)
+}
+
+func (m *Meta) Clone() *Meta {
+	return &Meta{
+		ID:                 m.ID,
+		Token:              m.Token,
+		Nest:               m.Nest,
+		Leading:            m.Leading,
+		Trailing:           m.Trailing,
+		Infix:              m.Infix,
+		PreviousEmptyLines: m.PreviousEmptyLines,
+		EndLine:            m.EndLine,
+		EndPosition:        m.EndPosition,
+	}
+}
+
+func (m *Meta) CloneWithoutComments() *Meta {
+	return &Meta{
+		ID:                 m.ID,
+		Token:              m.Token,
+		Nest:               m.Nest,
+		Leading:            Comments{},
+		Trailing:           Comments{},
+		Infix:              Comments{},
+		PreviousEmptyLines: m.PreviousEmptyLines,
+		EndLine:            m.EndLine,
+		EndPosition:        m.EndPosition,
+	}
 }
 
 var idCounter uint64
