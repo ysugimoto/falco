@@ -21,9 +21,9 @@ func (i *InfixExpression) String() string {
 	buf.WriteString("(")
 	buf.WriteString(i.Left.String())
 	if i.Explicit {
-		buf.WriteString(" " + i.Operator + " ")
+		buf.WriteString(" " + i.Operator)
 	}
-	buf.WriteString(i.Right.String())
+	buf.WriteString(" " + i.Right.String())
 	buf.WriteString(")")
 
 	return buf.String()

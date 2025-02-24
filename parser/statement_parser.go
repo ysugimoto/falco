@@ -99,6 +99,9 @@ func (p *Parser) ParseImportStatement() (*ast.ImportStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	i.Meta.EndLine = i.Name.EndLine
+	i.Meta.EndPosition = i.Name.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, i.Name.Meta)
 	i.Meta.Trailing = p.Trailing()
@@ -127,6 +130,8 @@ func (p *Parser) ParseIncludeStatement() (ast.Statement, error) {
 		SwapLeadingTrailing(p.curToken, i.Module.Meta)
 	}
 	i.Meta.Trailing = p.Trailing()
+	i.Meta.EndLine = i.Module.EndLine
+	i.Meta.EndPosition = i.Module.EndPosition
 
 	return i, nil
 }
@@ -154,6 +159,8 @@ func (p *Parser) ParseBlockStatement() (*ast.BlockStatement, error) {
 
 	p.NextToken() // point to RIGHT_BRACE
 	b.Meta.Trailing = p.Trailing()
+	b.Meta.EndLine = p.curToken.Token.Line
+	b.Meta.EndPosition = p.curToken.Token.Position
 
 	// RIGHT_BRACE leading comments are block infix comments
 	SwapLeadingInfix(p.curToken, b.Meta)
@@ -181,6 +188,9 @@ func (p *Parser) ParseSetStatement() (*ast.SetStatement, error) {
 		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
+	stmt.Operator.Meta.EndLine = p.curToken.Token.Line
+	stmt.Operator.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+
 	p.NextToken() // point to right expression start
 
 	exp, err := p.ParseExpression(LOWEST)
@@ -192,6 +202,9 @@ func (p *Parser) ParseSetStatement() (*ast.SetStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = exp.GetMeta().EndLine
+	stmt.Meta.EndPosition = exp.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Value.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()
@@ -212,6 +225,9 @@ func (p *Parser) ParseUnsetStatement() (*ast.UnsetStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.Ident.EndLine
+	stmt.Meta.EndPosition = stmt.Ident.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Ident.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()
@@ -232,6 +248,9 @@ func (p *Parser) ParseRemoveStatement() (*ast.RemoveStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.Ident.EndLine
+	stmt.Meta.EndPosition = stmt.Ident.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Ident.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()
@@ -259,6 +278,9 @@ func (p *Parser) ParseAddStatement() (*ast.AddStatement, error) {
 		Meta:     p.curToken,
 		Operator: p.curToken.Token.Literal,
 	}
+	stmt.Operator.Meta.EndLine = p.curToken.Token.Line
+	stmt.Operator.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+
 	p.NextToken() // start expression token
 
 	exp, err := p.ParseExpression(LOWEST)
@@ -270,6 +292,9 @@ func (p *Parser) ParseAddStatement() (*ast.AddStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = exp.GetMeta().EndLine
+	stmt.Meta.EndPosition = exp.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Value.GetMeta())
 	stmt.Meta.Trailing = p.Trailing()
@@ -287,6 +312,7 @@ func (p *Parser) ParseCallStatement() (*ast.CallStatement, error) {
 	}
 	stmt.Subroutine = p.ParseIdent()
 
+	var hasParenthesis bool
 	// Parse functions with ()
 	if p.PeekTokenIs(token.LEFT_PAREN) {
 		p.NextToken() // point to the token to check if it is RIGHT_PAREN
@@ -294,10 +320,21 @@ func (p *Parser) ParseCallStatement() (*ast.CallStatement, error) {
 			return nil, errors.WithStack(UnexpectedToken(p.curToken))
 		}
 		p.NextToken() // point to RIGHT_PAREN
+		hasParenthesis = true
 	}
 
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
+	}
+
+	if hasParenthesis {
+		// If call has parenthesis, set end position to current token
+		stmt.Meta.EndLine = p.curToken.Token.Line
+		stmt.Meta.EndPosition = p.curToken.Token.Position
+	} else {
+		// Otherwise, set end position from subroutine ident
+		stmt.Meta.EndLine = stmt.Subroutine.EndLine
+		stmt.Meta.EndPosition = stmt.Subroutine.EndPosition
 	}
 
 	p.NextToken() // point to SEMICOLON
@@ -337,6 +374,9 @@ func (p *Parser) ParseDeclareStatement() (*ast.DeclareStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.ValueType.Meta.EndLine
+	stmt.Meta.EndPosition = stmt.ValueType.Meta.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.ValueType.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -385,6 +425,20 @@ func (p *Parser) ParseErrorStatement() (*ast.ErrorStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+
+	// Calculate end line and position
+	switch {
+	case stmt.Argument != nil:
+		stmt.Meta.EndLine = stmt.Argument.GetMeta().EndLine
+		stmt.Meta.EndPosition = stmt.Argument.GetMeta().EndPosition
+	case stmt.Code != nil:
+		stmt.Meta.EndLine = stmt.Code.GetMeta().EndLine
+		stmt.Meta.EndPosition = stmt.Code.GetMeta().EndPosition
+	default:
+		stmt.Meta.EndLine = stmt.GetMeta().Token.Line
+		stmt.Meta.EndPosition = stmt.GetMeta().Token.Position + len(stmt.GetMeta().Token.Literal) - 1
+	}
+
 	p.NextToken() // point to SEMICOLON
 
 	switch {
@@ -411,6 +465,9 @@ func (p *Parser) ParseEsiStatement() (*ast.EsiStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position + 2
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -433,6 +490,9 @@ func (p *Parser) ParseLogStatement() (*ast.LogStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = value.GetMeta().EndLine
+	stmt.Meta.EndPosition = value.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	stmt.Meta.Trailing = p.Trailing()
 
@@ -447,7 +507,9 @@ func (p *Parser) ParseRestartStatement() (*ast.RestartStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	p.NextToken() // point to SEMICOLON
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position + 6 // point "t" position of "restart" characters
+	p.NextToken()                                         // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
 
@@ -465,6 +527,9 @@ func (p *Parser) ParseReturnStatement() (*ast.ReturnStatement, error) {
 	// return statement may not have argument
 	// https://developer.fastly.com/reference/vcl/statements/return/
 	if p.PeekTokenIs(token.SEMICOLON) {
+		stmt.Meta.EndLine = p.curToken.Token.Line
+		stmt.Meta.EndPosition = p.curToken.Token.Position + 5 // point "n" position of "return" characters
+
 		p.NextToken() // point to SEMICOLON
 		SwapLeadingInfix(p.curToken, stmt.Meta)
 		stmt.Meta.Trailing = p.Trailing()
@@ -500,6 +565,15 @@ func (p *Parser) ParseReturnStatement() (*ast.ReturnStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+
+	if hasRightParen {
+		stmt.Meta.EndLine = p.curToken.Token.Line
+		stmt.Meta.EndPosition = p.curToken.Token.Position
+	} else {
+		stmt.Meta.EndLine = expression.GetMeta().EndLine
+		stmt.Meta.EndPosition = expression.GetMeta().EndPosition
+	}
+
 	p.NextToken() // point to SEMICOLON
 	if hasRightParen {
 		stmt.ParenthesisTrailingComments = p.curToken.Leading
@@ -526,6 +600,9 @@ func (p *Parser) ParseSyntheticStatement() (*ast.SyntheticStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = value.GetMeta().EndLine
+	stmt.Meta.EndPosition = value.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	stmt.Meta.Trailing = p.Trailing()
 
@@ -547,6 +624,9 @@ func (p *Parser) ParseSyntheticBase64Statement() (*ast.SyntheticBase64Statement,
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = value.GetMeta().EndLine
+	stmt.Meta.EndPosition = value.GetMeta().EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	stmt.Meta.Trailing = p.Trailing()
 
@@ -612,18 +692,21 @@ func (p *Parser) ParseIfStatement() (*ast.IfStatement, error) {
 			}
 
 			// Otherwise, it is else statement
-			stmt.Alternative = &ast.ElseStatement{
+			alternative := &ast.ElseStatement{
 				Meta: p.curToken,
 			}
 			// Next token must be LEFT_BRACE
 			if !p.ExpectPeek(token.LEFT_BRACE) {
 				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 			}
-			SwapLeadingInfix(p.curToken, stmt.Alternative.Meta)
-			stmt.Alternative.Consequence, err = p.ParseBlockStatement()
+			SwapLeadingInfix(p.curToken, alternative.Meta)
+			alternative.Consequence, err = p.ParseBlockStatement()
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
+			alternative.Meta.EndLine = p.curToken.Token.Line
+			alternative.Meta.EndPosition = p.curToken.Token.Position
+			stmt.Alternative = alternative
 			// exit for loop
 			goto FINISH
 		// Note: VCL could define "else if" statement with "elseif", "elsif" keyword
@@ -641,6 +724,8 @@ func (p *Parser) ParseIfStatement() (*ast.IfStatement, error) {
 	}
 FINISH:
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 	return stmt, nil
 }
 
@@ -678,6 +763,8 @@ func (p *Parser) ParseAnotherIfStatement(keyword string) (*ast.IfStatement, erro
 		return nil, errors.WithStack(err)
 	}
 	// cursor must be on RIGHT_BRACE
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 	return stmt, nil
 }
 
@@ -730,6 +817,8 @@ func (p *Parser) ParseSwitchStatement() (*ast.SwitchStatement, error) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
 	SwapLeadingTrailing(p.curToken, control.Expression.GetMeta())
+	control.Meta.EndLine = p.curToken.Token.Line
+	control.Meta.EndPosition = p.curToken.Token.Position
 
 	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
@@ -781,6 +870,8 @@ func (p *Parser) ParseSwitchStatement() (*ast.SwitchStatement, error) {
 	p.NextToken() // point to RIGHT_BRACE
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 
 	return stmt, nil
 }
@@ -793,6 +884,9 @@ func (p *Parser) ParseBreakStatement() (*ast.BreakStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position + 4
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -808,6 +902,9 @@ func (p *Parser) ParseFallthroughStatement() (*ast.FallthroughStatement, error) 
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position + 10
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -826,7 +923,7 @@ func (p *Parser) ParseCaseStatement() (*ast.CaseStatement, error) {
 		p.NextToken() // match expression
 
 		matchExp := &ast.InfixExpression{
-			Meta: p.curToken,
+			Meta: p.curToken.CloneWithoutComments(),
 		}
 		switch p.curToken.Token.Type {
 		case token.STRING:
@@ -846,6 +943,8 @@ func (p *Parser) ParseCaseStatement() (*ast.CaseStatement, error) {
 		default:
 			return nil, UnexpectedToken(p.curToken, "string", "~")
 		}
+		matchExp.Meta.EndLine = matchExp.Right.GetMeta().EndLine
+		matchExp.Meta.EndPosition = matchExp.Right.GetMeta().EndPosition
 		stmt.Test = matchExp
 	case token.DEFAULT:
 		// nothing to do
@@ -886,6 +985,8 @@ func (p *Parser) ParseCaseStatement() (*ast.CaseStatement, error) {
 		}
 		stmt.Fallthrough = true
 	}
+	stmt.Meta.EndLine = p.peekToken.Token.Line
+	stmt.Meta.EndPosition = p.peekToken.Token.Position
 
 	return stmt, nil
 }
@@ -903,6 +1004,9 @@ func (p *Parser) ParseGotoStatement() (*ast.GotoStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = stmt.Destination.EndLine
+	stmt.Meta.EndPosition = stmt.Destination.EndPosition
+
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingTrailing(p.curToken, stmt.Destination.Meta)
 	stmt.Meta.Trailing = p.Trailing()
@@ -920,13 +1024,15 @@ func (p *Parser) ParseGotoDestination() (*ast.GotoDestinationStatement, error) {
 	}
 	stmt.Name = p.ParseIdent()
 	stmt.Meta.Trailing = p.Trailing()
+	stmt.Meta.EndLine = stmt.Name.EndLine
+	stmt.Meta.EndPosition = stmt.Name.EndPosition
 
 	return stmt, nil
 }
 
 func (p *Parser) ParseFunctionCall() (*ast.FunctionCallStatement, error) {
 	stmt := &ast.FunctionCallStatement{
-		Meta:     p.curToken,
+		Meta:     p.curToken.Clone(),
 		Function: p.ParseIdent(),
 	}
 
@@ -940,6 +1046,8 @@ func (p *Parser) ParseFunctionCall() (*ast.FunctionCallStatement, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
+	stmt.Meta.EndLine = p.curToken.Token.Line
+	stmt.Meta.EndPosition = p.curToken.Token.Position
 
 	p.NextToken() // point to SEMICOLON
 	SwapLeadingInfix(p.curToken, stmt.Meta)

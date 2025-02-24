@@ -10,17 +10,25 @@ import (
 )
 
 func (p *Parser) ParseIdent() *ast.Ident {
-	return &ast.Ident{
+	v := &ast.Ident{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	// To point to the last character, minus 1
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v
 }
 
 func (p *Parser) ParseIP() *ast.IP {
-	return &ast.IP{
+	v := &ast.IP{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	// To point to the last character, plus 1 because token is string so add half of offset
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) + (p.curToken.Token.Offset / 2)
+	return v
 }
 
 func (p *Parser) ParseLongString() (*ast.String, error) {
@@ -35,6 +43,8 @@ func (p *Parser) ParseLongString() (*ast.String, error) {
 	str, err := p.ParseString()
 	str.LongString = true
 	str.Delimiter = delimiter
+	str.Meta.Token.Position -= len(delimiter)
+	str.Meta.Token.Position -= 1
 
 	if !p.PeekTokenIs(token.CLOSE_LONG_STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
@@ -46,58 +56,72 @@ func (p *Parser) ParseLongString() (*ast.String, error) {
 
 	str.GetMeta().Leading = openToken.Leading
 	str.GetMeta().Trailing = p.peekToken.Trailing
-	p.NextToken()
+	p.NextToken() // point to end delimiter
+	str.Meta.EndLine = p.curToken.Token.Line
+	str.Meta.EndPosition = p.curToken.Token.Position
 
 	return str, err
 }
 
 func (p *Parser) ParseString() (*ast.String, error) {
 	var err error
-	Parsed := p.curToken.Token.Literal
+	parsed := p.curToken.Token.Literal
 	// Escapes are only expanded in double-quoted strings.
 	if p.curToken.Token.Offset == 2 {
-		Parsed, err = decodeStringEscapes(Parsed)
+		parsed, err = decodeStringEscapes(parsed)
 		if err != nil {
 			return nil, errors.WithStack(InvalidEscape(p.curToken, err.Error()))
 		}
 	}
 
-	return &ast.String{
+	v := &ast.String{
 		Meta:  p.curToken,
-		Value: Parsed,
-	}, nil
+		Value: parsed,
+	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	v.Meta.EndPosition = p.curToken.Token.Position + len(parsed) - 1 + p.curToken.Token.Offset
+	return v, nil
 }
 
 func (p *Parser) ParseInteger() (*ast.Integer, error) {
-	v, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
+	i, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
 	}
 
-	return &ast.Integer{
+	v := &ast.Integer{
 		Meta:  p.curToken,
-		Value: v,
-	}, nil
+		Value: i,
+	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }
 
 func (p *Parser) ParseFloat() (*ast.Float, error) {
-	v, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
+	f, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "FLOAT"))
 	}
 
-	return &ast.Float{
+	v := &ast.Float{
 		Meta:  p.curToken,
-		Value: v,
-	}, nil
+		Value: f,
+	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }
 
 // nolint: unparam
 func (p *Parser) ParseBoolean() *ast.Boolean {
-	return &ast.Boolean{
+	v := &ast.Boolean{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Type == token.TRUE,
 	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v
 }
 
 func (p *Parser) ParseRTime() (*ast.RTime, error) {
@@ -124,8 +148,11 @@ func (p *Parser) ParseRTime() (*ast.RTime, error) {
 	if _, err := strconv.ParseFloat(value, 64); err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "RTIME"))
 	}
-	return &ast.RTime{
+	v := &ast.RTime{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
-	}, nil
+	}
+	v.Meta.EndLine = p.curToken.Token.Line
+	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }

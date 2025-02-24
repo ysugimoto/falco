@@ -247,7 +247,7 @@ func (l *Lexer) NextToken() token.Token {
 				t = newToken(token.AND, l.char, line, index)
 				t.Literal = "&&"
 			}
-		case '=': // "|="
+		case '=': // "&="
 			l.readChar()
 			t = newToken(token.BITWISE_AND, l.char, line, index)
 			t.Literal = "&="

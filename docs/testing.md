@@ -30,6 +30,7 @@ Flags:
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acl limitation
     --watch            : Watch VCL file changes and run test
+    --coverage         : Report code coverage
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl
@@ -89,6 +90,23 @@ falco test -I vcl_tests ./vcl/default.vcl --watch
 ```
 
 Then falco observes `vcl_tests/*` and `vcl/*` file changes and run test incrementally.
+
+## Report Code Coverage
+
+If you provide `--coverage` option for testing command, falco collects and calculates code coverage after the test.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --coverage
+```
+
+After testing finished, falco will display the coverage report.
+
+![CleanShot 2025-02-24 at 18 31 29@2x](https://github.com/user-attachments/assets/73071213-3924-4b8e-aabe-383f15feb5f3)
+
+> [!NOTE]
+> To collect the code coverage, falco needs instrumenting to your VCL code by transforming the AST.
+> This process is heavy so coverage mode is disabled when incremental testing is active.
 
 ## Testing Subroutine
 

@@ -12,7 +12,7 @@ import (
 var fake = &ast.Meta{Token: token.Null}
 
 // Add coverage marker to entire VCL
-// Note that our coverage measurement will ignores root statig declarations like backend, table, etc.
+// Note that our coverage measurement will ignores root declarations like backend, table, etc.
 func (i *Interpreter) instrument(vcl *ast.VCL) {
 	for _, v := range vcl.Statements {
 		if sub, ok := v.(*ast.SubroutineDeclaration); ok {
@@ -42,7 +42,7 @@ func (i *Interpreter) instrumentStatements(stmts []ast.Statement) []ast.Statemen
 	return statements
 }
 
-// Add coverage marker to statement
+// Add coverage marker to single statement
 func (i *Interpreter) instrumentStatement(stmt ast.Statement) []ast.Statement {
 	var statements []ast.Statement
 
@@ -51,24 +51,24 @@ func (i *Interpreter) instrumentStatement(stmt ast.Statement) []ast.Statement {
 	case *ast.BlockStatement:
 		// Only put instrumentation to the block inside statements
 		t.Statements = i.instrumentStatements(t.Statements)
+
 	case *ast.IfStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, t))
 		i.instrumentIfStatement(t)
+
 	case *ast.SwitchStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, t))
 		i.instrumentSwitchStatement(t)
 
+	// Instrumenting for statement with specific argument expression(s)
 	case *ast.FunctionCallStatement:
 		statements = append(statements, i.instrumentFunctionCallStatement(t)...)
-
-	// Common expression value instruments
 	case *ast.ErrorStatement:
-		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
-		statements = append(statements, i.instrumentExpression(t.Code)...)
-		statements = append(statements, i.instrumentExpression(t.Argument)...)
+		statements = append(statements, i.instrumentErrorStatement(t)...)
 	case *ast.ReturnStatement:
-		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
-		statements = append(statements, i.instrumentExpression(t.ReturnExpression)...)
+		statements = append(statements, i.instrumentReturnStatement(t)...)
+
+	// Instrumenting for statement with single expression
 	case *ast.SetStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
 		statements = append(statements, i.instrumentExpression(t.Value)...)
@@ -102,7 +102,39 @@ func (i *Interpreter) instrumentStatement(stmt ast.Statement) []ast.Statement {
 	return statements
 }
 
-// Put conditions and branches instruments
+// Put conditions and branches instruments to if statement.
+// Note that on instrumenting, we need to cover the elseif condition,
+// so that we will transform the else-if statement to the nested if-else like:
+//
+// Before:
+//
+//	if (condition01) {
+//	  consequence01...
+//	} else if (condition02) {
+//	  consequence02...
+//	} else {
+//	  alternative...
+//	}
+//
+// After:
+//
+//	[statement of if statement]
+//	if (condition01) {
+//	  [branch of condition01_1] - if
+//	  [statements of consequence01]
+//	  consequence01...
+//	} else {
+//	  # [branch of condition01_2] - else if
+//	  if (condition02) {
+//	    [branch of condition02]
+//	    [statements of consequence02]
+//	    consequence02...
+//	  } else {
+//	    [branch of condition01_3] - else
+//	    [statements of alternative]
+//	    alternative...
+//	  }
+//	}
 func (i *Interpreter) instrumentIfStatement(stmt *ast.IfStatement) {
 	branch := 1
 
@@ -151,6 +183,37 @@ func (i *Interpreter) instrumentIfStatement(stmt *ast.IfStatement) {
 	}
 }
 
+// Put conditions and branches instruments to switch statement.
+// Note that on instrumenting, we need to cover for each cases,
+//
+// Before:
+//
+//	switch (test) {
+//	 case "1":
+//	   case01_statements...
+//	 case "2":
+//	   case02_statements...
+//	 default:
+//	   default_statements...
+//	}
+//
+// After:
+//
+//	[statement of switch statement]
+//	switch (test) {
+//	 case "1":
+//	   [branch of switch_1]
+//	   [statements of case01_statements]
+//	   case01_statements...
+//	 case "2":
+//	   [branch of switch_2]
+//	   [statements of case02_statements]
+//	   case02_statements...
+//	 default:
+//	   [statements of default_statements]
+//	   [branch of switch_3]
+//	   default_statements...
+//	}
 func (i *Interpreter) instrumentSwitchStatement(stmt *ast.SwitchStatement) {
 	branch := 1
 
@@ -171,6 +234,31 @@ func (i *Interpreter) instrumentFunctionCallStatement(stmt *ast.FunctionCallStat
 
 	for _, arg := range stmt.Arguments {
 		statements = append(statements, i.instrumentExpression(arg)...)
+	}
+
+	return statements
+}
+
+func (i *Interpreter) instrumentErrorStatement(stmt *ast.ErrorStatement) []ast.Statement {
+	var statements []ast.Statement
+
+	statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
+	if stmt.Code != nil {
+		statements = append(statements, i.instrumentExpression(stmt.Code)...)
+	}
+	if stmt.Argument != nil {
+		statements = append(statements, i.instrumentExpression(stmt.Argument)...)
+	}
+
+	return statements
+}
+
+func (i *Interpreter) instrumentReturnStatement(stmt *ast.ReturnStatement) []ast.Statement {
+	var statements []ast.Statement
+
+	statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
+	if stmt.ReturnExpression != nil {
+		statements = append(statements, i.instrumentExpression(stmt.ReturnExpression)...)
 	}
 
 	return statements
@@ -200,6 +288,23 @@ func (i *Interpreter) instrumentExpression(expr ast.Expression) []ast.Statement 
 	return statements
 }
 
+// Put conditions and branches instruments to if expression.
+// Note that on instrumenting, we need to cover the consequence/alternative expression.
+//
+// Before:
+//
+//	set req.http.Foo = if(req.http.Bar, "a", "b");
+//
+// After:
+//
+//	[statement of set statement]
+//	[statement of if expression]
+//	if (req.http.Bar) {
+//	  [branch of "a"]
+//	} else {
+//	  [branch of "b"]
+//	}
+//	set req.http.Foo = if(req.http.Bar, "a", "b");
 func (i *Interpreter) instrumentIfExpression(expr *ast.IfExpression) []ast.Statement {
 	branch := &ast.IfStatement{
 		Keyword:   "if",
@@ -225,6 +330,7 @@ func (i *Interpreter) instrumentIfExpression(expr *ast.IfExpression) []ast.State
 	return []ast.Statement{branch}
 }
 
+// Create coverage marker and put cover function into the VCL statements
 func (i *Interpreter) createMarker(t shared.CoverageType, node ast.Node, suffix ...string) ast.Statement {
 	name := "coverage." + t.String()
 	tok := node.GetMeta().Token
