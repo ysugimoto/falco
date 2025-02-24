@@ -51,24 +51,24 @@ func (i *Interpreter) instrumentStatement(stmt ast.Statement) []ast.Statement {
 	case *ast.BlockStatement:
 		// Only put instrumentation to the block inside statements
 		t.Statements = i.instrumentStatements(t.Statements)
+
 	case *ast.IfStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, t))
 		i.instrumentIfStatement(t)
+
 	case *ast.SwitchStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, t))
 		i.instrumentSwitchStatement(t)
 
+	// Instrumenting for statement with specific argument expression(s)
 	case *ast.FunctionCallStatement:
 		statements = append(statements, i.instrumentFunctionCallStatement(t)...)
-
-	// Common expression value instruments
 	case *ast.ErrorStatement:
-		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
-		statements = append(statements, i.instrumentExpression(t.Code)...)
-		statements = append(statements, i.instrumentExpression(t.Argument)...)
+		statements = append(statements, i.instrumentErrorStatement(t)...)
 	case *ast.ReturnStatement:
-		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
-		statements = append(statements, i.instrumentExpression(t.ReturnExpression)...)
+		statements = append(statements, i.instrumentReturnStatement(t)...)
+
+	// Instrumenting for statement with single expression
 	case *ast.SetStatement:
 		statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
 		statements = append(statements, i.instrumentExpression(t.Value)...)
@@ -234,6 +234,31 @@ func (i *Interpreter) instrumentFunctionCallStatement(stmt *ast.FunctionCallStat
 
 	for _, arg := range stmt.Arguments {
 		statements = append(statements, i.instrumentExpression(arg)...)
+	}
+
+	return statements
+}
+
+func (i *Interpreter) instrumentErrorStatement(stmt *ast.ErrorStatement) []ast.Statement {
+	var statements []ast.Statement
+
+	statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
+	if stmt.Code != nil {
+		statements = append(statements, i.instrumentExpression(stmt.Code)...)
+	}
+	if stmt.Argument != nil {
+		statements = append(statements, i.instrumentExpression(stmt.Argument)...)
+	}
+
+	return statements
+}
+
+func (i *Interpreter) instrumentReturnStatement(stmt *ast.ReturnStatement) []ast.Statement {
+	var statements []ast.Statement
+
+	statements = append(statements, i.createMarker(shared.CoverageTypeStatement, stmt))
+	if stmt.ReturnExpression != nil {
+		statements = append(statements, i.instrumentExpression(stmt.ReturnExpression)...)
 	}
 
 	return statements
