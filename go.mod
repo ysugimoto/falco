@@ -30,6 +30,8 @@ require (
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
 
+require github.com/olekukonko/tablewriter v0.0.5 // indirect
+
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
