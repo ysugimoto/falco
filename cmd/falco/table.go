@@ -22,7 +22,7 @@ func getCellColor(p float64) tablewriter.Colors {
 	switch {
 	case p >= 80:
 		return cellGreen
-	case p >= 50:
+	case p >= 50 && p < 80:
 		return cellYellow
 	default:
 		return cellRed
@@ -42,16 +42,19 @@ type tableRow struct {
 }
 
 func (r tableRow) rowData() (data []string, colors []tablewriter.Colors) {
+	// File column
 	data = append(data, r.File)
 	colors = append(colors, getCellColor((r.Statements+r.Branches+r.Subroutines)/3))
 
-	// data = append(data, fmt.Sprintf("%.2f", r.Statements))
+	// Stmt column
 	data = append(data, printScore(r.Statements))
 	colors = append(colors, getCellColor(r.Statements))
 
+	// Branch column
 	data = append(data, printScore(r.Branches))
 	colors = append(colors, getCellColor(r.Branches))
 
+	// Subroutine column
 	data = append(data, printScore(r.Subroutines))
 	colors = append(colors, getCellColor(r.Subroutines))
 
@@ -59,7 +62,7 @@ func (r tableRow) rowData() (data []string, colors []tablewriter.Colors) {
 }
 
 func printCoverageTable(c *shared.CoverageFactory) error {
-	coverageTable, err := formatCoverageTable(c)
+	coverageTable, err := transformCoverageTable(c)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -90,51 +93,15 @@ func printCoverageTable(c *shared.CoverageFactory) error {
 	return nil
 }
 
-func formatCoverageTable(c *shared.CoverageFactory) ([]tableRow, error) {
-	cwd, err := os.Getwd()
+func transformCoverageTable(c *shared.CoverageFactory) ([]tableRow, error) {
+	fm, err := transformFileMap(c)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	// Grouping by file
-	fileMap := make(map[string]*shared.CoverageFactory)
-	for id, tok := range c.NodeMap {
-		if filepath.Ext(tok.File) != ".vcl" {
-			continue
-		}
-		rel, err := filepath.Rel(cwd, tok.File)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		if _, ok := fileMap[rel]; !ok {
-			fileMap[rel] = &shared.CoverageFactory{
-				Subroutines: make(shared.CoverageFactoryItem),
-				Statements:  make(shared.CoverageFactoryItem),
-				Branches:    make(shared.CoverageFactoryItem),
-			}
-		}
-		switch {
-		case strings.HasPrefix(id, "sub"):
-			if _, ok := fileMap[rel].Subroutines[id]; !ok {
-				fileMap[rel].Subroutines[id] = 0
-			}
-			fileMap[rel].Subroutines[id] += c.Subroutines[id]
-		case strings.HasPrefix(id, "stmt"):
-			if _, ok := fileMap[rel].Statements[id]; !ok {
-				fileMap[rel].Statements[id] = 0
-			}
-			fileMap[rel].Statements[id] += c.Statements[id]
-		case strings.HasPrefix(id, "brancn"):
-			if _, ok := fileMap[rel].Branches[id]; !ok {
-				fileMap[rel].Branches[id] = 0
-			}
-			fileMap[rel].Branches[id] += c.Branches[id]
-		}
-	}
-
 	// Transform to tableRow
 	var rows []tableRow
-	for file, factory := range fileMap {
+	for file, factory := range fm {
 		report := factory.Report()
 		rows = append(rows, tableRow{
 			File:        file,
@@ -143,10 +110,63 @@ func formatCoverageTable(c *shared.CoverageFactory) ([]tableRow, error) {
 			Subroutines: report.Statements.Percent,
 		})
 	}
-	// Sort by filename
+
+	// Sort by filename ascending
 	sort.Slice(rows, func(i, j int) bool {
-		return rows[i].File > rows[j].File
+		return rows[i].File < rows[j].File // ascii asc
 	})
 
 	return rows, nil
+}
+
+func transformFileMap(c *shared.CoverageFactory) (map[string]*shared.CoverageFactory, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Grouping by file
+	fileMap := make(map[string]*shared.CoverageFactory)
+	for id, tok := range c.NodeMap {
+		var file string
+		var err error
+
+		// If file extension is ".vcl", get fileative path
+		if strings.EqualFold(filepath.Ext(tok.File), ".vcl") {
+			file, err = filepath.Rel(cwd, tok.File)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+		} else {
+			// Other cases like "snippet::xxx" - included snippets
+			file = tok.File
+		}
+
+		if _, ok := fileMap[file]; !ok {
+			fileMap[file] = &shared.CoverageFactory{
+				Subroutines: make(shared.CoverageFactoryItem),
+				Statements:  make(shared.CoverageFactoryItem),
+				Branches:    make(shared.CoverageFactoryItem),
+			}
+		}
+		switch {
+		case strings.HasPrefix(id, "sub"):
+			if _, ok := fileMap[file].Subroutines[id]; !ok {
+				fileMap[file].Subroutines[id] = 0
+			}
+			fileMap[file].Subroutines[id] += c.Subroutines[id]
+		case strings.HasPrefix(id, "stmt"):
+			if _, ok := fileMap[file].Statements[id]; !ok {
+				fileMap[file].Statements[id] = 0
+			}
+			fileMap[file].Statements[id] += c.Statements[id]
+		case strings.HasPrefix(id, "brancn"):
+			if _, ok := fileMap[file].Branches[id]; !ok {
+				fileMap[file].Branches[id] = 0
+			}
+			fileMap[file].Branches[id] += c.Branches[id]
+		}
+	}
+
+	return fileMap, nil
 }
