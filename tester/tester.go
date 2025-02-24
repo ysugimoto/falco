@@ -90,11 +90,15 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 		results = append(results, result)
 	}
 
-	return &TestFactory{
+	factory := &TestFactory{
 		Results:    results,
 		Statistics: t.counter,
 		Logs:       t.debugger.stack,
-	}, nil
+	}
+	if t.coverage != nil {
+		factory.Coverage = t.coverage.Factory().Report()
+	}
+	return factory, nil
 }
 
 // Actually run testing method

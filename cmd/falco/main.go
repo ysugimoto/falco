@@ -470,6 +470,14 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
+	if factory.Coverage != nil {
+		c := factory.Coverage
+		write(white, "%s: ", "Coverage")
+		write(white, "%% Stmts: %.2f (%d/%d), ", c.Statements.Percent, c.Statements.Executed, c.Statements.Total)
+		write(white, "%% Branch: %.2f (%d/%d), ", c.Branches.Percent, c.Branches.Executed, c.Branches.Total)
+		writeln(white, "%% Subroutines: %.2f (%d/%d)", c.Subroutines.Percent, c.Subroutines.Executed, c.Subroutines.Total)
+	}
+
 	if factory.Statistics.Fails > 0 {
 		return ErrExit
 	}

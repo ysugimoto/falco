@@ -21,7 +21,7 @@ type testTable struct {
 	name     string
 	input    string
 	expect   string
-	coverage *shared.Coverage
+	coverage *shared.CoverageFactory
 }
 type testTables []testTable
 
@@ -48,7 +48,7 @@ func assertInstrument(t *testing.T, tests testTables) {
 				t.Errorf("instrumented vcl mismatch, diff=%s", diff)
 				return
 			}
-			if diff := cmp.Diff(c, tt.coverage); diff != "" {
+			if diff := cmp.Diff(c.Factory(), tt.coverage); diff != "" {
 				t.Errorf("coverage state mismatch, diff=%s", diff)
 				return
 			}
@@ -80,16 +80,16 @@ sub instrument2 {
 	set req.http.Bar = "baz";
 }
 `,
-			coverage: &shared.Coverage{
-				Subroutines: shared.CoverageMap{
+			coverage: &shared.CoverageFactory{
+				Subroutines: shared.CoverageFactoryItem{
 					"sub_2_1": 0,
 					"sub_5_1": 0,
 				},
-				Statements: shared.CoverageMap{
+				Statements: shared.CoverageFactoryItem{
 					"stmt_3_2": 0,
 					"stmt_6_2": 0,
 				},
-				Branches: shared.CoverageMap{},
+				Branches: shared.CoverageFactoryItem{},
 				NodeMap: map[string]token.Token{
 					"sub_2_1":  {Type: token.SUBROUTINE, Literal: "sub", Line: 2, Position: 1},
 					"sub_5_1":  {Type: token.SUBROUTINE, Literal: "sub", Line: 5, Position: 1},
@@ -166,11 +166,11 @@ sub instrument {
 	set req.http.V = var.V;
 }
 `,
-			coverage: &shared.Coverage{
-				Subroutines: shared.CoverageMap{
+			coverage: &shared.CoverageFactory{
+				Subroutines: shared.CoverageFactoryItem{
 					"sub_2_1": 0,
 				},
-				Statements: shared.CoverageMap{
+				Statements: shared.CoverageFactoryItem{
 					"stmt_3_2":  0,
 					"stmt_4_2":  0,
 					"stmt_5_3":  0,
@@ -181,7 +181,7 @@ sub instrument {
 					"stmt_14_4": 0,
 					"stmt_17_2": 0,
 				},
-				Branches: shared.CoverageMap{
+				Branches: shared.CoverageFactoryItem{
 					"branch_4_2_1":  0,
 					"branch_4_2_2":  0,
 					"branch_4_2_3":  0,
@@ -278,11 +278,11 @@ sub instrument {
 	}
 }
 `,
-			coverage: &shared.Coverage{
-				Subroutines: shared.CoverageMap{
+			coverage: &shared.CoverageFactory{
+				Subroutines: shared.CoverageFactoryItem{
 					"sub_2_1": 0,
 				},
-				Statements: shared.CoverageMap{
+				Statements: shared.CoverageFactoryItem{
 					"stmt_3_2":  0,
 					"stmt_4_2":  0,
 					"stmt_6_3":  0,
@@ -294,7 +294,7 @@ sub instrument {
 					"stmt_15_3": 0,
 					"stmt_16_3": 0,
 				},
-				Branches: shared.CoverageMap{
+				Branches: shared.CoverageFactoryItem{
 					"branch_4_2_1": 0,
 					"branch_4_2_2": 0,
 					"branch_4_2_3": 0,
@@ -355,15 +355,15 @@ sub instrument {
 	set var.V = if(req.http.Foo, "bar", "baz");
 }
 `,
-			coverage: &shared.Coverage{
-				Subroutines: shared.CoverageMap{
+			coverage: &shared.CoverageFactory{
+				Subroutines: shared.CoverageFactoryItem{
 					"sub_2_1": 0,
 				},
-				Statements: shared.CoverageMap{
+				Statements: shared.CoverageFactoryItem{
 					"stmt_3_2": 0,
 					"stmt_4_2": 0,
 				},
-				Branches: shared.CoverageMap{
+				Branches: shared.CoverageFactoryItem{
 					"branch_4_14_true":  0,
 					"branch_4_14_false": 0,
 				},

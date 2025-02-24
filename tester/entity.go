@@ -61,4 +61,5 @@ type TestFactory struct {
 	Results    []*TestResult
 	Statistics *shared.Counter
 	Logs       []string
+	Coverage   *shared.CoverageReport
 }
