@@ -14,7 +14,11 @@ import (
 )
 
 var opts = cmp.Options{
-	cmpopts.IgnoreFields(ast.Meta{}, "Token", "ID", "Leading", "Trailing", "Infix", "Nest", "PreviousEmptyLines"),
+	cmpopts.IgnoreFields(
+		ast.Meta{},
+		"Token", "ID", "Leading", "Trailing", "Infix",
+		"Nest", "PreviousEmptyLines", "EndLine", "EndPosition",
+	),
 }
 
 type testTable struct {

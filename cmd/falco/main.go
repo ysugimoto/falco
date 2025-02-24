@@ -305,6 +305,12 @@ func watchRunTest(runner *Runner, rslv resolver.Resolver) error {
 	}
 	defer watcher.Close()
 
+	// On watching mode, disable code coverage
+	if runner.config.Testing.Coverage {
+		writeln(yellow, ":warning: Disable code coverage on watch mode")
+		runner.config.Testing.Coverage = false
+	}
+
 	doneCh := make(chan struct{})
 	errCh := make(chan error)
 
@@ -471,11 +477,12 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
 	if factory.Coverage != nil {
-		c := factory.Coverage
-		write(white, "%s: ", "Coverage")
-		write(white, "%% Stmts: %.2f (%d/%d), ", c.Statements.Percent, c.Statements.Executed, c.Statements.Total)
-		write(white, "%% Branch: %.2f (%d/%d), ", c.Branches.Percent, c.Branches.Executed, c.Branches.Total)
-		writeln(white, "%% Subroutines: %.2f (%d/%d)", c.Subroutines.Percent, c.Subroutines.Executed, c.Subroutines.Total)
+		writeln(white, "")
+		writeln(white, "Coverage Report")
+		if err := printCoverageTable(factory.Coverage); err != nil {
+			writeln(red, err.Error())
+			return ErrExit
+		}
 	}
 
 	if factory.Statistics.Fails > 0 {

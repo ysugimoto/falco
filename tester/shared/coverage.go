@@ -120,13 +120,11 @@ func (c *CoverageFactory) Report() *CoverageReport {
 		Subroutines: c.calculate(c.Subroutines),
 		Statements:  c.calculate(c.Statements),
 		Branches:    c.calculate(c.Branches),
-		NodeMap:     c.NodeMap,
 	}
 }
 
 func (c *CoverageFactory) calculate(v CoverageFactoryItem) *CoverageReportItem {
 	var executed, total uint64
-	var percent float64
 
 	for _, val := range v {
 		total++
@@ -134,6 +132,7 @@ func (c *CoverageFactory) calculate(v CoverageFactoryItem) *CoverageReportItem {
 			executed++
 		}
 	}
+	var percent float64
 	if total > 0 {
 		percent = math.Round(float64(executed)/float64(total)*10000) / 100
 	}
@@ -155,5 +154,4 @@ type CoverageReport struct {
 	Subroutines *CoverageReportItem
 	Statements  *CoverageReportItem
 	Branches    *CoverageReportItem
-	NodeMap     map[string]token.Token
 }

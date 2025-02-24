@@ -96,7 +96,7 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 		Logs:       t.debugger.stack,
 	}
 	if t.coverage != nil {
-		factory.Coverage = t.coverage.Factory().Report()
+		factory.Coverage = t.coverage.Factory()
 	}
 	return factory, nil
 }
