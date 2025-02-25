@@ -1,3 +1,14 @@
+## v1.14.0
+
+- use pcre regexp for assetion function [#416](https://github.com/ysugimoto/falco/pull/416) (@ysugimoto)
+- Display coverage table [#415](https://github.com/ysugimoto/falco/pull/415) (@ysugimoto)
+- Implement test coverage measurement [#414](https://github.com/ysugimoto/falco/pull/414) (@ysugimoto)
+- Improve and new feature for parser package [#413](https://github.com/ysugimoto/falco/pull/413) (@ysugimoto)
+- Reset regex captured group when matched [#412](https://github.com/ysugimoto/falco/pull/412) (@ysugimoto)
+- remove goling linter-settings [#411](https://github.com/ysugimoto/falco/pull/411) (@ysugimoto)
+- fix objective header set like foo:bar [#410](https://github.com/ysugimoto/falco/pull/410) (@ysugimoto)
+- use pcre regular expression in interpreter [#409](https://github.com/ysugimoto/falco/pull/409) (@ysugimoto)
+
 ## v1.13.0
 
 - list all configuration fields [#406](https://github.com/ysugimoto/falco/pull/406) (@ysugimoto)
