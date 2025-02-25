@@ -1,11 +1,10 @@
 package function
 
 import (
-	"regexp"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	regexp "go.elara.ws/pcre"
 )
 
 const Assert_not_match_Name = "assert.not_match"
