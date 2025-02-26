@@ -1310,3 +1310,12 @@ uuid.version7:
   reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-version7/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   return: STRING
+
+digest.ecdsa_verify:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, STRING, STRING, ID]
+    - [ID, STRING, STRING, STRING, ID, ID]
+  return: BOOL
+

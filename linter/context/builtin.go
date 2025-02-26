@@ -299,6 +299,18 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-base64url-nopad-decode/",
 					},
 				},
+				"ecdsa_verify": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType, types.IDType},
+							[]types.Type{types.IDType, types.StringType, types.StringType, types.StringType, types.IDType, types.IDType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/",
+					},
+				},
 				"hash_crc32": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
