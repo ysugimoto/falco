@@ -41,7 +41,7 @@ func main() {
 	}
 	if len(functions) > 0 {
 		fmt.Fprintln(os.Stdout, "====== Lacked builtin functions found ======")
-		for _, v := range variables {
+		for _, v := range functions {
 			fmt.Fprintf(os.Stdout, "%s: %s\n", v.name, v.url)
 		}
 		fmt.Fprintln(os.Stdout, "")
