@@ -52,27 +52,27 @@ func Digest_rsa_verify(ctx *context.Context, args ...value.Value) (value.Value, 
 
 	hashMethod, err := Digest_rsa_verify_HashMethod(args[0])
 	if err != nil {
-		return value.Null, errors.New("digest.rsa_verify", "Failed to determine hash method, %w", err)
+		return value.Null, errors.New(Digest_rsa_verify_Name, "Failed to determine hash method, %w", err)
 	}
 
 	publicKey := value.Unwrap[*value.String](args[1])
 	payload := Digest_rsa_verify_HashSum(args[2], hashMethod)
 	digest, err := Digest_rsa_verify_DecodeArgument(args[3], base64Method)
 	if err != nil {
-		return value.Null, errors.New("digest.rsa_verify", "Failed to decode digest, %w", err)
+		return value.Null, errors.New(Digest_rsa_verify_Name, "Failed to decode digest, %w", err)
 	}
 
 	block, _ := pem.Decode([]byte(publicKey.Value))
-	if block == nil {
-		return value.Null, errors.New("digest.rsa_verify", "Failed to parse pem block of public key, %w", err)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return value.Null, errors.New(Digest_rsa_verify_Name, "Failed to parse pem block of public key")
 	}
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return value.Null, errors.New("digest.rsa_verify", "Failed to parse public key, %w", err)
+		return value.Null, errors.New(Digest_rsa_verify_Name, "Failed to parse public key, %w", err)
 	}
 	rsaKey, ok := pub.(*rsa.PublicKey)
 	if !ok {
-		return value.Null, errors.New("digest.rsa_verify", "Provided public key does not seem to be RSA Public Key")
+		return value.Null, errors.New(Digest_rsa_verify_Name, "Provided public key does not seem to be RSA Public Key")
 	}
 	if err := rsa.VerifyPKCS1v15(rsaKey, hashMethod, payload, digest); err != nil {
 		return &value.Boolean{Value: false}, nil
@@ -138,6 +138,6 @@ func Digest_rsa_verify_DecodeArgument(v value.Value, b64 string) ([]byte, error)
 		}
 		return dec, nil
 	default:
-		return nil, fmt.Errorf("Invalid base64_method %s, 5th argument of digest.rsa_verify", b64)
+		return nil, fmt.Errorf("Invalid base64_method %s, 5th argument of %s", b64, Digest_rsa_verify_Name)
 	}
 }
