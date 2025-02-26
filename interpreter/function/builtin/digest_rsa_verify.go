@@ -127,7 +127,7 @@ func Digest_rsa_verify_DecodeArgument(v value.Value, b64 string) ([]byte, error)
 		// Trick: url decoding may error. Then we try to decode as nopadding
 		dec, err := base64.RawURLEncoding.DecodeString(s.Value)
 		if err != nil {
-			return base64.RawURLEncoding.DecodeString(s.Value)
+			return base64.URLEncoding.DecodeString(s.Value)
 		}
 		return dec, nil
 	case "url_nopad":

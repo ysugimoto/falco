@@ -44,11 +44,7 @@ func Digest_ecdsa_verify(ctx *context.Context, args ...value.Value) (value.Value
 	}
 
 	// Argument 1: hash_method
-	hashMethod, err := Digest_ecdsa_verify_HashMethod(args[0])
-	if err != nil {
-		return value.Null, errors.New(Digest_ecdsa_verify_Name, "Failed to determine hash method, %w", err)
-	}
-
+	hashMethod := value.Unwrap[*value.Ident](args[0]).Value
 	// Argument 2: public_key
 	publicKey := value.Unwrap[*value.String](args[1]).Value
 	// Argument 3: payload
@@ -68,11 +64,6 @@ func Digest_ecdsa_verify(ctx *context.Context, args ...value.Value) (value.Value
 		return value.Null, errors.New(Digest_ecdsa_verify_Name, "Failed to decode public key, %w", err)
 	}
 
-	decodedPayload, err := Digest_ecdsa_verify_DecodeArgument(payload, base64Method)
-	if err != nil {
-		return value.Null, errors.New(Digest_ecdsa_verify_Name, "Failed to decode payload, %w", err)
-	}
-
 	decodedDigest, err := Digest_ecdsa_verify_DecodeArgument(digest, base64Method)
 	if err != nil {
 		return value.Null, errors.New(Digest_ecdsa_verify_Name, "Failed to decode digest, %w", err)
@@ -81,27 +72,11 @@ func Digest_ecdsa_verify(ctx *context.Context, args ...value.Value) (value.Value
 	// digestFormat only accepts "der" or "jwt"
 	switch digestFormat {
 	case "der":
-		return Digest_ecdsa_verify_Der(hashMethod, pubKey, decodedPayload, decodedDigest)
+		return Digest_ecdsa_verify_Der(hashMethod, pubKey, payload, decodedDigest)
 	case "jwt":
-		return Digest_ecdsa_verify_Jwt(hashMethod, pubKey, decodedPayload, decodedDigest)
+		return Digest_ecdsa_verify_Jwt(hashMethod, pubKey, payload, decodedDigest)
 	default:
 		return value.Null, errors.New(Digest_ecdsa_verify_Name, "Invalid digest format '%s' provided, only accepts der or jwt", digestFormat)
-	}
-}
-
-func Digest_ecdsa_verify_HashMethod(method value.Value) (crypto.Hash, error) {
-	v := value.Unwrap[*value.Ident](method)
-	switch v.Value {
-	case "sha1":
-		return crypto.SHA1, nil
-	case "sha256":
-		return crypto.SHA256, nil
-	case "sha384":
-		return crypto.SHA384, nil
-	case "sha512":
-		return crypto.SHA512, nil
-	default:
-		return crypto.Hash(0), fmt.Errorf("Invalid hash_method %s provided on first argument of %s", v.Value, Digest_ecdsa_verify_Name)
 	}
 }
 
@@ -129,7 +104,7 @@ func Digest_ecdsa_verify_DecodeArgument(v string, b64 string) ([]byte, error) {
 		// Trick: url decoding may error. Then we try to decode as nopadding
 		dec, err := base64.RawURLEncoding.DecodeString(v)
 		if err != nil {
-			return base64.RawURLEncoding.DecodeString(v)
+			return base64.URLEncoding.DecodeString(v)
 		}
 		return dec, nil
 	case "url_nopad":
@@ -144,39 +119,51 @@ func Digest_ecdsa_verify_DecodeArgument(v string, b64 string) ([]byte, error) {
 	}
 }
 
-func Digest_ecdsa_verify_Der(hashMethod crypto.Hash, pubKey *ecdsa.PublicKey, payload, digest []byte) (value.Value, error) {
+func Digest_ecdsa_verify_Der(method string, pubKey *ecdsa.PublicKey, payload string, digest []byte) (value.Value, error) {
+	var hash crypto.Hash
 
-	hash := hashMethod.New()
-	hash.Write(payload)
+	// ASN.1 DER-encoded supports sha1, sha256, sha384, and sha512
+	switch method {
+	case "sha1":
+		hash = crypto.SHA1
+	case "sha256":
+		hash = crypto.SHA256
+	case "sha384":
+		hash = crypto.SHA384
+	case "sha512":
+		hash = crypto.SHA512
+	default:
+		return value.Null, fmt.Errorf("Invalid hash_method %s provided on first argument of %s", method, Digest_ecdsa_verify_Name)
+	}
+
+	h := hash.New()
+	h.Write([]byte(payload))
 
 	return &value.Boolean{
-		Value: ecdsa.VerifyASN1(pubKey, hash.Sum(nil), digest),
+		Value: ecdsa.VerifyASN1(pubKey, h.Sum(nil), digest),
 	}, nil
 
 }
 
-func Digest_ecdsa_verify_Jwt(hashMethod crypto.Hash, pubKey *ecdsa.PublicKey, payload, digest []byte) (value.Value, error) {
-	var keySize int
-	switch hashMethod {
-	case crypto.SHA1:
-		keySize = 18
-	case crypto.SHA256:
-		keySize = 32
-	case crypto.SHA384:
-		keySize = 48
-	case crypto.SHA512:
-		keySize = 66
+const Digest_ecdsa_verify_Jwt_KeySize = 32
+
+func Digest_ecdsa_verify_Jwt(method string, pubKey *ecdsa.PublicKey, payload string, digest []byte) (value.Value, error) {
+	// JWT encode only sha256 (ES256)
+	// see https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/
+	if method != "sha256" {
+		return value.Null, fmt.Errorf("Only sha256 supports in  hash_method for jwt digest, provided %s", method)
 	}
 
-	if len(digest) != 2*keySize {
-		return nil, fmt.Errorf("Invalid digest length - expects %d, actual %d", 2*keySize, len(digest))
+	// Digest key size constant, 32 bits
+	if len(digest) != 2*Digest_ecdsa_verify_Jwt_KeySize {
+		return nil, fmt.Errorf("Invalid digest length - expects %d, actual %d", 2*Digest_ecdsa_verify_Jwt_KeySize, len(digest))
 	}
 
-	r := big.NewInt(0).SetBytes(digest[:keySize])
-	s := big.NewInt(0).SetBytes(digest[keySize:])
+	r := big.NewInt(0).SetBytes(digest[:Digest_ecdsa_verify_Jwt_KeySize])
+	s := big.NewInt(0).SetBytes(digest[Digest_ecdsa_verify_Jwt_KeySize:])
 
-	hash := hashMethod.New()
-	hash.Write(payload)
+	hash := crypto.SHA256.New()
+	hash.Write([]byte(payload))
 
 	return &value.Boolean{
 		Value: ecdsa.Verify(pubKey, hash.Sum(nil), r, s),

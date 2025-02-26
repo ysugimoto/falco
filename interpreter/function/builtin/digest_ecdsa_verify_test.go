@@ -3,7 +3,16 @@
 package builtin
 
 import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"testing"
+
+	"github.com/ysugimoto/falco/interpreter/value"
 	// "github.com/ysugimoto/falco/interpreter/context"
 	// "github.com/ysugimoto/falco/interpreter/value"
 )
@@ -13,6 +22,153 @@ import (
 // - ID, STRING, STRING, STRING, ID
 // - ID, STRING, STRING, STRING, ID, ID
 // Reference: https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/
-func Test_Digest_ecdsa_verify(t *testing.T) {
-	t.Skip("Test Builtin function digest.ecdsa_verify should be impelemented")
+func Test_Digest_ecdsa_verify_der(t *testing.T) {
+	tests := []struct {
+		name       string
+		hashMethod string
+		hash       crypto.Hash
+		isError    bool
+	}{
+		{
+			name:       "Pass - correct parameters with SHA1",
+			hashMethod: "sha1",
+			hash:       crypto.SHA1,
+		},
+		{
+			name:       "Pass - correct parameters with SHA256",
+			hashMethod: "sha256",
+			hash:       crypto.SHA256,
+		},
+		{
+			name:       "Pass - correct parameters with SHA384",
+			hashMethod: "sha384",
+			hash:       crypto.SHA384,
+		},
+		{
+			name:       "Pass - correct parameters with SHA512",
+			hashMethod: "sha512",
+			hash:       crypto.SHA512,
+		},
+	}
+
+	message := base64.RawURLEncoding.EncodeToString([]byte("This message should be verified"))
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+			if err != nil {
+				t.Errorf("Failed to generate private key, %s", err)
+				return
+			}
+			publicKey := privateKey.PublicKey
+
+			h := tt.hash.New()
+			h.Write([]byte(message))
+			rs, err := ecdsa.SignASN1(rand.Reader, privateKey, h.Sum(nil))
+			if err != nil {
+				t.Errorf("Failed to sign ASN.1, %s", err)
+				return
+			}
+			verified, err := Digest_ecdsa_verify_Der(tt.hashMethod, &publicKey, message, rs)
+			if err != nil {
+				t.Errorf("Failed to Verify DER, %s", err)
+				return
+			}
+			v := value.Unwrap[*value.Boolean](verified)
+			if !v.Value {
+				t.Errorf("Verified result should be true")
+				return
+			}
+		})
+	}
+}
+
+func Test_Digest_ecdsa_verify_jwt(t *testing.T) {
+	tests := []struct {
+		name       string
+		hashMethod string
+		hash       crypto.Hash
+		isError    bool
+	}{
+		{
+			name:       "Pass - correct parameters with SHA1",
+			hashMethod: "sha1",
+			hash:       crypto.SHA1,
+			isError:    true,
+		},
+		{
+			name:       "Pass - correct parameters with SHA256",
+			hashMethod: "sha256",
+			hash:       crypto.SHA256,
+		},
+		{
+			name:       "Pass - correct parameters with SHA384",
+			hashMethod: "sha384",
+			hash:       crypto.SHA384,
+			isError:    true,
+		},
+		{
+			name:       "Pass - correct parameters with SHA512",
+			hashMethod: "sha512",
+			hash:       crypto.SHA512,
+			isError:    true,
+		},
+	}
+
+	header, _ := json.Marshal(map[string]any{
+		"alg": "ES256",
+		"kid": "123456",
+	})
+	payload, _ := json.Marshal(map[string]any{
+		"iss": "manual",
+		"aud": "localhost",
+	})
+
+	message := fmt.Sprintf(
+		"%s.%s",
+		base64.RawURLEncoding.EncodeToString(header),
+		base64.RawURLEncoding.EncodeToString(payload),
+	)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+			if err != nil {
+				t.Errorf("Failed to generate private key, %s", err)
+				return
+			}
+			publicKey := privateKey.PublicKey
+
+			// JWT Sign
+			h := tt.hash.New()
+			h.Write([]byte(message))
+			r, s, err := ecdsa.Sign(rand.Reader, privateKey, h.Sum(nil))
+			if err != nil {
+				t.Errorf("Failed to sign ASN.1, %s", err)
+				return
+			}
+			bitSize := privateKey.Curve.Params().BitSize
+			keyBytes := bitSize / 8
+			if bitSize%8 > 0 {
+				keyBytes += 1
+			}
+
+			rs := make([]byte, 2*keyBytes)
+			r.FillBytes(rs[0:keyBytes])
+			s.FillBytes(rs[keyBytes:])
+
+			verified, err := Digest_ecdsa_verify_Jwt(tt.hashMethod, &publicKey, message, rs)
+			if err != nil {
+				if !tt.isError {
+					t.Errorf("Failed to Verify DER, %s", err)
+				}
+				return
+			}
+			v := value.Unwrap[*value.Boolean](verified)
+			if !v.Value {
+				t.Errorf("Verified result should be true")
+				return
+			}
+		})
+	}
 }
