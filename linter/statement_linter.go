@@ -135,7 +135,7 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(err)
 	}
 
-	if err := isValidStatementExpression(stmt.Value); err != nil {
+	if err := isValidStatementExpression(left, stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Value.GetMeta().Token,
@@ -377,7 +377,7 @@ func (l *Linter) lintAddStatement(stmt *ast.AddStatement, ctx *context.Context) 
 		}
 	}
 
-	if err := isValidStatementExpression(stmt.Value); err != nil {
+	if err := isValidStatementExpression(left, stmt.Value); err != nil {
 		err := &LintError{
 			Severity: ERROR,
 			Token:    stmt.Value.GetMeta().Token,

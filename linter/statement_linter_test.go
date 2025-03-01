@@ -783,3 +783,23 @@ sub foo {
 		assertErrorWithSeverity(t, input, WARNING)
 	}
 }
+
+func TestGroupedExpressionInStatement(t *testing.T) {
+	tests := []string{
+		`
+sub vcl_recv {
+  #FASTLY recv
+  set req.http.foo = (req.http.bar == "example.com");
+}`,
+		`
+sub vcl_recv {
+  #FASTLY recv
+  set req.http.foo = req.http.bar (req.http.baz == "example.com");
+}`,
+	}
+
+	for _, input := range tests {
+		assertError(t, input)
+	}
+
+}
