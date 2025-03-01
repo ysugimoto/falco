@@ -226,19 +226,40 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
-	right, err := i.ProcessExpression(stmt.Value, false)
-	if err != nil {
-		return errors.WithStack(err)
+	if strings.HasPrefix(stmt.Ident.Value, "var.") {
+		left, err := i.localVars.Get(stmt.Ident.Value)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+			return errors.WithStack(err)
+		}
+		right, err := i.ProcessExpression(stmt.Value, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+			return errors.WithStack(err)
+		}
+		right, err := i.ProcessExpression(stmt.Value, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
-	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
-	} else {
-		err = i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right)
-	}
-	if err != nil {
-		return errors.WithStack(err)
-	}
 	return nil
 }
 
@@ -258,6 +279,9 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		)
 	}
 
+	if err := isValidStatementExpression(value.StringType, stmt.Value); err != nil {
+		return errors.WithStack(err)
+	}
 	right, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)

@@ -146,9 +146,10 @@ func TestReturnStatement(t *testing.T) {
 
 func TestSetStatement(t *testing.T) {
 	tests := []struct {
-		name  string
-		scope context.Scope
-		stmt  *ast.SetStatement
+		name    string
+		scope   context.Scope
+		stmt    *ast.SetStatement
+		isError bool
 	}{
 		{
 			name:  "set local variable",
@@ -190,6 +191,27 @@ func TestSetStatement(t *testing.T) {
 				Value:    &ast.String{Value: "test"},
 			},
 		},
+		{
+			name:  "error for grouped expression includes",
+			scope: context.RecvScope,
+			stmt: &ast.SetStatement{
+				Meta:     &ast.Meta{},
+				Ident:    &ast.Ident{Value: "req.http.foo"},
+				Operator: &ast.Operator{Operator: "="},
+				Value: &ast.GroupedExpression{
+					Right: &ast.InfixExpression{
+						Left: &ast.Ident{
+							Value: "req.http.bar",
+						},
+						Operator: "==",
+						Right: &ast.String{
+							Value: "example.com",
+						},
+					},
+				},
+			},
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -204,9 +226,12 @@ func TestSetStatement(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
+		ip.ctx.Request = req
 		ip.ctx.BackendRequest = req
 		if err := ip.ProcessSetStatement(tt.stmt); err != nil {
-			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+			if !tt.isError {
+				t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+			}
 		}
 	}
 }
