@@ -93,13 +93,13 @@ func TestSetRequestHeaderValueOverwrite(t *testing.T) {
 	}
 
 	ret = getRequestHeaderValue(req, "Foo")
-	if ret.Value != "abc=123, bar=snafu" {
-		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123, bar=snafu", ret.Value)
+	if ret.Value != "abc=123,bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123,bar=snafu", ret.Value)
 	}
 
 	// Check exact http.Header struct data
 	if diff := cmp.Diff(req.Header, http.Header{
-		"Foo": []string{"abc=123", "bar=snafu"},
+		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
 		t.Errorf(diff)
 	}
@@ -137,13 +137,13 @@ func TestSetResponseHeaderValueOverwrite(t *testing.T) {
 	}
 
 	ret = getResponseHeaderValue(resp, "Foo")
-	if ret.Value != "abc=123, bar=snafu" {
-		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123, bar=snafu", ret.Value)
+	if ret.Value != "abc=123,bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123,bar=snafu", ret.Value)
 	}
 
 	// Check exact http.Header struct data
 	if diff := cmp.Diff(resp.Header, http.Header{
-		"Foo": []string{"abc=123", "bar=snafu"},
+		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
 		t.Errorf(diff)
 	}
