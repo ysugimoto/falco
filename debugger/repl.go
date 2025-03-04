@@ -3,6 +3,7 @@ package debugger
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/lexer"
@@ -36,7 +37,7 @@ func (c *Console) evaluate(input string) (string, error) {
 	val, err := c.interpreter.ProcessExpression(exp, false)
 	if err != nil {
 		if re, ok := err.(*exception.Exception); ok {
-			return "", fmt.Errorf(re.Message) // DO NOT diplay line and position info
+			return "", errors.New(re.Message) // DO NOT diplay line and position info
 		}
 		return "", err
 	}

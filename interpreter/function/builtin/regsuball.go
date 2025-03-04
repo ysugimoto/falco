@@ -3,11 +3,10 @@
 package builtin
 
 import (
-	"regexp"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	regexp "go.elara.ws/pcre"
 )
 
 const Regsuball_Name = "regsuball"

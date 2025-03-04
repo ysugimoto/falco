@@ -3,12 +3,12 @@ package operator
 import (
 	"fmt"
 	"net"
-	"regexp"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
+	regexp "go.elara.ws/pcre"
 )
 
 func Equal(left, right value.Value) (value.Value, error) {
@@ -56,6 +56,19 @@ func Equal(left, right value.Value) (value.Value, error) {
 			return &value.Boolean{Value: false}, nil
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) == 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(
@@ -208,6 +221,19 @@ func GreaterThan(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) > 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -336,6 +362,19 @@ func LessThan(left, right value.Value) (value.Value, error) {
 
 			return &value.Boolean{
 				Value: lv.Value < rv.Value,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) < 0,
 			}, nil
 		default:
 			return value.Null, errors.WithStack(
@@ -479,6 +518,19 @@ func GreaterThanEqual(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) >= 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -616,6 +668,19 @@ func LessThanEqual(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.TimeType:
+		lv := value.Unwrap[*value.Time](left)
+		switch right.Type() {
+		case value.TimeType:
+			rv := value.Unwrap[*value.Time](right)
+			return &value.Boolean{
+				Value: lv.Value.Compare(rv.Value) <= 0,
+			}, nil
+		default:
+			return value.Null, errors.WithStack(
+				fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
+			)
+		}
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("Invalid type comparison %s and %s", left.Type(), right.Type()),
@@ -646,7 +711,10 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); matches != nil {
+			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
+				// Important: regex matched group variables are reset if matching is succeeded
+				// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+				ctx.RegexMatchedValues = make(map[string]*value.String)
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
 				}
@@ -844,5 +912,36 @@ func Concat(left, right value.Value) (value.Value, error) {
 
 	return &value.String{
 		Value: left.String() + right.String(),
+	}, nil
+}
+
+func TimeCalculation(left, right value.Value, operator string) (value.Value, error) {
+	if left.Type() != value.TimeType {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("%s type could not use as literal for minus time calculation", left.Type()),
+		)
+	}
+	if right.Type() != value.RTimeType {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("%s type could not use as literal for minus time calculation", left.Type()),
+		)
+	}
+	if !right.IsLiteral() {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("RTime literal could not use as literal for minus time calculation"),
+		)
+	}
+
+	lv := value.Unwrap[*value.Time](left)
+	rv := value.Unwrap[*value.RTime](right)
+
+	// If operator is "-", subtract from left time.
+	if operator == "-" {
+		return &value.Time{
+			Value: lv.Value.Add(-rv.Value),
+		}, nil
+	}
+	return &value.Time{
+		Value: lv.Value.Add(rv.Value),
 	}, nil
 }

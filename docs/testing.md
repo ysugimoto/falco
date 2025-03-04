@@ -29,6 +29,8 @@ Flags:
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acl limitation
+    --watch            : Watch VCL file changes and run test
+    --coverage         : Report code coverage
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl
@@ -78,6 +80,34 @@ falco test -I vcl_tests ./vcl/default.vcl
 
 falco finds `default.test.vcl` as testing file for both case.
 
+## Incremental Testing
+
+If you provide `--watch` option for testing command, test runner watches source and testing VCL file change and run tests.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --watch
+```
+
+Then falco observes `vcl_tests/*` and `vcl/*` file changes and run test incrementally.
+
+## Report Code Coverage
+
+If you provide `--coverage` option for testing command, falco collects and calculates code coverage after the test.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --coverage
+```
+
+After testing finished, falco will display the coverage report.
+
+![CleanShot 2025-02-24 at 18 31 29@2x](https://github.com/user-attachments/assets/73071213-3924-4b8e-aabe-383f15feb5f3)
+
+> [!NOTE]
+> To collect the code coverage, falco needs instrumenting to your VCL code by transforming the AST.
+> This process is heavy so coverage mode is disabled when incremental testing is active.
+
 ## Testing Subroutine
 
 Unit testing file can be written as VCL subroutine, example is the following:
@@ -105,6 +135,36 @@ sub test_vcl_deliver {
 ```
 
 You can see many interesting syntaxes, The test case is controlled with annotation and assertion functions.
+
+## Grouped Testing
+
+falco supports special syntax of `describe`, `before_[scope]`, and `after_[scope]` - jest like syntax - only for the testing.
+Here is the example of grouped testing:
+
+```vcl
+// Grouping test
+describe grouped_tests {
+
+    // run before recv scoped subroutine
+    before_recv {
+        // you can use variables that is enable to access in RECV scope
+        set req.http.BeforeRecv = "1";
+    }
+
+    sub test_recv {
+        // ensure http header which is injected via hook
+        assert.equal(req.http.BeforeRecv, "1");
+        // Do unit testing for RECV scope
+    }
+
+    ...
+}
+```
+
+> [!NOTE]
+> Testing subroutines are stateful through the grouped testing.
+> A interpreter only be initialized for the group, the same interpreter will be used for each testing subroutine.
+> It is useful for testing across scopes but this behavior may be different from the jest one.
 
 ### Scope Recognition
 
@@ -158,12 +218,16 @@ We describe them following table and examples:
 | Name                         | Type       | Description                                                                                  |
 |:-----------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
+| testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
 | testing.inspect              | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
+| testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
+| testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
+| testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -183,7 +247,29 @@ We describe them following table and examples:
 | assert.not_subroutine_called | FUNCTION   | Assert subroutine has not called in testing subroutine                                       |
 | assert.restart               | FUNCTION   | Assert restart statement has called                                                          |
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
+| assert.not_state             | FUNCTION   | Assert after state is not expected one                                                       |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
+| assert.not_error             | FUNCTION   | Assert runtime state will not move to error status                                           |
+
+----
+
+### testing.synthetic_body STRING
+
+Returns the response body as set by a call to `synthetic` or `synthetic.base64`.
+Only valid in the `error` scope.
+
+```vcl
+// @scope: error
+sub generate_response {
+    synthetic "No dice.";
+}
+
+// @scope: error
+sub test_vcl {
+    testing.call_subroutine("generate_response");
+    assert.equal(testing.synthetic_body, "No dice.");
+}
+```
 
 ----
 
@@ -318,6 +404,125 @@ sub test_vcl {
 
     // Assert injected value
     assert.equal(table.lookup(example_dict, "foo", ""), "bar");
+}
+```
+
+----
+
+### testing.mock(STRING from, STRING to)
+
+Mock the subroutine with testing subroutine.
+
+> [!NOTE]
+> You cannot mock Fastly reserved (lifecycle) subroutine that starts with `vcl_` like `vcl_recv`, `vcl_fetch`, etc.
+> But you can mock the functional subroutine that returns some value.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+// @scope: recv
+sub test_vcl {
+    // Mock the subroutine
+    testing.mock("add_header", "mock_add_header");
+
+    // vcl_recv has a dependency that calls "add_header" subroutine inside.
+    testing.call_subroutine("vcl_recv");
+
+    // Assert mocked subroutine result
+    assert.equal(req.http.Mocked, "1");
+}
+```
+
+----
+
+### testing.restore_mock(STRING from)
+
+Restore mocked subroutine to the original.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    after_recv {
+        // Restore mock
+        testing.restore_mock("add_header");
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
+}
+```
+
+----
+
+### testing.restore_all_mocks()
+
+Restore all mocked subroutines.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    after_recv {
+        // Restore all mocks
+        testing.restore_all_mocks();
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
 }
 ```
 
@@ -687,6 +892,22 @@ sub test_vcl {
 
 ----
 
+### assert.not_state(ID state [, STRING message])
+
+Assert current state is not expected one.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will move state to lookup to lookup cache
+    testing.call_subroutine("vcl_recv");
+
+    // Assert state does not move to lookup
+    assert.not_state(lookup);
+}
+```
+
+----
+
 ### assert.error(INTEGER status [, STRING response, STRING message])
 
 Assert error status code (and response) if error statement has called.
@@ -701,6 +922,22 @@ sub test_vcl {
 
     // Assert error statement has called with expected status and response text
     assert.error(900, "Fastly Internal");
+}
+```
+
+----
+
+### assert.not_error([STRING message])
+
+Assert runtime state will not move to error status.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will call error statement with status code and response
+    testing.call_subroutine("vcl_recv");
+
+    // Assert error statement has not called
+    assert.not_error();
 }
 ```
 

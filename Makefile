@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test benchmark
 
 BUILD_VERSION=$(or ${VERSION}, dev)
 
@@ -45,3 +45,11 @@ local: test lint
 
 clean:
 	rm ./dist/falco-*
+
+plugin_ci:
+	cd ./examples/plugin/lint_backend_name && \
+		go build -o falco-backend-name . && \
+		cp ./falco-backend-name /usr/local/bin/falco-backend-name
+
+benchmark:
+	cd cmd/benchmark && go test -bench . -benchmem

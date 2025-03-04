@@ -14,6 +14,7 @@ import (
 
 type Fetcher interface {
 	Backends() ([]*types.RemoteBackend, error)
+	Directors() ([]*types.RemoteDirector, error)
 	Dictionaries() ([]*types.RemoteDictionary, error)
 	Acls() ([]*types.RemoteAcl, error)
 	Snippets() ([]*types.RemoteVCL, error)
@@ -28,6 +29,7 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 	}
 
 	var eg errgroup.Group
+
 	fmt.Print("Fething snippets...")
 	eg.Go(func() (err error) {
 		snippets.Dictionaries, err = fetchEdgeDictionary(fetcher)
@@ -39,6 +41,10 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 	})
 	eg.Go(func() (err error) {
 		snippets.Backends, err = fetchBackend(fetcher)
+		return err
+	})
+	eg.Go(func() (err error) {
+		snippets.Directors, err = fetchDirector(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
@@ -142,6 +148,60 @@ func fetchBackend(fetcher Fetcher) ([]SnippetItem, error) {
 	return snippets, nil
 }
 
+func fetchDirector(fetcher Fetcher) ([]SnippetItem, error) {
+	var snippets []SnippetItem
+	directors, err := fetcher.Directors()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get Directors: %w", err)
+	}
+	if len(directors) == 0 {
+		return snippets, nil
+	}
+
+	printType := func(dtype int) string {
+		switch remote.DirectorType(dtype) {
+		case remote.Random:
+			return "random"
+		case remote.Hash:
+			return "hash"
+		case remote.Client:
+			return "client"
+		case remote.Shield:
+			return "shield"
+		}
+		return ""
+	}
+	directorTmpl, err := template.New("director").
+		Funcs(template.FuncMap{"printtype": printType}).
+		Parse(directorTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile director template: %w", err)
+	}
+
+	for _, d := range directors {
+		// The .retries property enables only for random director
+		// https://www.fastly.com/documentation/reference/vcl/declarations/director/
+		if remote.DirectorType(d.Type) != remote.Random {
+			d.Retries = 0 // zero won't be rendered in the template
+		}
+
+		// Director name can be registered including "-" string but invalid in the VCL.
+		// Fastly will replace its name from "-" to "_" so we should follow it.
+		d.Name = TerraformBackendNameSanitizer(d.Name)
+
+		buf := new(bytes.Buffer)
+		if err := directorTmpl.Execute(buf, d); err != nil {
+			return nil, fmt.Errorf("failed to render director template: %w", err)
+		}
+		snippets = append(snippets, SnippetItem{
+			Name: fmt.Sprintf("Remote.Director:%s", d.Name),
+			Data: buf.String(),
+		})
+	}
+
+	return snippets, nil
+}
+
 func renderBackendShields(backends []*types.RemoteBackend) ([]SnippetItem, error) {
 	printType := func(dtype remote.DirectorType) string {
 		switch dtype {
@@ -156,9 +216,10 @@ func renderBackendShields(backends []*types.RemoteBackend) ([]SnippetItem, error
 		}
 		return ""
 	}
+
 	dirTmpl, err := template.New("director").
 		Funcs(template.FuncMap{"printtype": printType}).
-		Parse(directorTemplate)
+		Parse(shieldDirectorTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile director template: %w", err)
 	}

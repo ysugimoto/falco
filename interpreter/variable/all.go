@@ -55,6 +55,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	switch name {
 	case BEREQ_IS_CLUSTERING:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_CLASS_BOT:
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
@@ -81,6 +84,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		RESP_STALE_IS_ERROR,
 		RESP_STALE_IS_REVALIDATING,
 		WORKSPACE_OVERFLOWED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_DISPLAY_TOUCHSCREEN:
@@ -125,6 +131,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return &value.String{}, nil
 		}
 		// Format is undocumented, returning the value seen with the fiddle client.
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "|00|1:0:0:16|m,s,p,a"}, nil
 
 	// Backend is always healthy on simulator
@@ -140,10 +149,19 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: protocol}, nil
 	case CLIENT_GEO_LATITUDE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 37.7786941}, nil
 	case CLIENT_GEO_LONGITUDE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: -122.3981452}, nil
 	case FASTLY_ERROR:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: ""}, nil
 	case MATH_1_PI:
 		return &value.Float{Value: 1 / math.Pi}, nil
@@ -197,20 +215,32 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	// AS Number always indicates "Reserved" defined by RFC7300
 	// see: https://datatracker.ietf.org/doc/html/rfc7300
 	case CLIENT_AS_NUMBER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 4294967294}, nil
 	case CLIENT_AS_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "Reserved"}, nil
 
 	// Client display infos are unknown. Always returns -1
 	case CLIENT_DISPLAY_HEIGHT,
 		CLIENT_DISPLAY_PPI,
 		CLIENT_DISPLAY_WIDTH:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: -1}, nil
 
 	// Client geo values always return 0
 	case CLIENT_GEO_AREA_CODE,
 		CLIENT_GEO_METRO_CODE,
 		CLIENT_GEO_UTC_OFFSET:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 
 	// Alias of client.geo.utc_offset
@@ -219,6 +249,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Client could not fully identified so returns false
 	case CLIENT_IDENTIFIED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_PORT:
@@ -297,20 +330,38 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 1}, nil
 
 	case SERVER_BILLING_REGION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "Asia"}, nil // always returns Asia
 	case SERVER_PORT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
 	case SERVER_POP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "FALCO"}, nil // Intend to set string not exists in Fastly POP certainly
 
 	// workspace related values respects Fastly fiddle one
 	case WORKSPACE_BYTES_FREE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 125008}, nil
 	case WORKSPACE_BYTES_TOTAL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 139392}, nil
 
-	// backend.src_ip always incicates this server, means localhost
+	// backend.src_ip always indicates this server, means localhost
 	case BERESP_BACKEND_SRC_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case SERVER_IP:
 		addrs, err := net.InterfaceAddrs()
@@ -386,6 +437,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		CLIENT_GEO_REGION_ASCII,
 		CLIENT_GEO_REGION_LATIN1,
 		CLIENT_GEO_REGION_UTF8:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "unknown"}, nil
 
 	case CLIENT_IDENTITY:
@@ -418,6 +472,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Always empty string
 	case CLIENT_PLATFORM_HWTYPE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: ""}, nil
 
 	case FASTLY_INFO_STATE:
@@ -556,12 +613,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Fixed values
 	case SERVER_DATACENTER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: FALCO_DATACENTER}, nil
 	case SERVER_HOSTNAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_IDENTITY:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_REGION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "US"}, nil
 	case STALE_EXISTS:
 		return v.ctx.StaleContents, nil
@@ -636,6 +705,9 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		if val, ok := v.ctx.RegexMatchedValues[match[1]]; ok {
 			return val
 		}
+		// regex captured variable always returns string values even nothing capturing
+		// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+		return &value.String{IsNotSet: true}
 	}
 
 	// HTTP request header matching

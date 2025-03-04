@@ -21,10 +21,13 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
+    --proxy            : Enable actual proxy behavior
     -request           : Simulate request config
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --key              : Specify TLS server key file
+    --cert             : Specify TLS cert file
 
 Local simulator example:
     falco simulate -I . /path/to/vcl/main.vcl
@@ -62,17 +65,48 @@ Particularly VCL subroutine flow is useful for debugging.
 **falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.
 There are many limitations which are described below.**
 
+## TLS Server
 
-## Debug mode
+Typically Fastly runs with TLS environment so your VCL may has HTTPS-related logic.
+falco supports to run as HTTPS server with your key/cert files. We recommend to use [mkcert](https://github.com/FiloSottile/mkcert) to generate key/cert file on your local machine.
+
+```shell
+# Generate certificates for localhost
+mkcert localhost
+
+# Run as HTTP server
+falco simulate /path/to/your/default.vcl --key /path/to/localhost-key.pem --cert /path/to/localhost.pem
+```
+
+Then falco serve with https://localhost:3124.
+
+## Override Edge Dictionary Items
+
+Edge Dictionary values are managed in Fastly cloud but often we have some logics that relates to its value (e.g flag true/false), and write-only dictionary items could access via remote API.
+To simulate its behavior with specific value, falco supports overriding edge dictionary item locally from configuration.
+
+See `simulator.edge_dictionary` field in [configuration.md](./configuration.md).
+
+## Debug Mode
 
 `falco` also includes TUI debugger so that you can debug VCL with step execution.
 You can run the debugger by providing `-debug` option on the simulator:
 
 ```
-falco local -debug /path/to/your/default.vcl
+falco simulate -debug /path/to/your/default.vcl
 ```
 
-### Start debugging
+## Actual Proxy Behavior
+
+In default, falco simulator responds process flow JSON for a HTTP request on http://localhost:3124 - protocol and port may be changed - but falco also can respond actual HTTP proxy response (e.g origin or edge response), it's useful for E2E testing via example HTTP request.
+
+To be enable the actual HTTP proxy, provide `--proxy` option to `simulator` subcommand:
+
+```shell
+falco simulate --proxy /path/to/your/default.vcl
+```
+
+### Start Debugging
 
 When falco runs the simulator with the debugger, falco finds `@debugger` leading annotation comment in your VCL.
 If the comment is found, stop execution on the statement, for example:
@@ -97,6 +131,35 @@ And the debugger TUI accepts function keys to step execution:
 You can type other keys to dump the variable in the debugger shell.
 
 <img width="1128" alt="debugger example" src="https://github.com/ysugimoto/falco/assets/1000401/9be8cd4c-d726-41ef-832a-483ed03579ca">
+
+### Debug Adapter Protocol support
+
+`falco` supports [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/).
+You can launch falco's debugger by calling `falco dap` subcommand from your editor.
+
+> [!NOTE]
+> Currently, `falco dap` doesn't support Fastly remote resources.
+
+For Neovim with [nvim-dap](https://github.com/mfussenegger/nvim-dap), the configurations below can be used to launch debugging session.
+
+```lua
+local dap = require('dap')
+dap.adapters.vcl = {
+  name = 'falco',
+  type = 'executable',
+  command = 'falco',
+  args = { 'dap' },
+}
+dap.configurations.vcl = {
+  {
+    type = 'vcl',
+    request = 'launch',
+    name = "Debug VCL by falco",
+    mainVCL = "${file}",
+    includePaths = { "${workspaceFolder}" },
+  },
+}
+```
 
 ## Simulator Limitations
 

@@ -109,6 +109,9 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 	case *ast.GroupedExpression:
 		return i.ProcessGroupedExpression(t)
 	case *ast.InfixExpression:
+		if t.Operator == "+" {
+			return i.ProcessStringConcatInfixExpression(t)
+		}
 		return i.ProcessInfixExpression(t, withCondition)
 	case *ast.IfExpression:
 		return i.ProcessIfExpression(t)
@@ -234,6 +237,10 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				exp.Function.Value,
 			)
 		}
+		// If mocked functional subroutine found, use it
+		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[exp.Function.Value]; ok {
+			sub = mocked
+		}
 		if _, ok := types.ValueTypeMap[sub.ReturnType.Value]; !ok {
 			return value.Null, exception.Runtime(
 				&sub.GetMeta().Token,
@@ -315,9 +322,6 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 		result, opErr = operator.LogicalOr(left, right)
 	case "&&":
 		result, opErr = operator.LogicalAnd(left, right)
-	// "+" means string concatenation
-	case "+":
-		result, opErr = operator.Concat(left, right)
 	default:
 		return value.Null, errors.WithStack(
 			exception.Runtime(&exp.GetMeta().Token, "Unexpected infix operator: %s", exp.Operator),
@@ -326,9 +330,226 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 
 	if opErr != nil {
 		return value.Null, errors.WithStack(
-			exception.Runtime(&exp.GetMeta().Token, opErr.Error()),
+			exception.Runtime(&exp.GetMeta().Token, "%s", opErr.Error()),
 		)
 	}
 
 	return result, nil
+}
+
+// InfixExpression process, but special case for string concatenation.
+// string cocatenation has special type checking rule.
+// left and right expression must be following expressions:
+// - STRING                  - both literal and ident
+// - IDENT                   - common variables like req.*, var.*, now, etc
+// - PrefixExpression        - the operator must be "+"
+// - InfixExpression(nested) - same rule for left and right expression, and operator must be "+"
+// - FunctionCallExpression  - return value must be STRING
+// - IfExpression            - return value must be STRING
+//
+// Other expressions (e.g GroupedExpression) is invalid. For example:
+// set req.http.SomeHeader = "a" + "b" + "c";   // valid
+// set req.http.SomeHeader = "a" + ("b" + "c"); // invalid
+//
+// And we need to consider about "time calculation" - calculate between TIME and RTIME - as following rules:
+// 1. RTIME literal with explicit plus or minus sign should be accepted for concatenating to previous TIME expression
+// 2. And previous TIME expression must be an IDENT - invalid for return type of FunctionCallExpression like std.time()
+//
+// Above two rules are satisfied, if should be "time calculation", add RTIME duration to the TIME.
+// For example syntaxes:
+// set req.http.Foo = now + 5m;                             // valid, time calculation(plus) between now(TIME) and 5m(RTIME literal)
+// set req.http.Foo = now - 5m;                             // valid, time calculation(minus) between now(TIME) and 5m(RTIME literal)
+// set req.http.Foo = now + var.someRTime;                  // invalid, plus sign will be time calculation but accept only literal
+// set req.http.Foo = now var.someRTime;                    // valid, string concatenation
+// set req.http.Foo = now 5m;                               // invalid, time calculate syntax error
+// set req.http.Foo = std.time("xxx", now) + 5m;            // invalid, left expression is TIME type but not an ident
+// set req.http.Foo = std.time("xxx", now) + var.someRTime; // valid, string concatenation
+//
+// See Fastly fiddle: https://fiddle.fastly.dev/fiddle/befec89e
+// nolint: gocognit
+func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpression) (value.Value, error) {
+	var series []*series
+
+	left, err := i.toSeriesExpression(exp.Left)
+	if err != nil {
+		return value.Null, errors.WithStack(err)
+	}
+	series = append(series, left...)
+
+	right, err := i.toSeriesExpression(exp.Right)
+	if err != nil {
+		return value.Null, errors.WithStack(err)
+	}
+	if exp.Explicit {
+		right[0].Operator = exp.Operator
+	}
+	series = append(series, right...)
+
+	var rv value.Value = &value.String{}
+	var opErr error
+
+	for idx := 0; idx < len(series); idx++ {
+		s := series[idx]
+		cv, err := i.ProcessExpression(s.Expression, false)
+		if err != nil {
+			return value.Null, errors.WithStack(err)
+		}
+
+		switch s.Expression.(type) {
+		case *ast.String:
+			rv, opErr = operator.Concat(rv, cv)
+			if opErr != nil {
+				return value.Null, errors.WithStack(err)
+			}
+		case *ast.IfExpression:
+			if cv.Type() != value.StringType {
+				return value.Null, exception.Runtime(
+					&s.Expression.GetMeta().Token,
+					"Cannot use %s type for string concatenation",
+					cv.Type(),
+				)
+			}
+			rv, opErr = operator.Concat(rv, cv)
+			if opErr != nil {
+				return value.Null, errors.WithStack(err)
+			}
+		case *ast.FunctionCallExpression:
+			if cv.Type() != value.StringType {
+				return value.Null, exception.Runtime(
+					&s.Expression.GetMeta().Token,
+					"Cannot use %s type for string concatenation",
+					cv.Type(),
+				)
+			}
+			rv, opErr = operator.Concat(rv, cv)
+			if opErr != nil {
+				return value.Null, errors.WithStack(err)
+			}
+		case *ast.Ident:
+			switch cv.Type() {
+			case value.StringType:
+				rv, opErr = operator.Concat(rv, cv)
+				if opErr != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				continue
+			case value.TimeType:
+				// If ident value type is TIME, check the next expression is RTIME literal.
+				// If so, it calculates as time calculation.
+				if idx+1 < len(series)-1 {
+					next := series[idx+1]
+					if _, ok := next.Expression.(*ast.RTime); ok {
+						nv, err := i.ProcessExpression(next.Expression, false)
+						if err != nil {
+							return value.Null, errors.WithStack(err)
+						}
+						cv, opErr = operator.TimeCalculation(cv, nv, next.Operator)
+						if opErr != nil {
+							return value.Null, errors.WithStack(err)
+						}
+						// String concat with left and time-calculated value (TIME type)
+						rv, opErr = operator.Concat(rv, cv)
+						if opErr != nil {
+							return value.Null, errors.WithStack(err)
+						}
+						// Next RTime is consumed, increment index
+						idx++
+						continue
+					}
+				}
+			case value.RTimeType:
+				// If expression is RTIME literal, follwing condition must be satisfied:
+				// - previous expression is IDENT and the value if TIME type
+				// - explicitly calculation sign ("+" or "-") must be present
+				if s.Operator == "+" || s.Operator == "-" {
+					if idx-1 >= 0 {
+						prev := series[idx-1]
+						v, err := i.ProcessExpression(prev.Expression, false)
+						if err != nil {
+							return value.Null, errors.WithStack(err)
+						}
+						if v.Type() == value.TimeType {
+							return value.Null, exception.Runtime(
+								&s.Expression.GetMeta().Token,
+								"Cannot use RTIME type for string concatenation",
+							)
+						}
+					}
+				}
+				continue
+			}
+			rv, opErr = operator.Concat(rv, cv)
+			if opErr != nil {
+				return value.Null, errors.WithStack(err)
+			}
+		default:
+			return value.Null, exception.Runtime(
+				&s.Expression.GetMeta().Token,
+				"Cannot use %s type for string concatenation",
+				cv.Type(),
+			)
+		}
+	}
+
+	return rv, nil
+}
+
+func (i *Interpreter) toSeriesExpression(expr ast.Expression) ([]*series, error) {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// If expression is ident, it must be a variable
+		// e.g req.http.Header, var.declaredVariable
+		if strings.HasPrefix(t.Value, "var.") {
+			if _, err := i.localVars.Get(t.Value); err != nil {
+				return nil, errors.WithStack(err)
+			}
+		} else if _, err := i.vars.Get(i.ctx.Scope, t.Value); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case *ast.PrefixExpression:
+		if t.Operator != "+" && t.Operator != "-" {
+			return nil, exception.Runtime(
+				&expr.GetMeta().Token,
+				"Cannot use %s operator for string concatenation",
+				t.Operator,
+			)
+		}
+		s, err := i.toSeriesExpression(t.Right)
+		if err != nil {
+			return nil, err
+		}
+		s[0].Operator = t.Operator
+		return s, nil
+	case *ast.GroupedExpression:
+		return nil, exception.Runtime(&expr.GetMeta().Token, "Cannot use GroupedExpression for string concatenation")
+	case *ast.InfixExpression:
+		if t.Operator != "+" {
+			return nil, exception.Runtime(
+				&expr.GetMeta().Token,
+				"Cannot use %s operator for string concatenation",
+				t.Operator,
+			)
+		}
+		var s []*series
+		left, err := i.toSeriesExpression(t.Left)
+		if err != nil {
+			return nil, err
+		}
+		s = append(s, left...)
+
+		right, err := i.toSeriesExpression(t.Right)
+		if err != nil {
+			return nil, err
+		}
+		if t.Explicit {
+			right[0].Operator = t.Operator
+		}
+		s = append(s, right...)
+		return s, nil
+	}
+
+	// Concatenatable expression
+	return []*series{
+		{Expression: expr},
+	}, nil
 }

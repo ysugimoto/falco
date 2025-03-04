@@ -28,21 +28,27 @@ var Null = Token{
 	Literal: "NULL",
 }
 
+func Custom(name string) TokenType {
+	return TokenType(name)
+}
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
 
 	// Language idents
-	IDENT   = "IDENT"
-	INT     = "INT"
-	STRING  = "STRING"
-	FLOAT   = "FLOAT"
-	RTIME   = "RTIME"
-	COMMENT = "COMMENT"
-	TRUE    = "TRUE"
-	FALSE   = "FALSE"
-	PERCENT = "PERCENT"
-	LF      = "LF" // "\n"
+	IDENT             = "IDENT"
+	INT               = "INT"
+	STRING            = "STRING"
+	OPEN_LONG_STRING  = "OPEN_LONG_STRING"
+	CLOSE_LONG_STRING = "CLOSE_LONG_STRING"
+	FLOAT             = "FLOAT"
+	RTIME             = "RTIME"
+	COMMENT           = "COMMENT"
+	TRUE              = "TRUE"
+	FALSE             = "FALSE"
+	PERCENT           = "PERCENT"
+	LF                = "LF" // "\n"
 
 	// Operators
 	// https://developer.fastly.com/reference/vcl/operators/
@@ -97,7 +103,7 @@ const (
 	DIRECTOR         = "DIRECTOR"         // director
 	BACKEND          = "BACKEND"          // backend
 	TABLE            = "TABLE"            // table
-	SUBROUTINE       = "SUBROUTINE"       // sub"
+	SUBROUTINE       = "SUBROUTINE"       // sub
 	ADD              = "ADD"              // add
 	CALL             = "CALL"             // call
 	DECLARE          = "DECLARE"          // declare
@@ -125,6 +131,12 @@ const (
 	DEFAULT          = "DEFAULT"          // default
 	BREAK            = "BREAK"            // break
 	FALLTHROUGH      = "FALLTHROUGH"      // fallthrough
+
+	// Fastly Generated control syntaxes
+	// Fastly automatically generates some control syntaxes like "pragma".
+	// falco should lex them
+	PRAGMA         = "PRAGMA"
+	FASTLY_CONTROL = "CONTROL" // Presents as "C!" or "W!" character
 )
 
 var keywords = map[string]TokenType{
@@ -141,7 +153,6 @@ var keywords = map[string]TokenType{
 	"include":          INCLUDE,
 	"import":           IMPORT,
 	"log":              LOG,
-	"remote":           REMOVE,
 	"restart":          RESTART,
 	"return":           RETURN,
 	"set":              SET,
@@ -163,6 +174,7 @@ var keywords = map[string]TokenType{
 	"default":          DEFAULT,
 	"break":            BREAK,
 	"fallthrough":      FALLTHROUGH,
+	"pragma":           PRAGMA,
 }
 
 func LookupIdent(ident string) TokenType {

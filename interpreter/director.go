@@ -362,7 +362,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 	hashTable := make(map[uint32]*value.Backend)
 
 	var healthyBackends int
-	max := uint32(math.Pow(10, 4)) // max 10000
+	maxNum := uint32(math.Pow(10, 4)) // max 10000
 	// Put backends to the circles
 	for _, v := range dc.Backends {
 		if !v.Backend.Healthy.Load() {
@@ -378,7 +378,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 			hash.Write([]byte(v.Backend.Value.Name.Value))
 			hash.Write([]byte(fmt.Sprint(i)))
 			h := hash.Sum(nil)
-			num := binary.BigEndian.Uint32(h[:8]) % max
+			num := binary.BigEndian.Uint32(h[:8]) % maxNum
 			hashTable[num] = v.Backend
 			circles = append(circles, num)
 		}
@@ -406,7 +406,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 		hashKey = sha256.Sum256([]byte(identity))
 	}
 
-	key := binary.BigEndian.Uint32(hashKey[:8]) % max
+	key := binary.BigEndian.Uint32(hashKey[:8]) % maxNum
 	index := sort.Search(len(circles), func(i int) bool {
 		return circles[i] >= key
 	})
@@ -424,8 +424,8 @@ func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*
 
 	var target *value.Backend
 	for m := 4; m <= 16; m += 2 {
-		max := uint64(math.Pow(10, float64(m)))
-		num := binary.BigEndian.Uint64(hash[:8]) % max
+		maxNum := uint64(math.Pow(10, float64(m)))
+		num := binary.BigEndian.Uint64(hash[:8]) % maxNum
 
 		for _, v := range dc.Backends {
 			if !v.Backend.Healthy.Load() {
@@ -433,7 +433,7 @@ func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*
 			}
 			bh := sha256.Sum256([]byte(v.Backend.Value.String()))
 			b := binary.BigEndian.Uint64(bh[:8])
-			if b%(max*10) >= num && b%(max*10) < num+max {
+			if b%(maxNum*10) >= num && b%(maxNum*10) < num+maxNum {
 				target = v.Backend
 				goto DETERMINED
 			}

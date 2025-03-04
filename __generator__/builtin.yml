@@ -1291,3 +1291,31 @@ header.unset:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [ID, STRING]
+
+fastly.try_select_shield:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/miscellaneous/fastly-try-select-shield/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [BACKEND, BACKEND]
+  return: BACKEND
+
+uuid.is_version7:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-is-version7/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.version7:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-version7/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+digest.ecdsa_verify:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, STRING, STRING, ID]
+    - [ID, STRING, STRING, STRING, ID, ID]
+  return: BOOL
+

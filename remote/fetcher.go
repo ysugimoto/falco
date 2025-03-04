@@ -50,6 +50,7 @@ func (f *FastlyApiFetcher) Backends() ([]*types.RemoteBackend, error) {
 	}
 	return r, nil
 }
+
 func (f *FastlyApiFetcher) Dictionaries() ([]*types.RemoteDictionary, error) {
 	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
 	defer timeout()
@@ -71,6 +72,7 @@ func (f *FastlyApiFetcher) Dictionaries() ([]*types.RemoteDictionary, error) {
 	}
 	return r, nil
 }
+
 func (f *FastlyApiFetcher) Acls() ([]*types.RemoteAcl, error) {
 	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
 	defer timeout()
@@ -88,6 +90,32 @@ func (f *FastlyApiFetcher) Acls() ([]*types.RemoteAcl, error) {
 	for _, a := range fastlyAcls {
 		r = append(r, &types.RemoteAcl{
 			Name: a.Name,
+		})
+	}
+	return r, nil
+}
+
+func (f *FastlyApiFetcher) Directors() ([]*types.RemoteDirector, error) {
+	c, timeout := _context.WithTimeout(_context.Background(), f.timeout)
+	defer timeout()
+	version, err := f.getVersion(c)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get latest version %w", err)
+	}
+
+	fastlyDirectors, err := f.client.ListDirectors(c, version)
+	if err != nil {
+		return nil, err
+	}
+
+	r := []*types.RemoteDirector{}
+	for _, d := range fastlyDirectors {
+		r = append(r, &types.RemoteDirector{
+			Type:     int(d.Type),
+			Name:     d.Name,
+			Backends: d.Backends,
+			Retries:  d.Retries,
+			Quorum:   d.Quorum,
 		})
 	}
 	return r, nil

@@ -47,12 +47,21 @@ type TerraformBackend struct {
 	Address *string
 }
 
+type TerraformDirector struct {
+	Type     int
+	Name     string
+	Backends []string
+	Retries  *int
+	Quorum   *int
+}
+
 type FastlyService struct {
 	Name             string
 	Vcls             []*TerraformVcl
 	Backends         []*TerraformBackend
 	Acls             []*TerraformAcl
 	Dictionaries     []*TerraformDictionary
+	Directors        []*TerraformDirector
 	Snippets         []*TerraformSnippet
 	LoggingEndpoints []string
 }
@@ -62,6 +71,7 @@ type FastlyServiceValues struct {
 	Vcl        []*TerraformVcl        `json:"vcl"`
 	Acl        []*TerraformAcl        `json:"acl"`
 	Backend    []*TerraformBackend    `json:"backend"`
+	Director   []*TerraformDirector   `json:"director"`
 	Dictionary []*TerraformDictionary `json:"dictionary"`
 	Snippets   []*TerraformSnippet    `json:"snippet"`
 
@@ -99,14 +109,14 @@ type TerraformPlannedResource struct {
 	Values       json.RawMessage `json:"values"`
 }
 
+type TerraformModule struct {
+	Resources    []*TerraformPlannedResource `json:"resources"`
+	ChildModules []*TerraformModule          `json:"child_modules"`
+}
+
 type TerraformPlannedInput struct {
 	PlannedValues *struct {
-		RootModule *struct {
-			Resources    []*TerraformPlannedResource `json:"resources"`
-			ChildModules []*struct {
-				Resources []*TerraformPlannedResource `json:"resources"`
-			} `json:"child_modules"`
-		} `json:"root_module"`
+		RootModule *TerraformModule `json:"root_module"`
 	} `json:"planned_values"`
 }
 
@@ -125,56 +135,59 @@ func UnmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 		return nil, errors.New(`Input does not seem to terraform planned JSON: "root_module" field does not exist`)
 	}
 
-	var services []*FastlyService
-	var serviceValues *FastlyServiceValues
-	// Case: service is declared in root module
-	if len(root.PlannedValues.RootModule.Resources) > 0 {
-		for _, v := range root.PlannedValues.RootModule.Resources {
-			if !isFastlyVCLServiceResource(v) {
-				continue
-			}
-
-			if err := json.Unmarshal(v.Values, &serviceValues); err != nil {
-				return nil, errors.Wrap(err, "Failed to unmarshal values")
-			}
-
-			services = append(services, &FastlyService{
-				Name:             serviceValues.Name,
-				Vcls:             serviceValues.Vcl,
-				Acls:             serviceValues.Acl,
-				Backends:         serviceValues.Backend,
-				Dictionaries:     serviceValues.Dictionary,
-				Snippets:         serviceValues.Snippets,
-				LoggingEndpoints: factoryLoggingEndpoints(serviceValues),
-			})
-		}
-	}
-
-	// Case: service is declared in child module
-	for _, v := range root.PlannedValues.RootModule.ChildModules {
-		for _, v := range v.Resources {
-			if !isFastlyVCLServiceResource(v) {
-				continue
-			}
-
-			if err := json.Unmarshal(v.Values, &serviceValues); err != nil {
-				return nil, errors.Wrap(err, "Failed to unmarshal values")
-			}
-
-			services = append(services, &FastlyService{
-				Name:             serviceValues.Name,
-				Vcls:             serviceValues.Vcl,
-				Acls:             serviceValues.Acl,
-				Backends:         serviceValues.Backend,
-				Dictionaries:     serviceValues.Dictionary,
-				Snippets:         serviceValues.Snippets,
-				LoggingEndpoints: factoryLoggingEndpoints(serviceValues),
-			})
-		}
+	services, err := findFastlyServicesInTerraformModule(root.PlannedValues.RootModule)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	if len(services) == 0 {
 		return nil, errors.New(`Fastly service does not exist. Did you plan with fastly terraform provider?`)
+	}
+
+	return services, nil
+}
+
+func findFastlyServicesInTerraformModule(mod *TerraformModule) ([]*FastlyService, error) {
+	var services []*FastlyService
+
+	// Find services in module resources
+	if len(mod.Resources) > 0 {
+		// v is *TerraformPlannedResource
+		for _, v := range mod.Resources {
+			if !isFastlyVCLServiceResource(v) {
+				continue
+			}
+
+			var s *FastlyServiceValues
+			if err := json.Unmarshal(v.Values, &s); err != nil {
+				return nil, errors.Wrap(err, "Failed to unmarshal values")
+			}
+
+			services = append(services, &FastlyService{
+				Name:             s.Name,
+				Vcls:             s.Vcl,
+				Acls:             s.Acl,
+				Backends:         s.Backend,
+				Dictionaries:     s.Dictionary,
+				Directors:        s.Director,
+				Snippets:         s.Snippets,
+				LoggingEndpoints: factoryLoggingEndpoints(s),
+			})
+		}
+	}
+
+	// Check child_modules existence and return found services if not found
+	if len(mod.ChildModules) == 0 {
+		return services, nil
+	}
+	// If module has child_modules, find Fastly service recursively
+	for _, child := range mod.ChildModules {
+		// child is *TerraformModule
+		childSerivices, err := findFastlyServicesInTerraformModule(child)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		services = append(services, childSerivices...)
 	}
 
 	return services, nil

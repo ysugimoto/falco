@@ -31,6 +31,12 @@ client.sess_timeout:
   get: RTIME
   set: RTIME
 
+bereq.max_reuse_idle_time:
+  reference: # no references for this variable seem to exist.
+  on: [MISS, PASS]
+  get: RTIME
+  set: RTIME
+
 ## Following variables are documented.
 backend.conn.is_tls:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/"
@@ -1015,41 +1021,49 @@ client.class.checker:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.downloader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.feedreader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.filter:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.masquerading:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.spam:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.display.height:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.display.ppi:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.display.touchscreen:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/"
@@ -1060,6 +1074,7 @@ client.display.width:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.identified:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/"
@@ -1080,6 +1095,7 @@ client.platform.ereader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.platform.gameconsole:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/"
@@ -1115,6 +1131,7 @@ client.platform.tvplayer:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 fastly_info.h2.is_push:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/"
@@ -1858,7 +1875,7 @@ math.TAU:
 fastly.error:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
-  get: FLOAT
+  get: STRING
   unset: true
 
 fastly.ff.visits_this_pop:

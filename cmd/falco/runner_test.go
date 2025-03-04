@@ -17,10 +17,11 @@ type RepoExampleTestMetadata struct {
 	errors   int
 	warnings int
 	infos    int
+	runError bool
 }
 
 func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
-	return []RepoExampleTestMetadata{
+	ret := []RepoExampleTestMetadata{
 		{
 			name:     "example 1",
 			fileName: "../../examples/linter/default01.vcl",
@@ -34,13 +35,14 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			errors:   1,
 			warnings: 0,
 			infos:    0,
+			runError: true,
 		},
 		{
 			name:     "example 3",
 			fileName: "../../examples/linter/default03.vcl",
 			errors:   0,
 			warnings: 0,
-			infos:    1,
+			infos:    2,
 		},
 		{
 			name:     "example 4",
@@ -49,7 +51,27 @@ func loadRepoExampleTestMetadata() []RepoExampleTestMetadata {
 			warnings: 0,
 			infos:    1,
 		},
+		{
+			name:     "undocumented",
+			fileName: "../../examples/linter/undocumented.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    0,
+		},
 	}
+
+	// Run custom linter testing only in CI env
+	if v := os.Getenv("CI"); v != "" {
+		ret = append(ret, RepoExampleTestMetadata{
+			name:     "run custom linter",
+			fileName: "../../examples/linter/custom_linter.vcl",
+			errors:   0,
+			warnings: 0,
+			infos:    0,
+		})
+	}
+
+	return ret
 }
 
 func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, *terraform.TerraformFetcher) {
@@ -76,12 +98,7 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 				VerboseWarning: true,
 			},
 		}
-		r, err := NewRunner(c, f)
-		if err != nil {
-			t.Fatalf("Unexpected runner creation error: %s", err)
-			return
-		}
-		ret, err := r.Run(rslv[0])
+		ret, err := NewRunner(c, f).Run(rslv[0])
 		if err != nil {
 			t.Fatalf("Unexpected Run() error: %s", err)
 		}
@@ -105,12 +122,7 @@ func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 			VerboseWarning: true,
 		},
 	}
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-		return
-	}
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -133,11 +145,7 @@ func TestResolveWithDuplicateDeclarations(t *testing.T) {
 			VerboseWarning: true,
 		},
 	}
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -156,12 +164,7 @@ func TestResolveModulesWithVCLExtension(t *testing.T) {
 		},
 	}
 
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -180,12 +183,7 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 		},
 	}
 
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-
-	ret, err := r.Run(rslv[0])
+	ret, err := NewRunner(c, f).Run(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -208,12 +206,7 @@ func TestTesterWithTerraform(t *testing.T) {
 		},
 	}
 
-	r, err := NewRunner(c, f)
-	if err != nil {
-		t.Fatalf("Unexpected runner creation error: %s", err)
-	}
-
-	res, err := r.Test(rslv[0])
+	res, err := NewRunner(c, f).Test(rslv[0])
 	if err != nil {
 		t.Fatalf("Unexpected Run() error: %s", err)
 	}
@@ -230,25 +223,22 @@ func TestRepositoryExamples(t *testing.T) {
 	tests := loadRepoExampleTestMetadata()
 	c := &config.Config{
 		Linter: &config.LinterConfig{
-			VerboseWarning: true,
+			VerboseWarning:    true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resolvers, err := resolver.NewFileResolvers(tt.fileName, c.IncludePaths)
 			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
+				t.Errorf("Unexpected resolver creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(c, nil)
+
+			ret, err := NewRunner(c, nil).Run(resolvers[0])
 			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
-				return
-			}
-			ret, err := r.Run(resolvers[0])
-			if tt.errors != 0 {
-				if err == nil {
-					t.Errorf("Expected Run() to generate an error")
+				if !tt.runError {
+					t.Errorf("Unexpected runner error: %s", err)
 				}
 				return
 			}
@@ -272,7 +262,8 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 	c := &config.Config{
 		Json: true,
 		Linter: &config.LinterConfig{
-			VerboseWarning: true,
+			VerboseWarning:    true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 	}
 
@@ -283,12 +274,7 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(c, nil)
-			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
-				return
-			}
-			ret, err := r.Run(resolvers[0])
+			ret, err := NewRunner(c, nil).Run(resolvers[0])
 			if tt.errors != 0 {
 				if err != nil {
 					t.Errorf("Unexpected error running Run(): %s", err)
@@ -304,8 +290,12 @@ func TestRepositoryExamplesJSONMode(t *testing.T) {
 			if ret.Errors != tt.errors {
 				t.Errorf("Errors expects %d, got %d", tt.errors, ret.Errors)
 			}
-			if len(ret.LintErrors) != tt.infos+tt.warnings+tt.errors {
-				t.Errorf("Expected %d linting errors, got %d", tt.infos+tt.warnings+tt.errors, len(ret.LintErrors))
+			var c int
+			for _, v := range ret.LintErrors {
+				c += len(v)
+			}
+			if c != tt.infos+tt.warnings+tt.errors {
+				t.Errorf("Expected %d linting errors, got %d", tt.infos+tt.warnings+tt.errors, c)
 			}
 
 			countLintErrorsWithSeverity := func(sev linter.Severity) int {
@@ -341,21 +331,51 @@ func TestTester(t *testing.T) {
 	}{
 		{
 			name:   "table manipulation test",
-			main:   "../../examples/testing/table_manipulation.vcl",
+			main:   "../../examples/testing/table_manipulation/table_manipulation.vcl",
 			filter: "*table_*.test.vcl",
 			passes: 2,
 		},
 		{
 			name:   "empty and notset value test",
-			main:   "../../examples/testing/default_values.vcl",
+			main:   "../../examples/testing/default_values/default_values.vcl",
 			filter: "*values.test.vcl",
 			passes: 16,
 		},
 		{
 			name:   "assertions test",
-			main:   "../../examples/testing/assertion.vcl",
+			main:   "../../examples/testing/assertion/assertion.vcl",
 			filter: "*assertion.test.vcl",
 			passes: 5,
+		},
+		{
+			name:   "grouping test",
+			main:   "../../examples/testing/group/group.vcl",
+			filter: "*group.test.vcl",
+			passes: 3,
+		},
+		{
+			name:   "mockging test",
+			main:   "../../examples/testing/mock_subroutine/mock_subroutine.vcl",
+			filter: "*mock_subroutine.test.vcl",
+			passes: 6,
+		},
+		{
+			name:   "overriding variables test",
+			main:   "../../examples/testing/override_variables/override_variables.vcl",
+			filter: "*override_variables.test.vcl",
+			passes: 6,
+		},
+		{
+			name:   "base64 functional test",
+			main:   "../../examples/testing/base64/main.vcl",
+			filter: "*base64.test.vcl",
+			passes: 12,
+		},
+		{
+			name:   "regex grouped variables test",
+			main:   "../../examples/testing/regex/regex.vcl",
+			filter: "*regex.test.vcl",
+			passes: 4,
 		},
 	}
 
@@ -372,6 +392,15 @@ func TestTester(t *testing.T) {
 				},
 				Testing: &config.TestConfig{
 					Filter: tt.filter,
+					YamlOverrideVariables: map[string]any{
+						"tls.client.certificate.is_cert_missing": true,
+						"client.geo.area_code":                   100,
+						"req.digest.ratio":                       0.8,
+						"client.as.name":                         "Foobar",
+					},
+					CLIOverrideVariables: []string{
+						"client.geo.area_code=200", // will be overridden
+					},
 				},
 				Commands: config.Commands{"test", main},
 			}
@@ -380,12 +409,7 @@ func TestTester(t *testing.T) {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
 			}
-			r, err := NewRunner(c, nil)
-			if err != nil {
-				t.Errorf("Unexpected runner creation error: %s", err)
-				return
-			}
-			ret, err := r.Test(resolvers[0])
+			ret, err := NewRunner(c, nil).Test(resolvers[0])
 			if err != nil {
 				t.Errorf("Unexpected runner creation error: %s", err)
 				return
@@ -401,6 +425,106 @@ func TestTester(t *testing.T) {
 			if ret.Statistics.Fails > 0 {
 				t.Errorf("Testing fails should be zero, got: %d", ret.Statistics.Fails)
 				return
+			}
+			if ret.Statistics.Passes != tt.passes {
+				t.Errorf("Testing passes should be %d, got: %d", tt.passes, ret.Statistics.Passes)
+				return
+			}
+		})
+	}
+}
+
+func TestFastlyGeneratedVCLLinting(t *testing.T) {
+	c, err := config.New([]string{"--generated"})
+	if err != nil {
+		t.Errorf("Unexpected config pointer generation error: %s", err)
+		return
+	}
+
+	resolvers, err := resolver.NewFileResolvers("../../examples/linter/fastly_generated.vcl", c.IncludePaths)
+	if err != nil {
+		t.Errorf("Unexpected runner creation error: %s", err)
+		return
+	}
+	ret, err := NewRunner(c, nil).Run(resolvers[0])
+	if err != nil {
+		t.Errorf("Unexpected linting error: %s", err)
+		return
+	}
+	if ret.Infos != 2 {
+		t.Errorf("Infos expects 2, got %d", ret.Infos)
+	}
+	if ret.Warnings != 3 {
+		t.Errorf("Warning expects 3, got %d", ret.Warnings)
+	}
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
+	}
+}
+
+func TestInjectDictionaryTesting(t *testing.T) {
+	tests := []struct {
+		name    string
+		main    string
+		inject  bool
+		passes  int
+		isError bool
+	}{
+		{
+			name:   "inject dictionary",
+			main:   "../../examples/testing/inject_dictionary/inject_dictionary.vcl",
+			inject: true,
+			passes: 1,
+		},
+		{
+			name:    "inject dictionary",
+			main:    "../../examples/testing/inject_dictionary/inject_dictionary.vcl",
+			passes:  0,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			main, err := filepath.Abs(tt.main)
+			if err != nil {
+				t.Errorf("Unexpected making absolute path error: %s", err)
+				return
+			}
+			c := &config.Config{
+				Linter: &config.LinterConfig{
+					VerboseWarning: true,
+				},
+				Testing: &config.TestConfig{
+					Filter: "*.test.vcl",
+				},
+				Commands: config.Commands{"test", main},
+			}
+			if tt.inject {
+				c.Testing.OverrideEdgeDictionaries = map[string]config.EdgeDictionary{
+					"injected_dictionary": map[string]string{
+						"is_maintenance": "1",
+					},
+				}
+			}
+			resolvers, err := resolver.NewFileResolvers(main, c.IncludePaths)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			ret, err := NewRunner(c, nil).Test(resolvers[0])
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+			}
+			for _, v := range ret.Results {
+				for _, c := range v.Cases {
+					if c.Error != nil {
+						if !tt.isError {
+							t.Errorf(`Test case "%s" raises error: %s`, c.Name, c.Error)
+						}
+						return
+					}
+				}
 			}
 			if ret.Statistics.Passes != tt.passes {
 				t.Errorf("Testing passes should be %d, got: %d", tt.passes, ret.Statistics.Passes)

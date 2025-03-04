@@ -24,7 +24,7 @@ func Assert_equal_fold_Validate(args []value.Value) error {
 
 func Assert_equal_fold(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_equal_fold_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	return assert_equal_fold(args...)
@@ -47,13 +47,13 @@ func assert_equal_fold(args ...value.Value) (value.Value, error) {
 				actual.Type(),
 			)
 		}
-		return &value.Boolean{}, errors.NewAssertionError(actual, message)
+		return &value.Boolean{}, errors.NewAssertionError(actual, "%s", message)
 	}
 
 	ok := &value.Boolean{Value: strings.EqualFold(actual.String(), expect.String())}
 	if !ok.Value {
 		if message != "" {
-			return ok, errors.NewAssertionError(actual, message)
+			return ok, errors.NewAssertionError(actual, "%s", message)
 		}
 		return ok, errors.NewAssertionError(actual,
 			"Assertion error: expect=%v, actual=%v", expect, actual)

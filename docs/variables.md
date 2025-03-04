@@ -1,7 +1,28 @@
 # Variables in simulator
 
-Following table describes variables that will return tentative values.
-Will be updated when we find or implement a way to get accurate values.
+Following table describes variables that will return tentative values,
+but you can override these values by configuration or cli arguments for testing.
+
+## Overide by Configuration
+
+Put override configuration in `testing.overrides` section as map.
+
+```yaml
+...
+testing:
+    overrides:
+      client.class.checker: true
+      client.as.name: "overridden"
+...
+```
+
+## CLI
+
+Provide `-o, --override` option on the CLI command, accepts multiple options.
+
+```shell
+falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=overridden"
+```
 
 
 | Variable                                   | Tentative Value                    |
@@ -15,8 +36,8 @@ Will be updated when we find or implement a way to get accurate values.
 | client.platform.mediaplayer                | false                              |
 | client.geo.latitude                        | 37.7786941                         |
 | client.geo.longitude                       | -122.3981452                       |
-| client.as_number                           | 4294967294                         |
-| client.as_name                             | "Reserved"                         |
+| client.as.number                           | 4294967294                         |
+| client.as.name                             | "Reserved"                         |
 | client.display.height                      | -1                                 |
 | client.display.ppi                         | -1                                 |
 | client.display.width                       | -1                                 |
@@ -67,7 +88,7 @@ Will be updated when we find or implement a way to get accurate values.
 | obj.is_pci                                 | false                              |
 | req.backend.is_cluster                     | false                              |
 | resp.is_locally_generated                  | false                              |
-| req.digest_ratio                           | 0.4                                |
+| req.digest.ratio                           | 0.4                                |
 | obj.stale_white_revalidate                 | 60s                                |
 | backend.socket.congestion_algorithm        | "cubic"                            |
 | backend.socket.cwnd                        | 60                                 |
@@ -184,3 +205,5 @@ Will be updated when we find or implement a way to get accurate values.
 
 "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_DHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_DHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:TLS_DHE_RSA_WITH_AES_256_CBC_SHA256:TLS_DHE_DSS_WITH_AES_256_GCM_SHA384:TLS_DHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:TLS_DHE_RSA_WITH_AES_256_CCM_8:TLS_DHE_RSA_WITH_AES_256_CCM:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384:TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384:TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384:TLS_DHE_DSS_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_DHE_RSA_WITH_AES_128_CCM_8:TLS_DHE_RSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256:TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:TLS_DHE_DSS_WITH_AES_256_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_DHE_DSS_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_DHE_RSA_WITH_AES_256_CBC_SHA:TLS_DHE_DSS_WITH_AES_256_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:TLS_DHE_RSA_WITH_AES_128_CBC_SHA:TLS_DHE_DSS_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_AES_256_GCM_SHA384:TLS_RSA_WITH_AES_256_CCM_8:TLS_RSA_WITH_AES_256_CCM:TLS_RSA_WITH_ARIA_256_GCM_SHA384:TLS_RSA_WITH_AES_128_GCM_SHA256:TLS_RSA_WITH_AES_128_CCM_8:TLS_RSA_WITH_AES_128_CCM:TLS_RSA_WITH_ARIA_128_GCM_SHA256:TLS_RSA_WITH_AES_256_CBC_SHA256:TLS_RSA_WITH_AES_128_CBC_SHA256:TLS_RSA_WITH_AES_256_CBC_SHA:TLS_RSA_WITH_AES_128_CBC_SHA:TLS_EMPTY_RENEGOTIATION_INFO_SCSV"
 ```
+
+These values will be updated when we find or implement a way to get accurate values.

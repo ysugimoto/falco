@@ -134,6 +134,24 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Int-Value": &value.String{Value: "2"},
 			},
 		},
+		{
+			name: "Functional subroutine allows non-literals in return statement",
+			vcl: `sub compute INTEGER {
+				{
+					return std.toupper("test");
+				}
+			}
+
+			sub vcl_recv {
+				declare local var.mystr STRING;
+				set var.mystr = compute();
+				set req.http.X-Str-Value = var.mystr;
+			}
+			`,
+			assertions: map[string]value.Value{
+				"req.http.X-Str-Value": &value.String{Value: "TEST"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

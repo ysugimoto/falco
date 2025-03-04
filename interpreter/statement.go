@@ -18,6 +18,17 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
+// _nopSeekCloser is like io.NopCloser, but for wrapping io.ReadSeeker.
+type _nopSeekCloser struct {
+	io.ReadSeeker
+}
+
+func (_nopSeekCloser) Close() error { return nil }
+
+func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return _nopSeekCloser{r}
+}
+
 // nolint: gocognit
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
@@ -33,6 +44,14 @@ func (i *Interpreter) ProcessBlockStatement(
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {
@@ -203,23 +222,44 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 	if stmt.ReturnExpression == nil {
 		return BARE_RETURN
 	}
-	return State((*stmt.ReturnExpression).String())
+	return State(stmt.ReturnExpression.String())
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
-	right, err := i.ProcessExpression(stmt.Value, false)
-	if err != nil {
-		return errors.WithStack(err)
+	if strings.HasPrefix(stmt.Ident.Value, "var.") {
+		left, err := i.localVars.Get(stmt.Ident.Value)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+			return errors.WithStack(err)
+		}
+		right, err := i.ProcessExpression(stmt.Value, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+			return errors.WithStack(err)
+		}
+		right, err := i.ProcessExpression(stmt.Value, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
-	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		err = i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right)
-	} else {
-		err = i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right)
-	}
-	if err != nil {
-		return errors.WithStack(err)
-	}
 	return nil
 }
 
@@ -239,12 +279,15 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		)
 	}
 
+	if err := isValidStatementExpression(value.StringType, stmt.Value); err != nil {
+		return errors.WithStack(err)
+	}
 	right, err := i.ProcessExpression(stmt.Value, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	if err := i.vars.Add(i.ctx.Scope, stmt.Ident.Value, right); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -258,7 +301,7 @@ func (i *Interpreter) ProcessUnsetStatement(stmt *ast.UnsetStatement) error {
 	}
 
 	if err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -273,7 +316,7 @@ func (i *Interpreter) ProcessRemoveStatement(stmt *ast.RemoveStatement) error {
 	}
 
 	if err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	return nil
 }
@@ -282,12 +325,22 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	var state State
 	var err error
 	name := stmt.Subroutine.Value
+
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
+		// If mocked functional subroutine exists, use it
+		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[name]; ok {
+			sub = mocked
+		}
+
 		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
 	} else if sub, ok = i.ctx.Subroutines[name]; ok {
+		// If mocked subroutine exists, use it
+		if mocked, ok := i.ctx.MockedSubroutines[name]; ok {
+			sub = mocked
+		}
 		state, err = i.ProcessSubroutine(sub, ds)
 		if err != nil {
 			return NONE, errors.WithStack(err)
@@ -314,7 +367,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 		}
 		// set obj.status and obj.response variable internally
 		if err := assign.Assign(i.ctx.ObjectStatus, code); err != nil {
-			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	// Possibility error response is not defined
@@ -325,7 +378,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 		}
 
 		if err := assign.Assign(i.ctx.ObjectResponse, arg); err != nil {
-			return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	return nil
@@ -373,9 +426,9 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
 }
 
@@ -386,9 +439,9 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 	}
 	v := &value.String{}
 	if err := assign.Assign(v, val); err != nil {
-		return exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
-	i.ctx.Object.Body = io.NopCloser(strings.NewReader(v.Value))
+	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
 	return nil
 }
 
@@ -404,7 +457,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 	// Builtin function will not change any state
 	fn, err := function.Exists(i.ctx.Scope, stmt.Function.Value)
 	if err != nil {
-		return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+		return NONE, exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	// Check the function can call in statement (means a function that returns VOID type can call)
 	if !fn.CanStatementCall {
@@ -451,7 +504,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			t.Token = stmt.GetMeta().Token
 			return NONE, errors.WithStack(t)
 		default:
-			return NONE, exception.Runtime(&stmt.GetMeta().Token, err.Error())
+			return NONE, exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 		}
 	}
 	return NONE, nil
@@ -547,7 +600,7 @@ func (i *Interpreter) ProcessIfStatement(
 
 	// else
 	if stmt.Alternative != nil {
-		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Statements, ds, isReturnAsValue)
+		val, state, _, err := i.ProcessBlockStatement(stmt.Alternative.Consequence.Statements, ds, isReturnAsValue)
 		if err != nil {
 			return value.Null, NONE, errors.WithStack(err)
 		}
@@ -565,7 +618,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 	isReturnAsValue bool,
 ) (value.Value, State, error) {
 	// User defined functions used in a switch control statement must have a STRING return type.
-	if fnCall, ok := stmt.Control.(*ast.FunctionCallExpression); ok {
+	if fnCall, ok := stmt.Control.Expression.(*ast.FunctionCallExpression); ok {
 		fn, ok := i.ctx.SubroutineFunctions[fnCall.Function.Value]
 		if ok && fn.ReturnType.Value != string(value.StringType) {
 			return value.Null, NONE, errors.WithStack(exception.Runtime(
@@ -575,7 +628,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 			))
 		}
 	}
-	expr, err := i.ProcessExpression(stmt.Control, false)
+	expr, err := i.ProcessExpression(stmt.Control.Expression, false)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}

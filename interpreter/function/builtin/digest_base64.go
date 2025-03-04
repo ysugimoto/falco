@@ -3,10 +3,9 @@
 package builtin
 
 import (
-	"encoding/base64"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -39,6 +38,6 @@ func Digest_base64(ctx *context.Context, args ...value.Value) (value.Value, erro
 	input := value.Unwrap[*value.String](args[0])
 
 	return &value.String{
-		Value: base64.StdEncoding.EncodeToString([]byte(input.Value)),
+		Value: shared.Base64Encode(input.Value),
 	}, nil
 }

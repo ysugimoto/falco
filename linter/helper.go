@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/types"
 )
 
@@ -105,19 +105,20 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		// We should do linting loughly because this type is only provided via Faslty Origin-Shielding
 		Props: map[string]types.Type{
 			"shield": types.StringType,
+			"is_ssl": types.BoolType,
 		},
 		Requires: []string{"shield"},
 	},
 }
 
 func isAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_'
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 // isValidName validates ident name has only [0-9a-zA-Z_]+
 func isValidName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) {
+		if isAlphaNumeric(r) || r == '_' {
 			continue
 		}
 		return false
@@ -128,7 +129,7 @@ func isValidName(name string) bool {
 // isValidVariableName validates ident name has only [0-9a-zA-Z_\.-:]+
 func isValidVariableName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) || r == '.' || r == '-' || r == ':' {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' {
 			continue
 		}
 		return false
@@ -163,13 +164,15 @@ func isValidConditionExpression(cond ast.Expression) error {
 //
 // declare local var.Foo BOOL;
 // declare local var.Bar STRING;
-// set var.Bar = "foo" "bar";                      // -> valid, string concatenation operator can use
-// set var.Foo = (req.http.Host == "example.com"); // -> valid, equal operator cau use inside grouped expression set statement
-// set var.Foo = !false;                           // -> invalid, could not use in set statement
-// set var.Foo = req.http.Host == "example.com";   // -> invalid, equal operator could not use in set statement
+// set var.Bar = "foo" "bar";                         // -> valid, string concatenation operator can use
+// set var.Foo = (req.http.Host == "example.com");    // -> valid, equal operator cau use inside grouped expression set statement
+// set var.Bar = (req.http.Host == "example.com");    // -> invalid, expression must be an string
+// set var.Foo = !false;                              // -> invalid, could not use in set statement
+// set var.Bar = !tls.client.certificate.is_cert_bad; // -> invalid, expression must be an string
+// set var.Foo = req.http.Host == "example.com";      // -> invalid, equal operator could not use in set statement
 //
 // So we'd check validity following function.
-func isValidStatementExpression(exp ast.Expression) error {
+func isValidStatementExpression(leftType types.Type, exp ast.Expression) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
 		if t.Operator == "!" {
@@ -178,6 +181,10 @@ func isValidStatementExpression(exp ast.Expression) error {
 	case *ast.InfixExpression:
 		if t.Operator != "+" {
 			return fmt.Errorf("could not specify %s operator in statement", t.Operator)
+		}
+	case *ast.GroupedExpression:
+		if leftType != types.BoolType {
+			return fmt.Errorf("could not specify grouped expression excepting boolean statement")
 		}
 	}
 	return nil
@@ -200,21 +207,25 @@ func isValidReturnExpression(exp ast.Expression) error {
 	return nil
 }
 
-func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) error {
+// Push regex captured variable to the context if needed
+func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
-		return pushRegexGroupVars(t.Right, ctx)
+		pushRegexGroupVars(t.Right, ctx)
+	case *ast.GroupedExpression:
+		pushRegexGroupVars(t.Right, ctx)
 	case *ast.InfixExpression:
 		if t.Operator == "~" || t.Operator == "!~" {
 			m := captureRegex.FindAllStringSubmatch(t.Right.String(), -1)
-			if m != nil {
-				return ctx.PushRegexVariables(len(m) + 1)
+			if len(m) > 0 {
+				ctx.PushRegexVariables(len(m) + 1)
+			} else {
+				ctx.ResetRegexVariables()
 			}
 		} else {
-			return pushRegexGroupVars(t.Right, ctx)
+			pushRegexGroupVars(t.Right, ctx)
 		}
 	}
-	return nil
 }
 
 func isBooleanOperator(operator string) bool {
@@ -343,7 +354,7 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	}
 
 	// If could not via subroutine name, find by annotations
-	// typically defined is module file
+	// typically defined in module file
 	scopes := 0
 	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
@@ -368,9 +379,50 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 		}
 	}
 	if scopes == 0 {
-		return context.RECV
+		// Unknown scope
+		return -1
 	}
 	return scopes
+}
+
+func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
+	var scopes int
+	for i := range scopeNames {
+		switch strings.ToUpper(scopeNames[i]) {
+		case "RECV":
+			scopes |= context.RECV
+		case "HASH":
+			scopes |= context.HASH
+		case "HIT":
+			scopes |= context.HIT
+		case "MISS":
+			scopes |= context.MISS
+		case "PASS":
+			scopes |= context.PASS
+		case "FETCH":
+			scopes |= context.FETCH
+		case "ERROR":
+			scopes |= context.ERROR
+		case "DELIVER":
+			scopes |= context.DELIVER
+		case "LOG":
+			scopes |= context.LOG
+		}
+	}
+	if scopes == 0 {
+		// Unknown scope
+		return -1
+	}
+	return scopes
+}
+
+func isIgnoredSubroutineInConfig(ignores []string, subroutineName string) bool {
+	for i := range ignores {
+		if ignores[i] == subroutineName {
+			return true
+		}
+	}
+	return false
 }
 
 func getFastlySubroutineScope(name string) string {
@@ -397,15 +449,34 @@ func getFastlySubroutineScope(name string) string {
 	return ""
 }
 
-func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
-	comments := strings.Split(commentText, "\n")
-	for _, c := range comments {
-		c = strings.TrimLeft(c, " */#")
-		if strings.HasPrefix(strings.ToUpper(c), phrase) {
+// Fastly macro format Must be "#FASTLY [scope]"
+// - Comment sign must starts with single "#". "/" sign is not accepted
+// - Fixed "FASTLY" string must exactly present without whitespace after comment sign
+// - [scope] string is case-insensitive (recv/RECV can be accepcted, typically uppercase)
+// - Additional comment is also accepted like "#FASTLY RECV some extra comment"
+func hasFastlyBoilerPlateMacro(cs ast.Comments, scope string) bool {
+	for _, c := range cs {
+		// Uppercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToUpper(scope)) {
+			return true
+		}
+		// lowercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToLower(scope)) {
 			return true
 		}
 	}
 	return false
+}
+
+// According to fastly share_key must be alphanumeric and ASCII only
+func isValidBackendShareKey(shareKey string) bool {
+	for _, c := range shareKey {
+		if isAlphaNumeric(c) {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // According to fastly if a prober is configured with initial < threshold
@@ -487,4 +558,63 @@ func isProtectedHTTPHeaderName(name string) bool {
 		return true
 	}
 	return false
+}
+
+// Series expresses the series of string concatenation.
+type Series struct {
+	Operator   string // Operator will accept either of "+" or "-" or empty string.
+	Expression ast.Expression
+}
+
+func toSeriesExpressions(expr ast.Expression, ctx *context.Context) ([]*Series, *LintError) {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// If expression is ident, must be a variable
+		// e.g req.http.Header, var.declaredVariable
+		if _, err := ctx.Get(t.Value); err != nil {
+			switch err {
+			case context.ErrDeprecated, context.ErrUncapturedRegexVariable, context.ErrRegexVariableOverridden:
+				break
+			default:
+				return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
+			}
+		}
+	case *ast.PrefixExpression:
+		if t.Operator != "+" && t.Operator != "-" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "PrefixExpression")
+		}
+		s, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		s[0].Operator = t.Operator
+		return s, nil
+	case *ast.GroupedExpression:
+		return nil, InvalidStringConcatenation(expr.GetMeta(), "GroupedExpression")
+	case *ast.InfixExpression:
+		if t.Operator != "+" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "InfixExpression")
+		}
+		var series []*Series
+		left, err := toSeriesExpressions(t.Left, ctx)
+		if err != nil {
+			return nil, err
+		}
+		series = append(series, left...)
+
+		right, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if t.Explicit {
+			right[0].Operator = t.Operator
+		}
+		series = append(series, right...)
+		return series, nil
+	}
+
+	// Concatenatable expression
+	return []*Series{
+		{Expression: expr},
+	}, nil
 }

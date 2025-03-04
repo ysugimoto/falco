@@ -101,3 +101,10 @@ func InvalidEscape(m *ast.Meta, msg string) *ParseError {
 		Message: msg,
 	}
 }
+
+func LongStringDelimiterMismatch(m *ast.Meta, openDelim, closeDelim string) *ParseError {
+	return &ParseError{
+		Token:   m.Token,
+		Message: fmt.Sprintf("Long String delimiter mismatch. open=%s, close=%s", openDelim, closeDelim),
+	}
+}

@@ -48,6 +48,8 @@ type Director struct {
 	Name     string       `json:"name"`
 	Type     DirectorType `json:"type"`
 	Backends []string     `json:"backends"`
+	Retries  int          `json:"retries"`
+	Quorum   int          `json:"quorum"`
 }
 
 type VCLSnippet struct {

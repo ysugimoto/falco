@@ -45,6 +45,7 @@ func New(options ...context.Option) *Interpreter {
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
+		process:      process.New(),
 	}
 }
 
@@ -135,16 +136,21 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
+	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
 	}
-	if err := i.ProcessDeclarations(statements); err != nil {
+	// instrumenting if coverage measurement is enabled
+	if i.ctx.Coverage != nil {
+		i.instrument(vcl)
+	}
+	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
 		return err
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -181,6 +187,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
+
 		case *ast.SubroutineDeclaration:
 			i.Debugger.Run(stmt)
 			if t.ReturnType != nil {
@@ -190,6 +197,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				i.ctx.SubroutineFunctions[t.Name.Value] = t
 				continue
 			}
+
 			exists, ok := i.ctx.Subroutines[t.Name.Value]
 			if !ok {
 				i.ctx.Subroutines[t.Name.Value] = t
@@ -216,6 +224,22 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Ratecounters[t.Name.Value] = t
+		}
+	}
+
+	// Inject edge dictionaries which provided via configuration
+	for name, dict := range i.ctx.InjectEdgeDictionaries {
+		if v, ok := i.ctx.Tables[name]; ok {
+			// If EdgeDictionary already defined, inject items.
+			// Edge Dictionary value type must be STRING
+			if v.ValueType.Value != "STRING" {
+				return exception.System("EdgeDictionary injection error: %s value type is not STRING", v.Name.Value)
+			}
+			i.InjectEdgeDictionaryItem(v, dict)
+		} else {
+			// Otherwise, add definition
+			d := i.createEdgeDictionaryDeclaration(name, dict)
+			i.ctx.Tables[name] = d
 		}
 	}
 	return nil

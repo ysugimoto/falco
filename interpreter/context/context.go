@@ -12,6 +12,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 // Reserved vcl names in Fastly
@@ -55,11 +56,17 @@ type Context struct {
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	OriginalHost        string
+	IsActualResponse    bool
 
-	OverrideMaxBackends int
-	OverrideMaxAcls     int
-	OverrideRequest     *config.RequestConfig
-	OverrideBackends    map[string]*config.OverrideBackend
+	OverrideMaxBackends    int
+	OverrideMaxAcls        int
+	OverrideRequest        *config.RequestConfig
+	OverrideBackends       map[string]*config.OverrideBackend
+	InjectEdgeDictionaries map[string]config.EdgeDictionary
+
+	// Mocking subroutines map
+	MockedSubroutines            map[string]*ast.SubroutineDeclaration
+	MockedFunctioncalSubroutines map[string]*ast.SubroutineDeclaration
 
 	Request          *http.Request
 	BackendRequest   *http.Request
@@ -138,12 +145,16 @@ type Context struct {
 	ObjectStatus                        *value.Integer
 	ObjectResponse                      *value.String
 	IsLocallyGenerated                  *value.Boolean
+	BackendRequestMaxReuseIdleTime      *value.RTime
 
 	// For testing fields
 	// Stored subroutine return state
 	ReturnState     *value.String
 	FixedTime       *time.Time
 	SubroutineCalls map[string]int
+
+	// Coverage marker pointer. not nil if testing with coverage measurement
+	Coverage *shared.Coverage
 
 	// Regex captured values like "re.group.N" and local declared variables are volatile,
 	// reset this when process is outgoing for each subroutines
@@ -158,19 +169,25 @@ type Context struct {
 	// However, Fastly document says the esi will be triggered when esi statement is executed in FETCH directive.
 	// see: https://developer.fastly.com/reference/vcl/statements/esi/
 	TriggerESI bool
+
+	OverrideVariables map[string]value.Value
 }
 
 func New(options ...Option) *Context {
 	ctx := &Context{
-		Acls:                make(map[string]*value.Acl),
-		Backends:            make(map[string]*value.Backend),
-		Tables:              make(map[string]*ast.TableDeclaration),
-		Subroutines:         make(map[string]*ast.SubroutineDeclaration),
-		Penaltyboxes:        make(map[string]*ast.PenaltyboxDeclaration),
-		Ratecounters:        make(map[string]*ast.RatecounterDeclaration),
-		Gotos:               make(map[string]*ast.GotoStatement),
-		SubroutineFunctions: make(map[string]*ast.SubroutineDeclaration),
-		OverrideBackends:    make(map[string]*config.OverrideBackend),
+		Acls:                   make(map[string]*value.Acl),
+		Backends:               make(map[string]*value.Backend),
+		Tables:                 make(map[string]*ast.TableDeclaration),
+		Subroutines:            make(map[string]*ast.SubroutineDeclaration),
+		Penaltyboxes:           make(map[string]*ast.PenaltyboxDeclaration),
+		Ratecounters:           make(map[string]*ast.RatecounterDeclaration),
+		Gotos:                  make(map[string]*ast.GotoStatement),
+		SubroutineFunctions:    make(map[string]*ast.SubroutineDeclaration),
+		OverrideBackends:       make(map[string]*config.OverrideBackend),
+		InjectEdgeDictionaries: make(map[string]config.EdgeDictionary),
+
+		MockedSubroutines:            make(map[string]*ast.SubroutineDeclaration),
+		MockedFunctioncalSubroutines: make(map[string]*ast.SubroutineDeclaration),
 
 		CacheHitItem:                    nil,
 		RequestStartTime:                time.Now(),
@@ -203,7 +220,8 @@ func New(options ...Option) *Context {
 		// Observations indicate that it is a zero padded hex representation of two
 		// 64-bit values The first 64-bits are seemingly random, the nature of the
 		// apparent randomness is unknown. The second 64-bit value is always 1.
-		RequestID:                           &value.String{Value: fmt.Sprintf("%016x0000000000000001", rand.Int63())},
+		RequestID: &value.String{Value: fmt.Sprintf("%016x0000000000000001", rand.Int63())},
+
 		WafAnomalyScore:                     &value.Integer{},
 		WafBlocked:                          &value.Boolean{},
 		WafCounter:                          &value.Integer{},
@@ -245,9 +263,12 @@ func New(options ...Option) *Context {
 		ObjectResponse:                      &value.String{Value: "error"},
 		ReturnState:                         &value.String{IsNotSet: true},
 		IsLocallyGenerated:                  &value.Boolean{},
+		BackendRequestMaxReuseIdleTime:      &value.RTime{},
 
 		RegexMatchedValues: make(map[string]*value.String),
 		SubroutineCalls:    make(map[string]int),
+
+		OverrideVariables: make(map[string]value.Value),
 	}
 
 	// collect options

@@ -67,11 +67,20 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return &value.String{Value: bereq.URL.Path}, nil
 	case BEREQ_URL_QS:
 		return &value.String{Value: bereq.URL.RawQuery}, nil
+	case BEREQ_MAX_REUSE_IDLE_TIME:
+		return v.ctx.BackendRequestMaxReuseIdleTime, nil
+
 	// We simulate request is always pass to the origin, not consider shielding
 	case REQ_BACKEND_IS_ORIGIN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: true}, nil
 	// Digest ratio will return fixed value
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 	}
 
@@ -149,6 +158,11 @@ func (v *PassScopeVariables) Set(s context.Scope, name, operator string, val val
 		bereq.URL.Path = parsed.Path
 		bereq.URL.RawQuery = parsed.RawPath
 		bereq.URL.RawFragment = parsed.RawFragment
+		return nil
+	case BEREQ_MAX_REUSE_IDLE_TIME:
+		if err := doAssign(v.ctx.BackendRequestMaxReuseIdleTime, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
 		return nil
 	}
 

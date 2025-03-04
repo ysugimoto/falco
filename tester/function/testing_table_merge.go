@@ -33,7 +33,7 @@ func Testing_table_merge(
 ) (value.Value, error) {
 
 	if err := Testing_table_merge_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	baseTable := value.Unwrap[*value.Ident](args[0]).Value

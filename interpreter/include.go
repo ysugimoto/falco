@@ -17,7 +17,7 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 		if include, ok := stmt.(*ast.IncludeStatement); ok {
 			if strings.HasPrefix(include.Module.Value, "snippet::") {
 				if included, err := i.includeSnippet(include, isRoot); err != nil {
-					return nil, ex.Runtime(&stmt.GetMeta().Token, err.Error())
+					return nil, ex.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 				} else {
 					resolved = append(resolved, included...)
 				}
@@ -25,7 +25,7 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 			}
 			included, err := i.includeFile(include, isRoot)
 			if err != nil {
-				return nil, ex.Runtime(&stmt.GetMeta().Token, err.Error())
+				return nil, ex.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 			}
 			recursive, err := i.resolveIncludeStatement(included, isRoot)
 			if err != nil {

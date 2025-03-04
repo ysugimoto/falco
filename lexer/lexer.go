@@ -19,15 +19,20 @@ type Lexer struct {
 	file   string
 	peeks  []token.Token
 	isEOF  bool
+
+	customs map[string]token.TokenType
 }
 
 func New(r io.Reader, opts ...OptionFunc) *Lexer {
 	o := collect(opts)
 	l := &Lexer{
-		r:      bufio.NewReader(r),
-		line:   1,
-		buffer: new(bytes.Buffer),
-		file:   o.Filename,
+		r:       bufio.NewReader(r),
+		line:    1,
+		buffer:  new(bytes.Buffer),
+		stack:   make([]string, 0, 512),
+		peeks:   make([]token.Token, 0, 8),
+		file:    o.Filename,
+		customs: o.Customs,
 	}
 	l.readChar()
 	return l
@@ -35,6 +40,20 @@ func New(r io.Reader, opts ...OptionFunc) *Lexer {
 
 func NewFromString(input string, opts ...OptionFunc) *Lexer {
 	return New(strings.NewReader(input), opts...)
+}
+
+func (l *Lexer) RegisterCustomTokens(tokenMap map[string]token.TokenType) {
+	for k, v := range tokenMap {
+		l.customs[k] = v
+	}
+}
+
+func (l *Lexer) skipBytes(n int) {
+	discarded, err := l.r.Discard(n)
+	if err != nil {
+		l.char = 0x00
+	}
+	l.index += discarded
 }
 
 func (l *Lexer) readChar() {
@@ -60,6 +79,22 @@ func (l *Lexer) peekChar() rune {
 	return rune(b[0])
 }
 
+func (l *Lexer) peekUntil(cond func(b byte) bool) (string, error) {
+	var peekBytes int
+	for {
+		r, err := l.r.Peek(peekBytes + 1)
+		if err != nil {
+			return "", err
+		}
+
+		peekBytes++
+
+		if cond(r[peekBytes-1]) {
+			return string(r), nil
+		}
+	}
+}
+
 func (l *Lexer) NewLine() {
 	l.stack = append(l.stack, strings.TrimRight(l.buffer.String(), "\n"))
 	l.buffer = new(bytes.Buffer)
@@ -79,9 +114,11 @@ func (l *Lexer) LineCount() int {
 }
 
 func (l *Lexer) PeekToken() token.Token {
+	if len(l.peeks) > 0 {
+		return l.peeks[0]
+	}
 	t := l.NextToken()
-	// peek token stack works FIFO queue
-	l.peeks = append(l.peeks, t)
+	l.peeks = append([]token.Token{t}, l.peeks...)
 	return t
 }
 
@@ -116,17 +153,33 @@ func (l *Lexer) NextToken() token.Token {
 			t = newToken(token.MINUS, l.char, line, index)
 		}
 	case '{':
-		// VCL allows bracket enclosed string like {" foobar "},
-		// it is convenient to make string that includes whitespace, TAB, etc.
-		// So, lexer should lex it.
-		if l.peekChar() == '"' {
-			l.readChar()
-			t = newToken(token.STRING, l.char, line, index)
-			t.Literal = l.readBracketString()
-			t.Offset = 4 // {" and "}
-		} else {
+		// Fastly VCL allows bracket enclosed strings like {" foobar "}, along
+		// with custom delimiters like {JSON" {"foo": "bar"} "JSON}. It is
+		// convenient for constructing strings thats include whitespace,
+		// creating JSON responses, etc.
+		// see: https://www.fastly.com/documentation/reference/vcl/types/string/
+		delimiter, err := l.peekUntil(func(b byte) bool {
+			return !isLongStringDelimiter(rune(b))
+		})
+
+		if err != nil || delimiter[len(delimiter)-1] != '"' {
 			t = newToken(token.LEFT_BRACE, l.char, line, index)
+			break
 		}
+
+		t = newToken(token.OPEN_LONG_STRING, l.char, line, index)
+		t.Literal = delimiter[:len(delimiter)-1]
+
+		l.skipBytes(len(delimiter))
+
+		st := newToken(token.STRING, l.char, l.line, l.index)
+		st.Literal = l.readBracketString(delimiter[:len(delimiter)-1])
+		st.Offset = 2 + len(delimiter)*2
+		l.pushToken(st)
+
+		ct := newToken(token.CLOSE_LONG_STRING, l.char, l.line, l.index)
+		ct.Literal = delimiter[:len(delimiter)-1]
+		l.pushToken(ct)
 	case '}':
 		t = newToken(token.RIGHT_BRACE, l.char, line, index)
 	case '(':
@@ -194,7 +247,7 @@ func (l *Lexer) NextToken() token.Token {
 				t = newToken(token.AND, l.char, line, index)
 				t.Literal = "&&"
 			}
-		case '=': // "|="
+		case '=': // "&="
 			l.readChar()
 			t = newToken(token.BITWISE_AND, l.char, line, index)
 			t.Literal = "&="
@@ -291,8 +344,19 @@ func (l *Lexer) NextToken() token.Token {
 	case 0x0A: // '\n'
 		t = newToken(token.LF, l.char, line, index)
 	default:
+		// Fastly control syntaxes
+		if l.char == 0x43 || l.char == 0x57 { // "C" or "W"
+			c := l.char
+			if l.peekChar() == '!' { // "C!" or "W!"
+				l.readChar()
+				t = newToken(token.FASTLY_CONTROL, l.char, line, index)
+				t.Literal = string(c) + "!"
+				break
+			}
+		}
+
 		switch {
-		case l.isLetter(l.char):
+		case isLetter(l.char):
 			literal := l.readIdentifier()
 
 			// Switch's default case keyword needs special handling due to the header
@@ -339,7 +403,12 @@ func (l *Lexer) NextToken() token.Token {
 				}
 			default:
 				t.Literal = literal
-				t.Type = token.LookupIdent(t.Literal)
+				// If custom token found, use it
+				if custom, ok := l.customs[literal]; ok {
+					t.Type = custom
+				} else {
+					t.Type = token.LookupIdent(t.Literal)
+				}
 				t.Line = line
 				t.Position = index
 				t.File = l.file
@@ -382,7 +451,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	t.File = l.file
+
 	return t
+}
+
+func (l *Lexer) pushToken(t token.Token) {
+	t.File = l.file
+	l.peeks = append(l.peeks, t)
 }
 
 func (l *Lexer) skipWhitespace() {
@@ -391,99 +466,20 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) readString() string {
-	var rs []rune
-	l.readChar()
-	for {
-		if l.char == '"' || l.char == 0x00 {
-			break
-		}
-		rs = append(rs, l.char)
-		l.readChar()
-	}
-
-	return string(rs)
-}
-
-func (l *Lexer) readBracketString() string {
-	var rs []rune
-	l.readChar()
-	for {
-		if l.char == 0x00 {
-			break
-		}
-		if l.char == '"' {
-			if l.peekChar() == '}' {
-				l.readChar()
-				break
-			}
-		}
-		rs = append(rs, l.char)
-		l.readChar()
-	}
-
-	return string(rs)
-}
-
-func (l *Lexer) readNumber() string {
-	var rs []rune
-	for isDigit(l.char) {
-		rs = append(rs, l.char)
-		l.readChar()
-	}
-	return string(rs)
-}
-
-func (l *Lexer) readEOL() string {
-	var rs []rune
-	for {
-		rs = append(rs, l.char)
-		if l.peekChar() == 0x00 || l.peekChar() == '\n' {
-			break
-		}
-		l.readChar()
-	}
-	return string(rs)
-}
-
-func (l *Lexer) readMultiComment() string {
-	var rs []rune
-	for {
-		if l.char == 0x00 {
-			break
-		}
-		if l.char == '*' && l.peekChar() == '/' {
-			rs = append(rs, l.char)
-			l.readChar()
-			rs = append(rs, l.char)
-			break
-		}
-		rs = append(rs, l.char)
-		l.readChar()
-	}
-
-	return string(rs)
-}
-
-func (l *Lexer) readIdentifier() string {
-	var rs []rune
-	for l.isLetter(l.char) {
-		rs = append(rs, l.char)
-		l.readChar()
-	}
-	return string(rs)
-}
-
-func (l *Lexer) isLetter(r rune) bool {
-	// Letter allows "-", "." and ":" character to parse ident http header name like `req.http.X-Forwarded-For`
-	// but in some name definitions (e.g. acl name, backend name), parser must check "-" IS NOT included.
-	// return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r == '_' || r == '-' || r == '.' || r == ':'
+func isLetter(r rune) bool {
+	// Letter allows [a-zA-Z_] character to parse ident of http header name like `req`, `http`, `X-Forwarded-For`.
 	return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_'
 }
 
 func isDigit(r rune) bool {
 	// Digit allows "." character to parse literal is INTEGER of FLOAT.
 	return (r >= '0' && r <= '9') || r == '.'
+}
+
+func isLongStringDelimiter(r rune) bool {
+	// Long string delimiters appear to be the valid isLetter and isDigit
+	// characters, except for '.'.
+	return (r != '.' && (isLetter(r) || isDigit(r)))
 }
 
 func newToken(tokenType token.TokenType, literal rune, line, index int) token.Token {

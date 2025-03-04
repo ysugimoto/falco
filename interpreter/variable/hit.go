@@ -63,14 +63,20 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
 	case OBJ_STALE_WHILE_REVALIDATE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Return fixed value because we don't support SWR yet
 		return &value.RTime{Value: 60 * time.Second}, nil
 	case OBJ_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Object.StatusCode)}, nil
 	case OBJ_TTL:
 		return v.ctx.ObjectTTL, nil
-	// Digest ratio will return fixed value
+	// Digest ratio will return fixed value if not override
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 	}
 
