@@ -10,111 +10,101 @@ import (
 )
 
 func getRequestHeaderValue(r *http.Request, name string) *value.String {
-	// Header name can contain ":" for object-like value
-	if !strings.Contains(name, ":") {
-		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey(name)]; ok {
-			v := strings.Join(r.Header.Values(name), ", ")
-			return &value.String{Value: v}
-		}
+	var key string
+	name, key, _ = strings.Cut(name, ":")
+	v := r.Header.Get(name)
+	if v == "" {
 		return &value.String{IsNotSet: true}
 	}
-	spl := strings.SplitN(name, ":", 2)
+
+	if key == "" {
+		return &value.String{Value: v}
+	}
+
 	// Request header can modify cookie, then we need to retrieve value from Cookie pointer
-	if strings.EqualFold(spl[0], "cookie") {
+	if strings.EqualFold(name, "cookie") {
 		for _, c := range r.Cookies() {
-			if c.Name == spl[1] {
+			if c.Name == key {
 				return &value.String{Value: c.Value}
 			}
 		}
 	}
 
-	for _, hv := range r.Header.Values(spl[0]) {
-		kvs := strings.SplitN(hv, "=", 2)
-		if kvs[0] == spl[1] {
-			return &value.String{Value: kvs[1]}
-		}
-	}
-	return &value.String{IsNotSet: true}
+	// Handle reading RFC-8941 dictionary value
+	return GetField(v, key, ",")
 }
 
 func getResponseHeaderValue(r *http.Response, name string) *value.String {
-	// Header name can contain ":" for object-like value
-	if !strings.Contains(name, ":") {
-		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey(name)]; ok {
-			v := strings.Join(r.Header.Values(name), ", ")
-			return &value.String{Value: v}
-		}
+	var key string
+	name, key, _ = strings.Cut(name, ":")
+	v := r.Header.Get(name)
+	if v == "" {
 		return &value.String{IsNotSet: true}
 	}
 
-	spl := strings.SplitN(name, ":", 2)
-	for _, hv := range r.Header.Values(spl[0]) {
-		kvs := strings.SplitN(hv, "=", 2)
-		if kvs[0] == spl[1] {
-			return &value.String{Value: kvs[1]}
-		}
+	if key == "" {
+		return &value.String{Value: v}
 	}
-	return &value.String{IsNotSet: true}
+
+	// Handle reading RFC-8941 dictionary value
+	return GetField(v, key, ",")
 }
 
 func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
-	if !strings.Contains(name, ":") {
-		r.Header.Set(name, val.String())
+	name, key, found := strings.Cut(name, ":")
+	if !found {
+		// Fastly truncates header values at newlines.
+		sVal, _, _ := strings.Cut(val.String(), "\n")
+		r.Header.Set(name, sVal)
 		return
 	}
 
-	// If name contains ":" like req.http.VARS:xxx, add with key-value format
-	// HTTP Request can modify cookie
-	spl := strings.SplitN(name, ":", 2)
-	if strings.EqualFold(spl[0], "cookie") {
+	if strings.EqualFold(name, "cookie") {
 		hh := http.Header{}
-		hh.Add("Cookie", fmt.Sprintf("%s=%s", spl[1], val.String()))
+		hh.Add("Cookie", fmt.Sprintf("%s=%s", key, val.String()))
 		rr := http.Request{Header: hh}
-		c, _ := rr.Cookie(spl[1]) // nolint:errcheck
+		c, _ := rr.Cookie(key) // nolint:errcheck
 		r.AddCookie(c)
 		return
 	}
 
-	unsetRequestHeaderValue(r, name)
-	r.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
+	// Handle setting RFC-8941 dictionary value
+	r.Header.Set(name, setField(r.Header.Get(name), key, val, ","))
 }
 
 func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
-	if !strings.Contains(name, ":") {
-		r.Header.Set(name, val.String())
+	name, key, found := strings.Cut(name, ":")
+	if !found {
+		// Fastly truncates header values at newlines.
+		sVal, _, _ := strings.Cut(val.String(), "\n")
+		r.Header.Set(name, sVal)
 		return
 	}
 
-	// If name contains ":" like req.http.VARS:xxx, add with key-value format
-	unsetResponseHeaderValue(r, name)
-	spl := strings.SplitN(name, ":", 2)
-	r.Header.Add(spl[0], fmt.Sprintf("%s=%s", spl[1], val.String()))
+	// Handle setting RFC-8941 dictionary value
+	r.Header.Set(name, setField(r.Header.Get(name), key, val, ","))
 }
 
 func unsetRequestHeaderValue(r *http.Request, name string) {
-	if !strings.Contains(name, ":") {
+	name, key, found := strings.Cut(name, ":")
+	if !found {
 		r.Header.Del(name)
 		return
 	}
 
-	// Header name contains ":" character, then filter value by key
-	spl := strings.SplitN(name, ":", 2)
 	// Request header can modify cookie, then we need to unset value from Cookie pointer
-	if strings.EqualFold(spl[0], "cookie") {
-		removeCookieByName(r, spl[1])
+	if strings.EqualFold(name, "cookie") {
+		removeCookieByName(r, key)
 		return
 	}
 
-	// Store old header values, clear header, and add filtered values only
-	oldHeaders := r.Header.Values(spl[0])
-	r.Header.Del(spl[0])
-	for _, hv := range oldHeaders {
-		kvs := strings.SplitN(hv, "=", 2)
-		if kvs[0] == spl[1] {
-			continue
-		}
-		r.Header.Add(spl[0], hv)
+	// Handle removing RFC-8941 dictionary value
+	t := unsetField(r.Header.Get(name), key, ",")
+	if t == "" {
+		r.Header.Del(name)
+		return
 	}
+	r.Header.Set(name, t)
 }
 
 // removeCookieByName removes a part of Cookie headers that name is matched.
@@ -158,22 +148,16 @@ func removeCookieByName(r *http.Request, cookieName string) {
 }
 
 func unsetResponseHeaderValue(r *http.Response, name string) {
-	if !strings.Contains(name, ":") {
+	name, key, found := strings.Cut(name, ":")
+	if !found {
 		r.Header.Del(name)
 		return
 	}
 
-	// Header name contains ":" character, then filter value by key
-	spl := strings.SplitN(name, ":", 2)
-
-	// Store old header values, delete header, and add filtered values
-	oldHeaders := r.Header.Values(spl[0])
-	r.Header.Del(spl[0])
-	for _, hv := range oldHeaders {
-		kvs := strings.SplitN(hv, "=", 2)
-		if kvs[0] == spl[1] {
-			continue
-		}
-		r.Header.Add(spl[0], hv)
+	t := unsetField(r.Header.Get(name), key, ",")
+	if t == "" {
+		r.Header.Del(name)
+		return
 	}
+	r.Header.Set(name, t)
 }

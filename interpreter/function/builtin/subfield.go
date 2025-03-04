@@ -3,11 +3,10 @@
 package builtin
 
 import (
-	"strings"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
 const Subfield_Name = "subfield"
@@ -49,15 +48,5 @@ func Subfield(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		}
 	}
 
-	for _, v := range strings.Split(subject, separator) {
-		kv := strings.SplitN(v, "=", 2)
-		if kv[0] != field {
-			continue
-		}
-		if len(kv) > 1 {
-			return &value.String{Value: kv[1]}, nil
-		}
-		return &value.String{Value: ""}, nil
-	}
-	return &value.String{Value: ""}, nil
+	return variable.GetField(subject, field, separator), nil
 }
