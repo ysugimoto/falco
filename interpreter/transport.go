@@ -168,12 +168,18 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 
 	client := http.DefaultClient
 	if req.URL.Scheme == HTTPS_SCHEME {
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil, errors.WithStack(errors.New("cannot clone http.DefaultTransport"))
+		}
+
+		transport := defaultTransport.Clone()
+		transport.TLSClientConfig = &tls.Config{
+			ServerName: req.URL.Hostname(),
+		}
+
 		client = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					ServerName: req.URL.Hostname(),
-				},
-			},
+			Transport: transport,
 		}
 	}
 	resp, err := client.Do(req)
