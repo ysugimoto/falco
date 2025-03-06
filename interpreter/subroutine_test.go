@@ -160,3 +160,50 @@ func TestFunctionSubroutine(t *testing.T) {
 		})
 	}
 }
+
+func TestMaxCallStackExceeded(t *testing.T) {
+	tests := []struct {
+		name string
+		vcl  string
+	}{
+		{
+			name: "process subroutine max call stack exceeded",
+			vcl: `
+sub s1 {
+	set req.http.Foo = "1";
+	call s2;
+}
+sub s2 {
+	set req.http.Bar = "1";
+	call s1;
+}
+
+sub vcl_recv {
+	call s1;
+}`,
+		},
+		{
+			name: "functional subroutine max call stack exceeded",
+			vcl: `
+sub f1 STRING {
+	declare local var.V STRING;
+	set var.V = f2();
+	return var.V;
+}
+sub f2 STRING {
+	declare local var.V STRING;
+	set var.V = f1();
+	return var.V;
+}
+
+sub vcl_recv {
+	set req.http.Foo = f1();
+}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, nil, true)
+		})
+	}
+}
