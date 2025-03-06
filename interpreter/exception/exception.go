@@ -65,7 +65,8 @@ func MaxCallStackExceeded(t *token.Token, stacks []*ast.SubroutineDeclaration) *
 	message := make([]string, len(stacks))
 	for i := range stacks {
 		message[i] = fmt.Sprintf(
-			"%s:%d",
+			"%s in %s:%d",
+			stacks[i].Name.Value,
 			stacks[i].GetMeta().Token.File,
 			stacks[i].GetMeta().Token.Line,
 		)
