@@ -12,6 +12,13 @@ import (
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
+const (
+	// Faslty does not document about max call stack but we define our expected stack count.
+	// Fastly forbid VCL that may cause an infinite loop to call subroutine but our interpreter could accept,
+	// so we need to suppress its behavior by definition and guard process.
+	maxCallStackExceedCount = 100
+)
+
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
@@ -21,10 +28,19 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	// Try to extract fastly reserved subroutine macro
@@ -52,10 +68,19 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return value.Null, NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	var err error

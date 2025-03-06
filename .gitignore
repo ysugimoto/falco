@@ -34,3 +34,4 @@ request.json
 *.pem
 bench.*.txt
 issue-*
+*.prof

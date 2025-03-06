@@ -32,6 +32,7 @@ type Interpreter struct {
 	ctx           *context.Context
 	process       *process.Process
 	cache         *cache.Cache
+	callStack     []*ast.SubroutineDeclaration
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
 
@@ -42,6 +43,7 @@ func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),
+		callStack:    []*ast.SubroutineDeclaration{},
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
