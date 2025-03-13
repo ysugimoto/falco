@@ -1,3 +1,10 @@
+## v1.15.0
+
+-  Implement max call stack for calling subroutine recursively [#423](https://github.com/ysugimoto/falco/pull/423) (@ysugimoto)
+-  fix: resolve missing default transport settings in HTTPS by cloning http.DefaultTransport [#422](https://github.com/ysugimoto/falco/pull/422) (@3846masa)
+-  Improve set statement value expression [#420](https://github.com/ysugimoto/falco/pull/420) (@ysugimoto)
+-  Implement digest.ecdsa_verify function[#419](https://github.com/ysugimoto/falco/pull/419) (@ysugimoto)
+
 ## v1.14.0
 
 - use pcre regexp for assetion function [#416](https://github.com/ysugimoto/falco/pull/416) (@ysugimoto)
