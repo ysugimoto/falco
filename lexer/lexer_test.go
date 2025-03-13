@@ -525,9 +525,7 @@ aabbccddIieEffggHHhEXAMPLEPUBLICKEY
 		{Type: token.IDENT, Literal: "req.http.pk"},
 		{Type: token.ASSIGN, Literal: "="},
 		{Type: token.OPEN_LONG_STRING, Literal: ""},
-		{Type: token.STRING, Literal: `-----BEGIN PUBLIC KEY-----
-aabbccddIieEffggHHhEXAMPLEPUBLICKEY
------END PUBLIC KEY-----`},
+		{Type: token.STRING, Literal: "-----BEGIN PUBLIC KEY-----\naabbccddIieEffggHHhEXAMPLEPUBLICKEY\n-----END PUBLIC KEY-----"},
 		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},

@@ -18,6 +18,10 @@ acl internal {
 	!"192.168.0.4"/32;
 	// Leading comment
 	"192.168.0.5"; // CIDR Trailing comment
+	{"192.168.0.6"};
+	{"192.168.0.7"}/32;
+	!{"192.168.0.8"};
+	!{"192.168.0.9"}/32;
 	// Infix comment
 } // Trailing comment
 `
@@ -36,7 +40,7 @@ acl internal {
 					Infix:              comments("// Infix comment"),
 					Nest:               0,
 					PreviousEmptyLines: 0,
-					EndLine:            11,
+					EndLine:            15,
 					EndPosition:        1,
 				},
 				Name: &ast.Ident{
@@ -301,6 +305,218 @@ acl internal {
 								EndPosition:        14,
 							},
 							Value: "192.168.0.5",
+						},
+					},
+					{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.OPEN_LONG_STRING,
+								Literal:  "",
+								Line:     10,
+								Position: 2,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            10,
+							EndPosition:        16,
+						},
+						IP: &ast.IP{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "192.168.0.6",
+									Line:     10,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            10,
+								EndPosition:        16,
+							},
+							Value: "192.168.0.6",
+						},
+					},
+					{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.OPEN_LONG_STRING,
+								Literal:  "",
+								Line:     11,
+								Position: 2,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            11,
+							EndPosition:        19,
+						},
+						IP: &ast.IP{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "192.168.0.7",
+									Line:     11,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            11,
+								EndPosition:        16,
+							},
+							Value: "192.168.0.7",
+						},
+						Mask: &ast.Integer{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.INT,
+									Literal:  "32",
+									Line:     11,
+									Position: 18,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            11,
+								EndPosition:        19,
+							},
+							Value: 32,
+						},
+					},
+					{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.NOT,
+								Literal:  "!",
+								Line:     12,
+								Position: 2,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            12,
+							EndPosition:        17,
+						},
+						Inverse: &ast.Boolean{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.NOT,
+									Literal:  "!",
+									Line:     12,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            0,
+								EndPosition:        0,
+							},
+							Value: true,
+						},
+						IP: &ast.IP{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "192.168.0.8",
+									Line:     12,
+									Position: 3,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            12,
+								EndPosition:        17,
+							},
+							Value: "192.168.0.8",
+						},
+					},
+					{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.NOT,
+								Literal:  "!",
+								Line:     13,
+								Position: 2,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            13,
+							EndPosition:        20,
+						},
+						Inverse: &ast.Boolean{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.NOT,
+									Literal:  "!",
+									Line:     13,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            0,
+								EndPosition:        0,
+							},
+							Value: true,
+						},
+						IP: &ast.IP{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "192.168.0.9",
+									Line:     13,
+									Position: 3,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            13,
+								EndPosition:        17,
+							},
+							Value: "192.168.0.9",
+						},
+						Mask: &ast.Integer{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.INT,
+									Literal:  "32",
+									Line:     13,
+									Position: 19,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            13,
+								EndPosition:        20,
+							},
+							Value: 32,
 						},
 					},
 				},
@@ -928,6 +1144,9 @@ table tbl {
 	"lorem": "ipsum", // Prop Trailing comment
 	// Prop2 Leading comment
 	"dolor": "sit", // Prop2 Trailing comment
+	"multiline": {"a
+b
+c"},
 	// Table Infix comment
 } // Table Trailing comment`
 
@@ -946,7 +1165,7 @@ table tbl {
 						Infix:              comments("// Table Infix comment"),
 						Nest:               0,
 						PreviousEmptyLines: 0,
-						EndLine:            9,
+						EndLine:            12,
 						EndPosition:        1,
 					},
 					Name: &ast.Ident{
@@ -1127,6 +1346,61 @@ table tbl {
 									EndPosition:        15,
 								},
 								Value: "sit",
+							},
+							HasComma: true,
+						},
+						{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "multiline",
+									Line:     8,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            10,
+								EndPosition:        3,
+							},
+							Key: &ast.String{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.STRING,
+										Literal:  "multiline",
+										Line:     8,
+										Position: 2,
+									},
+									Leading:            comments(),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            8,
+									EndPosition:        12,
+								},
+								Value: "multiline",
+							},
+							Value: &ast.String{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.STRING,
+										Literal:  "a\nb\nc",
+										Line:     8,
+										Position: 15,
+									},
+									Leading:            comments(),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        3,
+								},
+								Value:      "a\nb\nc",
+								LongString: true,
 							},
 							HasComma: true,
 						},
@@ -1148,7 +1422,10 @@ table tbl {
 	// Prop Leading comment
 	"lorem": "ipsum", // Prop Trailing comment
 	// Prop2 Leading comment
-	"dolor": "sit" // Prop2 Trailing comment
+	"dolor": "sit", // Prop2 Trailing comment
+	"multiline": {"a
+b
+c"}
 	// Table Infix comment
 } // Table Trailing comment`
 
@@ -1167,7 +1444,7 @@ table tbl {
 						Infix:              comments("// Table Infix comment"),
 						Nest:               0,
 						PreviousEmptyLines: 0,
-						EndLine:            9,
+						EndLine:            12,
 						EndPosition:        1,
 					},
 					Name: &ast.Ident{
@@ -1348,6 +1625,61 @@ table tbl {
 									EndPosition:        15,
 								},
 								Value: "sit",
+							},
+							HasComma: true,
+						},
+						{
+							Meta: &ast.Meta{
+								Token: token.Token{
+									Type:     token.STRING,
+									Literal:  "multiline",
+									Line:     8,
+									Position: 2,
+								},
+								Leading:            comments(),
+								Trailing:           comments(),
+								Infix:              comments(),
+								Nest:               1,
+								PreviousEmptyLines: 0,
+								EndLine:            10,
+								EndPosition:        3,
+							},
+							Key: &ast.String{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.STRING,
+										Literal:  "multiline",
+										Line:     8,
+										Position: 2,
+									},
+									Leading:            comments(),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            8,
+									EndPosition:        12,
+								},
+								Value: "multiline",
+							},
+							Value: &ast.String{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.STRING,
+										Literal:  "a\nb\nc",
+										Line:     8,
+										Position: 15,
+									},
+									Leading:            comments(),
+									Trailing:           comments(),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            10,
+									EndPosition:        3,
+								},
+								Value:      "a\nb\nc",
+								LongString: true,
 							},
 						},
 					},
