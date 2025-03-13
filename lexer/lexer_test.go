@@ -98,6 +98,9 @@ sub vcl_recv {
 	}
 
 	set req.http.default:foo = "bar";
+	set req.http.pk = {"-----BEGIN PUBLIC KEY-----
+aabbccddIieEffggHHhEXAMPLEPUBLICKEY
+-----END PUBLIC KEY-----"};
 }`
 
 	expects := []token.Token{
@@ -514,6 +517,18 @@ sub vcl_recv {
 		{Type: token.IDENT, Literal: "req.http.default:foo"},
 		{Type: token.ASSIGN, Literal: "="},
 		{Type: token.STRING, Literal: "bar"},
+		{Type: token.SEMICOLON, Literal: ";"},
+
+		// Multiline string
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.SET, Literal: "set"},
+		{Type: token.IDENT, Literal: "req.http.pk"},
+		{Type: token.ASSIGN, Literal: "="},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
+		{Type: token.STRING, Literal: `-----BEGIN PUBLIC KEY-----
+aabbccddIieEffggHHhEXAMPLEPUBLICKEY
+-----END PUBLIC KEY-----`},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 
