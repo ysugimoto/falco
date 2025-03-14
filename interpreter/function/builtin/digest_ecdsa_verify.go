@@ -148,15 +148,18 @@ func Digest_ecdsa_verify_Der(method string, pubKey *ecdsa.PublicKey, payload str
 const Digest_ecdsa_verify_Jwt_KeySize = 32
 
 func Digest_ecdsa_verify_Jwt(method string, pubKey *ecdsa.PublicKey, payload string, digest []byte) (value.Value, error) {
-	// JWT encode only sha256 (ES256)
+	// JWT encode only supports sha256 (ES256)
 	// see https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/
 	if method != "sha256" {
-		return value.Null, fmt.Errorf("Only sha256 supports in  hash_method for jwt digest, provided %s", method)
+		return value.Null, fmt.Errorf("Only sha256 supports in hash_method for jwt digest, %s provided", method)
 	}
 
-	// Digest key size constant, 32 bits
+	// Digest key size constant of 64 bytes
 	if len(digest) != 2*Digest_ecdsa_verify_Jwt_KeySize {
-		return nil, fmt.Errorf("Invalid digest length - expects %d, actual %d", 2*Digest_ecdsa_verify_Jwt_KeySize, len(digest))
+		// return false without error if digest key length is not 64
+		return &value.Boolean{
+			Value: false,
+		}, nil
 	}
 
 	r := big.NewInt(0).SetBytes(digest[:Digest_ecdsa_verify_Jwt_KeySize])

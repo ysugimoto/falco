@@ -91,7 +91,7 @@ func Test_Digest_ecdsa_verify_jwt(t *testing.T) {
 		isError    bool
 	}{
 		{
-			name:       "Pass - correct parameters with SHA1",
+			name:       "Error - parameters with SHA1",
 			hashMethod: "sha1",
 			hash:       crypto.SHA1,
 			isError:    true,
@@ -102,13 +102,13 @@ func Test_Digest_ecdsa_verify_jwt(t *testing.T) {
 			hash:       crypto.SHA256,
 		},
 		{
-			name:       "Pass - correct parameters with SHA384",
+			name:       "Error - parameters with SHA384",
 			hashMethod: "sha384",
 			hash:       crypto.SHA384,
 			isError:    true,
 		},
 		{
-			name:       "Pass - correct parameters with SHA512",
+			name:       "Error - parameters with SHA512",
 			hashMethod: "sha512",
 			hash:       crypto.SHA512,
 			isError:    true,
@@ -160,7 +160,7 @@ func Test_Digest_ecdsa_verify_jwt(t *testing.T) {
 			verified, err := Digest_ecdsa_verify_Jwt(tt.hashMethod, &publicKey, message, rs)
 			if err != nil {
 				if !tt.isError {
-					t.Errorf("Failed to Verify DER, %s", err)
+					t.Errorf("Failed to Verify JWT, %s", err)
 				}
 				return
 			}
@@ -170,5 +170,41 @@ func Test_Digest_ecdsa_verify_jwt(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+func Test_Digest_ecdsa_verify_jwt2(t *testing.T) {
+	header, _ := json.Marshal(map[string]any{
+		"alg": "ES256",
+		"kid": "123456",
+	})
+	payload, _ := json.Marshal(map[string]any{
+		"iss": "manual",
+		"aud": "localhost",
+	})
+
+	message := fmt.Sprintf(
+		"%s.%s",
+		base64.RawURLEncoding.EncodeToString(header),
+		base64.RawURLEncoding.EncodeToString(payload),
+	)
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Errorf("Failed to generate private key, %s", err)
+		return
+	}
+	publicKey := privateKey.PublicKey
+
+	// invalid digest - expects 64 bytes but provide 48 bytes
+	rs := make([]byte, 48)
+	verified, err := Digest_ecdsa_verify_Jwt("sha256", &publicKey, message, rs)
+	if err != nil {
+		t.Errorf("Failed to Verify JWT, %s", err)
+		return
+	}
+	v := value.Unwrap[*value.Boolean](verified)
+	if v.Value {
+		t.Errorf("Verified result should be false")
 	}
 }
