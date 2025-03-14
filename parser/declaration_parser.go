@@ -56,10 +56,24 @@ func (p *Parser) ParseAclCidr() (*ast.AclCidr, error) {
 		p.NextToken() // point to IP token
 	}
 
-	if !p.CurTokenIs(token.STRING) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
+	switch p.curToken.Token.Type {
+	case token.STRING:
+		// If token is STRING, parse as IP
+		cidr.IP = p.ParseIP()
+	case token.OPEN_LONG_STRING:
+		// If token is LONG_STRING like {"192.168.0.1"}, parse as STRING and convert to IP
+		str, err := p.ParseLongString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		cidr.IP = &ast.IP{
+			Meta:  str.Meta,
+			Value: str.Value,
+		}
+	default:
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, token.STRING))
 	}
-	cidr.IP = p.ParseIP()
+
 	// If inverse is not set, leading comment should be set as CIDR node leading comment
 	if cidr.Inverse == nil {
 		cidr.IP.Meta = clearComments(cidr.IP.Meta)
@@ -413,6 +427,12 @@ func (p *Parser) ParseTableProperty() (*ast.TableProperty, error) {
 	case token.STRING:
 		var err error
 		prop.Value, err = p.ParseString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case token.OPEN_LONG_STRING:
+		var err error
+		prop.Value, err = p.ParseLongString()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
