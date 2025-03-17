@@ -1,3 +1,8 @@
+## v1.15.1
+
+-  Improve digest.ecdsa_verify function [#425](https://github.com/ysugimoto/falco/pull/425) (@ysugimoto)
+-  Fix/multiline expressions [#424](https://github.com/ysugimoto/falco/pull/424) (@ysugimoto)
+
 ## v1.15.0
 
 -  Implement max call stack for calling subroutine recursively [#423](https://github.com/ysugimoto/falco/pull/423) (@ysugimoto)
