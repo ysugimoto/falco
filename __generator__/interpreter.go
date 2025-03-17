@@ -124,7 +124,11 @@ func (i *Interpreter) generateBuiltInFunction() error {
 			return err
 		}
 		signature := fmt.Sprintf(
-			"Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) { return builtin.%s(ctx, args...) }",
+			`Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				doImplicitTypeConversion(args, %s)
+				return builtin.%s(ctx, args...)
+			}`,
+			argumentTypes(v.Arguments),
 			ucFirst(strings.ReplaceAll(key, ".", "_")),
 		)
 		buf.WriteString(signature + ",\n")
