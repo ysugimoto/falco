@@ -624,6 +624,16 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-src-ip/",
 							},
 						},
+						"src_port": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.IntegerType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/beresp-backend-src-port/",
+							},
+						},
 					},
 				},
 				"brotli": {
@@ -1844,6 +1854,16 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/",
 							},
 						},
+					},
+				},
+				"is_staging": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-is-staging/",
 					},
 				},
 			},
