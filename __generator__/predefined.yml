@@ -2300,3 +2300,14 @@ ratecounter.%any%.rate.60s:
   reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-60s/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: FLOAT
+
+fastly.is_staging:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-is-staging/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+beresp.backend.src_port:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/beresp-backend-src-port/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+

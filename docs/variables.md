@@ -196,6 +196,8 @@ falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=o
 | waf.failures                               | 0                                  |
 | waf.php_injection_score                    | 0                                  |
 | waf.rce_score                              | 0                                  |
+| fastly.is_staging                          | false                              |
+| beresp.backend.src_port                    | 0                                  |
 
 `tls.client.ciphers_list` value is too long to fit the above table so we write the value following:
 
