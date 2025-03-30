@@ -1812,6 +1812,16 @@ func predefinedVariables() Variables {
 		},
 		"fastly": &Object{
 			Items: map[string]*Object{
+				"ddos_detected": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-ddos-detected/",
+					},
+				},
 				"error": {
 					Items: map[string]*Object{},
 					Value: &Accessor{

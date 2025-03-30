@@ -685,9 +685,15 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	// https://github.com/ysugimoto/falco/issues/427
 	// Fastly has staging environment but we always return false
 	case FASTLY_IS_STAGING:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	// Falco could not get source port to connect to origin so returns zero as tentative
 	case BERESP_BACKEND_SRC_PORT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	}
 

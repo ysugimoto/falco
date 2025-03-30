@@ -168,6 +168,7 @@ const (
 	CLIENT_SOCKET_TCPI_SND_SSTHRESH            = "client.socket.tcpi_snd_ssthresh"
 	CLIENT_SOCKET_TCPI_TOTAL_RETRANS           = "client.socket.tcpi_total_retrans"
 	ESI_ALLOW_INSIDE_CDATA                     = "esi.allow_inside_cdata"
+	FASTLY_DDOS_DETECTED                       = "fastly.ddos_detected"
 	FASTLY_ERROR                               = "fastly.error"
 	FASTLY_FF_VISITS_THIS_POP                  = "fastly.ff.visits_this_pop"
 	FASTLY_FF_VISITS_THIS_POP_THIS_SERVICE     = "fastly.ff.visits_this_pop_this_service"
