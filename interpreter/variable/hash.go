@@ -40,6 +40,11 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return &value.Boolean{Value: v.ctx.Request.Method == PURGE}, nil
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
+	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables

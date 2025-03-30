@@ -2311,3 +2311,7 @@ beresp.backend.src_port:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
 
+fastly.ddos_detected:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-ddos-detected/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
