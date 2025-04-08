@@ -1,3 +1,10 @@
+## v1.15.2
+
+- Pin GHA action version  [#426](https://github.com/ysugimoto/falco/pull/426) (@ysugimoto)
+- Implement new predefined variables [#428](https://github.com/ysugimoto/falco/pull/428) (@ysugimoto)
+- Implement `fastly.ddos_detected` predefined variables [#430](https://github.com/ysugimoto/falco/pull/430) (@ysugimoto)
+- Fix base64 decode function with single equal characters [#432](https://github.com/ysugimoto/falco/pull/432) (@ysugimoto)
+
 ## v1.15.1
 
 -  Improve digest.ecdsa_verify function [#425](https://github.com/ysugimoto/falco/pull/425) (@ysugimoto)
