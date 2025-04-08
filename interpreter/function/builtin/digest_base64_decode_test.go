@@ -49,6 +49,12 @@ func Test_Digest_base64_decode(t *testing.T) {
 			input:  "YWJjZB==",
 			expect: "abcd",
 		},
+		{
+			// https://github.com/ysugimoto/falco/issues/431
+			name:   "issue-431",
+			input:  "Zm9vYmFyVGVzdAo=",
+			expect: "foobarTest\n",
+		},
 	}
 
 	for _, tt := range tests {
