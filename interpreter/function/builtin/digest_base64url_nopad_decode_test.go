@@ -54,6 +54,12 @@ func Test_Digest_base64url_nopad_decode(t *testing.T) {
 			input:  "aGVsbG8=0",
 			expect: "hello4",
 		},
+		{
+			// https://github.com/ysugimoto/falco/issues/431
+			name:   "issue-431",
+			input:  "Zm9vYmFyVGVzdAo=",
+			expect: "foobarTest\n",
+		},
 	}
 
 	for _, tt := range tests {

@@ -45,7 +45,7 @@ func removeInvalidCharactersStd(src string) string {
 			removed.WriteByte(b)
 		case b == 0x3D: // =
 			// If "=" sign found, next byte must also be "="
-			if peek, err := reader.Peek(1); err != nil && peek[0] == 0x3D {
+			if peek, err := reader.Peek(1); err == nil && peek[0] == 0x3D {
 				removed.WriteByte(b)
 				removed.WriteByte(b)
 				// skip next "=" character
@@ -87,7 +87,7 @@ func removeInvalidCharactersUrl(src string) string {
 			removed.WriteByte(b)
 		case b == 0x3D: // =
 			// If "=" sign found, next byte must also be "="
-			if peek, err := r.Peek(1); err != nil && peek[0] == 0x3D {
+			if peek, err := r.Peek(1); err == nil && peek[0] == 0x3D {
 				removed.WriteByte(b)
 				removed.WriteByte(b)
 				// skip next "=" character
