@@ -1407,6 +1407,16 @@ func predefinedVariables() Variables {
 								Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-mobile/",
 							},
 						},
+						"model": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/",
+							},
+						},
 						"smarttv": {
 							Items: map[string]*Object{},
 							Value: &Accessor{
@@ -1436,6 +1446,16 @@ func predefinedVariables() Variables {
 								Scopes:     RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 								Reference:  "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/",
 								Deprecated: true,
+							},
+						},
+						"vendor": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-vendor/",
 							},
 						},
 					},
