@@ -443,7 +443,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				prefix = c.Group + " › "
 			}
 			if c.Error != nil {
-				writeln(redBold, "%s● [%s] %s%s\n", indent(1), c.Scope, prefix, c.Name)
+				writeln(redBold, "%s● [VCL_%s] %s%s\n", indent(1), c.Scope, prefix, c.Name)
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
@@ -457,7 +457,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				writeln(white, "")
 				failedCount++
 			} else {
-				writeln(green, "%s✓ [%s] %s%s", indent(1), c.Scope, prefix, c.Name)
+				writeln(green, "%s✓ [VCL_%s] %s%s", indent(1), c.Scope, prefix, c.Name)
 				passedCount++
 			}
 		}
