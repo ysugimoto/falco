@@ -2315,3 +2315,13 @@ fastly.ddos_detected:
   reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-ddos-detected/"
   on: [RECV, HASH, DELIVER, LOG]
   get: BOOL
+
+client.platform.model:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.platform.vendor:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-vendor/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING

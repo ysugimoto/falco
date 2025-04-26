@@ -116,6 +116,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case CLIENT_PLATFORM_TVPLAYER:
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
+	case CLIENT_PLATFORM_MODEL:
+		return &value.String{
+			Value: getPlatformModel(req.Header.Get("User-Agent")),
+		}, nil
+	case CLIENT_PLATFORM_VENDOR:
+		return &value.String{
+			Value: getPlatformVendor(req.Header.Get("User-Agent")),
+		}, nil
 	case CLIENT_SESS_TIMEOUT:
 		return v.ctx.ClientSessTimeout, nil
 	case FASTLY_INFO_EDGE_IS_TLS:
