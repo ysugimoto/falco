@@ -1,3 +1,9 @@
+## v1.15.3
+
+- Tweak vendor detecting tests [#437](https://github.com/ysugimoto/falco/pull/437) (@ysugimoto)
+- Implement new predefined variables [#436](https://github.com/ysugimoto/falco/pull/436) (@ysugimoto)
+- Add VCL_ prefix at scope string in test result printing [#435](https://github.com/ysugimoto/falco/pull/435) (@ysugimoto)
+
 ## v1.15.2
 
 - Pin GHA action version  [#426](https://github.com/ysugimoto/falco/pull/426) (@ysugimoto)
