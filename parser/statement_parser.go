@@ -349,7 +349,7 @@ func (p *Parser) ParseDeclareStatement() (*ast.DeclareStatement, error) {
 		Meta: p.curToken,
 	}
 
-	// Declare Syntax is declare [IDENT:"local"] [IDENT:variable name] [IDENT:VCL type]
+	// Declare Syntax is declare [IDENT:"local"] [IDENT:variable name] [IDENT:VCL type] [= Expression]?
 	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
@@ -371,14 +371,34 @@ func (p *Parser) ParseDeclareStatement() (*ast.DeclareStatement, error) {
 	SwapLeadingTrailing(p.curToken, stmt.Name.Meta)
 	stmt.ValueType = p.ParseIdent()
 
+	// Check for optional value assignment
+	if p.PeekTokenIs(token.ASSIGN) {
+		p.NextToken() // point to ASSIGN
+		SwapLeadingTrailing(p.curToken, stmt.ValueType.Meta)
+
+		p.NextToken() // point to value expression
+		value, err := p.ParseExpression(LOWEST)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		stmt.Value = value
+		stmt.Meta.EndLine = value.GetMeta().EndLine
+		stmt.Meta.EndPosition = value.GetMeta().EndPosition
+	} else {
+		stmt.Meta.EndLine = stmt.ValueType.Meta.EndLine
+		stmt.Meta.EndPosition = stmt.ValueType.Meta.EndPosition
+	}
+
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	stmt.Meta.EndLine = stmt.ValueType.Meta.EndLine
-	stmt.Meta.EndPosition = stmt.ValueType.Meta.EndPosition
 
 	p.NextToken() // point to SEMICOLON
-	SwapLeadingTrailing(p.curToken, stmt.ValueType.Meta)
+	if stmt.Value != nil {
+		SwapLeadingTrailing(p.curToken, stmt.Value.GetMeta())
+	} else {
+		SwapLeadingTrailing(p.curToken, stmt.ValueType.Meta)
+	}
 	stmt.Meta.Trailing = p.Trailing()
 
 	return stmt, nil

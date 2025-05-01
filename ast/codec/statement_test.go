@@ -113,14 +113,35 @@ func TestDeclareStatement(t *testing.T) {
 			name: "basic declare statement",
 			input: `
 sub vcl_recv {
-	call some_function;
+	declare local var.V STRING;
 }`,
 			expect: &ast.SubroutineDeclaration{
 				Name: &ast.Ident{Value: "vcl_recv"},
 				Block: &ast.BlockStatement{
 					Statements: []ast.Statement{
-						&ast.CallStatement{
-							Subroutine: &ast.Ident{Value: "some_function"},
+						&ast.DeclareStatement{
+							Name:      &ast.Ident{Value: "var.V"},
+							ValueType: &ast.Ident{Value: "STRING"},
+							Value:     nil,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "declare statement with value",
+			input: `
+sub vcl_recv {
+	declare local var.V STRING = "hello";
+}`,
+			expect: &ast.SubroutineDeclaration{
+				Name: &ast.Ident{Value: "vcl_recv"},
+				Block: &ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.DeclareStatement{
+							Name:      &ast.Ident{Value: "var.V"},
+							ValueType: &ast.Ident{Value: "STRING"},
+							Value:     &ast.String{Value: "hello"},
 						},
 					},
 				},

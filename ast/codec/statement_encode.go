@@ -90,6 +90,9 @@ func (c *Encoder) encodeDeclareStatement(stmt *ast.DeclareStatement) *Frame {
 
 	w.Write(c.encodeIdent(stmt.Name).Encode())
 	w.Write(c.encodeIdent(stmt.ValueType).Encode())
+	if stmt.Value != nil {
+		w.Write(c.encodeExpression(stmt.Value).Encode())
+	}
 
 	return &Frame{
 		frameType: DECLARE_STATEMENT,
