@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -293,21 +294,11 @@ func isLiteralExpression(exp ast.Expression) bool {
 }
 
 func expectType(cur types.Type, expects ...types.Type) bool {
-	for i := range expects {
-		if expects[i] == cur {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expects, cur)
 }
 
 func expectState(cur string, expects ...string) bool {
-	for i := range expects {
-		if expects[i] == cur {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expects, cur)
 }
 
 func annotations(comments ast.Comments) []string {
@@ -417,12 +408,7 @@ func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
 }
 
 func isIgnoredSubroutineInConfig(ignores []string, subroutineName string) bool {
-	for i := range ignores {
-		if ignores[i] == subroutineName {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ignores, subroutineName)
 }
 
 func getFastlySubroutineScope(name string) string {

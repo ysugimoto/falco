@@ -76,26 +76,16 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 	var start, end int
 	width, height := screen.Size()
 	height -= heightOffset
-
-	line := c.line
-	if line > len(lines)-1 {
-		line = len(lines) - 1
-	}
+	line := min(c.line, len(lines)-1)
 
 	// Determine range to display code
 	switch {
 	case line-height/2 < 0:
 		start = 0
-		end = height - 1
-		if end > len(lines)-1 {
-			end = len(lines) - 1
-		}
+		end = min(height-1, len(lines)-1)
 	case line+height/2 >= len(lines)-1:
 		end = len(lines) - 1
-		start = end - height + 1
-		if start < 0 {
-			start = 0
-		}
+		start = max(end-height+1, 0)
 	default:
 		start = line - height/2
 		end = line + height/2 - 1 // minus 1 due to display current file
@@ -120,10 +110,7 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 		// If print line is debugging, highlight it
 		case i == c.line-1:
 			pt := line.plainText()
-			offset := width - (len(pt+lineNumber) + hightlightOffset)
-			if offset < 0 {
-				offset = 0
-			}
+			offset := max(width-(len(pt+lineNumber)+hightlightOffset), 0)
 			suffix := strings.Repeat(" ", offset)
 			fmt.Fprintf(
 				w,

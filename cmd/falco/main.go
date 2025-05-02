@@ -284,7 +284,7 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		}
 		return nil
 	}
-	printStats := func(format string, args ...interface{}) {
+	printStats := func(format string, args ...any) {
 		fmt.Fprintf(os.Stdout, format+"\n", args...)
 	}
 
