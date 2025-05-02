@@ -12,7 +12,7 @@ import (
 
 var T = token.Token{}
 
-func assert(t *testing.T, actual, expect interface{}) {
+func assert(t *testing.T, actual, expect any) {
 
 	if diff := cmp.Diff(expect, actual,
 		// Meta structs ignores Token info

@@ -26,6 +26,8 @@ jobs:
           skip-cache: true
           skip-save-cache: true
           install-mode: binary
+      - name: Modernize check
+        run: make modernize
       - name: Set version
         id: version
         run: |

@@ -40,6 +40,9 @@ all: linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
 lint:
 	golangci-lint run
 
+modernize:
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
+
 local: test lint
 	go build ./cmd/falco
 

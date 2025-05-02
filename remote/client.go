@@ -32,7 +32,7 @@ func NewFastlyClient(c *http.Client, serviceId, apiKey string) *FastlyClient {
 	}
 }
 
-func (c *FastlyClient) request(ctx context.Context, url string, v interface{}) error {
+func (c *FastlyClient) request(ctx context.Context, url string, v any) error {
 	// falco always call API with GET request because we DO NOT change any resources
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fastlyApiBaseUrl+url, nil)
 	if err != nil {

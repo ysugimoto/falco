@@ -64,13 +64,13 @@ func checkVariables(m *sync.Map) ([]Variable, error) {
 	}
 	defer fp.Close()
 
-	defined := make(map[string]interface{})
+	defined := make(map[string]any)
 	if err := yaml.NewDecoder(fp).Decode(defined); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	var lacked []Variable
-	m.Range(func(key, val interface{}) bool {
+	m.Range(func(key, val any) bool {
 		k := key.(string) //nolint:errcheck
 		v := val.(string) //nolint:errcheck
 

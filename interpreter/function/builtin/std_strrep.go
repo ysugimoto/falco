@@ -37,10 +37,7 @@ func Std_strrep(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	}
 
 	s := value.Unwrap[*value.String](args[0]).Value
-	count := value.Unwrap[*value.Integer](args[1]).Value
-	if count < 0 {
-		count = 0
-	}
+	count := max(value.Unwrap[*value.Integer](args[1]).Value, 0)
 
 	return &value.String{
 		Value: strings.Repeat(s, int(count)),

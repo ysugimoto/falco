@@ -46,7 +46,7 @@ func (e *Exception) Error() string {
 	return out
 }
 
-func Runtime(t *token.Token, format string, args ...interface{}) *Exception {
+func Runtime(t *token.Token, format string, args ...any) *Exception {
 	return &Exception{
 		Type:    RuntimeType,
 		Token:   t,
@@ -54,7 +54,7 @@ func Runtime(t *token.Token, format string, args ...interface{}) *Exception {
 	}
 }
 
-func System(format string, args ...interface{}) *Exception {
+func System(format string, args ...any) *Exception {
 	return &Exception{
 		Type:    SystemType,
 		Message: fmt.Sprintf(format, args...),

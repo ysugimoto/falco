@@ -54,7 +54,7 @@ func Cstr_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 			continue
 		}
 		if b < 0x1F || 0x7F < b {
-			escaped = append(escaped, []byte(fmt.Sprintf("\\x%x", b))...)
+			escaped = fmt.Appendf(escaped, "\\x%x", b)
 			continue
 		}
 		escaped = append(escaped, b)

@@ -97,7 +97,7 @@ type Runner struct {
 }
 
 // Wrap writeln function in order to prevent to write when json mode turns on
-func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
+func (r *Runner) message(c *color.Color, format string, args ...any) {
 	// Suppress output when JSON mode turns on
 	// This is because JSON only should display JSON string
 	// so any other messages we must not output

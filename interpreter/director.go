@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -376,7 +377,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 			hash := sha256.New() // TODO: consider to user hash/fnv for getting performance guarantee
 			hash.Write(buf)
 			hash.Write([]byte(v.Backend.Value.Name.Value))
-			hash.Write([]byte(fmt.Sprint(i)))
+			hash.Write(fmt.Append([]byte{}, i))
 			h := hash.Sum(nil)
 			num := binary.BigEndian.Uint32(h[:8]) % maxNum
 			hashTable[num] = v.Backend
@@ -385,9 +386,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 	}
 
 	// Sort slice for binary search
-	sort.Slice(circles, func(i, j int) bool {
-		return circles[i] < circles[j]
-	})
+	slices.Sort(circles)
 
 	var hashKey [32]byte
 	switch dc.Key {
