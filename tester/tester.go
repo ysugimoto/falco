@@ -70,7 +70,7 @@ func (t *Tester) listTestFiles(main string) ([]string, error) {
 		testFiles = append(testFiles, files...)
 	}
 
-	return testFiles, nil
+	return dedupeFiles(testFiles), nil
 }
 
 // Only expose function for running tests

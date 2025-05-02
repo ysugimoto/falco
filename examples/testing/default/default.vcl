@@ -38,7 +38,7 @@ sub error_response {
 
 sub vcl_recv {
 
-  #Fastly recv
+  #FASTLY recv
   set req.backend = httpbin_org;
   set req.http.Foo = {" foo bar baz "};
   call custom_logger;
