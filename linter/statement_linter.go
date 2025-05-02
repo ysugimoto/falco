@@ -536,7 +536,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		expects = append(expects, "pass")
 	case context.FETCH:
 		// https://developer.fastly.com/reference/vcl/subroutines/fetch/
-		expects = append(expects, "deliver", "deliver_stale", "pass", "error", "restart")
+		expects = append(expects, "deliver", "deliver_stale", "hit_for_pass", "pass", "error", "restart")
 	case context.ERROR:
 		// https://developer.fastly.com/reference/vcl/subroutines/error/
 		expects = append(expects, "deliver", "deliver_stale", "restart")
