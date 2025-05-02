@@ -49,3 +49,19 @@ func findTestTargetFiles(root, filter string) ([]string, error) {
 	}
 	return f.files, nil
 }
+
+// dedupe testing target files
+func dedupeFiles(files []string) []string {
+	var deduped []string
+	stack := make(map[string]struct{})
+
+	for i := range files {
+		if _, ok := stack[files[i]]; ok {
+			continue
+		}
+		deduped = append(deduped, files[i])
+		stack[files[i]] = struct{}{}
+	}
+
+	return deduped
+}
