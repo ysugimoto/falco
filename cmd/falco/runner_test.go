@@ -377,6 +377,12 @@ func TestTester(t *testing.T) {
 			filter: "*regex.test.vcl",
 			passes: 4,
 		},
+		{
+			name:   "header subfield dealing test",
+			main:   "../../examples/testing/subfield-header-dealing/default.vcl",
+			filter: "*default.test.vcl",
+			passes: 10,
+		},
 	}
 
 	for _, tt := range tests {
