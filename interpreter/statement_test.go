@@ -91,24 +91,46 @@ func TestDeclareStatement(t *testing.T) {
 			},
 			isError: true,
 		},
+		{
+			name: "Assign value with declaration",
+			decl: &ast.DeclareStatement{
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "STRING"},
+				Value:     &ast.String{Value: "Hello, World!"},
+			},
+			expect: &value.String{
+				Value: "Hello, World!",
+			},
+		},
+		{
+			name: "Assign value with declaration but differnent type",
+			decl: &ast.DeclareStatement{
+				Name:      &ast.Ident{Value: "var.foo"},
+				ValueType: &ast.Ident{Value: "STRING"},
+				Value:     &ast.Integer{Value: 1},
+			},
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
-		ip := New(nil)
-		err := ip.localVars.Declare(tt.decl.Name.Value, tt.decl.ValueType.Value)
-		if err != nil {
-			if !tt.isError {
-				t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+		t.Run(tt.name, func(t *testing.T) {
+			ip := New(nil)
+			err := ip.ProcessDeclareStatement(tt.decl)
+			if err != nil {
+				if !tt.isError {
+					t.Errorf("%s: unexpected error returned: %s", tt.name, err)
+				}
+				return
 			}
-			continue
-		}
 
-		v, err := ip.localVars.Get(tt.decl.Name.Value)
-		if err != nil {
-			t.Errorf("%s: %s varible must be declared: %s", tt.name, tt.decl.Name.Value, err)
-			continue
-		}
-		assertValue(t, tt.name, tt.expect, v)
+			v, err := ip.localVars.Get(tt.decl.Name.Value)
+			if err != nil {
+				t.Errorf("%s: %s varible must be declared: %s", tt.name, tt.decl.Name.Value, err)
+				return
+			}
+			assertValue(t, tt.name, tt.expect, v)
+		})
 	}
 }
 
