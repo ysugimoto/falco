@@ -68,6 +68,7 @@ func TestGetField(t *testing.T) {
 		{input: `a=c\,adf,b=asdf`, field: "c", notSet: true},
 		{input: `a=c\,adf,b=asdf`, field: "adf", expect: ""},
 		{input: `a=c\,adf,b=asdf`, field: "b", expect: "asdf"},
+		{input: `a=`, field: "a", expect: ""},
 	}
 
 	for i, tt := range tests {

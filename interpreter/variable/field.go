@@ -95,7 +95,14 @@ func setField(subject, key string, val value.Value, sep string) string {
 			// Fastly truncates values at newlines after quoting the value.
 			sVal, _, _ = strings.Cut(`"`+escaped+`"`, "\n")
 		}
-		kv = fmt.Sprintf("%s=%s", key, sVal)
+
+		if sVal == "" {
+			// If value string is empty, only set key name without equal sign
+			kv = key
+		} else {
+			// Otherwise, set key and value with concatenating equal sign
+			kv = fmt.Sprintf("%s=%s", key, sVal)
+		}
 	}
 
 	if subject == "" {
