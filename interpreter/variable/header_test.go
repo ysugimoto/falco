@@ -124,6 +124,13 @@ func TestSetResponseHeaderValueEmpty(t *testing.T) {
 	if ret.Value != "VALUE2,VALUE=V" {
 		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE2,VALUE=V", ret.Value)
 	}
+
+	// Can unset empty key
+	unsetRequestHeaderValue(req, "VARS:VALUE2")
+	ret = getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE=V" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE=V", ret.Value)
+	}
 }
 
 func TestSetResponseHeaderValue(t *testing.T) {
