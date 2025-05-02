@@ -64,15 +64,28 @@ const (
 	subcommandFormat    = "fmt"
 )
 
-func write(c *color.Color, format string, args ...interface{}) {
+func write(c *color.Color, format string, args ...any) {
 	c.Fprint(output, emoji.Sprintf(format, args...))
 }
 
-func writeln(c *color.Color, format string, args ...interface{}) {
+func writeln(c *color.Color, format string, args ...any) {
 	write(c, format+"\n", args...)
 }
 
+func isCI() bool {
+	// Some common CI services like GitHub Actions, Circle CI has the `CI=true` environment variable
+	// so simply we check this environment whether variable is set
+	return os.Getenv("CI") != ""
+}
+
 func main() {
+	// Event falco is running on the CI (e.g GitHub Actions), we should display colored output
+	// https://github.com/ysugimoto/falco/issues/438
+	if isCI() {
+		// https://github.com/fatih/color?tab=readme-ov-file#github-actions
+		color.NoColor = false
+	}
+
 	c, err := config.New(os.Args[1:])
 	if err != nil {
 		writeln(red, "Failed to initialize config: %s", err)
