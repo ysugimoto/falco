@@ -156,7 +156,7 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	return trimMutipleLineFeeds(buf.String())
 }
 
-// Format delclare local varialbe statement
+// Format declare local variable statement
 func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer bufferPool.Put(buf)
@@ -168,6 +168,10 @@ func (f *Formatter) formatDeclareStatement(stmt *ast.DeclareStatement) string {
 	}
 	buf.WriteString("local " + stmt.Name.String())
 	buf.WriteString(" " + stmt.ValueType.String())
+	if stmt.Value != nil {
+		buf.WriteString(" = ")
+		buf.WriteString(f.formatExpression(stmt.Value).ChunkedString(stmt.Nest, buf.Len()))
+	}
 	buf.WriteString(";")
 
 	return buf.String()

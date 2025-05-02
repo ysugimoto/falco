@@ -113,6 +113,13 @@ func (c *Decoder) decodeDeclareStatement() (*ast.DeclareStatement, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	// Check if a value is present
+	if isExpressionFrame(c.peekFrame()) {
+		if stmt.Value, err = c.decodeExpression(c.nextFrame()); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
 	return stmt, nil
 }
 

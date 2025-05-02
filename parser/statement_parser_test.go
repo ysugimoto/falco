@@ -5632,6 +5632,293 @@ sub vcl_recv {
 		}
 		assert(t, vcl, expect)
 	})
+
+	t.Run("With string value", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	declare local var.hello STRING = "world!"; // Trailing comment
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            5,
+						EndPosition:        1,
+					},
+					Name: &ast.Ident{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            5,
+							EndPosition:        1,
+						},
+						Statements: []ast.Statement{
+							&ast.DeclareStatement{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.DECLARE,
+										Literal:  "declare",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments("// Trailing comment"),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            4,
+									EndPosition:        42,
+								},
+								Name: &ast.Ident{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "var.hello",
+											Line:     4,
+											Position: 16,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        24,
+									},
+									Value: "var.hello",
+								},
+								ValueType: &ast.Ident{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "STRING",
+											Line:     4,
+											Position: 26,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        31,
+									},
+									Value: "STRING",
+								},
+								Value: &ast.String{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.STRING,
+											Literal:  "world!",
+											Line:     4,
+											Position: 35,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        42,
+									},
+									Value: "world!",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
+	t.Run("With integer value", func(t *testing.T) {
+		input := `// Subroutine
+sub vcl_recv {
+	// Leading comment
+	declare local var.answer INTEGER = 42; // Trailing comment
+}`
+
+		expect := &ast.VCL{
+			Statements: []ast.Statement{
+				&ast.SubroutineDeclaration{
+					Meta: &ast.Meta{
+						Token: token.Token{
+							Type:     token.SUBROUTINE,
+							Literal:  "sub",
+							Line:     2,
+							Position: 1,
+						},
+						Leading:            comments("// Subroutine"),
+						Trailing:           comments(),
+						Infix:              comments(),
+						Nest:               0,
+						PreviousEmptyLines: 0,
+						EndLine:            5,
+						EndPosition:        1,
+					},
+					Name: &ast.Ident{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.IDENT,
+								Literal:  "vcl_recv",
+								Line:     2,
+								Position: 5,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               0,
+							PreviousEmptyLines: 0,
+							EndLine:            2,
+							EndPosition:        12,
+						},
+						Value: "vcl_recv",
+					},
+					Block: &ast.BlockStatement{
+						Meta: &ast.Meta{
+							Token: token.Token{
+								Type:     token.LEFT_BRACE,
+								Literal:  "{",
+								Line:     2,
+								Position: 14,
+							},
+							Leading:            comments(),
+							Trailing:           comments(),
+							Infix:              comments(),
+							Nest:               1,
+							PreviousEmptyLines: 0,
+							EndLine:            5,
+							EndPosition:        1,
+						},
+						Statements: []ast.Statement{
+							&ast.DeclareStatement{
+								Meta: &ast.Meta{
+									Token: token.Token{
+										Type:     token.DECLARE,
+										Literal:  "declare",
+										Line:     4,
+										Position: 2,
+									},
+									Leading:            comments("// Leading comment"),
+									Trailing:           comments("// Trailing comment"),
+									Infix:              comments(),
+									Nest:               1,
+									PreviousEmptyLines: 0,
+									EndLine:            4,
+									EndPosition:        38,
+								},
+								Name: &ast.Ident{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "var.answer",
+											Line:     4,
+											Position: 16,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        25,
+									},
+									Value: "var.answer",
+								},
+								ValueType: &ast.Ident{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.IDENT,
+											Literal:  "INTEGER",
+											Line:     4,
+											Position: 27,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        33,
+									},
+									Value: "INTEGER",
+								},
+								Value: &ast.Integer{
+									Meta: &ast.Meta{
+										Token: token.Token{
+											Type:     token.INT,
+											Literal:  "42",
+											Line:     4,
+											Position: 37,
+										},
+										Leading:            comments(),
+										Trailing:           comments(),
+										Infix:              comments(),
+										Nest:               1,
+										PreviousEmptyLines: 0,
+										EndLine:            4,
+										EndPosition:        38,
+									},
+									Value: 42,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		vcl, err := New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Errorf("%+v", err)
+		}
+		assert(t, vcl, expect)
+	})
+
 	t.Run("Full comments", func(t *testing.T) {
 		input := `// Subroutine
 sub vcl_recv {
@@ -6728,8 +7015,8 @@ sub vcl_recv {
 									Right: &ast.String{
 										Meta: &ast.Meta{
 											Token: token.Token{
-												Type: token.STRING,
-												Literal: "	timestamp:",
+												Type:     token.STRING,
+												Literal:  "	timestamp:",
 												Line:     5,
 												Position: 31,
 											},
@@ -6741,7 +7028,7 @@ sub vcl_recv {
 											EndLine:            5,
 											EndPosition:        45,
 										},
-										Value: "	timestamp:",
+										Value:      "	timestamp:",
 										LongString: true,
 									},
 									Left: &ast.InfixExpression{

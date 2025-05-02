@@ -150,6 +150,21 @@ func TestFormatDeclareStatement(t *testing.T) {
 }
 `,
 		},
+		{
+			name: "declare statement with value",
+			input: `sub vcl_recv {
+	// declare leading comment
+	declare /* before_local */ local /* after_local */ var.FOO /* after_name */ STRING /* after_type */ = /* after_equal */ "Hello" /* after_value */; // declare trailing comment
+}
+`,
+			expect: `sub vcl_recv {
+  // declare leading comment
+  declare /* before_local */ local /* after_local */ var.FOO /* after_name */ STRING /* after_type */ = /* after_equal */
+                                                                                                        "Hello"
+                                                                                                        /* after_value */;  // declare trailing comment
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
