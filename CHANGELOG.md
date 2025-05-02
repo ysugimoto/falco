@@ -1,3 +1,12 @@
+## v1.16.0
+
+- Support assign value with variable declaration [#444](https://github.com/ysugimoto/falco/pull/444) (@ysugimoto)
+- Support hit_for_pass return state in vcl_fetch directive [#443](https://github.com/ysugimoto/falco/pull/443) (@ysugimoto)
+- Colored output for common CI services [#442](https://github.com/ysugimoto/falco/pull/442) (@ysugimoto)
+- Dedupe test target files [#441](https://github.com/ysugimoto/falco/pull/441) (@ysugimoto)
+- Add hit_for_pass to valid return values for vcl_fetch subroutine [#440](https://github.com/ysugimoto/falco/pull/440) (@acme)
+- Support inline declarations in declare statements [#439](https://github.com/ysugimoto/falco/pull/439) (@acme)
+
 ## v1.15.3
 
 - Tweak vendor detecting tests [#437](https://github.com/ysugimoto/falco/pull/437) (@ysugimoto)
