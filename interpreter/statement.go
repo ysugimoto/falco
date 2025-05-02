@@ -215,7 +215,22 @@ func (i *Interpreter) ProcessBlockStatement(
 }
 
 func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error {
-	return i.localVars.Declare(stmt.Name.Value, stmt.ValueType.Value)
+	if err := i.localVars.Declare(stmt.Name.Value, stmt.ValueType.Value); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Assign if the value is declared at the same time like:
+	// declare local var.S STRING = "Hello, World!";
+	if stmt.Value != nil {
+		v, err := i.ProcessExpression(stmt.Value, false)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err = i.localVars.Set(stmt.Name.Value, "=", v); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
