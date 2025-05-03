@@ -105,6 +105,34 @@ func TestSetRequestHeaderValueOverwrite(t *testing.T) {
 	}
 }
 
+func TestSetResponseHeaderValueEmpty(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	// Set empty header values
+	setRequestHeaderValue(req, "VARS", &value.String{Value: ""})
+	setRequestHeaderValue(req, "VARS:VALUE", &value.String{Value: ""})
+	setRequestHeaderValue(req, "VARS:VALUE2", &value.String{Value: ""})
+
+	// Each field value does not have equal signs, only present key name
+	ret := getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE,VALUE2" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE,VALUE2", ret.Value)
+	}
+
+	// Overwrite partial key and value
+	setRequestHeaderValue(req, "VARS:VALUE", &value.String{Value: "V"})
+	ret = getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE2,VALUE=V" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE2,VALUE=V", ret.Value)
+	}
+
+	// Can unset empty key
+	unsetRequestHeaderValue(req, "VARS:VALUE2")
+	ret = getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE=V" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE=V", ret.Value)
+	}
+}
+
 func TestSetResponseHeaderValue(t *testing.T) {
 	tests := []struct {
 		name  string

@@ -43,8 +43,7 @@ lint:
 modernize:
 	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
 
-local: test lint
-	go build ./cmd/falco
+local: test lint modernize
 
 clean:
 	rm ./dist/falco-*
