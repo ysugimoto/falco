@@ -1,11 +1,10 @@
 package variable
 
 import (
-	"fmt"
-	"net/http"
 	"net/textproto"
 	"strings"
 
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -14,7 +13,7 @@ func getRequestHeaderValue(r *http.Request, name string) *value.String {
 	name, key, _ = strings.Cut(name, ":")
 	v := r.Header.Get(name)
 	if v == "" {
-		return &value.String{IsNotSet: true}
+		return &value.String{IsNotSet: !r.IsAssigned(name)}
 	}
 
 	if key == "" {
@@ -39,7 +38,7 @@ func getResponseHeaderValue(r *http.Response, name string) *value.String {
 	name, key, _ = strings.Cut(name, ":")
 	v := r.Header.Get(name)
 	if v == "" {
-		return &value.String{IsNotSet: true}
+		return &value.String{IsNotSet: !r.IsAssigned(name)}
 	}
 
 	if key == "" {
@@ -53,42 +52,54 @@ func getResponseHeaderValue(r *http.Response, name string) *value.String {
 func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
+		// Skip when set value is notset
+		if s, ok := val.(*value.String); ok && s.IsNotSet {
+			return
+		}
+
 		// Fastly truncates header values at newlines.
 		sVal, _, _ := strings.Cut(val.String(), "\n")
 		r.Header.Set(name, sVal)
+		r.Assign(name)
 		return
 	}
 
 	if strings.EqualFold(name, "cookie") {
-		hh := http.Header{}
-		hh.Add("Cookie", fmt.Sprintf("%s=%s", key, val.String()))
-		rr := http.Request{Header: hh}
-		c, _ := rr.Cookie(key) // nolint:errcheck
+		c := http.CreateCookie(key, val.String())
 		r.AddCookie(c)
 		return
 	}
 
 	// Handle setting RFC-8941 dictionary value
 	r.Header.Set(name, setField(r.Header.Get(name), key, val, ","))
+	r.Assign(name)
 }
 
 func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
+		// Skip when set value is notset
+		if s, ok := val.(*value.String); ok && s.IsNotSet {
+			return
+		}
+
 		// Fastly truncates header values at newlines.
 		sVal, _, _ := strings.Cut(val.String(), "\n")
 		r.Header.Set(name, sVal)
+		r.Assign(name)
 		return
 	}
 
 	// Handle setting RFC-8941 dictionary value
 	r.Header.Set(name, setField(r.Header.Get(name), key, val, ","))
+	r.Assign(name)
 }
 
 func unsetRequestHeaderValue(r *http.Request, name string) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
 		r.Header.Del(name)
+		r.Unassign(name)
 		return
 	}
 
@@ -102,9 +113,11 @@ func unsetRequestHeaderValue(r *http.Request, name string) {
 	t := unsetField(r.Header.Get(name), key, ",")
 	if t == "" {
 		r.Header.Del(name)
+		r.Unassign(name)
 		return
 	}
 	r.Header.Set(name, t)
+	r.Unassign(name)
 }
 
 // removeCookieByName removes a part of Cookie headers that name is matched.
@@ -151,13 +164,16 @@ func unsetResponseHeaderValue(r *http.Response, name string) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
 		r.Header.Del(name)
+		r.Unassign(name)
 		return
 	}
 
 	t := unsetField(r.Header.Get(name), key, ",")
 	if t == "" {
 		r.Header.Del(name)
+		r.Unassign(name)
 		return
 	}
 	r.Header.Set(name, t)
+	r.Unassign(name)
 }

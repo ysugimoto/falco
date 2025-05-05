@@ -61,6 +61,11 @@ func (v LocalVariables) Set(name, operator string, val value.Value) error {
 			"Failed to assign value to %s, %w", name, err,
 		))
 	}
+
+	// On local STRING variable assignment, always set notset to false even assign value is notset
+	if str, ok := left.(*value.String); ok {
+		str.IsNotSet = false
+	}
 	return nil
 }
 

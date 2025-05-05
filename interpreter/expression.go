@@ -14,7 +14,7 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, error) {
+func (i *Interpreter) IdentValue(val string, opt *ExpressionOption) (value.Value, error) {
 	// Extra lookups identity - call additional ident finder if defined
 	// This feature is implemented for testing, typically we do not use for interpreter working
 	if i.IdentResolver != nil {
@@ -42,7 +42,7 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 			return v, nil
 		}
 	} else if v, err := i.vars.Get(i.ctx.Scope, val); err != nil {
-		if withCondition {
+		if opt.Condition() {
 			return value.Null, nil
 		} else {
 			return value.Null, errors.WithStack(err)
@@ -59,14 +59,22 @@ func (i *Interpreter) IdentValue(val string, withCondition bool) (value.Value, e
 //
 // For example:
 //
-//	withCondition: true  -> if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
-//	withCondition: false -> set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
-//	withCondition: false -> set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
-func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) (value.Value, error) {
+//	ExpressionOption.Condition: true
+//		if (!req.http.Foo) { ... } // Valid, req.http.Foo is nullable string but can be inverse as false
+//	ExpressionOption.Condition: false:
+//		set var.bool = (!req.http.Foo); // Complicated but valid, "!" prefix operator could  use for right expression
+//	ExpressionOption.Condition: false:
+//		set var.bool = !req.http.Foo;   // Invalid, bare "!" prefix operator could not use for right expression
+func (i *Interpreter) ProcessExpression(exp ast.Expression, opts ...expOption) (value.Value, error) {
+	opt := collectExpressionOption(opts...)
+	return i.processExpression(exp, opt)
+}
+
+func (i *Interpreter) processExpression(exp ast.Expression, opt *ExpressionOption) (value.Value, error) {
 	switch t := exp.(type) {
 	// Underlying VCL type expressions
 	case *ast.Ident:
-		return i.IdentValue(t.Value, withCondition)
+		return i.IdentValue(t.Value, opt)
 	case *ast.IP:
 		return &value.IP{Value: net.ParseIP(t.Value), Literal: true}, nil
 	case *ast.Boolean:
@@ -105,25 +113,25 @@ func (i *Interpreter) ProcessExpression(exp ast.Expression, withCondition bool) 
 
 	// Combined expressions
 	case *ast.PrefixExpression:
-		return i.ProcessPrefixExpression(t, withCondition)
+		return i.ProcessPrefixExpression(t, opt)
 	case *ast.GroupedExpression:
 		return i.ProcessGroupedExpression(t)
 	case *ast.InfixExpression:
 		if t.Operator == "+" {
-			return i.ProcessStringConcatInfixExpression(t)
+			return i.ProcessStringConcatInfixExpression(t, opt)
 		}
-		return i.ProcessInfixExpression(t, withCondition)
+		return i.ProcessInfixExpression(t, opt)
 	case *ast.IfExpression:
 		return i.ProcessIfExpression(t)
 	case *ast.FunctionCallExpression:
-		return i.ProcessFunctionCallExpression(t, withCondition)
+		return i.ProcessFunctionCallExpression(t, opt)
 	default:
 		return value.Null, exception.Runtime(&exp.GetMeta().Token, "Undefined expression found")
 	}
 }
 
-func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCondition bool) (value.Value, error) {
-	v, err := i.ProcessExpression(exp.Right, withCondition)
+func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, opt *ExpressionOption) (value.Value, error) {
+	v, err := i.processExpression(exp.Right, opt)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -135,7 +143,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 			return &value.Boolean{Value: !t.Value}, nil
 		case *value.String:
 			// If withCondition is enabled, STRING could be converted to BOOL
-			if !withCondition {
+			if !opt.Condition() {
 				return value.Null, errors.WithStack(
 					exception.Runtime(&exp.GetMeta().Token, `Unexpected "!" prefix operator for %v`, v),
 				)
@@ -176,7 +184,7 @@ func (i *Interpreter) ProcessPrefixExpression(exp *ast.PrefixExpression, withCon
 }
 
 func (i *Interpreter) ProcessPostfixExpression(exp *ast.PostfixExpression) (value.Value, error) {
-	v, err := i.ProcessExpression(exp.Left, false)
+	v, err := i.ProcessExpression(exp.Left)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -196,7 +204,7 @@ func (i *Interpreter) ProcessPostfixExpression(exp *ast.PostfixExpression) (valu
 }
 
 func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (value.Value, error) {
-	v, err := i.ProcessExpression(exp.Right, true)
+	v, err := i.ProcessExpression(exp.Right, ConditionExpression())
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -204,7 +212,7 @@ func (i *Interpreter) ProcessGroupedExpression(exp *ast.GroupedExpression) (valu
 }
 
 func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, error) {
-	cond, err := i.ProcessExpression(exp.Condition, true)
+	cond, err := i.ProcessExpression(exp.Condition, ConditionExpression())
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -212,23 +220,23 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 	switch t := cond.(type) {
 	case *value.Boolean:
 		if t.Value {
-			return i.ProcessExpression(exp.Consequence, false)
+			return i.ProcessExpression(exp.Consequence)
 		}
 	case *value.String:
 		if !t.IsNotSet {
-			return i.ProcessExpression(exp.Consequence, false)
+			return i.ProcessExpression(exp.Consequence)
 		}
 	default:
 		if cond == value.Null {
-			return i.ProcessExpression(exp.Alternative, false)
+			return i.ProcessExpression(exp.Alternative)
 		}
 		return value.Null, exception.Runtime(&exp.GetMeta().Token, "If condition returns not boolean")
 	}
 
-	return i.ProcessExpression(exp.Alternative, false)
+	return i.ProcessExpression(exp.Alternative)
 }
 
-func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
+func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, opt *ExpressionOption) (value.Value, error) {
 	if sub, ok := i.ctx.SubroutineFunctions[exp.Function.Value]; ok {
 		if len(exp.Arguments) > 0 {
 			return value.Null, exception.Runtime(
@@ -278,7 +286,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				)
 			}
 		} else {
-			a, err := i.ProcessExpression(exp.Arguments[j], withCondition)
+			a, err := i.processExpression(exp.Arguments[j], opt)
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}
@@ -288,12 +296,12 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 	return fn.Call(i.ctx, args...)
 }
 
-func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondition bool) (value.Value, error) {
-	left, err := i.ProcessExpression(exp.Left, withCondition)
+func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, opt *ExpressionOption) (value.Value, error) {
+	left, err := i.processExpression(exp.Left, opt)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(exp.Right, withCondition)
+	right, err := i.processExpression(exp.Right, opt)
 	if err != nil {
 		return value.Null, errors.WithStack(err)
 	}
@@ -367,7 +375,7 @@ func (i *Interpreter) ProcessInfixExpression(exp *ast.InfixExpression, withCondi
 //
 // See Fastly fiddle: https://fiddle.fastly.dev/fiddle/befec89e
 // nolint: gocognit
-func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpression) (value.Value, error) {
+func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpression, opt *ExpressionOption) (value.Value, error) {
 	var series []*series
 
 	left, err := i.toSeriesExpression(exp.Left)
@@ -385,12 +393,17 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 	}
 	series = append(series, right...)
 
+	// Check all series expression is notset string
+	if i.isNotSetStringSeries(series) {
+		return &value.String{IsNotSet: true}, nil
+	}
+
 	var rv value.Value = &value.String{}
 	var opErr error
 
 	for idx := 0; idx < len(series); idx++ {
 		s := series[idx]
-		cv, err := i.ProcessExpression(s.Expression, false)
+		cv, err := i.ProcessExpression(s.Expression)
 		if err != nil {
 			return value.Null, errors.WithStack(err)
 		}
@@ -428,7 +441,18 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 		case *ast.Ident:
 			switch cv.Type() {
 			case value.StringType:
-				rv, opErr = operator.Concat(rv, cv)
+				if opt.IsLocalVariable() {
+					// notset treating for string concatenation to local variable.
+					// The local variable should be treated as empty string even value is notset
+					str := value.Unwrap[*value.String](cv)
+					if str.IsNotSet {
+						rv, opErr = operator.Concat(rv, &value.String{})
+					} else {
+						rv, opErr = operator.Concat(rv, cv)
+					}
+				} else {
+					rv, opErr = operator.Concat(rv, cv)
+				}
 				if opErr != nil {
 					return value.Null, errors.WithStack(err)
 				}
@@ -439,7 +463,7 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 				if idx+1 < len(series)-1 {
 					next := series[idx+1]
 					if _, ok := next.Expression.(*ast.RTime); ok {
-						nv, err := i.ProcessExpression(next.Expression, false)
+						nv, err := i.ProcessExpression(next.Expression)
 						if err != nil {
 							return value.Null, errors.WithStack(err)
 						}
@@ -464,7 +488,7 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 				if s.Operator == "+" || s.Operator == "-" {
 					if idx-1 >= 0 {
 						prev := series[idx-1]
-						v, err := i.ProcessExpression(prev.Expression, false)
+						v, err := i.ProcessExpression(prev.Expression)
 						if err != nil {
 							return value.Null, errors.WithStack(err)
 						}
@@ -552,4 +576,40 @@ func (i *Interpreter) toSeriesExpression(expr ast.Expression) ([]*series, error)
 	return []*series{
 		{Expression: expr},
 	}, nil
+}
+
+// Check all string concatenation series are constructed with notset string
+func (i *Interpreter) isNotSetStringSeries(series []*series) bool {
+	for _, s := range series {
+		// series expression must be an ident
+		ident, ok := s.Expression.(*ast.Ident)
+		if !ok {
+			return false
+		}
+		// get stored variable
+		var v value.Value
+		var err error
+		if strings.HasPrefix(ident.Value, "var.") {
+			v, err = i.localVars.Get(ident.Value)
+		} else {
+			v, err = i.vars.Get(i.ctx.Scope, ident.Value)
+		}
+		if err != nil {
+			return false
+		}
+
+		// asset value as STRING type
+		str, ok := v.(*value.String)
+		if !ok {
+			return false
+		}
+		// check string is notset
+		if str.IsNotSet {
+			continue
+		}
+		return false
+	}
+
+	// This return indicates all series expression is notset
+	return true
 }

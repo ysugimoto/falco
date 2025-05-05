@@ -638,7 +638,7 @@ func unwrapIdentArguments(ip *interpreter.Interpreter, args []value.Value) ([]va
 			continue
 		}
 		ident := value.Unwrap[*value.Ident](args[i])
-		v, err := ip.IdentValue(ident.Value, false)
+		v, err := ip.IdentValue(ident.Value, &interpreter.ExpressionOption{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

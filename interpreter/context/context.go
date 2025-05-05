@@ -3,12 +3,12 @@ package context
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/cache"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippets"
