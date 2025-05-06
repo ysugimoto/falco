@@ -12,7 +12,7 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
@@ -31,14 +31,14 @@ var (
 )
 
 type Tester struct {
-	interpreterOptions []icontext.Option
+	interpreterOptions []context.Option
 	config             *config.TestConfig
 	counter            *shared.Counter
 	debugger           *Debugger
 	coverage           *shared.Coverage
 }
 
-func New(c *config.TestConfig, opts []icontext.Option) *Tester {
+func New(c *config.TestConfig, opts []context.Option) *Tester {
 	t := &Tester{
 		interpreterOptions: opts,
 		config:             c,
@@ -47,7 +47,7 @@ func New(c *config.TestConfig, opts []icontext.Option) *Tester {
 	}
 	if c.Coverage {
 		t.coverage = shared.NewCoverage()
-		t.interpreterOptions = append(t.interpreterOptions, icontext.WithCoverage(t.coverage))
+		t.interpreterOptions = append(t.interpreterOptions, context.WithCoverage(t.coverage))
 	}
 	return t
 }
@@ -153,12 +153,23 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					errChan <- errors.WithStack(err)
 					return
 				}
-				suite, scopes := t.findTestSuites(st)
-				for _, s := range scopes {
+				metadata := getTestMetadata(st)
+				for _, s := range metadata.Scopes {
+					// Skip this testsuite when marked as @skip
+					if metadata.Skip {
+						cases = append(cases, &TestCase{
+							Name:  metadata.Name,
+							Scope: s.String(),
+							Skip:  true,
+						})
+						t.counter.Skip()
+						continue
+					}
+
 					start := time.Now()
 					err := i.ProcessTestSubroutine(s, st)
 					cases = append(cases, &TestCase{
-						Name:  suite,
+						Name:  metadata.Name,
 						Error: errors.Cause(err),
 						Scope: s.String(),
 						Time:  time.Since(start).Milliseconds(),
@@ -216,8 +227,19 @@ func (t *Tester) runDescribedTests(
 	}
 
 	for _, sub := range d.Subroutines {
-		suite, scopes := t.findTestSuites(sub)
-		for _, s := range scopes {
+		metadata := getTestMetadata(sub)
+		for _, s := range metadata.Scopes {
+			// Skip this testsuite when marked as @skip
+			if metadata.Skip {
+				cases = append(cases, &TestCase{
+					Name:  metadata.Name,
+					Scope: s.String(),
+					Skip:  true,
+				})
+				t.counter.Skip()
+				continue
+			}
+
 			// Run before_xxx hook that corresponds to scope is exists
 			if hook, ok := d.Befores[strings.ToLower("before_"+s.String())]; ok {
 				i.SetScope(s)
@@ -233,7 +255,7 @@ func (t *Tester) runDescribedTests(
 			start := time.Now()
 			err := i.ProcessTestSubroutine(s, sub)
 			cases = append(cases, &TestCase{
-				Name:  suite,
+				Name:  metadata.Name,
 				Group: d.Name.String(),
 				Error: errors.Cause(err),
 				Scope: s.String(),
@@ -258,67 +280,6 @@ func (t *Tester) runDescribedTests(
 	}
 
 	return cases, nil
-}
-
-// Find test suite name and may multile scopes
-func (t *Tester) findTestSuites(sub *ast.SubroutineDeclaration) (string, []icontext.Scope) {
-	// Find test suite name and scope from annotation
-	suiteName := sub.Name.Value
-
-	var scopes []icontext.Scope
-	comments := sub.GetMeta().Leading
-	for i := range comments {
-		l := strings.TrimLeft(comments[i].Value, " */#")
-		if !strings.HasPrefix(l, "@") {
-			continue
-		}
-		// If @suite annotation found, use it as suite name
-		if strings.HasPrefix(l, "@suite:") {
-			suiteName = strings.TrimSpace(strings.TrimPrefix(l, "@suite:"))
-			continue
-		}
-		var an []string
-		if strings.HasPrefix(l, "@scope:") {
-			an = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
-		} else {
-			an = strings.Split(strings.TrimPrefix(l, "@"), ",")
-		}
-		for _, s := range an {
-			scope := icontext.ScopeByString(strings.TrimSpace(s))
-			if scope != icontext.UnknownScope {
-				scopes = append(scopes, scope)
-			}
-		}
-	}
-
-	if len(scopes) > 0 {
-		return suiteName, scopes
-	}
-
-	// If we could not determine scope from annotation, try to find from subroutine name.
-	switch {
-	case strings.HasSuffix(sub.Name.Value, "_recv"):
-		scopes = append(scopes, icontext.RecvScope)
-	case strings.HasSuffix(sub.Name.Value, "_hash"):
-		scopes = append(scopes, icontext.HashScope)
-	case strings.HasSuffix(sub.Name.Value, "_miss"):
-		scopes = append(scopes, icontext.MissScope)
-	case strings.HasSuffix(sub.Name.Value, "_pass"):
-		scopes = append(scopes, icontext.PassScope)
-	case strings.HasSuffix(sub.Name.Value, "_fetch"):
-		scopes = append(scopes, icontext.FetchScope)
-	case strings.HasSuffix(sub.Name.Value, "_deliver"):
-		scopes = append(scopes, icontext.DeliverScope)
-	case strings.HasSuffix(sub.Name.Value, "_error"):
-		scopes = append(scopes, icontext.ErrorScope)
-	case strings.HasSuffix(sub.Name.Value, "_log"):
-		scopes = append(scopes, icontext.LogScope)
-	default:
-		// Set RECV scope as default
-		scopes = append(scopes, icontext.RecvScope)
-	}
-
-	return suiteName, scopes
 }
 
 // Set up interprete for each test subroutines
