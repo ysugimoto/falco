@@ -446,13 +446,14 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 					// The local variable should be treated as empty string even value is notset
 					str := value.Unwrap[*value.String](cv)
 					if str.IsNotSet {
-						rv, opErr = operator.Concat(rv, &value.String{})
+						rv, opErr = operator.Concat(rv, &value.String{IsNotSet: false})
 					} else {
 						rv, opErr = operator.Concat(rv, cv)
 					}
 				} else {
 					rv, opErr = operator.Concat(rv, cv)
 				}
+
 				if opErr != nil {
 					return value.Null, errors.WithStack(err)
 				}
@@ -598,7 +599,7 @@ func (i *Interpreter) isNotSetStringSeries(series []*series) bool {
 			return false
 		}
 
-		// asset value as STRING type
+		// assert value as STRING type
 		str, ok := v.(*value.String)
 		if !ok {
 			return false
@@ -610,6 +611,6 @@ func (i *Interpreter) isNotSetStringSeries(series []*series) bool {
 		return false
 	}
 
-	// This return indicates all series expression is notset
+	// This return indicates all series expression are notset
 	return true
 }

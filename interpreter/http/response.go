@@ -8,13 +8,13 @@ import (
 
 type Response struct {
 	*http.Response
-	assigned notSetKeyMap
+	headerKeyStore
 }
 
 func WrapResponse(r *http.Response) *Response {
 	return &Response{
-		Response: r,
-		assigned: notSetKeyMap{},
+		r,
+		headerKeyStore{},
 	}
 }
 
@@ -40,19 +40,6 @@ func (r *Response) Clone() *Response {
 			Trailer:          r.Trailer.Clone(),
 			TLS:              r.TLS,
 		},
-		assigned: notSetKeyMap{},
+		headerKeyStore: headerKeyStore{},
 	}
-}
-
-func (r *Response) IsAssigned(name string) bool {
-	_, v := r.assigned[name]
-	return v
-}
-
-func (r *Response) Assign(name string) {
-	r.assigned[name] = struct{}{}
-}
-
-func (r *Response) Unassign(name string) {
-	delete(r.assigned, name)
 }

@@ -228,7 +228,7 @@ describe notset_http_header {
       set var.state = "empty";
     }
     assert.is_notset(var.state);
-    assert.equal(std.strlen(var.V), 22 );
+    assert.equal(std.strlen(var.V), 22);
     assert.equal(var.V, "(null)-SomeValueheader");
   }
 }
