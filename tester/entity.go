@@ -14,6 +14,7 @@ type TestCase struct {
 	Error error
 	Scope string
 	Time  int64 // msec order
+	Skip  bool
 }
 
 func (t *TestCase) MarshalJSON() ([]byte, error) {

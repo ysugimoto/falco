@@ -435,7 +435,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		}
 	}
 
-	var passedCount, failedCount, totalCount int
+	var passedCount, failedCount, skippedCount, totalCount int
 	for _, r := range factory.Results {
 		switch {
 		case len(r.Cases) == 0:
@@ -455,8 +455,12 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			if c.Group != "" {
 				prefix = c.Group + " › "
 			}
-			if c.Error != nil {
-				writeln(redBold, "%s● [VCL_%s] %s%s\n", indent(1), c.Scope, prefix, c.Name)
+			switch {
+			case c.Skip:
+				writeln(yellow, "%s- [VCL_%s] %s%s", indent(1), c.Scope, prefix, c.Name)
+				skippedCount++
+			case c.Error != nil:
+				writeln(redBold, "%s● [VCL_%s] %s%s (%dms)\n", indent(1), c.Scope, prefix, c.Name, c.Time)
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
@@ -469,8 +473,8 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				}
 				writeln(white, "")
 				failedCount++
-			} else {
-				writeln(green, "%s✓ [VCL_%s] %s%s", indent(1), c.Scope, prefix, c.Name)
+			default:
+				writeln(green, "%s✓ [VCL_%s] %s%s (%dms)", indent(1), c.Scope, prefix, c.Name, c.Time)
 				passedCount++
 			}
 		}
@@ -484,8 +488,14 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 	if failedCount > 0 {
 		failedColor = red
 	}
+	skippedColor := white
+	if skippedCount > 0 {
+		skippedColor = yellow
+	}
+
 	write(passedColor, "%d passed, ", passedCount)
 	write(failedColor, "%d failed, ", failedCount)
+	write(skippedColor, "%d skipped, ", skippedCount)
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
