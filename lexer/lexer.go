@@ -368,9 +368,10 @@ func (l *Lexer) NextToken() token.Token {
 				return t
 			}
 
-			// Read more neighbor digit, dot, hyphen and colon character
-			// in order to lex digit contained identifier like "version4", "req.http.Cookie:session" string
-			for l.char == '-' || l.char == '.' || l.char == ':' || isDigit(l.char) {
+			// Read more neighbor digit, dot, hyphen, asterisk and colon character
+			// in order to lex digit contained identifier like "version4", "req.http.Cookie:session" string.
+			// For asterisk ('*'), support wildcard prefix match for unset/remove statement.
+			for l.char == '-' || l.char == '.' || l.char == ':' || l.char == '*' || isDigit(l.char) {
 				literal += string(l.char)
 				l.readChar()
 				literal += l.readIdentifier()

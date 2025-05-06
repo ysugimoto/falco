@@ -194,7 +194,7 @@ PASS:
 }
 
 func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Context) types.Type {
-	if !isValidVariableName(stmt.Ident.Value) {
+	if !isValidVariableNameWithWildcard(stmt.Ident.Value) {
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "unset").Match(UNSET_STATEMENT_SYNTAX))
 	}
 
@@ -215,7 +215,7 @@ func (l *Linter) lintUnsetStatement(stmt *ast.UnsetStatement, ctx *context.Conte
 }
 
 func (l *Linter) lintRemoveStatement(stmt *ast.RemoveStatement, ctx *context.Context) types.Type {
-	if !isValidVariableName(stmt.Ident.Value) {
+	if !isValidVariableNameWithWildcard(stmt.Ident.Value) {
 		l.Error(InvalidName(stmt.Ident.GetMeta(), stmt.Ident.Value, "remove").Match(REMOVE_STATEMENT_SYNTAX))
 	}
 
