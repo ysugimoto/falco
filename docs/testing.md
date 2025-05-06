@@ -173,9 +173,34 @@ falco recognizes `@scope` annotation for execution scope.
 `@scope: deliver` means the testing should run on `DELIVER` scope.
 You can specify multiply by separating commas like `@scope: hit,pass`.
 
+```vcl
+// @scope: recv,fetch,pass
+sub some_test_suite {
+    ...
+}
+```
+
 ### Suite Name
 
 You can specify the test suite name with `@suite` annotation value. Otherwise, the suite name will be set as the subroutine name.
+
+```vcl
+// @suite: test suite name here
+sub some_test_suite {
+    ...
+}
+```
+
+### Skipping Test
+
+You can skip test case by adding `@skip` annotation comment. falco recognizes this annotation and skip testing.
+
+```vcl
+// @skip
+sub some_test_suite {
+    ...
+}
+```
 
 ### Testing preparation
 

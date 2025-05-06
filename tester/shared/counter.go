@@ -4,6 +4,7 @@ type Counter struct {
 	Asserts int `json:"asserts"`
 	Passes  int `json:"passes"`
 	Fails   int `json:"fails"`
+	Skips   int `json:"skips"`
 }
 
 func NewCounter() *Counter {
@@ -18,4 +19,8 @@ func (c *Counter) Pass() {
 func (c *Counter) Fail() {
 	c.Asserts++
 	c.Fails++
+}
+
+func (c *Counter) Skip() {
+	c.Skips++
 }
