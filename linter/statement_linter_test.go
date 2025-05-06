@@ -129,6 +129,15 @@ sub foo {
 
 		assertError(t, input)
 	})
+
+	t.Run("invalid ident with wildcard", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.X-* = "foo";
+}`
+
+		assertError(t, input)
+	})
 }
 
 func TestLintUnsetStatement(t *testing.T) {
@@ -165,6 +174,22 @@ sub foo {
 	unset req.backend;
 }`
 
+		assertError(t, input)
+	})
+
+	t.Run("valid with wildcard", func(t *testing.T) {
+		input := `
+sub foo {
+	unset req.http.X-*;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("invalid with wildcard position", func(t *testing.T) {
+		input := `
+sub foo {
+	unset req.http.X-*-Bar;
+}`
 		assertError(t, input)
 	})
 }
