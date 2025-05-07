@@ -1325,3 +1325,17 @@ std.strcasecmp:
   arguments:
     - [STRING, STRING]
   return: BOOL
+
+digest.hash_xxh32:
+  reference: "" # TODO: fill URL after documentation found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_xxh64:
+  reference: "" # TODO: fill URL after documentation found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
