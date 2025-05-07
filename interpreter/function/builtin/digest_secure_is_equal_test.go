@@ -49,7 +49,7 @@ func Test_Digest_secure_is_equal(t *testing.T) {
 		}
 		v := value.Unwrap[*value.Boolean](ret)
 		if v.Value != tt.expect {
-			t.Errorf("return value unmach, expect=%t, got=%t", tt.expect, v.Value)
+			t.Errorf("return value unmatch, expect=%t, got=%t", tt.expect, v.Value)
 		}
 	}
 }

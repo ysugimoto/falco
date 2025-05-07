@@ -28,7 +28,7 @@ func Test_Digest_hash_sha384(t *testing.T) {
 	v := value.Unwrap[*value.String](ret)
 	expect := "eb455d56d2c1a69de64e832011f3393d45f3fa31d6842f21af92d2fe469c499da5e3179847334a18479c8d1dedea1be3"
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 
 }
