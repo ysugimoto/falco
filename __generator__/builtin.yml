@@ -1319,3 +1319,9 @@ digest.ecdsa_verify:
     - [ID, STRING, STRING, STRING, ID, ID]
   return: BOOL
 
+std.strcasecmp:
+  reference: "" # TODO: fill after documentation is found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL

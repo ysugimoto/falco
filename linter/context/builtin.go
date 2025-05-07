@@ -1619,6 +1619,17 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-str2ip/",
 					},
 				},
+				"strcasecmp": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
 				"strlen": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{

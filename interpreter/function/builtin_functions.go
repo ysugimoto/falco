@@ -1409,6 +1409,16 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"std.strcasecmp": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			return builtin.Std_strcasecmp(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"std.strlen": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
