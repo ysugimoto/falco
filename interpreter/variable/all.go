@@ -439,8 +439,6 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		CLIENT_GEO_COUNTRY_NAME_UTF8,
 		CLIENT_GEO_IP_OVERRIDE,
 		CLIENT_GEO_POSTAL_CODE,
-		CLIENT_GEO_PROXY_DESCRIPTION,
-		CLIENT_GEO_PROXY_TYPE,
 		CLIENT_GEO_REGION,
 		CLIENT_GEO_REGION_ASCII,
 		CLIENT_GEO_REGION_LATIN1,
@@ -449,6 +447,22 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return v, nil
 		}
 		return &value.String{Value: "unknown"}, nil
+
+	case CLIENT_GEO_PROXY_TYPE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		// return tentative value as "?"
+		// see: https://www.fastly.com/documentation/reference/vcl/variables/geolocation/client-geo-proxy-type/
+		return &value.String{Value: "?"}, nil
+
+	case CLIENT_GEO_PROXY_DESCRIPTION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		// return tentative value as "?"
+		// see: https://www.fastly.com/documentation/reference/vcl/variables/geolocation/client-geo-proxy-description/
+		return &value.String{Value: "?"}, nil
 
 	case CLIENT_IDENTITY:
 		if v.ctx.ClientIdentity == nil {

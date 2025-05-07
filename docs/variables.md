@@ -67,8 +67,8 @@ falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=o
 | client.geo.country_name.utf8               | "unknown"                          |
 | client.geo.ip_override                     | "unknown"                          |
 | client.geo.postal_code                     | "unknown"                          |
-| client.geo.proxy_description               | "unknown"                          |
-| client.geo.proxy_type                      | "unknown"                          |
+| client.geo.proxy_description               | "?"                                |
+| client.geo.proxy_type                      | "?"                                |
 | client.geo.region                          | "unknown"                          |
 | client.geo.region.ascii                    | "unknown"                          |
 | client.geo.region.latin1                   | "unknown"                          |
