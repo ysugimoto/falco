@@ -432,6 +432,28 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha512-from-base64/",
 					},
 				},
+				"hash_xxh32": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"hash_xxh64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
 				"hmac_md5": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
@@ -1617,6 +1639,17 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/std-str2ip/",
+					},
+				},
+				"strcasecmp": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
 					},
 				},
 				"strlen": &FunctionSpec{

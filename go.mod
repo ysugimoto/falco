@@ -30,7 +30,10 @@ require (
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
 
-require github.com/olekukonko/tablewriter v0.0.5 // indirect
+require (
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/pierrec/xxHash v0.1.5 // indirect
+)
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect

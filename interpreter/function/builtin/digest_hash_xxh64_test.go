@@ -9,14 +9,14 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-// Fastly built-in function testing implementation of digest.hash_sha1
+// Fastly built-in function testing implementation of digest.hash_xxh64
 // Arguments may be:
 // - STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hash-sha1/
-func Test_Digest_hash_sha1(t *testing.T) {
-	ret, err := Digest_hash_sha1(
+// Reference:
+func Test_Digest_hash_xxh64(t *testing.T) {
+	ret, err := Digest_hash_xxh64(
 		&context.Context{},
-		&value.String{Value: "123456789"},
+		&value.String{Value: "example"},
 	)
 
 	if err != nil {
@@ -26,7 +26,7 @@ func Test_Digest_hash_sha1(t *testing.T) {
 		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
 	}
 	v := value.Unwrap[*value.String](ret)
-	expect := "f7c3bc1d808e04732adf679965ccc34ca7ae3441"
+	expect := "e6eda53558c41c5e"
 	if v.Value != expect {
 		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}

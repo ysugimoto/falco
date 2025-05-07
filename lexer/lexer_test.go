@@ -74,6 +74,7 @@ sub vcl_recv {
 		error 750;
 	}
 
+	unset req.http.X-*;
 	add req.http.Cookie:session = uuid.version4();
 	esi;
 	log syslog "foo";
@@ -424,6 +425,12 @@ aabbccddIieEffggHHhEXAMPLEPUBLICKEY
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.RIGHT_BRACE, Literal: "}"},
 		{Type: token.LF, Literal: "\n"},
+		{Type: token.LF, Literal: "\n"},
+
+		// wildcard unset
+		{Type: token.UNSET, Literal: "unset"},
+		{Type: token.IDENT, Literal: "req.http.X-*"},
+		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 
 		{Type: token.ADD, Literal: "add"},

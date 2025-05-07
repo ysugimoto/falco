@@ -138,6 +138,47 @@ func isValidVariableName(name string) bool {
 	return true
 }
 
+// isValidVariableNameWithWildcard validates ident name has only [0-9a-zA-Z_\.-:*]+ for unset/remove statement
+func isValidVariableNameWithWildcard(name string) bool {
+	asterisk := -1
+	colon := -1
+	dot := -1
+	for index, r := range name {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' || r == '*' {
+			// Store the poisition of asterisk
+			switch r {
+			case '*':
+				asterisk = index
+			case ':':
+				colon = index
+			case '.':
+				dot = index
+			}
+			continue
+		}
+		return false
+	}
+
+	// If asterisk character found, the poistion must be the end of name or must not be the after of colon.
+	// unset req.http.*       // <- invalid
+	// unset req.http.X-*Foo  // <- invalid
+	// unset req.http.VARS:*  // <- invalid
+	// unset req.http.X-*     // <- valid
+	// unset req.http.VARS:V* // <- valid
+	if asterisk != -1 {
+		if colon != -1 && asterisk == colon+1 {
+			return false
+		}
+		if asterisk == 0 || asterisk != len(name)-1 {
+			return false
+		}
+		if dot != -1 && asterisk == dot+1 {
+			return false
+		}
+	}
+	return true
+}
+
 // In VCL, could not specify literal in if condition expression.
 //
 // if (!req.http.Cookie) { ... } // -> valid, inverse actual identity variable (implicit type conversion will occur)
