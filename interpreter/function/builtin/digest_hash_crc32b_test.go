@@ -28,6 +28,6 @@ func Test_Digest_hash_crc32b(t *testing.T) {
 	v := value.Unwrap[*value.String](ret)
 	expect := "2639f4cb"
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

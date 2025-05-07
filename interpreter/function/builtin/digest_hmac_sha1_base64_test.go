@@ -29,6 +29,6 @@ func Test_Digest_hmac_sha1_base64(t *testing.T) {
 	v := value.Unwrap[*value.String](ret)
 	expect := "hRO7NVB2zOKuXrnzmatcr9unyKI="
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }
