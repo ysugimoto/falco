@@ -1,8 +1,7 @@
 package tester
 
 import (
-	"net/http"
-	"net/http/httptest"
+	ghttp "net/http"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -14,6 +13,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 	"github.com/ysugimoto/falco/lexer"
@@ -148,7 +148,11 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				// so we always initialize interpreter, inject testing functions for each subroutine
 				i := t.setupInterpreter(defs)
 
-				mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+				mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+				if err != nil {
+					errChan <- errors.WithStack(err)
+					return
+				}
 				if err := i.TestProcessInit(mockRequest); err != nil {
 					errChan <- errors.WithStack(err)
 					return
@@ -205,13 +209,16 @@ func (t *Tester) runDescribedTests(
 ) ([]*TestCase, error) {
 
 	var cases []*TestCase
-	mockRequest := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+	if err != nil {
+		return cases, errors.WithStack(err)
+	}
 
 	// describe should run as group testing, create interpreter once through tests
 	i := t.setupInterpreter(defs)
 
 	if err := i.TestProcessInit(mockRequest); err != nil {
-		return cases, err
+		return cases, errors.WithStack(err)
 	}
 
 	defer func() {

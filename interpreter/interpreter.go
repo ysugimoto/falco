@@ -3,7 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,6 +14,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -309,7 +310,7 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.CacheHitItem = v
-			i.ctx.Object = i.cloneResponse(v.Response)
+			i.ctx.Object = v.Response.Clone()
 			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
@@ -549,7 +550,7 @@ func (i *Interpreter) ProcessFetch() error {
 
 	// Update cache
 	defer func() {
-		resp := i.cloneResponse(i.ctx.BackendResponse)
+		resp := i.ctx.BackendResponse.Clone()
 		// Note: compare BackendResponseCacheable value
 		// because this value will be changed by user in vcl_fetch directive
 		if i.ctx.BackendResponseCacheable.Value {
@@ -609,15 +610,17 @@ func (i *Interpreter) ProcessError() error {
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
 	i.ctx.Object = &http.Response{
-		StatusCode:    int(i.ctx.ObjectStatus.Value),
-		Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
-		Proto:         "HTTP/1.0",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-		ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-		Request:       i.ctx.Request,
+		Response: &ghttp.Response{
+			StatusCode:    int(i.ctx.ObjectStatus.Value),
+			Status:        ghttp.StatusText(int(i.ctx.ObjectStatus.Value)),
+			Proto:         "HTTP/1.0",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+			ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+			Request:       i.ctx.Request.Request,
+		},
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -659,9 +662,9 @@ func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
 	if i.ctx.Object != nil {
-		i.ctx.Response = i.cloneResponse(i.ctx.Object)
+		i.ctx.Response = i.ctx.Object.Clone()
 	} else if i.ctx.BackendResponse != nil {
-		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
+		i.ctx.Response = i.ctx.BackendResponse.Clone()
 	}
 
 	// Simulate Fastly statement lifecycle

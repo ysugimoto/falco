@@ -166,7 +166,7 @@ func evaluateExpression(ip *interpreter.Interpreter, line string) (string, error
 	if err != nil {
 		return "", err
 	}
-	val, err := ip.ProcessExpression(exp, false)
+	val, err := ip.ProcessExpression(exp)
 	if err != nil {
 		if re, ok := err.(*exception.Exception); ok {
 			return "", errors.New(re.Message) // DO NOT diplay line and position info

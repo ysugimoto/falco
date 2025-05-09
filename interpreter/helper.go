@@ -41,3 +41,7 @@ func isValidStatementExpression(left value.Type, exp ast.Expression) error {
 	}
 	return nil
 }
+
+func isLocalVariableIdent(ident *ast.Ident) bool {
+	return strings.HasPrefix(ident.Value, "var.")
+}

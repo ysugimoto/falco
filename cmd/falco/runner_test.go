@@ -339,7 +339,7 @@ func TestTester(t *testing.T) {
 			name:   "empty and notset value test",
 			main:   "../../examples/testing/default_values/default_values.vcl",
 			filter: "*values.test.vcl",
-			passes: 16,
+			passes: 17,
 		},
 		{
 			name:   "assertions test",
@@ -382,6 +382,12 @@ func TestTester(t *testing.T) {
 			main:   "../../examples/testing/subfield-header-dealing/default.vcl",
 			filter: "*default.test.vcl",
 			passes: 10,
+		},
+		{
+			name:   "notset string test",
+			main:   "../../examples/testing/notset/default.vcl",
+			filter: "*notset/default.test.vcl",
+			passes: 42,
 		},
 	}
 

@@ -2,63 +2,72 @@ package function
 
 import (
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func Test_inspect(t *testing.T) {
 
 	ctx := context.New()
-	ctx.Request = httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+	ctx.Request = http.WrapRequest(
+		httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil),
+	)
 	ctx.BackendRequest = ctx.Request.Clone(ctx.Request.Context())
-	ctx.BackendResponse = &http.Response{
-		StatusCode:    http.StatusOK,
-		Status:        http.StatusText(http.StatusOK),
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader("OK")),
-		ContentLength: 2,
-		Close:         true,
-		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
-	}
-	ctx.Response = &http.Response{
-		StatusCode:    http.StatusOK,
-		Status:        http.StatusText(http.StatusOK),
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader("OK")),
-		ContentLength: 2,
-		Close:         true,
-		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
-	}
-	ctx.Object = &http.Response{
-		StatusCode:    http.StatusOK,
-		Status:        http.StatusText(http.StatusOK),
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader("OK")),
-		ContentLength: 2,
-		Close:         true,
-		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       ctx.BackendRequest.Clone(ctx.Request.Context()),
-	}
+	ctx.BackendResponse = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    ghttp.StatusOK,
+			Status:        ghttp.StatusText(ghttp.StatusOK),
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader("OK")),
+			ContentLength: 2,
+			Close:         true,
+			Uncompressed:  false,
+			Trailer:       ghttp.Header{},
+			Request:       ctx.BackendRequest.Clone(ctx.Request.Context()).Request,
+		},
+	)
+	ctx.Response = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    ghttp.StatusOK,
+			Status:        ghttp.StatusText(ghttp.StatusOK),
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader("OK")),
+			ContentLength: 2,
+			Close:         true,
+			Uncompressed:  false,
+			Trailer:       ghttp.Header{},
+			Request:       ctx.BackendRequest.Clone(ctx.Request.Context()).Request,
+		},
+	)
+	ctx.Object = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    ghttp.StatusOK,
+			Status:        ghttp.StatusText(ghttp.StatusOK),
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader("OK")),
+			ContentLength: 2,
+			Close:         true,
+			Uncompressed:  false,
+			Trailer:       ghttp.Header{},
+			Request:       ctx.BackendRequest.Clone(ctx.Request.Context()).Request,
+		},
+	)
 
 	t.Run("Inspect variable", func(t *testing.T) {
 		tests := []struct {
