@@ -1,12 +1,13 @@
 package variable
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"net/url"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -14,9 +15,11 @@ func createScopeVars(urlStr string) *AllScopeVariables {
 	parsedUrl, _ := url.Parse(urlStr)
 	return &AllScopeVariables{
 		ctx: &context.Context{
-			Request: &http.Request{
-				URL: parsedUrl,
-			},
+			Request: http.WrapRequest(
+				&ghttp.Request{
+					URL: parsedUrl,
+				},
+			),
 		},
 	}
 }

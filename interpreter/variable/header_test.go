@@ -1,11 +1,12 @@
 package variable
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -21,7 +22,9 @@ func TestGetRequestHeaderValue(t *testing.T) {
 		{name: "Cookie:foo", expect: &value.String{Value: "bar"}},
 		{name: "Cookie:baz", expect: &value.String{IsNotSet: true}},
 	}
-	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	req := http.WrapRequest(
+		httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+	)
 	req.Header.Set("Foo", "bar")
 	req.Header.Add("Text", "lorem=ipsum")
 	req.Header.Add("Text", "dolor=sit")
@@ -45,12 +48,12 @@ func TestGetReponseHeaderValue(t *testing.T) {
 		{name: "Text:lorem", expect: &value.String{Value: "ipsum"}},
 		{name: "Text:amet", expect: &value.String{IsNotSet: true}},
 	}
-	header := http.Header{}
+	header := ghttp.Header{}
 	header.Set("Foo", "bar")
 	header.Add("Text", "lorem=ipsum")
 	header.Add("Text", "dolor=sit")
 	header.Set("Cookie", "foo=bar")
-	resp := &http.Response{Header: header}
+	resp := http.WrapResponse(&ghttp.Response{Header: header})
 
 	for _, tt := range tests {
 		ret := getResponseHeaderValue(resp, tt.name)
@@ -71,7 +74,9 @@ func TestSetRequestHeaderValue(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+		req := http.WrapRequest(
+			httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+		)
 		setRequestHeaderValue(req, tt.name, &value.String{Value: tt.value})
 		ret := getRequestHeaderValue(req, tt.name)
 		if ret.Value != tt.value {
@@ -82,7 +87,9 @@ func TestSetRequestHeaderValue(t *testing.T) {
 }
 
 func TestSetRequestHeaderValueOverwrite(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	req := http.WrapRequest(
+		httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+	)
 	setRequestHeaderValue(req, "Foo:abc", &value.String{Value: "123"})
 	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "baz"})
 	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "snafu"})
@@ -98,7 +105,7 @@ func TestSetRequestHeaderValueOverwrite(t *testing.T) {
 	}
 
 	// Check exact http.Header struct data
-	if diff := cmp.Diff(req.Header, http.Header{
+	if diff := cmp.Diff(req.Header, ghttp.Header{
 		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
 		t.Errorf(diff)
@@ -106,7 +113,9 @@ func TestSetRequestHeaderValueOverwrite(t *testing.T) {
 }
 
 func TestSetResponseHeaderValueEmpty(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	req := http.WrapRequest(
+		httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+	)
 	// Set empty header values
 	setRequestHeaderValue(req, "VARS", &value.String{Value: ""})
 	setRequestHeaderValue(req, "VARS:VALUE", &value.String{Value: ""})
@@ -143,7 +152,7 @@ func TestSetResponseHeaderValue(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		resp := &http.Response{Header: http.Header{}}
+		resp := http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}})
 		setResponseHeaderValue(resp, tt.name, &value.String{Value: tt.value})
 		ret := getResponseHeaderValue(resp, tt.name)
 		if ret.Value != tt.value {
@@ -154,7 +163,7 @@ func TestSetResponseHeaderValue(t *testing.T) {
 }
 
 func TestSetResponseHeaderValueOverwrite(t *testing.T) {
-	resp := &http.Response{Header: http.Header{}}
+	resp := http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}})
 	setResponseHeaderValue(resp, "Foo:abc", &value.String{Value: "123"})
 	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "baz"})
 	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "snafu"})
@@ -170,7 +179,7 @@ func TestSetResponseHeaderValueOverwrite(t *testing.T) {
 	}
 
 	// Check exact http.Header struct data
-	if diff := cmp.Diff(resp.Header, http.Header{
+	if diff := cmp.Diff(resp.Header, ghttp.Header{
 		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
 		t.Errorf(diff)
@@ -190,7 +199,9 @@ func TestUnsetRequestHeaderValue(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+		req := http.WrapRequest(
+			httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+		)
 		req.Header.Set("Foo", "bar")
 		req.Header.Add("Text", "lorem=ipsum")
 		req.Header.Add("Text", "dolor=sit")
@@ -230,7 +241,7 @@ func TestUnsetRequestHeaderValueWildcard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+			req := http.WrapRequest(httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil))
 			req.Header.Set("X-SomeHeader-1", "foo")
 			req.Header.Set("X-SomeHeader-2", "bar")
 			setRequestHeaderValue(req, "VARS:VALUE1", &value.String{Value: "foo"})
@@ -259,11 +270,11 @@ func TestUnsetResponseHeaderValue(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		header := http.Header{}
+		header := ghttp.Header{}
 		header.Set("Foo", "bar")
 		header.Add("Text", "lorem=ipsum")
 		header.Add("Text", "dolor=sit")
-		resp := &http.Response{Header: header}
+		resp := http.WrapResponse(&ghttp.Response{Header: header})
 
 		unsetResponseHeaderValue(resp, tt.name)
 		ret := getResponseHeaderValue(resp, tt.name)
@@ -299,10 +310,10 @@ func TestUnsetResponseHeaderValueWildcard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			header := http.Header{}
+			header := ghttp.Header{}
 			header.Set("X-SomeHeader-1", "foo")
 			header.Set("X-SomeHeader-2", "bar")
-			resp := &http.Response{Header: header}
+			resp := http.WrapResponse(&ghttp.Response{Header: header})
 			setResponseHeaderValue(resp, "VARS:VALUE1", &value.String{Value: "foo"})
 			setResponseHeaderValue(resp, "VARS:VALUE2", &value.String{Value: "bar"})
 
@@ -327,7 +338,9 @@ func TestRemoveCookieByName(t *testing.T) {
 		{name: "hoge", expect: 2},
 	}
 	for _, tt := range tests {
-		req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+		req := http.WrapRequest(
+			httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+		)
 		req.Header.Add("Cookie", "foo=bar")
 		req.Header.Add("Cookie", "cat=meow")
 		removeCookieByName(req, tt.name)

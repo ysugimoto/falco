@@ -208,7 +208,7 @@ func (c *CodeView) lexFile(file string) ([]Line, error) {
 			}
 
 			var colorFunc colors.ColorFunc
-			whitespace := strings.Repeat(" ", t.Position-1-index)
+			whitespace := strings.Repeat(" ", max(0, t.Position-1-index))
 			literal := t.Literal
 
 			switch t.Type {

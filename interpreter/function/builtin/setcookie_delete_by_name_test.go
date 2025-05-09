@@ -3,14 +3,13 @@
 package builtin
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of setcookie.delete_by_name
@@ -45,15 +44,15 @@ func Test_Setcookie_delete_by_name(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		resp := &http.Response{
-			Header: http.Header{},
+		resp := &ghttp.Response{
+			Header: ghttp.Header{},
 		}
 		for _, c := range tt.setCookie {
 			resp.Header.Add("Set-Cookie", c)
 		}
 
 		ret, err := Setcookie_delete_by_name(
-			&context.Context{Scope: context.DeliverScope, Response: resp},
+			&context.Context{Scope: context.DeliverScope, Response: http.WrapResponse(resp)},
 			&value.Ident{Value: "resp"},
 			&value.String{Value: tt.ignore},
 		)

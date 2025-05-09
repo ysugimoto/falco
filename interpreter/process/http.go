@@ -1,8 +1,9 @@
 package process
 
 import (
-	"net/http"
 	"strings"
+
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 type HttpFlow struct {
