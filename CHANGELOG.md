@@ -1,3 +1,12 @@
+## v1.17.0
+
+- Implement std.strcasecmp builtin function [#451](https://github.com/ysugimoto/falco/pull/451) (@ysugimoto)
+- Implement xxh32 and xxh64 builtin function [#450](https://github.com/ysugimoto/falco/pull/450) (@ysugimoto)
+- Implement wildcard support for unset statement [#449](https://github.com/ysugimoto/falco/pull/449) (@ysugimoto)
+- Implement skipping test feature [#448](https://github.com/ysugimoto/falco/pull/448) (@ysugimoto)
+- Fix objective header get only key name [#446](https://github.com/ysugimoto/falco/pull/446) (@ysugimoto)
+- Use modarnize package [#445](https://github.com/ysugimoto/falco/pull/445) (@ysugimoto)
+
 ## v1.16.0
 
 - Support assign value with variable declaration [#444](https://github.com/ysugimoto/falco/pull/444) (@ysugimoto)
