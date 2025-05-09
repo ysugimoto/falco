@@ -241,7 +241,7 @@ func TestUnsetRequestHeaderValueWildcard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+			req := http.WrapRequest(httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil))
 			req.Header.Set("X-SomeHeader-1", "foo")
 			req.Header.Set("X-SomeHeader-2", "bar")
 			setRequestHeaderValue(req, "VARS:VALUE1", &value.String{Value: "foo"})
@@ -310,10 +310,10 @@ func TestUnsetResponseHeaderValueWildcard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			header := http.Header{}
+			header := ghttp.Header{}
 			header.Set("X-SomeHeader-1", "foo")
 			header.Set("X-SomeHeader-2", "bar")
-			resp := &http.Response{Header: header}
+			resp := http.WrapResponse(&ghttp.Response{Header: header})
 			setResponseHeaderValue(resp, "VARS:VALUE1", &value.String{Value: "foo"})
 			setResponseHeaderValue(resp, "VARS:VALUE2", &value.String{Value: "bar"})
 
