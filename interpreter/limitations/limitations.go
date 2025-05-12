@@ -26,7 +26,7 @@ const (
 	MaxRequestHeaderSize      = 69 * KB
 	MaxResponseHeaderSize     = 69 * KB
 	MaxRequestHeaderCount     = 96
-	MaxReponseHeaderCount     = 96
+	MaxResponseHeaderCount    = 96
 	MaxRequestBodyPayloadSize = 8 * KB
 
 	// Surrogate key limitations but actually don't check these
@@ -85,7 +85,7 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	var cookieSize int
 	for _, c := range req.Cookies() {
 		cookieSize += len([]byte(c.Raw))
-		// If max cookie size is greater than limitation, remove cookit header
+		// If max cookie size is greater than limitation, remove cookie header
 		// and add overflow header
 		if cookieSize > MaxCookieSize {
 			req.Header.Del("Cookie")
@@ -139,17 +139,17 @@ func CheckFastlyResponseLimit(resp *http.Response) error {
 		headerSize += len(
 			fmt.Appendf([]byte{}, "%s: %s\n", key, strings.Join(values, ", ")),
 		)
-		if headerSize > MaxRequestHeaderSize {
+		if headerSize > MaxResponseHeaderSize {
 			return exception.System(
 				"Overflow response header size limitation of %d bytes",
-				MaxRequestHeaderSize,
+				MaxResponseHeaderSize,
 			)
 		}
 		headerCount++
-		if headerCount > MaxRequestHeaderCount {
+		if headerCount > MaxResponseHeaderCount {
 			return exception.System(
 				"Overflow response header count limitation of %d",
-				MaxRequestHeaderCount,
+				MaxResponseHeaderCount,
 			)
 		}
 	}
