@@ -590,11 +590,11 @@ func TestIsNotSetSeriesCheck(t *testing.T) {
 				httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil),
 			)
 			i.SetScope(context.RecvScope)
-			i.localVars.Declare("var.NS", "STRING")
+			i.localVars.Declare("var.NS", "IP")
 			i.localVars.Declare("var.S", "STRING")
 			i.localVars.Set("var.S", "=", &value.String{Value: "S"})
 
-			actual := i.isNotSetStringSeries(tt.series)
+			actual := i.isNotSetExpressionSeries(tt.series)
 			if diff := cmp.Diff(tt.expect, actual); diff != "" {
 				t.Errorf("result mismatch, diff=%s", diff)
 			}

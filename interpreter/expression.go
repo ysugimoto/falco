@@ -393,8 +393,8 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 	}
 	series = append(series, right...)
 
-	// Check all series expression is notset string
-	if i.isNotSetStringSeries(series) {
+	// Check all series expressions are constructed with notset value
+	if i.isNotSetExpressionSeries(series) {
 		return &value.String{IsNotSet: true}, nil
 	}
 
@@ -444,8 +444,24 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 				if opt.IsLocalVariable() {
 					// notset treating for string concatenation to local variable.
 					// The local variable should be treated as empty string even value is notset
-					str := value.Unwrap[*value.String](cv)
-					if str.IsNotSet {
+					if str := value.Unwrap[*value.String](cv); str.IsNotSet {
+						rv, opErr = operator.Concat(rv, &value.String{IsNotSet: false})
+					} else {
+						rv, opErr = operator.Concat(rv, cv)
+					}
+				} else {
+					rv, opErr = operator.Concat(rv, cv)
+				}
+
+				if opErr != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				continue
+			case value.IpType:
+				if opt.IsLocalVariable() {
+					// notset treating for string concatenation to local variable.
+					// The local variable should be treated as empty string even value is notset
+					if str := value.Unwrap[*value.IP](cv); str.IsNotSet {
 						rv, opErr = operator.Concat(rv, &value.String{IsNotSet: false})
 					} else {
 						rv, opErr = operator.Concat(rv, cv)
@@ -579,8 +595,8 @@ func (i *Interpreter) toSeriesExpression(expr ast.Expression) ([]*series, error)
 	}, nil
 }
 
-// Check all string concatenation series are constructed with notset string
-func (i *Interpreter) isNotSetStringSeries(series []*series) bool {
+// Check all expression concatenation series are constructed with notset value
+func (i *Interpreter) isNotSetExpressionSeries(series []*series) bool {
 	for _, s := range series {
 		// series expression must be an ident
 		ident, ok := s.Expression.(*ast.Ident)
@@ -599,14 +615,18 @@ func (i *Interpreter) isNotSetStringSeries(series []*series) bool {
 			return false
 		}
 
-		// assert value as STRING type
-		str, ok := v.(*value.String)
-		if !ok {
-			return false
-		}
-		// check string is notset
-		if str.IsNotSet {
-			continue
+		// assert value as STRING|IP type
+		switch t := v.(type) {
+		case *value.String:
+			// check string is notset
+			if t.IsNotSet {
+				continue
+			}
+		case *value.IP:
+			// check IP is notset
+			if t.IsNotSet {
+				continue
+			}
 		}
 		return false
 	}
