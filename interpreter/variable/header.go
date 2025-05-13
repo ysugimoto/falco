@@ -8,6 +8,16 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
+func isNotSetValue(v value.Value) bool {
+	switch t := v.(type) {
+	case *value.String:
+		return t.IsNotSet
+	case *value.IP:
+		return t.IsNotSet
+	}
+	return false
+}
+
 func getRequestHeaderValue(r *http.Request, name string) *value.String {
 	var key string
 	name, key, _ = strings.Cut(name, ":")
@@ -53,7 +63,7 @@ func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
 		// Skip when set value is notset
-		if s, ok := val.(*value.String); ok && s.IsNotSet {
+		if isNotSetValue(val) {
 			return
 		}
 
@@ -79,7 +89,7 @@ func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
 		// Skip when set value is notset
-		if s, ok := val.(*value.String); ok && s.IsNotSet {
+		if isNotSetValue(val) {
 			return
 		}
 

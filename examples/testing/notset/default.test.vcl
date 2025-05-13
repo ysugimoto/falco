@@ -1,5 +1,6 @@
 // All test cases refered to Fastly fiddle behaviors
 // see: https://fiddle.fastly.dev/fiddle/68510f85
+// see: https://fiddle.fastly.dev/fiddle/93d222ff
 
 describe notset_local_variable {
 
@@ -230,5 +231,64 @@ describe notset_http_header {
     assert.is_notset(var.state);
     assert.equal(std.strlen(var.V), 22);
     assert.equal(var.V, "(null)-SomeValueheader");
+  }
+}
+
+describe notset_ip {
+
+  // @scope: recv
+  sub notset_output {
+    declare local var.S IP;
+    assert.equal(std.strlen(var.S), 0);
+  }
+
+  // @scope: recv
+  sub set_notset_ip_to_header {
+    declare local var.state STRING;
+    declare local var.S IP;
+    set req.http.H = var.S;
+    if (!req.http.H) {
+      set var.state = "notset";
+    }
+    if (req.http.H) {
+      set var.state = "empty";
+    }
+    assert.equal(var.state, "notset");
+    assert.equal(std.strlen(req.http.H), 0);
+    assert.equal(req.http.H, "(null)");
+  }
+
+  // @scope: recv
+  sub set_doubled_notset_values {
+    declare local var.state STRING;
+    declare local var.S STRING;
+    declare local var.T IP;
+    set var.S = req.http.Undefined var.T;
+    if (!var.S) {
+      set var.state = "notset";
+    }
+    if (var.S == "") {
+      set var.state = "empty";
+    }
+    assert.equal(var.state, "empty");
+    assert.equal(std.strlen(var.S), 0);
+    assert.equal(var.S, "");
+  }
+
+  // @scope: recv
+  sub set_notset_ip_with_some_value {
+    declare local var.state STRING;
+    declare local var.S STRING;
+    declare local var.T IP;
+    set var.S =  var.T "-SomeValue";
+    if (!var.S) {
+      set var.state = "notset";
+    }
+    if (var.S == "") {
+      set var.state = "empty";
+    }
+    assert.is_notset(var.state);
+    assert.equal(std.strlen(var.S), 10);
+    assert.equal(var.S, "-SomeValue");
   }
 }
