@@ -253,6 +253,7 @@ We describe them following table and examples:
 | testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
 | testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
+| testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -548,6 +549,23 @@ describe add_header_mock {
         // This subroutine no longer uses mocked subroutine
         ...
     }
+}
+```
+
+----
+
+### STRING testing.get_env(STRING name)
+
+Get environment value from `name`.
+This is only enabled on the testing environment and it will be useful for switching test to environment (dev,prod) differences.
+
+```vcl
+sub test_vcl {
+    if (testing.get_env("IS_DEV")) {
+        // skip this test on development environment
+        return;
+    }
+    ...do some assertions
 }
 ```
 
