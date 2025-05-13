@@ -3,15 +3,57 @@
 package function
 
 import (
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/builtin"
+	fe "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+// Fastly can accept other type of variable as STRING type argument.
+// This is not strict typings but we should implement the same bahavior.
+// Pre-generate index numbers of STRING type argument for each functions
+// and stringify its value if the value is not a STRING type nor literals.
+func stringifyVariableArguments(name string, args []value.Value, indicies map[int]struct{}) ([]value.Value, error) {
+	stringified := make([]value.Value, len(args))
+	for i := range args {
+		// The argument of index is not a STRING type, skip it
+		if _, ok := indicies[i]; !ok {
+			stringified[i] = args[i]
+			continue
+		}
+
+		switch t := args[i].(type) {
+		case *value.String:
+			// If value is STRING type, treat as empty string (NOTSET: false)
+			stringified[i] = &value.String{Value: t.Value, Literal: t.Literal}
+		case *value.Backend:
+			// Backend value could not convert to string
+			return nil, fe.CannotConvertToString(name, i)
+		case *value.Acl:
+			// Acl value could not convert to string
+			return nil, fe.CannotConvertToString(name, i)
+		default:
+			// Other types, can convert non-literal value only
+			if t.IsLiteral() {
+				return nil, fe.CannotConvertToString(name, i)
+			}
+			// Stringify the argument value
+			stringified[i] = &value.String{Value: args[i].String()}
+		}
+	}
+	return stringified, nil
+}
 
 var builtinFunctions = map[string]*Function{
 	"accept.charset_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("accept.charset_lookup", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Accept_charset_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -22,6 +64,11 @@ var builtinFunctions = map[string]*Function{
 	"accept.encoding_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("accept.encoding_lookup", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Accept_encoding_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -32,6 +79,11 @@ var builtinFunctions = map[string]*Function{
 	"accept.language_filter_basic": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("accept.language_filter_basic", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Accept_language_filter_basic(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -42,6 +94,11 @@ var builtinFunctions = map[string]*Function{
 	"accept.language_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("accept.language_lookup", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Accept_language_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -52,6 +109,11 @@ var builtinFunctions = map[string]*Function{
 	"accept.media_lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("accept.media_lookup", args, map[int]struct{}{0: {}, 1: {}, 2: {}, 3: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Accept_media_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -92,6 +154,11 @@ var builtinFunctions = map[string]*Function{
 	"bin.base64_to_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("bin.base64_to_hex", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Bin_base64_to_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -102,6 +169,11 @@ var builtinFunctions = map[string]*Function{
 	"bin.hex_to_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("bin.hex_to_base64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Bin_hex_to_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -112,6 +184,11 @@ var builtinFunctions = map[string]*Function{
 	"boltsort.sort": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("boltsort.sort", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Boltsort_sort(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -122,6 +199,11 @@ var builtinFunctions = map[string]*Function{
 	"crypto.decrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("crypto.decrypt_base64", args, map[int]struct{}{3: {}, 4: {}, 5: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Crypto_decrypt_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -132,6 +214,11 @@ var builtinFunctions = map[string]*Function{
 	"crypto.decrypt_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("crypto.decrypt_hex", args, map[int]struct{}{3: {}, 4: {}, 5: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Crypto_decrypt_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -142,6 +229,11 @@ var builtinFunctions = map[string]*Function{
 	"crypto.encrypt_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("crypto.encrypt_base64", args, map[int]struct{}{3: {}, 4: {}, 5: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Crypto_encrypt_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -152,6 +244,11 @@ var builtinFunctions = map[string]*Function{
 	"crypto.encrypt_hex": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("crypto.encrypt_hex", args, map[int]struct{}{3: {}, 4: {}, 5: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Crypto_encrypt_hex(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -162,6 +259,11 @@ var builtinFunctions = map[string]*Function{
 	"cstr_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("cstr_escape", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Cstr_escape(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -172,6 +274,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.awsv4_hmac": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.awsv4_hmac", args, map[int]struct{}{0: {}, 1: {}, 2: {}, 3: {}, 4: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_awsv4_hmac(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -182,6 +289,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -192,6 +304,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64_decode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -202,6 +319,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64url", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64url(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -212,6 +334,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64url_decode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64url_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -222,6 +349,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_nopad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64url_nopad", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64url_nopad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -232,6 +364,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.base64url_nopad_decode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.base64url_nopad_decode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_base64url_nopad_decode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -242,6 +379,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.ecdsa_verify": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.ecdsa_verify", args, map[int]struct{}{1: {}, 2: {}, 3: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_ecdsa_verify(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -252,6 +394,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_crc32": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_crc32", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_crc32(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -262,6 +409,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_crc32b": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_crc32b", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_crc32b(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -272,6 +424,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_md5", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -282,6 +439,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha1", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -292,6 +454,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha1_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha1_from_base64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha1_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -302,6 +469,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha224": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha224", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha224(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -312,6 +484,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha256", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -322,6 +499,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha256_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha256_from_base64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha256_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -332,6 +514,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha384": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha384", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha384(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -342,6 +529,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha512", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -352,6 +544,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_sha512_from_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_sha512_from_base64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_sha512_from_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -362,6 +559,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_xxh32": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_xxh32", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_xxh32(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -372,6 +574,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hash_xxh64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hash_xxh64", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hash_xxh64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -382,6 +589,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_md5", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -392,6 +604,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_md5_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_md5_base64", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_md5_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -402,6 +619,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha1", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -412,6 +634,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha1_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha1_base64", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha1_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -422,6 +649,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha256", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -432,6 +664,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha256_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha256_base64", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha256_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -442,6 +679,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha512", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -452,6 +694,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.hmac_sha512_base64": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.hmac_sha512_base64", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_hmac_sha512_base64(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -462,6 +709,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.rsa_verify": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.rsa_verify", args, map[int]struct{}{1: {}, 2: {}, 3: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_rsa_verify(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -472,6 +724,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.secure_is_equal": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.secure_is_equal", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_secure_is_equal(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -482,6 +739,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_md5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.time_hmac_md5", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_time_hmac_md5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -492,6 +754,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha1": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.time_hmac_sha1", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_time_hmac_sha1(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -502,6 +769,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha256": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.time_hmac_sha256", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_time_hmac_sha256(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -512,6 +784,11 @@ var builtinFunctions = map[string]*Function{
 	"digest.time_hmac_sha512": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("digest.time_hmac_sha512", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Digest_time_hmac_sha512(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -522,6 +799,11 @@ var builtinFunctions = map[string]*Function{
 	"early_hints": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("early_hints", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Early_hints(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -532,6 +814,11 @@ var builtinFunctions = map[string]*Function{
 	"fastly.hash": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("fastly.hash", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Fastly_hash(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -562,6 +849,11 @@ var builtinFunctions = map[string]*Function{
 	"h2.push": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("h2.push", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.H2_push(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -602,6 +894,11 @@ var builtinFunctions = map[string]*Function{
 	"header.get": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("header.get", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Header_get(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -612,6 +909,11 @@ var builtinFunctions = map[string]*Function{
 	"header.set": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("header.set", args, map[int]struct{}{1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Header_set(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -622,6 +924,11 @@ var builtinFunctions = map[string]*Function{
 	"header.unset": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("header.unset", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Header_unset(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -632,6 +939,11 @@ var builtinFunctions = map[string]*Function{
 	"http_status_matches": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("http_status_matches", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Http_status_matches(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -642,6 +954,11 @@ var builtinFunctions = map[string]*Function{
 	"json.escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("json.escape", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Json_escape(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -962,6 +1279,11 @@ var builtinFunctions = map[string]*Function{
 	"parse_time_delta": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("parse_time_delta", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Parse_time_delta(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -972,6 +1294,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.add", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_add(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -982,6 +1309,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.clean": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.clean", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_clean(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -992,6 +1324,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.filter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.filter", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_filter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1002,6 +1339,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.filter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.filter_except", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_filter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1022,6 +1364,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.get": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.get", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_get(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1032,6 +1379,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.globfilter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.globfilter", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_globfilter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1042,6 +1394,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.globfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.globfilter_except", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_globfilter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1052,6 +1409,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.regfilter": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.regfilter", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_regfilter(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1062,6 +1424,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.regfilter_except": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.regfilter_except", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_regfilter_except(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1072,6 +1439,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.remove": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.remove", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_remove(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1082,6 +1454,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.set": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.set", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_set(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1092,6 +1469,11 @@ var builtinFunctions = map[string]*Function{
 	"querystring.sort": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("querystring.sort", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Querystring_sort(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1142,6 +1524,11 @@ var builtinFunctions = map[string]*Function{
 	"randomstr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("randomstr", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Randomstr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1152,6 +1539,11 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.check_rate": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("ratelimit.check_rate", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Ratelimit_check_rate(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1162,6 +1554,11 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.check_rates": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("ratelimit.check_rates", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Ratelimit_check_rates(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1172,6 +1569,11 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.penaltybox_add": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("ratelimit.penaltybox_add", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Ratelimit_penaltybox_add(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -1182,6 +1584,11 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.penaltybox_has": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("ratelimit.penaltybox_has", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Ratelimit_penaltybox_has(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1192,6 +1599,11 @@ var builtinFunctions = map[string]*Function{
 	"ratelimit.ratecounter_increment": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("ratelimit.ratecounter_increment", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Ratelimit_ratecounter_increment(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1202,6 +1614,11 @@ var builtinFunctions = map[string]*Function{
 	"regsub": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("regsub", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Regsub(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1212,6 +1629,11 @@ var builtinFunctions = map[string]*Function{
 	"regsuball": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("regsuball", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Regsuball(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1232,6 +1654,11 @@ var builtinFunctions = map[string]*Function{
 	"setcookie.delete_by_name": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("setcookie.delete_by_name", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Setcookie_delete_by_name(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1242,6 +1669,11 @@ var builtinFunctions = map[string]*Function{
 	"setcookie.get_value_by_name": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("setcookie.get_value_by_name", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Setcookie_get_value_by_name(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1252,6 +1684,11 @@ var builtinFunctions = map[string]*Function{
 	"std.anystr2ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.anystr2ip", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_anystr2ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1262,6 +1699,11 @@ var builtinFunctions = map[string]*Function{
 	"std.atof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.atof", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_atof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1272,6 +1714,11 @@ var builtinFunctions = map[string]*Function{
 	"std.atoi": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.atoi", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_atoi(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1282,6 +1729,11 @@ var builtinFunctions = map[string]*Function{
 	"std.basename": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.basename", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_basename(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1292,6 +1744,11 @@ var builtinFunctions = map[string]*Function{
 	"std.collect": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.collect", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_collect(ctx, args...)
 		},
 		CanStatementCall: true,
@@ -1312,6 +1769,11 @@ var builtinFunctions = map[string]*Function{
 	"std.dirname": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.dirname", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_dirname(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1332,6 +1794,11 @@ var builtinFunctions = map[string]*Function{
 	"std.ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.ip", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1362,6 +1829,11 @@ var builtinFunctions = map[string]*Function{
 	"std.itoa_charset": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.itoa_charset", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_itoa_charset(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1372,6 +1844,11 @@ var builtinFunctions = map[string]*Function{
 	"std.prefixof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.prefixof", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_prefixof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1382,6 +1859,11 @@ var builtinFunctions = map[string]*Function{
 	"std.replace": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.replace", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_replace(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1392,6 +1874,11 @@ var builtinFunctions = map[string]*Function{
 	"std.replace_prefix": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.replace_prefix", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_replace_prefix(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1402,6 +1889,11 @@ var builtinFunctions = map[string]*Function{
 	"std.replace_suffix": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.replace_suffix", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_replace_suffix(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1412,6 +1904,11 @@ var builtinFunctions = map[string]*Function{
 	"std.replaceall": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.replaceall", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_replaceall(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1422,6 +1919,11 @@ var builtinFunctions = map[string]*Function{
 	"std.str2ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.str2ip", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_str2ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1432,6 +1934,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strcasecmp": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strcasecmp", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strcasecmp(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1442,6 +1949,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strlen": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strlen", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strlen(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1452,6 +1964,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strpad", args, map[int]struct{}{0: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strpad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1462,6 +1979,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strrep": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strrep", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strrep(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1472,6 +1994,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strrev": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strrev", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strrev(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1482,6 +2009,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strstr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strstr", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strstr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1492,6 +2024,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strtof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strtof", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strtof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1502,6 +2039,11 @@ var builtinFunctions = map[string]*Function{
 	"std.strtol": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.strtol", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_strtol(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1512,6 +2054,11 @@ var builtinFunctions = map[string]*Function{
 	"std.suffixof": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.suffixof", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_suffixof(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1522,6 +2069,11 @@ var builtinFunctions = map[string]*Function{
 	"std.time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.time", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_time(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1532,6 +2084,11 @@ var builtinFunctions = map[string]*Function{
 	"std.tolower": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.tolower", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_tolower(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1542,6 +2099,11 @@ var builtinFunctions = map[string]*Function{
 	"std.toupper": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("std.toupper", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Std_toupper(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1552,6 +2114,11 @@ var builtinFunctions = map[string]*Function{
 	"strftime": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("strftime", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Strftime(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1562,6 +2129,11 @@ var builtinFunctions = map[string]*Function{
 	"subfield": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("subfield", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Subfield(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1572,6 +2144,11 @@ var builtinFunctions = map[string]*Function{
 	"substr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("substr", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Substr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1582,6 +2159,11 @@ var builtinFunctions = map[string]*Function{
 	"table.contains": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.contains", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_contains(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1592,6 +2174,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup", args, map[int]struct{}{1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1602,6 +2189,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_acl": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_acl", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_acl(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1612,6 +2204,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_backend": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_backend", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_backend(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1622,6 +2219,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_bool": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_bool", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_bool(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1632,6 +2234,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_float": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_float", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_float(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1642,6 +2249,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_integer": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_integer", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_integer(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1652,6 +2264,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_ip": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_ip", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_ip(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1662,6 +2279,11 @@ var builtinFunctions = map[string]*Function{
 	"table.lookup_rtime": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("table.lookup_rtime", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Table_lookup_rtime(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1682,6 +2304,11 @@ var builtinFunctions = map[string]*Function{
 	"time.hex_to_time": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("time.hex_to_time", args, map[int]struct{}{1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Time_hex_to_time(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1712,6 +2339,11 @@ var builtinFunctions = map[string]*Function{
 	"time.runits": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("time.runits", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Time_runits(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1732,6 +2364,11 @@ var builtinFunctions = map[string]*Function{
 	"time.units": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("time.units", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Time_units(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1742,6 +2379,11 @@ var builtinFunctions = map[string]*Function{
 	"urldecode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("urldecode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Urldecode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1752,6 +2394,11 @@ var builtinFunctions = map[string]*Function{
 	"urlencode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("urlencode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Urlencode(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1762,6 +2409,11 @@ var builtinFunctions = map[string]*Function{
 	"utf8.codepoint_count": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("utf8.codepoint_count", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Utf8_codepoint_count(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1772,6 +2424,11 @@ var builtinFunctions = map[string]*Function{
 	"utf8.is_valid": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("utf8.is_valid", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Utf8_is_valid(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1782,6 +2439,11 @@ var builtinFunctions = map[string]*Function{
 	"utf8.strpad": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("utf8.strpad", args, map[int]struct{}{0: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Utf8_strpad(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1792,6 +2454,11 @@ var builtinFunctions = map[string]*Function{
 	"utf8.substr": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("utf8.substr", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Utf8_substr(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1812,6 +2479,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_valid": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.is_valid", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_is_valid(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1822,6 +2494,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version3": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.is_version3", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_is_version3(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1832,6 +2509,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version4": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.is_version4", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_is_version4(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1842,6 +2524,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.is_version5", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_is_version5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1852,6 +2539,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.is_version7": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.is_version7", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_is_version7(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1882,6 +2574,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.version3": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.version3", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_version3(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1902,6 +2599,11 @@ var builtinFunctions = map[string]*Function{
 	"uuid.version5": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("uuid.version5", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Uuid_version5(ctx, args...)
 		},
 		CanStatementCall: false,
@@ -1932,6 +2634,11 @@ var builtinFunctions = map[string]*Function{
 	"xml_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("xml_escape", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
 			return builtin.Xml_escape(ctx, args...)
 		},
 		CanStatementCall: false,

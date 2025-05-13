@@ -156,7 +156,8 @@ func (v *PassScopeVariables) Set(s context.Scope, name, operator string, val val
 		}
 		// Update request URLs
 		bereq.URL.Path = parsed.Path
-		bereq.URL.RawQuery = parsed.RawPath
+		bereq.URL.RawPath = parsed.RawPath
+		bereq.URL.RawQuery = parsed.RawQuery
 		bereq.URL.RawFragment = parsed.RawFragment
 		return nil
 	case BEREQ_MAX_REUSE_IDLE_TIME:
