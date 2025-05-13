@@ -106,17 +106,25 @@ func stringifyVariableArguments(name string, args []value.Value, indicies map[in
 			stringified[i] = args[i]
 			continue
 		}
-		// If value is STRING type, treat as empty string (NOTSET: false)
-		if v, ok := args[i].(*value.String); ok {
-			stringified[i] = &value.String{Value: v.Value, Literal: v.Literal}
-			continue
-		}
-		// Fail process when the argument is a literal
-		if args[i].IsLiteral() {
+
+		switch t := args[i].(type) {
+		case *value.String:
+			// If value is STRING type, treat as empty string (NOTSET: false)
+			stringified[i] = &value.String{Value: t.Value, Literal: t.Literal}
+		case *value.Backend:
+			// Backend value could not convert to string
 			return nil, fe.CannotConvertToString(name, i)
+		case *value.Acl:
+			// Acl value could not convert to string
+			return nil, fe.CannotConvertToString(name, i)
+		default:
+			// Other types, can convert non-literal value only
+			if t.IsLiteral() {
+				return nil, fe.CannotConvertToString(name, i)
+			}
+			// Stringify the argument value
+			stringified[i] = &value.String{Value: args[i].String()}
 		}
-		// Stringify the argument value
-		stringified[i] = &value.String{Value: args[i].String()}
 	}
 	return stringified, nil
 }
