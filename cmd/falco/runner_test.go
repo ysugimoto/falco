@@ -384,10 +384,10 @@ func TestTester(t *testing.T) {
 			passes: 10,
 		},
 		{
-			name:   "notset string test",
+			name:   "notset variable test",
 			main:   "../../examples/testing/notset/default.vcl",
 			filter: "*notset/default.test.vcl",
-			passes: 42,
+			passes: 52,
 		},
 	}
 

@@ -240,7 +240,6 @@ describe notset_ip {
   sub notset_output {
     declare local var.S IP;
     assert.equal(std.strlen(var.S), 0);
-    assert.equal(var.S, "(null)");
   }
 
   // @scope: recv

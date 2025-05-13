@@ -27,6 +27,13 @@ func stringifyVariableArguments(name string, args []value.Value, indicies map[in
 		case *value.String:
 			// If value is STRING type, treat as empty string (NOTSET: false)
 			stringified[i] = &value.String{Value: t.Value, Literal: t.Literal}
+		case *value.IP:
+			// If value is IP type, treat notset status
+			if t.IsNotSet || t.Value == nil {
+				stringified[i] = &value.String{Value: ""}
+			} else {
+				stringified[i] = &value.String{Value: t.Value.String()}
+			}
 		case *value.Backend:
 			// Backend value could not convert to string
 			return nil, fe.CannotConvertToString(name, i)
