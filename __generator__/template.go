@@ -87,10 +87,39 @@ const interpreterBuiltinFunctions = `
 package function
 
 import (
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/function/builtin"
+	fe "github.com/ysugimoto/falco/interpreter/function/errors"
 )
+
+// Fastly can accept other type of variable as STRING type argument.
+// This is not strict typings but we should implement the same bahavior.
+// Pre-generate index numbers of STRING type argument for each functions
+// and stringify its value if the value is not a STRING type nor literals.
+func stringifyVariableArguments(name string, args []value.Value, indicies map[int]struct{}) ([]value.Value, error) {
+	stringified := make([]value.Value, len(args))
+	for i := range args {
+		// The argument of index is not a STRING type, skip it
+		if _, ok := indicies[i]; !ok {
+			stringified[i] = args[i]
+			continue
+		}
+		// If value is STRING type, treat as empty string (NOTSET: false)
+		if v, ok := args[i].(*value.String); ok {
+			stringified[i] = &value.String{Value: v.Value, Literal: v.Literal}
+			continue
+		}
+		// Fail process when the argument is a literal
+		if args[i].IsLiteral() {
+			return nil, fe.CannotConvertToString(name, i)
+		}
+		// Stringify the argument value
+		stringified[i] = &value.String{Value: args[i].String()}
+	}
+	return stringified, nil
+}
 
 var builtinFunctions = map[string]*Function {
 	{{ .Functions }}
