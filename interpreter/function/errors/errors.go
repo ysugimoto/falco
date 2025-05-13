@@ -37,6 +37,10 @@ func TypeMismatch(name string, num int, expects, actual value.Type) error {
 	return New(name, "Argument %d expects %s type but %s provided", num, expects, actual)
 }
 
+func CannotConvertToString(name string, num int) error {
+	return New(name, "Argument %d cannot convert to string because the value is literal", num)
+}
+
 // Testing related errors
 type TestingError struct {
 	// Token info will be injected on interpreter
