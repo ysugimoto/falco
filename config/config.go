@@ -67,7 +67,7 @@ type TestConfig struct {
 	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
 	IncludePaths []string // Copy from root field
 	OverrideHost string   `yaml:"host" cli:"host"`
-	Watch        bool     `cli:"watch"`        // Enable only in CLI option
+	Watch        bool     `cli:"w,watch"`      // Enable only in CLI option
 	Coverage     bool     `cli:"coverage"`     // Enable only in CLI option
 	CoverageOut  string   `cli:"coverage-out"` // Enable only in CLI option
 
