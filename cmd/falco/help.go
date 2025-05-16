@@ -165,7 +165,7 @@ Flags:
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
-    --watch            : Watch VCL file changes and run test
+    -w, --watch        : Watch VCL file changes and run test
     --coverage         : Report code coverage
 
 Local testing example:
