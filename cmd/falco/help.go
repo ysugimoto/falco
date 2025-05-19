@@ -159,13 +159,14 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -t, --timeout      : Set timeout to running test
     -f, --filter       : Override glob filter to find test files
+    -w, --watch        : Watch VCL file changes and run test
+    -t, --tag          : Provide tag for testing
     -json              : Output results as JSON
     -request           : Override request config
+    --timeout          : Set timeout to running test
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
-    -w, --watch        : Watch VCL file changes and run test
     --coverage         : Report code coverage
 
 Local testing example:
