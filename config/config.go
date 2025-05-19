@@ -63,8 +63,9 @@ type SimulatorConfig struct {
 
 // Testing configuration
 type TestConfig struct {
-	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
+	Timeout      int      `cli:"timeout" yaml:"timeout"`
 	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
+	Tags         []string `cli:"t,tag"`
 	IncludePaths []string // Copy from root field
 	OverrideHost string   `yaml:"host" cli:"host"`
 	Watch        bool     `cli:"w,watch"`      // Enable only in CLI option

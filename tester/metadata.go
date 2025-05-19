@@ -1,11 +1,20 @@
 package tester
 
 import (
+	"bytes"
+	"io"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 )
+
+// Testing tag struct.
+// The Inverse fields indicates inverse tag match like !prod.
+type Tag struct {
+	Name    string
+	Inverse bool
+}
 
 // Define test metadata.
 // This struct fields are filled from annotation comments
@@ -13,6 +22,41 @@ type Metadata struct {
 	Name   string
 	Scopes []context.Scope
 	Skip   bool
+	Tags   []Tag
+}
+
+func (m *Metadata) MatchTags(tags []string) bool {
+	// If any tags are not specified in test suite, always run
+	if len(m.Tags) == 0 {
+		return false
+	}
+
+	// If any tags are not provided via cli option, check non-inversed tag is specified
+	if len(tags) == 0 {
+		for _, v := range m.Tags {
+			if !v.Inverse {
+				return false
+			}
+		}
+		return true
+	}
+
+	// Otherwise, compare both tags
+	for i := range tags {
+		for _, v := range m.Tags {
+			var matched bool
+			if v.Name == tags[i] {
+				matched = !v.Inverse
+			} else {
+				matched = v.Inverse
+			}
+			if matched {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // Find test metadata from annotation comment
@@ -21,6 +65,7 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 		Name:   sub.Name.Value,
 		Scopes: []context.Scope{},
 		Skip:   false,
+		Tags:   []Tag{},
 	}
 
 	comments := sub.GetMeta().Leading
@@ -38,6 +83,13 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 		// If @skip annotation found. mark as skipped test
 		if strings.HasPrefix(l, "@skip") {
 			metadata.Skip = true
+		}
+
+		// Parse testing tags
+		if strings.HasPrefix(l, "@tag:") {
+			metadata.Tags = parseTestingTags(
+				strings.TrimSpace(strings.TrimPrefix(l, "@tag:")),
+			)
 		}
 
 		var Scopes []string
@@ -83,4 +135,47 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 	}
 
 	return metadata
+}
+
+func parseTestingTags(tagValues string) []Tag {
+	var tags []Tag
+
+	buf := bytes.Buffer{}
+	var inverse bool
+	r := strings.NewReader(tagValues)
+	for {
+		b, err := r.ReadByte()
+		if err != nil {
+			// The err must be EOF
+			if err != io.EOF {
+				goto END
+			}
+			if buf.Len() > 0 {
+				tags = append(tags, Tag{
+					Name:    buf.String(),
+					Inverse: inverse,
+				})
+			}
+			goto END
+		}
+
+		switch b {
+		case 0x21: // "!"
+			inverse = true
+		case 0x2C: // ","
+			tags = append(tags, Tag{
+				Name:    buf.String(),
+				Inverse: inverse,
+			})
+			buf.Reset()
+			inverse = false
+		case 0x20: // " "
+			continue
+		default:
+			buf.WriteByte(b)
+		}
+	}
+END:
+
+	return tags
 }

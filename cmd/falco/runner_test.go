@@ -539,3 +539,72 @@ func TestInjectDictionaryTesting(t *testing.T) {
 		})
 	}
 }
+
+func TestSkippingTests(t *testing.T) {
+	tests := []struct {
+		name    string
+		main    string
+		tags    []string
+		skipped int
+	}{
+		{
+			name:    "no tags are provided",
+			main:    "../../examples/testing/skipping_tests/default.vcl",
+			tags:    []string{},
+			skipped: 2,
+		},
+		{
+			name:    "provide prod tag",
+			main:    "../../examples/testing/skipping_tests/default.vcl",
+			tags:    []string{"prod"},
+			skipped: 2,
+		},
+		{
+			name:    "provide dev tag",
+			main:    "../../examples/testing/skipping_tests/default.vcl",
+			tags:    []string{"dev"},
+			skipped: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			main, err := filepath.Abs(tt.main)
+			if err != nil {
+				t.Errorf("Unexpected making absolute path error: %s", err)
+				return
+			}
+			c := &config.Config{
+				Linter: &config.LinterConfig{
+					VerboseWarning: true,
+				},
+				Testing: &config.TestConfig{
+					Filter: "*/skipping_tests/*.test.vcl",
+					Tags:   tt.tags,
+				},
+				Commands: config.Commands{"test", main},
+			}
+			resolvers, err := resolver.NewFileResolvers(main, c.IncludePaths)
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+				return
+			}
+			ret, err := NewRunner(c, nil).Test(resolvers[0])
+			if err != nil {
+				t.Errorf("Unexpected runner creation error: %s", err)
+			}
+			for _, v := range ret.Results {
+				for _, c := range v.Cases {
+					if c.Error != nil {
+						t.Errorf(`Test case "%s" raises error: %s`, c.Name, c.Error)
+						return
+					}
+				}
+			}
+			if ret.Statistics.Skips != tt.skipped {
+				t.Errorf("Testing skipped count should be %d, got: %d", tt.skipped, ret.Statistics.Skips)
+				return
+			}
+		})
+	}
+}
