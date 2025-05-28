@@ -159,8 +159,8 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				}
 				metadata := getTestMetadata(st)
 				for _, s := range metadata.Scopes {
-					// Skip this testsuite when marked as @skip
-					if metadata.Skip {
+					// Skip this testsuite when marked as @skip or @tag matched
+					if metadata.Skip || metadata.MatchTags(t.config.Tags) {
 						cases = append(cases, &TestCase{
 							Name:  metadata.Name,
 							Scope: s.String(),
@@ -236,8 +236,8 @@ func (t *Tester) runDescribedTests(
 	for _, sub := range d.Subroutines {
 		metadata := getTestMetadata(sub)
 		for _, s := range metadata.Scopes {
-			// Skip this testsuite when marked as @skip
-			if metadata.Skip {
+			// Skip this testsuite when marked as @skip or @tag matched
+			if metadata.Skip || metadata.MatchTags(t.config.Tags) {
 				cases = append(cases, &TestCase{
 					Name:  metadata.Name,
 					Scope: s.String(),

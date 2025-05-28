@@ -41,7 +41,11 @@ Download binary from [releases page](https://github.com/ysugimoto/falco/releases
 $ brew install falco
 ```
 
-You can compile this project by yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
+You can compile this project by yourself with:
+
+```shell
+go install github.com/ysugimoto/falco/cmd/falco@latest
+```
 
 ## Usage
 
@@ -145,10 +149,6 @@ To integrate `falco` into your GitHub Actions pipeline, e.g. for linting:
         target: test/vcl/file_to_be_linted.vcl
 
 See [ain/falco-github-action](https://github.com/ain/falco-github-action) for documentation.
-
-## Transforming
-
-`falco` plans to transpile Fastly VCL to the other programming language that works on the Compute@Edge, keep you posted when there is any progress.
 
 ## Contribution
 

@@ -32,6 +32,10 @@ func TestConfigFromCLI(t *testing.T) {
 		"-r",
 		"-V",
 		"--json",
+		"-t",
+		"foo",
+		"-t",
+		"bar",
 		"lint",
 	}
 	c, err := New(args)
@@ -62,6 +66,7 @@ func TestConfigFromCLI(t *testing.T) {
 		Testing: &TestConfig{
 			Filter:          "*.test.vcl",
 			IncludePaths:    []string{"."},
+			Tags:            []string{"foo", "bar"},
 			OverrideRequest: &RequestConfig{},
 		},
 		Console: &ConsoleConfig{

@@ -1,3 +1,15 @@
+## v1.18.1
+
+- Fix table.lookup_xxx builtin function [#462](https://github.com/ysugimoto/falco/pull/462) (@ysugimoto)
+
+## v1.18.0
+
+- Fix typos in interpreter/limitations/limitations.go [#452](https://github.com/ysugimoto/falco/pull/452) (@taga3s)
+- Implement testing.get_env testing function [#455](https://github.com/ysugimoto/falco/pull/455) (@ysugimoto)
+- Add -w shorthand flag for Unit Testing watch mode [#458](https://github.com/ysugimoto/falco/pull/458) (@taga3s)
+- Implement prefer_ipv6 field in backend declaration [#460](https://github.com/ysugimoto/falco/pull/460) (@ysugimoto)
+- Implement testing tags [#461](https://github.com/ysugimoto/falco/pull/461) (@ysugimoto)
+
 ## v1.17.0
 
 - Implement std.strcasecmp builtin function [#451](https://github.com/ysugimoto/falco/pull/451) (@ysugimoto)

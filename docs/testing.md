@@ -193,7 +193,11 @@ sub some_test_suite {
 
 ### Skipping Test
 
-You can skip test case by adding `@skip` annotation comment. falco recognizes this annotation and skip testing.
+You can skip test case by a couple of ways.
+
+#### Adding `@skip` annotation comment
+
+When you write `@skip` annotation comment in leading comment of testing subroutine, falco skips this testing subroutine.
 
 ```vcl
 // @skip
@@ -201,6 +205,55 @@ sub some_test_suite {
     ...
 }
 ```
+
+> [!NOTE]
+> Testing subroutines which is applied `@skip` annotation comment are always skipped.
+
+#### Specify `@tag` annotation and match against `-t,--tag` cli option
+
+When you write `@tag: [tag1],[tag2],...` annotation comment in leading comment of testing subroutine, falco evaluates tag maching and run if matched..
+
+```vcl
+// @tag: prod
+sub some_test_suite {
+    ...
+}
+```
+
+And you can provide matcher tags via `-t,--tag` option:
+
+```shell
+falco test -t prod /path/to/vcl/default.vcl
+```
+
+Then, falco evaluates whether `prod` tag matches against `@tag` values (on the above case, test will be run).
+And the `@tag` annotation could appect inverse flag like `!prod`:
+
+```vcl
+// @tag: !prod
+sub some_test_suite {
+    ...
+}
+```
+
+Then this test suite will be run if `prod` tag is NOT provided.
+We describes the falco treats and evaluates tag specification and providing cli option as the following table:
+
+
+| Tag Specification | Tag CLI Option | Run Test |
+|:-----------------:|:--------------:|:---------|
+| prod              | N/A            | **NO**   |
+| prod              | prod           | YES      |
+| prod              | dev            | **NO**   |
+| !prod             | N/A            | YES      |
+| !prod             | prod           | **NO**   |
+| !prod             | dev            | YES      |
+| N/A               | N/A            | YES      |
+| N/A               | prod           | YES      |
+| N/A               | dev            | YES      |
+
+> [!IMPORTANT]
+> Above table describes significant thing that if you specify some tag annotation, the test suite only runs when some tag option is provided.
 
 ### Testing preparation
 
@@ -253,6 +306,7 @@ We describe them following table and examples:
 | testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
 | testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
+| testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -548,6 +602,23 @@ describe add_header_mock {
         // This subroutine no longer uses mocked subroutine
         ...
     }
+}
+```
+
+----
+
+### STRING testing.get_env(STRING name)
+
+Get environment value from `name`.
+This is only enabled on the testing environment and it will be useful for switching test to environment (dev,prod) differences.
+
+```vcl
+sub test_vcl {
+    if (testing.get_env("IS_DEV")) {
+        // skip this test on development environment
+        return;
+    }
+    ...do some assertions
 }
 ```
 

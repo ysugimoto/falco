@@ -436,8 +436,6 @@ func (p *Parser) ParseTableProperty() (*ast.TableProperty, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-	case token.ACL, token.BACKEND:
-		prop.Value = p.ParseIdent()
 	case token.TRUE, token.FALSE:
 		prop.Value = p.ParseBoolean()
 	case token.FLOAT:

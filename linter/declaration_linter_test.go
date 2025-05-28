@@ -57,6 +57,7 @@ backend foo {
   .ssl_check_cert = always;
   .min_tls_version = "1.2";
   .max_tls_version = "1.2";
+  .prefer_ipv6 = true;
   .probe = {
     .dummy = false;
     .initial = 5;
