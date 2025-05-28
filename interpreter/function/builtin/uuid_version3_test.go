@@ -8,8 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of uuid.version3
@@ -17,7 +15,6 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version3/
 func Test_Uuid_version3(t *testing.T) {
-	t.Skip("Test Builtin function uuid.version3 should be impelemented")
 	tests := []struct {
 		namespace string
 		input     string
