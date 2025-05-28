@@ -17,7 +17,7 @@ import (
 // - STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/uuid/uuid-version3/
 func Test_Uuid_version3(t *testing.T) {
-	t.Skip("Test Builtin function uuid.version3 should be impelemented")
+	// t.Skip("Test Builtin function uuid.version3 should be impelemented")
 	tests := []struct {
 		namespace string
 		input     string
