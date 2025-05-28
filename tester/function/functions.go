@@ -92,7 +92,8 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 			IsIdentArgument: func(i int) bool {
 				return false
 			},
-		}, "testing.fixed_time": {Scope: allScope,
+		},
+		"testing.fixed_time": {Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 				unwrapped, err := unwrapIdentArguments(i, args)
 				if err != nil {
@@ -179,6 +180,14 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 			Scope:            allScope,
 			Call:             Testing_inject_variable,
 			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"testing.get_env": {
+			Scope:            allScope,
+			Call:             Testing_get_env,
+			CanStatementCall: false,
 			IsIdentArgument: func(i int) bool {
 				return false
 			},

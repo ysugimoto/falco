@@ -37,30 +37,33 @@ func Table_lookup_backend(ctx *context.Context, args ...value.Value) (value.Valu
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultBackend := value.Unwrap[*value.Backend](args[2]).Value
+	defaultBackend := value.Unwrap[*value.Backend](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.Backend{Value: defaultBackend}, errors.New(Table_lookup_backend_Name,
+		return defaultBackend, errors.New(Table_lookup_backend_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "BACKEND" {
-		return &value.Backend{Value: defaultBackend}, errors.New(Table_lookup_backend_Name,
+		return defaultBackend, errors.New(Table_lookup_backend_Name,
 			"table %d value type is not BACKEND", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.BackendDeclaration)
-			if !ok {
-				return &value.Backend{Value: defaultBackend}, errors.New(Table_lookup_backend_Name,
-					"table %s value could not cast to BACKEND type", id,
-				)
-			}
-			return &value.Backend{Value: v}, nil
+		if prop.Key.Value != key {
+			continue
+		}
+		v, ok := prop.Value.(*ast.Ident)
+		if !ok {
+			return defaultBackend, errors.New(Table_lookup_backend_Name,
+				"table %s value could not cast to BACKEND type", id,
+			)
+		}
+		if backend, ok := ctx.Backends[v.Value]; ok {
+			return backend, nil
 		}
 	}
-	return &value.Backend{Value: defaultBackend}, nil
+	return defaultBackend, nil
 }

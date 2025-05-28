@@ -33,6 +33,7 @@ var BackendPropertyTypes = map[string]types.Type{
 	"host_header":              types.StringType,
 	"always_use_host_header":   types.BoolType,
 	"bypass_local_route_table": types.BoolType,
+	"prefer_ipv6":              types.BoolType,
 }
 
 var BackendProbePropertyTypes = map[string]types.Type{

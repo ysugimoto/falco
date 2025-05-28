@@ -26,6 +26,7 @@ sub test_subroutine {}
 			expect: &Metadata{
 				Name:   "basic metadata test",
 				Scopes: []context.Scope{context.RecvScope},
+				Tags:   []Tag{},
 			},
 		},
 		{
@@ -37,6 +38,7 @@ sub test_subroutine {}
 			expect: &Metadata{
 				Name:   "test_subroutine",
 				Scopes: []context.Scope{context.RecvScope},
+				Tags:   []Tag{},
 			},
 		},
 		{
@@ -48,6 +50,7 @@ sub test_subroutine {}
 			expect: &Metadata{
 				Name:   "metadata test",
 				Scopes: []context.Scope{context.RecvScope},
+				Tags:   []Tag{},
 			},
 		},
 		{
@@ -60,6 +63,7 @@ sub test_subroutine {}
 			expect: &Metadata{
 				Name:   "metadata test",
 				Scopes: []context.Scope{context.FetchScope, context.PassScope, context.LogScope},
+				Tags:   []Tag{},
 			},
 		},
 		{
@@ -74,6 +78,24 @@ sub test_subroutine {}
 				Name:   "metadata test",
 				Scopes: []context.Scope{context.RecvScope},
 				Skip:   true,
+				Tags:   []Tag{},
+			},
+		},
+		{
+			name: "tagged",
+			vcl: `
+// @suite: metadata test
+// @scope: recv
+// @tag: prod,!stg
+sub test_subroutine {}
+`,
+			expect: &Metadata{
+				Name:   "metadata test",
+				Scopes: []context.Scope{context.RecvScope},
+				Tags: []Tag{
+					{Name: "prod"},
+					{Name: "stg", Inverse: true},
+				},
 			},
 		},
 	}
@@ -89,6 +111,93 @@ sub test_subroutine {}
 			actual := getTestMetadata(sub)
 			if diff := cmp.Diff(tt.expect, actual); diff != "" {
 				t.Errorf("Parsed metadata mismatch, diff=%s", diff)
+			}
+		})
+	}
+}
+
+// https://github.com/ysugimoto/falco/issues/457
+func TestTagsMatch(t *testing.T) {
+	tests := []struct {
+		name   string
+		tag    []string
+		tags   []Tag
+		expect bool
+	}{
+		{
+			name:   "no tags",
+			tag:    []string{"prod"},
+			tags:   []Tag{},
+			expect: false,
+		},
+		{
+			name: "singular tag match",
+			tag:  []string{"prod"},
+			tags: []Tag{
+				{Name: "prod"},
+			},
+			expect: true,
+		},
+		{
+			name: "singular inversed tag unmatch",
+			tag:  []string{"prod"},
+			tags: []Tag{
+				{Name: "prod", Inverse: true},
+			},
+			expect: false,
+		},
+		{
+			name: "singular inversed tag match",
+			tag:  []string{"dev"},
+			tags: []Tag{
+				{Name: "prod", Inverse: true},
+			},
+			expect: true,
+		},
+		{
+			name: "multiple tag match",
+			tag:  []string{"stg"},
+			tags: []Tag{
+				{Name: "prod"},
+				{Name: "stg"},
+			},
+			expect: true,
+		},
+		{
+			name: "multiple inversed tag unmatch",
+			tag:  []string{"prod"},
+			tags: []Tag{
+				{Name: "prod", Inverse: true},
+				{Name: "stg"},
+			},
+			expect: false,
+		},
+		{
+			name: "multiple inversed tag match",
+			tag:  []string{"stg"},
+			tags: []Tag{
+				{Name: "prod", Inverse: true},
+				{Name: "stg", Inverse: true},
+			},
+			expect: true,
+		},
+		{
+			name: "always match",
+			tag:  []string{"prod"},
+			tags: []Tag{
+				{Name: "prod", Inverse: true},
+				{Name: "prod"},
+			},
+			expect: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Metadata{Tags: tt.tags}
+			actual := m.MatchTags(tt.tag)
+			if diff := cmp.Diff(tt.expect, actual); diff != "" {
+				t.Errorf("Tags.Match result unmatch, diff=%s", diff)
 			}
 		})
 	}
