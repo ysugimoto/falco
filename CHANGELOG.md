@@ -1,3 +1,7 @@
+## v1.18.1
+
+- Fix table.lookup_xxx builtin function [#462](https://github.com/ysugimoto/falco/pull/462) (@ysugimoto)
+
 ## v1.18.0
 
 - Fix typos in interpreter/limitations/limitations.go [#452](https://github.com/ysugimoto/falco/pull/452) (@taga3s)
