@@ -22,9 +22,8 @@ import (
 	lcontext "github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester"
-	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -66,13 +65,6 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
-type Fetcher interface {
-	Backends() ([]*types.RemoteBackend, error)
-	Dictionaries() ([]*types.RemoteDictionary, error)
-	Acls() ([]*types.RemoteAcl, error)
-	Snippets() ([]*types.RemoteVCL, error)
-}
-
 type RunMode int
 
 const (
@@ -83,7 +75,7 @@ const (
 type Runner struct {
 	overrides map[string]linter.Severity
 	lexers    map[string]*lexer.Lexer
-	snippets  *snippets.Snippets
+	snippets  *snippet.Snippets
 	config    *config.Config
 
 	level       Level
@@ -107,7 +99,7 @@ func (r *Runner) message(c *color.Color, format string, args ...any) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
+func NewRunner(c *config.Config, fetcher snippet.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -119,7 +111,7 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 
 	// If fetch interface is provided, communicate with it
 	if fetcher != nil {
-		s, err := snippets.Fetch(fetcher)
+		s, err := snippet.Fetch(fetcher)
 		if err != nil {
 			r.message(red, "%s\n", err.Error())
 		}

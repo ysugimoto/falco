@@ -1,33 +1,45 @@
-package snippets
+package snippet
 
-type SnippetItem struct {
+type Item struct {
 	Data string
 	Name string
 }
 
-type Snippets struct {
-	Dictionaries     []SnippetItem
-	Acls             []SnippetItem
-	Backends         []SnippetItem
-	Directors        []SnippetItem
-	ScopedSnippets   map[string][]SnippetItem
-	IncludeSnippets  map[string]SnippetItem
+// map type aliases
+type (
+	ScopedSnippets   map[string][]Item
+	IncludeSnippets  map[string]Item
 	LoggingEndpoints map[string]struct{}
+)
+
+type Snippets struct {
+	// Store fetched resources
+	dictionaries []Item
+	acls         []Item
+	backends     []Item
+	directors    []Item
+
+	// expose items, access from external package
+	ScopedSnippets  ScopedSnippets
+	IncludeSnippets IncludeSnippets
+
+	// Currently no use
+	LoggingEndpoints LoggingEndpoints
 }
 
-func (s *Snippets) EmbedSnippets() []SnippetItem {
-	var snippets []SnippetItem
+func (s *Snippets) EmbedSnippets() []Item {
+	var snippets []Item
 
 	// Embed Dictionaries
-	snippets = append(snippets, s.Dictionaries...)
+	snippets = append(snippets, s.dictionaries...)
 	// Embed Acls
-	snippets = append(snippets, s.Acls...)
+	snippets = append(snippets, s.acls...)
 	// Embed Backends
-	snippets = append(snippets, s.Backends...)
+	snippets = append(snippets, s.backends...)
 	// Embed Directors
 	// Note that director must be placed after backends
 	// because director refers to backend
-	snippets = append(snippets, s.Directors...)
+	snippets = append(snippets, s.directors...)
 
 	// And also we need to embed VCL snippets which is registered as "init" type
 	if scoped, ok := s.ScopedSnippets["init"]; ok {
