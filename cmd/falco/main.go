@@ -105,12 +105,17 @@ func main() {
 		os.Exit(Success)
 	}
 
-	var fetcher snippet.Fetcher
-	var action string
-	// falco could lint multiple services so resolver should be a slice
-	var resolvers []resolver.Resolver
+	var (
+		// falco could lint multiple services so resolver should be a slice
+		resolvers   []resolver.Resolver
+		fetcher     snippet.Fetcher
+		action      string
+		isTerraform bool
+	)
+
 	switch c.Commands.At(0) {
 	case subcommandTerraform:
+		isTerraform = true
 		fastlyServices, err := terraform.ParseStdin(os.Stdin)
 		if err == nil {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
@@ -153,7 +158,7 @@ func main() {
 	}
 
 	// No need to use remove object on fmt command
-	if action != subcommandFormat && c.Remote {
+	if action != subcommandFormat && !isTerraform && c.Remote {
 		if !c.Json {
 			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		}
@@ -211,6 +216,7 @@ func main() {
 
 		if exitErr == ErrExit {
 			shouldExit = true
+			break
 		}
 	}
 
