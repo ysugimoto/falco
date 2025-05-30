@@ -11,7 +11,6 @@ import (
 	"github.com/ysugimoto/falco/interpreter/function"
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/types"
 )
 
 func (i *Interpreter) IdentValue(val string, opt *ExpressionOption) (value.Value, error) {
@@ -237,6 +236,7 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 }
 
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, opt *ExpressionOption) (value.Value, error) {
+	// Function name exists in functional subroutine
 	if sub, ok := i.ctx.SubroutineFunctions[exp.Function.Value]; ok {
 		if len(exp.Arguments) > 0 {
 			return value.Null, exception.Runtime(
@@ -249,7 +249,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[exp.Function.Value]; ok {
 			sub = mocked
 		}
-		if _, ok := types.ValueTypeMap[sub.ReturnType.Value]; !ok {
+		if !isValidFastlyTypeString(sub.ReturnType.Value) {
 			return value.Null, exception.Runtime(
 				&sub.GetMeta().Token,
 				"subroutine %s has invalid return type %s",
@@ -264,6 +264,8 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 		}
 		return v, nil
 	}
+
+	// Otherwise, process as builtin function
 	fn, err := function.Exists(i.ctx.Scope, exp.Function.Value)
 	if err != nil {
 		return value.Null, errors.WithStack(err)

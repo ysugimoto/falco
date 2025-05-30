@@ -45,3 +45,12 @@ func isValidStatementExpression(left value.Type, exp ast.Expression) error {
 func isLocalVariableIdent(ident *ast.Ident) bool {
 	return strings.HasPrefix(ident.Value, "var.")
 }
+
+// Validate type string is Fastly supported value type
+func isValidFastlyTypeString(t string) bool {
+	switch t {
+	case "INTEGER", "FLOAT", "BOOL", "ACL", "BACKEND", "IP", "STRING", "RTIME", "TIME":
+		return true
+	}
+	return false
+}
