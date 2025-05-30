@@ -6,7 +6,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Context) types.Type {

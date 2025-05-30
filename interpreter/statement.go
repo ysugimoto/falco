@@ -15,7 +15,6 @@ import (
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/types"
 )
 
 // _nopSeekCloser is like io.NopCloser, but for wrapping io.ReadSeeker.
@@ -656,7 +655,7 @@ func (i *Interpreter) ProcessSwitchStatement(
 		return value.Null, NONE, errors.WithStack(err)
 	}
 	// Control expression must evaluate to a value type
-	if _, ok := types.ValueTypeMap[string(expr.Type())]; !ok {
+	if !isValidFastlyTypeString(string(expr.Type())) {
 		return value.Null, NONE, errors.WithStack(exception.Runtime(
 			&stmt.GetMeta().Token,
 			"switch has invalid control type %s",

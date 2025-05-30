@@ -9,10 +9,10 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type Linter struct {
