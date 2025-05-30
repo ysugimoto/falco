@@ -58,6 +58,13 @@ type Director struct {
 	Quorum   *int     `json:"quorum"`
 }
 
+type Condition struct {
+	Name      string `json:"name"`
+	Priority  int64  `json:"priority"`
+	Statement string `json:"statement"`
+	Type      string `json:"type"`
+}
+
 type FastlyResources struct {
 	Services        map[string]*FastlyService
 	AclEntries      []*fastlyAclEntryValues
@@ -72,6 +79,7 @@ type FastlyService struct {
 	Dictionaries     []*Dictionary
 	Directors        []*Director
 	Snippets         []*Snippet
+	Conditions       []*Condition
 	LoggingEndpoints []string
 }
 
@@ -84,6 +92,7 @@ type fastlyServiceValues struct {
 	Director   []*Director   `json:"director"`
 	Dictionary []*Dictionary `json:"dictionary"`
 	Snippets   []*Snippet    `json:"snippet"`
+	Conditions []*Condition  `json:"condition"`
 
 	// Various kinds of realtime logging endpoints
 	LoggingBigQuerty     []*LoggingEndpoint `json:"logging_bigqeury"`

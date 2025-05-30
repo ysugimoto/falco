@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
 
@@ -257,5 +258,48 @@ func TestListBackends(t *testing.T) {
 	if *i.Shield != "some_shield" {
 		t.Errorf("item shield assertion error, expects=some_shield but got=%s", *i.Shield)
 		t.FailNow()
+	}
+}
+
+func TestListConditions(t *testing.T) {
+	c := NewFastlyClient(&http.Client{
+		Transport: &TestRoundTripper{
+			StatusCode: 200,
+			Body: `
+[
+	{
+		"version": "10",
+		"statement": "req.url.path == \"/robots.txt\"",
+		"service_id": "test",
+		"type": "REQUEST",
+		"name": "Robots",
+		"deleted_at": null,
+		"created_at": "2022-03-04T06:45:19Z",
+		"updated_at": "2025-05-26T06:38:31Z",
+		"comment": "",
+		"priority": "10"
+	}
+]`,
+		},
+	}, "dummy", "dummy")
+
+	conditions, err := c.ListConditions(context.Background(), 10)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		t.FailNow()
+	}
+	if len(conditions) != 1 {
+		t.Errorf("backends should have 1 items but got %d", len(conditions))
+		t.FailNow()
+	}
+
+	expect := &Condition{
+		Type:      "REQUEST",
+		Statement: `req.url.path == "/robots.txt"`,
+		Priotity:  "10",
+		Name:      "Robots",
+	}
+	if diff := cmp.Diff(expect, conditions[0]); diff != "" {
+		t.Errorf("API response result mismatch, diff=%s", diff)
 	}
 }

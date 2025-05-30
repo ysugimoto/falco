@@ -27,6 +27,35 @@ func NewFastlyApiFetcher(serviceId, apiKey string, timeout time.Duration) snippe
 	}
 }
 
+func (f *FastlyApiFetcher) Conditions() ([]*snippet.Condition, error) {
+	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
+	defer timeout()
+	version, err := f.getVersion(ctx)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	conditions, err := f.client.ListConditions(ctx, version)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	r := make([]*snippet.Condition, len(conditions))
+	for i, cond := range conditions {
+		priority, err := strconv.ParseInt(cond.Priotity, 10, 64)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		r[i] = &snippet.Condition{
+			Name:      cond.Name,
+			Statement: cond.Statement,
+			Type:      snippet.Phase(cond.Type),
+			Priority:  priority,
+		}
+	}
+	return r, nil
+}
+
 func (f *FastlyApiFetcher) Backends() ([]*snippet.Backend, error) {
 	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
 	defer timeout()
@@ -37,7 +66,7 @@ func (f *FastlyApiFetcher) Backends() ([]*snippet.Backend, error) {
 
 	backends, err := f.client.ListBackends(ctx, version)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	r := make([]*snippet.Backend, len(backends))

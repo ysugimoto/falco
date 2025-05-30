@@ -72,6 +72,16 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 	return v.Number, nil
 }
 
+func (c *FastlyClient) ListConditions(ctx context.Context, version int64) ([]*Condition, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/condition", c.serviceId, version)
+	var conds []*Condition
+	if err := c.request(ctx, endpoint, &conds); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return conds, nil
+}
+
 func (c *FastlyClient) ListEdgeDictionaries(ctx context.Context, version int64) ([]*EdgeDictionary, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/dictionary", c.serviceId, version)
 	var dicts []*EdgeDictionary

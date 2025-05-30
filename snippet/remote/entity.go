@@ -51,3 +51,10 @@ type VCLSnippet struct {
 	Priority string  `json:"priority"`
 	Content  *string `json:"content"`
 }
+
+type Condition struct {
+	Type      string `json:"type"`
+	Statement string `json:"statement"`
+	Priotity  string `json:"priority"`
+	Name      string `json:"name"`
+}

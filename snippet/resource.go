@@ -1,5 +1,7 @@
 package snippet
 
+// Remote resources mapping structs
+
 type AclEntry struct {
 	Ip      string
 	Negated string
@@ -37,14 +39,6 @@ type VCLSnippet struct {
 	Priority int64
 }
 
-type Director struct {
-	Type     int
-	Name     string
-	Backends []string
-	Retries  int
-	Quorum   int
-}
-
 type DirectorType int8
 
 const (
@@ -53,3 +47,41 @@ const (
 	Client
 	Shield // shield director type is special type for Origin-Shielding on Faslty configuration
 )
+
+type Director struct {
+	Type     int
+	Name     string
+	Backends []string
+	Retries  int
+	Quorum   int
+}
+
+/*
+  {
+    "type": "REQUEST",
+    "statement": "req.url.path == \"/.well-known/change-password\"",
+    "service_id": "0jkUgZ76zN3lJzVa1ZhaM9",
+    "priority": "10",
+    "version": "204",
+    "comment": "",
+    "name": "well-known-change-password",
+    "created_at": "2021-01-25T08:06:34Z",
+    "deleted_at": null,
+    "updated_at": "2025-05-26T06:38:31Z"
+  }
+*/
+
+type Phase string
+
+const (
+	RequestPhase  Phase = "REQUEST"
+	CachePhase    Phase = "CACHE"
+	ResponsePhase Phase = "RESPONSE"
+)
+
+type Condition struct {
+	Type      Phase
+	Statement string
+	Priority  int64
+	Name      string
+}
