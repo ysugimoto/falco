@@ -65,6 +65,21 @@ type Condition struct {
 	Type      string `json:"type"`
 }
 
+type Header struct {
+	Action            string `json:"action"`
+	CacheCondition    string `json:"cache_condition"`
+	IgnoreIfSet       bool   `json:"ignore_if_set"`
+	Name              string `json:"name"`
+	Priority          int64  `json:"priority"`
+	Regex             string `json:"regex"`
+	RequestCondition  string `json:"request_condition"`
+	ResponseCondition string `json:"response_condition"`
+	Source            string `json:"source"`
+	Destination       string `json:"destination"`
+	Substitution      string `json:"substitution"`
+	Type              string `json:"type"`
+}
+
 type FastlyResources struct {
 	Services        map[string]*FastlyService
 	AclEntries      []*fastlyAclEntryValues
@@ -80,6 +95,7 @@ type FastlyService struct {
 	Directors        []*Director
 	Snippets         []*Snippet
 	Conditions       []*Condition
+	Headers          []*Header
 	LoggingEndpoints []string
 }
 
@@ -93,6 +109,7 @@ type fastlyServiceValues struct {
 	Dictionary []*Dictionary `json:"dictionary"`
 	Snippets   []*Snippet    `json:"snippet"`
 	Conditions []*Condition  `json:"condition"`
+	Headers    []*Header     `json:"header"`
 
 	// Various kinds of realtime logging endpoints
 	LoggingBigQuerty     []*LoggingEndpoint `json:"logging_bigqeury"`

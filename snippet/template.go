@@ -37,6 +37,17 @@ var helperFuncs = template.FuncMap{
 	"sanitize": func(name string) string {
 		return invalid.ReplaceAllString(name, "_")
 	},
+	"objectify": func(p Phase) string {
+		switch p {
+		case RequestPhase:
+			return "req"
+		case CachePhase:
+			return "beresp"
+		case ResponsePhase:
+			return "resp"
+		}
+		return ""
+	},
 }
 
 // Template declarations
@@ -110,6 +121,42 @@ director {{ .Name }} {{ .Type | printtype }} {
 `,
 		))
 
+var headerTemplate = template.Must(
+	template.New("header").
+		Funcs(helperFuncs).
+		Parse(
+			`
+{{if .ConditionExpression }}if ({{ .ConditionExpression }}) {{"{"}}{{- end}}
+{{if .IgnoreIfSet }}if (!{{ .Type | objectify }}.{{ .Destination }}) {{"{"}}{{- end}}
+{{if eq .Action "set" -}}
+	set {{ .Type | objectify }}.{{ .Destination }} = {{ .Source }};
+{{end -}}
+
+{{- if eq .Action "append" -}}
+	if (!{{ .Type | objectify }}.{{ .Destination }}) {{"{"}}
+		set {{ .Type | objectify }}.{{ .Destination }} = {{ .Source }};
+	{{"}"}} else {{"{"}}
+		set {{ .Type | objectify }}.{{ .Destination }} = {{ .Type | objectify }}.{{ .Destination }} {{ .Source }};
+	{{"}"}}
+{{end -}}
+
+{{- if eq .Action "delete" -}}
+	unset {{ .Type | objectify }}.{{ .Destination }};
+{{end -}}
+
+{{- if eq .Action "regex" -}}
+	set {{ .Type | objectify }}.{{ .Destination }} = regsub({{ .Source }}, "{{ .Regex }}", "{{ .Substitution }}");
+{{end -}}
+
+{{- if eq .Action "regex_repeat" -}}
+	set {{ .Type | objectify }}.{{ .Destination }} = regsuball({{ .Source }}, "{{ .Regex }}", "{{ .Substitution }}");
+{{end -}}
+
+{{if .IgnoreIfSet }}{{"}"}}{{- end}}
+{{if .ConditionExpression }}{{"}"}}{{- end}}
+`,
+		))
+
 // Render functions
 
 func renderDictionary(dict *Dictionary) (*Item, error) {
@@ -173,5 +220,21 @@ func renderDirector(director *Director, isShield bool) (*Item, error) {
 	return &Item{
 		Name: fmt.Sprintf("Remote.Director:%s", director.Name),
 		Data: buf.String(),
+	}, nil
+}
+
+func renderHeader(header *Header) (*Item, error) {
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer pool.Put(buf)
+
+	buf.Reset()
+	if err := headerTemplate.Execute(buf, header); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &Item{
+		Name:     fmt.Sprintf("Remote.Header:%s", header.Name),
+		Data:     buf.String(),
+		Priority: header.Priority,
 	}, nil
 }

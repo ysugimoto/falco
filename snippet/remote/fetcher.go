@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +28,51 @@ func NewFastlyApiFetcher(serviceId, apiKey string, timeout time.Duration) snippe
 	}
 }
 
+func (f *FastlyApiFetcher) Headers() ([]*snippet.Header, error) {
+	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
+	defer timeout()
+	version, err := f.getVersion(ctx)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	headers, err := f.client.ListHeaders(ctx, version)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	r := make([]*snippet.Header, len(headers))
+	for i, h := range headers {
+		priority, err := strconv.ParseInt(h.Priority, 10, 64)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		var condition *string
+		switch h.Type {
+		case "request":
+			condition = h.RequestCondition
+		case "cache":
+			condition = h.CacheCondition
+		case "response":
+			condition = h.ResponseCondition
+		}
+
+		r[i] = &snippet.Header{
+			Type:         snippet.Phase(strings.ToUpper(h.Type)),
+			Action:       snippet.Action(h.Action),
+			Name:         h.Name,
+			IgnoreIfSet:  h.IgnoreIfSet == "1",
+			Condition:    condition,
+			Priority:     priority,
+			Source:       h.Source,
+			Destination:  h.Destination,
+			Regex:        h.Regex,
+			Substitution: h.Substitution,
+		}
+	}
+	return r, nil
+}
+
 func (f *FastlyApiFetcher) Conditions() ([]*snippet.Condition, error) {
 	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
 	defer timeout()
@@ -42,7 +88,7 @@ func (f *FastlyApiFetcher) Conditions() ([]*snippet.Condition, error) {
 
 	r := make([]*snippet.Condition, len(conditions))
 	for i, cond := range conditions {
-		priority, err := strconv.ParseInt(cond.Priotity, 10, 64)
+		priority, err := strconv.ParseInt(cond.Priority, 10, 64)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -96,7 +142,7 @@ func (f *FastlyApiFetcher) Dictionaries() ([]*snippet.Dictionary, error) {
 	r := make([]*snippet.Dictionary, len(dictionaries))
 	for i, dict := range dictionaries {
 		items := make([]*snippet.DictionaryItem, len(dict.Items))
-		for j, item := range items {
+		for j, item := range dict.Items {
 			items[j] = &snippet.DictionaryItem{
 				Key:   item.Key,
 				Value: item.Value,
