@@ -1,8 +1,13 @@
 package snippet
 
+import (
+	"github.com/pkg/errors"
+)
+
 type Item struct {
-	Data string
-	Name string
+	Data     string
+	Name     string
+	Priority int64
 }
 
 // map type aliases
@@ -19,6 +24,10 @@ type Snippets struct {
 	backends     []Item
 	directors    []Item
 
+	// Lazy rendering snippets
+	conditions map[string]*Condition
+	headers    []*Header
+
 	// expose items, access from external package
 	ScopedSnippets  ScopedSnippets
 	IncludeSnippets IncludeSnippets
@@ -27,7 +36,7 @@ type Snippets struct {
 	LoggingEndpoints LoggingEndpoints
 }
 
-func (s *Snippets) EmbedSnippets() []Item {
+func (s *Snippets) EmbedSnippets() ([]Item, error) {
 	var snippets []Item
 
 	// Embed Dictionaries
@@ -46,7 +55,14 @@ func (s *Snippets) EmbedSnippets() []Item {
 		snippets = append(snippets, scoped...)
 	}
 
-	return snippets
+	// Render header snippets - embedded on extracting Fastly macros
+	for i := range s.headers {
+		if err := s.renderHeaderSnippet(s.headers[i]); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	return snippets, nil
 }
 
 // Fastly logging endpoints is not used on linting and interpreter,
@@ -63,5 +79,44 @@ func (s *Snippets) FetchLoggingEndpoint(fetcher Fetcher) error {
 	for i := range endpoints {
 		s.LoggingEndpoints[endpoints[i]] = struct{}{}
 	}
+	return nil
+}
+
+func (s *Snippets) renderHeaderSnippet(h *Header) error {
+	var snip *Item
+	var err error
+
+	if h.Condition == nil {
+		// If condition is nil, don't need to look up condition map. enable to render directly
+		snip, err = renderHeader(h)
+	} else {
+		// Otherwise, look up condtion map and get condition expression
+		cond, ok := s.conditions[*h.Condition]
+		if !ok {
+			err = errors.New("Condition " + *h.Condition + " is not found")
+		} else {
+			h.ConditionExpression = cond.Statement
+			snip, err = renderHeader(h)
+		}
+	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Assign snippet which corresponds to scope
+	var scope string
+	switch h.Type {
+	case RequestPhase:
+		scope = "recv"
+	case CachePhase:
+		scope = "fetch"
+	case ResponsePhase:
+		scope = "deliver"
+	}
+
+	if _, ok := s.ScopedSnippets[scope]; !ok {
+		s.ScopedSnippets[scope] = []Item{}
+	}
+	s.ScopedSnippets[scope] = append(s.ScopedSnippets[scope], *snip)
 	return nil
 }

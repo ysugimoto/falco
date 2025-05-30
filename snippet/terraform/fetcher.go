@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/ysugimoto/falco/snippet"
 )
@@ -31,6 +32,43 @@ func (f *TerraformFetcher) filterService() []*FastlyService {
 		}
 	}
 	return []*FastlyService{}
+}
+
+func (f *TerraformFetcher) Headers() ([]*snippet.Header, error) {
+	var h []*snippet.Header
+	for _, s := range f.filterService() {
+		for _, header := range s.Headers {
+			var c *string
+			switch header.Type {
+			case "request":
+				if header.RequestCondition != "" {
+					c = &header.RequestCondition
+				}
+			case "cache":
+				if header.CacheCondition != "" {
+					c = &header.CacheCondition
+				}
+			case "response":
+				if header.ResponseCondition != "" {
+					c = &header.ResponseCondition
+				}
+			}
+
+			h = append(h, &snippet.Header{
+				Type:         snippet.Phase(strings.ToUpper(header.Type)),
+				Action:       snippet.Action(header.Action),
+				Name:         header.Name,
+				IgnoreIfSet:  header.IgnoreIfSet,
+				Condition:    c,
+				Priority:     header.Priority,
+				Source:       header.Source,
+				Destination:  header.Destination,
+				Regex:        header.Regex,
+				Substitution: header.Substitution,
+			})
+		}
+	}
+	return h, nil
 }
 
 func (f *TerraformFetcher) Conditions() ([]*snippet.Condition, error) {

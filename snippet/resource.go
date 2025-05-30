@@ -56,21 +56,6 @@ type Director struct {
 	Quorum   int
 }
 
-/*
-  {
-    "type": "REQUEST",
-    "statement": "req.url.path == \"/.well-known/change-password\"",
-    "service_id": "0jkUgZ76zN3lJzVa1ZhaM9",
-    "priority": "10",
-    "version": "204",
-    "comment": "",
-    "name": "well-known-change-password",
-    "created_at": "2021-01-25T08:06:34Z",
-    "deleted_at": null,
-    "updated_at": "2025-05-26T06:38:31Z"
-  }
-*/
-
 type Phase string
 
 const (
@@ -84,4 +69,30 @@ type Condition struct {
 	Statement string
 	Priority  int64
 	Name      string
+}
+
+type Action string
+
+const (
+	SetAction      Action = "set"
+	AppendAction   Action = "append"
+	DeleteAction   Action = "delete"
+	RegexAction    Action = "regex"
+	RegexAllAction Action = "regex_repeat"
+)
+
+type Header struct {
+	Type         Phase
+	Action       Action
+	Name         string
+	IgnoreIfSet  bool
+	Condition    *string
+	Priority     int64
+	Source       string
+	Destination  string
+	Regex        string
+	Substitution string
+
+	// This field value will be assigned on rendering
+	ConditionExpression string
 }

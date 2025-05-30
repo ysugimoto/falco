@@ -137,3 +137,47 @@ func TestUnmarshalWithConditions(t *testing.T) {
 		t.Errorf("Unmarshalled conditions mismatch, diff=%s", diff)
 	}
 }
+
+func TestUnmarshalWithHeaders(t *testing.T) {
+	fileName := "./data/terraform-service-header.json"
+	buf, err := os.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error when unarshalling tf %s ", fileName)
+	}
+
+	if len(services) != 1 {
+		t.Errorf("Length of services should be %d, got %d", 1, len(services))
+	}
+
+	headerExpects := []*Header{
+		{
+			Name:             "test1",
+			Action:           "set",
+			Priority:         10,
+			Type:             "request",
+			Source:           `"foo"`,
+			Destination:      "http.Header-Item",
+			RequestCondition: "request_condition",
+		},
+		{
+			Name:         "test2",
+			Action:       "regex",
+			Priority:     10,
+			Type:         "response",
+			Source:       "req.url",
+			Destination:  "http.Header-Item",
+			IgnoreIfSet:  true,
+			Regex:        "/foo/([^/]+)/",
+			Substitution: "$1",
+		},
+	}
+	if diff := cmp.Diff(headerExpects, services[0].Headers); diff != "" {
+		t.Errorf("Unmarshalled headers mismatch, diff=%s", diff)
+	}
+}

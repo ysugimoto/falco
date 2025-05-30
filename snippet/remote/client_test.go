@@ -289,17 +289,76 @@ func TestListConditions(t *testing.T) {
 		t.FailNow()
 	}
 	if len(conditions) != 1 {
-		t.Errorf("backends should have 1 items but got %d", len(conditions))
+		t.Errorf("conditions should have 1 items but got %d", len(conditions))
 		t.FailNow()
 	}
 
 	expect := &Condition{
 		Type:      "REQUEST",
 		Statement: `req.url.path == "/robots.txt"`,
-		Priotity:  "10",
+		Priority:  "10",
 		Name:      "Robots",
 	}
 	if diff := cmp.Diff(expect, conditions[0]); diff != "" {
+		t.Errorf("API response result mismatch, diff=%s", diff)
+	}
+}
+
+func TestListHeaders(t *testing.T) {
+	c := NewFastlyClient(&http.Client{
+		Transport: &TestRoundTripper{
+			StatusCode: 200,
+			Body: `
+[
+  {
+    "regex": "/foo(.+)/",
+    "service_id": "qRK2E1vLIVkQ3BU0iVk9X7",
+    "type": "request",
+    "ignore_if_set": "1",
+    "request_condition": "request_condition",
+    "action": "regex_repeat",
+    "dst": "http.Set-Header-Item",
+    "updated_at": "2025-05-30T15:41:47Z",
+    "cache_condition": null,
+    "priority": "10",
+    "response_condition": null,
+    "src": "req.url",
+    "substitution": "$1",
+    "version": "23",
+    "name": "set_header_request",
+    "created_at": "2025-05-30T14:23:57Z",
+    "deleted_at": null
+  }
+]`,
+		},
+	}, "dummy", "dummy")
+
+	headers, err := c.ListHeaders(context.Background(), 10)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		t.FailNow()
+	}
+	if len(headers) != 1 {
+		t.Errorf("headers should have 1 items but got %d", len(headers))
+		t.FailNow()
+	}
+
+	rc := "request_condition"
+	expect := &Header{
+		Regex:             "/foo(.+)/",
+		Type:              "request",
+		IgnoreIfSet:       "1",
+		RequestCondition:  &rc,
+		CacheCondition:    nil,
+		ResponseCondition: nil,
+		Source:            "req.url",
+		Destination:       "http.Set-Header-Item",
+		Priority:          "10",
+		Action:            "regex_repeat",
+		Substitution:      "$1",
+		Name:              "set_header_request",
+	}
+	if diff := cmp.Diff(expect, headers[0]); diff != "" {
 		t.Errorf("API response result mismatch, diff=%s", diff)
 	}
 }

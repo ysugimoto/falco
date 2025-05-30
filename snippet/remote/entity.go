@@ -55,6 +55,21 @@ type VCLSnippet struct {
 type Condition struct {
 	Type      string `json:"type"`
 	Statement string `json:"statement"`
-	Priotity  string `json:"priority"`
+	Priority  string `json:"priority"`
 	Name      string `json:"name"`
+}
+
+type Header struct {
+	Regex             string  `json:"regex"`
+	Type              string  `json:"type"`
+	IgnoreIfSet       string  `json:"ignore_if_set"`
+	RequestCondition  *string `json:"request_condition"`
+	CacheCondition    *string `json:"cache_condition"`
+	ResponseCondition *string `json:"response_condition"`
+	Source            string  `json:"src"`
+	Destination       string  `json:"dst"`
+	Priority          string  `json:"priority"`
+	Action            string  `json:"action"`
+	Substitution      string  `json:"substitution"`
+	Name              string  `json:"name"`
 }

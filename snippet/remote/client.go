@@ -72,6 +72,16 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 	return v.Number, nil
 }
 
+func (c *FastlyClient) ListHeaders(ctx context.Context, version int64) ([]*Header, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/header", c.serviceId, version)
+	var headers []*Header
+	if err := c.request(ctx, endpoint, &headers); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return headers, nil
+}
+
 func (c *FastlyClient) ListConditions(ctx context.Context, version int64) ([]*Condition, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/condition", c.serviceId, version)
 	var conds []*Condition
