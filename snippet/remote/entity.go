@@ -35,21 +35,12 @@ type Backend struct {
 	Address *string `json:"address"`
 }
 
-type DirectorType int8
-
-const (
-	Random DirectorType = iota + 1
-	Hash
-	Client
-	Shield // shield director type is special type for Origin-Shielding on Faslty configuration
-)
-
 type Director struct {
-	Name     string       `json:"name"`
-	Type     DirectorType `json:"type"`
-	Backends []string     `json:"backends"`
-	Retries  int          `json:"retries"`
-	Quorum   int          `json:"quorum"`
+	Name     string   `json:"name"`
+	Type     int      `json:"type"`
+	Backends []string `json:"backends"`
+	Retries  int      `json:"retries"`
+	Quorum   int      `json:"quorum"`
 }
 
 type VCLSnippet struct {

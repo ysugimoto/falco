@@ -202,7 +202,7 @@ func (c *FastlyClient) ListSnippets(ctx context.Context, version int64) ([]*VCLS
 		return nil, errors.WithStack(err)
 	}
 
-	// Dynamic snippet contents is nil for this API, we need to call more API to get snippet content
+	// Could not dynamic snippet content from this API response so we need to call more API to get snippet content
 	var wg sync.WaitGroup
 	var once sync.Once
 	errch := make(chan error)

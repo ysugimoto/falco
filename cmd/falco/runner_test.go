@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -8,7 +9,7 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/snippet/terraform"
 )
 
 type RepoExampleTestMetadata struct {
@@ -80,7 +81,7 @@ func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, *terraf
 		t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
 	}
 
-	services, err := terraform.UnmarshalTerraformPlannedInput(buf)
+	services, err := terraform.ParseStdin(bytes.NewReader(buf))
 	if err != nil {
 		t.Fatalf("Unexpected error %s unarshalling %s ", fileName, err)
 	}
@@ -91,7 +92,11 @@ func loadFromTfJson(fileName string, t *testing.T) ([]resolver.Resolver, *terraf
 }
 
 func TestResolveExternalWithExternalProperties(t *testing.T) {
-	for _, fileName := range []string{"../../terraform/data/terraform-valid.json", "../../terraform/data/terraform-valid-weird-name.json"} {
+	files := []string{
+		"../../snippet/terraform/data/terraform-valid.json",
+		"../../snippet/terraform/data/terraform-valid-weird-name.json",
+	}
+	for _, fileName := range files {
 		rslv, f := loadFromTfJson(fileName, t)
 		c := &config.Config{
 			Linter: &config.LinterConfig{
@@ -115,7 +120,7 @@ func TestResolveExternalWithExternalProperties(t *testing.T) {
 }
 
 func TestResolveExternalWithNoExternalProperties(t *testing.T) {
-	fileName := "../../terraform/data/terraform-empty.json"
+	fileName := "../../snippet/terraform/data/terraform-empty.json"
 	rslv, f := loadFromTfJson(fileName, t)
 	c := &config.Config{
 		Linter: &config.LinterConfig{
@@ -138,7 +143,7 @@ func TestResolveExternalWithNoExternalProperties(t *testing.T) {
 }
 
 func TestResolveWithDuplicateDeclarations(t *testing.T) {
-	fileName := "../../terraform/data/terraform-duplicate.json"
+	fileName := "../../snippet/terraform/data/terraform-duplicate.json"
 	rslv, f := loadFromTfJson(fileName, t)
 	c := &config.Config{
 		Linter: &config.LinterConfig{
@@ -156,7 +161,7 @@ func TestResolveWithDuplicateDeclarations(t *testing.T) {
 }
 
 func TestResolveModulesWithVCLExtension(t *testing.T) {
-	fileName := "../../terraform/data/terraform-modules-extension.json"
+	fileName := "../../snippet/terraform/data/terraform-modules-extension.json"
 	rslv, f := loadFromTfJson(fileName, t)
 	c := &config.Config{
 		Linter: &config.LinterConfig{
@@ -175,7 +180,7 @@ func TestResolveModulesWithVCLExtension(t *testing.T) {
 }
 
 func TestResolveModulesWithoutVCLExtension(t *testing.T) {
-	fileName := "../../terraform/data/terraform-modules-without-extension.json"
+	fileName := "../../snippet/terraform/data/terraform-modules-without-extension.json"
 	rslv, f := loadFromTfJson(fileName, t)
 	c := &config.Config{
 		Linter: &config.LinterConfig{
@@ -194,14 +199,14 @@ func TestResolveModulesWithoutVCLExtension(t *testing.T) {
 }
 
 func TestTesterWithTerraform(t *testing.T) {
-	fileName := "../../terraform/data/terraform-valid.json"
+	fileName := "../../snippet/terraform/data/terraform-valid.json"
 	rslv, f := loadFromTfJson(fileName, t)
 	c := &config.Config{
 		Linter: &config.LinterConfig{
 			VerboseWarning: true,
 		},
 		Testing: &config.TestConfig{
-			IncludePaths: []string{"../../terraform/testing/"},
+			IncludePaths: []string{"../../snippet/terraform/testing/"},
 			Filter:       "*.test.vcl",
 		},
 	}
@@ -212,6 +217,25 @@ func TestTesterWithTerraform(t *testing.T) {
 	}
 	if res.Statistics.Fails > 0 || res.Statistics.Passes != 1 {
 		t.Errorf("Expected 0 failures and 1 pass, got %d failures and %d passes", res.Statistics.Fails, res.Statistics.Passes)
+	}
+}
+
+func TestResolveModulesWithAclEntriesAndDictionaryItems(t *testing.T) {
+	fileName := "../../snippet/terraform/data/terraform-entry-items.json"
+	rslv, f := loadFromTfJson(fileName, t)
+	c := &config.Config{
+		Linter: &config.LinterConfig{
+			VerboseWarning: true,
+		},
+	}
+
+	ret, err := NewRunner(c, f).Run(rslv[0])
+	if err != nil {
+		t.Fatalf("Unexpected Run() error: %s", err)
+	}
+
+	if ret.Errors > 0 {
+		t.Errorf("Errors expects 0, got %d", ret.Errors)
 	}
 }
 

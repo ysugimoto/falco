@@ -17,7 +17,7 @@ func TestStuff(t *testing.T) {
 			t.Fatalf("Unexpected error %s reading file %s ", fileName, err)
 		}
 
-		services, err := UnmarshalTerraformPlannedInput(buf)
+		services, err := unmarshalTerraformPlannedInput(buf)
 		if err != nil {
 			t.Fatalf("Unexpected error %s unarshalling %s ", fileName, err)
 		}

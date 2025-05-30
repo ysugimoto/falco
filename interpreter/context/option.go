@@ -4,7 +4,7 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester/shared"
 )
 
@@ -16,7 +16,7 @@ func WithResolver(rslv resolver.Resolver) Option {
 	}
 }
 
-func WithSnippets(fs *snippets.Snippets) Option {
+func WithSnippets(fs *snippet.Snippets) Option {
 	return func(c *Context) {
 		c.FastlySnippets = fs
 	}

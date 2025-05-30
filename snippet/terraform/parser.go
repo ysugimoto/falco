@@ -1,23 +1,24 @@
-package main
+package terraform
 
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/terraform"
 )
 
-func ParseStdin() ([]*terraform.FastlyService, error) {
+func ParseStdin(in io.Reader) ([]*FastlyService, error) {
 	// Consider reading from stdin timeout to not to hang up in CI flow
 	input := make(chan []byte)
 	errChan := make(chan error)
 
 	go func() {
-		buf, err := io.ReadAll(os.Stdin)
+		buf, err := io.ReadAll(in)
 		if err != nil {
+			if err == io.EOF {
+				return
+			}
 			errChan <- err
 			return
 		}
@@ -26,10 +27,10 @@ func ParseStdin() ([]*terraform.FastlyService, error) {
 
 	select {
 	case buf := <-input:
-		return terraform.UnmarshalTerraformPlannedInput(buf)
+		return unmarshalTerraformPlannedInput(buf)
 	case err := <-errChan:
 		return nil, errors.New(fmt.Sprintf("Failed to read from stdin: %s", err.Error()))
 	case <-time.After(10 * time.Second):
-		return nil, errors.New(("Failed to read from stdin: timed out"))
+		return nil, errors.New("Failed to read from stdin: timed out")
 	}
 }
