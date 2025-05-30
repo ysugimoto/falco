@@ -17,6 +17,7 @@ type Fetcher interface {
 	Directors() ([]*Director, error)
 	Dictionaries() ([]*Dictionary, error)
 	Acls() ([]*Acl, error)
+	Conditions() ([]*Condition, error)
 	Snippets() ([]*VCLSnippet, error)
 	LoggingEndpoints() ([]string, error)
 }

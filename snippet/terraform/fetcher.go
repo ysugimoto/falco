@@ -33,6 +33,21 @@ func (f *TerraformFetcher) filterService() []*FastlyService {
 	return []*FastlyService{}
 }
 
+func (f *TerraformFetcher) Conditions() ([]*snippet.Condition, error) {
+	var c []*snippet.Condition
+	for _, s := range f.filterService() {
+		for _, cond := range s.Conditions {
+			c = append(c, &snippet.Condition{
+				Name:      cond.Name,
+				Statement: cond.Statement,
+				Priority:  cond.Priority,
+				Type:      snippet.Phase(cond.Type),
+			})
+		}
+	}
+	return c, nil
+}
+
 func (f *TerraformFetcher) Backends() ([]*snippet.Backend, error) {
 	var b []*snippet.Backend
 	for _, s := range f.filterService() {
