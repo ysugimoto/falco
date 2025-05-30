@@ -300,6 +300,7 @@ We describe them following table and examples:
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
+| testing.inject_variable      | FUNCTION   | Inject variable that returns tentative value                                                 |
 | testing.inspect              | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
@@ -436,6 +437,26 @@ sub test_vcl {
     // Typically obj.status could not access in recv scope,
     // but can inspect via this function.
     assert.equal(testing.inspect("obj.status"), 400);
+}
+```
+
+----
+
+### testing.inject_variable(STRING var_name, ANY value)
+
+Inject variable that returns tentative value.
+
+> [!NOTE]
+> This function could override tentative values which are written in https://github.com/ysugimoto/falco/blob/main/docs/variables.md, typical variables could not be overridden.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Override server.region variable value
+    testing.inject_variable("server.region", "Asia");
+    testing.call_subroutine("vcl_recv");
+
+    assert.equal(req.http.Region, "Asia");
 }
 ```
 
