@@ -389,6 +389,28 @@ func watchRunTest(runner *Runner, rslv resolver.Resolver) error {
 	}
 }
 
+// shorthand indent making
+func indent(level int) string {
+	return strings.Repeat(" ", level*2)
+}
+
+// print problem line
+func printCodeLine(lx *lexer.Lexer, tok token.Token) {
+	problemLine := tok.Line
+	lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
+	for l := problemLine - 1; l <= problemLine+1; l++ {
+		line, ok := lx.GetLine(l)
+		if !ok {
+			continue
+		}
+		color := white
+		if l == problemLine {
+			color = yellow
+		}
+		writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+	}
+}
+
 func runTest(runner *Runner, rslv resolver.Resolver) error {
 	factory, err := runner.Test(rslv)
 	if err != nil {
@@ -414,27 +436,6 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		return nil
 	}
 
-	// shorthand indent making
-	indent := func(level int) string {
-		return strings.Repeat(" ", level*2)
-	}
-	// print problem line
-	printCodeLine := func(lx *lexer.Lexer, tok token.Token) {
-		problemLine := tok.Line
-		lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
-		for l := problemLine - 1; l <= problemLine+1; l++ {
-			line, ok := lx.GetLine(l)
-			if !ok {
-				continue
-			}
-			color := white
-			if l == problemLine {
-				color = yellow
-			}
-			writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
-		}
-	}
-
 	var passedCount, failedCount, skippedCount, totalCount int
 	for _, r := range factory.Results {
 		switch {
@@ -455,12 +456,20 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			if c.Group != "" {
 				prefix = c.Group + " › "
 			}
+
 			switch {
 			case c.Skip:
 				writeln(yellow, "%s- [VCL_%s] %s%s", indent(1), c.Scope, prefix, c.Name)
 				skippedCount++
 			case c.Error != nil:
 				writeln(redBold, "%s● [VCL_%s] %s%s (%dms)\n", indent(1), c.Scope, prefix, c.Name, c.Time)
+				if len(c.Logs) > 0 {
+					writeln(yellow, "%s[Logs]", indent(1))
+					for i := range c.Logs {
+						writeln(white, "%s%s", indent(2), c.Logs[i])
+					}
+					writeln(white, "")
+				}
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
@@ -475,6 +484,13 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				failedCount++
 			default:
 				writeln(green, "%s✓ [VCL_%s] %s%s (%dms)", indent(1), c.Scope, prefix, c.Name, c.Time)
+				if len(c.Logs) > 0 {
+					writeln(yellow, "\n%s[Logs]", indent(1))
+					for i := range c.Logs {
+						writeln(white, "%s%s", indent(2), c.Logs[i])
+					}
+					writeln(white, "")
+				}
 				passedCount++
 			}
 		}
