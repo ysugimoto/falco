@@ -464,7 +464,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			case c.Error != nil:
 				writeln(redBold, "%s● [VCL_%s] %s%s (%dms)\n", indent(1), c.Scope, prefix, c.Name, c.Time)
 				if len(c.Logs) > 0 {
-					writeln(yellow, "%s[Logs]", indent(1))
+					writeln(yellow, "%s[Logs]", indent(2))
 					for i := range c.Logs {
 						writeln(white, "%s%s", indent(2), c.Logs[i])
 					}
@@ -485,7 +485,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 			default:
 				writeln(green, "%s✓ [VCL_%s] %s%s (%dms)", indent(1), c.Scope, prefix, c.Name, c.Time)
 				if len(c.Logs) > 0 {
-					writeln(yellow, "\n%s[Logs]", indent(1))
+					writeln(yellow, "\n%s[Logs]", indent(2))
 					for i := range c.Logs {
 						writeln(white, "%s%s", indent(2), c.Logs[i])
 					}
