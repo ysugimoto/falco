@@ -184,7 +184,11 @@ func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		for _, snip := range r.snippets.EmbedSnippets() {
+		snippets, err := r.snippets.EmbedSnippets()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		for _, snip := range snippets {
 			s, err := r.parseVCL(snip.Name, snip.Data)
 			if err != nil {
 				return nil, err

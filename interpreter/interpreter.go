@@ -85,7 +85,7 @@ func (i *Interpreter) restart() error {
 	i.ctx.Response = nil
 
 	if err := i.ProcessRecv(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -96,11 +96,11 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	main, err := ctx.Resolver.MainVCL()
 	if err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyVCLLimitation(main.Data); err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	vcl, err := parser.New(
 		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
@@ -108,19 +108,21 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	if err != nil {
 		// parse error
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if ctx.FastlySnippets != nil {
-		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
-			s, err := parser.New(
-				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
-			).ParseVCL()
+		snippets, err := ctx.FastlySnippets.EmbedSnippets()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		for _, snip := range snippets {
+			s, err := parser.New(lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name))).ParseVCL()
 			if err != nil {
 				// parse error
 				i.Debugger.Message(err.Error())
-				return err
+				return errors.WithStack(err)
 			}
 			vcl.Statements = append(s.Statements, vcl.Statements...)
 		}
@@ -141,17 +143,17 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 
 	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// instrumenting if coverage measurement is enabled
 	if i.ctx.Coverage != nil {
 		i.instrument(vcl)
 	}
 	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil

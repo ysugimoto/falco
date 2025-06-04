@@ -19,6 +19,7 @@ type Fetcher interface {
 	Acls() ([]*Acl, error)
 	Conditions() ([]*Condition, error)
 	Snippets() ([]*VCLSnippet, error)
+	Headers() ([]*Header, error)
 	LoggingEndpoints() ([]string, error)
 }
 
@@ -50,6 +51,14 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 	})
 	eg.Go(func() (err error) {
 		snippets.ScopedSnippets, snippets.IncludeSnippets, err = fetchVCLSnippets(fetcher)
+		return err
+	})
+	eg.Go(func() (err error) {
+		snippets.conditions, err = fetchConditions(fetcher)
+		return err
+	})
+	eg.Go(func() (err error) {
+		snippets.headers, err = fetcher.Headers()
 		return err
 	})
 
@@ -194,8 +203,9 @@ func fetchVCLSnippets(fetcher Fetcher) (ScopedSnippets, IncludeSnippets, error) 
 		// "none" type means that user could include the snippet arbitrary
 		if snip.Type == "none" {
 			include[snip.Name] = Item{
-				Name: snip.Name,
-				Data: snip.Content,
+				Name:     snip.Name,
+				Data:     snip.Content,
+				Priority: snip.Priority,
 			}
 			continue
 		}
@@ -204,10 +214,24 @@ func fetchVCLSnippets(fetcher Fetcher) (ScopedSnippets, IncludeSnippets, error) 
 			scoped[snip.Type] = []Item{}
 		}
 		scoped[snip.Type] = append(scoped[snip.Type], Item{
-			Name: snip.Name,
-			Data: snip.Content,
+			Name:     snip.Name,
+			Data:     snip.Content,
+			Priority: snip.Priority,
 		})
 	}
 
 	return scoped, include, nil
+}
+
+func fetchConditions(fetcher Fetcher) (map[string]*Condition, error) {
+	conditions, err := fetcher.Conditions()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	ret := make(map[string]*Condition)
+	for _, cond := range conditions {
+		ret[cond.Name] = cond
+	}
+	return ret, nil
 }
