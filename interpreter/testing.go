@@ -28,7 +28,11 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 				Properties: []*ast.BackendProperty{
 					{
 						Key:   &ast.Ident{Value: "host"},
-						Value: &ast.String{Value: "http://localhost:3124"},
+						Value: &ast.String{Value: "localhost"},
+					},
+					{
+						Key:   &ast.Ident{Value: "port"},
+						Value: &ast.String{Value: "80"},
 					},
 				},
 			},

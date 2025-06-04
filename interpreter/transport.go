@@ -119,15 +119,6 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		url += "?" + v
 	}
 
-	// Debug message
-	var suffix string
-	if overrideBackend != nil {
-		suffix = " (overrided by config)"
-	}
-	i.Debugger.Message(
-		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, url, suffix),
-	)
-
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
 		url,
@@ -182,13 +173,26 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 			Transport: transport,
 		}
 	}
+
+	// Debug message
+	var suffix string
+	// nolint:errcheck
+	if overrideBackend, _ := getOverrideBackend(i.ctx, backend.Value.Name.Value); overrideBackend != nil {
+		suffix = " (overrided by config)"
+	}
+	i.Debugger.Message(
+		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, req.URL.String(), suffix),
+	)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode))
+	i.Debugger.Message(
+		fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode),
+	)
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer

@@ -34,7 +34,6 @@ type Tester struct {
 	interpreterOptions []context.Option
 	config             *config.TestConfig
 	counter            *shared.Counter
-	debugger           *Debugger
 	coverage           *shared.Coverage
 }
 
@@ -43,7 +42,6 @@ func New(c *config.TestConfig, opts []context.Option) *Tester {
 		interpreterOptions: opts,
 		config:             c,
 		counter:            shared.NewCounter(),
-		debugger:           NewDebugger(),
 	}
 	if c.Coverage {
 		t.coverage = shared.NewCoverage()
@@ -93,7 +91,6 @@ func (t *Tester) Run(main string) (*TestFactory, error) {
 	factory := &TestFactory{
 		Results:    results,
 		Statistics: t.counter,
-		Logs:       t.debugger.stack,
 	}
 	if t.coverage != nil {
 		factory.Coverage = t.coverage.Factory()
@@ -155,6 +152,10 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				}
 				metadata := getTestMetadata(st)
 				for _, s := range metadata.Scopes {
+					// Attach new debugger for each test suite
+					d := NewDebugger()
+					i.Debugger = d
+
 					// Skip this testsuite when marked as @skip or @tag matched
 					if metadata.Skip || metadata.MatchTags(t.config.Tags) {
 						cases = append(cases, &TestCase{
@@ -173,6 +174,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 						Error: errors.Cause(err),
 						Scope: s.String(),
 						Time:  time.Since(start).Milliseconds(),
+						Logs:  d.stack,
 					})
 					if err != nil {
 						t.counter.Fail()
@@ -229,6 +231,10 @@ func (t *Tester) runDescribedTests(
 	for _, sub := range d.Subroutines {
 		metadata := getTestMetadata(sub)
 		for _, s := range metadata.Scopes {
+			// Attach new debugger for each test suite
+			debugger := NewDebugger()
+			i.Debugger = debugger
+
 			// Skip this testsuite when marked as @skip or @tag matched
 			if metadata.Skip || metadata.MatchTags(t.config.Tags) {
 				cases = append(cases, &TestCase{
@@ -260,6 +266,7 @@ func (t *Tester) runDescribedTests(
 				Error: errors.Cause(err),
 				Scope: s.String(),
 				Time:  time.Since(start).Milliseconds(),
+				Logs:  debugger.stack,
 			})
 			if err != nil {
 				t.counter.Fail()
@@ -285,7 +292,7 @@ func (t *Tester) runDescribedTests(
 // Set up interprete for each test subroutines
 func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter {
 	i := interpreter.New(t.interpreterOptions...)
-	i.Debugger = t.debugger
+	i.Debugger = NewDebugger() // store the default debugger
 	i.IdentResolver = func(val string) value.Value {
 		if v, ok := defs.Backends[val]; ok {
 			return v
