@@ -35,6 +35,7 @@ type Snippets struct {
 	Conditions      map[string]*Condition `json:"conditions"`
 	Headers         []*Header             `json:"headers"`
 	ResponseObjects []*ResponseObject     `json:"responseObjects"`
+	RequestSetting  *RequestSetting       `json:"request_setting"`
 
 	// expose items, access from external package
 	ScopedSnippets  ScopedSnippets  `json:"scoped"`
@@ -44,7 +45,7 @@ type Snippets struct {
 	LoggingEndpoints LoggingEndpoints `json:"logging"`
 }
 
-func (s *Snippets) EmbedSnippets() ([]Item, error) {
+func (s *Snippets) EmbedSnippets(enableTLS bool) ([]Item, error) {
 	var snippets []Item
 
 	// Embed Dictionaries
@@ -69,6 +70,15 @@ func (s *Snippets) EmbedSnippets() ([]Item, error) {
 			return nil, errors.WithStack(err)
 		}
 	}
+	// Treat Force SSL setting
+	if s.RequestSetting != nil && s.RequestSetting.ForceSSL {
+		// We can implement this feature but only enables on enable TLS server
+		// because falco simulator usually runs on HTTP for local testing, without TLS.
+		if enableTLS {
+			s.renderForceSSLSnippet()
+		}
+	}
+
 	// Response object is handled at error directive,
 	// so use error statement with internal status code like:
 	//
@@ -103,6 +113,7 @@ func (s *Snippets) FetchLoggingEndpoint(fetcher Fetcher) error {
 	return nil
 }
 
+// Lazy render header snippets
 func (s *Snippets) renderHeaderSnippet(h *Header) error {
 	var snip *Item
 	var err error
@@ -135,13 +146,11 @@ func (s *Snippets) renderHeaderSnippet(h *Header) error {
 		scope = "deliver"
 	}
 
-	if _, ok := s.ScopedSnippets[scope]; !ok {
-		s.ScopedSnippets[scope] = []Item{}
-	}
-	s.ScopedSnippets[scope] = append(s.ScopedSnippets[scope], *snip)
+	s.ScopedSnippets.Add(scope, *snip)
 	return nil
 }
 
+// Lazy render response object snippets
 func (s *Snippets) renderResponseObjectSnippet(r *ResponseObject, statusCode int) error {
 	var snip *Item
 	var err error
@@ -169,19 +178,38 @@ func (s *Snippets) renderResponseObjectSnippet(r *ResponseObject, statusCode int
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if _, ok := s.ScopedSnippets[scope]; !ok {
-		s.ScopedSnippets[scope] = []Item{}
-	}
-	s.ScopedSnippets[scope] = append(s.ScopedSnippets[scope], *condition)
+	s.ScopedSnippets.Add(scope, *condition)
 
 	// And also render response object
 	snip, err = renderResponseObject(r)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if _, ok := s.ScopedSnippets["error"]; !ok {
-		s.ScopedSnippets["error"] = []Item{}
-	}
-	s.ScopedSnippets["error"] = append(s.ScopedSnippets["error"], *snip)
+	s.ScopedSnippets.Add("error", *snip)
 	return nil
+}
+
+// Lazy render force SSL request setting
+// Confirmed on Fastly generated VCL, will be added automatically following snippets
+func (s *Snippets) renderForceSSLSnippet() {
+	s.ScopedSnippets.Add("recv", Item{
+		Name: "Remote.ForceSSL",
+		Data: `
+if (!req.http.Fastly-SSL) {
+   error 801 "Force SSL";
+}
+`,
+	})
+	s.ScopedSnippets.Add("error", Item{
+		Name: "Remote.ForceSSL",
+		Data: `
+if (obj.status == 801) {
+	set obj.status = 301;
+	set obj.response = "Moved Permanently";
+	set obj.http.Location = "https://" req.http.host req.url;
+	synthetic {""};
+	return (deliver);
+}
+`,
+	})
 }

@@ -196,7 +196,7 @@ func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		snippets, err := r.snippets.EmbedSnippets()
+		snippets, err := r.snippets.EmbedSnippets(false) // disable TLS on linting
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -409,12 +409,15 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 
 func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	sc := r.config.Simulator
+	isTLS := sc.KeyFile != "" && sc.CertFile != ""
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 		icontext.WithActualResponse(sc.IsProxyResponse),
+		icontext.WithTLServer(isTLS),
 	}
+
 	if r.snippets != nil {
 		options = append(options, icontext.WithSnippets(r.snippets))
 	}
@@ -445,7 +448,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	}
 
 	var err error
-	if sc.KeyFile != "" && sc.CertFile != "" {
+	if isTLS {
 		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
 		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
 	} else {

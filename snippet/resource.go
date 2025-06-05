@@ -110,3 +110,8 @@ type ResponseObject struct {
 	StatusCode          int
 	ConditionExpression string
 }
+
+type RequestSetting struct {
+	ForceSSL bool
+	// will be needed more fields to support
+}

@@ -26,6 +26,7 @@ type Fetcher interface {
 	Snippets() ([]*VCLSnippet, error)
 	Headers() ([]*Header, error)
 	ResponseObjects() ([]*ResponseObject, error)
+	RequestSetting() (*RequestSetting, error)
 	LoggingEndpoints() ([]string, error)
 }
 
@@ -69,6 +70,10 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 	})
 	eg.Go(func() (err error) {
 		snippets.ResponseObjects, err = fetcher.ResponseObjects()
+		return err
+	})
+	eg.Go(func() (err error) {
+		snippets.RequestSetting, err = fetcher.RequestSetting()
 		return err
 	})
 

@@ -90,6 +90,10 @@ type ResponseObject struct {
 	CacheCondition   string `json:"cache_condition"`
 }
 
+type RequestSetting struct {
+	ForceSSL bool `json:"force_ssl"`
+}
+
 type FastlyResources struct {
 	Services        map[string]*FastlyService
 	AclEntries      []*fastlyAclEntryValues
@@ -107,6 +111,7 @@ type FastlyService struct {
 	Conditions       []*Condition
 	Headers          []*Header
 	ResponseObjects  []*ResponseObject
+	RequestSettings  []*RequestSetting
 	LoggingEndpoints []string
 }
 
@@ -122,6 +127,7 @@ type fastlyServiceValues struct {
 	Conditions      []*Condition      `json:"condition"`
 	Headers         []*Header         `json:"header"`
 	ResponseObjects []*ResponseObject `json:"response_object"`
+	RequestSettings []*RequestSetting `json:"request_setting"`
 
 	// Various kinds of realtime logging endpoints
 	LoggingBigQuerty     []*LoggingEndpoint `json:"logging_bigqeury"`

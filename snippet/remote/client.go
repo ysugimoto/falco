@@ -72,6 +72,19 @@ func (c *FastlyClient) LatestVersion(ctx context.Context) (int64, error) {
 	return v.Number, nil
 }
 
+func (c *FastlyClient) GetRequestSetting(ctx context.Context, version int64) (*RequestSetting, error) {
+	endpoint := fmt.Sprintf("/service/%s/version/%d/request_settings", c.serviceId, version)
+	var requestSettings []*RequestSetting
+	if err := c.request(ctx, endpoint, &requestSettings); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if len(requestSettings) > 0 {
+		return requestSettings[0], nil
+	}
+	return nil, nil
+}
+
 func (c *FastlyClient) ListResponseObjects(ctx context.Context, version int64) ([]*ResponseObject, error) {
 	endpoint := fmt.Sprintf("/service/%s/version/%d/response_object", c.serviceId, version)
 	var responseObjects []*ResponseObject

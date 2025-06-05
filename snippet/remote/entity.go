@@ -83,3 +83,7 @@ type ResponseObject struct {
 	RequestCondition string  `json:"request_condition"`
 	Name             string  `json:"name"`
 }
+
+type RequestSetting struct {
+	ForceSSL string `json:"force_ssl"`
+}

@@ -113,7 +113,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if ctx.FastlySnippets != nil {
-		snippets, err := ctx.FastlySnippets.EmbedSnippets()
+		snippets, err := ctx.FastlySnippets.EmbedSnippets(ctx.TLSServer)
 		if err != nil {
 			return errors.WithStack(err)
 		}
