@@ -121,24 +121,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		url += "?" + v
 	}
 
-<<<<<<< HEAD
-	// Debug message
-	var suffix string
-	if overrideBackend != nil {
-		suffix = " (overrided by config)"
-	}
-	i.Debugger.Message(
-		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, url, suffix),
-	)
-
 	req, err := http.NewRequest(i.ctx.Request.Method, url, i.ctx.Request.Body)
-=======
-	req, err := http.NewRequest(
-		i.ctx.Request.Method,
-		url,
-		i.ctx.Request.Body,
-	)
->>>>>>> origin/main
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
