@@ -103,6 +103,26 @@ func (f *FastlyApiFetcher) WriteCache(snip *snippet.Snippets) {
 	json.NewEncoder(fp).Encode(snip) // nolint:errcheck
 }
 
+func (f *FastlyApiFetcher) RequestSetting() (*snippet.RequestSetting, error) {
+	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
+	defer timeout()
+	version, err := f.getVersion(ctx)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	requestSetting, err := f.client.GetRequestSetting(ctx, version)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if requestSetting == nil {
+		return nil, nil
+	}
+	return &snippet.RequestSetting{
+		ForceSSL: requestSetting.ForceSSL == "1",
+	}, nil
+}
+
 func (f *FastlyApiFetcher) ResponseObjects() ([]*snippet.ResponseObject, error) {
 	ctx, timeout := context.WithTimeout(context.Background(), f.timeout)
 	defer timeout()

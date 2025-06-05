@@ -43,6 +43,17 @@ func (f *TerraformFetcher) filterService() []*FastlyService {
 	return []*FastlyService{}
 }
 
+func (f *TerraformFetcher) RequestSetting() (*snippet.RequestSetting, error) {
+	for _, s := range f.filterService() {
+		if len(s.RequestSettings) > 0 {
+			return &snippet.RequestSetting{
+				ForceSSL: s.RequestSettings[0].ForceSSL,
+			}, nil
+		}
+	}
+	return nil, nil
+}
+
 func (f *TerraformFetcher) ResponseObjects() ([]*snippet.ResponseObject, error) {
 	var ros []*snippet.ResponseObject
 	for _, s := range f.filterService() {

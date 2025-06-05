@@ -87,6 +87,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 					Conditions:       s.Conditions,
 					Headers:          s.Headers,
 					ResponseObjects:  s.ResponseObjects,
+					RequestSettings:  s.RequestSettings,
 					LoggingEndpoints: factoryLoggingEndpoints(s),
 				}
 			case isFastlyServiceAclEntryResource(v):
