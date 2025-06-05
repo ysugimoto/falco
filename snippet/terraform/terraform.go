@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"encoding/json"
+	"slices"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -259,10 +260,18 @@ func collectServices(r *FastlyResources) []*FastlyService {
 			if dict.Name != item.Index {
 				continue
 			}
-			for key, val := range item.Items {
+			// Sort items by key ascending
+			keys := make([]string, len(item.Items))
+			index := 0
+			for key := range item.Items {
+				keys[index] = key
+				index++
+			}
+			slices.Sort(keys)
+			for i := range keys {
 				dict.Items = append(dict.Items, &DictionaryItem{
-					Key:   key,
-					Value: val,
+					Key:   keys[i],
+					Value: item.Items[keys[i]],
 				})
 			}
 		}
