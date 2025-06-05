@@ -73,3 +73,13 @@ type Header struct {
 	Substitution      string  `json:"substitution"`
 	Name              string  `json:"name"`
 }
+
+type ResponseObject struct {
+	Content          *string `json:"content"`
+	Response         string  `json:"response"`
+	CacheCondition   string  `json:"cache_condition"`
+	ContentType      string  `json:"content_type"`
+	Status           string  `json:"status"`
+	RequestCondition string  `json:"request_condition"`
+	Name             string  `json:"name"`
+}

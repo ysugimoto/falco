@@ -80,6 +80,16 @@ type Header struct {
 	Type              string `json:"type"`
 }
 
+type ResponseObject struct {
+	Name             string `json:"name"`
+	ContentType      string `json:"content_type"`
+	Content          string `json:"content"`
+	Status           int64  `json:"status"`
+	Response         string `json:"response"`
+	RequestCondition string `json:"request_condition"`
+	CacheCondition   string `json:"cache_condition"`
+}
+
 type FastlyResources struct {
 	Services        map[string]*FastlyService
 	AclEntries      []*fastlyAclEntryValues
@@ -96,20 +106,22 @@ type FastlyService struct {
 	Snippets         []*Snippet
 	Conditions       []*Condition
 	Headers          []*Header
+	ResponseObjects  []*ResponseObject
 	LoggingEndpoints []string
 }
 
 type fastlyServiceValues struct {
-	ID         string        `json:"id"`
-	Name       string        `json:"name"`
-	Vcl        []*Vcl        `json:"vcl"`
-	Acl        []*Acl        `json:"acl"`
-	Backend    []*Backend    `json:"backend"`
-	Director   []*Director   `json:"director"`
-	Dictionary []*Dictionary `json:"dictionary"`
-	Snippets   []*Snippet    `json:"snippet"`
-	Conditions []*Condition  `json:"condition"`
-	Headers    []*Header     `json:"header"`
+	ID              string            `json:"id"`
+	Name            string            `json:"name"`
+	Vcl             []*Vcl            `json:"vcl"`
+	Acl             []*Acl            `json:"acl"`
+	Backend         []*Backend        `json:"backend"`
+	Director        []*Director       `json:"director"`
+	Dictionary      []*Dictionary     `json:"dictionary"`
+	Snippets        []*Snippet        `json:"snippet"`
+	Conditions      []*Condition      `json:"condition"`
+	Headers         []*Header         `json:"header"`
+	ResponseObjects []*ResponseObject `json:"response_object"`
 
 	// Various kinds of realtime logging endpoints
 	LoggingBigQuerty     []*LoggingEndpoint `json:"logging_bigqeury"`

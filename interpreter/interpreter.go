@@ -611,8 +611,8 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	i.ctx.Object = &http.Response{
-		Response: &ghttp.Response{
+	i.ctx.Object = http.WrapResponse(
+		&ghttp.Response{
 			StatusCode:    int(i.ctx.ObjectStatus.Value),
 			Status:        ghttp.StatusText(int(i.ctx.ObjectStatus.Value)),
 			Proto:         "HTTP/1.0",
@@ -623,7 +623,7 @@ func (i *Interpreter) ProcessError() error {
 			ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
 			Request:       i.ctx.Request.Request,
 		},
-	}
+	)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle

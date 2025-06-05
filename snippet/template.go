@@ -157,6 +157,29 @@ var headerTemplate = template.Must(
 `,
 		))
 
+var responseObjectConditionTemplate = template.Must(
+	template.New("responseobject.condition").
+		Parse(
+			`
+{{if .ConditionExpression}} if ({{ .ConditionExpression}}) {{"{"}}{{- end}}
+	error {{ .StatusCode }} "Fastly Internal";
+{{if .ConditionExpression }}{{"}"}}{{- end}}
+`,
+		))
+
+var responseObjectTemplate = template.Must(
+	template.New("responseobject").
+		Parse(
+			`
+if (obj.status == {{ .StatusCode }}) {{"{"}}
+	set obj.status = {{ .Status }};
+	set obj.http.Content-Type = "{{ .ContentType }}";
+	synthetic {{"{\""}}{{if .Content }}{{ .Content }}{{else}}{{ .Response }}{{end}}{{"\"}"}};
+	return(deliver);
+{{"}"}}
+`,
+		))
+
 // Render functions
 
 func renderDictionary(dict *Dictionary) (*Item, error) {
@@ -236,5 +259,35 @@ func renderHeader(header *Header) (*Item, error) {
 		Name:     fmt.Sprintf("Remote.Header:%s", header.Name),
 		Data:     buf.String(),
 		Priority: header.Priority,
+	}, nil
+}
+
+func renderResponseObjectCondition(r *ResponseObject) (*Item, error) {
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer pool.Put(buf)
+
+	buf.Reset()
+	if err := responseObjectConditionTemplate.Execute(buf, r); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &Item{
+		Name: fmt.Sprintf("Remote.ResponseObject.Condition:%s", r.Name),
+		Data: buf.String(),
+	}, nil
+}
+
+func renderResponseObject(r *ResponseObject) (*Item, error) {
+	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer pool.Put(buf)
+
+	buf.Reset()
+	if err := responseObjectTemplate.Execute(buf, r); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &Item{
+		Name: fmt.Sprintf("Remote.ResponseObject:%s", r.Name),
+		Data: buf.String(),
 	}, nil
 }
