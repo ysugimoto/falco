@@ -22,6 +22,15 @@ func (f *TerraformFetcher) SetName(name string) {
 	f.currentName = name
 }
 
+func (f *TerraformFetcher) LookupCache(refresh bool) *snippet.Snippets {
+	// Terraform cache always null because the planned input should be provided from stdin
+	return nil
+}
+
+func (f *TerraformFetcher) WriteCache(snip *snippet.Snippets) {
+	// noop
+}
+
 func (f *TerraformFetcher) filterService() []*FastlyService {
 	if f.currentName == "" {
 		return f.services
@@ -32,6 +41,28 @@ func (f *TerraformFetcher) filterService() []*FastlyService {
 		}
 	}
 	return []*FastlyService{}
+}
+
+func (f *TerraformFetcher) ResponseObjects() ([]*snippet.ResponseObject, error) {
+	var ros []*snippet.ResponseObject
+	for _, s := range f.filterService() {
+		for _, ro := range s.ResponseObjects {
+			var c *string
+			if ro.Content != "" {
+				c = &ro.Content
+			}
+			ros = append(ros, &snippet.ResponseObject{
+				Content:          c,
+				Response:         ro.Response,
+				RequestCondition: ro.RequestCondition,
+				CacheCondition:   ro.CacheCondition,
+				Status:           ro.Status,
+				ContentType:      ro.ContentType,
+				Name:             ro.Name,
+			})
+		}
+	}
+	return ros, nil
 }
 
 func (f *TerraformFetcher) Headers() ([]*snippet.Header, error) {
@@ -137,12 +168,10 @@ func (f *TerraformFetcher) Acls() ([]*snippet.Acl, error) {
 					ae := &snippet.AclEntry{
 						Ip:      entry.Ip,
 						Comment: entry.Comment,
+						Negated: entry.Negated,
 					}
 					if subnet, err := strconv.ParseInt(entry.Subnet, 10, 64); err == nil {
 						ae.Subnet = &subnet
-					}
-					if entry.Negated {
-						ae.Negated = "!"
 					}
 					entries[i] = ae
 				}

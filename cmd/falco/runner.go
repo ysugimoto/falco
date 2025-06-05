@@ -111,14 +111,26 @@ func NewRunner(c *config.Config, fetcher snippet.Fetcher) *Runner {
 
 	// If fetch interface is provided, communicate with it
 	if fetcher != nil {
-		s, err := snippet.Fetch(fetcher)
+		var snippets *snippet.Snippets
+		var err error
+
+		// Lookup snippets cache
+		cache := fetcher.LookupCache(c.Refresh)
+		if cache != nil {
+			snippets = cache
+			r.message(white, "Use cached remote snippets.\n")
+		} else {
+			snippets, err = snippet.Fetch(fetcher)
+		}
 		if err != nil {
 			r.message(red, "%s\n", err.Error())
 		}
-		r.snippets = s
+		r.snippets = snippets
 		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
 			r.message(red, "%s\n", err.Error())
 		}
+		// ...and save cache after the constructor
+		defer fetcher.WriteCache(snippets)
 	}
 
 	// Set verbose level

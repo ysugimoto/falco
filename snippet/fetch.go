@@ -13,6 +13,11 @@ import (
 // Remote Fetcher    - Fastly Managed
 // Terraform Fetcher - Terraform Planned Result
 type Fetcher interface {
+	// Caching methods
+	LookupCache(bool) *Snippets
+	WriteCache(*Snippets)
+
+	// Resource fetching methods
 	Backends() ([]*Backend, error)
 	Directors() ([]*Director, error)
 	Dictionaries() ([]*Dictionary, error)
@@ -20,6 +25,7 @@ type Fetcher interface {
 	Conditions() ([]*Condition, error)
 	Snippets() ([]*VCLSnippet, error)
 	Headers() ([]*Header, error)
+	ResponseObjects() ([]*ResponseObject, error)
 	LoggingEndpoints() ([]string, error)
 }
 
@@ -34,19 +40,19 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 
 	fmt.Print("Fething snippets...")
 	eg.Go(func() (err error) {
-		snippets.dictionaries, err = fetchEdgeDictionary(fetcher)
+		snippets.Dictionaries, err = fetchEdgeDictionary(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
-		snippets.acls, err = fetchAccessControl(fetcher)
+		snippets.Acls, err = fetchAccessControl(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
-		snippets.backends, err = fetchBackend(fetcher)
+		snippets.Backends, err = fetchBackend(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
-		snippets.directors, err = fetchDirector(fetcher)
+		snippets.Directors, err = fetchDirector(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
@@ -54,11 +60,15 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 		return err
 	})
 	eg.Go(func() (err error) {
-		snippets.conditions, err = fetchConditions(fetcher)
+		snippets.Conditions, err = fetchConditions(fetcher)
 		return err
 	})
 	eg.Go(func() (err error) {
-		snippets.headers, err = fetcher.Headers()
+		snippets.Headers, err = fetcher.Headers()
+		return err
+	})
+	eg.Go(func() (err error) {
+		snippets.ResponseObjects, err = fetcher.ResponseObjects()
 		return err
 	})
 

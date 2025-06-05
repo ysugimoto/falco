@@ -4,7 +4,7 @@ package snippet
 
 type AclEntry struct {
 	Ip      string
-	Negated string
+	Negated bool
 	Subnet  *int64
 	Comment string
 }
@@ -94,5 +94,19 @@ type Header struct {
 	Substitution string
 
 	// This field value will be assigned on rendering
+	ConditionExpression string
+}
+
+type ResponseObject struct {
+	Content          *string
+	Response         string
+	RequestCondition string
+	CacheCondition   string
+	Status           int64
+	ContentType      string
+	Name             string
+
+	// This field value will be assigned on rendering
+	StatusCode          int
 	ConditionExpression string
 }
