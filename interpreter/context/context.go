@@ -45,6 +45,7 @@ var (
 )
 
 type Context struct {
+	TLSServer           bool
 	Resolver            resolver.Resolver
 	FastlySnippets      *snippet.Snippets
 	Acls                map[string]*value.Acl

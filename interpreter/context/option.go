@@ -86,3 +86,9 @@ func WithCoverage(cv *shared.Coverage) Option {
 		c.Coverage = cv
 	}
 }
+
+func WithTLServer(tls bool) Option {
+	return func(c *Context) {
+		c.TLSServer = tls
+	}
+}

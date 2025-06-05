@@ -1,7 +1,6 @@
 package snippet
 
 import (
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 )
 
@@ -46,7 +45,7 @@ type Snippets struct {
 	LoggingEndpoints LoggingEndpoints `json:"logging"`
 }
 
-func (s *Snippets) EmbedSnippets() ([]Item, error) {
+func (s *Snippets) EmbedSnippets(enableTLS bool) ([]Item, error) {
 	var snippets []Item
 
 	// Embed Dictionaries
@@ -73,7 +72,11 @@ func (s *Snippets) EmbedSnippets() ([]Item, error) {
 	}
 	// Treat Force SSL setting
 	if s.RequestSetting != nil && s.RequestSetting.ForceSSL {
-		s.renderForceSSLSnippet()
+		// We can implement this feature but only enables on enable TLS server
+		// because falco simulator usually runs on HTTP for local testing, without TLS.
+		if enableTLS {
+			s.renderForceSSLSnippet()
+		}
 	}
 
 	// Response object is handled at error directive,
@@ -89,8 +92,6 @@ func (s *Snippets) EmbedSnippets() ([]Item, error) {
 		}
 		internalStatusCode++
 	}
-
-	pp.Println(s.ScopedSnippets)
 
 	return snippets, nil
 }
