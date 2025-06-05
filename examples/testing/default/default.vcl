@@ -28,7 +28,7 @@ backend httpbin_org {
 
 //@scope: recv,deliver,log
 sub custom_logger {
-  log req.http.header;
+  log req.http.Foo;
 }
 
 //@scope: error

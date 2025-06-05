@@ -121,6 +121,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		url += "?" + v
 	}
 
+<<<<<<< HEAD
 	// Debug message
 	var suffix string
 	if overrideBackend != nil {
@@ -131,6 +132,13 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	)
 
 	req, err := http.NewRequest(i.ctx.Request.Method, url, i.ctx.Request.Body)
+=======
+	req, err := http.NewRequest(
+		i.ctx.Request.Method,
+		url,
+		i.ctx.Request.Body,
+	)
+>>>>>>> origin/main
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
@@ -164,13 +172,25 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 		return nil, errors.WithStack(err)
 	}
 
+	// Debug message
+	var suffix string
+	// nolint:errcheck
+	if overrideBackend, _ := getOverrideBackend(i.ctx, backend.Value.Name.Value); overrideBackend != nil {
+		suffix = " (overridden by config)"
+	}
+	i.Debugger.Message(
+		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, req.URL.String(), suffix),
+	)
+
 	resp, err := http.SendRequest(req)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode))
+	i.Debugger.Message(
+		fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode),
+	)
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer

@@ -48,6 +48,10 @@ func (d *Debugger) Message(msg string) {
 	d.message.Append(messageview.Runtime, "%s", msg)
 }
 
+func (d *Debugger) Log(stmt *ast.LogStatement, value string) {
+	d.message.Append(messageview.Runtime, "%s", value)
+}
+
 func (d *Debugger) breakPoint(t token.Token) interpreter.DebugState {
 	d.code.SetFile(t.File, t.Line)
 	d.app.Draw()

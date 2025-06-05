@@ -68,6 +68,10 @@ func (d *Debugger) Message(msg string) {
 	d.printFunc(msg)
 }
 
+func (d *Debugger) Log(stmt *ast.LogStatement, value string) {
+	d.printFunc(value)
+}
+
 func (d *Debugger) waitForNewState() interpreter.DebugState {
 	d.mode = <-d.stateCh
 

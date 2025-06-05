@@ -1,6 +1,9 @@
 package tester
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter"
 )
@@ -18,5 +21,14 @@ func (d *Debugger) Run(node ast.Node) interpreter.DebugState {
 }
 
 func (d *Debugger) Message(msg string) {
+	// Discard message
+}
+
+func (d *Debugger) Log(stmt *ast.LogStatement, value string) {
+	token := stmt.GetMeta().Token
+	msg := fmt.Sprintf(
+		"%s (%s %d:%d)",
+		value, filepath.Base(token.File), token.Line, token.Position,
+	)
 	d.stack = append(d.stack, msg)
 }
