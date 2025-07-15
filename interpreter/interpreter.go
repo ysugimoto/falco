@@ -134,18 +134,18 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 		i.ctx.OriginalHost = r.Host
 	}
 
-	// We should think about purge request.
-	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
-	// - method is FASTLYPURGE
-	// - host is api.fastly.com
-	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
-	if i.ctx.IsPurgeRequest {
-		r.Header.Set("Host", "api.fastly.com")
-	}
-
 	i.process = process.New()
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
+
+	// We should think about purge request.
+	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
+	// - method is FASTLYPURGE
+	// - host header is original access based, but fastly_info.host_header value turns to api.fastly.com
+	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+	if i.ctx.IsPurgeRequest {
+		i.ctx.OriginalHost = "api.fastly.com"
+	}
 
 	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
