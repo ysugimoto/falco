@@ -134,6 +134,12 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 		i.ctx.OriginalHost = r.Host
 	}
 
+	// We should think about purge request.
+	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
+	// - method is FASTLYPURGE
+	// - host is api.fastly.com
+	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+
 	i.process = process.New()
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
@@ -284,6 +290,25 @@ func (i *Interpreter) ProcessRecv() error {
 		}
 	} else {
 		state = PASS
+	}
+
+	// When request is purge request the service processes vcl_recv subroutine only,
+	// don't call any directive after vcl_recv.
+	if i.ctx.IsPurgeRequest {
+		if !i.ctx.ReturnStatementCalled {
+			return exception.Runtime(
+				nil,
+				"Failed to accept purge request. The vcl_recv subroutine must determine next state with return statement",
+			)
+		}
+		if state != LOOKUP && state != PASS {
+			return exception.Runtime(
+				nil,
+				`Failed to accept purge request. The vcl_recv subroutine MUST return "lookup" or "pass" state with return statement`,
+			)
+		}
+		// We don't call following state machine subroutines.
+		return nil
 	}
 
 	switch state {
@@ -760,20 +785,20 @@ var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 	if v := resp.Header.Get("Surrogate-Control"); v != "" {
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}
 	}
 	if v := resp.Header.Get("Cache-Control"); v != "" {
-		if strings.HasPrefix(v, "s-maxage=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+		if sMaxAge, found := strings.CutPrefix(v, "s-maxage="); found {
+			if dur, err := time.ParseDuration(sMaxAge + "s"); err == nil {
 				return dur
 			}
 		}
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}

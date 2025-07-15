@@ -52,8 +52,8 @@ func (c *Comments) Annotations() []string {
 	lines := strings.Split(c.String(), "\n")
 	for i := range lines {
 		l := strings.TrimLeft(lines[i], " */#")
-		if strings.HasPrefix(l, "@") {
-			annotations = append(annotations, strings.TrimPrefix(l, "@"))
+		if annotation, found := strings.CutPrefix(l, "@"); found {
+			annotations = append(annotations, annotation)
 		}
 	}
 
