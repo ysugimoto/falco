@@ -349,8 +349,8 @@ func annotations(comments ast.Comments) []string {
 		l := strings.TrimLeft(comments[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
 			var an []string
-			if strings.HasPrefix(l, "@scope:") {
-				an = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
+			if trimmed, found := strings.CutPrefix(l, "@scope:"); found {
+				an = strings.Split(trimmed, ",")
 			} else {
 				an = strings.Split(strings.TrimPrefix(l, "@"), ",")
 			}
