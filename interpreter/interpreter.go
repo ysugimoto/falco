@@ -139,6 +139,9 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	// - method is FASTLYPURGE
 	// - host is api.fastly.com
 	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+	if i.ctx.IsPurgeRequest {
+		r.Header.Set("Host", "api.fastly.com")
+	}
 
 	i.process = process.New()
 	i.ctx.Scope = context.InitScope
