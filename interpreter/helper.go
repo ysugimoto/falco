@@ -11,8 +11,8 @@ import (
 func findProcessMark(comments ast.Comments) (string, bool) {
 	for i := range comments {
 		l := strings.TrimLeft(comments[i].Value, " */#")
-		if cutted, found := strings.CutPrefix(l, "@process"); found {
-			return strings.TrimSpace(cutted), true
+		if process, found := strings.CutPrefix(l, "@process"); found {
+			return strings.TrimSpace(process), true
 		}
 	}
 
