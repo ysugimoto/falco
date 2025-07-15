@@ -64,7 +64,7 @@ func WithActualResponse(is bool) Option {
 	}
 }
 
-func WithOverrideVariales(variables map[string]any) Option {
+func WithOverrideVariables(variables map[string]any) Option {
 	return func(c *Context) {
 		for k, v := range variables {
 			switch t := v.(type) {

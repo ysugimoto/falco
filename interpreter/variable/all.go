@@ -60,9 +60,15 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_CLASS_BOT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.IsBot()}, nil
 	case CLIENT_CLASS_BROWSER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.Browser.Name > 0}, nil
 
@@ -90,51 +96,93 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_DISPLAY_TOUCHSCREEN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isTouch := ua.DeviceType == uasurfer.DevicePhone ||
 			ua.DeviceType == uasurfer.DeviceTablet ||
 			ua.DeviceType == uasurfer.DeviceWearable
 		return &value.Boolean{Value: isTouch}, nil
 	case CLIENT_PLATFORM_EREADER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.OS.Name == uasurfer.OSKindle}, nil
 	case CLIENT_PLATFORM_GAMECONSOLE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isGame := ua.OS.Name == uasurfer.OSPlaystation ||
 			ua.OS.Name == uasurfer.OSXbox ||
 			ua.OS.Name == uasurfer.OSNintendo
 		return &value.Boolean{Value: isGame}, nil
 	case CLIENT_PLATFORM_MOBILE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DevicePhone}, nil
 	case CLIENT_PLATFORM_SMARTTV:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_PLATFORM_TABLET:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTablet}, nil
 	case CLIENT_PLATFORM_TVPLAYER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_PLATFORM_MODEL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{
 			Value: getPlatformModel(req.Header.Get("User-Agent")),
 		}, nil
 	case CLIENT_PLATFORM_VENDOR:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{
 			Value: getPlatformVendor(req.Header.Get("User-Agent")),
 		}, nil
 	case CLIENT_SESS_TIMEOUT:
 		return v.ctx.ClientSessTimeout, nil
 	case FASTLY_INFO_EDGE_IS_TLS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.TLS != nil}, nil
 	case FASTLY_INFO_IS_H2:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.ProtoMajor == 2}, nil
 	case FASTLY_INFO_IS_H3:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.ProtoMajor == 3}, nil
 	case FASTLY_INFO_HOST_HEADER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: v.ctx.OriginalHost}, nil
 	case FASTLY_INFO_H2_FINGERPRINT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		if req.ProtoMajor != 2 {
 			return &value.String{}, nil
 		}
@@ -296,6 +344,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Returns tentative value -- you may know your customer_id in the contraction :-)
 	case REQ_CUSTOMER_ID:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "FalcoVirtualCustomerId"}, nil
 
 	// Returns fixed value which is presented on Fastly fiddle
@@ -408,15 +459,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case TIME_ELAPSED:
 		return &value.RTime{Value: time.Since(v.ctx.RequestStartTime)}, nil
 	case CLIENT_BOT_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_VERSION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.Browser.Version
 		return &value.String{
@@ -451,6 +511,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{Value: "unknown"}, nil
 
 	case CLIENT_IDENTITY:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		if v.ctx.ClientIdentity == nil {
 			// default as client.ip
 			idx := strings.LastIndex(req.RemoteAddr, ":")
@@ -462,6 +525,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return v.ctx.ClientIdentity, nil
 
 	case CLIENT_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		idx := strings.LastIndex(req.RemoteAddr, ":")
 		if idx == -1 {
 			return &value.IP{Value: net.ParseIP(req.RemoteAddr)}, nil
@@ -469,9 +535,15 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
 
 	case CLIENT_OS_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.OS.Name.String()}, nil
 	case CLIENT_OS_VERSION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.OS.Version
 		return &value.String{
