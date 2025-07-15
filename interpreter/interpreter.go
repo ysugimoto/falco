@@ -760,20 +760,20 @@ var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 	if v := resp.Header.Get("Surrogate-Control"); v != "" {
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}
 	}
 	if v := resp.Header.Get("Cache-Control"); v != "" {
-		if strings.HasPrefix(v, "s-maxage=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+		if sMaxAge, found := strings.CutPrefix(v, "s-maxage="); found {
+			if dur, err := time.ParseDuration(sMaxAge + "s"); err == nil {
 				return dur
 			}
 		}
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}

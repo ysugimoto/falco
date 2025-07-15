@@ -75,8 +75,8 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 			continue
 		}
 		// If @suite annotation found, use it as suite name
-		if strings.HasPrefix(l, "@suite:") {
-			metadata.Name = strings.TrimSpace(strings.TrimPrefix(l, "@suite:"))
+		if trimmed, found := strings.CutPrefix(l, "@suite:"); found {
+			metadata.Name = strings.TrimSpace(trimmed)
 			continue
 		}
 
@@ -86,15 +86,14 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 		}
 
 		// Parse testing tags
-		if strings.HasPrefix(l, "@tag:") {
-			metadata.Tags = parseTestingTags(
-				strings.TrimSpace(strings.TrimPrefix(l, "@tag:")),
-			)
+		if trimmed, found := strings.CutPrefix(l, "@tag:"); found {
+			metadata.Tags = parseTestingTags(strings.TrimSpace(trimmed))
 		}
 
 		var Scopes []string
-		if strings.HasPrefix(l, "@scope:") {
-			Scopes = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
+
+		if trimmed, found := strings.CutPrefix(l, "@scope:"); found {
+			Scopes = strings.Split(trimmed, ",")
 		} else {
 			Scopes = strings.Split(strings.TrimPrefix(l, "@"), ",")
 		}
