@@ -170,6 +170,14 @@ type Context struct {
 	// see: https://developer.fastly.com/reference/vcl/statements/esi/
 	TriggerESI bool
 
+	// Marker that return status is called.
+	// This field is used for ensuring some state machine subroutine returns new state via return statement.
+	// For example, FSATLYPURGE method must return the next state by calling return statement.
+	ReturnStatementCalled bool
+
+	// Marker that return request is purge request.
+	IsPurgeRequest bool
+
 	OverrideVariables map[string]value.Value
 }
 

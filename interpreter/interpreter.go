@@ -138,6 +138,15 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
+	// We should think about purge request.
+	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
+	// - method is FASTLYPURGE
+	// - host header is original access based, but fastly_info.host_header value turns to api.fastly.com
+	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+	if i.ctx.IsPurgeRequest {
+		i.ctx.OriginalHost = "api.fastly.com"
+	}
+
 	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
@@ -284,6 +293,25 @@ func (i *Interpreter) ProcessRecv() error {
 		}
 	} else {
 		state = PASS
+	}
+
+	// When request is purge request the service processes vcl_recv subroutine only,
+	// don't call any directive after vcl_recv.
+	if i.ctx.IsPurgeRequest {
+		if !i.ctx.ReturnStatementCalled {
+			return exception.Runtime(
+				nil,
+				"Failed to accept purge request. The vcl_recv subroutine must determine next state with return statement",
+			)
+		}
+		if state != LOOKUP && state != PASS {
+			return exception.Runtime(
+				nil,
+				`Failed to accept purge request. The vcl_recv subroutine MUST return "lookup" or "pass" state with return statement`,
+			)
+		}
+		// We don't call following state machine subroutines.
+		return nil
 	}
 
 	switch state {

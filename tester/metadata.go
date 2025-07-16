@@ -91,7 +91,6 @@ func getTestMetadata(sub *ast.SubroutineDeclaration) *Metadata {
 		}
 
 		var Scopes []string
-
 		if trimmed, found := strings.CutPrefix(l, "@scope:"); found {
 			Scopes = strings.Split(trimmed, ",")
 		} else {
