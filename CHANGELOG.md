@@ -1,3 +1,11 @@
+## v1.19.0
+
+- Support fastly purge request in interpreter [#477](https://github.com/ysugimoto/falco/pull/477) (@ysugimoto)
+- More injectable variables [#479](https://github.com/ysugimoto/falco/pull/479) (@ysugimoto)
+- Use log statement for testing printing [#471](https://github.com/ysugimoto/falco/pull/471) (@ysugimoto)
+- Improve builtin function tests [#464](https://github.com/ysugimoto/falco/pull/464) (@ysugimoto)
+- Update docs/testing.md to add missing testing.inject_variable description [#464](https://github.com/ysugimoto/falco/pull/464) (@taga3s)
+
 ## v1.18.1
 
 - Fix table.lookup_xxx builtin function [#462](https://github.com/ysugimoto/falco/pull/462) (@ysugimoto)
