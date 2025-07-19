@@ -58,7 +58,7 @@ type SimulatorConfig struct {
 	OverrideRequest *RequestConfig
 
 	// Inject values that the simulator returns tentative value
-	InjectValues map[string]any `yaml:"values"`
+	// InjectValues map[string]any `yaml:"values"`
 }
 
 // Testing configuration

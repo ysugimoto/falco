@@ -39,22 +39,31 @@ func (i *Interpreter) ServeHTTP(w ghttp.ResponseWriter, r *ghttp.Request) {
 		}
 	}
 
-	if err := i.ProcessRecv(); err != nil {
+	err := i.ProcessRecv()
+	if err != nil {
 		handleError(err)
-	} else if err := limitations.CheckFastlyResponseLimit(i.ctx.Response); err != nil {
-		handleError(err)
+	}
+	// Check response limitations in Fastly
+	if i.ctx.Response != nil {
+		if err := limitations.CheckFastlyResponseLimit(i.ctx.Response); err != nil {
+			handleError(err)
+		}
 	}
 
 	i.process.Restarts = i.ctx.Restarts
 	i.process.Backend = i.ctx.Backend
 
-	if i.ctx.IsActualResponse {
+	switch {
+	case i.ctx.IsPurgeRequest:
+		// If the service received purge request, send accepted response
+		i.sendPurgeRequestResponse(w, err)
+	case i.ctx.IsActualResponse:
 		// If we need to respond actual response, send it
 		i.sendResponse(w)
-		return
+	default:
+		// Otherwise, responds process flow JSON
+		i.sendProcessResponse(w)
 	}
-	// Otherwise, responds process flow JSON
-	i.sendProcessResponse(w)
 }
 
 func (i *Interpreter) sendProcessResponse(w ghttp.ResponseWriter) {
@@ -88,4 +97,18 @@ func (i *Interpreter) sendResponse(w ghttp.ResponseWriter) {
 	}
 	w.WriteHeader(i.ctx.Response.StatusCode)
 	io.Copy(w, i.ctx.Response.Body) // nolint:errcheck
+}
+
+func (i *Interpreter) sendPurgeRequestResponse(w http.ResponseWriter, err error) {
+	// https://www.fastly.com/documentation/guides/full-site-delivery/purging/authenticating-api-purge-requests/#purging-urls-with-an-api-token
+	w.Header().Set("Content-Type", "application/json")
+
+	// If our runtime could not accept purge request, send error response
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, `{"status": "ng", "id": "falco_purge_rejection"}`) // nolint:errcheck
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, `{"status": "ok", "id": "falco_purge_acceptance"}`) // nolint:errcheck
 }

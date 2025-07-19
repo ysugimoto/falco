@@ -170,6 +170,7 @@ func (i *Interpreter) ProcessBlockStatement(
 			}
 			// When return statement is processed, return its state immediately
 			state := i.ProcessReturnStatement(t)
+			i.ctx.ReturnStatementCalled = true
 			return value.Null, state, DebugPass, nil
 
 		case *ast.ErrorStatement:

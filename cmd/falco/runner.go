@@ -498,7 +498,7 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 			overrides[key] = val
 		}
 	}
-	options = append(options, icontext.WithOverrideVariales(overrides))
+	options = append(options, icontext.WithOverrideVariables(overrides))
 
 	r.message(white, "Running tests...")
 	factory, err := tester.New(tc, options).Run(r.config.Commands.At(1))
