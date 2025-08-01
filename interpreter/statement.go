@@ -445,6 +445,7 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
+	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 
@@ -458,6 +459,7 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
+	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 

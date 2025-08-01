@@ -383,6 +383,12 @@ func TestTester(t *testing.T) {
 			filter: "*default.test.vcl",
 			passes: 10,
 		},
+		{
+			name:   "synthetic vs obj.resoonse",
+			main:   "../../examples/testing/synthetic_response/default.vcl",
+			filter: "*default.test.vcl",
+			passes: 2,
+		},
 	}
 
 	for _, tt := range tests {
