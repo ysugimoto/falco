@@ -25,17 +25,16 @@ func (v *TestingVariables) Get(ctx *context.Context, scope context.Scope, name s
 	case TESTING_STATE:
 		return &value.String{Value: strings.ToUpper(ctx.ReturnState.Value)}, nil
 	case TESTING_SYNTHETIC_BODY:
-		if b, err := io.ReadAll(ctx.Object.Body); err == nil {
+		b, err := io.ReadAll(ctx.Object.Body)
+		if err == nil {
 			// Just assuming that seeking it back to the start is fine. Nothing
 			// else _should_ have left this in a weird state.
 			if seeker, ok := ctx.Object.Body.(io.Seeker); ok {
 				if _, err := seeker.Seek(0, io.SeekStart); err != nil {
 					return nil, err
 				}
-				return &value.String{Value: string(b)}, nil
-			} else {
-				return nil, errors.New("cannot assert ctx.Object.Body to io.Seeker")
 			}
+			return &value.String{Value: string(b)}, nil
 		} else {
 			return nil, err
 		}
@@ -52,5 +51,5 @@ func (v *TestingVariables) Set(
 	val value.Value,
 ) error {
 
-	return errors.New("Not Found")
+	return errors.New("Testing variables are read-only")
 }

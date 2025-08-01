@@ -1,11 +1,7 @@
 package variable
 
 import (
-	"io"
-	"strings"
 	"time"
-
-	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -108,10 +104,16 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		return nil
 	case OBJ_RESPONSE:
+		// If synthetic response has already been set, ignore this assignment.
+		if v.ctx.HasSyntheticResponse {
+			return nil
+		}
+
 		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
+		// obj.response indicates response header line, meand status text in http.Response
+		v.ctx.Object.Status = v.ctx.ObjectResponse.Value
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
@@ -119,7 +121,6 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
-		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {
