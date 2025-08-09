@@ -8,7 +8,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Assert_is_json_Name = "testing.get_log"
+const Assert_is_json_Name = "assert.is_json"
 
 func Assert_is_json_Validate(args []value.Value) error {
 	if len(args) < 1 || len(args) > 2 {
@@ -23,7 +23,7 @@ func Assert_is_json_Validate(args []value.Value) error {
 
 	if len(args) == 2 {
 		if args[1].Type() != value.StringType {
-			return errors.TypeMismatch(Assert_ends_with_Name, 2, value.StringType, args[1].Type())
+			return errors.TypeMismatch(Assert_is_json_Name, 2, value.StringType, args[1].Type())
 		}
 	}
 	return nil
@@ -41,7 +41,7 @@ func Assert_is_json(
 	// Check custom message
 	var message string
 	if len(args) == 2 {
-		message = value.Unwrap[*value.String](args[2]).Value
+		message = value.Unwrap[*value.String](args[1]).Value
 	} else {
 		message = "Value should be JSON"
 	}
@@ -49,7 +49,7 @@ func Assert_is_json(
 	msg := value.Unwrap[*value.String](args[0])
 	valid := &value.Boolean{Value: json.Valid([]byte(msg.Value))}
 	if !valid.Value {
-		return valid, errors.NewAssertionError(valid, message)
+		return valid, errors.NewAssertionError(args[0], message)
 	}
 	return valid, nil
 }

@@ -19,6 +19,21 @@ func TestAssertIsJSON(t *testing.T) {
 	}{
 		{
 			args: []value.Value{
+				&value.Boolean{Value: false},
+			},
+			expect: nil,
+			err:    &errors.TestingError{},
+		},
+		{
+			args: []value.Value{
+				&value.String{Value: "[]"},
+				&value.Boolean{Value: false},
+			},
+			expect: nil,
+			err:    &errors.TestingError{},
+		},
+		{
+			args: []value.Value{
 				&value.String{Value: "[]"},
 			},
 			expect: &value.Boolean{Value: true},
@@ -32,16 +47,23 @@ func TestAssertIsJSON(t *testing.T) {
 		{
 			args: []value.Value{
 				&value.String{Value: "[1,2"},
+				&value.String{Value: "custom_message"},
 			},
 			expect: &value.Boolean{Value: false},
-			err:    &errors.AssertionError{},
+			err: &errors.AssertionError{
+				Actual:  &value.String{Value: "[1,2"},
+				Message: "custom_message",
+			},
 		},
 		{
 			args: []value.Value{
 				&value.String{Value: `{"foo: "bar"}`},
 			},
 			expect: &value.Boolean{Value: false},
-			err:    &errors.AssertionError{},
+			err: &errors.AssertionError{
+				Actual:  &value.String{Value: `{"foo: "bar"}`},
+				Message: "Value should be JSON",
+			},
 		},
 	}
 
@@ -53,10 +75,9 @@ func TestAssertIsJSON(t *testing.T) {
 		if diff := cmp.Diff(
 			tests[i].err,
 			err,
-			cmpopts.IgnoreFields(errors.AssertionError{}, "Message", "Actual"),
 			cmpopts.IgnoreFields(errors.TestingError{}, "Message"),
 		); diff != "" {
-			t.Errorf("AssertIsJSON()[%d] error: diff=%s", i, diff)
+			t.Errorf("Assert_is_json()[%d] error: diff=%s", i, diff)
 		}
 	}
 }
