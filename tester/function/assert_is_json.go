@@ -35,7 +35,7 @@ func Assert_is_json(
 ) (value.Value, error) {
 
 	if err := Assert_is_json_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message
@@ -49,7 +49,7 @@ func Assert_is_json(
 	msg := value.Unwrap[*value.String](args[0])
 	valid := &value.Boolean{Value: json.Valid([]byte(msg.Value))}
 	if !valid.Value {
-		return valid, errors.NewAssertionError(args[0], message)
+		return valid, errors.NewAssertionError(args[0], "%s", message)
 	}
 	return valid, nil
 }
