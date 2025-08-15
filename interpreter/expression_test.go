@@ -384,9 +384,20 @@ func TestProcessStringConcat(t *testing.T) {
 			isError: true,
 		},
 		{
-			name:    "RTIME concatenation",
+			name:    "RTIME literal concatenation",
 			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 6s; }`,
 			isError: true,
+		},
+		{
+			name: "RTIME ident concatenation",
+			vcl: `sub vcl_recv {
+				declare local var.R RTIME;
+				set var.R = 5m;
+				set req.http.Foo = "foo" var.R;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo300.000"},
+			},
 		},
 		{
 			name: "TIME concatenation",
