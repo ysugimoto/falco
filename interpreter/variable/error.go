@@ -159,8 +159,8 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
-		return val, nil
+	if val, err := v.getFromRegex(name); val != nil {
+		return val, err
 	}
 
 	// If not found, also look up all scope value
@@ -171,14 +171,14 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	return val, nil
 }
 
-func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
+func (v *ErrorScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Object, match[1])
+	return getResponseHeaderValue(v.ctx.Object, match[1]), nil
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {

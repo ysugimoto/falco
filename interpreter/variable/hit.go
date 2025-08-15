@@ -76,8 +76,8 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Float{Value: 0.4}, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
-		return val, nil
+	if val, err := v.getFromRegex(name); val != nil {
+		return val, err
 	}
 
 	// If not found, also look up all scope value
@@ -88,10 +88,10 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	return val, nil
 }
 
-func (v *HitScopeVariables) getFromRegex(name string) value.Value {
+func (v *HitScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP request header matching
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.Object, match[1])
+		return getResponseHeaderValue(v.ctx.Object, match[1]), nil
 	}
 	return v.base.getFromRegex(name)
 }

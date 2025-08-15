@@ -191,7 +191,9 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
+			h := &atomic.Bool{}
+			h.Store(true)
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true, Healthy: h}
 		case *ast.TableDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {

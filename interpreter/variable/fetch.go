@@ -223,8 +223,8 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return v.ctx.EnableSSI, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
-		return val, nil
+	if val, err := v.getFromRegex(name); val != nil {
+		return val, err
 	}
 
 	// If not found, also look up all scope value
@@ -235,14 +235,14 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	return val, nil
 }
 
-func (v *FetchScopeVariables) getFromRegex(name string) value.Value {
+func (v *FetchScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return getRequestHeaderValue(v.ctx.BackendRequest, match[1]), nil
 	}
 
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.BackendResponse, match[1])
+		return getResponseHeaderValue(v.ctx.BackendResponse, match[1]), nil
 	}
 	return v.base.getFromRegex(name)
 }

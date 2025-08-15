@@ -389,8 +389,8 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
-		return val, nil
+	if val, err := v.getFromRegex(name); val != nil {
+		return val, err
 	}
 
 	// If not found, also look up all scope value
@@ -401,17 +401,17 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	return val, nil
 }
 
-func (v *LogScopeVariables) getFromRegex(name string) value.Value {
+func (v *LogScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
 			Value: v.ctx.Response.Header.Get(match[1]),
-		}
+		}, nil
 	}
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
 			Value: v.ctx.BackendRequest.Header.Get(match[1]),
-		}
+		}, nil
 	}
 	return v.base.getFromRegex(name)
 }
