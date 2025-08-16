@@ -476,7 +476,6 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 						}
 					}
 				}
-				continue
 			}
 			rv, opErr = operator.Concat(rv, cv)
 			if opErr != nil {
