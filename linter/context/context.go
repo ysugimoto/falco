@@ -351,11 +351,7 @@ func (c *Context) AddDirector(name string, director *types.Director) error {
 		DirectorDecl: director.Decl,
 	}
 
-	c.Variables["director"] = &Object{
-		Items: map[string]*Object{
-			name: dynamicDirector(),
-		},
-	}
+	c.Variables["director"].Items[name] = dynamicDirector()
 
 	// And, director target backend identifiers should be marked as used
 	for _, d := range director.Decl.Properties {

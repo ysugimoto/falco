@@ -183,6 +183,11 @@ func TestDynamicVariableExist(t *testing.T) {
 				Properties: []ast.Expression{},
 			},
 		})
+		c.AddDirector("verify_example_not_overridden", &types.Director{
+			Decl: &ast.DirectorDeclaration{
+				Properties: []ast.Expression{},
+			},
+		})
 		if v, err := c.Get("director.example.healthy"); err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		} else if v != types.BoolType {
