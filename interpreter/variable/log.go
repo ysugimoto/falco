@@ -389,8 +389,10 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return val, nil
 	}
 
-	if val, err := v.getFromRegex(name); val != nil {
-		return val, err
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
+		return val, nil
 	}
 
 	// If not found, also look up all scope value

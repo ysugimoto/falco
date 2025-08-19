@@ -778,8 +778,10 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 0}, nil
 	}
 
-	if val, err := v.getFromRegex(name); val != nil {
-		return val, err
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
+		return val, nil
 	}
 
 	if injectedVariable != nil {
