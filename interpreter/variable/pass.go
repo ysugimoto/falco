@@ -90,7 +90,9 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -102,10 +104,10 @@ func (v *PassScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	return val, nil
 }
 
-func (v *PassScopeVariables) getFromRegex(name string) value.Value {
+func (v *PassScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return getRequestHeaderValue(v.ctx.BackendRequest, match[1]), nil
 	}
 	return v.base.getFromRegex(name)
 }

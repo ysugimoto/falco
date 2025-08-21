@@ -16,16 +16,28 @@ type Variable interface {
 }
 
 var (
-	requestHttpHeaderRegex         = regexp.MustCompile(`^req\.http\.(.+)`)
-	backendRequestHttpHeaderRegex  = regexp.MustCompile(`^bereq\.http\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/client-request/req-http/
+	requestHttpHeaderRegex = regexp.MustCompile(`^req\.http\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/backend-request/bereq-http/
+	backendRequestHttpHeaderRegex = regexp.MustCompile(`^bereq\.http\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-http/
 	backendResponseHttpHeaderRegex = regexp.MustCompile(`^beresp\.http\.(.+)`)
-	responseHttpHeaderRegex        = regexp.MustCompile(`^resp\.http\.(.+)`)
-	objectHttpHeaderRegex          = regexp.MustCompile(`^obj\.http\.(.+)`)
-	rateCounterRegex               = regexp.MustCompile(`ratecounter\.([^\.]+)\.(.+)`)
-	regexMatchedRegex              = regexp.MustCompile(`re\.group\.([0-9]+)`)
-	backendConnectionsOpenRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_open`)
-	backendConnectionsUsedRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_used`)
-	backendHealthyRegex            = regexp.MustCompile(`backend\.([^\.]+)\.healthy`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/client-response/resp-http/
+	responseHttpHeaderRegex = regexp.MustCompile(`^resp\.http\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/cache-object/obj-http/
+	objectHttpHeaderRegex = regexp.MustCompile(`^obj\.http\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/rate-limiting/ratecounter-bucket-10s/
+	rateCounterRegex = regexp.MustCompile(`ratecounter\.([^\.]+)\.(.+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/re-group/
+	regexMatchedRegex = regexp.MustCompile(`re\.group\.([0-9]+)`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/
+	backendConnectionsOpenRegex = regexp.MustCompile(`backend\.([^\.]+)\.connections_open`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-used/
+	backendConnectionsUsedRegex = regexp.MustCompile(`backend\.([^\.]+)\.connections_used`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-healthy/
+	backendHealthyRegex = regexp.MustCompile(`backend\.([^\.]+)\.healthy`)
+	// https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/
+	directorHealthyRegex = regexp.MustCompile(`director\.([^\.]+)\.healthy`)
 )
 
 func doAssign(left value.Value, operator string, right value.Value) error {

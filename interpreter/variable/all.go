@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -777,7 +778,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 0}, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -792,20 +795,20 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	))
 }
 
-func (v *AllScopeVariables) getFromRegex(name string) value.Value {
+func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// regex captured variables matching
 	if match := regexMatchedRegex.FindStringSubmatch(name); match != nil {
 		if val, ok := v.ctx.RegexMatchedValues[match[1]]; ok {
-			return val
+			return val, nil
 		}
 		// regex captured variable always returns string values even nothing capturing
 		// see: https://fiddle.fastly.dev/fiddle/3e5320ef
-		return &value.String{IsNotSet: true}
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	// HTTP request header matching
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.Request, match[1])
+		return getRequestHeaderValue(v.ctx.Request, match[1]), nil
 	}
 
 	// Ratecounter variable matching
@@ -826,22 +829,36 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		}
 		return &value.Float{
 			Value: val,
-		}
+		}, nil
 	}
 
 	if match := backendConnectionsOpenRegex.FindStringSubmatch(name); match != nil {
-		return &value.Integer{}
+		return &value.Integer{}, nil
 	}
 
 	if match := backendConnectionsUsedRegex.FindStringSubmatch(name); match != nil {
-		return &value.Integer{}
+		return &value.Integer{}, nil
 	}
 
 	if match := backendHealthyRegex.FindStringSubmatch(name); match != nil {
-		return &value.Boolean{Value: true}
+		return &value.Boolean{Value: true}, nil
 	}
 
-	return nil
+	if match := directorHealthyRegex.FindStringSubmatch(name); match != nil {
+		if v, ok := v.ctx.Backends[match[1]]; ok {
+			// Fastly doesn't seem to distinguish between "director.{NAME}.healthy" and "backend.{NAME}.healthy",
+			// so we don't need to check the director type here.
+			// Fiddle: https://fiddle.fastly.dev/fiddle/a691fc39
+			if v.Healthy == nil {
+				return value.Null, exception.Runtime(nil, "director '%s' healthy status not set", match[1])
+			}
+			return &value.Boolean{Value: v.Healthy.Load()}, nil
+		} else {
+			return value.Null, exception.Runtime(nil, "director '%s' is not found", match[1])
+		}
+	}
+
+	return nil, nil
 }
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
