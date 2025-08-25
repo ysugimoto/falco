@@ -414,7 +414,8 @@ func (i *Interpreter) ProcessStringConcatInfixExpression(exp *ast.InfixExpressio
 				return value.Null, errors.WithStack(err)
 			}
 		case *ast.FunctionCallExpression:
-			if cv.Type() != value.StringType {
+			// Fiddle: https://fiddle.fastly.dev/fiddle/e71a005f
+			if cv.Type() == value.BackendType || cv.Type() == value.AclType {
 				return value.Null, exception.Runtime(
 					&s.Expression.GetMeta().Token,
 					"Cannot use %s type for string concatenation",
