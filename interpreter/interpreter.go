@@ -228,13 +228,13 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Penaltyboxes[t.Name.Value] = t
+			i.ctx.Penaltyboxes[t.Name.Value] = value.NewPenaltybox(t)
 		case *ast.RatecounterDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Ratecounters[t.Name.Value] = t
+			i.ctx.Ratecounters[t.Name.Value] = value.NewRatecounter(t)
 		}
 	}
 

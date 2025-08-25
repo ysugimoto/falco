@@ -21,7 +21,7 @@ var (
 	backendResponseHttpHeaderRegex = regexp.MustCompile(`^beresp\.http\.(.+)`)
 	responseHttpHeaderRegex        = regexp.MustCompile(`^resp\.http\.(.+)`)
 	objectHttpHeaderRegex          = regexp.MustCompile(`^obj\.http\.(.+)`)
-	rateCounterRegex               = regexp.MustCompile(`ratecounter\.([^\.]+)\.(.+)`)
+	rateCounterRegex               = regexp.MustCompile(`ratecounter\.([^\.]+)\.(bucket|rate)\.([^\.]+)`)
 	regexMatchedRegex              = regexp.MustCompile(`re\.group\.([0-9]+)`)
 	backendConnectionsOpenRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_open`)
 	backendConnectionsUsedRegex    = regexp.MustCompile(`backend\.([^\.]+)\.connections_used`)

@@ -51,8 +51,8 @@ type Context struct {
 	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration
 	Subroutines         map[string]*ast.SubroutineDeclaration
-	Penaltyboxes        map[string]*ast.PenaltyboxDeclaration
-	Ratecounters        map[string]*ast.RatecounterDeclaration
+	Penaltyboxes        map[string]*value.Penaltybox
+	Ratecounters        map[string]*value.Ratecounter
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	OriginalHost        string
@@ -193,8 +193,8 @@ func New(options ...Option) *Context {
 		Backends:               make(map[string]*value.Backend),
 		Tables:                 make(map[string]*ast.TableDeclaration),
 		Subroutines:            make(map[string]*ast.SubroutineDeclaration),
-		Penaltyboxes:           make(map[string]*ast.PenaltyboxDeclaration),
-		Ratecounters:           make(map[string]*ast.RatecounterDeclaration),
+		Penaltyboxes:           make(map[string]*value.Penaltybox),
+		Ratecounters:           make(map[string]*value.Ratecounter),
 		Gotos:                  make(map[string]*ast.GotoStatement),
 		SubroutineFunctions:    make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:       make(map[string]*config.OverrideBackend),
