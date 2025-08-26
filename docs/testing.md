@@ -312,6 +312,7 @@ We describe them following table and examples:
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
+| assert.is_json               | FUNCTION   | Assert actual string should be valid JSON                                                    |
 | assert.is_notset             | FUNCTION   | Assert actual value should be NotSet                                                         |
 | assert.equal                 | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
 | assert.not_equal             | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
@@ -749,6 +750,28 @@ sub test_vcl {
 
     // Fail because experssion value is not BOOL false
     assert.false(req.http.Foo);
+}
+```
+
+----
+
+### assert.is_json(STRING actual [, STRING message])
+
+Assert actual string should be valid JSON.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+
+    set var.testing = "[1,2,3]";
+
+    // Pass because value contains valid JSON array.
+    assert.is_json(var.testing);
+
+    set var.testing = "[1,2,3,]";
+
+    // Fail because value contains array with trailing comma.
+    assert.is_json(var.testing);
 }
 ```
 

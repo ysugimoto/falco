@@ -3,19 +3,44 @@ package variable
 import (
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 func createScopeVars(urlStr string) *AllScopeVariables {
 	parsedUrl, _ := url.Parse(urlStr)
+	healthy := &atomic.Bool{}
+	healthy.Store(true)
+	unhealthy := &atomic.Bool{}
+	unhealthy.Store(false)
 	return &AllScopeVariables{
 		ctx: &context.Context{
 			Request: &http.Request{
 				URL: parsedUrl,
+			},
+			Backends: map[string]*value.Backend{
+				"healthy": {
+					Value: &ast.BackendDeclaration{
+						Name: &ast.Ident{Value: "healthy"},
+					},
+					Healthy: healthy,
+				},
+				"unhealthy": {
+					Value: &ast.BackendDeclaration{
+						Name: &ast.Ident{Value: "unhealthy"},
+					},
+					Healthy: unhealthy,
+				},
+				"nostatus": {
+					Value: &ast.BackendDeclaration{
+						Name: &ast.Ident{Value: "nostatus"},
+					},
+				},
 			},
 		},
 	}
@@ -261,6 +286,66 @@ func TestGetClientVendor(t *testing.T) {
 			ret := getPlatformVendor(tt.ua)
 			if ret != tt.expect {
 				t.Errorf("getPlatformVendor returns unmatch, expect=%s, got=%s", tt.expect, ret)
+			}
+		})
+	}
+}
+
+func TestGetFromRegex(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		expect  value.Value
+		isError bool
+	}{
+		{
+			input:   "backend.healthy.healthy",
+			expect:  &value.Boolean{Value: true},
+			isError: false,
+		},
+		{
+			input:   "director.healthy.healthy",
+			expect:  &value.Boolean{Value: true},
+			isError: false,
+		},
+		{
+			input:   "director.unhealthy.healthy",
+			expect:  &value.Boolean{Value: false},
+			isError: false,
+		},
+		{
+			input:   "director.not_found.healthy",
+			expect:  value.Null,
+			isError: true,
+		},
+		{
+			input:   "director.nostatus.healthy",
+			expect:  value.Null,
+			isError: true,
+		},
+		{
+			input:   "backend.healthy.connections_open",
+			expect:  &value.Integer{Value: 0},
+			isError: false,
+		},
+		{
+			input:   "backend.healthy.connections_used",
+			expect:  &value.Integer{Value: 0},
+			isError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			vars := createScopeVars("")
+			val, err := vars.getFromRegex(tt.input)
+			if tt.isError && err == nil {
+				t.Error("Expected error, got nil")
+			} else if !tt.isError && err != nil {
+				t.Errorf("Unexpected error: %s", err)
+			}
+			if diff := cmp.Diff(val, tt.expect); diff != "" {
+				t.Errorf("Return value unmatch, diff: %s", diff)
 			}
 		})
 	}

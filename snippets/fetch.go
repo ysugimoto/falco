@@ -264,7 +264,7 @@ func fetchVCLSnippets(fetcher Fetcher) (
 
 	// Sort by priority
 	sort.Slice(snippets, func(i, j int) bool {
-		return snippets[i].Priority > snippets[j].Priority
+		return snippets[i].Priority < snippets[j].Priority
 	})
 
 	scoped := make(map[string][]SnippetItem)
