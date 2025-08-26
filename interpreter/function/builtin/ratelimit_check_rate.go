@@ -41,6 +41,7 @@ func Ratelimit_check_rate(ctx *context.Context, args ...value.Value) (value.Valu
 	if err := Ratelimit_check_rate_Validate(args); err != nil {
 		return value.Null, err
 	}
+
 	var entry string
 	switch args[0].Type() {
 	case value.StringType:
@@ -81,6 +82,11 @@ func check_ratelimit(ctx *context.Context, entry string, rcName string, delta, w
 	}
 	if limit < 10 || limit > 70000000 {
 		return false, errors.New(Ratelimit_check_rate_Name, "Fifth argument of limit must be between 10 and 70000000")
+	}
+
+	// (testing) if fixed access rate has specified, use it
+	if ctx.FixedAccessRate != nil {
+		return *ctx.FixedAccessRate >= float64(limit), nil
 	}
 
 	rc, ok := ctx.Ratecounters[rcName]

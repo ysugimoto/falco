@@ -3,56 +3,67 @@ package variable
 import (
 	"time"
 
+	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Handle ratecounter related variables
 // ref: https://www.fastly.com/documentation/guides/concepts/rate-limiting/#using-two-count-periods-vcl-only
 
-func getRateCounterBucketValue(rc *value.Ratecounter, client, window string) value.Value {
+func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, client, window string) value.Value {
+	var duration time.Duration
+
 	switch window {
 	case "10s":
-		return &value.Integer{
-			Value: rc.Bucket(client, 10*time.Second),
-		}
+		duration = 10 * time.Second
 	case "20s":
-		return &value.Integer{
-			Value: rc.Bucket(client, 20*time.Second),
-		}
+		duration = 20 * time.Second
 	case "30s":
-		return &value.Integer{
-			Value: rc.Bucket(client, 30*time.Second),
-		}
+		duration = 30 * time.Second
 	case "40s":
-		return &value.Integer{
-			Value: rc.Bucket(client, 40*time.Second),
-		}
+		duration = 40 * time.Second
 	case "50s":
-		return &value.Integer{
-			Value: rc.Bucket(client, 50*time.Second),
-		}
+		duration = 50 * time.Second
 	case "60s":
+		duration = 50 * time.Second
+	default:
+		return nil
+	}
+
+	// If fixed rate is injected for testing, use it
+	if ctx.FixedAccessRate != nil {
 		return &value.Integer{
-			Value: rc.Bucket(client, 60*time.Second),
+			Value: int64(*ctx.FixedAccessRate * duration.Seconds()),
 		}
 	}
-	return nil
+
+	return &value.Integer{
+		Value: rc.Bucket(client, duration),
+	}
 }
 
-func getRateCounterRateValue(rc *value.Ratecounter, client, window string) value.Value {
+func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client, window string) value.Value {
+	var duration time.Duration
+
 	switch window {
 	case "1s":
-		return &value.Float{
-			Value: rc.Rate(client, time.Second),
-		}
+		duration = time.Second
 	case "10s":
-		return &value.Float{
-			Value: rc.Rate(client, 10*time.Second),
-		}
+		duration = 10 * time.Second
 	case "60s":
+		duration = 60 * time.Second
+	default:
+		return nil
+	}
+
+	// If fixed rate is injected for testing, use it
+	if ctx.FixedAccessRate != nil {
 		return &value.Float{
-			Value: rc.Rate(client, 60*time.Second),
+			Value: *ctx.FixedAccessRate,
 		}
 	}
-	return nil
+
+	return &value.Float{
+		Value: rc.Rate(client, duration),
+	}
 }

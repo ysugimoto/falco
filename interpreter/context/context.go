@@ -149,9 +149,13 @@ type Context struct {
 
 	// For testing fields
 	// Stored subroutine return state
-	ReturnState     *value.String
-	FixedTime       *time.Time
+	ReturnState *value.String
+	// Injected fixed time for `now`, `now.sec`, etc
+	FixedTime *time.Time
+	// Count of subroutine called
 	SubroutineCalls map[string]int
+	// Injected fixed access rate
+	FixedAccessRate *float64
 
 	// Coverage marker pointer. not nil if testing with coverage measurement
 	Coverage *shared.Coverage

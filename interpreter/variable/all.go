@@ -819,9 +819,9 @@ func (v *AllScopeVariables) getFromRegex(name string) value.Value {
 		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
 		switch method {
 		case "bucket":
-			return getRateCounterBucketValue(rc, ip.String(), window)
+			return getRateCounterBucketValue(v.ctx, rc, ip.String(), window)
 		case "rate":
-			return getRateCounterRateValue(rc, ip.String(), window)
+			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
 		default:
 			return nil
 		}
