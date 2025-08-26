@@ -4,13 +4,14 @@ import (
 	"time"
 
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Handle ratecounter related variables
 // ref: https://www.fastly.com/documentation/guides/concepts/rate-limiting/#using-two-count-periods-vcl-only
 
-func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, client, window string) value.Value {
+func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, client, window string) (value.Value, error) {
 	var duration time.Duration
 
 	switch window {
@@ -27,22 +28,22 @@ func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, clie
 	case "60s":
 		duration = 50 * time.Second
 	default:
-		return nil
+		return nil, exception.Runtime(nil, "unexpected window %s found", window)
 	}
 
 	// If fixed rate is injected for testing, use it
 	if ctx.FixedAccessRate != nil {
 		return &value.Integer{
 			Value: int64(*ctx.FixedAccessRate * duration.Seconds()),
-		}
+		}, nil
 	}
 
 	return &value.Integer{
 		Value: rc.Bucket(client, duration),
-	}
+	}, nil
 }
 
-func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client, window string) value.Value {
+func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client, window string) (value.Value, error) {
 	var duration time.Duration
 
 	switch window {
@@ -53,17 +54,17 @@ func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client
 	case "60s":
 		duration = 60 * time.Second
 	default:
-		return nil
+		return nil, exception.Runtime(nil, "unexpected window %s found", window)
 	}
 
 	// If fixed rate is injected for testing, use it
 	if ctx.FixedAccessRate != nil {
 		return &value.Float{
 			Value: *ctx.FixedAccessRate,
-		}
+		}, nil
 	}
 
 	return &value.Float{
 		Value: rc.Rate(client, duration),
-	}
+	}, nil
 }

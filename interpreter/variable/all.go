@@ -816,7 +816,7 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 		name, method, window := matches[1], matches[2], matches[3]
 		rc, ok := v.ctx.Ratecounters[name]
 		if !ok {
-			return nil
+			return nil, exception.Runtime(nil, "ratecounter '%s' is not defined", name)
 		}
 		// Get remote address by accessing client.ip variable
 		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
@@ -826,7 +826,7 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 		case "rate":
 			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
 		default:
-			return nil
+			return nil, exception.Runtime(nil, "unexpected method '%s' found", method)
 		}
 	}
 
