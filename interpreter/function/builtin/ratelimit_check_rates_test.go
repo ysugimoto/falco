@@ -3,13 +3,189 @@
 package builtin
 
 import (
+	"net"
 	"testing"
+	"time"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-// Fastly built-in function testing implementation of ratelimit.check_rates
-// Arguments may be:
-// - STRING, ID, INTEGER, INTEGER, INTEGER, ID, INTEGER, INTEGER, INTEGER, ID, RTIME
-// Reference: https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rates/
 func Test_Ratelimit_check_rates(t *testing.T) {
-	t.Skip("Test Builtin function ratelimit.check_rates should be impelemented")
+	tests := []struct {
+		name          string
+		args          []value.Value
+		wantExceeded  bool
+		wantErr       bool
+		penaltyboxHas string
+	}{
+		{
+			name: "not exceeded",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.1"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 10},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 10},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded: false,
+		},
+		{
+			name: "first rate exceeded",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.2"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 101},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded:  true,
+			penaltyboxHas: "192.0.2.2",
+		},
+		{
+			name: "second rate exceeded",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.3"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 101},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded:  true,
+			penaltyboxHas: "192.0.2.3",
+		},
+		{
+			name: "ip type entry",
+			args: []value.Value{
+				&value.IP{Value: net.ParseIP("192.0.2.4")},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 101},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded:  true,
+			penaltyboxHas: "192.0.2.4",
+		},
+		{
+			name: "penaltybox not found",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.5"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 101},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "nonexistent"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantErr: true,
+		},
+		{
+			name: "argument error: not enough",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.1"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "argument error: type mismatch",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.1"},
+				&value.String{Value: "rc1"}, // should be IDENT
+				&value.Integer{Value: 10},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "rc2"},
+				&value.Integer{Value: 10},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantErr: true,
+		},
+	}
+
+	// Wait for next window
+	for time.Now().Unix()%10 != 0 {
+		time.Sleep(time.Second)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rc1 := value.NewRatecounter(nil)
+			rc2 := value.NewRatecounter(nil)
+			pb := value.NewPenaltybox(nil)
+			ratecounters := map[string]*value.Ratecounter{
+				"rc1": rc1,
+				"rc2": rc2,
+			}
+			penaltyboxes := map[string]*value.Penaltybox{
+				"pb": pb,
+			}
+
+			ctx := &context.Context{
+				Ratecounters: ratecounters,
+				Penaltyboxes: penaltyboxes,
+			}
+
+			ret, err := Ratelimit_check_rates(ctx, tt.args...)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Expected error but got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			if ret.Type() != value.BooleanType {
+				t.Errorf("Unexpected return type, expect=BOOLEAN, got=%s", ret.Type())
+			}
+			b := value.Unwrap[*value.Boolean](ret)
+			if b.Value != tt.wantExceeded {
+				t.Errorf("Unexpected return value, expect=%t, got=%t", tt.wantExceeded, b.Value)
+			}
+
+			if tt.penaltyboxHas != "" {
+				pbName := value.Unwrap[*value.Ident](tt.args[9]).Value
+				pbox := penaltyboxes[pbName]
+				if pbox == nil {
+					t.Errorf("Penaltybox %s not found in test setup", pbName)
+					return
+				}
+				if !pbox.Has(tt.penaltyboxHas) {
+					t.Errorf("Expected entry %s to be in penaltybox, but it was not", tt.penaltyboxHas)
+				}
+			}
+		})
+	}
 }

@@ -308,6 +308,7 @@ We describe them following table and examples:
 | testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
+| testing.fixed_access_rate    | FUNCTION   | Set fixed access rate value                                                                  |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -641,6 +642,44 @@ sub test_vcl {
         return;
     }
     ...do some assertions
+}
+```
+
+----
+
+### testing.fixed_access_rate(FLOAT|INTEGER rate)
+
+Set fixed access rate. This function affects to `ratelimit` related values and functions like:
+
+- `ratecounter.rc.bucket.10s`
+- `ratecounter.rc.bucket.20s`
+- `ratecounter.rc.bucket.30s`
+- `ratecounter.rc.bucket.40s`
+- `ratecounter.rc.bucket.50s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.rate.1s`
+- `ratecounter.rc.rate.10s`
+- `ratecounter.rc.rate.60s`
+- `ratelimit.check_rate()`
+- `ratelimit.check_rates()`
+
+```vcl
+ratecounter rc {}
+penaltybox pb {}
+
+sub test_vcl {
+    declare local var.exceeded BOOL;
+    set var.exceeded = false;
+
+    // set the fixed rate
+    testing.fixed_access_rate(100.0);
+
+    if (ratelimit.check_rate(client.ip, rc, 1, 10, 100, pb, 10s)) {
+        set var.exceeded  = true;
+    }
+
+    assert.true(var.exceeded);
 }
 ```
 

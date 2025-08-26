@@ -192,6 +192,14 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 				return false
 			},
 		},
+		"testing.fixed_access_rate": {
+			Scope:            allScope,
+			Call:             Testing_fixed_access_rate,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 	}
 }
 

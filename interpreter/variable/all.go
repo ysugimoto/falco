@@ -812,24 +812,22 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 	}
 
 	// Ratecounter variable matching
-	if match := rateCounterRegex.FindStringSubmatch(name); match != nil {
-		var val float64
-		// all ratecounter variable value returns 1.0 fixed value
-		switch match[1] {
-		case "rate_10s",
-			"rate_1s",
-			"rate.60s",
-			"bucket.10s",
-			"bucket.20s",
-			"bucket.30s",
-			"bucket.40s",
-			"bucket.50s",
-			"bucket.60s":
-			val = 1.0
+	if matches := rateCounterRegex.FindStringSubmatch(name); matches != nil {
+		name, method, window := matches[1], matches[2], matches[3]
+		rc, ok := v.ctx.Ratecounters[name]
+		if !ok {
+			return nil, exception.Runtime(nil, "ratecounter '%s' is not defined", name)
 		}
-		return &value.Float{
-			Value: val,
-		}, nil
+		// Get remote address by accessing client.ip variable
+		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
+		switch method {
+		case "bucket":
+			return getRateCounterBucketValue(v.ctx, rc, ip.String(), window)
+		case "rate":
+			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
+		default:
+			return nil, exception.Runtime(nil, "unexpected method '%s' found", method)
+		}
 	}
 
 	if match := backendConnectionsOpenRegex.FindStringSubmatch(name); match != nil {

@@ -27,7 +27,7 @@ var (
 	// https://www.fastly.com/documentation/reference/vcl/variables/cache-object/obj-http/
 	objectHttpHeaderRegex = regexp.MustCompile(`^obj\.http\.(.+)`)
 	// https://www.fastly.com/documentation/reference/vcl/variables/rate-limiting/ratecounter-bucket-10s/
-	rateCounterRegex = regexp.MustCompile(`ratecounter\.([^\.]+)\.(.+)`)
+	rateCounterRegex = regexp.MustCompile(`ratecounter\.([^\.]+)\.(bucket|rate)\.([^\.]+)`)
 	// https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/re-group/
 	regexMatchedRegex = regexp.MustCompile(`re\.group\.([0-9]+)`)
 	// https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/

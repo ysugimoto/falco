@@ -42,6 +42,12 @@ func createScopeVars(urlStr string) *AllScopeVariables {
 					},
 				},
 			},
+			Ratecounters: map[string]*value.Ratecounter{
+				"rc": value.NewRatecounter(nil),
+			},
+			Penaltyboxes: map[string]*value.Penaltybox{
+				"pb": value.NewPenaltybox(nil),
+			},
 		},
 	}
 }
@@ -332,6 +338,41 @@ func TestGetFromRegex(t *testing.T) {
 			input:   "backend.healthy.connections_used",
 			expect:  &value.Integer{Value: 0},
 			isError: false,
+		},
+		{
+			input:   "backend.healthy.connections_used",
+			expect:  &value.Integer{Value: 0},
+			isError: false,
+		},
+		{
+			input:   "ratecounter.rc.bucket.10s",
+			expect:  &value.Integer{Value: 0},
+			isError: false,
+		},
+		{
+			input:   "ratecounter.rc.bucket.100s",
+			expect:  nil,
+			isError: true,
+		},
+		{
+			input:   "ratecounter.not_found.bucket.10s",
+			expect:  nil,
+			isError: true,
+		},
+		{
+			input:   "ratecounter.rc.rate.10s",
+			expect:  &value.Float{Value: 0},
+			isError: false,
+		},
+		{
+			input:   "ratecounter.rc.rate.100s",
+			expect:  nil,
+			isError: true,
+		},
+		{
+			input:   "ratecounter.not_found.rate.10s",
+			expect:  nil,
+			isError: true,
 		},
 	}
 
