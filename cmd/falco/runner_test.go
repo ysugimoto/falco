@@ -384,10 +384,22 @@ func TestTester(t *testing.T) {
 			passes: 10,
 		},
 		{
-			name:   "synthetic vs obj.resoonse",
+			name:   "synthetic vs obj.response",
 			main:   "../../examples/testing/synthetic_response/default.vcl",
 			filter: "*default.test.vcl",
 			passes: 2,
+		},
+		{
+			name:   "rate limiting",
+			main:   "../../examples/testing/rate_limiting/main.vcl",
+			filter: "*main.test.vcl",
+			passes: 1,
+		},
+		{
+			name:   "origin host header",
+			main:   "../../examples/testing/origin_host_header/main.vcl",
+			filter: "*main.test.vcl",
+			passes: 5,
 		},
 	}
 
