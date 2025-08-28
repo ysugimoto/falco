@@ -297,6 +297,7 @@ We describe them following table and examples:
 |:-----------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
+| testing.origin_host_header   | STRING     | The value of `Host` header that will send to an origin                                       |
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
@@ -350,6 +351,28 @@ sub generate_response {
 sub test_vcl {
     testing.call_subroutine("generate_response");
     assert.equal(testing.synthetic_body, "No dice.");
+}
+```
+
+----
+
+### testing.origin_host_header STRING
+
+Returns the `Host` header value that will send to the origin.
+This value is calculated from `backend` configuration so you need to choose the backend before accessing this variable.
+
+```vcl
+backend example {
+    .host = "example.com";
+    .port = "443";
+    .always_use_host_header = true;
+}
+
+// @scope: recv
+sub test_vcl {
+    // Choose backend before calling
+    set req.backend = example;
+    assert.equal(testing.origin_host_header, "example.com");
 }
 ```
 
