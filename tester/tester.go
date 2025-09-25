@@ -327,7 +327,6 @@ func (t *Tester) addTableDefinitions(i *interpreter.Interpreter, defs *tf.Defini
 	for name, table := range defs.Tables {
 		if err := i.AddTable(name, table); err != nil {
 			// If table already exists, that's fine - it may have been defined in main VCL
-			// or by a testing.table_define() call
 			continue
 		}
 	}
