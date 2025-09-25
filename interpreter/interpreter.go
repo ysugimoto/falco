@@ -786,6 +786,19 @@ func (i *Interpreter) ProcessLog() error {
 	return nil
 }
 
+// AddTable adds a table declaration to the interpreter context.
+// This is primarily used for testing to inject table definitions.
+func (i *Interpreter) AddTable(name string, table *ast.TableDeclaration) error {
+	if i.ctx == nil {
+		return errors.New("interpreter context not initialized; call ProcessInit first")
+	}
+	if _, exists := i.ctx.Tables[name]; exists {
+		return fmt.Errorf("table %s already exists", name)
+	}
+	i.ctx.Tables[name] = table
+	return nil
+}
+
 var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {

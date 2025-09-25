@@ -150,6 +150,11 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					errChan <- errors.WithStack(err)
 					return
 				}
+				// Add static table definitions from test VCL to interpreter context
+				if err := t.addTableDefinitions(i, defs); err != nil {
+					errChan <- errors.WithStack(err)
+					return
+				}
 				metadata := getTestMetadata(st)
 				for _, s := range metadata.Scopes {
 					// Attach new debugger for each test suite
@@ -213,6 +218,10 @@ func (t *Tester) runDescribedTests(
 	i := t.setupInterpreter(defs)
 
 	if err := i.TestProcessInit(mockRequest); err != nil {
+		return cases, err
+	}
+	// Add static table definitions from test VCL to interpreter context
+	if err := t.addTableDefinitions(i, defs); err != nil {
 		return cases, err
 	}
 
@@ -310,6 +319,19 @@ func (t *Tester) setupInterpreter(defs *tf.Definiions) *interpreter.Interpreter 
 	function.Inject(tf.TestingFunctions(i, defs, t.counter, t.coverage))
 
 	return i
+}
+
+// addTableDefinitions adds tables from test VCL definitions to the interpreter context
+// using the public AddTable method. This enables offline table testing without API calls.
+func (t *Tester) addTableDefinitions(i *interpreter.Interpreter, defs *tf.Definiions) error {
+	for name, table := range defs.Tables {
+		if err := i.AddTable(name, table); err != nil {
+			// If table already exists, that's fine - it may have been defined in main VCL
+			// or by a testing.table_define() call
+			continue
+		}
+	}
+	return nil
 }
 
 // Factory declarations in testing VCL
