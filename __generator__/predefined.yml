@@ -203,6 +203,11 @@ backend.%any%.healthy:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
 
+director.%any%.healthy:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
 bereq.between_bytes_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/"
   on: [PASS, MISS]

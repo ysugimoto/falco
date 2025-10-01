@@ -1816,6 +1816,24 @@ func predefinedVariables() Variables {
 				},
 			},
 		},
+		"director": &Object{
+			Items: map[string]*Object{
+				"%any%": {
+					Items: map[string]*Object{
+						"healthy": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/",
+							},
+						},
+					},
+				},
+			},
+		},
 		"esi": &Object{
 			Items: map[string]*Object{
 				"allow_inside_cdata": {

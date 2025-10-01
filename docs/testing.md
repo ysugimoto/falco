@@ -297,6 +297,7 @@ We describe them following table and examples:
 |:-----------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
+| testing.origin_host_header   | STRING     | The value of `Host` header that will send to an origin                                       |
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
@@ -308,9 +309,11 @@ We describe them following table and examples:
 | testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
+| testing.fixed_access_rate    | FUNCTION   | Set fixed access rate value                                                                  |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
+| assert.is_json               | FUNCTION   | Assert actual string should be valid JSON                                                    |
 | assert.is_notset             | FUNCTION   | Assert actual value should be NotSet                                                         |
 | assert.equal                 | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
 | assert.not_equal             | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
@@ -348,6 +351,28 @@ sub generate_response {
 sub test_vcl {
     testing.call_subroutine("generate_response");
     assert.equal(testing.synthetic_body, "No dice.");
+}
+```
+
+----
+
+### testing.origin_host_header STRING
+
+Returns the `Host` header value that will send to the origin.
+This value is calculated from `backend` configuration so you need to choose the backend before accessing this variable.
+
+```vcl
+backend example {
+    .host = "example.com";
+    .port = "443";
+    .always_use_host_header = true;
+}
+
+// @scope: recv
+sub test_vcl {
+    // Choose backend before calling
+    set req.backend = example;
+    assert.equal(testing.origin_host_header, "example.com");
 }
 ```
 
@@ -645,6 +670,44 @@ sub test_vcl {
 
 ----
 
+### testing.fixed_access_rate(FLOAT|INTEGER rate)
+
+Set fixed access rate. This function affects to `ratelimit` related values and functions like:
+
+- `ratecounter.rc.bucket.10s`
+- `ratecounter.rc.bucket.20s`
+- `ratecounter.rc.bucket.30s`
+- `ratecounter.rc.bucket.40s`
+- `ratecounter.rc.bucket.50s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.rate.1s`
+- `ratecounter.rc.rate.10s`
+- `ratecounter.rc.rate.60s`
+- `ratelimit.check_rate()`
+- `ratelimit.check_rates()`
+
+```vcl
+ratecounter rc {}
+penaltybox pb {}
+
+sub test_vcl {
+    declare local var.exceeded BOOL;
+    set var.exceeded = false;
+
+    // set the fixed rate
+    testing.fixed_access_rate(100.0);
+
+    if (ratelimit.check_rate(client.ip, rc, 1, 10, 100, pb, 10s)) {
+        set var.exceeded  = true;
+    }
+
+    assert.true(var.exceeded);
+}
+```
+
+----
+
 ### assert(ANY expr [, STRING message])
 
 Assert provided expression should be truthy.
@@ -710,6 +773,28 @@ sub test_vcl {
 
     // Fail because experssion value is not BOOL false
     assert.false(req.http.Foo);
+}
+```
+
+----
+
+### assert.is_json(STRING actual [, STRING message])
+
+Assert actual string should be valid JSON.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+
+    set var.testing = "[1,2,3]";
+
+    // Pass because value contains valid JSON array.
+    assert.is_json(var.testing);
+
+    set var.testing = "[1,2,3,]";
+
+    // Fail because value contains array with trailing comma.
+    assert.is_json(var.testing);
 }
 ```
 

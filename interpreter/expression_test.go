@@ -393,9 +393,20 @@ func TestProcessStringConcat(t *testing.T) {
 			isError: true,
 		},
 		{
-			name:    "RTIME concatenation",
+			name:    "RTIME literal concatenation",
 			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 6s; }`,
 			isError: true,
+		},
+		{
+			name: "RTIME ident concatenation",
+			vcl: `sub vcl_recv {
+				declare local var.R RTIME;
+				set var.R = 5m;
+				set req.http.Foo = "foo" var.R;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo300.000"},
+			},
 		},
 		{
 			name: "TIME concatenation",
@@ -405,8 +416,57 @@ func TestProcessStringConcat(t *testing.T) {
 			},
 		},
 		{
-			name:    "FunctionCall expression concatenation with not string",
-			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + std.atoi("foo"); }`,
+			name: "FunctionCall expression concatenation with integer",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.atoi("10"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo10"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with boolean",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + math.is_finite(1.0); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo1"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with float",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + math.exp(1.0); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo2.718"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with IP",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.str2ip("192.0.2.1", "192.0.2.2"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo192.0.2.1"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with time",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.time("Mon, 02 Jan 2006 22:04:05 GMT", now); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "fooMon, 02 Jan 2006 22:04:05 GMT"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with ACL",
+			vcl: `
+			acl empty{}
+			table ext ACL { "ext": empty, }
+			sub vcl_recv {
+				set req.http.Foo = "foo" + table.lookup_acl(ext, req.url.ext, empty);
+			}`,
+			isError: true,
+		},
+		{
+			name: "FunctionCall expression concatenation with backend",
+			vcl: `
+			table t BACKEND { "test": F_origin_0, }
+			sub vcl_recv {
+				set req.http.Foo = "foo" + table.lookup_backend(t, "test2", req.backend);
+			}`,
 			isError: true,
 		},
 		{

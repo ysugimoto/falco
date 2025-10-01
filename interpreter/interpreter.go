@@ -194,7 +194,9 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
+			h := &atomic.Bool{}
+			h.Store(true)
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true, Healthy: h}
 		case *ast.TableDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
@@ -231,13 +233,13 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Penaltyboxes[t.Name.Value] = t
+			i.ctx.Penaltyboxes[t.Name.Value] = value.NewPenaltybox(t)
 		case *ast.RatecounterDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Ratecounters[t.Name.Value] = t
+			i.ctx.Ratecounters[t.Name.Value] = value.NewRatecounter(t)
 		}
 	}
 

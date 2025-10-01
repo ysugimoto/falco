@@ -1,11 +1,8 @@
 package variable
 
 import (
-	"io"
 	"net"
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -162,7 +159,9 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -174,14 +173,14 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	return val, nil
 }
 
-func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
+func (v *ErrorScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Object, match[1])
+	return getResponseHeaderValue(v.ctx.Object, match[1]), nil
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -212,10 +211,16 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case OBJ_RESPONSE:
+		// If synthetic response has already been set, ignore this assignment.
+		if v.ctx.HasSyntheticResponse {
+			return nil
+		}
+
 		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
+		// obj.response indicates response header line, meand status text in http.Response
+		v.ctx.Object.Status = v.ctx.ObjectResponse.Value
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
@@ -223,7 +228,6 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
-		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {

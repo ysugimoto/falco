@@ -99,16 +99,16 @@ func (i *Interpreter) sendResponse(w ghttp.ResponseWriter) {
 	io.Copy(w, i.ctx.Response.Body) // nolint:errcheck
 }
 
-func (i *Interpreter) sendPurgeRequestResponse(w http.ResponseWriter, err error) {
+func (i *Interpreter) sendPurgeRequestResponse(w ghttp.ResponseWriter, err error) {
 	// https://www.fastly.com/documentation/guides/full-site-delivery/purging/authenticating-api-purge-requests/#purging-urls-with-an-api-token
 	w.Header().Set("Content-Type", "application/json")
 
 	// If our runtime could not accept purge request, send error response
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(ghttp.StatusBadRequest)
 		io.WriteString(w, `{"status": "ng", "id": "falco_purge_rejection"}`) // nolint:errcheck
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(ghttp.StatusOK)
 	io.WriteString(w, `{"status": "ok", "id": "falco_purge_acceptance"}`) // nolint:errcheck
 }

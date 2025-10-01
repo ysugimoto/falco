@@ -52,8 +52,8 @@ type Context struct {
 	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration
 	Subroutines         map[string]*ast.SubroutineDeclaration
-	Penaltyboxes        map[string]*ast.PenaltyboxDeclaration
-	Ratecounters        map[string]*ast.RatecounterDeclaration
+	Penaltyboxes        map[string]*value.Penaltybox
+	Ratecounters        map[string]*value.Ratecounter
 	Gotos               map[string]*ast.GotoStatement
 	SubroutineFunctions map[string]*ast.SubroutineDeclaration
 	OriginalHost        string
@@ -150,9 +150,13 @@ type Context struct {
 
 	// For testing fields
 	// Stored subroutine return state
-	ReturnState     *value.String
-	FixedTime       *time.Time
+	ReturnState *value.String
+	// Injected fixed time for `now`, `now.sec`, etc
+	FixedTime *time.Time
+	// Count of subroutine called
 	SubroutineCalls map[string]int
+	// Injected fixed access rate
+	FixedAccessRate *float64
 
 	// Coverage marker pointer. not nil if testing with coverage measurement
 	Coverage *shared.Coverage
@@ -179,6 +183,12 @@ type Context struct {
 	// Marker that return request is purge request.
 	IsPurgeRequest bool
 
+	// Flag for a synthetic response has been set.
+	// It means that some VCL will set response phase like `set obj.response = "xxx"`
+	// but we should ignore when synthetic response has already set.
+	// Note that obj.response is deprecated after HTTP/1.1 but VCL still supports this spec.
+	HasSyntheticResponse bool
+
 	OverrideVariables map[string]value.Value
 }
 
@@ -188,8 +198,8 @@ func New(options ...Option) *Context {
 		Backends:               make(map[string]*value.Backend),
 		Tables:                 make(map[string]*ast.TableDeclaration),
 		Subroutines:            make(map[string]*ast.SubroutineDeclaration),
-		Penaltyboxes:           make(map[string]*ast.PenaltyboxDeclaration),
-		Ratecounters:           make(map[string]*ast.RatecounterDeclaration),
+		Penaltyboxes:           make(map[string]*value.Penaltybox),
+		Ratecounters:           make(map[string]*value.Ratecounter),
 		Gotos:                  make(map[string]*ast.GotoStatement),
 		SubroutineFunctions:    make(map[string]*ast.SubroutineDeclaration),
 		OverrideBackends:       make(map[string]*config.OverrideBackend),
@@ -269,7 +279,7 @@ func New(options ...Option) *Context {
 		ObjectGrace:                         &value.RTime{},
 		ObjectTTL:                           &value.RTime{},
 		ObjectStatus:                        &value.Integer{Value: 500},
-		ObjectResponse:                      &value.String{Value: "error"},
+		ObjectResponse:                      &value.String{IsNotSet: true},
 		ReturnState:                         &value.String{IsNotSet: true},
 		IsLocallyGenerated:                  &value.Boolean{},
 		BackendRequestMaxReuseIdleTime:      &value.RTime{},

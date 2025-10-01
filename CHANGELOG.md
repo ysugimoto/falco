@@ -1,3 +1,15 @@
+## v1.20.0
+
+- Implement ratelimit related features [#491](https://github.com/ysugimoto/falco/pull/491) (@ysugimoto)
+- Fix string concatenation with functional calls [#490](https://github.com/ysugimoto/falco/pull/490) (@MasonM)
+- Make querystring.get not decode query keys [#489](https://github.com/ysugimoto/falco/pull/489) (@yonran)
+- Order snippets by ascending priority [#488](https://github.com/ysugimoto/falco/pull/488) (@yonran)
+- Fix string concatenation with RTIME idents [#487](https://github.com/ysugimoto/falco/pull/487) (@MasonM)
+- Fully implement and fix `fastly.try_select_shield()` [#486](https://github.com/ysugimoto/falco/pull/486) (@MasonM)
+- Implement `director.{NAME}.healthy` and fix segfaults [#485](https://github.com/ysugimoto/falco/pull/485) (@MasonM)
+- Add `assert.is_json()` function [#483](https://github.com/ysugimoto/falco/pull/483) (@MasonM)
+- Fix object response handling, mainly error scope [#481](https://gthub.com/ysugimoto/falco/pull/481) (@ysugimoto)
+
 ## v1.19.0
 
 - Support fastly purge request in interpreter [#477](https://github.com/ysugimoto/falco/pull/477) (@ysugimoto)

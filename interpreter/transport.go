@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gobwas/glob"
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
@@ -100,13 +101,6 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		}
 	}
 
-	var alwaysHost bool
-	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
-		return nil, errors.WithStack(err)
-	} else if v != nil {
-		alwaysHost = value.Unwrap[*value.Boolean](v).Value
-	}
-
 	if port == "" {
 		if scheme == HTTPS_SCHEME {
 			port = "443"
@@ -128,10 +122,39 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	req.Header = i.ctx.Request.Header.Clone()
 	setupFastlyHeaders(req)
 
-	if alwaysHost {
-		req.Header.Set("Host", host)
+	hostHeader, err := i.getOriginHostHeader(backend, host)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	} else if hostHeader != nil {
+		req.Header.Set("Host", *hostHeader)
 	}
 	return req, nil
+}
+
+func (i *Interpreter) getOriginHostHeader(backend *value.Backend, defaultHost string) (*string, error) {
+	// Check backend is dynamic
+	if v, err := i.getBackendProperty(backend.Value.Properties, "dynamic"); err != nil {
+		pp.Println("dynamic get error")
+		return nil, errors.WithStack(err)
+	} else if v != nil && v.Type() == value.BooleanType {
+		pp.Println("dynamic boolean")
+		// If backend is dynamic, lookup .host_header field value
+		if vv, err := i.getBackendProperty(backend.Value.Properties, "host_header"); err != nil {
+			return nil, errors.WithStack(err)
+		} else if vv != nil && vv.Type() == value.StringType {
+			return &value.Unwrap[*value.String](vv).Value, nil
+		}
+	}
+
+	// Otherwise, check .always_use_host_header is defined
+	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
+		return nil, errors.WithStack(err)
+	} else if v != nil && v.Type() == value.BooleanType {
+		if value.Unwrap[*value.Boolean](v).Value {
+			return &defaultHost, nil
+		}
+	}
+	return nil, nil
 }
 
 func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response, error) {

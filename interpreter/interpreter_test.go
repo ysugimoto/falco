@@ -129,11 +129,19 @@ func TestProcessDeclarations(t *testing.T) {
 	}); err != nil {
 		t.Errorf("%+v\n", err)
 	}
-	if _, ok := ip.ctx.Backends["backend_example"]; !ok {
+	backend, ok := ip.ctx.Backends["backend_example"]
+	if !ok {
 		t.Errorf("Failed to find backend_example in backends: %v\n", ip.ctx.Backends)
 	}
-	if _, ok := ip.ctx.Backends["director_example"]; !ok {
+	if backend.Healthy == nil || !backend.Healthy.Load() {
+		t.Errorf("Healthy status not set for backend_example")
+	}
+	backend, ok = ip.ctx.Backends["director_example"]
+	if !ok {
 		t.Errorf("Failed to find director_example in backends: %v\n", ip.ctx.Backends)
+	}
+	if backend.Healthy == nil || !backend.Healthy.Load() {
+		t.Errorf("Healthy status not set for director_example")
 	}
 }
 

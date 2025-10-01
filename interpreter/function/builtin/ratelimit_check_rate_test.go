@@ -4,12 +4,80 @@ package builtin
 
 import (
 	"testing"
+	"time"
+
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-// Fastly built-in function testing implementation of ratelimit.check_rate
-// Arguments may be:
-// - STRING, ID, INTEGER, INTEGER, INTEGER, ID, RTIME
-// Reference: https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-check-rate/
 func Test_Ratelimit_check_rate(t *testing.T) {
-	t.Skip("Test Builtin function ratelimit.check_rate should be impelemented")
+	tests := []struct {
+		name         string
+		args         []value.Value
+		wantExceeded bool
+		wantErr      bool
+	}{
+		{
+			name: "exceeded",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.1"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 101},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded: true,
+		},
+		{
+			name: "not exceeded",
+			args: []value.Value{
+				&value.String{Value: "192.0.2.2"},
+				&value.Ident{Value: "rc1"},
+				&value.Integer{Value: 10},
+				&value.Integer{Value: 1},
+				&value.Integer{Value: 100},
+				&value.Ident{Value: "pb"},
+				&value.RTime{Value: 10 * time.Second},
+			},
+			wantExceeded: false,
+		},
+	}
+
+	// Wait for next window
+	for time.Now().Unix()%10 != 0 {
+		time.Sleep(time.Second)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rc1 := value.NewRatecounter(nil)
+			pb := value.NewPenaltybox(nil)
+			ctx := &context.Context{
+				Ratecounters: map[string]*value.Ratecounter{
+					"rc1": rc1,
+				},
+				Penaltyboxes: map[string]*value.Penaltybox{
+					"pb": pb,
+				},
+			}
+
+			ret, err := Ratelimit_check_rate(ctx, tt.args...)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Expected error but got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			b := value.Unwrap[*value.Boolean](ret)
+			if b.Value != tt.wantExceeded {
+				t.Errorf("Unexpected return value, expect=%t, got=%t", tt.wantExceeded, b.Value)
+			}
+		})
+	}
 }
