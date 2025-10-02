@@ -1,6 +1,10 @@
 package lexer
 
-import "github.com/ysugimoto/falco/token"
+import (
+	"maps"
+
+	"github.com/ysugimoto/falco/token"
+)
 
 type OptionFunc func(o *Option)
 
@@ -18,9 +22,7 @@ func WithFile(filename string) OptionFunc {
 
 func WithCustomTokens(tokenMap map[string]token.TokenType) OptionFunc {
 	return func(o *Option) {
-		for k, v := range tokenMap {
-			o.Customs[k] = v
-		}
+		maps.Copy(o.Customs, tokenMap)
 	}
 }
 

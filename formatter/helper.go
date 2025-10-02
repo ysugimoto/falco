@@ -78,7 +78,7 @@ func formatChunkedString(chunk, indent string) string {
 	defer bufferPool.Put(buf)
 
 	buf.Reset()
-	for _, line := range strings.Split(chunk, "\n") {
+	for line := range strings.SplitSeq(chunk, "\n") {
 		buf.WriteString(indent + strings.TrimSpace(line) + "\n")
 	}
 	return buf.String()

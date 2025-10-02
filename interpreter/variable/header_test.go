@@ -101,7 +101,7 @@ func TestSetRequestHeaderValueOverwrite(t *testing.T) {
 	if diff := cmp.Diff(req.Header, http.Header{
 		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 
@@ -173,7 +173,7 @@ func TestSetResponseHeaderValueOverwrite(t *testing.T) {
 	if diff := cmp.Diff(resp.Header, http.Header{
 		"Foo": []string{"abc=123,bar=snafu"},
 	}); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 

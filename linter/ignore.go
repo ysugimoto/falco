@@ -74,7 +74,7 @@ func parseIgnoreComment(comment string) (string, []Rule) {
 	}
 
 	var rules []Rule
-	for _, r := range strings.Split(body, ",") {
+	for r := range strings.SplitSeq(body, ",") {
 		trimmed := strings.TrimSpace(r)
 		if trimmed != "" {
 			rules = append(rules, Rule(trimmed))

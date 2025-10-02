@@ -66,7 +66,7 @@ func digitVal(c rune) int {
 func readByte(r *bufio.Reader) (byte, error) {
 	var x byte
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		c, _, err := r.ReadRune()
 		if err != nil {
 			return 0, err

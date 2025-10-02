@@ -43,12 +43,12 @@ func Accept_language_filter_basic(ctx *context.Context, args ...value.Value) (va
 	nmatches := value.Unwrap[*value.Integer](args[3])
 
 	var languages []string
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for v := range strings.SplitSeq(lookup.Value, ":") {
 		languages = append(languages, v)
 	}
 
 	var matches []int
-	for _, v := range strings.Split(language.Value, ",") {
+	for v := range strings.SplitSeq(language.Value, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

@@ -1,8 +1,6 @@
 module github.com/ysugimoto/falco
 
-go 1.23.0
-
-toolchain go1.24.3
+go 1.24.3
 
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1

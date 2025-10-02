@@ -32,7 +32,7 @@ func BenchmarkLexer(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		lx := lexer.NewFromString(buf.String(), lexer.WithFile(benchmarkTargetFile))
 		for {
 			tok := lx.NextToken()
@@ -63,7 +63,7 @@ func BenchmarkParser(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := parser.New(
 			lexer.NewFromString(buf.String(), lexer.WithFile(benchmarkTargetFile)),
 		).ParseVCL()
@@ -90,7 +90,7 @@ func BenchmarkLinter(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		vcl, err := parser.New(
 			lexer.NewFromString(buf.String(), lexer.WithFile(benchmarkTargetFile)),
 		).ParseVCL()
@@ -118,7 +118,7 @@ func BenchmarkFormatter(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		vcl, err := parser.New(
 			lexer.NewFromString(buf.String(), lexer.WithFile(benchmarkTargetFile)),
 		).ParseVCL()
