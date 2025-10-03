@@ -30,7 +30,7 @@ func ParseQuery(qs string) (*QueryStrings, error) {
 		Prefix: qs[0:idx],
 	}
 	qs = qs[idx+1:]
-	for _, q := range strings.Split(qs, "&") {
+	for q := range strings.SplitSeq(qs, "&") {
 		sp := strings.SplitN(q, "=", 2)
 		if len(sp) == 0 {
 			continue

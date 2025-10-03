@@ -163,7 +163,7 @@ OUT:
 func decodeMultiBytes(reader *bufio.Reader, firstByte byte) ([]byte, error) {
 	mbs := []byte{firstByte}
 
-	for i := 0; i < utf8.UTFMax; i++ {
+	for range utf8.UTFMax {
 		sb := make([]byte, 3) // create 3 bytes for %HH
 		if _, err := reader.Read(sb); err != nil {
 			return nil, errors.WithStack(err)

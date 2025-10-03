@@ -221,7 +221,7 @@ func (c *Context) UserDefinedFunctionScope(name string, mode int, returnType typ
 }
 
 func (c *Context) PushRegexVariables(matchN int) {
-	for i := 0; i < matchN; i++ {
+	for i := range matchN {
 		c.RegexVariables[fmt.Sprintf("re.group.%d", i)]++
 	}
 	// Reset unused grouped variable numbers

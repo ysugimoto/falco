@@ -22,7 +22,7 @@ func Header_unset_Validate(args []value.Value) error {
 	if len(args) != 2 {
 		return errors.ArgumentNotEnough(Header_unset_Name, 2, args)
 	}
-	for i := 0; i < 1; i++ {
+	for i := range 1 {
 		if args[i].Type() != Header_unset_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_unset_Name, i+1, Header_unset_ArgumentTypes[i], args[i].Type())
 		}

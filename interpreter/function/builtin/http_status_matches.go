@@ -46,7 +46,7 @@ func Http_status_matches(ctx *context.Context, args ...value.Value) (value.Value
 		format = format[1:]
 	}
 
-	for _, code := range strings.Split(format, ",") {
+	for code := range strings.SplitSeq(format, ",") {
 		if status != strings.TrimSpace(code) {
 			continue
 		}
