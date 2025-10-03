@@ -225,7 +225,7 @@ func (c *Context) PushRegexVariables(matchN int) {
 		c.RegexVariables[fmt.Sprintf("re.group.%d", i)]++
 	}
 	// Reset unused grouped variable numbers
-	for i := range matchN {
+	for i := 10; i >= matchN; i-- {
 		c.RegexVariables[fmt.Sprintf("re.group.%d", i)] = 0
 	}
 }
