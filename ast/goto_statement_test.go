@@ -6,18 +6,15 @@ import (
 
 func TestGotoStatement(t *testing.T) {
 	g := &GotoStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment")),
 		Destination: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "update_and_set",
 		},
 	}
 
-	expect := `// This is comment
-goto update_and_set; // This is comment
+	expect := `// leading comment
+goto /* before_name */ update_and_set /* after_name */; // trailing comment
 `
-
-	if g.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, g.String())
-	}
+	assert(t, g.String(), expect)
 }

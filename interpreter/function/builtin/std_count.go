@@ -45,6 +45,8 @@ func Std_count(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		return &value.Integer{Value: int64(len(ctx.BackendRequest.Header))}, nil
 	case "beresp.headers":
 		return &value.Integer{Value: int64(len(ctx.BackendResponse.Header))}, nil
+	case "obj.headers":
+		return &value.Integer{Value: int64(len(ctx.Object.Header))}, nil
 	case "resp.headers":
 		return &value.Integer{Value: int64(len(ctx.Response.Header))}, nil
 	default:

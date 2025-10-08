@@ -43,7 +43,7 @@ func Digest_hash_crc32b(ctx *context.Context, args ...value.Value) (value.Value,
 	var crc uint32 = 0xffffffff
 	for _, c := range []byte(input.Value) {
 		crc = crc ^ (uint32)(c)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			if crc&0x1 != 0 {
 				crc = (crc >> 1) ^ 0xEDB88320
 			} else {

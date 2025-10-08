@@ -29,7 +29,7 @@ include "default05_include01";
 
 sub vcl_recv {
 
-  #Fastly recv
+  #FASTLY recv
   set req.backend = httpbin_org;
 
   if (req.http.Some-Truthy-Header) {

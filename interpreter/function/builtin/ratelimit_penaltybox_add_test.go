@@ -3,9 +3,13 @@
 package builtin
 
 import (
+	"net"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+	"time"
+
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of ratelimit.penaltybox_add
@@ -13,5 +17,77 @@ import (
 // - ID, STRING, RTIME
 // Reference: https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-add/
 func Test_Ratelimit_penaltybox_add(t *testing.T) {
-	t.Skip("Test Builtin function ratelimit.penaltybox_add should be impelemented")
+	tests := []struct {
+		name      string
+		ident     string
+		entry     value.Value
+		ttl       time.Duration
+		isError   bool
+		expectErr string
+	}{
+		{
+			name:  "entry is string",
+			ident: "my_penaltybox",
+			entry: &value.String{Value: "some_entry"},
+			ttl:   10 * time.Second,
+		},
+		{
+			name:  "entry is ip",
+			ident: "my_penaltybox",
+			entry: &value.IP{Value: net.ParseIP("192.168.0.1")},
+			ttl:   10 * time.Second,
+		},
+		{
+			name:      "penaltybox not found",
+			ident:     "not_found",
+			entry:     &value.String{Value: "some_entry"},
+			ttl:       10 * time.Second,
+			isError:   true,
+			expectErr: "[ratelimit.penaltybox_add] Penaltybox not_found is not defined",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &context.Context{
+				Penaltyboxes: map[string]*value.Penaltybox{
+					"my_penaltybox": value.NewPenaltybox(&ast.PenaltyboxDeclaration{
+						Name: &ast.Ident{Value: "my_penaltybox"},
+					}),
+				},
+			}
+			_, err := Ratelimit_penaltybox_add(
+				ctx,
+				&value.Ident{Value: tt.ident},
+				tt.entry,
+				&value.RTime{Value: tt.ttl},
+			)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("expected error but got nil")
+					return
+				}
+				if err.Error() != tt.expectErr {
+					t.Errorf("expected error %s, but got %s", tt.expectErr, err.Error())
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %s", err.Error())
+				return
+			}
+
+			pb := ctx.Penaltyboxes[tt.ident]
+			var entry string
+			switch tt.entry.Type() {
+			case value.StringType:
+				entry = value.Unwrap[*value.String](tt.entry).Value
+			case value.IpType:
+				entry = value.Unwrap[*value.IP](tt.entry).String()
+			}
+			if !pb.Has(entry) {
+				t.Errorf("entry %s does not exist in penaltybox", entry)
+			}
+		})
+	}
 }

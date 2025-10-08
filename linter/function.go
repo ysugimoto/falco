@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/token"
 	"github.com/ysugimoto/falco/types"
 )
@@ -98,6 +98,17 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 					calledFn.meta, calledFn.name, i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
+		}
+	}
+
+	// Special cases
+	if calledFn.name == "regsub" || calledFn.name == "regsuball" {
+		if !isTypeLiteral(calledFn.arguments[1]) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    calledFn.arguments[1].GetMeta().Token,
+				Message:  "Regex patterns must be string literals.",
+			})
 		}
 	}
 

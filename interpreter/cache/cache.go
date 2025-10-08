@@ -2,6 +2,7 @@
 package cache
 
 import (
+	"slices"
 	"sync"
 	"time"
 
@@ -68,10 +69,5 @@ func (c *Cache) Get(hash string) *CacheItem {
 var unCacheableStatusCodes = []int{200, 203, 300, 301, 302, 404, 410}
 
 func IsCacheableStatusCode(statusCode int) bool {
-	for _, v := range unCacheableStatusCodes {
-		if v == statusCode {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(unCacheableStatusCodes, statusCode)
 }

@@ -16,7 +16,6 @@ import (
 // - STRING, INTEGER, INTEGER
 // Reference: https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-time-hmac-sha512/
 func Test_Digest_time_hmac_sha512(t *testing.T) {
-	t.Skip("Test Builtin function digest.time_hmac_sha512 should be impelemented")
 	secret := base64.StdEncoding.EncodeToString([]byte("12345678901234567890"))
 	ret, err := digest_time_hmac_sha512(
 		time.Date(1970, 1, 1, 0, 0, 59, 0, time.UTC),
@@ -34,6 +33,6 @@ func Test_Digest_time_hmac_sha512(t *testing.T) {
 	enc := sha512.Sum512([]byte("342147"))
 	expect := base64.StdEncoding.EncodeToString(enc[:])
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

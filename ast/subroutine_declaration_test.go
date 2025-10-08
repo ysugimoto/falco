@@ -6,13 +6,13 @@ import (
 
 func TestSubroutineStatement(t *testing.T) {
 	sub := &SubroutineDeclaration{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+		Meta: New(T, 0, comments("// leading comment"), comments("/* trailing comment */")),
 		Name: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "vcl_recv",
 		},
 		Block: &BlockStatement{
-			Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+			Meta: New(T, 1, comments(), comments(), comments("// infix comment")),
 			Statements: []Statement{
 				&EsiStatement{
 					Meta: New(T, 1, comments("// This is comment"), comments("/* This is comment */")),
@@ -21,14 +21,13 @@ func TestSubroutineStatement(t *testing.T) {
 		},
 	}
 
-	expect := `// This is comment
-sub vcl_recv {
+	expect := `// leading comment
+sub /* before_name */ vcl_recv /* after_name */ {
   // This is comment
   esi; /* This is comment */
-} /* This is comment */
+  // infix comment
+} /* trailing comment */
 `
 
-	if sub.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, sub.String())
-	}
+	assert(t, sub.String(), expect)
 }

@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"unicode/utf8"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -35,7 +37,11 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	input := []rune(value.Unwrap[*value.String](args[0]).Value)
+	v := value.Unwrap[*value.String](args[0])
+	if !utf8.Valid([]byte(v.Value)) {
+		return &value.String{}, nil
+	}
+	input := []rune(v.Value)
 	offset := int(value.Unwrap[*value.Integer](args[1]).Value)
 	var length *int
 	if len(args) > 2 {
@@ -46,22 +52,21 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 	var start, end int
 	if offset < 0 {
 		start = len(input) + offset
+		if start < 0 {
+			return &value.String{}, nil
+		}
 	} else {
 		start = offset
 	}
 	if length == nil {
 		end = len(input)
 	} else if *length < 0 {
-		if offset < 0 {
-			end = len(input) + *length + 1
-		} else {
-			end = len(input) + *length
-		}
+		end = len(input) + *length
 	} else {
-		if offset < 0 {
-			end = start + *length
-		} else {
-			end = start + *length + 1
+		end = start + *length
+		// Handle integer overflow
+		if end < 0 {
+			return &value.String{}, nil
 		}
 	}
 	if end > len(input) {
@@ -69,12 +74,10 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 	}
 
 	if start > len(input) {
-		return &value.String{IsNotSet: true}, errors.New(Substr_Name,
-			"Invalid start offset %d against input string %s", offset, input,
-		)
+		return &value.String{}, nil
 	}
 	if end <= start {
-		return &value.String{Value: ""}, nil
+		return &value.String{}, nil
 	}
 	return &value.String{Value: string(input[start:end])}, nil
 }

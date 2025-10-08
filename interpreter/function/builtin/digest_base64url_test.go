@@ -28,6 +28,6 @@ func Test_Digest_base64url(t *testing.T) {
 	v := value.Unwrap[*value.String](ret)
 	expect := "zprOsc67z47PgiDOv8-Bzq_Pg86xz4TOtQ=="
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

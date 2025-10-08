@@ -15,4 +15,5 @@ func (e *EmptyResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
 	return nil, errors.New("Empty Resolver returns error")
 }
 
-func (e *EmptyResolver) Name() string { return "__EMPTY__" }
+func (e *EmptyResolver) Name() string           { return "__EMPTY__" }
+func (e *EmptyResolver) IncludePaths() []string { return []string{} }

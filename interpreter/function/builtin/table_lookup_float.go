@@ -37,30 +37,32 @@ func Table_lookup_float(ctx *context.Context, args ...value.Value) (value.Value,
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.Float](args[2]).Value
+	defaultValue := value.Unwrap[*value.Float](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
+		return defaultValue, errors.New(Table_lookup_float_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "FLOAT" {
-		return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
+		return defaultValue, errors.New(Table_lookup_float_Name,
 			"table %d value type is not FLOAT", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.Float)
-			if !ok {
-				return &value.Float{Value: defaultValue}, errors.New(Table_lookup_float_Name,
-					"table %s value could not cast to FLOAT type", id,
-				)
-			}
-			return &value.Float{Value: v.Value}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+
+		v, ok := prop.Value.(*ast.Float)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_float_Name,
+				"table %s value could not cast to FLOAT type", id,
+			)
+		}
+		return &value.Float{Value: v.Value}, nil
 	}
-	return &value.Float{Value: defaultValue}, nil
+	return defaultValue.Copy(), nil
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -27,7 +28,11 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 				Properties: []*ast.BackendProperty{
 					{
 						Key:   &ast.Ident{Value: "host"},
-						Value: &ast.String{Value: "http://localhost:3124"},
+						Value: &ast.String{Value: "localhost"},
+					},
+					{
+						Key:   &ast.Ident{Value: "port"},
+						Value: &ast.String{Value: "80"},
 					},
 				},
 			},
@@ -55,5 +60,13 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	}
 	i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
+	return nil
+}
+
+func (i *Interpreter) ProcessTestSubroutine(scope icontext.Scope, sub *ast.SubroutineDeclaration) error {
+	i.SetScope(scope)
+	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }

@@ -41,12 +41,12 @@ func Accept_language_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	language := value.Unwrap[*value.String](args[2])
 
 	var languages []string
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for v := range strings.SplitSeq(lookup.Value, ":") {
 		languages = append(languages, v)
 	}
 
 	index := len(languages)
-	for _, v := range strings.Split(language.Value, ",") {
+	for v := range strings.SplitSeq(language.Value, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

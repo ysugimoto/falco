@@ -37,30 +37,32 @@ func Table_lookup_bool(ctx *context.Context, args ...value.Value) (value.Value, 
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.Boolean](args[2]).Value
+	defaultValue := value.Unwrap[*value.Boolean](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
+		return defaultValue, errors.New(Table_lookup_bool_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "BOOL" {
-		return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
+		return defaultValue, errors.New(Table_lookup_bool_Name,
 			"table %d value type is not BOOL", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.Boolean)
-			if !ok {
-				return &value.Boolean{Value: defaultValue}, errors.New(Table_lookup_bool_Name,
-					"table %s value could not cast to BOOL type", id,
-				)
-			}
-			return &value.Boolean{Value: v.Value}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+
+		v, ok := prop.Value.(*ast.Boolean)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_bool_Name,
+				"table %s value could not cast to BOOL type", id,
+			)
+		}
+		return &value.Boolean{Value: v.Value}, nil
 	}
-	return &value.Boolean{Value: defaultValue}, nil
+	return defaultValue.Copy(), nil
 }

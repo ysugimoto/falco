@@ -8,16 +8,14 @@ func TestSynthericStatement(t *testing.T) {
 	s := &SyntheticStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Value: &String{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_expr */"), comments("/* after_expr */")),
 			Value: "foobar",
 		},
 	}
 
 	expect := `// This is comment
-synthetic "foobar"; // This is comment
+synthetic /* before_expr */ "foobar" /* after_expr */; // This is comment
 `
 
-	if s.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, s.String())
-	}
+	assert(t, s.String(), expect)
 }

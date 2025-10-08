@@ -4,8 +4,11 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of table.lookup_acl
@@ -13,5 +16,61 @@ import (
 // - TABLE, STRING, ACL
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/
 func Test_Table_lookup_acl(t *testing.T) {
-	t.Skip("table.lookup_acl only has difference for table value type")
+	table := map[string]*ast.TableDeclaration{
+		"example": {
+			ValueType: &ast.Ident{Value: "ACL"},
+			Properties: []*ast.TableProperty{
+				{
+					Key: &ast.String{Value: "foo"},
+					Value: &ast.Ident{
+						Value: "bar",
+					},
+				},
+			},
+		},
+	}
+	acl := map[string]*value.Acl{
+		"bar": {
+			Value: &ast.AclDeclaration{
+				Name: &ast.Ident{Value: "bar"},
+			},
+		},
+		"default": {
+			Value: &ast.AclDeclaration{
+				Name: &ast.Ident{Value: "default"},
+			},
+		},
+	}
+
+	tests := []struct {
+		input   string
+		key     string
+		expect  value.Value
+		isError bool
+	}{
+		{input: "doesnotexist", key: "foo", expect: value.Null, isError: true},
+		{input: "example", key: "foo", expect: acl["bar"]},
+		{input: "example", key: "other", expect: acl["default"]},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.Ident{Value: tt.input},
+			&value.String{Value: tt.key},
+			acl["default"],
+		}
+		ret, err := Table_lookup_acl(&context.Context{Tables: table, Acls: acl}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.AclType {
+			t.Errorf("[%d] Unexpected return type, expect=ACL, got=%s", i, ret.Type())
+		}
+		if diff := cmp.Diff(tt.expect, ret); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

@@ -5,6 +5,7 @@ package builtin
 import (
 	"net/url"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -38,7 +39,20 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 	}
 
 	v := value.Unwrap[*value.String](args[0])
-	name := value.Unwrap[*value.String](args[1])
+	nameValue := value.Unwrap[*value.String](args[1])
+	// Fastly behavior: pct-decode only (no '+' as space) for the argument name.
+	name, err := url.PathUnescape(nameValue.Value)
+	if err != nil {
+		// If URL decoding fails, return not set
+		return value.Null, errors.InvalidHexChar(Querystring_get_Name, 1)
+	}
+	if !utf8.ValidString(name) {
+		return value.Null, errors.UnexpectedByteInShortString(Querystring_get_Name, 1)
+	}
+	// Re-encode using query-component semantics but ensure space encodes as %20 (not '+').
+	// This yields: ' ' -> %20, '+' -> %2B, alnum stays, matching Fastly behavior.
+	name = url.QueryEscape(name)
+	name = strings.ReplaceAll(name, "+", "%20")
 
 	var qs string
 	if idx := strings.Index(v.Value, "?"); idx != -1 {
@@ -49,19 +63,14 @@ func Querystring_get(ctx *context.Context, args ...value.Value) (value.Value, er
 	// ?name  => should return empty string, but returns empty string
 	// ?name= => should return not set, but returns empty string
 	// so we try to parse from RawQuery string, not using url.Value
-	for _, query := range strings.Split(qs, "&") {
-		sp := strings.Split(query, "=")
+	for query := range strings.SplitSeq(qs, "&") {
+		sp := strings.SplitN(query, "=", 2)
 		if len(sp) < 2 || sp[0] == "" {
 			continue
 		}
-		n, err := url.QueryUnescape(sp[0])
-		if err != nil {
-			continue
-		}
-		if n == name.Value {
+		if sp[0] == name && len(sp) >= 2 {
 			return &value.String{Value: sp[1]}, nil
 		}
 	}
-	// includes not set value
 	return &value.String{IsNotSet: true}, nil
 }

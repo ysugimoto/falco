@@ -57,7 +57,11 @@ func (f *FileResolver) Name() string {
 	return ""
 }
 
-func (f *FileResolver) getVCL(file string) (*VCL, error) {
+func (f *FileResolver) IncludePaths() []string {
+	return f.includePaths
+}
+
+func getVCL(file string) (*VCL, error) {
 	if _, err := os.Stat(file); err != nil {
 		return nil, err
 	}
@@ -80,7 +84,7 @@ func (f *FileResolver) getVCL(file string) (*VCL, error) {
 }
 
 func (f *FileResolver) MainVCL() (*VCL, error) {
-	return f.getVCL(f.main)
+	return getVCL(f.main)
 }
 
 func (f *FileResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
@@ -91,7 +95,7 @@ func (f *FileResolver) Resolve(stmt *ast.IncludeStatement) (*VCL, error) {
 
 	// Find for each include paths
 	for _, p := range f.includePaths {
-		if vcl, err := f.getVCL(filepath.Join(p, modulePathWithExtension)); err == nil {
+		if vcl, err := getVCL(filepath.Join(p, modulePathWithExtension)); err == nil {
 			return vcl, nil
 		}
 	}

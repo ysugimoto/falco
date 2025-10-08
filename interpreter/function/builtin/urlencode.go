@@ -3,10 +3,9 @@
 package builtin
 
 import (
-	"net/url"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -37,9 +36,10 @@ func Urlencode(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	input := value.Unwrap[*value.String](args[0]).Value
-	// url.QueryEscape encodes white space to "+" so we should use url.PathEscape
-	// in order to encode white space to "%20"
-	enc := url.PathEscape(input)
+	enc, err := shared.UrlEncode(input)
+	if err != nil {
+		return &value.String{IsNotSet: true}, errors.New(Urlencode_Name, err.Error())
+	}
 
 	return &value.String{Value: enc}, nil
 }

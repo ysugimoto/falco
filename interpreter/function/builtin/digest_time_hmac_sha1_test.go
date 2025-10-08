@@ -33,6 +33,6 @@ func Test_Digest_time_hmac_sha1(t *testing.T) {
 	enc := sha1.Sum([]byte("287082"))
 	expect := base64.StdEncoding.EncodeToString(enc[:])
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

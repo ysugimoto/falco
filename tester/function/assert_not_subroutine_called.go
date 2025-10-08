@@ -21,7 +21,7 @@ func Assert_not_subroutine_called_Validate(args []value.Value) error {
 
 func Assert_not_subroutine_called(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_not_subroutine_called_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	name := value.Unwrap[*value.String](args[0]).Value
@@ -41,7 +41,7 @@ func Assert_not_subroutine_called(ctx *context.Context, args ...value.Value) (va
 	_, ok := ctx.SubroutineCalls[name]
 	if ok {
 		if message != "" {
-			return &value.Boolean{}, errors.NewAssertionError(args[0], message)
+			return &value.Boolean{}, errors.NewAssertionError(args[0], "%s", message)
 		}
 		return &value.Boolean{}, errors.NewAssertionError(args[0], "Subroutine %s is called", name)
 	}

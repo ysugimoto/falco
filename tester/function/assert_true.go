@@ -23,7 +23,7 @@ func Assert_true_Validate(args []value.Value) error {
 
 func Assert_true(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_true_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message

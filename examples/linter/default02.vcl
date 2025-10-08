@@ -27,7 +27,7 @@ backend httpbin_org {
 
 sub vcl_recv {
 
-  #Fastly recv
+  #FASTLY recv
   set req.backend = httpbin_org;
 
   return (pass);
@@ -35,13 +35,13 @@ sub vcl_recv {
 
 sub vcl_deliver {
 
-  #Fastly deliver
+  #FASTLY deliver
   set resp.http.X-Custom-Header = "Custom Header";
   return (deliver);
 }
 
 sub vcl_fetch {
 
-  #Fastly fetch
+  #FASTLY fetch
   return(deliver);
 }

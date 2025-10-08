@@ -7,8 +7,6 @@ import (
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of digest.secure_is_equal
@@ -49,7 +47,7 @@ func Test_Digest_secure_is_equal(t *testing.T) {
 		}
 		v := value.Unwrap[*value.Boolean](ret)
 		if v.Value != tt.expect {
-			t.Errorf("return value unmach, expect=%t, got=%t", tt.expect, v.Value)
+			t.Errorf("return value unmatch, expect=%t, got=%t", tt.expect, v.Value)
 		}
 	}
 }

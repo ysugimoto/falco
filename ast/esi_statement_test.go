@@ -6,14 +6,11 @@ import (
 
 func TestEsiStatement(t *testing.T) {
 	esi := &EsiStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment"), comments("/* infix comment */")),
 	}
 
-	expect := `// This is comment
-esi; // This is comment
+	expect := `// leading comment
+esi /* infix comment */; // trailing comment
 `
-
-	if esi.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, esi.String())
-	}
+	assert(t, esi.String(), expect)
 }

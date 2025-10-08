@@ -9,6 +9,8 @@ const (
 	PORT                     = "port"
 	PURGE                    = "purge"
 	FALCO_VIRTUAL_SERVICE_ID = "falco-virtual-service-id"
+	FALCO_SERVER_HOSTNAME    = "cache-localsimulator"
+	FALCO_DATACENTER         = "FALCO"
 )
 
 // Mapping from tls package ciphersuite name (IANA) to OpenSSL name

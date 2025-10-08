@@ -105,6 +105,11 @@ Following table describes annotation name and recognizing scope:
 | @deliver    | DELIVER | // @deliver<br>sub custom {} |
 | @log        | LOG     | // @log<br>sub custom {}     |
 
+
+## Linter Plugin
+
+You can provide custom linter rule by writing your plugin. See [Plugin](./plugin.md) documentation in detail.
+
 ## Fastly related features
 
 Partially supports fetching Fastly managed VCL snippets. See [remote.md](https://github.com/ysugimoto/falco/blob/master/docs/remote.md) in detail.
@@ -130,6 +135,10 @@ sub vcl_recv {
 
   // falco-ignore-next-line
   set req.http.Example = some.undefined.variable;
+
+  // You can disable specific rules only
+  // falco-ignore-next-line function/arguments, function/argument-type
+  set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
 }
 ```
 
@@ -142,6 +151,9 @@ sub vcl_recv {
   # FASTLY RECV
 
   set req.http.Example = some.undefined.variable; // falco-ignore
+
+  // You can disable specific rules only
+  set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2); // falco-ignore function/arguments, function/argument-type
 }
 ```
 
@@ -157,6 +169,18 @@ sub vcl_recv {
   set req.http.Example = some.undefined.variable;
   // falco-igore-end
 
+  // You can disable specific rules only
+  // falco-ignore-start function/arguments, function/argument-type
+  set req.http.foo = std.itoa(req.http.bar) + std.itoa(0, 1, 2);
+  // falco-ignore-end function/arguments, function/argument-type
+
+  // Note that falco-ignore-end without rule names specified re-enables all rules
+  // falco-ignore-start function/arguments
+  set req.http.foo = std.itoa(0, 1, 2);
+  // falco-ignore-start function/argument-type
+  set req.http.foo = std.itoa(req.http.bar);
+  // falco-ignore-end
+  // Now both function/arguments and function/argument-type are enabled again.
 }
 ```
 

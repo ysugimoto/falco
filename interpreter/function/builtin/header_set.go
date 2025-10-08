@@ -23,7 +23,7 @@ func Header_set_Validate(args []value.Value) error {
 	if len(args) != 3 {
 		return errors.ArgumentNotEnough(Header_set_Name, 3, args)
 	}
-	for i := 0; i < 1; i++ {
+	for i := range 1 {
 		if args[i].Type() != Header_set_ArgumentTypes[i] {
 			return errors.TypeMismatch(Header_set_Name, i+1, Header_set_ArgumentTypes[i], args[i].Type())
 		}

@@ -6,14 +6,17 @@ import (
 
 func TestSwitchStatement(t *testing.T) {
 	switchs := &SwitchStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
-		Control: &Ident{
-			Meta:  New(T, 0),
-			Value: "req.http.host",
+		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("// This is switch infix")),
+		Control: &SwitchControl{
+			Meta: New(T, 0, comments("/* before_paren */"), comments("/* after_paren */")),
+			Expression: &Ident{
+				Meta:  New(T, 0, comments("/* before_expr */"), comments("/* after_expr */")),
+				Value: "req.http.host",
+			},
 		},
 		Cases: []*CaseStatement{
 			{
-				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */")),
+				Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("/* infix_case */")),
 				Test: &InfixExpression{
 					Left:     &Ident{Value: "req.http.Host"},
 					Operator: "==",
@@ -88,9 +91,9 @@ func TestSwitchStatement(t *testing.T) {
 	}
 
 	expect := `// This is comment
-switch (req.http.host) {
+switch /* before_paren */ (/* before_expr */ req.http.host /* after_expr */) /* after_paren */ {
 // This is comment
-case "1": /* This is comment */
+case /* infix_case */ "1": /* This is comment */
   // This is comment
   break; /* This is comment */
 // This is comment
@@ -109,10 +112,9 @@ case "5": /* This is comment */
 default: /* This is comment */
   // This is comment
   break; /* This is comment */
+  // This is switch infix
 } /* This is comment */
 `
 
-	if switchs.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, switchs.String())
-	}
+	assert(t, switchs.String(), expect)
 }

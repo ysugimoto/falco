@@ -11,23 +11,24 @@ type TableDeclaration struct {
 	Properties []*TableProperty
 }
 
-func (t *TableDeclaration) statement()     {}
+func (t *TableDeclaration) ID() uint64     { return t.Meta.ID }
+func (t *TableDeclaration) Statement()     {}
 func (t *TableDeclaration) GetMeta() *Meta { return t.Meta }
 func (t *TableDeclaration) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(t.LeadingComment())
-	buf.WriteString("table ")
-	buf.WriteString(t.Name.String())
+	buf.WriteString(t.LeadingComment(lineFeed))
+	buf.WriteString("table")
+	buf.WriteString(paddingLeft(t.Name.String()))
 	if t.ValueType != nil {
-		buf.WriteString(" " + t.ValueType.String())
+		buf.WriteString(paddingLeft(t.ValueType.String()))
 	}
 	buf.WriteString(" {\n")
 	for _, props := range t.Properties {
 		buf.WriteString(props.String())
 	}
 	buf.WriteString("}")
-	buf.WriteString(t.TrailingComment())
+	buf.WriteString(t.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()
@@ -40,15 +41,16 @@ type TableProperty struct {
 	HasComma bool
 }
 
+func (t *TableProperty) ID() uint64 { return t.Meta.ID }
 func (t *TableProperty) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(t.LeadingComment())
+	buf.WriteString(t.LeadingComment(lineFeed))
 	buf.WriteString(indent(t.Nest) + t.Key.String())
-	buf.WriteString(": ")
-	buf.WriteString(t.Value.String())
+	buf.WriteString(":")
+	buf.WriteString(paddingLeft(t.Value.String()))
 	buf.WriteString(",")
-	buf.WriteString(t.TrailingComment())
+	buf.WriteString(t.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

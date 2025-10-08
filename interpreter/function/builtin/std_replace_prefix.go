@@ -40,8 +40,8 @@ func Std_replace_prefix(ctx *context.Context, args ...value.Value) (value.Value,
 	target := value.Unwrap[*value.String](args[1]).Value
 	replacement := value.Unwrap[*value.String](args[2]).Value
 
-	if strings.HasPrefix(s, target) {
-		s = replacement + strings.TrimPrefix(s, target)
+	if trimmed, found := strings.CutPrefix(s, target); found {
+		s = replacement + trimmed
 	}
 
 	return &value.String{Value: s}, nil

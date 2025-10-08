@@ -2,12 +2,13 @@ package remote
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"testing"
 
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type TestRoundTripper struct {

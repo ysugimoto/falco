@@ -41,6 +41,6 @@ func Test_Digest_rsa_verify(t *testing.T) {
 	}
 	v := value.Unwrap[*value.Boolean](ret)
 	if v.Value != true {
-		t.Errorf("return value unmach, expect=true, got=%t", v.Value)
+		t.Errorf("return value unmatch, expect=true, got=%t", v.Value)
 	}
 }

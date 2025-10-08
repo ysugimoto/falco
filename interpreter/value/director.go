@@ -16,3 +16,12 @@ type DirectorConfigBackend struct {
 	Id      string
 	Weight  int
 }
+
+const (
+	DIRECTORTYPE_RANDOM   = "random"
+	DIRECTORTYPE_FALLBACK = "fallback"
+	DIRECTORTYPE_HASH     = "hash"
+	DIRECTORTYPE_CLIENT   = "client"
+	DIRECTORTYPE_CHASH    = "chash"
+	DIRECTORTYPE_SHIELD   = "shield"
+)

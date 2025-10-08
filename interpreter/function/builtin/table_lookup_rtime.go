@@ -40,44 +40,46 @@ func Table_lookup_rtime(ctx *context.Context, args ...value.Value) (value.Value,
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.RTime](args[2]).Value
+	defaultValue := value.Unwrap[*value.RTime](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.RTime{Value: defaultValue}, errors.New(Table_lookup_rtime_Name,
+		return defaultValue, errors.New(Table_lookup_rtime_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "RTIME" {
-		return &value.RTime{Value: defaultValue}, errors.New(Table_lookup_rtime_Name,
+		return defaultValue, errors.New(Table_lookup_rtime_Name,
 			"table %d value type is not RTIME", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.RTime)
-			if !ok {
-				return &value.RTime{Value: defaultValue}, errors.New(Table_lookup_rtime_Name,
-					"table %s value could not cast to RTIME type", id,
-				)
-			}
-
-			var val time.Duration
-			switch {
-			case strings.HasSuffix(v.Value, "d"):
-				num := strings.TrimSuffix(v.Value, "d")
-				val, _ = time.ParseDuration(num + "h")
-				val *= 24
-			case strings.HasSuffix(v.Value, "y"):
-				num := strings.TrimSuffix(v.Value, "y")
-				val, _ = time.ParseDuration(num + "h")
-				val *= 24 * 365
-			default:
-				val, _ = time.ParseDuration(v.Value)
-			}
-			return &value.RTime{Value: val}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+
+		v, ok := prop.Value.(*ast.RTime)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_rtime_Name,
+				"table %s value could not cast to RTIME type", id,
+			)
+		}
+
+		var val time.Duration
+		switch {
+		case strings.HasSuffix(v.Value, "d"):
+			num := strings.TrimSuffix(v.Value, "d")
+			val, _ = time.ParseDuration(num + "h")
+			val *= 24
+		case strings.HasSuffix(v.Value, "y"):
+			num := strings.TrimSuffix(v.Value, "y")
+			val, _ = time.ParseDuration(num + "h")
+			val *= 24 * 365
+		default:
+			val, _ = time.ParseDuration(v.Value)
+		}
+		return &value.RTime{Value: val}, nil
 	}
-	return &value.RTime{Value: defaultValue}, nil
+	return defaultValue.Copy(), nil
 }

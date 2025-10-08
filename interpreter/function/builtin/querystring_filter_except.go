@@ -47,7 +47,7 @@ func Querystring_filter_except(ctx *context.Context, args ...value.Value) (value
 		)
 	}
 	filterMap := make(map[string]struct{})
-	for _, f := range bytes.Split([]byte(names.Value), Querystring_filtersep_Sign) {
+	for f := range bytes.SplitSeq([]byte(names.Value), Querystring_filtersep_Sign) {
 		filterMap[string(f)] = struct{}{}
 	}
 

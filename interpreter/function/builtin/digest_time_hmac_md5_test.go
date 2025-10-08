@@ -34,6 +34,6 @@ func Test_Digest_time_hmac_md5(t *testing.T) {
 	enc := md5.Sum([]byte("532013"))
 	expect := base64.StdEncoding.EncodeToString(enc[:])
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

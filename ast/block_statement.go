@@ -9,16 +9,18 @@ type BlockStatement struct {
 	Statements []Statement
 }
 
-func (b *BlockStatement) statement()     {}
+func (b *BlockStatement) ID() uint64     { return b.Meta.ID }
+func (b *BlockStatement) Statement()     {}
 func (b *BlockStatement) GetMeta() *Meta { return b.Meta }
 func (b *BlockStatement) String() string {
 	var buf bytes.Buffer
 
+	buf.WriteString(b.LeadingComment(lineFeed))
 	buf.WriteString("{\n")
 	for _, stmt := range b.Statements {
 		buf.WriteString(stmt.String())
 	}
-	buf.WriteString(b.InfixComment())
+	buf.WriteString(indent(b.Nest-1) + b.InfixComment(lineFeed))
 	if b.Nest == 0 {
 		buf.WriteString("}")
 	} else {

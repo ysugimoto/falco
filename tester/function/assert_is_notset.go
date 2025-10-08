@@ -18,7 +18,7 @@ func Assert_is_notset_Validate(args []value.Value) error {
 
 func Assert_is_notset(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_is_notset_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message

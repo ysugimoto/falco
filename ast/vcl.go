@@ -24,3 +24,7 @@ func (v *VCL) String() string {
 func (v *VCL) GetMeta() *Meta {
 	return New(token.Null, 0)
 }
+
+func (v *VCL) ID() uint64 {
+	return 0
+}

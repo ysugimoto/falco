@@ -37,30 +37,31 @@ func Table_lookup_integer(ctx *context.Context, args ...value.Value) (value.Valu
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.Integer](args[2]).Value
+	defaultValue := value.Unwrap[*value.Integer](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
+		return defaultValue, errors.New(Table_lookup_integer_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "INTEGER" {
-		return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
+		return defaultValue, errors.New(Table_lookup_integer_Name,
 			"table %d value type is not INTEGER", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.Integer)
-			if !ok {
-				return &value.Integer{Value: defaultValue}, errors.New(Table_lookup_integer_Name,
-					"table %s value could not cast to INTEGER type", id,
-				)
-			}
-			return &value.Integer{Value: v.Value}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+		v, ok := prop.Value.(*ast.Integer)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_integer_Name,
+				"table %s value could not cast to INTEGER type", id,
+			)
+		}
+		return &value.Integer{Value: v.Value}, nil
 	}
-	return &value.Integer{Value: defaultValue}, nil
+	return defaultValue.Copy(), nil
 }

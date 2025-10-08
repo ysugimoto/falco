@@ -8,16 +8,13 @@ func TestRemoveStatement(t *testing.T) {
 	remove := &RemoveStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Ident: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "req.http.Foo",
 		},
 	}
 
 	expect := `// This is comment
-remove req.http.Foo; // This is comment
+remove /* before_name */ req.http.Foo /* after_name */; // This is comment
 `
-
-	if remove.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, remove.String())
-	}
+	assert(t, remove.String(), expect)
 }

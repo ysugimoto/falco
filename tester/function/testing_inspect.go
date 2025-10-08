@@ -22,7 +22,7 @@ func Testing_inspect(
 ) (value.Value, error) {
 
 	if err := Testing_inspect_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	if args[0].Type() != value.StringType {

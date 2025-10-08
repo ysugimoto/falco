@@ -4,8 +4,11 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of table.lookup_backend
@@ -13,5 +16,61 @@ import (
 // - TABLE, STRING, BACKEND
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/
 func Test_Table_lookup_backend(t *testing.T) {
-	t.Skip("table.lookup_backend only has difference for table value type")
+	table := map[string]*ast.TableDeclaration{
+		"example": {
+			ValueType: &ast.Ident{Value: "BACKEND"},
+			Properties: []*ast.TableProperty{
+				{
+					Key: &ast.String{Value: "foo"},
+					Value: &ast.Ident{
+						Value: "bar",
+					},
+				},
+			},
+		},
+	}
+	backend := map[string]*value.Backend{
+		"bar": {
+			Value: &ast.BackendDeclaration{
+				Name: &ast.Ident{Value: "bar"},
+			},
+		},
+		"default": {
+			Value: &ast.BackendDeclaration{
+				Name: &ast.Ident{Value: "default"},
+			},
+		},
+	}
+
+	tests := []struct {
+		input   string
+		key     string
+		expect  value.Value
+		isError bool
+	}{
+		{input: "doesnotexist", key: "foo", expect: backend["default"], isError: true},
+		{input: "example", key: "foo", expect: backend["bar"]},
+		{input: "example", key: "other", expect: backend["default"]},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.Ident{Value: tt.input},
+			&value.String{Value: tt.key},
+			backend["default"],
+		}
+		ret, err := Table_lookup_backend(&context.Context{Tables: table, Backends: backend}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.BackendType {
+			t.Errorf("[%d] Unexpected return type, expect=BACKEND, got=%s", i, ret.Type())
+		}
+		if diff := cmp.Diff(tt.expect, ret); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

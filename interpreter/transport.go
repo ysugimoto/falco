@@ -3,14 +3,17 @@ package interpreter
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
-	"crypto/tls"
-	"net/http"
-
 	"github.com/gobwas/glob"
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
@@ -18,6 +21,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
 const HTTPS_SCHEME = "https"
@@ -34,6 +38,21 @@ func getOverrideBackend(ctx *icontext.Context, backendName string) (*config.Over
 		return val, nil
 	}
 	return nil, nil
+}
+
+func setupFastlyHeaders(req *http.Request) {
+	// Fastly-FF
+	// https://www.fastly.com/documentation/reference/http/http-headers/Fastly-FF/#format
+	mac := hmac.New(sha256.New, []byte("falco"))
+	mac.Write([]byte(variable.FALCO_VIRTUAL_SERVICE_ID))
+	hash := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	ff := fmt.Sprintf("%s!%s!%s", hash, variable.FALCO_DATACENTER, variable.FALCO_SERVER_HOSTNAME)
+	if req.Header.Get("Fastly-FF") != "" {
+		req.Header.Add("Fastly-FF", ","+ff)
+	} else {
+		req.Header.Set("Fastly-FF", ff)
+	}
+	// TODO: cdn-loop, fastly-client, fastly-client-ip, x-forwarded-for, x-forwarded-host, x-forwarded-server, x-varnish,
 }
 
 func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value.Backend) (*http.Request, error) {
@@ -80,13 +99,6 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		}
 	}
 
-	var alwaysHost bool
-	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
-		return nil, errors.WithStack(err)
-	} else if v != nil {
-		alwaysHost = value.Unwrap[*value.Boolean](v).Value
-	}
-
 	if port == "" {
 		if scheme == HTTPS_SCHEME {
 			port = "443"
@@ -101,15 +113,6 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		url += "?" + v
 	}
 
-	// Debug message
-	var suffix string
-	if overrideBackend != nil {
-		suffix = " (overrided by config)"
-	}
-	i.Debugger.Message(
-		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, url, suffix),
-	)
-
 	req, err := http.NewRequest(
 		i.ctx.Request.Method,
 		url,
@@ -119,11 +122,41 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
 	req.Header = i.ctx.Request.Header.Clone()
+	setupFastlyHeaders(req)
 
-	if alwaysHost {
-		req.Header.Set("Host", host)
+	hostHeader, err := i.getOriginHostHeader(backend, host)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	} else if hostHeader != nil {
+		req.Header.Set("Host", *hostHeader)
 	}
 	return req, nil
+}
+
+func (i *Interpreter) getOriginHostHeader(backend *value.Backend, defaultHost string) (*string, error) {
+	// Check backend is dynamic
+	if v, err := i.getBackendProperty(backend.Value.Properties, "dynamic"); err != nil {
+		pp.Println("dynamic get error")
+		return nil, errors.WithStack(err)
+	} else if v != nil && v.Type() == value.BooleanType {
+		pp.Println("dynamic boolean")
+		// If backend is dynamic, lookup .host_header field value
+		if vv, err := i.getBackendProperty(backend.Value.Properties, "host_header"); err != nil {
+			return nil, errors.WithStack(err)
+		} else if vv != nil && vv.Type() == value.StringType {
+			return &value.Unwrap[*value.String](vv).Value, nil
+		}
+	}
+
+	// Otherwise, check .always_use_host_header is defined
+	if v, err := i.getBackendProperty(backend.Value.Properties, "always_use_host_header"); err != nil {
+		return nil, errors.WithStack(err)
+	} else if v != nil && v.Type() == value.BooleanType {
+		if value.Unwrap[*value.Boolean](v).Value {
+			return &defaultHost, nil
+		}
+	}
+	return nil, nil
 }
 
 func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response, error) {
@@ -149,21 +182,40 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 
 	client := http.DefaultClient
 	if req.URL.Scheme == HTTPS_SCHEME {
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil, errors.WithStack(errors.New("cannot clone http.DefaultTransport"))
+		}
+
+		transport := defaultTransport.Clone()
+		transport.TLSClientConfig = &tls.Config{
+			ServerName: req.URL.Hostname(),
+		}
+
 		client = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					ServerName: req.URL.Hostname(),
-				},
-			},
+			Transport: transport,
 		}
 	}
+
+	// Debug message
+	var suffix string
+	// nolint:errcheck
+	if overrideBackend, _ := getOverrideBackend(i.ctx, backend.Value.Name.Value); overrideBackend != nil {
+		suffix = " (overrided by config)"
+	}
+	i.Debugger.Message(
+		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, req.URL.String(), suffix),
+	)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
 
 	// Debug message
-	i.Debugger.Message(fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode))
+	i.Debugger.Message(
+		fmt.Sprintf("Backend (%s) responds status code %d", backend.Value.Name.Value, resp.StatusCode),
+	)
 
 	// read all response body to suppress memory leak
 	var buf bytes.Buffer

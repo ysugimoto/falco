@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,12 +25,14 @@ import (
 type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
+	lock      sync.Mutex
 
 	options []context.Option
 
 	ctx           *context.Context
 	process       *process.Process
 	cache         *cache.Cache
+	callStack     []*ast.SubroutineDeclaration
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
 
@@ -40,9 +43,11 @@ func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),
+		callStack:    []*ast.SubroutineDeclaration{},
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
+		process:      process.New(),
 	}
 }
 
@@ -122,6 +127,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
+	r.Header.Set("Host", r.Host)
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {
@@ -132,16 +138,30 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
+	// We should think about purge request.
+	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
+	// - method is FASTLYPURGE
+	// - host header is original access based, but fastly_info.host_header value turns to api.fastly.com
+	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+	if i.ctx.IsPurgeRequest {
+		i.ctx.OriginalHost = "api.fastly.com"
+	}
+
+	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
 		return err
 	}
-	if err := i.ProcessDeclarations(statements); err != nil {
+	// instrumenting if coverage measurement is enabled
+	if i.ctx.Coverage != nil {
+		i.instrument(vcl)
+	}
+	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
 		return err
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -171,13 +191,16 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
+			h := &atomic.Bool{}
+			h.Store(true)
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true, Healthy: h}
 		case *ast.TableDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
+
 		case *ast.SubroutineDeclaration:
 			i.Debugger.Run(stmt)
 			if t.ReturnType != nil {
@@ -187,6 +210,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				i.ctx.SubroutineFunctions[t.Name.Value] = t
 				continue
 			}
+
 			exists, ok := i.ctx.Subroutines[t.Name.Value]
 			if !ok {
 				i.ctx.Subroutines[t.Name.Value] = t
@@ -206,13 +230,29 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Penaltyboxes[t.Name.Value] = t
+			i.ctx.Penaltyboxes[t.Name.Value] = value.NewPenaltybox(t)
 		case *ast.RatecounterDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Ratecounters[t.Name.Value] = t
+			i.ctx.Ratecounters[t.Name.Value] = value.NewRatecounter(t)
+		}
+	}
+
+	// Inject edge dictionaries which provided via configuration
+	for name, dict := range i.ctx.InjectEdgeDictionaries {
+		if v, ok := i.ctx.Tables[name]; ok {
+			// If EdgeDictionary already defined, inject items.
+			// Edge Dictionary value type must be STRING
+			if v.ValueType.Value != "STRING" {
+				return exception.System("EdgeDictionary injection error: %s value type is not STRING", v.Name.Value)
+			}
+			i.InjectEdgeDictionaryItem(v, dict)
+		} else {
+			// Otherwise, add definition
+			d := i.createEdgeDictionaryDeclaration(name, dict)
+			i.ctx.Tables[name] = d
 		}
 	}
 	return nil
@@ -255,6 +295,25 @@ func (i *Interpreter) ProcessRecv() error {
 		}
 	} else {
 		state = PASS
+	}
+
+	// When request is purge request the service processes vcl_recv subroutine only,
+	// don't call any directive after vcl_recv.
+	if i.ctx.IsPurgeRequest {
+		if !i.ctx.ReturnStatementCalled {
+			return exception.Runtime(
+				nil,
+				"Failed to accept purge request. The vcl_recv subroutine must determine next state with return statement",
+			)
+		}
+		if state != LOOKUP && state != PASS {
+			return exception.Runtime(
+				nil,
+				`Failed to accept purge request. The vcl_recv subroutine MUST return "lookup" or "pass" state with return statement`,
+			)
+		}
+		// We don't call following state machine subroutines.
+		return nil
 	}
 
 	switch state {
@@ -518,7 +577,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 	// TODO: consider stale-white-revalidate and stale-if-error TTL
 
-	// Consider cache, create client response from backend response
+	// Update cache
 	defer func() {
 		resp := i.cloneResponse(i.ctx.BackendResponse)
 		// Note: compare BackendResponseCacheable value
@@ -533,7 +592,6 @@ func (i *Interpreter) ProcessFetch() error {
 				})
 			}
 		}
-		i.ctx.Response = resp
 	}()
 
 	// Simulate Fastly statement lifecycle
@@ -551,7 +609,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 
 	switch state {
-	case DELIVER, DELIVER_STALE, PASS:
+	case DELIVER, DELIVER_STALE, PASS, HIT_FOR_PASS:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case ERROR:
@@ -580,26 +638,16 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	if i.ctx.Object == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
-			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
-			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
-		} else {
-			i.ctx.Object = &http.Response{
-				StatusCode: int(i.ctx.ObjectStatus.Value),
-				Status:     http.StatusText(int(i.ctx.ObjectStatus.Value)),
-				Proto:      "HTTP/1.0",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header: http.Header{
-					"Content-Type": {"text/plain"},
-				},
-				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-				Request:       i.ctx.Request,
-			}
-		}
+	i.ctx.Object = &http.Response{
+		StatusCode:    int(i.ctx.ObjectStatus.Value),
+		Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
+		Proto:         "HTTP/1.0",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        http.Header{},
+		Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+		ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+		Request:       i.ctx.Request,
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -640,12 +688,10 @@ func (i *Interpreter) ProcessError() error {
 func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
-	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-		} else if i.ctx.Object != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.Object)
-		}
+	if i.ctx.Object != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.Object)
+	} else if i.ctx.BackendResponse != nil {
+		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -721,11 +767,11 @@ func (i *Interpreter) ProcessLog() error {
 	i.SetScope(context.LogScope)
 
 	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Response = &v
-		} else if i.ctx.Object != nil {
+		if i.ctx.Object != nil {
 			v := *i.ctx.Object
+			i.ctx.Response = &v
+		} else if i.ctx.BackendResponse != nil {
+			v := *i.ctx.BackendResponse
 			i.ctx.Response = &v
 		}
 	}
@@ -744,20 +790,20 @@ var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 	if v := resp.Header.Get("Surrogate-Control"); v != "" {
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}
 	}
 	if v := resp.Header.Get("Cache-Control"); v != "" {
-		if strings.HasPrefix(v, "s-maxage=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+		if sMaxAge, found := strings.CutPrefix(v, "s-maxage="); found {
+			if dur, err := time.ParseDuration(sMaxAge + "s"); err == nil {
 				return dur
 			}
 		}
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}

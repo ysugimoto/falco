@@ -20,6 +20,7 @@ var needValueOptions = map[string]struct{}{
 	"--transformer":  {},
 	"-f":             {},
 	"--filter":       {},
+	"--generated":    {},
 }
 
 func parseCommands(args []string) Commands {

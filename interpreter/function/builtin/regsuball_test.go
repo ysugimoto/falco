@@ -19,24 +19,35 @@ func Test_Regsuball(t *testing.T) {
 		pattern     string
 		replacement string
 		expect      string
+		literal     bool
+		isError     bool
 	}{
-		{input: "//foo///bar//baz", pattern: "/+", replacement: "/", expect: "/foo/bar/baz"},
-		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaaaaa"},
-		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: "\\1bar", expect: "foobar"},
+		{input: "//foo///bar//baz", pattern: "/+", replacement: "/", expect: "/foo/bar/baz", literal: true},
+		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaaaaa", literal: true},
+		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: `\1bar`, expect: "foobar", literal: true},
+		{input: "aaaa", pattern: "a", replacement: "aa", literal: false, isError: true},
 	}
 
 	for i, tt := range tests {
 		ret, err := Regsuball(
 			&context.Context{},
 			&value.String{Value: tt.input},
-			&value.String{Value: tt.pattern},
+			&value.String{Value: tt.pattern, Literal: tt.literal},
 			&value.String{Value: tt.replacement},
 		)
+		if tt.isError {
+			if err == nil {
+				t.Errorf("[%d] Expected error but got nil", i)
+			}
+			continue
+		}
 		if err != nil {
 			t.Errorf("[%d] Unexpected error: %s", i, err)
+			continue
 		}
 		if ret.Type() != value.StringType {
 			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			continue
 		}
 		v := value.Unwrap[*value.String](ret)
 		if v.Value != tt.expect {

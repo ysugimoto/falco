@@ -17,6 +17,7 @@
 dist/*
 playground
 tools
+local
 
 .vscode
 
@@ -27,3 +28,10 @@ __generator__/*.csv
 debugger.log
 debug.log
 request.json
+
+.falco.yml
+.falco.yaml
+*.pem
+bench.*.txt
+issue-*
+*.prof

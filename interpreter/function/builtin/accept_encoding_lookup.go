@@ -41,12 +41,12 @@ func Accept_encoding_lookup(ctx *context.Context, args ...value.Value) (value.Va
 	encoding := value.Unwrap[*value.String](args[2])
 
 	var encodings []string
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for v := range strings.SplitSeq(lookup.Value, ":") {
 		encodings = append(encodings, v)
 	}
 
 	index := len(encodings)
-	for _, v := range strings.Split(encoding.Value, ",") {
+	for v := range strings.SplitSeq(encoding.Value, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

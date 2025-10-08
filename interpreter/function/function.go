@@ -2,6 +2,7 @@ package function
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -31,7 +32,5 @@ func Exists(scope context.Scope, name string) (*Function, error) {
 
 func Inject(fns map[string]*Function) {
 	// Always override existing functions
-	for key, fn := range fns {
-		builtinFunctions[key] = fn
-	}
+	maps.Copy(builtinFunctions, fns)
 }

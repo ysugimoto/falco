@@ -1,8 +1,6 @@
 package colors
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -12,74 +10,74 @@ const (
 
 var Background = tcell.GetColor("#000000")
 
-type ColorFunc func(format string, args ...any) string
+type ColorFunc func(text string) string
 
 // Text extensions
-func Bold(format string, args ...any) string {
-	return fmt.Sprintf("[::b]"+format+"[::-]", args...)
+func Bold(text string) string {
+	return "[::b]" + text + "[::-]"
 }
 
-func Underline(format string, args ...any) string {
-	return fmt.Sprintf("[::u]"+format+"[::-]", args...)
+func Underline(text string) string {
+	return "[::u]" + text + "[::-]"
 }
 
 // Text colors
-func Black(format string, args ...any) string {
-	return fmt.Sprintf("[black]"+format+"[white]", args...)
+func Black(text string) string {
+	return "[black]" + text + "[white]"
 }
 
-func Maroon(format string, args ...any) string {
-	return fmt.Sprintf("[maroon]"+format+"[white]", args...)
+func Maroon(text string) string {
+	return "[maroon]" + text + "[white]"
 }
 
-func Green(format string, args ...any) string {
-	return fmt.Sprintf("[green]"+format+"[white]", args...)
+func Green(text string) string {
+	return "[green]" + text + "[white]"
 }
 
-func Olive(format string, args ...any) string {
-	return fmt.Sprintf("[olive]"+format+"[white]", args...)
+func Olive(text string) string {
+	return "[olive]" + text + "[white]"
 }
 
-func Navy(format string, args ...any) string {
-	return fmt.Sprintf("[navy]"+format+"[white]", args...)
+func Navy(text string) string {
+	return "[navy]" + text + "[white]"
 }
 
-func Purple(format string, args ...any) string {
-	return fmt.Sprintf("[purple]"+format+"[white]", args...)
+func Purple(text string) string {
+	return "[purple]" + text + "[white]"
 }
 
-func Teal(format string, args ...any) string {
-	return fmt.Sprintf("[teal]"+format+"[white]", args...)
+func Teal(text string) string {
+	return "[teal]" + text + "[white]"
 }
 
-func Silver(format string, args ...any) string {
-	return fmt.Sprintf("[silver]"+format+"[white]", args...)
+func Silver(text string) string {
+	return "[silver]" + text + "[white]"
 }
 
-func Gray(format string, args ...any) string {
-	return fmt.Sprintf("[gray]"+format+"[white]", args...)
+func Gray(text string) string {
+	return "[gray]" + text + "[white]"
 }
 
-func Red(format string, args ...any) string {
-	return fmt.Sprintf("[red]"+format+"[white]", args...)
+func Red(text string) string {
+	return "[red]" + text + "[white]"
 }
 
-func Lime(format string, args ...any) string {
-	return fmt.Sprintf("[lime]"+format+"[white]", args...)
+func Lime(text string) string {
+	return "[lime]" + text + "[white]"
 }
 
-func Yellow(format string, args ...any) string {
-	return fmt.Sprintf("[yellow]"+format+"[white]", args...)
+func Yellow(text string) string {
+	return "[yellow]" + text + "[white]"
 }
 
-func Blue(format string, args ...any) string {
-	return fmt.Sprintf("[blue]"+format+"[white]", args...)
+func Blue(text string) string {
+	return "[blue]" + text + "[white]"
 }
 
-func Fuchsia(format string, args ...any) string {
-	return fmt.Sprintf("[fuchsia]"+format+"[white]", args...)
+func Fuchsia(text string) string {
+	return "[fuchsia]" + text + "[white]"
 }
 
-func Aqua(format string, args ...any) string {
-	return fmt.Sprintf("[aqua]"+format+"[white]", args...)
+func Aqua(text string) string {
+	return "[aqua]" + text + "[white]"
 }

@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -25,7 +26,25 @@ func Test_Querystring_get(t *testing.T) {
 		{input: &value.String{Value: "/?foo=&foo=bar"}, second: &value.String{Value: "foo"}, expect: &value.String{Value: ""}},
 		{input: &value.String{Value: "/?a=1"}, second: &value.String{Value: "b"}, expect: &value.String{IsNotSet: true}},
 		{input: &value.String{Value: "/?foo"}, second: &value.String{Value: "foo"}, expect: &value.String{IsNotSet: true}},
+		// First occurrence without '=' should not block later values; later foo=bar should be returned
+		{input: &value.String{Value: "/?foo&foo=bar"}, second: &value.String{Value: "foo"}, expect: &value.String{Value: "bar"}},
 		{input: &value.String{Value: "/?a=1&b=2&c=3&d=4&b=5"}, second: &value.String{Value: "b"}, expect: &value.String{Value: "2"}},
+		{input: &value.String{Value: "/?a=b=c"}, second: &value.String{Value: "a"}, expect: &value.String{Value: "b=c"}},
+		// "Returns the undecoded value associated with the query parameter"
+		{input: &value.String{Value: "/?name=hello+world"}, second: &value.String{Value: "name"}, expect: &value.String{Value: "hello+world"}},
+		{input: &value.String{Value: "/?name=hello%20world"}, second: &value.String{Value: "name"}, expect: &value.String{Value: "hello%20world"}},
+		// there's no way to get the value of an unnecessarily pct-encoded key or plus
+		{input: &value.String{Value: "/?%62=unreachable"}, second: &value.String{Value: "b"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?%62=unreachable"}, second: &value.String{Value: "%62"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?%62=unreachable"}, second: &value.String{Value: "%2562"}, expect: &value.String{IsNotSet: true}},
+		// + is not decoded in key
+		{input: &value.String{Value: "/?+=unreachable"}, second: &value.String{Value: "+"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?+=unreachable"}, second: &value.String{Value: "%2B"}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?+=unreachable"}, second: &value.String{Value: " "}, expect: &value.String{IsNotSet: true}},
+		{input: &value.String{Value: "/?%20=space"}, second: &value.String{Value: "+"}, expect: &value.String{IsNotSet: true}},
+		// Space handling: an argument of " " or "%20" should match a key literally written as "%20" in the URL.
+		{input: &value.String{Value: "/?%20=v_space_key_arg_pct20"}, second: &value.String{Value: "%20"}, expect: &value.String{Value: "v_space_key_arg_pct20"}},
+		{input: &value.String{Value: "/?%20=v_space_key_arg_space"}, second: &value.String{Value: " "}, expect: &value.String{Value: "v_space_key_arg_space"}},
 	}
 
 	for i, tt := range tests {
@@ -39,6 +58,51 @@ func Test_Querystring_get(t *testing.T) {
 		v := value.Unwrap[*value.String](ret)
 		if diff := cmp.Diff(v, tt.expect); diff != "" {
 			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
+		}
+	}
+}
+
+func Test_Querystring_get_Errors(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        *value.String
+		second       *value.String
+		expectSubstr string
+	}{
+		{
+			name:         "invalid hex in pct-encode (%eh)",
+			input:        &value.String{Value: "/?a=1"},
+			second:       &value.String{Value: "%eh"},
+			expectSubstr: "Argument 1 has invalid pct-encode sequence",
+		},
+		{
+			name:         "invalid UTF-8 after pct-decoding (%ff)",
+			input:        &value.String{Value: "/?a=1"},
+			second:       &value.String{Value: "%ff"},
+			expectSubstr: "Argument 1, after pct-decoding, is invalid utf-8",
+		},
+		{
+			name:         "incomplete percent (%)",
+			input:        &value.String{Value: "/?a=1"},
+			second:       &value.String{Value: "%"},
+			expectSubstr: "Argument 1 has invalid pct-encode sequence",
+		},
+		{
+			name:         "invalid hex (%zz)",
+			input:        &value.String{Value: "/?a=1"},
+			second:       &value.String{Value: "%zz"},
+			expectSubstr: "Argument 1 has invalid pct-encode sequence",
+		},
+	}
+
+	for i, tt := range tests {
+		ret, err := Querystring_get(&context.Context{}, tt.input, tt.second)
+		if err == nil {
+			t.Errorf("[%d:%s] Expected error but got nil and value=%#v", i, tt.name, ret)
+			continue
+		}
+		if !strings.Contains(err.Error(), tt.expectSubstr) {
+			t.Errorf("[%d:%s] Error mismatch, got: %s", i, tt.name, err)
 		}
 	}
 }

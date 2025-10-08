@@ -6,18 +6,15 @@ import (
 
 func TestIncludeStatement(t *testing.T) {
 	is := &IncludeStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment")),
 		Module: &String{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "mod_recv",
 		},
 	}
 
-	expect := `// This is comment
-include "mod_recv"; // This is comment
+	expect := `// leading comment
+include /* before_name */ "mod_recv" /* after_name */; // trailing comment
 `
-
-	if is.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, is.String())
-	}
+	assert(t, is.String(), expect)
 }

@@ -4,8 +4,12 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/token"
 )
 
 // Fastly built-in function testing implementation of table.lookup_bool
@@ -13,5 +17,52 @@ import (
 // - TABLE, STRING, BOOL
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/
 func Test_Table_lookup_bool(t *testing.T) {
-	t.Skip("table.lookup_bool only has difference for table value type")
+	table := map[string]*ast.TableDeclaration{
+		"example": {
+			ValueType: &ast.Ident{Value: "BOOL"},
+			Properties: []*ast.TableProperty{
+				{
+					Key: &ast.String{Value: "foo"},
+					Value: &ast.Boolean{
+						Value: true,
+						Meta: &ast.Meta{
+							Token: token.Token{Offset: 0},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		input   string
+		key     string
+		expect  value.Value
+		isError bool
+	}{
+		{input: "doesnotexist", key: "foo", expect: &value.Boolean{}, isError: true},
+		{input: "example", key: "foo", expect: &value.Boolean{Value: true}},
+		{input: "example", key: "other", expect: &value.Boolean{Value: false}},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.Ident{Value: tt.input},
+			&value.String{Value: tt.key},
+			&value.Boolean{Value: false},
+		}
+		ret, err := Table_lookup_bool(&context.Context{Tables: table}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.BooleanType {
+			t.Errorf("[%d] Unexpected return type, expect=BOOL, got=%s", i, ret.Type())
+		}
+		if diff := cmp.Diff(tt.expect, ret); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

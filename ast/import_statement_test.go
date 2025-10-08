@@ -6,18 +6,16 @@ import (
 
 func TestImportStatement(t *testing.T) {
 	is := &ImportStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// leading comment")),
 		Name: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "boltsort",
 		},
 	}
 
-	expect := `// This is comment
-import boltsort; // This is comment
+	expect := `// leading comment
+import /* before_name */ boltsort /* after_name */; // leading comment
 `
 
-	if is.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, is.String())
-	}
+	assert(t, is.String(), expect)
 }

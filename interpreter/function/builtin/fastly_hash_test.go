@@ -16,7 +16,7 @@ import (
 func Test_Fastly_hash(t *testing.T) {
 
 	// This is hashing test, continue to several times
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		ret, err := Fastly_hash(
 			&context.Context{},
 			&value.String{Value: "example"},

@@ -80,6 +80,59 @@ func TestSetRequestHeaderValue(t *testing.T) {
 	}
 
 }
+
+func TestSetRequestHeaderValueOverwrite(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	setRequestHeaderValue(req, "Foo:abc", &value.String{Value: "123"})
+	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "baz"})
+	setRequestHeaderValue(req, "Foo:bar", &value.String{Value: "snafu"})
+
+	ret := getRequestHeaderValue(req, "Foo:bar")
+	if ret.Value != "snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "snafu", ret.Value)
+	}
+
+	ret = getRequestHeaderValue(req, "Foo")
+	if ret.Value != "abc=123,bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123,bar=snafu", ret.Value)
+	}
+
+	// Check exact http.Header struct data
+	if diff := cmp.Diff(req.Header, http.Header{
+		"Foo": []string{"abc=123,bar=snafu"},
+	}); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func TestSetResponseHeaderValueEmpty(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	// Set empty header values
+	setRequestHeaderValue(req, "VARS", &value.String{Value: ""})
+	setRequestHeaderValue(req, "VARS:VALUE", &value.String{Value: ""})
+	setRequestHeaderValue(req, "VARS:VALUE2", &value.String{Value: ""})
+
+	// Each field value does not have equal signs, only present key name
+	ret := getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE,VALUE2" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE,VALUE2", ret.Value)
+	}
+
+	// Overwrite partial key and value
+	setRequestHeaderValue(req, "VARS:VALUE", &value.String{Value: "V"})
+	ret = getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE2,VALUE=V" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE2,VALUE=V", ret.Value)
+	}
+
+	// Can unset empty key
+	unsetRequestHeaderValue(req, "VARS:VALUE2")
+	ret = getRequestHeaderValue(req, "VARS")
+	if ret.Value != "VALUE=V" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "VALUE=V", ret.Value)
+	}
+}
+
 func TestSetResponseHeaderValue(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -99,6 +152,31 @@ func TestSetResponseHeaderValue(t *testing.T) {
 	}
 
 }
+
+func TestSetResponseHeaderValueOverwrite(t *testing.T) {
+	resp := &http.Response{Header: http.Header{}}
+	setResponseHeaderValue(resp, "Foo:abc", &value.String{Value: "123"})
+	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "baz"})
+	setResponseHeaderValue(resp, "Foo:bar", &value.String{Value: "snafu"})
+
+	ret := getResponseHeaderValue(resp, "Foo:bar")
+	if ret.Value != "snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "snafu", ret.Value)
+	}
+
+	ret = getResponseHeaderValue(resp, "Foo")
+	if ret.Value != "abc=123,bar=snafu" {
+		t.Errorf("Return value unmatch, expect=%s, got=%s", "abc=123,bar=snafu", ret.Value)
+	}
+
+	// Check exact http.Header struct data
+	if diff := cmp.Diff(resp.Header, http.Header{
+		"Foo": []string{"abc=123,bar=snafu"},
+	}); diff != "" {
+		t.Error(diff)
+	}
+}
+
 func TestUnsetRequestHeaderValue(t *testing.T) {
 	tests := []struct {
 		name string
@@ -110,18 +188,63 @@ func TestUnsetRequestHeaderValue(t *testing.T) {
 		{name: "Cookie:foo"},
 		{name: "Cookie:baz"},
 	}
-	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
-	req.Header.Set("Foo", "bar")
-	req.Header.Add("Text", "lorem=ipsum")
-	req.Header.Add("Text", "dolor=sit")
-	req.Header.Set("Cookie", "foo=bar")
 
 	for _, tt := range tests {
+		req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+		req.Header.Set("Foo", "bar")
+		req.Header.Add("Text", "lorem=ipsum")
+		req.Header.Add("Text", "dolor=sit")
+		req.Header.Set("Cookie", "foo=bar")
+
 		unsetRequestHeaderValue(req, tt.name)
 		ret := getRequestHeaderValue(req, tt.name)
 		if diff := cmp.Diff(ret, &value.String{IsNotSet: true}); diff != "" {
 			t.Errorf("Unset value still not empty, diff=%s", diff)
 		}
+	}
+}
+
+func TestUnsetRequestHeaderValueWildcard(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     string
+		expects map[string]value.Value
+	}{
+		{
+			name: "unset simple wildcard fields",
+			key:  "X-*",
+			expects: map[string]value.Value{
+				"X-SomeHeader-1": &value.String{IsNotSet: true},
+				"X-SomeHeader-2": &value.String{IsNotSet: true},
+			},
+		},
+		{
+			name: "subfiled wildcard does not be delete",
+			key:  "VARS:VALUE*",
+			expects: map[string]value.Value{
+				"VARS:VALUE1": &value.String{Value: "foo"},
+				"VARS:VALUE2": &value.String{Value: "bar"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+			req.Header.Set("X-SomeHeader-1", "foo")
+			req.Header.Set("X-SomeHeader-2", "bar")
+			setRequestHeaderValue(req, "VARS:VALUE1", &value.String{Value: "foo"})
+			setRequestHeaderValue(req, "VARS:VALUE2", &value.String{Value: "bar"})
+
+			unsetRequestHeaderValue(req, tt.key)
+
+			for key, val := range tt.expects {
+				ret := getRequestHeaderValue(req, key)
+				if diff := cmp.Diff(ret, val); diff != "" {
+					t.Errorf("Unset result mismatch, diff=%s", diff)
+				}
+			}
+		})
 	}
 }
 
@@ -134,18 +257,64 @@ func TestUnsetResponseHeaderValue(t *testing.T) {
 		{name: "Text:lorem"},
 		{name: "Text:amet"},
 	}
-	header := http.Header{}
-	header.Set("Foo", "bar")
-	header.Add("Text", "lorem=ipsum")
-	header.Add("Text", "dolor=sit")
-	resp := &http.Response{Header: header}
 
 	for _, tt := range tests {
+		header := http.Header{}
+		header.Set("Foo", "bar")
+		header.Add("Text", "lorem=ipsum")
+		header.Add("Text", "dolor=sit")
+		resp := &http.Response{Header: header}
+
 		unsetResponseHeaderValue(resp, tt.name)
 		ret := getResponseHeaderValue(resp, tt.name)
 		if diff := cmp.Diff(ret, &value.String{IsNotSet: true}); diff != "" {
 			t.Errorf("Unset value still not empty, diff=%s", diff)
 		}
+	}
+}
+
+func TestUnsetResponseHeaderValueWildcard(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     string
+		expects map[string]value.Value
+	}{
+		{
+			name: "unset simple wildcard fields",
+			key:  "X-*",
+			expects: map[string]value.Value{
+				"X-SomeHeader-1": &value.String{IsNotSet: true},
+				"X-SomeHeader-2": &value.String{IsNotSet: true},
+			},
+		},
+		{
+			name: "subfiled wildcard does not be delete",
+			key:  "VARS:VALUE*",
+			expects: map[string]value.Value{
+				"VARS:VALUE1": &value.String{Value: "foo"},
+				"VARS:VALUE2": &value.String{Value: "bar"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			header := http.Header{}
+			header.Set("X-SomeHeader-1", "foo")
+			header.Set("X-SomeHeader-2", "bar")
+			resp := &http.Response{Header: header}
+			setResponseHeaderValue(resp, "VARS:VALUE1", &value.String{Value: "foo"})
+			setResponseHeaderValue(resp, "VARS:VALUE2", &value.String{Value: "bar"})
+
+			unsetResponseHeaderValue(resp, tt.key)
+
+			for key, val := range tt.expects {
+				ret := getResponseHeaderValue(resp, key)
+				if diff := cmp.Diff(ret, val); diff != "" {
+					t.Errorf("Unset result mismatch, diff=%s", diff)
+				}
+			}
+		})
 	}
 }
 

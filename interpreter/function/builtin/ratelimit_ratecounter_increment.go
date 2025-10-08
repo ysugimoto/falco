@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -17,6 +19,12 @@ func Ratelimit_ratecounter_increment_Validate(args []value.Value) error {
 		return errors.ArgumentNotEnough(Ratelimit_ratecounter_increment_Name, 3, args)
 	}
 	for i := range args {
+		if i == 1 { // second argument could accept string or IP type
+			if args[i].Type() != value.StringType && args[i].Type() != value.IpType {
+				return errors.TypeMismatch(Ratelimit_ratecounter_increment_Name, i+1, Ratelimit_ratecounter_increment_ArgumentTypes[i], args[i].Type())
+			}
+			continue
+		}
 		if args[i].Type() != Ratelimit_ratecounter_increment_ArgumentTypes[i] {
 			return errors.TypeMismatch(Ratelimit_ratecounter_increment_Name, i+1, Ratelimit_ratecounter_increment_ArgumentTypes[i], args[i].Type())
 		}
@@ -34,6 +42,25 @@ func Ratelimit_ratecounter_increment(ctx *context.Context, args ...value.Value) 
 		return value.Null, err
 	}
 
-	// TODO: Needs to be implemented
-	return &value.Integer{Value: 0}, nil
+	name := value.Unwrap[*value.Ident](args[0]).Value
+	var entry string
+	switch args[1].Type() {
+	case value.StringType:
+		entry = value.Unwrap[*value.String](args[1]).Value
+	case value.IpType:
+		entry = value.Unwrap[*value.IP](args[1]).String()
+	}
+	increment := value.Unwrap[*value.Integer](args[2]).Value
+
+	rc, ok := ctx.Ratecounters[name]
+	if !ok {
+		return nil, errors.New(Ratelimit_ratecounter_increment_Name, "Ratecounter %s is not defined", name)
+	}
+	rc.Increment(entry, increment, 0)
+
+	// Returns bucket count for recent 1 minute
+	return &value.Integer{
+		Value: rc.Bucket(entry, time.Minute),
+	}, nil
+
 }

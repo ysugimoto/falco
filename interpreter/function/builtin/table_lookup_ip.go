@@ -39,30 +39,38 @@ func Table_lookup_ip(ctx *context.Context, args ...value.Value) (value.Value, er
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.IP](args[2]).Value
+	defaultValue := value.Unwrap[*value.IP](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.IP{Value: defaultValue}, errors.New(Table_lookup_ip_Name,
+		return defaultValue, errors.New(Table_lookup_ip_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "IP" {
-		return &value.IP{Value: defaultValue}, errors.New(Table_lookup_ip_Name,
+		return defaultValue, errors.New(Table_lookup_ip_Name,
 			"table %d value type is not IP", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.IP)
-			if !ok {
-				return &value.IP{Value: defaultValue}, errors.New(Table_lookup_ip_Name,
-					"table %s value could not cast to IP type", id,
-				)
-			}
-			return &value.IP{Value: net.ParseIP(v.Value)}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+		// IP valus is defined as string
+		v, ok := prop.Value.(*ast.String)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_ip_Name,
+				"table %s value could not cast to IP type", id,
+			)
+		}
+		ip := net.ParseIP(v.Value)
+		if ip == nil {
+			return &value.IP{IsNotSet: true}, errors.New(Table_lookup_ip_Name,
+				"table %s value is invalid to parse as IP", id,
+			)
+		}
+		return &value.IP{Value: ip}, nil
 	}
-	return &value.IP{Value: defaultValue}, nil
+	return defaultValue.Copy(), nil
 }

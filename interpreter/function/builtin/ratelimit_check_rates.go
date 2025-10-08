@@ -17,6 +17,12 @@ func Ratelimit_check_rates_Validate(args []value.Value) error {
 		return errors.ArgumentNotEnough(Ratelimit_check_rates_Name, 11, args)
 	}
 	for i := range args {
+		if i == 0 { // first argument could accept string or IP type
+			if args[i].Type() != value.StringType && args[i].Type() != value.IpType {
+				return errors.TypeMismatch(Ratelimit_check_rates_Name, i+1, Ratelimit_check_rates_ArgumentTypes[i], args[i].Type())
+			}
+			continue
+		}
 		if args[i].Type() != Ratelimit_check_rates_ArgumentTypes[i] {
 			return errors.TypeMismatch(Ratelimit_check_rates_Name, i+1, Ratelimit_check_rates_ArgumentTypes[i], args[i].Type())
 		}
@@ -34,6 +40,40 @@ func Ratelimit_check_rates(ctx *context.Context, args ...value.Value) (value.Val
 		return value.Null, err
 	}
 
-	// TODO: Needs to be implemented
+	var entry string
+	switch args[0].Type() {
+	case value.StringType:
+		entry = value.Unwrap[*value.String](args[0]).Value
+	case value.IpType:
+		entry = value.Unwrap[*value.IP](args[0]).String()
+	}
+	rcName1 := value.Unwrap[*value.Ident](args[1]).Value
+	delta1 := value.Unwrap[*value.Integer](args[2]).Value
+	window1 := value.Unwrap[*value.Integer](args[3]).Value
+	limit1 := value.Unwrap[*value.Integer](args[4]).Value
+	rcName2 := value.Unwrap[*value.Ident](args[5]).Value
+	delta2 := value.Unwrap[*value.Integer](args[6]).Value
+	window2 := value.Unwrap[*value.Integer](args[7]).Value
+	limit2 := value.Unwrap[*value.Integer](args[8]).Value
+	pbName := value.Unwrap[*value.Ident](args[9]).Value
+	ttl := value.Unwrap[*value.RTime](args[10]).Value
+
+	exceeded1, err1 := check_ratelimit(ctx, entry, rcName1, delta1, window1, limit1)
+	if err1 != nil {
+		return nil, err1
+	}
+	exceeded2, err2 := check_ratelimit(ctx, entry, rcName2, delta2, window2, limit2)
+	if err2 != nil {
+		return nil, err2
+	}
+	if exceeded1 || exceeded2 {
+		// If rate is greater than limit, add to penaltybox
+		pb, ok := ctx.Penaltyboxes[pbName]
+		if !ok {
+			return nil, errors.New(Ratelimit_check_rates_Name, "Penaltybox %s is not defined", pbName)
+		}
+		pb.Add(entry, ttl)
+		return &value.Boolean{Value: true}, nil
+	}
 	return &value.Boolean{Value: false}, nil
 }

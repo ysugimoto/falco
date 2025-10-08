@@ -4,8 +4,13 @@ package builtin
 
 import (
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/token"
 )
 
 // Fastly built-in function testing implementation of table.lookup_rtime
@@ -13,5 +18,52 @@ import (
 // - TABLE, STRING, RTIME
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/
 func Test_Table_lookup_rtime(t *testing.T) {
-	t.Skip("table.lookup_rtime only has difference for table value type")
+	table := map[string]*ast.TableDeclaration{
+		"example": {
+			ValueType: &ast.Ident{Value: "RTIME"},
+			Properties: []*ast.TableProperty{
+				{
+					Key: &ast.String{Value: "foo"},
+					Value: &ast.RTime{
+						Value: "10s",
+						Meta: &ast.Meta{
+							Token: token.Token{Offset: 0},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		input   string
+		key     string
+		expect  value.Value
+		isError bool
+	}{
+		{input: "doesnotexist", key: "foo", isError: true},
+		{input: "example", key: "foo", expect: &value.RTime{Value: 10 * time.Second}},
+		{input: "example", key: "other", expect: &value.RTime{Value: time.Second}},
+	}
+
+	for i, tt := range tests {
+		args := []value.Value{
+			&value.Ident{Value: tt.input},
+			&value.String{Value: tt.key},
+			&value.RTime{Value: time.Second},
+		}
+		ret, err := Table_lookup_rtime(&context.Context{Tables: table}, args...)
+		if err != nil {
+			if !tt.isError {
+				t.Errorf("[%d] Unexpected error: %s", i, err)
+			}
+			continue
+		}
+		if ret.Type() != value.RTimeType {
+			t.Errorf("[%d] Unexpected return type, expect=RTIME, got=%s", i, ret.Type())
+		}
+		if diff := cmp.Diff(tt.expect, ret); diff != "" {
+			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
+		}
+	}
 }

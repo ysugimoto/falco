@@ -25,7 +25,7 @@ func Test_Randomstr(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		for j := 0; j < 10000; j++ {
+		for range 10000 {
 			ret, err := Randomstr(
 				&context.Context{},
 				&value.Integer{Value: tt.length},

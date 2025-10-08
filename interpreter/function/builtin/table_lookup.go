@@ -47,21 +47,23 @@ func Table_lookup(ctx *context.Context, args ...value.Value) (value.Value, error
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.String{IsNotSet: true}, errors.New(Table_lookup_Name,
+		return defaultValue, errors.New(Table_lookup_Name,
 			"table %d does not exist", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.String)
-			if !ok {
-				return &value.String{IsNotSet: true}, errors.New(Table_lookup_Name,
-					"table %s value could not cast to STRING type", id,
-				)
-			}
-			return &value.String{Value: v.Value}, nil
+		if prop.Key.Value != key {
+			continue
 		}
+
+		v, ok := prop.Value.(*ast.String)
+		if !ok {
+			return defaultValue, errors.New(Table_lookup_Name,
+				"table %s value could not cast to STRING type", id,
+			)
+		}
+		return &value.String{Value: v.Value}, nil
 	}
-	return defaultValue, nil
+	return defaultValue.Copy(), nil
 }

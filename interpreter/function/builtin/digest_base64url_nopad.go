@@ -3,10 +3,9 @@
 package builtin
 
 import (
-	"encoding/base64"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/interpreter/function/shared"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -36,9 +35,9 @@ func Digest_base64url_nopad(ctx *context.Context, args ...value.Value) (value.Va
 		return value.Null, err
 	}
 
-	s := value.Unwrap[*value.String](args[0])
+	input := value.Unwrap[*value.String](args[0])
 
 	return &value.String{
-		Value: base64.RawURLEncoding.EncodeToString([]byte(s.Value)),
+		Value: shared.Base64UrlEncodeNoPad(input.Value),
 	}, nil
 }

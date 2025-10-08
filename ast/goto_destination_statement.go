@@ -9,14 +9,15 @@ type GotoDestinationStatement struct {
 	Name *Ident
 }
 
-func (gd *GotoDestinationStatement) statement()     {}
+func (gd *GotoDestinationStatement) ID() uint64     { return gd.Meta.ID }
+func (gd *GotoDestinationStatement) Statement()     {}
 func (gd *GotoDestinationStatement) GetMeta() *Meta { return gd.Meta }
 func (gd *GotoDestinationStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(gd.LeadingComment())
+	buf.WriteString(gd.LeadingComment(lineFeed))
 	buf.WriteString(indent(gd.Nest) + gd.Name.Value)
-	buf.WriteString(gd.TrailingComment())
+	buf.WriteString(gd.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

@@ -8,7 +8,7 @@ func TestBackendDeclaration(t *testing.T) {
 	backend := &BackendDeclaration{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Name: &Ident{
-			Meta:  New(T, 0),
+			Meta:  New(T, 0, comments("/* before_name */"), comments("/* after_name */")),
 			Value: "example",
 		},
 		Properties: []*BackendProperty{
@@ -21,6 +21,17 @@ func TestBackendDeclaration(t *testing.T) {
 				Value: &String{
 					Meta:  New(T, 0),
 					Value: "example.com",
+				},
+			},
+			{
+				Meta: New(T, 1),
+				Key: &Ident{
+					Meta:  New(T, 0, comments(), comments("/* after_name */")),
+					Value: "port",
+				},
+				Value: &String{
+					Meta:  New(T, 0, comments("/* before_value */"), comments("/* after_value */")),
+					Value: "443",
 				},
 			},
 			{
@@ -50,10 +61,11 @@ func TestBackendDeclaration(t *testing.T) {
 	}
 
 	expect := `// This is comment
-backend example {
+backend /* before_name */ example /* after_name */ {
   // This is comment
   # This is another comment
   .host = "example.com"; // This is comment
+  .port /* after_name */ = /* before_value */ "443" /* after_value */;
   // This is comment
   # This is another comment
   .probe = {
@@ -64,7 +76,5 @@ backend example {
 } // This is comment
 `
 
-	if backend.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, backend.String())
-	}
+	assert(t, backend.String(), expect)
 }

@@ -12,16 +12,15 @@ import (
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
-func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
-	i.SetScope(scope)
-	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
+const (
+	// Faslty does not document about max call stack but we define our expected stack count.
+	// Fastly forbid VCL that may cause an infinite loop to call subroutine but our interpreter could accept,
+	// so we need to suppress its behavior by definition and guard process.
+	maxCallStackExceedCount = 100
+)
 
 func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -29,10 +28,19 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	// Try to extract fastly reserved subroutine macro
@@ -52,7 +60,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 
 // nolint: gocognit
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -60,10 +68,19 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return value.Null, NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	var err error
@@ -73,6 +90,14 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {
@@ -200,15 +225,9 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 }
 
 func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
-	val, err := i.ProcessExpression(*stmt.ReturnExpression, false)
+	val, err := i.ProcessExpression(stmt.ReturnExpression, false)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
-	}
-	if !val.IsLiteral() {
-		return value.Null, NONE, exception.Runtime(
-			&stmt.GetMeta().Token,
-			"Functional subroutine only can return value only accepts a literal value",
-		)
 	}
 
 	switch t := val.(type) {
@@ -244,7 +263,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 
 	var resolved []ast.Statement
 	// Find "FASTLY [macro]" comment and extract in infix comment of block statement
-	if hasFastlyBoilerplateMacro(sub.Block.InfixComment(), macroName) {
+	if hasFastlyBoilerplateMacro(sub.Block.Infix, macroName) {
 		for _, s := range snippets {
 			statements, err := loadStatementVCL(s.Name, s.Data)
 			if err != nil {
@@ -260,7 +279,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	// Find "FASTLY [macro]" comment and extract inside block statement
 	var found bool // guard flag, embedding macro should do only once
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerplateMacro(stmt.LeadingComment(), macroName) && !found {
+		if hasFastlyBoilerplateMacro(stmt.GetMeta().Leading, macroName) && !found {
 			for _, s := range snippets {
 				statements, err := loadStatementVCL(s.Name, s.Data)
 				if err != nil {
@@ -276,10 +295,10 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	return nil
 }
 
-func hasFastlyBoilerplateMacro(commentText, macroName string) bool {
-	for _, c := range strings.Split(commentText, "\n") {
-		c = strings.TrimLeft(c, " */#")
-		if strings.HasPrefix(strings.ToUpper(c), macroName) {
+func hasFastlyBoilerplateMacro(cs ast.Comments, macroName string) bool {
+	for _, c := range cs {
+		line := strings.TrimLeft(c.String(), " */#")
+		if strings.HasPrefix(strings.ToUpper(line), macroName) {
 			return true
 		}
 	}

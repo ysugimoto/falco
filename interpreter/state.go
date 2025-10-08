@@ -16,6 +16,7 @@ const (
 	DELIVER_STALE  State = "deliver_stale"
 	LOG            State = "log"
 	END            State = "end"
+	HIT_FOR_PASS   State = "hit_for_pass" // alias for pass
 	INTERNAL_ERROR State = "_internal_error_"
 	BARE_RETURN    State = "_bare_return_"
 )

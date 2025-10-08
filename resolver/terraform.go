@@ -47,6 +47,10 @@ func (s *TerraformResolver) Name() string {
 	return s.ServiceName
 }
 
+func (s *TerraformResolver) IncludePaths() []string {
+	return []string{}
+}
+
 func (s *TerraformResolver) MainVCL() (*VCL, error) {
 	return s.Main, nil
 }

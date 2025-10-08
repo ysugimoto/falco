@@ -908,7 +908,7 @@ Failed to load include target module.
 
 ## regex/matched-value-override
 
-Regex matched operator `re.group.N` value will be overriden.
+Regex matched operator `re.group.N` value will be overridden.
 
 These variables could use if(else) block statement when condition has regex operator like `~` or `!~`.
 Note that group matched variable has potential of making bugs due to its spec:

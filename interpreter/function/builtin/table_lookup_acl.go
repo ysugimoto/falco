@@ -37,30 +37,34 @@ func Table_lookup_acl(ctx *context.Context, args ...value.Value) (value.Value, e
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
 	key := value.Unwrap[*value.String](args[1]).Value
-	defaultAcl := value.Unwrap[*value.Acl](args[2]).Value
+	defaultAcl := value.Unwrap[*value.Acl](args[2])
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
+		return defaultAcl, errors.New(Table_lookup_acl_Name,
 			"table %d does not exist", id,
 		)
 	}
 	if table.ValueType == nil || table.ValueType.Value != "ACL" {
-		return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
+		return defaultAcl, errors.New(Table_lookup_acl_Name,
 			"table %d value type is not ACL", id,
 		)
 	}
 
 	for _, prop := range table.Properties {
-		if prop.Key.Value == key {
-			v, ok := prop.Value.(*ast.AclDeclaration)
-			if !ok {
-				return &value.Acl{Value: defaultAcl}, errors.New(Table_lookup_acl_Name,
-					"table %s value could not cast to ACL type", id,
-				)
-			}
-			return &value.Acl{Value: v}, nil
+		if prop.Key.Value != key {
+			continue
+		}
+
+		v, ok := prop.Value.(*ast.Ident)
+		if !ok {
+			return defaultAcl, errors.New(Table_lookup_acl_Name,
+				"table %s value could not cast to ACL type", id,
+			)
+		}
+		if acl, ok := ctx.Acls[v.Value]; ok {
+			return acl, nil
 		}
 	}
-	return &value.Acl{Value: defaultAcl}, nil
+	return defaultAcl, nil
 }

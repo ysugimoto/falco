@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"time"
+
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -17,6 +19,12 @@ func Ratelimit_check_rate_Validate(args []value.Value) error {
 		return errors.ArgumentNotEnough(Ratelimit_check_rate_Name, 7, args)
 	}
 	for i := range args {
+		if i == 0 { // first argument could accept string or IP type
+			if args[i].Type() != value.StringType && args[i].Type() != value.IpType {
+				return errors.TypeMismatch(Ratelimit_check_rate_Name, i+1, Ratelimit_check_rate_ArgumentTypes[i], args[i].Type())
+			}
+			continue
+		}
 		if args[i].Type() != Ratelimit_check_rate_ArgumentTypes[i] {
 			return errors.TypeMismatch(Ratelimit_check_rate_Name, i+1, Ratelimit_check_rate_ArgumentTypes[i], args[i].Type())
 		}
@@ -34,6 +42,61 @@ func Ratelimit_check_rate(ctx *context.Context, args ...value.Value) (value.Valu
 		return value.Null, err
 	}
 
-	// TODO: Needs to be implemented
+	var entry string
+	switch args[0].Type() {
+	case value.StringType:
+		entry = value.Unwrap[*value.String](args[0]).Value
+	case value.IpType:
+		entry = value.Unwrap[*value.IP](args[0]).String()
+	}
+	rcName := value.Unwrap[*value.Ident](args[1]).Value
+	delta := value.Unwrap[*value.Integer](args[2]).Value
+	window := value.Unwrap[*value.Integer](args[3]).Value
+	limit := value.Unwrap[*value.Integer](args[4]).Value
+	pbName := value.Unwrap[*value.Ident](args[5]).Value
+	ttl := value.Unwrap[*value.RTime](args[6]).Value
+
+	exceeded, err := check_ratelimit(ctx, entry, rcName, delta, window, limit)
+	if err != nil {
+		return nil, err
+	}
+	if exceeded {
+		// If rate is greater than limit, add to penaltybox
+		pb, ok := ctx.Penaltyboxes[pbName]
+		if !ok {
+			return nil, errors.New(Ratelimit_check_rate_Name, "Penaltybox %s is not defined", pbName)
+		}
+		pb.Add(entry, ttl)
+		return &value.Boolean{Value: true}, nil
+	}
 	return &value.Boolean{Value: false}, nil
+}
+
+func check_ratelimit(ctx *context.Context, entry string, rcName string, delta, window, limit int64) (bool, error) {
+	// Additional validations
+	if delta < 0 || delta > 100000 {
+		return false, errors.New(Ratelimit_check_rate_Name, "Third argument of delta must be between 0 and 100000")
+	}
+	if window != 1 && window != 10 && window != 60 {
+		return false, errors.New(Ratelimit_check_rate_Name, "Fourth argument of window must be 1, 10, or 60")
+	}
+	if limit < 10 || limit > 70000000 {
+		return false, errors.New(Ratelimit_check_rate_Name, "Fifth argument of limit must be between 10 and 70000000")
+	}
+
+	// (testing) if fixed access rate has specified, use it
+	if ctx.FixedAccessRate != nil {
+		return *ctx.FixedAccessRate >= float64(limit), nil
+	}
+
+	rc, ok := ctx.Ratecounters[rcName]
+	if !ok {
+		return false, errors.New(Ratelimit_check_rate_Name, "Ratecounter %s is not defined", rcName)
+	}
+	// Increment delta
+	rc.Increment(entry, delta, time.Duration(window)*time.Second)
+
+	// Compare the rate and limit
+	rate := rc.Rate(entry, time.Duration(window)*time.Second)
+	return rate >= float64(limit), nil
 }

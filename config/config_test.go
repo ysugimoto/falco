@@ -32,6 +32,10 @@ func TestConfigFromCLI(t *testing.T) {
 		"-r",
 		"-V",
 		"--json",
+		"-t",
+		"foo",
+		"-t",
+		"bar",
 		"lint",
 	}
 	c, err := New(args)
@@ -49,9 +53,10 @@ func TestConfigFromCLI(t *testing.T) {
 		Json:     true,
 		Commands: Commands{"lint"},
 		Linter: &LinterConfig{
-			VerboseLevel:   "",
-			VerboseWarning: true,
-			VerboseInfo:    true,
+			VerboseLevel:      "",
+			VerboseWarning:    true,
+			VerboseInfo:       true,
+			IgnoreSubroutines: []string{"vcl_pipe"},
 		},
 		Simulator: &SimulatorConfig{
 			Port:            3124,
@@ -61,7 +66,27 @@ func TestConfigFromCLI(t *testing.T) {
 		Testing: &TestConfig{
 			Filter:          "*.test.vcl",
 			IncludePaths:    []string{"."},
+			Tags:            []string{"foo", "bar"},
 			OverrideRequest: &RequestConfig{},
+		},
+		Console: &ConsoleConfig{
+			Scope:           "recv",
+			OverrideRequest: &RequestConfig{},
+		},
+		Format: &FormatConfig{
+			IndentWidth:                2,
+			TrailingCommentWidth:       1,
+			LineWidth:                  120,
+			IndentStyle:                "space",
+			ExplicitStringConat:        false,
+			SortDeclarationProperty:    false,
+			AlignDeclarationProperty:   false,
+			ElseIf:                     false,
+			ReturnStatementParenthesis: true,
+			SortDeclaration:            false,
+			AlignTrailingComment:       false,
+			CommentStyle:               "none",
+			ShouldUseUnset:             false,
 		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}

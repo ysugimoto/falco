@@ -6,14 +6,12 @@ import (
 
 func TestBreakStatement(t *testing.T) {
 	brk := &BreakStatement{
-		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
+		Meta: New(T, 0, comments("// leading comment"), comments("// trailing comment"), comments("/* infix comment */")),
 	}
 
-	expect := `// This is comment
-break; // This is comment
+	expect := `// leading comment
+break /* infix comment */; // trailing comment
 `
 
-	if brk.String() != expect {
-		t.Errorf("stringer error.\nexpect:\n%s\nactual:\n%s\n", expect, brk.String())
-	}
+	assert(t, brk.String(), expect)
 }

@@ -34,8 +34,8 @@ func (t *Transformer) Execute(d io.Reader) error {
 }
 
 func (t *Transformer) Write(v []byte) (int, error) {
-	write(magenta, "["+t.command+"] ")
-	write(white, string(v))
+	write(magenta, "[%s]", t.command)
+	write(white, "%s", string(v))
 
 	return len(v), nil
 }
