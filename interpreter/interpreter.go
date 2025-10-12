@@ -32,6 +32,8 @@ type Interpreter struct {
 	ctx           *context.Context
 	process       *process.Process
 	cache         *cache.Cache
+	rateCounters  map[string]*value.Ratecounter
+	penaltyBoxes  map[string]*value.Penaltybox
 	callStack     []*ast.SubroutineDeclaration
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
@@ -43,6 +45,8 @@ func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),
+		rateCounters: make(map[string]*value.Ratecounter),
+		penaltyBoxes: make(map[string]*value.Penaltybox),
 		callStack:    []*ast.SubroutineDeclaration{},
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
@@ -226,17 +230,27 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			// Other custom user subroutine could not be duplicated
 			return exception.Runtime(&t.Token, "Subroutine %s is duplicated", t.Name.Value)
 		case *ast.PenaltyboxDeclaration:
-			i.Debugger.Run(stmt)
-			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
-				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
+			pb := i.penaltyBoxes[t.Name.Value]
+			if pb == nil {
+				i.Debugger.Run(stmt)
+				if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
+					return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
+				}
+				pb = value.NewPenaltybox(t)
+				i.penaltyBoxes[t.Name.Value] = pb
 			}
-			i.ctx.Penaltyboxes[t.Name.Value] = value.NewPenaltybox(t)
+			i.ctx.Penaltyboxes[t.Name.Value] = pb
 		case *ast.RatecounterDeclaration:
-			i.Debugger.Run(stmt)
-			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
-				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
+			rc := i.rateCounters[t.Name.Value]
+			if rc == nil {
+				i.Debugger.Run(stmt)
+				if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
+					return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
+				}
+				rc = value.NewRatecounter(t)
+				i.rateCounters[t.Name.Value] = rc
 			}
-			i.ctx.Ratecounters[t.Name.Value] = value.NewRatecounter(t)
+			i.ctx.Ratecounters[t.Name.Value] = rc
 		}
 	}
 
