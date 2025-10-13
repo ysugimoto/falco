@@ -36,9 +36,7 @@ func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duratio
 
 func calculateRateWithTime(now int64, entries []rateEntry, window time.Duration) float64 {
 	var from, to int64
-
-	mod := now % 10
-	to = now - mod + 1
+	to = now
 	from = to - int64(window.Seconds())
 
 	var bucket int64
