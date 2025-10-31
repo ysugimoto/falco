@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
@@ -30,6 +29,7 @@ const (
 	CBC   = "cbc"
 	CTR   = "ctr"
 	GCM   = "gcm"
+	CCM   = "ccm"
 	PKCS7 = "pkcs7"
 )
 
@@ -56,13 +56,13 @@ func NewCryptoCodec(
 	if !ok {
 		return nil, errors.New(name, `Invalid cipher. Valid cipher ident is "aes128", "aes192" or "aes256"`)
 	}
-	if mode != CBC && mode != CTR && mode != GCM {
-		return nil, errors.New(name, `Invalid mode. Valid mode ident is "cbc", "ctr", or "gcm"`)
+	if mode != CBC && mode != CTR && mode != GCM && mode != CCM {
+		return nil, errors.New(name, `Invalid mode. Valid mode ident is "cbc", "ctr", "gcm" or "ccm"`)
 	}
 	if padding != PKCS7 && padding != NOPAD {
 		return nil, errors.New(name, `Invalid padding. Valid padding ident is "pkcs7" or "nopad"`)
-	} else if (mode == CTR || mode == GCM) && padding != NOPAD {
-		return nil, errors.New(name, `When mode is ctr or gcm, padding must be "nopad"`)
+	} else if (mode == CTR || mode == GCM || mode == CCM) && padding != NOPAD {
+		return nil, errors.New(name, `When mode is ctr, gcm, or ccm, padding must be "nopad"`)
 	}
 
 	return &CryptoCodec{
@@ -74,6 +74,7 @@ func NewCryptoCodec(
 	}, nil
 }
 
+// Utitiliy method decode hex to bin
 func (c *CryptoCodec) decodeHex(hexKey, hexIv string) (cipher.Block, []byte, error) {
 	key, err := hex.DecodeString(hexKey)
 	if err != nil {
@@ -99,6 +100,7 @@ func (c *CryptoCodec) decodeHex(hexKey, hexIv string) (cipher.Block, []byte, err
 	return block, iv, nil
 }
 
+// Public method, encryption
 func (c *CryptoCodec) Encrypt(hexKey, hexIv string, text []byte) ([]byte, error) {
 	block, iv, err := c.decodeHex(hexKey, hexIv)
 	if err != nil {
@@ -112,32 +114,13 @@ func (c *CryptoCodec) Encrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return c.encryptCTR(block, iv, text), nil
 	case GCM:
 		return c.encryptGCM(block, iv, text)
+	case CCM:
+		return c.encryptCCM(block, iv, text, nil)
 	}
 	return nil, errors.New(c.name, "Unsupported mode: %s", c.mode)
 }
 
-func (c *CryptoCodec) encryptCBC(block cipher.Block, iv, text []byte) []byte {
-	enc := cipher.NewCBCEncrypter(block, iv)
-
-	padded := text
-	if c.padding != NOPAD {
-		padSize := aes.BlockSize - (len(text) & aes.BlockSize)
-		padding := bytes.Repeat([]byte{byte(padSize)}, padSize)
-		padded = append(padded, padding...)
-	}
-
-	encrypted := make([]byte, len(padded))
-	enc.CryptBlocks(encrypted, padded)
-	return encrypted
-}
-
-func (c *CryptoCodec) encryptCTR(block cipher.Block, iv, text []byte) []byte {
-	stream := cipher.NewCTR(block, iv)
-	encrypted := make([]byte, len(text))
-	stream.XORKeyStream(encrypted, text)
-	return encrypted
-}
-
+// Public method, decryption
 func (c *CryptoCodec) Decrypt(hexKey, hexIv string, text []byte) ([]byte, error) {
 	block, iv, err := c.decodeHex(hexKey, hexIv)
 	if err != nil {
@@ -151,57 +134,8 @@ func (c *CryptoCodec) Decrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return c.decryptCTR(block, iv, text), nil
 	case GCM:
 		return c.decryptGCM(block, iv, text)
+	case CCM:
+		return c.decryptCCM(block, iv, text, nil)
 	}
 	return nil, errors.New(c.name, "Unsupported mode: %s", c.mode)
-}
-
-func (c *CryptoCodec) decryptCBC(block cipher.Block, iv, text []byte) []byte {
-	dec := cipher.NewCBCDecrypter(block, iv)
-
-	decrypted := make([]byte, len(text))
-	dec.CryptBlocks(decrypted, text)
-
-	if c.padding != NOPAD {
-		// unpadding
-		padSize := int(decrypted[len(decrypted)-1])
-		decrypted = decrypted[:len(decrypted)-padSize]
-	}
-	return decrypted
-}
-
-func (c *CryptoCodec) decryptCTR(block cipher.Block, iv, text []byte) []byte {
-	stream := cipher.NewCTR(block, iv)
-	decrypted := make([]byte, len(text))
-	stream.XORKeyStream(decrypted, text)
-	return decrypted
-}
-
-func (c *CryptoCodec) encryptGCM(block cipher.Block, nonce, plaintext []byte) ([]byte, error) {
-	aead, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, errors.New(c.name, "Failed to create GCM cipher: %s", err)
-	}
-
-	// Seal encrypts and authenticates plaintext, appends the result to dst (nil here)
-	// and appends the tag. Returns: ciphertext || tag
-	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
-	return ciphertext, nil
-}
-
-func (c *CryptoCodec) decryptGCM(block cipher.Block, nonce, ciphertext []byte) ([]byte, error) {
-	aead, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, errors.New(c.name, "Failed to create GCM cipher: %s", err)
-	}
-
-	// Open verifies the tag and decrypts ciphertext
-	// If authentication fails, returns an error
-	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		// Tag verification failed or ciphertext is malformed
-		return nil, &BadDecryptError{
-			Message: "GCM authentication tag verification failed",
-		}
-	}
-	return plaintext, nil
 }
