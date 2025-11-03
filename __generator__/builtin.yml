@@ -1339,3 +1339,24 @@ digest.hash_xxh64:
   arguments:
     - [STRING]
   return: STRING
+
+digest.hash_xxh32_from_base64:
+  reference: "" # TODO: fill URL after documentation found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_xxh64_from_base64:
+  reference: "" # TODO: fill URL after documentation found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hmac_sha256_with_base64_key:
+  reference: "" # TODO: fill URL after documentation found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING

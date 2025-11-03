@@ -443,7 +443,29 @@ func builtinFunctions() Functions {
 						Reference: "",
 					},
 				},
+				"hash_xxh32_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
 				"hash_xxh64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"hash_xxh64_from_base64": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
 						Return: types.StringType,
@@ -518,6 +540,17 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/",
+					},
+				},
+				"hmac_sha256_with_base64_key": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
 					},
 				},
 				"hmac_sha512": &FunctionSpec{
