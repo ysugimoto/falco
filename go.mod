@@ -13,7 +13,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/rs/xid v1.5.0
-	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ysugimoto/twist v0.10.2
 	golang.org/x/net v0.38.0
 	golang.org/x/sync v0.12.0
@@ -28,6 +27,7 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pierrec/xxHash v0.1.5
+	github.com/pion/dtls/v2 v2.2.12
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
