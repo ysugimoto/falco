@@ -35,3 +35,26 @@ func Test_Crypto_encrypt_hex(t *testing.T) {
 		t.Errorf("Encrypt value unmatch, expect=6bc1bee22e409f96e93d7e117393172a, got=%s", v)
 	}
 }
+
+// Test AES-128-CCM encryption with known test vector
+func Test_Crypto_encrypt_hex_AES128_CCM(t *testing.T) {
+	enc, err := Crypto_encrypt_hex(
+		&context.Context{},
+		&value.Ident{Value: "aes128"},
+		&value.Ident{Value: "ccm"},
+		&value.Ident{Value: "nopad"},
+		&value.String{Value: "00112233445566778899aabbccddeeff"},
+		&value.String{Value: "00010203040506"},
+		&value.String{Value: "a0"},
+	)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if enc.Type() != value.StringType {
+		t.Errorf("Unexpected type returned, expect=%s, got=%s", value.StringType, enc.Type())
+	}
+	v := value.Unwrap[*value.String](enc)
+	if v.Value != "d2a0d9aa0f288ae5ccdcee259e" {
+		t.Errorf("Encrypt value unmatch, expect=d2a0d9aa0f288ae5ccdcee259e, got=%s", v.Value)
+	}
+}
