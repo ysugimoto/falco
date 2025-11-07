@@ -408,8 +408,38 @@ func (l *Linter) lintCallStatement(stmt *ast.CallStatement, ctx *context.Context
 	if s, ok := ctx.Subroutines[stmt.Subroutine.Value]; !ok {
 		l.Error(UndefinedSubroutine(stmt.GetMeta(), stmt.Subroutine.Value).Match(CALL_STATEMENT_SUBROUTINE_NOTFOUND))
 	} else {
-		// Mark subroutine is explicitly called
 		s.IsUsed = true
+
+		params := s.Decl.Parameters
+		args := stmt.Arguments
+
+		if len(args) != len(params) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    stmt.GetMeta().Token,
+				Message: fmt.Sprintf(
+					"Subroutine %s expects %d parameter(s) but got %d argument(s)",
+					stmt.Subroutine.Value, len(params), len(args),
+				),
+			})
+		} else {
+			for i, arg := range args {
+				param := params[i]
+				expectedType := types.ValueTypeMap[param.Type.Value]
+				actualType := l.lint(arg, ctx)
+
+				if expectedType != actualType {
+					l.Error(&LintError{
+						Severity: ERROR,
+						Token:    arg.GetMeta().Token,
+						Message: fmt.Sprintf(
+							"Parameter %s expects type %s but got %s",
+							param.Name.Value, expectedType, actualType,
+						),
+					})
+				}
+			}
+		}
 	}
 
 	return types.NeverType

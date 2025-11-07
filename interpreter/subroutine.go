@@ -19,7 +19,7 @@ const (
 	maxCallStackExceedCount = 100
 )
 
-func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
+func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState, args []value.Value) (State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
@@ -27,6 +27,13 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	local := i.localVars
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
+
+	// Set parameters as local variables
+	for idx, param := range sub.Parameters {
+		if idx < len(args) {
+			i.localVars[param.Name.Value] = args[idx]
+		}
+	}
 
 	// Push this subroutine to callstacks
 	i.callStack = append(i.callStack, sub)
@@ -59,7 +66,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 }
 
 // nolint: gocognit
-func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
+func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState, args []value.Value) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
@@ -67,6 +74,13 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	local := i.localVars
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
+
+	// Set parameters as local variables
+	for idx, param := range sub.Parameters {
+		if idx < len(args) {
+			i.localVars[param.Name.Value] = args[idx]
+		}
+	}
 
 	// Push this subroutine to callstacks
 	i.callStack = append(i.callStack, sub)

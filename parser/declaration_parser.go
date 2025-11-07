@@ -500,11 +500,48 @@ func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	}
 	s.Name = p.ParseIdent()
 
+	if p.PeekTokenIs(token.LEFT_PAREN) {
+		p.NextToken()
+		SwapLeadingTrailing(p.curToken, s.Name.Meta)
+
+		for !p.PeekTokenIs(token.RIGHT_PAREN) && !p.PeekTokenIs(token.EOF) {
+			if !p.ExpectPeek(token.IDENT) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT (parameter type)"))
+			}
+			paramType := p.ParseIdent()
+
+			if !p.ExpectPeek(token.IDENT) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT (parameter name)"))
+			}
+			paramName := p.ParseIdent()
+
+			s.Parameters = append(s.Parameters, &ast.SubroutineParameter{
+				Meta: p.curToken,
+				Type: paramType,
+				Name: paramName,
+			})
+
+			if p.PeekTokenIs(token.COMMA) {
+				p.NextToken()
+			} else if !p.PeekTokenIs(token.RIGHT_PAREN) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA or RIGHT_PAREN"))
+			}
+		}
+
+		if !p.ExpectPeek(token.RIGHT_PAREN) {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
+		}
+	}
+
 	// Custom subroutines might be returning a type
 	// https://developer.fastly.com/reference/vcl/subroutines/
 	// we dont need to validate the type here, linter will do that later.
 	if p.ExpectPeek(token.IDENT) {
-		SwapLeadingTrailing(p.curToken, s.Name.Meta)
+		if len(s.Parameters) > 0 {
+			SwapLeadingTrailing(p.curToken, s.Parameters[len(s.Parameters)-1].Meta)
+		} else {
+			SwapLeadingTrailing(p.curToken, s.Name.Meta)
+		}
 		s.ReturnType = p.ParseIdent()
 	}
 
@@ -513,6 +550,8 @@ func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	}
 	if s.ReturnType != nil {
 		SwapLeadingTrailing(p.curToken, s.ReturnType.Meta)
+	} else if len(s.Parameters) > 0 {
+		SwapLeadingTrailing(p.curToken, s.Parameters[len(s.Parameters)-1].Meta)
 	} else {
 		SwapLeadingTrailing(p.curToken, s.Name.Meta)
 	}
