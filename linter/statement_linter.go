@@ -532,8 +532,16 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 		}
 
 		cc := l.lint(stmt.ReturnExpression, ctx)
-		// Condition expression return type must be BOOL or STRING
-		if !expectType(cc, *ctx.ReturnType) {
+		// Check if return type matches or can be implicitly converted
+		validReturnType := false
+		if expectType(cc, *ctx.ReturnType) {
+			validReturnType = true
+		} else if t, ok := implicitCoersionTable[*ctx.ReturnType]; ok {
+			// Check if the actual type can be implicitly converted to the expected return type
+			validReturnType = expectType(cc, append(t, *ctx.ReturnType)...)
+		}
+
+		if !validReturnType {
 			lintErr := &LintError{
 				Severity: ERROR,
 				Token:    stmt.ReturnExpression.GetMeta().Token,

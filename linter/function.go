@@ -21,7 +21,7 @@ var implicitCoersionTable = map[types.Type][]types.Type{
 	types.RTimeType:  {types.TimeType, types.StringType},
 	types.IPType:     {types.StringType},
 	types.IDType:     {types.StringType},
-	types.StringType: {types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType, types.IDType, types.RTimeType},
+	types.StringType: {types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType, types.IDType, types.RTimeType, types.IPType, types.TimeType},
 }
 
 func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn functionMeta, ctx *context.Context) types.Type {

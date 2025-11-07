@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"net"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/token"
 )
 
 const (
@@ -205,14 +207,20 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 			if state != NONE {
 				return value.Null, state, nil
 			}
-			// Check return value type is the same
-			if string(val.Type()) != sub.ReturnType.Value {
-				return val, NONE, exception.Runtime(
-					&t.GetMeta().Token,
-					"Invalid return type, expects=%s, but got=%s",
-					sub.ReturnType.Value,
-					val.Type(),
-				)
+			// Check return value type and perform implicit conversion if needed
+			expectedType := value.Type(sub.ReturnType.Value)
+			if val.Type() != expectedType {
+				// Try to perform implicit conversion
+				converted, err := i.convertValueToType(val, expectedType, &t.GetMeta().Token)
+				if err != nil {
+					return val, NONE, exception.Runtime(
+						&t.GetMeta().Token,
+						"Invalid return type, expects=%s, but got=%s",
+						sub.ReturnType.Value,
+						val.Type(),
+					)
+				}
+				val = converted
 			}
 			return val, NONE, nil
 		case *ast.ErrorStatement:
@@ -317,4 +325,31 @@ func hasFastlyBoilerplateMacro(cs ast.Comments, macroName string) bool {
 		}
 	}
 	return false
+}
+
+// convertValueToType attempts to convert a value to the expected type using implicit conversion rules
+func (i *Interpreter) convertValueToType(val value.Value, expectedType value.Type, tk *token.Token) (value.Value, error) {
+	// If types match, no conversion needed
+	if val.Type() == expectedType {
+		return val, nil
+	}
+
+	// Handle STRING to IP conversion
+	if val.Type() == value.StringType && expectedType == value.IpType {
+		strVal := value.Unwrap[*value.String](val)
+		ip := net.ParseIP(strVal.Value)
+		if ip == nil {
+			return nil, exception.Runtime(tk, "Invalid IP address: %s", strVal.Value)
+		}
+		return &value.IP{Value: ip}, nil
+	}
+
+	// Handle IP to STRING conversion
+	if val.Type() == value.IpType && expectedType == value.StringType {
+		ipVal := value.Unwrap[*value.IP](val)
+		return &value.String{Value: ipVal.Value.String()}, nil
+	}
+
+	// No conversion available
+	return nil, exception.Runtime(tk, "Cannot convert %s to %s", val.Type(), expectedType)
 }
