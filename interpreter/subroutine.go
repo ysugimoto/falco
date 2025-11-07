@@ -67,7 +67,7 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	return state, err
 }
 
-// nolint: gocognit
+// nolint: gocognit, funlen
 func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState, args []value.Value) (value.Value, State, error) {
 	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 

@@ -548,11 +548,12 @@ func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	if s.ReturnType != nil {
+	switch {
+	case s.ReturnType != nil:
 		SwapLeadingTrailing(p.curToken, s.ReturnType.Meta)
-	} else if len(s.Parameters) > 0 {
+	case len(s.Parameters) > 0:
 		SwapLeadingTrailing(p.curToken, s.Parameters[len(s.Parameters)-1].Meta)
-	} else {
+	default:
 		SwapLeadingTrailing(p.curToken, s.Name.Meta)
 	}
 
