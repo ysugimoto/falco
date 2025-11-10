@@ -14,43 +14,25 @@ import (
 
 // Fastly built-in function testing implementation of table.lookup_regex
 // Arguments may be:
-// - TABLE, STRING, STRING
+// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/
 func Test_Table_lookup_regex(t *testing.T) {
 	table := map[string]*ast.TableDeclaration{
-		"example": {
+		"regex_patterns": {
 			Properties: []*ast.TableProperty{
 				{
-					Key: &ast.String{Value: "prod-server-1"},
+					Key: &ast.String{Value: "/images"},
 					Value: &ast.String{
-						Value: "production",
+						Value: "^(?:jpe?g|png)$",
 						Meta: &ast.Meta{
 							Token: token.Token{Offset: 0},
 						},
 					},
 				},
 				{
-					Key: &ast.String{Value: "prod-server-2"},
+					Key: &ast.String{Value: "/articles"},
 					Value: &ast.String{
-						Value: "production",
-						Meta: &ast.Meta{
-							Token: token.Token{Offset: 0},
-						},
-					},
-				},
-				{
-					Key: &ast.String{Value: "dev-server-1"},
-					Value: &ast.String{
-						Value: "development",
-						Meta: &ast.Meta{
-							Token: token.Token{Offset: 0},
-						},
-					},
-				},
-				{
-					Key: &ast.String{Value: "test123"},
-					Value: &ast.String{
-						Value: "testing",
+						Value: "^md$",
 						Meta: &ast.Meta{
 							Token: token.Token{Offset: 0},
 						},
@@ -61,92 +43,64 @@ func Test_Table_lookup_regex(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		input        string
-		pattern      string
-		defaultValue string
-		expect       string
-		isError      bool
+		name             string
+		tableName        string
+		key              string
+		expectPattern    string
+		expectUnsatisfiable bool
+		isError          bool
 	}{
 		{
-			name:         "table does not exist",
-			input:        "doesnotexist",
-			pattern:      "prod.*",
-			defaultValue: "fallback",
-			expect:       "fallback",
-			isError:      true,
+			name:             "table does not exist",
+			tableName:        "doesnotexist",
+			key:              "/images",
+			expectPattern:    "$unsatisfiable",
+			expectUnsatisfiable: true,
+			isError:          true,
 		},
 		{
-			name:         "pattern matches first prod server",
-			input:        "example",
-			pattern:      "^prod-server-1$",
-			defaultValue: "fallback",
-			expect:       "production",
+			name:             "key found in table",
+			tableName:        "regex_patterns",
+			key:              "/images",
+			expectPattern:    "^(?:jpe?g|png)$",
+			expectUnsatisfiable: false,
 		},
 		{
-			name:         "pattern matches any prod server",
-			input:        "example",
-			pattern:      "prod-server-.*",
-			defaultValue: "fallback",
-			expect:       "production", // Should return first match
+			name:             "another key found in table",
+			tableName:        "regex_patterns",
+			key:              "/articles",
+			expectPattern:    "^md$",
+			expectUnsatisfiable: false,
 		},
 		{
-			name:         "pattern matches dev server",
-			input:        "example",
-			pattern:      "^dev-.*",
-			defaultValue: "fallback",
-			expect:       "development",
-		},
-		{
-			name:         "pattern with character class",
-			input:        "example",
-			pattern:      "test[0-9]+",
-			defaultValue: "fallback",
-			expect:       "testing",
-		},
-		{
-			name:         "pattern does not match",
-			input:        "example",
-			pattern:      "^staging-.*",
-			defaultValue: "fallback",
-			expect:       "fallback",
-		},
-		{
-			name:         "invalid regex pattern",
-			input:        "example",
-			pattern:      "[invalid(",
-			defaultValue: "fallback",
-			expect:       "fallback",
-			isError:      true,
-		},
-		{
-			name:         "case sensitive match",
-			input:        "example",
-			pattern:      "^PROD-.*",
-			defaultValue: "fallback",
-			expect:       "fallback",
+			name:             "key not found returns unsatisfiable",
+			tableName:        "regex_patterns",
+			key:              "/videos",
+			expectPattern:    "$unsatisfiable",
+			expectUnsatisfiable: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			args := []value.Value{
-				&value.Ident{Value: tt.input},
-				&value.String{Value: tt.pattern},
-				&value.String{Value: tt.defaultValue},
+				&value.Ident{Value: tt.tableName},
+				&value.String{Value: tt.key},
 			}
 			ret, err := Table_lookup_regex(&context.Context{Tables: table}, args...)
 			if err != nil {
 				if !tt.isError {
 					t.Errorf("Unexpected error: %s", err)
 				}
-				// Even with error, check the return value is as expected
 			}
-			if ret.Type() != value.StringType {
-				t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+			if ret.Type() != value.RegexType {
+				t.Errorf("Unexpected return type, expect=REGEX, got=%s", ret.Type())
 			}
-			v := value.Unwrap[*value.String](ret)
-			if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
+			v := value.Unwrap[*value.Regex](ret)
+			if v.Unsatisfiable != tt.expectUnsatisfiable {
+				t.Errorf("Unsatisfiable mismatch, expect=%v, got=%v", tt.expectUnsatisfiable, v.Unsatisfiable)
+			}
+			if diff := cmp.Diff(tt.expectPattern, v.Value); diff != "" {
 				t.Errorf("Return value unmatch, diff=%s", diff)
 			}
 		})

@@ -7,16 +7,15 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
-	pcre "go.elara.ws/pcre"
 )
 
 const Table_lookup_regex_Name = "table.lookup_regex"
 
-var Table_lookup_regex_ArgumentTypes = []value.Type{value.IdentType, value.StringType, value.StringType}
+var Table_lookup_regex_ArgumentTypes = []value.Type{value.IdentType, value.StringType}
 
 func Table_lookup_regex_Validate(args []value.Value) error {
-	if len(args) != 3 {
-		return errors.ArgumentNotEnough(Table_lookup_regex_Name, 3, args)
+	if len(args) != 2 {
+		return errors.ArgumentNotEnough(Table_lookup_regex_Name, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Table_lookup_regex_ArgumentTypes[i] {
@@ -28,45 +27,33 @@ func Table_lookup_regex_Validate(args []value.Value) error {
 
 // Fastly built-in function implementation of table.lookup_regex
 // Arguments may be:
-// - TABLE, STRING, STRING
+// - TABLE, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/
 func Table_lookup_regex(ctx *context.Context, args ...value.Value) (value.Value, error) {
-	// Argument validations
 	if err := Table_lookup_regex_Validate(args); err != nil {
 		return value.Null, err
 	}
 
 	id := value.Unwrap[*value.Ident](args[0]).Value
-	pattern := value.Unwrap[*value.String](args[1]).Value
-	defaultValue := value.Unwrap[*value.String](args[2])
+	key := value.Unwrap[*value.String](args[1]).Value
 
 	table, ok := ctx.Tables[id]
 	if !ok {
-		return defaultValue.Copy(), errors.New(Table_lookup_regex_Name,
+		return value.UnsatisfiableRegex.Copy(), errors.New(Table_lookup_regex_Name,
 			"table %s does not exist", id,
 		)
 	}
 
-	// Compile the regex pattern
-	re, err := pcre.Compile(pattern)
-	if err != nil {
-		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
-		return defaultValue.Copy(), errors.New(Table_lookup_regex_Name,
-			"Invalid regular expression pattern: %s", pattern,
-		)
-	}
-
-	// Iterate through table properties and match keys using regex
 	for _, prop := range table.Properties {
-		if re.MatchString(prop.Key.Value) {
+		if prop.Key.Value == key {
 			v, ok := prop.Value.(*ast.String)
 			if !ok {
-				return defaultValue.Copy(), errors.New(Table_lookup_regex_Name,
+				return value.UnsatisfiableRegex.Copy(), errors.New(Table_lookup_regex_Name,
 					"table %s value could not cast to STRING type", id,
 				)
 			}
-			return &value.String{Value: v.Value}, nil
+			return &value.Regex{Value: v.Value, Literal: false}, nil
 		}
 	}
-	return defaultValue.Copy(), nil
+	return value.UnsatisfiableRegex.Copy(), nil
 }

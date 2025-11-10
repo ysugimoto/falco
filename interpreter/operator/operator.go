@@ -722,6 +722,26 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 				return &value.Boolean{Value: true}, nil
 			}
 			return &value.Boolean{Value: false}, nil
+		case value.RegexType:
+			rv := value.Unwrap[*value.Regex](right)
+			if rv.Unsatisfiable {
+				return &value.Boolean{Value: false}, nil
+			}
+			re, err := pcre.Compile(rv.Value)
+			if err != nil {
+				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
+				return value.Null, errors.WithStack(
+					fmt.Errorf("Failed to compile regular expression from REGEX %s", rv.Value),
+				)
+			}
+			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
+				ctx.RegexMatchedValues = make(map[string]*value.String)
+				for j, m := range matches {
+					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
+				}
+				return &value.Boolean{Value: true}, nil
+			}
+			return &value.Boolean{Value: false}, nil
 		case value.AclType:
 			rv := value.Unwrap[*value.Acl](right)
 			ip := net.ParseIP(lv.Value)

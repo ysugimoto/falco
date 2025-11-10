@@ -1912,9 +1912,9 @@ func builtinFunctions() Functions {
 				"lookup_regex": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
-						Return: types.StringType,
+						Return: types.RegexType,
 						Arguments: [][]types.Type{
-							[]types.Type{types.TableType, types.StringType, types.StringType},
+							[]types.Type{types.TableType, types.StringType},
 						},
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,

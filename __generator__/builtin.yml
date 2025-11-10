@@ -1158,8 +1158,8 @@ table.lookup_regex:
   reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
-    - [TABLE, STRING, STRING]
-  return: STRING
+    - [TABLE, STRING]
+  return: REGEX
   extra: LOOKUP_TABLE
 
 uuid.dns:

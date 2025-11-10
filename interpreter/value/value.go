@@ -26,10 +26,11 @@ const (
 	IpType      Type = "IP"
 	BackendType Type = "BACKEND"
 	AclType     Type = "ACL"
+	RegexType   Type = "REGEX"
 )
 
 type ValueTypes interface {
-	*Ident | *String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl
+	*Ident | *String | *Integer | *Float | *Boolean | *IP | *RTime | *Time | *Backend | *Acl | *Regex
 }
 
 func Unwrap[T ValueTypes](v Value) T {
@@ -270,3 +271,32 @@ func (v *Acl) String() string {
 func (v *Acl) Type() Type      { return AclType }
 func (v *Acl) IsLiteral() bool { return v.Literal }
 func (v *Acl) Copy() Value     { return &Acl{Value: v.Value, Literal: v.Literal} }
+
+type Regex struct {
+	Value           string
+	Literal         bool
+	Unsatisfiable   bool // true if this is the unsatisfiable regex
+}
+
+func (v *Regex) String() string {
+	if v.Unsatisfiable {
+		return "$unsatisfiable"
+	}
+	return v.Value
+}
+func (v *Regex) Type() Type      { return RegexType }
+func (v *Regex) IsLiteral() bool { return v.Literal }
+func (v *Regex) Copy() Value {
+	return &Regex{
+		Value:         v.Value,
+		Literal:       v.Literal,
+		Unsatisfiable: v.Unsatisfiable,
+	}
+}
+
+// UnsatisfiableRegex is a singleton representing a regex that never matches any string
+var UnsatisfiableRegex = &Regex{
+	Value:         "$unsatisfiable",
+	Literal:       false,
+	Unsatisfiable: true,
+}

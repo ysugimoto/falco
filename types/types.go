@@ -287,6 +287,21 @@ func (g *Goto) Type() Type         { return GotoType }
 func (g *Goto) Token() token.Token { return g.Decl.Token }
 func (g *Goto) String() string     { return g.Decl.String() }
 
+type Regex struct {
+	Exp     ast.Expression
+	Value   string
+	IsLiteral bool // true if this is a literal pattern from source code
+}
+
+func (r *Regex) Type() Type         { return RegexType }
+func (r *Regex) Token() token.Token {
+	if r.Exp != nil {
+		return r.Exp.GetMeta().Token
+	}
+	return token.Null
+}
+func (r *Regex) String() string     { return r.Value }
+
 type AclEntry struct {
 	Ip      string
 	Negated string
