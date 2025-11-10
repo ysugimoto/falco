@@ -31,7 +31,7 @@ func Digest_hash_xxh32_from_base64_Validate(args []value.Value) error {
 // Fastly built-in function implementation of digest.hash_xxh32_from_base64
 // Arguments may be:
 // - STRING
-// Reference:
+// Reference: https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32-from-base64/
 func Digest_hash_xxh32_from_base64(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Digest_hash_xxh32_from_base64_Validate(args); err != nil {

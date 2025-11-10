@@ -440,7 +440,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32/",
 					},
 				},
 				"hash_xxh32_from_base64": &FunctionSpec{
@@ -451,7 +451,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32-from-base64/",
 					},
 				},
 				"hash_xxh64": &FunctionSpec{
@@ -462,7 +462,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64/",
 					},
 				},
 				"hash_xxh64_from_base64": &FunctionSpec{
@@ -473,7 +473,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64-from-base64/",
 					},
 				},
 				"hmac_md5": &FunctionSpec{
@@ -550,7 +550,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hmac-sha256-with-base64-key/",
 					},
 				},
 				"hmac_sha512": &FunctionSpec{
