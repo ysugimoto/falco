@@ -11,6 +11,129 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
+// handlePCREComment skips a PCRE comment (?#...) and returns the new index.
+func handlePCREComment(pattern string, i int) int {
+	i += 3 // Skip (?#
+	for i < len(pattern) && pattern[i] != ')' {
+		if pattern[i] == '\\' {
+			i++ // Skip escaped character
+		}
+		i++
+	}
+	return i + 1 // Skip the closing )
+}
+
+// handlePCREConditional skips a PCRE conditional (?(...)) and returns the new index.
+func handlePCREConditional(pattern string, i int) int {
+	i += 3 // Move past "(?("
+	depth := 1
+	for i < len(pattern) && depth > 0 {
+		switch pattern[i] {
+		case '\\':
+			i++ // Skip escaped character
+		case '(':
+			depth++
+		case ')':
+			depth--
+		}
+		i++
+	}
+	return i - 1 // Back up one since we'll increment at the end of the outer loop
+}
+
+// isInlineModifierChar returns true if the character is a valid inline modifier character.
+func isInlineModifierChar(ch byte) bool {
+	return ch == 'i' || ch == 'm' || ch == 's' || ch == 'x' ||
+		ch == 'U' || ch == 'X' || ch == 'J' || ch == '-'
+}
+
+// handlePCREInlineModifier checks if the pattern has inline modifiers and whether
+// it forms a modified non-capturing group. Returns newIndex.
+func handlePCREInlineModifier(pattern string, i int) int {
+	// Scan ahead to see if there's a : which makes it a modified group
+	j := i + 3
+	for j < len(pattern) && isInlineModifierChar(pattern[j]) {
+		j++
+	}
+	// Whether it's a modified non-capturing group (?i:...) or just an inline modifier (?i),
+	// we skip it the same way
+	return i + 1
+}
+
+// handlePCRESpecialConstruct processes special PCRE constructs starting with (?
+// and returns (shouldContinue, shouldCount, newIndex).
+func handlePCRESpecialConstruct(pattern string, i int) (bool, bool, int) {
+	if i+2 >= len(pattern) {
+		return false, false, i
+	}
+
+	nextCh := pattern[i+2]
+	switch nextCh {
+	case ':':
+		// Non-capturing group (?:...)
+		return true, false, i + 1
+	case '=', '!':
+		// Lookahead (?=...) or negative lookahead (?!...)
+		return true, false, i + 1
+	case '<':
+		// Could be lookbehind (?<=...) or negative lookbehind (?<!...)
+		if i+3 < len(pattern) && (pattern[i+3] == '=' || pattern[i+3] == '!') {
+			return true, false, i + 1
+		}
+		// Could also be named group (?<name>...) - count it
+		return true, true, i + 1
+	case '>':
+		// Atomic group (?>...)
+		return true, false, i + 1
+	case '#':
+		// Comment (?#...) - skip until closing )
+		newIdx := handlePCREComment(pattern, i)
+		return true, false, newIdx
+	case 'P':
+		// Python-style named group (?P<name>...) or (?P=name)
+		if i+3 < len(pattern) && pattern[i+3] == '<' {
+			// Named capture group - count it
+			return true, true, i + 1
+		}
+		// (?P=name) is a backreference, not a group
+		return true, false, i + 1
+	case '\'':
+		// Perl-style named group (?'name'...)
+		return true, true, i + 1
+	case '(':
+		// Conditional (?(...)) or (?(condition)yes|no)
+		newIdx := handlePCREConditional(pattern, i)
+		return true, false, newIdx
+	case 'R', '&':
+		// Subroutine call (?R), (?&name), etc.
+		return true, false, i + 1
+	}
+
+	// Check for inline modifiers
+	if isInlineModifierChar(nextCh) {
+		newIdx := handlePCREInlineModifier(pattern, i)
+		return true, false, newIdx
+	}
+
+	// Some other special construct we might not recognize
+	// To be safe, don't count it as a capture group
+	return true, false, i + 1
+}
+
+// skipCharClassStart advances the index past special characters at the start
+// of a character class ([^...] or []...]).
+func skipCharClassStart(pattern string, i int) int {
+	// Check for negated character class [^...]
+	if i < len(pattern) && pattern[i] == '^' {
+		i++
+	}
+	// Check for ] at start of character class (it's literal)
+	if i < len(pattern) && pattern[i] == ']' {
+		i++
+	}
+	return i
+}
+
 // countPCRECaptureGroups counts the number of actual capture groups in a PCRE pattern.
 // It correctly handles:
 // - Non-capturing groups (?:...)
@@ -47,14 +170,7 @@ func countPCRECaptureGroups(pattern string) int {
 		if ch == '[' && !inCharClass {
 			inCharClass = true
 			i++
-			// Check for negated character class [^...]
-			if i < len(pattern) && pattern[i] == '^' {
-				i++
-			}
-			// Check for ] at start of character class (it's literal)
-			if i < len(pattern) && pattern[i] == ']' {
-				i++
-			}
+			i = skipCharClassStart(pattern, i)
 			continue
 		}
 
@@ -74,103 +190,13 @@ func countPCRECaptureGroups(pattern string) int {
 		if ch == '(' {
 			// Look ahead to see if it's a special construct
 			if i+1 < len(pattern) && pattern[i+1] == '?' {
-				if i+2 < len(pattern) {
-					nextCh := pattern[i+2]
-					switch nextCh {
-					case ':':
-						// Non-capturing group (?:...)
-						i++
-						continue
-					case '=', '!':
-						// Lookahead (?=...) or negative lookahead (?!...)
-						i++
-						continue
-					case '<':
-						// Could be lookbehind (?<=...) or negative lookbehind (?<!...)
-						if i+3 < len(pattern) && (pattern[i+3] == '=' || pattern[i+3] == '!') {
-							i++
-							continue
-						}
-						// Could also be named group (?<name>...) but we'll count this as a capture
-						// (even though Fastly doesn't support it, we should count it correctly)
-						count++
-						i++
-						continue
-					case '>':
-						// Atomic group (?>...)
-						i++
-						continue
-					case '#':
-						// Comment (?#...) - skip until closing )
-						i += 3
-						for i < len(pattern) && pattern[i] != ')' {
-							if pattern[i] == '\\' {
-								i++ // Skip escaped character
-							}
-							i++
-						}
-						i++ // Skip the closing )
-						continue
-					case 'P':
-						// Python-style named group (?P<name>...) or (?P=name)
-						if i+3 < len(pattern) && pattern[i+3] == '<' {
-							// Named capture group - count it
-							count++
-							i++
-							continue
-						}
-						// (?P=name) is a backreference, not a group
-						i++
-						continue
-					case '\'':
-						// Perl-style named group (?'name'...)
-						count++
-						i++
-						continue
-					case 'i', 'm', 's', 'x', 'U', 'X', 'J', '-':
-						// Inline modifiers like (?i), (?-i), (?i:...), etc.
-						// Scan ahead to see if there's a : which makes it a modified group
-						j := i + 3
-						for j < len(pattern) && (pattern[j] == 'i' || pattern[j] == 'm' ||
-							pattern[j] == 's' || pattern[j] == 'x' || pattern[j] == 'U' ||
-							pattern[j] == 'X' || pattern[j] == 'J' || pattern[j] == '-') {
-							j++
-						}
-						if j < len(pattern) && pattern[j] == ':' {
-							// Modified non-capturing group (?i:...)
-							i++
-							continue
-						}
-						// Just an inline modifier (?i), not a group at all
-						i++
-						continue
-					case '(':
-						// Conditional (?(...)) or (?(condition)yes|no)
-						// Skip the condition part up to the matching )
-						i += 3 // Move past "(?("
-						depth := 1
-						for i < len(pattern) && depth > 0 {
-							if pattern[i] == '\\' {
-								i++ // Skip escaped character
-							} else if pattern[i] == '(' {
-								depth++
-							} else if pattern[i] == ')' {
-								depth--
-							}
-							i++
-						}
-						i-- // Back up one since we'll increment at the end of the outer loop
-						continue
-					case 'R', '&':
-						// Subroutine call (?R), (?&name), etc.
-						i++
-						continue
-					default:
-						// Some other special construct we might not recognize
-						// To be safe, don't count it as a capture group
-						i++
-						continue
-					}
+				shouldContinue, shouldCount, newIdx := handlePCRESpecialConstruct(pattern, i)
+				if shouldCount {
+					count++
+				}
+				if shouldContinue {
+					i = newIdx
+					continue
 				}
 			}
 			// Regular capturing group
@@ -411,7 +437,7 @@ func isValidReturnExpression(exp ast.Expression) error {
 		return isValidReturnExpression(t.Right)
 	case *ast.InfixExpression:
 		// Only comparison and boolean operators are allowed
-		if !(isBooleanOperator(t.Operator) || isComparisonOperator(t.Operator)) {
+		if !isBooleanOperator(t.Operator) && !isComparisonOperator(t.Operator) {
 			return fmt.Errorf("expected ;, got %s", t.Operator)
 		}
 		return isValidReturnExpression(t.Left)
