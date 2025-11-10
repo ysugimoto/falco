@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
-	regexp "go.elara.ws/pcre"
+	pcre "go.elara.ws/pcre"
 )
 
 func Equal(left, right value.Value) (value.Value, error) {
@@ -705,8 +705,9 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Right String type must be a literal"),
 				)
 			}
-			re, err := regexp.Compile(rv.Value)
+			re, err := pcre.Compile(rv.Value)
 			if err != nil {
+				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 				return value.Null, errors.WithStack(
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)

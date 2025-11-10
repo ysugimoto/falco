@@ -1154,6 +1154,14 @@ table.lookup_rtime:
   return: RTIME
   extra: LOOKUP_TABLE
 
+table.lookup_regex:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING, STRING]
+  return: STRING
+  extra: LOOKUP_TABLE
+
 uuid.dns:
   reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-dns/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]

@@ -1909,6 +1909,18 @@ func builtinFunctions() Functions {
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
 					},
 				},
+				"lookup_regex": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/",
+					},
+				},
 				"lookup_rtime": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
