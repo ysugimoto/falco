@@ -273,9 +273,9 @@ func (v *Acl) IsLiteral() bool { return v.Literal }
 func (v *Acl) Copy() Value     { return &Acl{Value: v.Value, Literal: v.Literal} }
 
 type Regex struct {
-	Value           string
-	Literal         bool
-	Unsatisfiable   bool // true if this is the unsatisfiable regex
+	Value         string
+	Literal       bool
+	Unsatisfiable bool // true if this is the unsatisfiable regex
 }
 
 func (v *Regex) String() string {
