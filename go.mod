@@ -1,6 +1,6 @@
 module github.com/ysugimoto/falco
 
-go 1.21
+go 1.24.3
 
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
@@ -13,11 +13,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/rs/xid v1.5.0
-	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ysugimoto/twist v0.10.2
-	golang.org/x/net v0.17.0
-	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/net v0.38.0
+	golang.org/x/sync v0.12.0
+	golang.org/x/sys v0.31.0 // indirect
 )
 
 require (
@@ -26,13 +25,11 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/gobwas/glob v0.2.3
 	github.com/k0kubun/pp v3.0.1+incompatible
+	github.com/olekukonko/tablewriter v0.0.5
+	github.com/pierrec/xxHash v0.1.5
+	github.com/pion/dtls/v2 v2.2.12
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
-)
-
-require (
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/pierrec/xxHash v0.1.5 // indirect
 )
 
 require (
@@ -50,8 +47,8 @@ require (
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	modernc.org/libc v1.17.0 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.2.0 // indirect

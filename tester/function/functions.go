@@ -1,6 +1,8 @@
 package function
 
 import (
+	"maps"
+
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter"
@@ -23,16 +25,10 @@ type Functions map[string]*ifn.Function
 
 func TestingFunctions(i *interpreter.Interpreter, defs *Definiions, c *shared.Counter, cv *shared.Coverage) Functions {
 	functions := Functions{}
-	for key, val := range testingFunctions(i, defs) {
-		functions[key] = val
-	}
-	for key, val := range assertionFunctions(i, c) {
-		functions[key] = val
-	}
+	maps.Copy(functions, testingFunctions(i, defs))
+	maps.Copy(functions, assertionFunctions(i, c))
 	if cv != nil {
-		for key, val := range coverageFunctions(cv) {
-			functions[key] = val
-		}
+		maps.Copy(functions, coverageFunctions(cv))
 	}
 	return functions
 }

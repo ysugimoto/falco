@@ -362,7 +362,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 		}
 		healthyBackends++
 		// typically loop three times in order to find suitable ring position
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			buf := make([]byte, 4)
 			binary.BigEndian.PutUint32(buf, dc.Seed)
 			hash := sha256.New() // TODO: consider to user hash/fnv for getting performance guarantee

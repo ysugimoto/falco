@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"maps"
 	"strings"
 
 	"github.com/ysugimoto/falco/token"
@@ -43,9 +44,7 @@ func NewFromString(input string, opts ...OptionFunc) *Lexer {
 }
 
 func (l *Lexer) RegisterCustomTokens(tokenMap map[string]token.TokenType) {
-	for k, v := range tokenMap {
-		l.customs[k] = v
-	}
+	maps.Copy(l.customs, tokenMap)
 }
 
 func (l *Lexer) skipBytes(n int) {

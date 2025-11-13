@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"strconv"
@@ -212,9 +213,7 @@ func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*
 	lt := linter.New(r.config.Linter)
 	lt.Lint(vcl, ctx)
 
-	for k, v := range lt.Lexers() {
-		r.lexers[k] = v
-	}
+	maps.Copy(r.lexers, lt.Lexers())
 
 	// If runner is running as stat mode, prevent to output lint result
 	if mode&RunModeStat > 0 {
@@ -485,9 +484,7 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	// The order is imporotant, should do yaml -> cli order because cli could override yaml configuration
 	overrides := make(map[string]any)
 	if tc.YamlOverrideVariables != nil {
-		for key, val := range tc.YamlOverrideVariables {
-			overrides[key] = val
-		}
+		maps.Copy(overrides, tc.YamlOverrideVariables)
 	}
 	if tc.CLIOverrideVariables != nil {
 		for _, v := range tc.CLIOverrideVariables {

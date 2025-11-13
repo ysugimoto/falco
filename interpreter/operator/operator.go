@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
-	regexp "go.elara.ws/pcre"
+	pcre "go.elara.ws/pcre"
 )
 
 func Equal(left, right value.Value) (value.Value, error) {
@@ -705,8 +705,9 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("Right String type must be a literal"),
 				)
 			}
-			re, err := regexp.Compile(rv.Value)
+			re, err := pcre.Compile(rv.Value)
 			if err != nil {
+				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 				return value.Null, errors.WithStack(
 					fmt.Errorf("Failed to compile regular expression from string %s", rv.Value),
 				)
@@ -714,6 +715,26 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
 				// Important: regex matched group variables are reset if matching is succeeded
 				// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+				ctx.RegexMatchedValues = make(map[string]*value.String)
+				for j, m := range matches {
+					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
+				}
+				return &value.Boolean{Value: true}, nil
+			}
+			return &value.Boolean{Value: false}, nil
+		case value.RegexType:
+			rv := value.Unwrap[*value.Regex](right)
+			if rv.Unsatisfiable {
+				return &value.Boolean{Value: false}, nil
+			}
+			re, err := pcre.Compile(rv.Value)
+			if err != nil {
+				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
+				return value.Null, errors.WithStack(
+					fmt.Errorf("Failed to compile regular expression from REGEX %s", rv.Value),
+				)
+			}
+			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
 				ctx.RegexMatchedValues = make(map[string]*value.String)
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}

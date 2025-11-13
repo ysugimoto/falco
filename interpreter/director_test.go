@@ -147,7 +147,7 @@ director test random {
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendRandom(d)
 			if err != nil {
 				t.Errorf("Random director backend determination failed: %s", err)
@@ -185,7 +185,7 @@ director test random {
 
 		ip.ctx.Backends["test03"].Healthy.Store(false)
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendRandom(d)
 			if err != nil {
 				t.Errorf("Random director backend determination failed: %s", err)
@@ -294,7 +294,7 @@ director test hash {
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendHash(d)
 			if err != nil {
 				t.Errorf("Hash director backend determination failed: %s", err)
@@ -358,7 +358,7 @@ director test client {
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendClient(d)
 			if err != nil {
 				t.Errorf("Client director backend determination failed: %s", err)
@@ -434,7 +434,7 @@ director test chash {
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendConsistentHash(d)
 			if err != nil {
 				t.Errorf("Chash director backend determination failed: %s", err)
@@ -470,7 +470,7 @@ director test chash {
 		d := ip.ctx.Backends["test"].Director
 		results := map[*value.Backend]int{}
 
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			r, err := ip.directorBackendConsistentHash(d)
 			if err != nil {
 				t.Errorf("Chash director backend determination failed: %s", err)

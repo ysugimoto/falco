@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"encoding/json"
+	"maps"
 	"slices"
 	"sort"
 
@@ -127,9 +128,8 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 		}
 
 		// Merge child resource
-		for key, val := range childResource.Services {
-			services[key] = val
-		}
+		maps.Copy(services, childResource.Services)
+
 		aclEntries = append(aclEntries, childResource.AclEntries...)
 		dictionaryItems = append(dictionaryItems, childResource.DictionaryItems...)
 	}

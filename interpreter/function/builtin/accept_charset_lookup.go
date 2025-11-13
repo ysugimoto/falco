@@ -41,12 +41,12 @@ func Accept_charset_lookup(ctx *context.Context, args ...value.Value) (value.Val
 	accept := value.Unwrap[*value.String](args[2])
 
 	var charsets []string
-	for _, v := range strings.Split(lookup.Value, ":") {
+	for v := range strings.SplitSeq(lookup.Value, ":") {
 		charsets = append(charsets, v)
 	}
 
 	index := len(charsets)
-	for _, v := range strings.Split(accept.Value, ",") {
+	for v := range strings.SplitSeq(accept.Value, ",") {
 		v = strings.TrimSpace(v)
 		if idx := strings.Index(v, ";"); idx != -1 {
 			v = v[0:idx]

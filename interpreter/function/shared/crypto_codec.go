@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 
+	"github.com/pion/dtls/v2/pkg/crypto/ccm"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 )
 
@@ -15,11 +16,22 @@ var BlockSizeMap = map[string]int{
 	"aes256": 32,
 }
 
+// BadDecryptError is returned when GCM tag verification fails
+type BadDecryptError struct {
+	Message string
+}
+
+func (e *BadDecryptError) Error() string {
+	return e.Message
+}
+
 // Ident values constants
 const (
 	NOPAD = "nopad"
 	CBC   = "cbc"
 	CTR   = "ctr"
+	GCM   = "gcm"
+	CCM   = "ccm"
 	PKCS7 = "pkcs7"
 )
 
@@ -30,8 +42,8 @@ type CryptoCodec struct {
 
 	// constrant values
 	cipher  string // "aes128" or "aes192" or "aes256"
-	mode    string // "cbc" or "ctr"
-	padding string // "pkcs7"  or "nopad"
+	mode    string // "cbc", "ctr", or "gcm"
+	padding string // "pkcs7" or "nopad"
 
 	// block size
 	size int
@@ -46,13 +58,13 @@ func NewCryptoCodec(
 	if !ok {
 		return nil, errors.New(name, `Invalid cipher. Valid cipher ident is "aes128", "aes192" or "aes256"`)
 	}
-	if mode != CBC && mode != CTR {
-		return nil, errors.New(name, `Invalid mode. Valid mode ident is "cbc" or "ctr"`)
+	if mode != CBC && mode != CTR && mode != GCM && mode != CCM {
+		return nil, errors.New(name, `Invalid mode. Valid mode ident is "cbc", "ctr", "gcm", or "ccm"`)
 	}
 	if padding != PKCS7 && padding != NOPAD {
 		return nil, errors.New(name, `Invalid padding. Valid padding ident is "pkcs7" or "nopad"`)
-	} else if mode == CTR && padding != NOPAD {
-		return nil, errors.New(name, `When mode is ctr, padding must be "nopad"`)
+	} else if (mode == CTR || mode == GCM || mode == CCM) && padding != NOPAD {
+		return nil, errors.New(name, `When mode is ctr, gcm, or ccm, padding must be "nopad"`)
 	}
 
 	return &CryptoCodec{
@@ -81,6 +93,25 @@ func (c *CryptoCodec) decodeHex(hexKey, hexIv string) (cipher.Block, []byte, err
 		return nil, nil, errors.New(c.name, "Failed to decode iv hex string")
 	}
 
+	// Validate IV length based on mode
+	var expectedIvLen int
+	switch c.mode {
+	case GCM:
+		expectedIvLen = 12 // GCM nonce: 12 bytes
+	case CCM:
+		expectedIvLen = 7 // CCM nonce: 7 bytes
+	case CBC, CTR:
+		expectedIvLen = 16 // Block size for CBC/CTR: 16 bytes
+	}
+
+	if expectedIvLen > 0 && len(iv) != expectedIvLen {
+		return nil, nil, errors.New(
+			c.name,
+			"Invalid IV size for %s mode. Expected %d bytes (%d hex chars) but got %d bytes (%d hex chars)",
+			c.mode, expectedIvLen, expectedIvLen*2, len(iv), len(iv)*2,
+		)
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, nil, errors.New(c.name, "Failed to create AES cipher block: %s", err)
@@ -95,10 +126,17 @@ func (c *CryptoCodec) Encrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return nil, err
 	}
 
-	if c.mode == CBC {
+	switch c.mode {
+	case CBC:
 		return c.encryptCBC(block, iv, text), nil
+	case CTR:
+		return c.encryptCTR(block, iv, text), nil
+	case GCM:
+		return c.encryptGCM(block, iv, text)
+	case CCM:
+		return c.encryptCCM(block, iv, text)
 	}
-	return c.encryptCTR(block, iv, text), nil
+	return nil, errors.New(c.name, "Unsupported mode: %s", c.mode)
 }
 
 func (c *CryptoCodec) encryptCBC(block cipher.Block, iv, text []byte) []byte {
@@ -129,10 +167,17 @@ func (c *CryptoCodec) Decrypt(hexKey, hexIv string, text []byte) ([]byte, error)
 		return nil, err
 	}
 
-	if c.mode == CBC {
+	switch c.mode {
+	case CBC:
 		return c.decryptCBC(block, iv, text), nil
+	case CTR:
+		return c.decryptCTR(block, iv, text), nil
+	case GCM:
+		return c.decryptGCM(block, iv, text)
+	case CCM:
+		return c.decryptCCM(block, iv, text)
 	}
-	return c.decryptCTR(block, iv, text), nil
+	return nil, errors.New(c.name, "Unsupported mode: %s", c.mode)
 }
 
 func (c *CryptoCodec) decryptCBC(block cipher.Block, iv, text []byte) []byte {
@@ -154,4 +199,67 @@ func (c *CryptoCodec) decryptCTR(block cipher.Block, iv, text []byte) []byte {
 	decrypted := make([]byte, len(text))
 	stream.XORKeyStream(decrypted, text)
 	return decrypted
+}
+
+func (c *CryptoCodec) encryptGCM(block cipher.Block, nonce, plaintext []byte) ([]byte, error) {
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, errors.New(c.name, "Failed to create GCM cipher: %s", err)
+	}
+
+	// Seal encrypts and authenticates plaintext, appends the result to dst (nil here)
+	// and appends the tag. Returns: ciphertext || tag
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+	return ciphertext, nil
+}
+
+func (c *CryptoCodec) decryptGCM(block cipher.Block, nonce, ciphertext []byte) ([]byte, error) {
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, errors.New(c.name, "Failed to create GCM cipher: %s", err)
+	}
+
+	// Open verifies the tag and decrypts ciphertext
+	// If authentication fails, returns an error
+	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		// Tag verification failed or ciphertext is malformed
+		return nil, &BadDecryptError{
+			Message: "GCM authentication tag verification failed",
+		}
+	}
+	return plaintext, nil
+}
+
+func (c *CryptoCodec) encryptCCM(block cipher.Block, nonce, plaintext []byte) ([]byte, error) {
+	// CCM parameters: 7-byte nonce, 12-byte tag
+	// TagSize must be even and between 4-16, NonceSize must be 7-13
+	aead, err := ccm.NewCCM(block, 12, 7)
+	if err != nil {
+		return nil, errors.New(c.name, "Failed to create CCM cipher: %s", err)
+	}
+
+	// Seal encrypts and authenticates plaintext, appends the result to dst (nil here)
+	// and appends the tag. Returns: ciphertext || tag
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+	return ciphertext, nil
+}
+
+func (c *CryptoCodec) decryptCCM(block cipher.Block, nonce, ciphertext []byte) ([]byte, error) {
+	// CCM parameters: 7-byte nonce, 12-byte tag
+	aead, err := ccm.NewCCM(block, 12, 7)
+	if err != nil {
+		return nil, errors.New(c.name, "Failed to create CCM cipher: %s", err)
+	}
+
+	// Open verifies the tag and decrypts ciphertext
+	// If authentication fails, returns an error
+	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		// Tag verification failed or ciphertext is malformed
+		return nil, &BadDecryptError{
+			Message: "CCM authentication tag verification failed",
+		}
+	}
+	return plaintext, nil
 }
