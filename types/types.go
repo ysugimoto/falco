@@ -40,6 +40,8 @@ const (
 	// to a string.
 	// Any backend is implicitly cast to ReqBackendType when set to req.backend.
 	ReqBackendType Type = 0x100000000010000
+	// RegexType represents a compiled regular expression pattern
+	RegexType Type = 0x100000000100000
 )
 
 var ValueTypeMap = map[string]Type{
@@ -52,6 +54,7 @@ var ValueTypeMap = map[string]Type{
 	"STRING":  StringType,
 	"RTIME":   RTimeType,
 	"TIME":    TimeType,
+	"REGEX":   RegexType,
 }
 
 func (t Type) String() string {
@@ -98,6 +101,8 @@ func (t Type) String() string {
 		return "GOTO"
 	case StringListType:
 		return "STRING_LIST"
+	case RegexType:
+		return "REGEX"
 	}
 	return "UNKNOWN"
 }
@@ -281,6 +286,21 @@ type Goto struct {
 func (g *Goto) Type() Type         { return GotoType }
 func (g *Goto) Token() token.Token { return g.Decl.Token }
 func (g *Goto) String() string     { return g.Decl.String() }
+
+type Regex struct {
+	Exp       ast.Expression
+	Value     string
+	IsLiteral bool // true if this is a literal pattern from source code
+}
+
+func (r *Regex) Type() Type { return RegexType }
+func (r *Regex) Token() token.Token {
+	if r.Exp != nil {
+		return r.Exp.GetMeta().Token
+	}
+	return token.Null
+}
+func (r *Regex) String() string { return r.Value }
 
 type AclEntry struct {
 	Ip      string

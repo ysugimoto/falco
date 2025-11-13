@@ -21,6 +21,7 @@ var typeToType = map[string]string{
 	"ACL":         "types.AclType",
 	"TABLE":       "types.TableType",
 	"STRING_LIST": "types.StringListType",
+	"REGEX":       "types.RegexType",
 }
 
 func main() {

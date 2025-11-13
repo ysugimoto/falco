@@ -299,6 +299,12 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 		} else {
 			b.IsUsed = true
 		}
+	case types.RegexType:
+		// REGEX tables store regex patterns as strings
+		vt := l.lint(prop.Value, ctx)
+		if vt != types.StringType {
+			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, types.StringType, vt))
+		}
 	default:
 		vt := l.lint(prop.Value, ctx)
 		if vt != tableType {

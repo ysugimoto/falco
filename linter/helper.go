@@ -2,7 +2,6 @@ package linter
 
 import (
 	"fmt"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -12,7 +11,203 @@ import (
 	"github.com/ysugimoto/falco/types"
 )
 
-var captureRegex = regexp.MustCompile(`\([^\)]+\)`)
+// handlePCREComment skips a PCRE comment (?#...) and returns the new index.
+func handlePCREComment(pattern string, i int) int {
+	i += 3 // Skip (?#
+	for i < len(pattern) && pattern[i] != ')' {
+		if pattern[i] == '\\' {
+			i++ // Skip escaped character
+		}
+		i++
+	}
+	return i + 1 // Skip the closing )
+}
+
+// handlePCREConditional skips a PCRE conditional (?(...)) and returns the new index.
+func handlePCREConditional(pattern string, i int) int {
+	i += 3 // Move past "(?("
+	depth := 1
+	for i < len(pattern) && depth > 0 {
+		switch pattern[i] {
+		case '\\':
+			i++ // Skip escaped character
+		case '(':
+			depth++
+		case ')':
+			depth--
+		}
+		i++
+	}
+	return i - 1 // Back up one since we'll increment at the end of the outer loop
+}
+
+// isInlineModifierChar returns true if the character is a valid inline modifier character.
+func isInlineModifierChar(ch byte) bool {
+	return ch == 'i' || ch == 'm' || ch == 's' || ch == 'x' ||
+		ch == 'U' || ch == 'X' || ch == 'J' || ch == '-'
+}
+
+// handlePCREInlineModifier checks if the pattern has inline modifiers and whether
+// it forms a modified non-capturing group. Returns newIndex.
+func handlePCREInlineModifier(pattern string, i int) int {
+	// Scan ahead to see if there's a : which makes it a modified group
+	j := i + 3
+	for j < len(pattern) && isInlineModifierChar(pattern[j]) {
+		j++
+	}
+	// Whether it's a modified non-capturing group (?i:...) or just an inline modifier (?i),
+	// we skip it the same way
+	return i + 1
+}
+
+// handlePCRESpecialConstruct processes special PCRE constructs starting with (?
+// and returns (shouldContinue, shouldCount, newIndex).
+func handlePCRESpecialConstruct(pattern string, i int) (bool, bool, int) {
+	if i+2 >= len(pattern) {
+		return false, false, i
+	}
+
+	nextCh := pattern[i+2]
+	switch nextCh {
+	case ':':
+		// Non-capturing group (?:...)
+		return true, false, i + 1
+	case '=', '!':
+		// Lookahead (?=...) or negative lookahead (?!...)
+		return true, false, i + 1
+	case '<':
+		// Could be lookbehind (?<=...) or negative lookbehind (?<!...)
+		if i+3 < len(pattern) && (pattern[i+3] == '=' || pattern[i+3] == '!') {
+			return true, false, i + 1
+		}
+		// Could also be named group (?<name>...) - count it
+		return true, true, i + 1
+	case '>':
+		// Atomic group (?>...)
+		return true, false, i + 1
+	case '#':
+		// Comment (?#...) - skip until closing )
+		newIdx := handlePCREComment(pattern, i)
+		return true, false, newIdx
+	case 'P':
+		// Python-style named group (?P<name>...) or (?P=name)
+		if i+3 < len(pattern) && pattern[i+3] == '<' {
+			// Named capture group - count it
+			return true, true, i + 1
+		}
+		// (?P=name) is a backreference, not a group
+		return true, false, i + 1
+	case '\'':
+		// Perl-style named group (?'name'...)
+		return true, true, i + 1
+	case '(':
+		// Conditional (?(...)) or (?(condition)yes|no)
+		newIdx := handlePCREConditional(pattern, i)
+		return true, false, newIdx
+	case 'R', '&':
+		// Subroutine call (?R), (?&name), etc.
+		return true, false, i + 1
+	}
+
+	// Check for inline modifiers
+	if isInlineModifierChar(nextCh) {
+		newIdx := handlePCREInlineModifier(pattern, i)
+		return true, false, newIdx
+	}
+
+	// Some other special construct we might not recognize
+	// To be safe, don't count it as a capture group
+	return true, false, i + 1
+}
+
+// skipCharClassStart advances the index past special characters at the start
+// of a character class ([^...] or []...]).
+func skipCharClassStart(pattern string, i int) int {
+	// Check for negated character class [^...]
+	if i < len(pattern) && pattern[i] == '^' {
+		i++
+	}
+	// Check for ] at start of character class (it's literal)
+	if i < len(pattern) && pattern[i] == ']' {
+		i++
+	}
+	return i
+}
+
+// countPCRECaptureGroups counts the number of actual capture groups in a PCRE pattern.
+// It correctly handles:
+// - Non-capturing groups (?:...)
+// - Lookaheads/lookbehinds (?=...), (?!...), (?<=...), (?<!...)
+// - Atomic groups (?>...)
+// - Comments (?#...)
+// - Other special constructs that don't capture
+// - Escaped parentheses \( and \)
+// - Character classes [...]
+// - Named groups (?P<name>...) - counts as capture but PCRE doesn't support these for Fastly
+func countPCRECaptureGroups(pattern string) int {
+	count := 0
+	inCharClass := false
+	escaped := false
+	i := 0
+
+	for i < len(pattern) {
+		ch := pattern[i]
+
+		// Handle escape sequences
+		if escaped {
+			escaped = false
+			i++
+			continue
+		}
+
+		if ch == '\\' {
+			escaped = true
+			i++
+			continue
+		}
+
+		// Handle character classes
+		if ch == '[' && !inCharClass {
+			inCharClass = true
+			i++
+			i = skipCharClassStart(pattern, i)
+			continue
+		}
+
+		if ch == ']' && inCharClass {
+			inCharClass = false
+			i++
+			continue
+		}
+
+		// Inside character class, parentheses are literals
+		if inCharClass {
+			i++
+			continue
+		}
+
+		// Check for opening parenthesis
+		if ch == '(' {
+			// Look ahead to see if it's a special construct
+			if i+1 < len(pattern) && pattern[i+1] == '?' {
+				shouldContinue, shouldCount, newIdx := handlePCRESpecialConstruct(pattern, i)
+				if shouldCount {
+					count++
+				}
+				if shouldContinue {
+					i = newIdx
+					continue
+				}
+			}
+			// Regular capturing group
+			count++
+		}
+
+		i++
+	}
+
+	return count
+}
 
 var BackendPropertyTypes = map[string]types.Type{
 	"dynamic":                  types.BoolType,
@@ -242,7 +437,7 @@ func isValidReturnExpression(exp ast.Expression) error {
 		return isValidReturnExpression(t.Right)
 	case *ast.InfixExpression:
 		// Only comparison and boolean operators are allowed
-		if !(isBooleanOperator(t.Operator) || isComparisonOperator(t.Operator)) {
+		if !isBooleanOperator(t.Operator) && !isComparisonOperator(t.Operator) {
 			return fmt.Errorf("expected ;, got %s", t.Operator)
 		}
 		return isValidReturnExpression(t.Left)
@@ -259,10 +454,18 @@ func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) {
 		pushRegexGroupVars(t.Right, ctx)
 	case *ast.InfixExpression:
 		if t.Operator == "~" || t.Operator == "!~" {
-			m := captureRegex.FindAllStringSubmatch(t.Right.String(), -1)
-			if len(m) > 0 {
-				ctx.PushRegexVariables(len(m) + 1)
+			// Extract the pattern string from the regex expression
+			if str, ok := t.Right.(*ast.String); ok {
+				// Count capture groups using PCRE-aware parser
+				captureCount := countPCRECaptureGroups(str.Value)
+				if captureCount > 0 {
+					// +1 because re.group.0 contains the full match
+					ctx.PushRegexVariables(captureCount + 1)
+				} else {
+					ctx.ResetRegexVariables()
+				}
 			} else {
+				// If it's not a string literal, we can't analyze it at compile time
 				ctx.ResetRegexVariables()
 			}
 		} else {
