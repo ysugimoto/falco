@@ -230,13 +230,16 @@ func (i *Interpreter) ProcessIfExpression(exp *ast.IfExpression) (value.Value, e
 
 func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpression, withCondition bool) (value.Value, error) {
 	if sub, ok := i.ctx.SubroutineFunctions[exp.Function.Value]; ok {
-		if len(exp.Arguments) > 0 {
-			return value.Null, exception.Runtime(
-				&exp.GetMeta().Token,
-				"Function subroutine %s could not accept any arguments",
-				exp.Function.Value,
-			)
+		// Evaluate arguments
+		var args []value.Value
+		for _, argExpr := range exp.Arguments {
+			argVal, err := i.ProcessExpression(argExpr, false)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			args = append(args, argVal)
 		}
+
 		// If mocked functional subroutine found, use it
 		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[exp.Function.Value]; ok {
 			sub = mocked
@@ -250,7 +253,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 			)
 		}
 		// Functional subroutine may change status
-		v, _, err := i.ProcessFunctionSubroutine(sub, DebugPass)
+		v, _, err := i.ProcessFunctionSubroutine(sub, DebugPass, args)
 		if err != nil {
 			return v, errors.WithStack(err)
 		}

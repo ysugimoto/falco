@@ -392,7 +392,7 @@ func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error
 	return nil
 }
 
-func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType types.Type) error {
+func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType types.Type, sub *types.Subroutine) error {
 	// check existence
 	if _, duplicated := c.functions[name]; duplicated {
 		if !IsFastlySubroutine(name) {
@@ -406,15 +406,27 @@ func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType typ
 		}
 	}
 
+	var arguments [][]types.Type
+	if len(sub.Decl.Parameters) > 0 {
+		var paramTypes []types.Type
+		for _, param := range sub.Decl.Parameters {
+			paramTypes = append(paramTypes, types.ValueTypeMap[param.Type.Value])
+		}
+		arguments = [][]types.Type{paramTypes}
+	}
+
 	c.functions[name] = &FunctionSpec{
 		Items: map[string]*FunctionSpec{},
 		Value: &BuiltinFunction{
 			Return:                returnType,
-			Arguments:             [][]types.Type{},
+			Arguments:             arguments,
 			Scopes:                scopes,
 			IsUserDefinedFunction: true,
 		},
 	}
+
+	// Also add to Subroutines map so parameter validation works
+	c.Subroutines[name] = sub
 
 	return nil
 }

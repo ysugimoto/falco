@@ -44,10 +44,10 @@ func Testing_call_subroutine(
 
 	// Functional subroutine
 	if sub, ok := ctx.SubroutineFunctions[name]; ok {
-		_, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass)
+		_, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass, nil)
 		// Scoped subroutine
 	} else if sub, ok := ctx.Subroutines[name]; ok {
-		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass)
+		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass, nil)
 		i.TestingState = state
 	} else {
 		return value.Null, errors.NewTestingError("subroutine %s is not defined in VCL", name)
