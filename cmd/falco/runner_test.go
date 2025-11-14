@@ -431,6 +431,12 @@ func TestTester(t *testing.T) {
 			filter: "*notset/default.test.vcl",
 			passes: 52,
 		},
+		{
+			name:   "do not omit query sign",
+			main:   "../../examples/testing/query_sign/default.vcl",
+			filter: "*default.test.vcl",
+			passes: 2,
+		},
 	}
 
 	for _, tt := range tests {
