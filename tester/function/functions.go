@@ -196,6 +196,14 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 				return false
 			},
 		},
+		"testing.mock_backend_health": {
+			Scope:            allScope,
+			Call:             Testing_mock_backend_health,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 	}
 }
 
