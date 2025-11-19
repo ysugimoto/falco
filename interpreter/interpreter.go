@@ -694,6 +694,22 @@ func (i *Interpreter) ProcessDeliver() error {
 		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	}
 
+	// Add Fastly related server info but values are falco's one.
+	// Note that these headers could be removed in vcl_deliver subroutine
+	i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
+	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+	i.ctx.Response.Header.Set("Date", time.Now().Format(http.TimeFormat))
+	i.ctx.Response.Header.Set("Server", "Falco")
+	i.ctx.Response.Header.Set("Via", "Falco")
+
+	// Additionally set cache related headers
+	if i.ctx.CacheHitItem != nil {
+		i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
+		i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+	} else {
+		i.ctx.Response.Header.Set("X-Cache-Hits", "0")
+	}
+
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
@@ -720,18 +736,7 @@ func (i *Interpreter) ProcessDeliver() error {
 			}
 		}
 
-		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
-		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-
-		// Additionally set cache related headers
-		if i.ctx.CacheHitItem != nil {
-			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
-			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
-		} else {
-			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
-		}
-		// When Fastly-Debug header is present, add debug header but values are fakes
+		// When Fastly-Debug header is still present after vcl_deliver calling, add debug headers with virtual value
 		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-Path",
