@@ -16,10 +16,10 @@ sub test_backend_health_status {
   assert.true(backend.backend1.healthy);
   assert.true(backend.backend2.healthy);
   assert.true(backend.backend3.healthy);
-  
+
   // Mark backend1 as unhealthy
-  testing.mock_backend_health(backend1, false);
-  
+  testing.set_backend_health(backend1, false);
+
   // Now backend1 should be unhealthy
   assert.false(backend.backend1.healthy);
   assert.true(backend.backend2.healthy);
@@ -31,11 +31,11 @@ sub test_backend_health_status {
 // @suite: Backend health can be restored
 sub test_restore_backend_health {
   // Mark backend1 as unhealthy
-  testing.mock_backend_health(backend1, false);
+  testing.set_backend_health(backend1, false);
   assert.false(backend.backend1.healthy);
 
   // Restore backend1 to healthy
-  testing.mock_backend_health(backend1, true);
+  testing.set_backend_health(backend1, true);
   assert.true(backend.backend1.healthy);
 }
 

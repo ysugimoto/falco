@@ -1,6 +1,6 @@
 # Backend Failover Testing Example
 
-This example demonstrates how to test backend failover logic using the `testing.mock_backend_health()` function.
+This example demonstrates how to test backend failover logic using the `testing.set_backend_health()` function.
 
 ## Overview
 
@@ -37,7 +37,7 @@ falco test -I . ./backend_failover.vcl
 
 ## Key Function
 
-### `testing.mock_backend_health(BACKEND backend, BOOL healthy)`
+### `testing.set_backend_health(BACKEND backend, BOOL healthy)`
 
 Sets the health status of a backend for testing purposes.
 
@@ -48,10 +48,10 @@ Sets the health status of a backend for testing purposes.
 **Example:**
 ```vcl
 // Mark backend as unhealthy
-testing.mock_backend_health(backend1, false);
+testing.set_backend_health(backend1, false);
 
 // Mark backend as healthy
-testing.mock_backend_health(backend1, true);
+testing.set_backend_health(backend1, true);
 ```
 
 ## Use Cases

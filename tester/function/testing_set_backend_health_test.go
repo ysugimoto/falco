@@ -9,7 +9,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-func Test_mock_backend_health(t *testing.T) {
+func Test_set_backend_health(t *testing.T) {
 	tests := []struct {
 		name          string
 		backendName   string
@@ -66,7 +66,7 @@ func Test_mock_backend_health(t *testing.T) {
 				},
 			}
 
-			_, err := Testing_mock_backend_health(
+			_, err := Testing_set_backend_health(
 				c,
 				backend,
 				&value.Boolean{Value: tt.setHealth},
@@ -91,7 +91,7 @@ func Test_mock_backend_health(t *testing.T) {
 	}
 }
 
-func Test_mock_backend_health_uninitialized(t *testing.T) {
+func Test_set_backend_health_uninitialized(t *testing.T) {
 	backend := &value.Backend{
 		Value: &ast.BackendDeclaration{
 			Name: &ast.Ident{Value: "test_backend"},
@@ -106,7 +106,7 @@ func Test_mock_backend_health_uninitialized(t *testing.T) {
 		},
 	}
 
-	_, err := Testing_mock_backend_health(
+	_, err := Testing_set_backend_health(
 		c,
 		backend,
 		&value.Boolean{Value: false},
@@ -117,7 +117,7 @@ func Test_mock_backend_health_uninitialized(t *testing.T) {
 	}
 }
 
-func Test_mock_backend_health_validation(t *testing.T) {
+func Test_set_backend_health_validation(t *testing.T) {
 	healthy := &atomic.Bool{}
 	healthy.Store(true)
 
@@ -158,7 +158,7 @@ func Test_mock_backend_health_validation(t *testing.T) {
 					"test_backend": backend,
 				},
 			}
-			_, err := Testing_mock_backend_health(c, tt.args...)
+			_, err := Testing_set_backend_health(c, tt.args...)
 			if err == nil {
 				t.Errorf("Expected validation error but got nil")
 			}
@@ -166,7 +166,7 @@ func Test_mock_backend_health_validation(t *testing.T) {
 	}
 }
 
-func Test_mock_backend_health_not_found(t *testing.T) {
+func Test_set_backend_health_not_found(t *testing.T) {
 	healthy := &atomic.Bool{}
 	healthy.Store(true)
 
@@ -182,7 +182,7 @@ func Test_mock_backend_health_not_found(t *testing.T) {
 		Backends: map[string]*value.Backend{},
 	}
 
-	_, err := Testing_mock_backend_health(
+	_, err := Testing_set_backend_health(
 		c,
 		backend,
 		&value.Boolean{Value: false},

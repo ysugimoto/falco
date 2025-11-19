@@ -6,31 +6,31 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Testing_mock_backend_health_Name = "testing.mock_backend_health"
+const Testing_set_backend_health_Name = "testing.set_backend_health"
 
-var Testing_mock_backend_health_ArgumentTypes = []value.Type{value.BackendType, value.BooleanType}
+var Testing_set_backend_health_ArgumentTypes = []value.Type{value.BackendType, value.BooleanType}
 
-func Testing_mock_backend_health_Validate(args []value.Value) error {
+func Testing_set_backend_health_Validate(args []value.Value) error {
 	if len(args) != 2 {
-		return errors.ArgumentNotEnough(Testing_mock_backend_health_Name, 2, args)
+		return errors.ArgumentNotEnough(Testing_set_backend_health_Name, 2, args)
 	}
 
-	for i := range Testing_mock_backend_health_ArgumentTypes {
-		if args[i].Type() != Testing_mock_backend_health_ArgumentTypes[i] {
+	for i := range Testing_set_backend_health_ArgumentTypes {
+		if args[i].Type() != Testing_set_backend_health_ArgumentTypes[i] {
 			return errors.TypeMismatch(
-				Testing_mock_backend_health_Name, i+1, Testing_mock_backend_health_ArgumentTypes[i], args[i].Type(),
+				Testing_set_backend_health_Name, i+1, Testing_set_backend_health_ArgumentTypes[i], args[i].Type(),
 			)
 		}
 	}
 	return nil
 }
 
-func Testing_mock_backend_health(
+func Testing_set_backend_health(
 	ctx *context.Context,
 	args ...value.Value,
 ) (value.Value, error) {
 
-	if err := Testing_mock_backend_health_Validate(args); err != nil {
+	if err := Testing_set_backend_health_Validate(args); err != nil {
 		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
