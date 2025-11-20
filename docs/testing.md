@@ -310,6 +310,7 @@ We describe them following table and examples:
 | testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
 | testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
 | testing.fixed_access_rate    | FUNCTION   | Set fixed access rate value                                                                  |
+| testing.set_backend_health   | FUNCTION   | Set health status of backend                                                                 |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
@@ -703,6 +704,37 @@ sub test_vcl {
     }
 
     assert.true(var.exceeded);
+}
+```
+
+----
+
+### `testing.set_backend_health(BACKEND backend, BOOL healthy)`
+
+Sets the health status of a backend for testing purposes.
+
+**Parameters:**
+- `backend` - The backend to modify (e.g., `backend1`)
+- `healthy` - Boolean value: `true` for healthy, `false` for unhealthy
+
+**Example:**
+```vcl
+// Test backend health check variable
+// @scope: recv
+// @suite: Test unhealthy backend
+sub test_backend_health_status {
+  // Initially all backends are healthy
+  assert.true(backend.backend1.healthy);
+  assert.true(backend.backend2.healthy);
+  assert.true(backend.backend3.healthy);
+
+  // Mark backend1 as unhealthy
+  testing.set_backend_health(backend1, false);
+
+  // Now backend1 should be unhealthy
+  assert.false(backend.backend1.healthy);
+  assert.true(backend.backend2.healthy);
+  assert.true(backend.backend3.healthy);
 }
 ```
 
