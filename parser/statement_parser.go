@@ -313,13 +313,29 @@ func (p *Parser) ParseCallStatement() (*ast.CallStatement, error) {
 	stmt.Subroutine = p.ParseIdent()
 
 	var hasParenthesis bool
-	// Parse functions with ()
 	if p.PeekTokenIs(token.LEFT_PAREN) {
-		p.NextToken() // point to the token to check if it is RIGHT_PAREN
-		if !p.PeekTokenIs(token.RIGHT_PAREN) {
-			return nil, errors.WithStack(UnexpectedToken(p.curToken))
+		p.NextToken()
+		SwapLeadingTrailing(p.curToken, stmt.Subroutine.GetMeta())
+
+		for !p.PeekTokenIs(token.RIGHT_PAREN) && !p.PeekTokenIs(token.EOF) {
+			p.NextToken()
+			expr, err := p.ParseExpression(LOWEST)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			stmt.Arguments = append(stmt.Arguments, expr)
+
+			if p.PeekTokenIs(token.COMMA) {
+				p.NextToken()
+			} else if !p.PeekTokenIs(token.RIGHT_PAREN) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA or RIGHT_PAREN"))
+			}
 		}
-		p.NextToken() // point to RIGHT_PAREN
+
+		if !p.PeekTokenIs(token.RIGHT_PAREN) {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
+		}
+		p.NextToken()
 		hasParenthesis = true
 	}
 
