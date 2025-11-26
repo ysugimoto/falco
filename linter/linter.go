@@ -519,7 +519,8 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 					l.Error(err.Match(SUBROUTINE_INVALID_RETURN_TYPE))
 				}
 
-				if err := ctx.AddUserDefinedFunction(t.Name.Value, getSubroutineCallScope(t), returnType); err != nil {
+				sub := &types.Subroutine{Decl: t, Body: t.Block}
+				if err := ctx.AddUserDefinedFunction(t.Name.Value, getSubroutineCallScope(t), returnType, sub); err != nil {
 					err := &LintError{
 						Severity: ERROR,
 						Token:    t.Name.GetMeta().Token,

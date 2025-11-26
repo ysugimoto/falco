@@ -841,7 +841,14 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 	}
 
 	if match := backendHealthyRegex.FindStringSubmatch(name); match != nil {
-		return &value.Boolean{Value: true}, nil
+		if v, ok := v.ctx.Backends[match[1]]; ok {
+			if v.Healthy == nil {
+				return value.Null, exception.Runtime(nil, "backend '%s' healthy status not set", match[1])
+			}
+			return &value.Boolean{Value: v.Healthy.Load()}, nil
+		} else {
+			return value.Null, exception.Runtime(nil, "backend '%s' is not found", match[1])
+		}
 	}
 
 	if match := directorHealthyRegex.FindStringSubmatch(name); match != nil {

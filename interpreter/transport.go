@@ -137,7 +137,6 @@ func (i *Interpreter) getOriginHostHeader(backend *value.Backend, defaultHost st
 		pp.Println("dynamic get error")
 		return nil, errors.WithStack(err)
 	} else if v != nil && v.Type() == value.BooleanType {
-		pp.Println("dynamic boolean")
 		// If backend is dynamic, lookup .host_header field value
 		if vv, err := i.getBackendProperty(backend.Value.Properties, "host_header"); err != nil {
 			return nil, errors.WithStack(err)

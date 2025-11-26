@@ -313,6 +313,21 @@ func TestGetFromRegex(t *testing.T) {
 			isError: false,
 		},
 		{
+			input:   "backend.unhealthy.healthy",
+			expect:  &value.Boolean{Value: false},
+			isError: false,
+		},
+		{
+			input:   "backend.not_found.healthy",
+			expect:  value.Null,
+			isError: true,
+		},
+		{
+			input:   "backend.nostatus.healthy",
+			expect:  value.Null,
+			isError: true,
+		},
+		{
 			input:   "director.healthy.healthy",
 			expect:  &value.Boolean{Value: true},
 			isError: false,
