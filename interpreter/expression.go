@@ -241,7 +241,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 		// Evaluate arguments
 		var args []value.Value
 		for _, argExpr := range exp.Arguments {
-			argVal, err := i.ProcessExpression(argExpr, false)
+			argVal, err := i.ProcessExpression(argExpr)
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}
