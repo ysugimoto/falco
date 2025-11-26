@@ -4,13 +4,14 @@ package builtin
 
 import (
 	"net"
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -58,11 +59,11 @@ func Test_Header_filter_except(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
 			req.Header.Set("Fastly-FF", "test")
 			req.Header.Set("X-Custom-Header", "value")
 			req.Header.Set("X-Additional-Header", "value")
-			ctx := &context.Context{Request: req}
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 
 			_, err := Header_filter_except(ctx, &value.Ident{Value: "req"}, tt.name)
 			if tt.isError {

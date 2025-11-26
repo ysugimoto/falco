@@ -110,7 +110,7 @@ func Assign(left, right value.Value) error {
 			lv.Value = rv.Value
 			// Note: left value turns "Set" value even right string is NotSet
 			// see: https://fiddle.fastly.dev/fiddle/68ca66ec
-			lv.IsNotSet = false
+			lv.IsNotSet = rv.IsNotSet
 		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to STRING"))
@@ -153,7 +153,7 @@ func Assign(left, right value.Value) error {
 		case value.IpType: // STRING = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value.String()
-			lv.IsNotSet = false
+			lv.IsNotSet = rv.IsNotSet
 		default:
 			return errors.WithStack(fmt.Errorf("Invalid assignment for STRING type, got %s", right.Type()))
 		}

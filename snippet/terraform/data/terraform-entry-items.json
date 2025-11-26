@@ -1,0 +1,136 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "type": "fastly_service_acl_entries",
+          "index": "test_acl",
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "values": {
+            "entry": [
+              {
+                "comment": "Entry-1",
+                "ip": "127.0.0.1",
+                "negated": true,
+                "subnet": "24"
+              },
+              {
+                "comment": "Entry-2",
+                "ip": "192.0.2.0",
+                "negated": false,
+                "subnet": "32"
+              }
+            ],
+            "service_id": "testFsatlyServiceId"
+          }
+        },
+        {
+          "type": "fastly_service_dictionary_items",
+          "index": "example",
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "values": {
+            "items": {
+              "foo": "bar",
+              "lorem": "ipsum"
+            },
+            "service_id": "testFsatlyServiceId"
+          }
+        },
+        {
+          "type": "fastly_service_vcl",
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "values": {
+            "acl": [
+              {
+                "name": "test_acl"
+              }
+            ],
+            "backend": [
+              {
+                "address": "example.com",
+                "name": "Host 1",
+                "override_host": "example.com",
+                "shield": "tyo-tokyo-jp"
+              },
+              {
+                "address": "httpbin.org",
+                "name": "httpbin_org",
+                "shield": "nrt-tokyo-jp"
+              }
+            ],
+            "dictionary": [
+              {
+                "name": "example",
+                "write_only": false
+              }
+            ],
+            "director": [
+              {
+                "backends": [
+                  "httpbin_org"
+                ],
+                "comment": "",
+                "name": "test-director",
+                "quorum": 75,
+                "retries": 10,
+                "shield": "",
+                "type": 1
+              }
+            ],
+            "id": "testFsatlyServiceId",
+            "logging_bigquery": [],
+            "logging_blobstorage": [],
+            "logging_cloudfiles": [],
+            "logging_datadog": [],
+            "logging_digitalocean": [],
+            "logging_elasticsearch": [],
+            "logging_ftp": [],
+            "logging_gcs": [],
+            "logging_googlepubsub": [],
+            "logging_grafanacloudlogs": [],
+            "logging_heroku": [],
+            "logging_honeycomb": [],
+            "logging_https": [],
+            "logging_kafka": [],
+            "logging_kinesis": [],
+            "logging_logentries": [],
+            "logging_loggly": [],
+            "logging_logshuttle": [],
+            "logging_newrelic": [],
+            "logging_newrelicotlp": [],
+            "logging_openstack": [],
+            "logging_papertrail": [],
+            "logging_s3": [],
+            "logging_scalyr": [],
+            "logging_sftp": [],
+            "logging_splunk": [],
+            "logging_sumologic": [],
+            "logging_syslog": [],
+            "name": "falcoTest",
+            "snippet": [
+              {
+                "content": "set req.http.Example-Recv = \"1\";",
+                "name": "example_recv",
+                "priority": 100,
+                "type": "recv"
+              },
+              {
+                "content": "set req.http.Explicit-Included-Snippet = \"1\";",
+                "name": "explicit_include_snippet",
+                "priority": 100,
+                "type": "none"
+              }
+            ],
+            "vcl": [
+              {
+                "content": "\nbackend httpbin_org {\n  .connect_timeout = 1s;\n  .dynamic = true;\n  .port = \"443\";\n  .host = \"httpbin.org\";\n  .first_byte_timeout = 20s;\n  .max_connections = 500;\n  .between_bytes_timeout = 20s;\n  .share_key = \"xei5lohleex3Joh5ie5uy7du\";\n  .ssl = true;\n  .ssl_sni_hostname = \"httpbin.org\";\n  .ssl_cert_hostname = \"httpbin.org\";\n  .ssl_check_cert = always;\n  .min_tls_version = \"1.2\";\n  .max_tls_version = \"1.2\";\n  //.bypass_local_route_table = false;\n  .probe = {\n    .request = \"GET /status/200 HTTP/1.1\" \"Host: httpbin.org\" \"Connection: close\";\n    .dummy = true;\n    .threshold = 1;\n    .window = 2;\n    .timeout = 5s;\n    .initial = 1;\n    .expected_response = 200;\n    .interval = 10s;\n  }\n}\n\nsub vcl_recv {\n  #FASTLY recv extra comment\n  set req.http.Foo = \"bar\";\n}\n\nsub vcl_miss {\n  #FASTLY MISS\n}\n\nsub vcl_hit {\n  #FASTLY HIT\n}\n\nsub vcl_pass {\n  #FASTLY PASS\n}\n\nsub vcl_hash {\n  #FASTLY HASH\n}\n\nsub vcl_fetch {\n  #FASTLY FETCH\n}\n\nsub vcl_deliver {\n  #FASTLY DELIVER\n  set resp.http.Backend = req.backend;\n}\n\nsub vcl_error {\n  #FASTLY ERROR\n}\n\nsub vcl_log {\n  #FASTLY LOG\n}\n\nsub vcl_pipe {}\n",
+                "main": true,
+                "name": "default"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

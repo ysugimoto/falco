@@ -1,12 +1,13 @@
 package interpreter
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"testing"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -244,7 +245,7 @@ func TestSetStatement(t *testing.T) {
 
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := http.NewRequest(ghttp.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
@@ -331,7 +332,7 @@ func TestBlockStatement(t *testing.T) {
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
 
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := http.NewRequest(ghttp.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}
@@ -426,7 +427,7 @@ func TestBlockStatementWithReturnValue(t *testing.T) {
 		ip.ctx = context.New()
 		ip.SetScope(tt.scope)
 
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		req, err := http.NewRequest(ghttp.MethodGet, "https://example.com", nil)
 		if err != nil {
 			t.Errorf("%s: unexpected error returned: %s", tt.name, err)
 		}

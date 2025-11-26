@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 )
 
 type Option func(c *Context)
@@ -13,7 +13,7 @@ func WithResolver(rslv resolver.Resolver) Option {
 	}
 }
 
-func WithSnippets(fs *snippets.Snippets) Option {
+func WithSnippets(fs *snippet.Snippets) Option {
 	return func(c *Context) {
 		c.fastlySnippets = fs
 	}

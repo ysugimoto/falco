@@ -5,8 +5,8 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type functionMeta struct {

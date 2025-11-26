@@ -4,13 +4,14 @@ package builtin
 
 import (
 	"net"
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -28,8 +29,8 @@ func Test_Header_unset(t *testing.T) {
 			{name: &value.String{Value: "Invalid%Header$<>"}},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{Request: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 			ident := &value.Ident{Value: "req"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})
@@ -92,8 +93,8 @@ func Test_Header_unset(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{Request: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 			ident := &value.Ident{Value: "req"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})
@@ -155,8 +156,8 @@ func Test_Header_unset(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{BackendRequest: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 			ident := &value.Ident{Value: "bereq"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})
@@ -218,8 +219,8 @@ func Test_Header_unset(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{BackendResponse: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{BackendResponse: http.WrapResponse(resp)}
 			ident := &value.Ident{Value: "beresp"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})
@@ -281,8 +282,8 @@ func Test_Header_unset(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{Object: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{Object: http.WrapResponse(resp)}
 			ident := &value.Ident{Value: "obj"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})
@@ -344,8 +345,8 @@ func Test_Header_unset(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{Response: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{Response: http.WrapResponse(resp)}
 			ident := &value.Ident{Value: "resp"}
 
 			_, _ = Header_set(ctx, ident, tt.name, &value.String{Value: "value"})

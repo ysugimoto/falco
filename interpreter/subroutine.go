@@ -244,7 +244,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 }
 
 func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
-	val, err := i.ProcessExpression(stmt.ReturnExpression, false)
+	val, err := i.ProcessExpression(stmt.ReturnExpression)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}

@@ -34,7 +34,7 @@ func (c *Console) evaluate(input string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	val, err := c.interpreter.ProcessExpression(exp, false)
+	val, err := c.interpreter.ProcessExpression(exp)
 	if err != nil {
 		if re, ok := err.(*exception.Exception); ok {
 			return "", errors.New(re.Message) // DO NOT diplay line and position info

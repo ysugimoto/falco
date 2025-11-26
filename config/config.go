@@ -123,6 +123,7 @@ type Config struct {
 	Remote       bool     `cli:"r,remote" yaml:"remote"`
 	Json         bool     `cli:"json"`
 	Request      string   `cli:"request"`
+	Refresh      bool     `cli:"refresh"`
 
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`

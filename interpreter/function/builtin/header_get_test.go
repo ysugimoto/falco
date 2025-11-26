@@ -4,7 +4,7 @@ package builtin
 
 import (
 	"net"
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -31,11 +32,11 @@ func Test_Header_get(t *testing.T) {
 			{name: &value.String{Value: "Invalid%Header$<>"}, expect: ""},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
 			req.Header.Set("X-Custom-Header", "value")
 			req.Header.Add("Object", "foo=valuefoo")
 			req.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{Request: req}
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "req"}, tt.name)
 			if tt.isError {
@@ -90,11 +91,11 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
 			req.Header.Set("X-Custom-Header", "value")
 			req.Header.Add("Object", "foo=valuefoo")
 			req.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{Request: req}
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "req"}, tt.name)
 			if tt.isError {
@@ -154,11 +155,11 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
 			req.Header.Set("X-Custom-Header", "value")
 			req.Header.Add("Object", "foo=valuefoo")
 			req.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{BackendRequest: req}
+			ctx := &context.Context{BackendRequest: http.WrapRequest(req)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "bereq"}, tt.name)
 			if tt.isError {
@@ -218,13 +219,13 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &ghttp.Response{
+				Header: ghttp.Header{},
 			}
 			resp.Header.Set("X-Custom-Header", "value")
 			resp.Header.Add("Object", "foo=valuefoo")
 			resp.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{BackendResponse: resp}
+			ctx := &context.Context{BackendResponse: http.WrapResponse(resp)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "beresp"}, tt.name)
 			if tt.isError {
@@ -284,13 +285,13 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &ghttp.Response{
+				Header: ghttp.Header{},
 			}
 			resp.Header.Set("X-Custom-Header", "value")
 			resp.Header.Add("Object", "foo=valuefoo")
 			resp.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{Object: resp}
+			ctx := &context.Context{Object: http.WrapResponse(resp)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "obj"}, tt.name)
 			if tt.isError {
@@ -350,13 +351,13 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &ghttp.Response{
+				Header: ghttp.Header{},
 			}
 			resp.Header.Set("X-Custom-Header", "value")
 			resp.Header.Add("Object", "foo=valuefoo")
 			resp.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{Response: resp}
+			ctx := &context.Context{Response: http.WrapResponse(resp)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "resp"}, tt.name)
 			if tt.isError {
@@ -416,13 +417,13 @@ func Test_Header_get(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{
-				Header: http.Header{},
+			resp := &ghttp.Response{
+				Header: ghttp.Header{},
 			}
 			resp.Header.Set("X-Custom-Header", "value")
 			resp.Header.Add("Object", "foo=valuefoo")
 			resp.Header.Add("Object", "bar=valuebar")
-			ctx := &context.Context{Response: resp}
+			ctx := &context.Context{Response: http.WrapResponse(resp)}
 
 			v, err := Header_get(ctx, &value.Ident{Value: "foo"}, tt.name)
 			if tt.isError {

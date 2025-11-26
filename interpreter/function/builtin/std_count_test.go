@@ -3,11 +3,12 @@
 package builtin
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -55,31 +56,41 @@ func Test_Std_count(t *testing.T) {
 	}
 
 	ctx := &context.Context{
-		Request: &http.Request{Header: http.Header{
-			"Header-1": {"1"},
-		}},
-		BackendRequest: &http.Request{Header: http.Header{
-			"Header-1": {"1"},
-			"Header-2": {"2"},
-		}},
-		BackendResponse: &http.Response{Header: http.Header{
-			"Header-1": {"1"},
-			"Header-2": {"2"},
-			"Header-3": {"3"},
-		}},
-		Object: &http.Response{Header: http.Header{
-			"Header-1": {"1"},
-			"Header-2": {"2"},
-			"Header-3": {"3"},
-			"Header-4": {"4"},
-		}},
-		Response: &http.Response{Header: http.Header{
-			"Header-1": {"1"},
-			"Header-2": {"2"},
-			"Header-3": {"3"},
-			"Header-4": {"4"},
-			"Header-5": {"5"},
-		}},
+		Request: http.WrapRequest(
+			&ghttp.Request{Header: ghttp.Header{
+				"Header-1": {"1"},
+			}},
+		),
+		BackendRequest: http.WrapRequest(
+			&ghttp.Request{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+			}},
+		),
+		BackendResponse: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+			}},
+		),
+		Object: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+				"Header-4": {"4"},
+			}},
+		),
+		Response: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+				"Header-4": {"4"},
+				"Header-5": {"5"},
+			}},
+		),
 	}
 
 	for _, tt := range tests {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 // handlePCREComment skips a PCRE comment (?#...) and returns the new index.
