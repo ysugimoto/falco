@@ -65,7 +65,7 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 
 func (i *Interpreter) ProcessTestSubroutine(scope icontext.Scope, sub *ast.SubroutineDeclaration) error {
 	i.SetScope(scope)
-	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+	if _, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

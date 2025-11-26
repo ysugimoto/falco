@@ -81,14 +81,15 @@ func (i *Interpreter) sendProcessResponse(w http.ResponseWriter) {
 }
 
 func (i *Interpreter) sendResponse(w http.ResponseWriter) {
-	h := w.Header()
-	for key, val := range i.ctx.Response.Header {
-		for i := range val {
-			h.Add(key, val[i])
-		}
-	}
-	w.WriteHeader(i.ctx.Response.StatusCode)
-	io.Copy(w, i.ctx.Response.Body) // nolint:errcheck
+	// We have to use (*http.Response).Write(io.Writer)
+	// in order to write custom status text which is set via obj.response variable.
+	//
+	// Typically, on handling HTTP, http.ResponseWriter interface is enough to respond regular HTTP specs
+	// but could not set custom status text on the status line.
+	//
+	// Fortunately (*http.Response).Write(io.Writer) method will support to output custom status text
+	// so we need to send HTTP response via this method.
+	i.ctx.Response.Write(w) // nolint:errcheck
 }
 
 func (i *Interpreter) sendPurgeRequestResponse(w http.ResponseWriter, err error) {

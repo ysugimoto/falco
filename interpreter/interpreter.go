@@ -289,7 +289,7 @@ func (i *Interpreter) ProcessRecv() error {
 
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -375,7 +375,7 @@ func (i *Interpreter) ProcessHash() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if state, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		} else if state != HASH && state != NONE {
 			return exception.Runtime(
@@ -411,7 +411,7 @@ func (i *Interpreter) ProcessMiss() error {
 	state := FETCH
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -456,7 +456,7 @@ func (i *Interpreter) ProcessHit() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -519,7 +519,7 @@ func (i *Interpreter) ProcessPass() error {
 	state := PASS
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -599,7 +599,7 @@ func (i *Interpreter) ProcessFetch() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -656,7 +656,7 @@ func (i *Interpreter) ProcessError() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -694,13 +694,29 @@ func (i *Interpreter) ProcessDeliver() error {
 		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
 	}
 
+	// Add Fastly related server info but values are falco's one.
+	// Note that these headers could be removed in vcl_deliver subroutine
+	i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
+	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+	i.ctx.Response.Header.Set("Date", time.Now().Format(http.TimeFormat))
+	i.ctx.Response.Header.Set("Server", "Falco")
+	i.ctx.Response.Header.Set("Via", "Falco")
+
+	// Additionally set cache related headers
+	if i.ctx.CacheHitItem != nil {
+		i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
+		i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+	} else {
+		i.ctx.Response.Header.Set("X-Cache-Hits", "0")
+	}
+
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	var err error
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -720,18 +736,7 @@ func (i *Interpreter) ProcessDeliver() error {
 			}
 		}
 
-		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
-		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-
-		// Additionally set cache related headers
-		if i.ctx.CacheHitItem != nil {
-			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
-			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
-		} else {
-			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
-		}
-		// When Fastly-Debug header is present, add debug header but values are fakes
+		// When Fastly-Debug header is still present after vcl_deliver calling, add debug headers with virtual value
 		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-Path",
@@ -779,7 +784,7 @@ func (i *Interpreter) ProcessLog() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if _, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		}
 	}

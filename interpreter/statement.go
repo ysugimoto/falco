@@ -342,13 +342,23 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	var err error
 	name := stmt.Subroutine.Value
 
+	// Evaluate arguments
+	var args []value.Value
+	for _, argExpr := range stmt.Arguments {
+		argVal, err := i.ProcessExpression(argExpr, false)
+		if err != nil {
+			return NONE, errors.WithStack(err)
+		}
+		args = append(args, argVal)
+	}
+
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
 		// If mocked functional subroutine exists, use it
 		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[name]; ok {
 			sub = mocked
 		}
 
-		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
+		_, state, err = i.ProcessFunctionSubroutine(sub, ds, args)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -357,7 +367,7 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 		if mocked, ok := i.ctx.MockedSubroutines[name]; ok {
 			sub = mocked
 		}
-		state, err = i.ProcessSubroutine(sub, ds)
+		state, err = i.ProcessSubroutine(sub, ds, args)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -445,7 +455,6 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
-	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 
@@ -459,7 +468,6 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
-	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 
