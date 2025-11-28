@@ -345,7 +345,7 @@ func TestTester(t *testing.T) {
 			name:   "assertions test",
 			main:   "../../examples/testing/assertion/assertion.vcl",
 			filter: "*assertion.test.vcl",
-			passes: 5,
+			passes: 6,
 		},
 		{
 			name:   "grouping test",
