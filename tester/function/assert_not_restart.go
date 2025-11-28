@@ -45,4 +45,3 @@ func Assert_not_restart(
 	}
 	return &value.Boolean{Value: true}, nil
 }
-

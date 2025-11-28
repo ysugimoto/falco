@@ -69,4 +69,3 @@ func Test_Assert_not_restart(t *testing.T) {
 		}
 	}
 }
-
