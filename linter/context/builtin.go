@@ -440,7 +440,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32/",
+					},
+				},
+				"hash_xxh32_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32-from-base64/",
 					},
 				},
 				"hash_xxh64": &FunctionSpec{
@@ -451,7 +462,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64/",
+					},
+				},
+				"hash_xxh64_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64-from-base64/",
 					},
 				},
 				"hmac_md5": &FunctionSpec{
@@ -518,6 +540,17 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/",
+					},
+				},
+				"hmac_sha256_with_base64_key": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hmac-sha256-with-base64-key/",
 					},
 				},
 				"hmac_sha512": &FunctionSpec{
@@ -1907,6 +1940,18 @@ func builtinFunctions() Functions {
 						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
+					},
+				},
+				"lookup_regex": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.RegexType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/",
 					},
 				},
 				"lookup_rtime": &FunctionSpec{

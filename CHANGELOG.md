@@ -1,3 +1,18 @@
+## v.1.21.0
+
+- Add functionality for setting backend health during testing [#511](https://github.com/ysugimoto/falco/pull/511) (@emylincon)
+- Fix synthetic response and obj.response relevants [#509](https://github.com/ysugimoto/falco/pull/509) (@ysugimoto)
+- Ability to check origin host header [#492](https://github.com/ysugimoto/falco/pull/492) (@ysugimoto)
+- Add contributor [#508](https://github.com/ysugimoto/falco/pull/508) (@ysugimoto)
+- Copy ForceQury to add query sign even query string is empty [#507](https://github.com/ysugimoto/falco/pull/507) (@ysugimoto)
+- Add table.lookup_regex function + extensive tests [#504](https://github.com/ysugimoto/falco/pull/504) (@jedisct1)
+- Remove legacy waf related documentation reference [#502](https://github.com/ysugimoto/falco/pull/502) (@ysugimoto)
+- Support parameters in custom subs [#501](https://github.com/ysugimoto/falco/pull/501) (@jedisct1)
+- Add digest_hash_{xxh32,xxh64} and digest_hmac_sha256_with_base64_key [#498](https://github.com/ysugimoto/falco/pull/498) (@jedisct1)
+- Add support for AES-CCM in crypto.hex_{encrypt,decrypt} [#497](https://github.com/ysugimoto/falco/pull/497) (@jedisct1)
+- Add AES-GCM support to crypto functions [#495](https://github.com/ysugimoto/falco/pull/495) (@jedisct1)
+- Security update [#494](https://github.com/ysugimoto/falco/pull/494) (@ysugimoto)
+
 ## v1.20.0
 
 - Implement ratelimit related features [#491](https://github.com/ysugimoto/falco/pull/491) (@ysugimoto)

@@ -650,6 +650,8 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		u := getRawUrlPath(req.URL)
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
+		} else if req.URL.ForceQuery {
+			u += "?"
 		}
 		if v := req.URL.RawFragment; v != "" {
 			u += "#" + v
@@ -839,7 +841,14 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 	}
 
 	if match := backendHealthyRegex.FindStringSubmatch(name); match != nil {
-		return &value.Boolean{Value: true}, nil
+		if v, ok := v.ctx.Backends[match[1]]; ok {
+			if v.Healthy == nil {
+				return value.Null, exception.Runtime(nil, "backend '%s' healthy status not set", match[1])
+			}
+			return &value.Boolean{Value: v.Healthy.Load()}, nil
+		} else {
+			return value.Null, exception.Runtime(nil, "backend '%s' is not found", match[1])
+		}
 	}
 
 	if match := directorHealthyRegex.FindStringSubmatch(name); match != nil {
@@ -924,6 +933,8 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		u := getRawUrlPath(v.ctx.Request.URL)
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
+		} else if v.ctx.Request.URL.ForceQuery {
+			u += "?"
 		}
 		if fragment := v.ctx.Request.URL.RawFragment; fragment != "" {
 			u += "#" + fragment
@@ -941,6 +952,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		v.ctx.Request.URL.RawPath = parsed.RawPath
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
+		v.ctx.Request.URL.ForceQuery = parsed.ForceQuery
 		return nil
 	}
 

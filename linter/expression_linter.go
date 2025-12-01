@@ -282,11 +282,11 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		}
 		return types.BoolType
 	case "~", "!~":
-		// Regex operator could compare only STRING,  IP or ACL type
+		// Regex operator could compare only STRING, IP or ACL type
 		if !expectType(left, types.StringType, types.IPType) {
 			l.Error(InvalidTypeExpression(exp.GetMeta(), left, types.StringType, types.IPType, types.AclType).Match(OPERATOR_CONDITIONAL))
-		} else if !expectType(right, types.StringType, types.AclType) {
-			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType).Match(OPERATOR_CONDITIONAL))
+		} else if !expectType(right, types.StringType, types.AclType, types.RegexType) {
+			l.Error(InvalidTypeExpression(exp.GetMeta(), right, types.StringType, types.RegexType).Match(OPERATOR_CONDITIONAL))
 		}
 		if expectType(right, types.StringType) && !isLiteralExpression(exp.Right) {
 			l.Error(&LintError{
@@ -348,6 +348,43 @@ func (l *Linter) lintIfExpression(exp *ast.IfExpression, ctx *context.Context) t
 }
 
 func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx *context.Context) types.Type {
+	// Check if this is a user-defined function subroutine (with return type)
+	if sub, ok := ctx.Subroutines[exp.Function.Value]; ok && sub.Decl.ReturnType != nil {
+		params := sub.Decl.Parameters
+		args := exp.Arguments
+
+		if len(args) != len(params) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    exp.Function.GetMeta().Token,
+				Message: fmt.Sprintf(
+					"Function %s expects %d parameter(s) but got %d argument(s)",
+					exp.Function.Value, len(params), len(args),
+				),
+			})
+		} else {
+			for i, arg := range args {
+				param := params[i]
+				expectedType := types.ValueTypeMap[param.Type.Value]
+				actualType := l.lint(arg, ctx)
+
+				if expectedType != actualType {
+					l.Error(&LintError{
+						Severity: ERROR,
+						Token:    arg.GetMeta().Token,
+						Message: fmt.Sprintf(
+							"Parameter %s expects type %s but got %s",
+							param.Name.Value, expectedType, actualType,
+						),
+					})
+				}
+			}
+		}
+
+		sub.IsUsed = true
+		return types.ValueTypeMap[sub.Decl.ReturnType.Value]
+	}
+
 	fn, err := ctx.GetFunction(exp.Function.Value)
 	if err != nil {
 		l.Error(&LintError{

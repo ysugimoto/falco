@@ -345,7 +345,7 @@ func TestTester(t *testing.T) {
 			name:   "assertions test",
 			main:   "../../examples/testing/assertion/assertion.vcl",
 			filter: "*assertion.test.vcl",
-			passes: 5,
+			passes: 6,
 		},
 		{
 			name:   "grouping test",
@@ -375,7 +375,7 @@ func TestTester(t *testing.T) {
 			name:   "regex grouped variables test",
 			main:   "../../examples/testing/regex/regex.vcl",
 			filter: "*regex.test.vcl",
-			passes: 4,
+			passes: 72,
 		},
 		{
 			name:   "header subfield dealing test",
@@ -400,6 +400,12 @@ func TestTester(t *testing.T) {
 			main:   "../../examples/testing/origin_host_header/main.vcl",
 			filter: "*main.test.vcl",
 			passes: 5,
+		},
+		{
+			name:   "do not omit query sign",
+			main:   "../../examples/testing/query_sign/default.vcl",
+			filter: "*default.test.vcl",
+			passes: 2,
 		},
 	}
 

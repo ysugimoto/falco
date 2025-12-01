@@ -196,6 +196,14 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 				return false
 			},
 		},
+		"testing.set_backend_health": {
+			Scope:            allScope,
+			Call:             Testing_set_backend_health,
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
 	}
 }
 
@@ -270,6 +278,26 @@ func assertionFunctions(i *interpreter.Interpreter, c *shared.Counter) Functions
 					return value.Null, errors.WithStack(err)
 				}
 				v, err := Assert_restart(ctx, i, unwrapped...)
+				if err != nil {
+					c.Fail()
+				} else {
+					c.Pass()
+				}
+				return v, err
+			},
+			CanStatementCall: true,
+			IsIdentArgument: func(i int) bool {
+				return false
+			},
+		},
+		"assert.not_restart": {
+			Scope: allScope,
+			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+				unwrapped, err := unwrapIdentArguments(i, args)
+				if err != nil {
+					return value.Null, errors.WithStack(err)
+				}
+				v, err := Assert_not_restart(ctx, i, unwrapped...)
 				if err != nil {
 					c.Fail()
 				} else {

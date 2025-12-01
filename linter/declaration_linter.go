@@ -299,6 +299,12 @@ func (l *Linter) lintTableProperty(prop *ast.TableProperty, tableType types.Type
 		} else {
 			b.IsUsed = true
 		}
+	case types.RegexType:
+		// REGEX tables store regex patterns as strings
+		vt := l.lint(prop.Value, ctx)
+		if vt != types.StringType {
+			l.Error(InvalidType(prop.Value.GetMeta(), prop.Key.Value, types.StringType, vt))
+		}
 	default:
 		vt := l.lint(prop.Value, ctx)
 		if vt != tableType {
@@ -358,6 +364,26 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 		cc = ctx.UserDefinedFunctionScope(decl.Name.Value, scope, returnType)
 	} else {
 		cc = ctx.Scope(scope)
+	}
+
+	// Declare parameters as local variables
+	for _, param := range decl.Parameters {
+		paramType, ok := types.ValueTypeMap[param.Type.Value]
+		if !ok {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    param.Type.GetMeta().Token,
+				Message:  fmt.Sprintf("Invalid parameter type: %s", param.Type.Value),
+			})
+		} else {
+			if err := cc.Declare(param.Name.Value, paramType, param.GetMeta()); err != nil {
+				l.Error(&LintError{
+					Severity: ERROR,
+					Token:    param.Name.GetMeta().Token,
+					Message:  err.Error(),
+				})
+			}
+		}
 	}
 
 	// Switch context mode which corredponds to call scope and restore after linting block statements
