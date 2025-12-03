@@ -1,8 +1,8 @@
 // http package aims to extend golang's http package.
 // On processing http related things by VCL, some go's zero value is incovenient
-// for dietinguishing whether notset or empty.
-// So that this package wraps origin http.Request/http.Response struct
-// in order to attach additional convenient field for certail VCL processing.
+// for dietinguishing whether the header value is notset or empty.
+// So that this package wraps original http.Request/http.Response struct
+// in order to attach additional convenient field for certain VCL processing.
 
 package http
 
