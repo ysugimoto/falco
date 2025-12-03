@@ -2,6 +2,10 @@ sub force_restart {
   restart;
 }
 
+sub no_restart {
+  set req.http.Bar = "2";
+}
+
 sub force_error {
   error 800 "FORCE ERROR";
 }
