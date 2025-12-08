@@ -1,3 +1,8 @@
+## v.1.21.1
+
+- Add assert.not_restart function and tests [#514](https://github.com/ysugimoto/falco/pull/514) (@emylincon)
+- Formatter supports custom subroutine parameters [#516](https://github.com/ysugimoto/falco/pull/516) (@ysugimoto)
+
 ## v.1.21.0
 
 - Add functionality for setting backend health during testing [#511](https://github.com/ysugimoto/falco/pull/511) (@emylincon)

@@ -489,6 +489,19 @@ func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 
 	buf.Reset()
 	buf.WriteString("call " + stmt.Subroutine.String())
+
+	// Add function arguments if specified
+	if len(stmt.Arguments) > 0 {
+		buf.WriteString("(")
+		length := buf.Len()
+		for i, arg := range stmt.Arguments {
+			buf.WriteString(f.formatExpression(arg).ChunkedString(stmt.Nest, length))
+			if i != len(stmt.Arguments)-1 {
+				buf.WriteString(", ")
+			}
+		}
+		buf.WriteString(")")
+	}
 	buf.WriteString(";")
 
 	return buf.String()

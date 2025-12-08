@@ -486,6 +486,24 @@ sub /* before_name */ foo /* after_name */ STRING /* after_type */ {
 }  // subroutine trailing comment
 `,
 		},
+		{
+			name: "with arguments",
+			input: `
+sub bar(STRING var.str, BACKEND var.backend) BACKEND {
+  if (var.str == "ok") {
+    return var.backend;
+  }
+  return default_backend;
+}
+`,
+			expect: `sub bar(STRING var.str, BACKEND var.backend) BACKEND {
+  if (var.str == "ok") {
+    return var.backend;
+  }
+  return default_backend;
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
