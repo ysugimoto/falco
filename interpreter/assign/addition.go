@@ -1,6 +1,8 @@
 package assign
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -8,6 +10,21 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+func UpdateHash(left *value.String, right value.Value) error {
+	if right.Type() != value.StringType && right.Type() != value.BooleanType && right.IsLiteral() {
+		return errors.WithStack(fmt.Errorf("Only STRING and BOOL literals are allowed, got %s", right.Type()))
+	}
+	if right.Type() == value.IdentType {
+		return errors.WithStack(fmt.Errorf("Unsupported type %s", right.Type()))
+	}
+	h := sha256.New()
+	h.Write([]byte(left.String()))
+	h.Write([]byte(right.String()))
+	hex := hex.EncodeToString(h.Sum(nil))
+	left.Value = hex
+	return nil
+}
 
 // nolint: funlen,gocognit,gocyclo
 func Addition(left, right value.Value) error {

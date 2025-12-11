@@ -1,8 +1,10 @@
 package variable
 
 import (
+	"fmt"
 	"regexp"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -39,6 +41,13 @@ var (
 	// https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/
 	directorHealthyRegex = regexp.MustCompile(`director\.([^\.]+)\.healthy`)
 )
+
+func doUpdateHash(left *value.String, operator string, right value.Value) error {
+	if operator != "+=" {
+		return errors.WithStack(fmt.Errorf("Invalid operator, got %s", operator))
+	}
+	return assign.UpdateHash(left, right)
+}
 
 func doAssign(left value.Value, operator string, right value.Value) error {
 	switch operator {
