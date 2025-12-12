@@ -1,6 +1,8 @@
 package codeview
 
 import (
+	"bytes"
+
 	"github.com/ysugimoto/falco/debugger/colors"
 )
 
@@ -22,17 +24,17 @@ func (c Character) text() string {
 type Line []Character
 
 func (l Line) text() string {
-	var line string
+	var line bytes.Buffer
 	for i := range l {
-		line += l[i].text()
+		line.WriteString(l[i].text())
 	}
-	return line
+	return line.String()
 }
 
 func (l Line) plainText() string {
-	var line string
+	var line bytes.Buffer
 	for i := range l {
-		line += l[i].code
+		line.WriteString(l[i].code)
 	}
-	return line
+	return line.String()
 }

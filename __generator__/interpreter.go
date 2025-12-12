@@ -75,7 +75,7 @@ func (i *Interpreter) generatePredefined() error {
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.predefined").Parse(interpreterPredefinedVariables))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Variables": buf.String(),
 	}); err != nil {
 		return err
@@ -148,7 +148,7 @@ func (i *Interpreter) generateBuiltInFunction() error {
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.builtin").Parse(interpreterBuiltinFunctions))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Functions": buf.String(),
 	}); err != nil {
 		return err
@@ -248,7 +248,7 @@ func (i *Interpreter) generateBuiltInFunctionFile(name string, fn *FunctionSpec)
 		template.New("interpreter.function").
 			Parse(interpreterFunctionImplementation),
 	)
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Name":          ucFirst(strings.ReplaceAll(name, ".", "_")),
 		"Original":      name,
 		"Reference":     fn.Ref,
@@ -294,7 +294,7 @@ func (i *Interpreter) generateBuiltInFunctionTestFile(name string, fn *FunctionS
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.function").Parse(interpreterFunctionTestImplementation))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Name":      ucFirst(strings.ReplaceAll(name, ".", "_")),
 		"Original":  name,
 		"Reference": fn.Ref,
