@@ -147,10 +147,10 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	buf.WriteString("{\n")
 	buf.WriteString(group.String())
 	if len(stmt.Infix) > 0 {
-		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest))
+		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Nest))
 	}
 	// need subtract 1 because RIGHT_BRACE is unnested
-	buf.WriteString(f.indent(stmt.Meta.Nest - 1))
+	buf.WriteString(f.indent(stmt.Nest - 1))
 	buf.WriteString("}")
 
 	return trimMutipleLineFeeds(buf.String())
@@ -341,10 +341,10 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 	for _, c := range stmt.Cases {
 		// If indent_cale_labels is false, subtrat 1 nest level
 		if !f.conf.IndentCaseLabels {
-			c.Meta.Nest--
+			c.Nest--
 		}
-		buf.WriteString(f.formatComment(c.Leading, "\n", c.Meta.Nest))
-		buf.WriteString(f.indent(c.Meta.Nest))
+		buf.WriteString(f.formatComment(c.Leading, "\n", c.Nest))
+		buf.WriteString(f.indent(c.Nest))
 
 		if c.Test != nil {
 			buf.WriteString("case ")
@@ -368,9 +368,9 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 		buf.WriteString(f.formatCaseSectionStatements(c))
 	}
 	if len(stmt.Infix) > 0 {
-		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Meta.Nest+1))
+		buf.WriteString(f.formatComment(stmt.Infix, "\n", stmt.Nest+1))
 	}
-	buf.WriteString(f.indent(stmt.Meta.Nest))
+	buf.WriteString(f.indent(stmt.Nest))
 	buf.WriteString("}")
 
 	return buf.String()

@@ -37,7 +37,7 @@ func (i *Interpreter) ProcessBlockStatement(
 ) (value.Value, State, DebugState, error) {
 
 	var err error
-	var debugState DebugState = ds
+	var debugState = ds
 
 	for _, stmt := range statements {
 		// Call debugger

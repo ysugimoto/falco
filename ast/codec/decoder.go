@@ -186,6 +186,6 @@ func (c *Decoder) decode(frame *Frame) (ast.Statement, error) {
 	case UNSET_STATEMENT:
 		return c.decodeUnsetStatement()
 	default:
-		return nil, errors.WithStack(fmt.Errorf("Unexpected frame found: %s", frame.String()))
+		return nil, errors.WithStack(fmt.Errorf("unexpected frame found: %s", frame.String()))
 	}
 }

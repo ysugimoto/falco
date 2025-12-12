@@ -29,6 +29,6 @@ func CheckProtectedHeader(name string) error {
 		return nil
 	}
 	return errors.WithStack(
-		fmt.Errorf("Could not modify %s header. This header is protected by Fastly", name),
+		fmt.Errorf("could not modify %s header, this header is protected by Fastly", name),
 	)
 }

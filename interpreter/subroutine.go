@@ -97,7 +97,7 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	}()
 
 	var err error
-	var debugState DebugState = ds
+	var debugState = ds
 
 	for _, stmt := range sub.Block.Statements {
 		// Call debugger

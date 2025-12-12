@@ -11,7 +11,7 @@ func LogicalOR(left, right value.Value) error {
 	if left.Type() != value.BooleanType || right.Type() != value.BooleanType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be BOOL for Logical OR operator, left=%s, right=%s",
+				"left and right type must be BOOL for logical OR operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)
@@ -26,7 +26,7 @@ func LogicalAND(left, right value.Value) error {
 	if left.Type() != value.BooleanType || right.Type() != value.BooleanType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be BOOL for Logical AND operator, left=%s, right=%s",
+				"left and right type must be BOOL for logical AND operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)

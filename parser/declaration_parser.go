@@ -34,9 +34,9 @@ func (p *Parser) ParseAclDeclaration() (*ast.AclDeclaration, error) {
 
 	// RIGHT_BRACE leading comments are ACL infix comments
 	SwapLeadingInfix(p.curToken, acl.Meta)
-	acl.Meta.Trailing = p.Trailing()
-	acl.Meta.EndLine = p.curToken.Token.Line
-	acl.Meta.EndPosition = p.curToken.Token.Position
+	acl.Trailing = p.Trailing()
+	acl.EndLine = p.curToken.Token.Line
+	acl.EndPosition = p.curToken.Token.Position
 
 	return acl, nil
 }
@@ -97,8 +97,8 @@ func (p *Parser) ParseAclCidr() (*ast.AclCidr, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	cidr.Meta.EndLine = p.curToken.Token.Line
-	cidr.Meta.EndPosition = endPosition
+	cidr.EndLine = p.curToken.Token.Line
+	cidr.EndPosition = endPosition
 	p.NextToken() // point to semicolon
 
 	// semicolon leading comment will attach whatever IP or Mask
@@ -107,7 +107,7 @@ func (p *Parser) ParseAclCidr() (*ast.AclCidr, error) {
 	} else {
 		SwapLeadingTrailing(p.curToken, cidr.IP.Meta)
 	}
-	cidr.Meta.Trailing = p.Trailing()
+	cidr.Trailing = p.Trailing()
 
 	return cidr, nil
 }
@@ -141,9 +141,9 @@ func (p *Parser) ParseBackendDeclaration() (*ast.BackendDeclaration, error) {
 
 	SwapLeadingInfix(p.peekToken, b.Meta)
 	p.NextToken() // point to RIGHT_BRACE
-	b.Meta.Trailing = p.Trailing()
-	b.Meta.EndLine = p.curToken.Token.Line
-	b.Meta.EndPosition = p.curToken.Token.Position
+	b.Trailing = p.Trailing()
+	b.EndLine = p.curToken.Token.Line
+	b.EndPosition = p.curToken.Token.Position
 
 	return b, nil
 }
@@ -184,12 +184,12 @@ func (p *Parser) ParseBackendProperty() (*ast.BackendProperty, error) {
 
 		p.NextToken() // point to RIGHT_BRACE
 		SwapLeadingInfix(p.curToken, probe.Meta)
-		probe.Meta.Trailing = p.Trailing()
+		probe.Trailing = p.Trailing()
 		prop.Value = probe
-		probe.Meta.EndLine = p.curToken.Token.Line
-		probe.Meta.EndPosition = p.curToken.Token.Position
-		prop.Meta.EndLine = p.curToken.Token.Line
-		prop.Meta.EndPosition = p.curToken.Token.Position
+		probe.EndLine = p.curToken.Token.Line
+		probe.EndPosition = p.curToken.Token.Position
+		prop.EndLine = p.curToken.Token.Line
+		prop.EndPosition = p.curToken.Token.Position
 		return prop, nil
 	}
 
@@ -203,10 +203,10 @@ func (p *Parser) ParseBackendProperty() (*ast.BackendProperty, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.EndLine = prop.Value.GetMeta().EndLine
-	prop.Meta.EndPosition = prop.Value.GetMeta().EndPosition
+	prop.EndLine = prop.Value.GetMeta().EndLine
+	prop.EndPosition = prop.Value.GetMeta().EndPosition
 	p.NextToken() // point to SEMICOLON
-	prop.Meta.Trailing = p.Trailing()
+	prop.Trailing = p.Trailing()
 
 	return prop, nil
 }
@@ -260,9 +260,9 @@ func (p *Parser) ParseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 
 	SwapLeadingInfix(p.peekToken, d.Meta)
 	p.NextToken() // point to RIGHT_BRACE
-	d.Meta.Trailing = p.Trailing()
-	d.Meta.EndLine = p.curToken.Token.Line
-	d.Meta.EndPosition = p.curToken.Token.Position
+	d.Trailing = p.Trailing()
+	d.EndLine = p.curToken.Token.Line
+	d.EndPosition = p.curToken.Token.Position
 
 	return d, nil
 }
@@ -294,10 +294,10 @@ func (p *Parser) ParseDirectorProperty() (ast.Expression, error) {
 	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.EndLine = exp.GetMeta().EndLine
-	prop.Meta.EndPosition = exp.GetMeta().EndPosition
+	prop.EndLine = exp.GetMeta().EndLine
+	prop.EndPosition = exp.GetMeta().EndPosition
 	p.NextToken() // point to SEMICOLON
-	prop.Meta.Trailing = p.Trailing()
+	prop.Trailing = p.Trailing()
 
 	return prop, nil
 }
@@ -338,9 +338,9 @@ func (p *Parser) ParseDirectorBackend() (ast.Expression, error) {
 		if !p.PeekTokenIs(token.SEMICOLON) {
 			return nil, errors.WithStack(MissingSemicolon(p.curToken))
 		}
-		prop.Meta.EndLine = exp.GetMeta().EndLine
-		prop.Meta.EndPosition = exp.GetMeta().EndPosition
-		prop.Meta.Trailing = p.Trailing()
+		prop.EndLine = exp.GetMeta().EndLine
+		prop.EndPosition = exp.GetMeta().EndPosition
+		prop.Trailing = p.Trailing()
 		p.NextToken() // point to SEMICOLON
 
 		backend.Values = append(backend.Values, prop)
@@ -348,9 +348,9 @@ func (p *Parser) ParseDirectorBackend() (ast.Expression, error) {
 
 	SwapLeadingInfix(p.peekToken, backend.Meta)
 	p.NextToken() // point to RIGHT_BRACE
-	backend.Meta.Trailing = p.Trailing()
-	backend.Meta.EndLine = p.curToken.Token.Line
-	backend.Meta.EndPosition = p.curToken.Token.Position
+	backend.Trailing = p.Trailing()
+	backend.EndLine = p.curToken.Token.Line
+	backend.EndPosition = p.curToken.Token.Position
 
 	return backend, nil
 }
@@ -393,9 +393,9 @@ func (p *Parser) ParseTableDeclaration() (*ast.TableDeclaration, error) {
 
 	SwapLeadingInfix(p.peekToken, t.Meta)
 	p.NextToken() // point to RIGHT_BRACE
-	t.Meta.Trailing = p.Trailing()
-	t.Meta.EndLine = p.curToken.Token.Line
-	t.Meta.EndPosition = p.curToken.Token.Position
+	t.Trailing = p.Trailing()
+	t.EndLine = p.curToken.Token.Line
+	t.EndPosition = p.curToken.Token.Position
 
 	return t, nil
 }
@@ -466,19 +466,19 @@ func (p *Parser) ParseTableProperty() (*ast.TableProperty, error) {
 	case token.COMMA:
 		// usual case, user should add Trailing comma for east properties :)
 		prop.HasComma = true
-		prop.Meta.EndLine = prop.Value.GetMeta().EndLine
-		prop.Meta.EndPosition = prop.Value.GetMeta().EndPosition
+		prop.EndLine = prop.Value.GetMeta().EndLine
+		prop.EndPosition = prop.Value.GetMeta().EndPosition
 
 		p.NextToken() // point to COMMA
 		SwapLeadingTrailing(p.curToken, prop.Value.GetMeta())
-		prop.Meta.Trailing = p.Trailing()
+		prop.Trailing = p.Trailing()
 	case token.RIGHT_BRACE:
 		// if peed token is RIGHT_BRACE, it means table declaration end. if also be valid
 		// Note that in this case, we could not Parse Trailing comment. it is Parsed as declaration infix comment.
-		prop.Meta.Trailing = p.Trailing()
+		prop.Trailing = p.Trailing()
 
-		prop.Meta.EndLine = prop.Value.GetMeta().EndLine
-		prop.Meta.EndPosition = prop.Value.GetMeta().EndPosition
+		prop.EndLine = prop.Value.GetMeta().EndLine
+		prop.EndPosition = prop.Value.GetMeta().EndPosition
 
 		// DO NOT advance token!
 
@@ -561,8 +561,8 @@ func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error
 	if s.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	s.Meta.EndLine = p.curToken.Token.Line
-	s.Meta.EndPosition = p.curToken.Token.Position
+	s.EndLine = p.curToken.Token.Line
+	s.EndPosition = p.curToken.Token.Position
 	// After block statement is Parsed, cursor should point to RIGHT_BRACE, end of block statement
 
 	return s, nil
@@ -587,8 +587,8 @@ func (p *Parser) ParsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error
 	if pb.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	pb.Meta.EndLine = p.curToken.Token.Line
-	pb.Meta.EndPosition = p.curToken.Token.Position
+	pb.EndLine = p.curToken.Token.Line
+	pb.EndPosition = p.curToken.Token.Position
 
 	return pb, nil
 }
@@ -612,8 +612,8 @@ func (p *Parser) ParseRatecounterDeclaration() (*ast.RatecounterDeclaration, err
 	if r.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	r.Meta.EndLine = p.curToken.Token.Line
-	r.Meta.EndPosition = p.curToken.Token.Position
+	r.EndLine = p.curToken.Token.Line
+	r.EndPosition = p.curToken.Token.Position
 
 	return r, nil
 }

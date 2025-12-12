@@ -9,7 +9,7 @@ import (
 	"go/format"
 	"text/template"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 type Linter struct {

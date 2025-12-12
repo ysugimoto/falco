@@ -38,7 +38,7 @@ func Division(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			if rv.Value == 0 {
 				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
+				return errors.WithStack(fmt.Errorf("division by zero"))
 			}
 			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(float64(lv.Value)/rv.Value, 1) {
@@ -51,7 +51,7 @@ func Division(left, right value.Value) error {
 				lv.Value /= int64(rv.Value)
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid division INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid division INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType: // FLOAT /= INTEGER
 		lv := value.Unwrap[*value.Float](left)
@@ -60,7 +60,7 @@ func Division(left, right value.Value) error {
 			rv := value.Unwrap[*value.Integer](right)
 			if rv.Value == 0 {
 				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
+				return errors.WithStack(fmt.Errorf("division by zero"))
 			}
 			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value/float64(rv.Value), 1) {
@@ -76,7 +76,7 @@ func Division(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			if rv.Value == 0 {
 				lv.IsNAN = true
-				return errors.WithStack(fmt.Errorf("Division by zero"))
+				return errors.WithStack(fmt.Errorf("division by zero"))
 			}
 			// nolint: gocritic
 			if rv.IsPositiveInf || math.IsInf(lv.Value/rv.Value, 1) {
@@ -89,7 +89,7 @@ func Division(left, right value.Value) error {
 				lv.Value /= rv.Value
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid division FLOAT type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid division FLOAT type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -101,10 +101,10 @@ func Division(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value /= time.Duration(rv.Value)
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid division RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use division assignment for type %s", left.Type()))
 	}
 	return nil
 }

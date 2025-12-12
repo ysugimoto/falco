@@ -293,7 +293,7 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 			}
 			break
 		}
-		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
+		l.Error(fmt.Errorf("unexpected node: %s", node.String()))
 	}
 	return types.NeverType
 }
@@ -561,7 +561,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 			}
 			factory = append(factory, stmt)
 		default:
-			l.Error(fmt.Errorf("Unexpected statement declaration: %s", t.String()))
+			l.Error(fmt.Errorf("unexpected statement declaration: %s", t.String()))
 		}
 	}
 	return factory

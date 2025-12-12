@@ -17,10 +17,7 @@ func (l *Lexer) readString() string {
 	buf.Reset()
 
 	l.readChar()
-	for {
-		if l.char == '"' || l.char == 0x00 {
-			break
-		}
+	for l.char != '"' && l.char != 0x00 {
 		buf.WriteRune(l.char)
 		l.readChar()
 	}
@@ -32,10 +29,7 @@ func (l *Lexer) readBracketString(delimiter string) string {
 	var rs []rune
 	end := []byte(delimiter + "}")
 	l.readChar()
-	for {
-		if l.char == 0x00 {
-			break
-		}
+	for l.char != 0x00 {
 		if l.char == '"' {
 			n, err := l.r.Peek(len(end))
 			if err != nil {
@@ -86,10 +80,7 @@ func (l *Lexer) readMultiComment() string {
 	defer pool.Put(buf)
 	buf.Reset()
 
-	for {
-		if l.char == 0x00 {
-			break
-		}
+	for l.char != 0x00 {
 		if l.char == '*' && l.peekChar() == '/' {
 			buf.WriteRune(l.char)
 			l.readChar()

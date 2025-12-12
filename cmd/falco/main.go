@@ -142,14 +142,14 @@ func main() {
 		resolvers, err = resolver.NewGlobResolver(c.Commands[1:]...)
 		action = c.Commands.At(0)
 		if len(resolvers) == 0 {
-			err = fmt.Errorf("No input files speficied")
+			err = fmt.Errorf("no input files speficied")
 		}
 	case "":
 		printHelp("")
 		os.Exit(Fail)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
-			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
+			err = fmt.Errorf("unrecognized subcommand: %s", c.Commands.At(0))
 		} else {
 			// "lint" command provides single file of service, then resolvers size is always 1
 			resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
@@ -415,11 +415,11 @@ func printCodeLine(lx *lexer.Lexer, tok token.Token) {
 		if !ok {
 			continue
 		}
-		color := white
+		c := white
 		if l == problemLine {
-			color = yellow
+			c = yellow
 		}
-		writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+		writeln(c, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
 	}
 }
 

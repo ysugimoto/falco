@@ -65,7 +65,7 @@ func Subtraction(left, right value.Value) error {
 				lv.Value -= rv.Value.Unix()
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid subtraction INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
@@ -117,7 +117,7 @@ func Subtraction(left, right value.Value) error {
 				lv.Value -= float64(rv.Value.Unix())
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction FLOAT type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid subtraction FLOAT type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -144,7 +144,7 @@ func Subtraction(left, right value.Value) error {
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value -= time.Duration(rv.Value.Unix())
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid subtraction RTIME type, got %s", right.Type()))
 		}
 	case value.TimeType:
 		lv := value.Unwrap[*value.Time](left)
@@ -173,10 +173,10 @@ func Subtraction(left, right value.Value) error {
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = lv.Value.Add(-rv.Value)
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid subtraction TIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid subtraction TIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use subtraction assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use subtraction assignment for type %s", left.Type()))
 	}
 	return nil
 }

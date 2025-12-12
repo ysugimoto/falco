@@ -319,7 +319,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		port := req.RemoteAddr[idx+1:]
 		if num, err := strconv.ParseInt(port, 10, 64); err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Failed to convert port number from string",
+				"failed to convert port number from string",
 			))
 		} else {
 			return &value.Integer{Value: num}, nil
@@ -441,7 +441,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		if addr == nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Failed to get local server IP address",
+				"failed to get local server IP address",
 			))
 		}
 		return &value.IP{Value: addr}, nil
@@ -574,14 +574,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Could not read request body",
+					"could not read request body",
 				))
 			}
 			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Request body is limited to 8KB",
+					"request body is limited to 8KB",
 				))
 			}
 			return &value.String{Value: b.String()}, nil
@@ -594,14 +594,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Could not read request body",
+					"could not read request body",
 				))
 			}
 			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Request body is limited to 8KB",
+					"request body is limited to 8KB",
 				))
 			}
 			return &value.String{
@@ -793,7 +793,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	}
 
 	return value.Null, errors.WithStack(fmt.Errorf(
-		"Undefined variable %s", name,
+		"undefined variable %s", name,
 	))
 }
 
@@ -976,7 +976,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	return errors.WithStack(fmt.Errorf(
-		"Variable %s is not found or could not set in scope: %s", name, s.String(),
+		"variable %s is not found or could not set in scope: %s", name, s.String(),
 	))
 }
 
@@ -985,7 +985,7 @@ func (v *AllScopeVariables) Add(s context.Scope, name string, val value.Value) e
 	match := requestHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return errors.WithStack(fmt.Errorf(
-			"Variable %s is not found or could not add. Normally add statement could use for HTTP header", name,
+			"variable %s is not found or could not add. Normally add statement could use for HTTP header", name,
 		))
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
@@ -1004,7 +1004,7 @@ func (v *AllScopeVariables) Unset(s context.Scope, name string) error {
 	match := requestHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return errors.WithStack(fmt.Errorf(
-			"Variable %s is not found or could not unset", name,
+			"variable %s is not found or could not unset", name,
 		))
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {

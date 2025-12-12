@@ -48,7 +48,7 @@ func (c *CodeView) SetFile(file string, line int) {
 
 func (c *CodeView) Draw(screen tcell.Screen) {
 	if c.file == "" {
-		c.TextView.Clear()
+		c.Clear()
 	} else {
 		c.DrawCode(screen)
 	}
@@ -56,7 +56,7 @@ func (c *CodeView) Draw(screen tcell.Screen) {
 }
 
 func (c *CodeView) DrawCode(screen tcell.Screen) {
-	w := c.TextView.BatchWriter()
+	w := c.BatchWriter()
 	defer w.Close()
 	w.Clear()
 
@@ -103,12 +103,12 @@ func (c *CodeView) DrawCode(screen tcell.Screen) {
 		line := lines[i]
 		lineNumber := fmt.Sprintf(format, i+1)
 
-		switch {
+		switch i {
 		// If print line is the last of lines, write without line-feed
-		case i == end:
+		case end:
 			fmt.Fprint(w, colors.Gray(lineNumber)+" "+line.text())
 		// If print line is debugging, highlight it
-		case i == c.line-1:
+		case c.line - 1:
 			pt := line.plainText()
 			offset := max(width-(len(pt+lineNumber)+hightlightOffset), 0)
 			suffix := strings.Repeat(" ", offset)
