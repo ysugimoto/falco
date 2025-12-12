@@ -192,7 +192,7 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 // Read peek chunk and combine if the chunk is placed on the same line
 func (c *ChunkBuffer) combineInfixChunk() string {
 	var peek *Chunk
-	var expr string
+	var expr bytes.Buffer
 	var index int
 
 	for {
@@ -207,7 +207,7 @@ func (c *ChunkBuffer) combineInfixChunk() string {
 			goto OUT
 		// If peek chunk is Comment, should be combined and look up next chunk
 		case Comment:
-			expr += " " + peek.buffer
+			expr.WriteString(" " + peek.buffer)
 		default:
 			return ""
 		}
@@ -219,7 +219,7 @@ OUT:
 	if !ok {
 		return ""
 	}
-	expr += " " + peek.buffer
+	expr.WriteString(" " + peek.buffer)
 
 	// Skip infix comments
 	for {
@@ -229,13 +229,13 @@ OUT:
 			return ""
 		}
 		if peek.Type == Comment {
-			expr += " " + peek.buffer
+			expr.WriteString(" " + peek.buffer)
 			continue
 		}
 		break
 	}
 	// Finally, add token buffer
-	expr += " " + peek.buffer
+	expr.WriteString(" " + peek.buffer)
 
 	// Forward index position to be read
 	for index > 0 {
@@ -243,7 +243,7 @@ OUT:
 		index--
 	}
 
-	return expr
+	return expr.String()
 }
 
 // nextLine() returns line feed and indent string

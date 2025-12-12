@@ -80,7 +80,7 @@ func (c *Console) generateSuggestions() error {
 			}).
 			Parse(consoleSuggestions),
 	)
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Suggestions": suggestions,
 		"Scopes": []string{
 			"RECV",

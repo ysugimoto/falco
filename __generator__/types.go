@@ -34,7 +34,7 @@ func (f *FunctionSpec) String() string {
 	}
 	switch f.Extra {
 	case "LOOKUP_TABLE":
-		buf.WriteString("Extra: func(c *Context, name string) interface{} { return c.Tables[name] },\n")
+		buf.WriteString("Extra: func(c *Context, name string) any { return c.Tables[name] },\n")
 	}
 	buf.WriteString(fmt.Sprintf("Scopes: %s,\n", strings.Join(f.On, "|")))
 	buf.WriteString(fmt.Sprintf(`Reference: "%s"`+",\n", f.Ref))

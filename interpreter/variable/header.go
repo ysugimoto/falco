@@ -107,10 +107,9 @@ func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 
 func unsetRequestHeaderValue(r *http.Request, name string) {
 	// If unset header name ends with "*", remove all matched headers
-	if strings.HasSuffix(name, "*") {
+	if name, ok := strings.CutSuffix(name, "*"); ok {
 		// Note that the wildcard does not work for header subfield
 		// ref: https://fiddle.fastly.dev/fiddle/288403c5
-		name = strings.TrimSuffix(name, "*")
 		for key := range r.Header {
 			if strings.HasPrefix(key, name) {
 				r.Header.Del(key)
@@ -185,10 +184,9 @@ func removeCookieByName(r *http.Request, cookieName string) {
 
 func unsetResponseHeaderValue(r *http.Response, name string) {
 	// If unset header name ends with "*", remove all matched headers
-	if strings.HasSuffix(name, "*") {
+	if name, ok := strings.CutSuffix(name, "*"); ok {
 		// Note that the wildcard does not work for header subfield
 		// ref: https://fiddle.fastly.dev/fiddle/288403c5
-		name = strings.TrimSuffix(name, "*")
 		for key := range r.Header {
 			if strings.HasPrefix(key, name) {
 				r.Header.Del(key)
