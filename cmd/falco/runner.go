@@ -23,9 +23,8 @@ import (
 	lcontext "github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester"
-	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -67,13 +66,6 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
-type Fetcher interface {
-	Backends() ([]*types.RemoteBackend, error)
-	Dictionaries() ([]*types.RemoteDictionary, error)
-	Acls() ([]*types.RemoteAcl, error)
-	Snippets() ([]*types.RemoteVCL, error)
-}
-
 type RunMode int
 
 const (
@@ -84,7 +76,7 @@ const (
 type Runner struct {
 	overrides map[string]linter.Severity
 	lexers    map[string]*lexer.Lexer
-	snippets  *snippets.Snippets
+	snippets  *snippet.Snippets
 	config    *config.Config
 
 	level       Level
@@ -108,7 +100,7 @@ func (r *Runner) message(c *color.Color, format string, args ...any) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
+func NewRunner(c *config.Config, fetcher snippet.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -120,14 +112,26 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) *Runner {
 
 	// If fetch interface is provided, communicate with it
 	if fetcher != nil {
-		s, err := snippets.Fetch(fetcher)
+		var snippets *snippet.Snippets
+		var err error
+
+		// Lookup snippets cache
+		cache := fetcher.LookupCache(c.Refresh)
+		if cache != nil {
+			snippets = cache
+			r.message(white, "Use cached remote snippets.\n")
+		} else {
+			snippets, err = snippet.Fetch(fetcher)
+		}
 		if err != nil {
 			r.message(red, "%s\n", err.Error())
 		}
-		r.snippets = s
+		r.snippets = snippets
 		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
 			r.message(red, "%s\n", err.Error())
 		}
+		// ...and save cache after the constructor
+		defer fetcher.WriteCache(snippets)
 	}
 
 	// Set verbose level
@@ -193,7 +197,11 @@ func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		for _, snip := range r.snippets.EmbedSnippets() {
+		snippets, err := r.snippets.EmbedSnippets(false) // disable TLS on linting
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		for _, snip := range snippets {
 			s, err := r.parseVCL(snip.Name, snip.Data)
 			if err != nil {
 				return nil, err
@@ -400,12 +408,15 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 
 func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	sc := r.config.Simulator
+	isTLS := sc.KeyFile != "" && sc.CertFile != ""
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
 		icontext.WithActualResponse(sc.IsProxyResponse),
+		icontext.WithTLServer(isTLS),
 	}
+
 	if r.snippets != nil {
 		options = append(options, icontext.WithSnippets(r.snippets))
 	}
@@ -436,7 +447,7 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	}
 
 	var err error
-	if sc.KeyFile != "" && sc.CertFile != "" {
+	if isTLS {
 		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
 		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
 	} else {

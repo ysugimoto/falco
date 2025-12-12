@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -123,11 +124,21 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		if err := i.generateBuiltInFunctionTestFile(key, v); err != nil {
 			return err
 		}
-		signature := fmt.Sprintf(
-			"Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) { return builtin.%s(ctx, args...) }",
-			ucFirst(strings.ReplaceAll(key, ".", "_")),
+
+		buf.WriteString("Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {\n")
+		if indicies := i.createFunctionStringifyVariableIndicies(v.Arguments); indicies != "" {
+			buf.WriteString("var err error\n")
+			buf.WriteString(
+				fmt.Sprintf("args, err = stringifyVariableArguments(\"%s\", args, %s)\n", key, indicies),
+			)
+			buf.WriteString("if err != nil {\n")
+			buf.WriteString("return value.Null, errors.WithStack(err)\n")
+			buf.WriteString("}\n")
+		}
+		buf.WriteString(
+			fmt.Sprintf("return builtin.%s(ctx, args...)\n", ucFirst(strings.ReplaceAll(key, ".", "_"))),
 		)
-		buf.WriteString(signature + ",\n")
+		buf.WriteString("},\n")
 		buf.WriteString(fmt.Sprintf("CanStatementCall: %t,\n", v.Return == ""))
 		buf.WriteString("IsIdentArgument: func(i int) bool {\n")
 		buf.WriteString(fmt.Sprintf("return %s\n", i.createFunctionIdentArguments(v.Arguments)))
@@ -157,6 +168,37 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		return err
 	}
 	return nil
+}
+
+func (i *Interpreter) createFunctionStringifyVariableIndicies(arguments [][]string) string {
+	// Find max length of arguments
+	var maxArgs []string
+	for _, args := range arguments {
+		if len(args) > len(maxArgs) {
+			maxArgs = args
+		}
+	}
+
+	stack := make(map[int]struct{})
+	// Find ID type argument position
+	for i, arg := range maxArgs {
+		if arg == "STRING" {
+			stack[i] = struct{}{}
+		}
+	}
+
+	if len(stack) == 0 {
+		return ""
+	}
+
+	indicies := make([]string, len(stack))
+	var idx int
+	for i := range stack {
+		indicies[idx] = fmt.Sprintf("%d: {}", i)
+		idx++
+	}
+	slices.Sort(indicies)
+	return fmt.Sprintf("map[int]struct{}{%s}", strings.Join(indicies, ", "))
 }
 
 func (i *Interpreter) createFunctionIdentArguments(arguments [][]string) string {

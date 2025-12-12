@@ -1,7 +1,7 @@
 package variable
 
 import (
-	"net/http"
+	ghttp "net/http"
 	"net/url"
 	"sync/atomic"
 	"testing"
@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -20,9 +21,11 @@ func createScopeVars(urlStr string) *AllScopeVariables {
 	unhealthy.Store(false)
 	return &AllScopeVariables{
 		ctx: &context.Context{
-			Request: &http.Request{
-				URL: parsedUrl,
-			},
+			Request: http.WrapRequest(
+				&ghttp.Request{
+					URL: parsedUrl,
+				},
+			),
 			Backends: map[string]*value.Backend{
 				"healthy": {
 					Value: &ast.BackendDeclaration{

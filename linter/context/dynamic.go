@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 func dynamicBackend() *Object {

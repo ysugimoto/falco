@@ -6,9 +6,9 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type Severity string
