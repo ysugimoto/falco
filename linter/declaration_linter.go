@@ -346,7 +346,7 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	if scope == -1 {
 		err := &LintError{
 			Severity: WARNING,
-			Token:    decl.Meta.Token,
+			Token:    decl.Token,
 			Message: fmt.Sprintf(
 				`Cannot recognize subrountine call scope for "%s"`,
 				decl.Name.Value,

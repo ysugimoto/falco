@@ -19,7 +19,6 @@ import (
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
-	"github.com/ysugimoto/falco/linter/context"
 	lcontext "github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
@@ -164,7 +163,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	options := []lcontext.Option{lcontext.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithSnippets(r.snippets))
+		options = append(options, lcontext.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -371,10 +370,10 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 }
 
 func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
-	options := []context.Option{context.WithResolver(rslv)}
+	options := []lcontext.Option{lcontext.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithSnippets(r.snippets))
+		options = append(options, lcontext.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -383,7 +382,7 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	}
 
 	// Note: this context is not Go context, our parsing context :)
-	ctx := context.New(options...)
+	ctx := lcontext.New(options...)
 
 	if _, err := r.run(ctx, main, RunModeStat); err != nil {
 		return nil, err

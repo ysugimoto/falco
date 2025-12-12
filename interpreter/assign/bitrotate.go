@@ -12,7 +12,7 @@ func LeftRotate(left, right value.Value) error {
 	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be INTEGER for Rotate Left operator, left=%s, right=%s",
+				"left and right type must be INTEGER for rotate-left operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)
@@ -33,7 +33,7 @@ func RightRotate(left, right value.Value) error {
 	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be INTEGER for Rotate Right operator, left=%s, right=%s",
+				"left and right type must be INTEGER for rotate-right operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)

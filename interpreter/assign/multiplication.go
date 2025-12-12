@@ -42,7 +42,7 @@ func Multiplication(left, right value.Value) error {
 				lv.Value = int64(float64(lv.Value) * rv.Value)
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid multiplication INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
@@ -72,7 +72,7 @@ func Multiplication(left, right value.Value) error {
 				lv.Value *= rv.Value
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication FLOAT type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid multiplication FLOAT type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -84,10 +84,10 @@ func Multiplication(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value *= time.Duration(rv.Value)
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid multiplication RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid multiplication RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use multiplication assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use multiplication assignment for type %s", left.Type()))
 	}
 	return nil
 }

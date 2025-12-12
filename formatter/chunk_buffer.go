@@ -50,7 +50,7 @@ func (c *Chunk) isLineComment() bool {
 	return string(prefix) != "/*"
 }
 
-// ChunkBuffer struct reperesents limited-line chunked string from configration.
+// ChunkBuffer struct reperesents limited-line chunked string from configuration.
 type ChunkBuffer struct {
 	chunks []*Chunk
 	conf   *config.FormatConfig

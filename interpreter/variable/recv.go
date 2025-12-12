@@ -72,7 +72,7 @@ func (v *RecvScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not parse remote address",
+				"could not parse remote address",
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
