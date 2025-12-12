@@ -1,9 +1,12 @@
 package ast
 
+import (
+	"strings"
+)
+
 func indent(lv int) string {
-	var str string
-	for range lv {
-		str += "  "
+	if lv < 1 {
+		return ""
 	}
-	return str
+	return strings.Repeat("  ", lv)
 }

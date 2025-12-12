@@ -55,7 +55,7 @@ type FunctionSpec struct {
 type BuiltinFunction struct {
 	Arguments 						[][]types.Type
 	Return    						types.Type
-	Extra     						func(c *Context, name string) interface{}
+	Extra     						func(c *Context, name string) any
 	Scopes    						int
 	Reference 						string
 	IsUserDefinedFunction bool

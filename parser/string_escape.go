@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -14,7 +15,7 @@ import (
 // Parse string escapes and return the resulting string with the decoded escaped
 // values.
 func decodeStringEscapes(s string) (string, error) {
-	var parsed string
+	var parsed bytes.Buffer
 	r := bufio.NewReader(strings.NewReader(s))
 
 	for {
@@ -39,13 +40,13 @@ func decodeStringEscapes(s string) (string, error) {
 			} else if err != nil {
 				return "", err
 			}
-			parsed += s
+			parsed.WriteString(s)
 		} else {
-			parsed += string(c)
+			parsed.WriteString(string(c))
 		}
 	}
 
-	return parsed, nil
+	return parsed.String(), nil
 }
 
 // isHex reports whether the rune is a hex digit.
