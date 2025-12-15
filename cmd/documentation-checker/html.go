@@ -33,7 +33,7 @@ func fetchFastlyDocument(ctx context.Context, url string, m *sync.Map) error {
 	if err != nil {
 		return errors.WithStack(err)
 	} else if resp.StatusCode != http.StatusOK {
-		return errors.WithStack(fmt.Errorf("Uexpected status code: %d, url: %s", resp.StatusCode, url))
+		return errors.WithStack(fmt.Errorf("uexpected status code: %d, url: %s", resp.StatusCode, url))
 	}
 	node, err := html.Parse(resp.Body)
 	if err != nil {
@@ -41,7 +41,7 @@ func fetchFastlyDocument(ctx context.Context, url string, m *sync.Map) error {
 	}
 	wrapper := findLinkWrapperNode(node)
 	if wrapper == nil {
-		return errors.WithStack(fmt.Errorf("Wrapper node is nil, url: %s", url))
+		return errors.WithStack(fmt.Errorf("wrapper node is nil, url: %s", url))
 	}
 	for c := wrapper.FirstChild; c != nil; c = c.NextSibling {
 		if c.Type != html.ElementNode || c.DataAtom != atom.Li {

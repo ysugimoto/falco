@@ -63,13 +63,13 @@ func Run(defaultScope string) error {
 	scope := context.ScopeByString(defaultScope)
 	switch scope {
 	case context.UnknownScope:
-		return fmt.Errorf("Invalid scope: %s", defaultScope)
+		return fmt.Errorf("invalid scope: %s", defaultScope)
 	case context.InitScope:
-		return fmt.Errorf("Could not use INIT scope on console")
+		return fmt.Errorf("could not use INIT scope on console")
 	}
 	ip := interpreter.New()
 	if err := ip.ConsoleProcessInit(); err != nil {
-		return fmt.Errorf("Failed to initialize interpreter: %s", err)
+		return fmt.Errorf("failed to initialize interpreter: %s", err)
 	}
 	ip.SetScope(scope)
 	displayHelp()

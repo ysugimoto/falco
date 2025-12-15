@@ -120,7 +120,7 @@ func (c *Encoder) encode(stmt ast.Statement) (*Frame, error) {
 	case *ast.UnsetStatement:
 		frame = c.encodeUnsetStatement(t)
 	default:
-		return nil, fmt.Errorf("Unknown node provided: %s", stmt.GetMeta().Token.Literal)
+		return nil, fmt.Errorf("unknown node provided: %s", stmt.GetMeta().Token.Literal)
 	}
 	return frame, nil
 }

@@ -222,13 +222,13 @@ func (c *Context) GetRatecounterVariable(name string) (types.Type, error) {
 	// Ratecounter variables have the shape: ratecounter.{Variable Name}.[bucket/rate].Time
 	nameComponents := strings.Split(name, ".")
 	if len(nameComponents) != 4 {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	ratecounterVariableName := nameComponents[1]
 	// Check first if this ratecounter is defined in the first place.
 	if _, ok := c.Ratecounters[ratecounterVariableName]; !ok {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	// nameComponents[0] should be "ratecounter"
@@ -239,13 +239,13 @@ func (c *Context) GetRatecounterVariable(name string) (types.Type, error) {
 		return v.Value.Get, nil
 	}
 
-	return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+	return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 }
 
 func (c *Context) AddAcl(name string, acl *types.Acl) error {
 	// check existence
 	if _, duplicated := c.Acls[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of ACL "%s"`, name)
+		return fmt.Errorf(`duplicate definition of ACL "%s"`, name)
 	}
 	c.Acls[name] = acl
 	return nil
@@ -254,7 +254,7 @@ func (c *Context) AddAcl(name string, acl *types.Acl) error {
 func (c *Context) AddBackend(name string, backend *types.Backend) error {
 	// check existence
 	if _, duplicated := c.Backends[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of backend "%s"`, name)
+		return fmt.Errorf(`duplicate definition of backend "%s"`, name)
 	}
 	c.Backends[name] = backend
 
@@ -267,7 +267,7 @@ func (c *Context) AddBackend(name string, backend *types.Backend) error {
 func (c *Context) AddTable(name string, table *types.Table) error {
 	// check existence
 	if _, duplicated := c.Tables[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of table "%s"`, name)
+		return fmt.Errorf(`duplicate definition of table "%s"`, name)
 	}
 	c.Tables[name] = table
 	return nil
@@ -276,7 +276,7 @@ func (c *Context) AddTable(name string, table *types.Table) error {
 func (c *Context) AddDirector(name string, director *types.Director) error {
 	// check existence
 	if _, duplicated := c.Directors[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of director "%s"`, name)
+		return fmt.Errorf(`duplicate definition of director "%s"`, name)
 	}
 	c.Directors[name] = director
 
@@ -312,13 +312,13 @@ func (c *Context) AddSubroutine(name string, subroutine *types.Subroutine) error
 	// check existence
 	if _, duplicated := c.functions[name]; duplicated {
 		if !IsFastlySubroutine(name) {
-			return fmt.Errorf(`Duplicate definition of subroutine "%s"`, name)
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
 	}
 
 	if _, duplicated := c.Subroutines[name]; duplicated {
 		if !IsFastlySubroutine(name) {
-			return fmt.Errorf(`Duplicate definition of subroutine "%s"`, name)
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
 	}
 
@@ -330,13 +330,13 @@ func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType typ
 	// check existence
 	if _, duplicated := c.functions[name]; duplicated {
 		if !IsFastlySubroutine(name) {
-			return fmt.Errorf(`Duplicate definition of subroutine "%s"`, name)
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
 	}
 
 	if _, duplicated := c.Subroutines[name]; duplicated {
 		if !IsFastlySubroutine(name) {
-			return fmt.Errorf(`Duplicate definition of subroutine "%s"`, name)
+			return fmt.Errorf(`duplicate definition of subroutine "%s"`, name)
 		}
 	}
 
@@ -368,7 +368,7 @@ func (c *Context) AddUserDefinedFunction(name string, scopes int, returnType typ
 func (c *Context) AddPenaltybox(name string, penaltybox *types.Penaltybox) error {
 	// check existence
 	if _, duplicated := c.Penaltyboxes[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of penaltybox "%s"`, name)
+		return fmt.Errorf(`duplicate definition of penaltybox "%s"`, name)
 	} else {
 		c.Penaltyboxes[name] = penaltybox
 	}
@@ -378,7 +378,7 @@ func (c *Context) AddPenaltybox(name string, penaltybox *types.Penaltybox) error
 func (c *Context) AddRatecounter(name string, ratecounter *types.Ratecounter) error {
 	// check existence
 	if _, duplicated := c.Ratecounters[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of ratecounter "%s"`, name)
+		return fmt.Errorf(`duplicate definition of ratecounter "%s"`, name)
 	} else {
 		c.Ratecounters[name] = ratecounter
 	}
@@ -391,7 +391,7 @@ func (c *Context) AddGoto(name string, newGoto *types.Goto) error {
 
 	// check existence
 	if _, duplicated := c.Gotos[name]; duplicated {
-		return fmt.Errorf(`Duplicate definition of goto "%s"`, name)
+		return fmt.Errorf(`duplicate definition of goto "%s"`, name)
 	} else {
 		c.Gotos[name] = newGoto
 	}
@@ -415,7 +415,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 
 	obj, ok := c.Variables[first]
 	if !ok {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	for _, key := range remains {
@@ -430,7 +430,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 				}
 				obj = obj.Items[key]
 			} else {
-				return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 			}
 		} else {
 			obj = v
@@ -439,7 +439,7 @@ func (c *Context) Get(name string) (types.Type, error) {
 
 	// Check object existence
 	if obj == nil || obj.Value == nil {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 	// Value exists, but unable to access in current scope
 	if err := CanAccessVariableInScope(obj.Value.Scopes, obj.Value.Reference, name, c.curMode); err != nil {
@@ -448,9 +448,9 @@ func (c *Context) Get(name string) (types.Type, error) {
 
 	// Unable "Get" access
 	if obj.Value.Get == types.NeverType {
-		message := fmt.Sprintf(`Variable "%s" could not read`, name)
+		message := fmt.Sprintf(`variable "%s" could not read`, name)
 		if obj.Value.Reference != "" {
-			message += "\nSee reference documentation: " + obj.Value.Reference
+			message += "\nsee reference documentation: " + obj.Value.Reference
 		}
 		return types.NullType, errors.New(message)
 	}
@@ -471,12 +471,12 @@ func (c *Context) Set(name string) (types.Type, error) {
 
 	// regex group variable like "re.group.N" is known read-only,
 	if first == "re" {
-		return types.NullType, fmt.Errorf(`Variable "%s" is read-only`, name)
+		return types.NullType, fmt.Errorf(`variable "%s" is read-only`, name)
 	}
 
 	obj, ok := c.Variables[first]
 	if !ok {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	for _, key := range remains {
@@ -492,7 +492,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 				}
 				obj = obj.Items[key]
 			} else {
-				return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 			}
 		} else {
 			obj = v
@@ -501,7 +501,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 
 	// Check object existence
 	if obj == nil || obj.Value == nil {
-		return types.NullType, fmt.Errorf(`Undefined variable "%s"`, name)
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	// Value exists, but unable to access in current scope
@@ -511,9 +511,9 @@ func (c *Context) Set(name string) (types.Type, error) {
 
 	// Unable "Set" access, means read-only.
 	if obj.Value.Set == types.NeverType {
-		message := fmt.Sprintf(`Variable "%s" is read-only`, name)
+		message := fmt.Sprintf(`variable "%s" is read-only`, name)
 		if obj.Value.Reference != "" {
-			message += "\nSee reference documentation: " + obj.Value.Reference
+			message += "\nsee reference documentation: " + obj.Value.Reference
 		}
 		return types.NullType, errors.New(message)
 	}
@@ -527,7 +527,7 @@ func (c *Context) Set(name string) (types.Type, error) {
 func (c *Context) Declare(name string, valueType types.Type, m *ast.Meta) error {
 	if _, err := c.Get(name); err == nil {
 		// If error is nil, variable already defined
-		return fmt.Errorf(`Variable "%s" is already declared`, name)
+		return fmt.Errorf(`variable "%s" is already declared`, name)
 	}
 
 	first, remains := splitName(name)
@@ -536,7 +536,7 @@ func (c *Context) Declare(name string, valueType types.Type, m *ast.Meta) error 
 	// declare local var.variableName [type]
 	// which means that they must be prefixed with var.
 	if first != "var" {
-		return fmt.Errorf(`Variable "%s" declaration error: Variable must be prefixed with 'var.'`, name)
+		return fmt.Errorf(`variable "%s" declaration error: variable must be prefixed with 'var.'`, name)
 	}
 
 	obj, ok := c.Variables[first]
@@ -576,12 +576,12 @@ func (c *Context) Unset(name string) error {
 
 	// regex group variable like "re.group.N" is known read-only,
 	if first == "re" {
-		return fmt.Errorf(`Variable "%s" is read-only`, name)
+		return fmt.Errorf(`variable "%s" is read-only`, name)
 	}
 
 	obj, ok := c.Variables[first]
 	if !ok {
-		return fmt.Errorf(`Undefined variable "%s"`, name)
+		return fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	for _, key := range remains {
@@ -592,7 +592,7 @@ func (c *Context) Unset(name string) error {
 					Value: v.Value,
 				}
 			} else {
-				return fmt.Errorf(`Undefined variable "%s"`, name)
+				return fmt.Errorf(`undefined variable "%s"`, name)
 			}
 		} else {
 			obj = v
@@ -609,9 +609,9 @@ func (c *Context) Unset(name string) error {
 	}
 	// Unable "Unset" access, means could not unset.
 	if !obj.Value.Unset {
-		message := fmt.Sprintf(`Variable "%s" is read-only`, name)
+		message := fmt.Sprintf(`variable "%s" is read-only`, name)
 		if obj.Value.Reference != "" {
-			message += "\nSee reference documentation: " + obj.Value.Reference
+			message += "\nsee reference documentation: " + obj.Value.Reference
 		}
 		return errors.New(message)
 	}
@@ -627,12 +627,12 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 
 	obj, ok := c.functions[first]
 	if !ok {
-		return nil, fmt.Errorf(`Function "%s" is not defined`, name)
+		return nil, fmt.Errorf(`function "%s" is not defined`, name)
 	}
 
 	for _, key := range remains {
 		if v, ok := obj.Items[key]; !ok {
-			return nil, fmt.Errorf(`Function "%s" is not defined`, name)
+			return nil, fmt.Errorf(`function "%s" is not defined`, name)
 		} else {
 			obj = v
 		}
@@ -645,7 +645,7 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 	// Value exists, but unable to access in current scope
 	if obj.Value.Scopes&c.curMode == 0 {
 		return nil, fmt.Errorf(
-			`Function "%s" is not available in scope %s\nSee reference documentation: %s`,
+			`function "%s" is not available in scope %s\nSee reference documentation: %s`,
 			name, ScopeString(c.curMode), obj.Value.Reference,
 		)
 	}
