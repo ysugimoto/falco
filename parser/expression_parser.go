@@ -121,8 +121,8 @@ func (p *Parser) ParsePrefixExpression() (*ast.PrefixExpression, error) {
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
-	exp.Meta.EndLine = right.GetMeta().EndLine
-	exp.Meta.EndPosition = right.GetMeta().EndPosition
+	exp.EndLine = right.GetMeta().EndLine
+	exp.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }
@@ -142,8 +142,8 @@ func (p *Parser) ParseGroupedExpression() (*ast.GroupedExpression, error) {
 	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
-	exp.Meta.EndLine = right.GetMeta().EndLine
-	exp.Meta.EndPosition = right.GetMeta().EndPosition + 1
+	exp.EndLine = right.GetMeta().EndLine
+	exp.EndPosition = right.GetMeta().EndPosition + 1
 
 	return exp, nil
 }
@@ -187,8 +187,8 @@ func (p *Parser) ParseIfExpression() (*ast.IfExpression, error) {
 	if !p.ExpectPeek(token.RIGHT_PAREN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
 	}
-	exp.Meta.EndLine = p.curToken.Token.Line
-	exp.Meta.EndPosition = p.curToken.Token.Position
+	exp.EndLine = p.curToken.Token.Line
+	exp.EndPosition = p.curToken.Token.Position
 
 	return exp, nil
 }
@@ -207,8 +207,8 @@ func (p *Parser) ParseInfixExpression(left ast.Expression) (ast.Expression, erro
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
-	exp.Meta.EndLine = right.GetMeta().EndLine
-	exp.Meta.EndPosition = right.GetMeta().EndPosition
+	exp.EndLine = right.GetMeta().EndLine
+	exp.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }
@@ -229,8 +229,8 @@ func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit 
 		return nil, errors.WithStack(err)
 	}
 	exp.Right = right
-	exp.Meta.EndLine = right.GetMeta().EndLine
-	exp.Meta.EndPosition = right.GetMeta().EndPosition
+	exp.EndLine = right.GetMeta().EndLine
+	exp.EndPosition = right.GetMeta().EndPosition
 
 	return exp, nil
 }
@@ -243,10 +243,10 @@ func (p *Parser) ParsePostfixExpression(left ast.Expression) (ast.Expression, er
 	exp.Operator = p.curToken.Token.Literal
 
 	// Swap start/end line and position
-	exp.Meta.EndLine = p.curToken.Token.Line
-	exp.Meta.EndPosition = p.curToken.Token.Position
-	exp.Meta.Token.Line = left.GetMeta().Token.Line
-	exp.Meta.Token.Position = left.GetMeta().Token.Position
+	exp.EndLine = p.curToken.Token.Line
+	exp.EndPosition = p.curToken.Token.Position
+	exp.Token.Line = left.GetMeta().Token.Line
+	exp.Token.Position = left.GetMeta().Token.Position
 
 	return exp, nil
 }
@@ -266,8 +266,8 @@ func (p *Parser) ParseFunctionCallExpression(fn ast.Expression) (ast.Expression,
 		return nil, errors.WithStack(err)
 	}
 	exp.Arguments = args
-	exp.Meta.EndLine = p.curToken.Token.Line
-	exp.Meta.EndPosition = p.curToken.Token.Position
+	exp.EndLine = p.curToken.Token.Line
+	exp.EndPosition = p.curToken.Token.Position
 
 	return exp, nil
 }

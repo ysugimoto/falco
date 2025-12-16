@@ -3,7 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,6 +14,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -84,7 +85,7 @@ func (i *Interpreter) restart() error {
 	i.ctx.Response = nil
 
 	if err := i.ProcessRecv(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -95,11 +96,11 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	main, err := ctx.Resolver.MainVCL()
 	if err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyVCLLimitation(main.Data); err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	vcl, err := parser.New(
 		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
@@ -107,19 +108,21 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	if err != nil {
 		// parse error
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if ctx.FastlySnippets != nil {
-		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
-			s, err := parser.New(
-				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
-			).ParseVCL()
+		snippets, err := ctx.FastlySnippets.EmbedSnippets(ctx.TLSServer)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		for _, snip := range snippets {
+			s, err := parser.New(lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name))).ParseVCL()
 			if err != nil {
 				// parse error
 				i.Debugger.Message(err.Error())
-				return err
+				return errors.WithStack(err)
 			}
 			vcl.Statements = append(s.Statements, vcl.Statements...)
 		}
@@ -149,17 +152,17 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 
 	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// instrumenting if coverage measurement is enabled
 	if i.ctx.Coverage != nil {
 		i.instrument(vcl)
 	}
 	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -289,7 +292,7 @@ func (i *Interpreter) ProcessRecv() error {
 
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -339,7 +342,7 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.CacheHitItem = v
-			i.ctx.Object = i.cloneResponse(v.Response)
+			i.ctx.Object = v.Response.Clone()
 			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
@@ -375,7 +378,7 @@ func (i *Interpreter) ProcessHash() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if state, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		} else if state != HASH && state != NONE {
 			return exception.Runtime(
@@ -411,7 +414,7 @@ func (i *Interpreter) ProcessMiss() error {
 	state := FETCH
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -456,7 +459,7 @@ func (i *Interpreter) ProcessHit() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -519,7 +522,7 @@ func (i *Interpreter) ProcessPass() error {
 	state := PASS
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -579,7 +582,7 @@ func (i *Interpreter) ProcessFetch() error {
 
 	// Update cache
 	defer func() {
-		resp := i.cloneResponse(i.ctx.BackendResponse)
+		resp := i.ctx.BackendResponse.Clone()
 		// Note: compare BackendResponseCacheable value
 		// because this value will be changed by user in vcl_fetch directive
 		if i.ctx.BackendResponseCacheable.Value {
@@ -599,7 +602,7 @@ func (i *Interpreter) ProcessFetch() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -638,17 +641,19 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	i.ctx.Object = &http.Response{
-		StatusCode:    int(i.ctx.ObjectStatus.Value),
-		Status:        http.StatusText(int(i.ctx.ObjectStatus.Value)),
-		Proto:         "HTTP/1.0",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-		ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-		Request:       i.ctx.Request,
-	}
+	i.ctx.Object = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    int(i.ctx.ObjectStatus.Value),
+			Status:        ghttp.StatusText(int(i.ctx.ObjectStatus.Value)),
+			Proto:         "HTTP/1.0",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+			ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+			Request:       i.ctx.Request.Request,
+		},
+	)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
@@ -656,7 +661,7 @@ func (i *Interpreter) ProcessError() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -689,9 +694,25 @@ func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
 	if i.ctx.Object != nil {
-		i.ctx.Response = i.cloneResponse(i.ctx.Object)
+		i.ctx.Response = i.ctx.Object.Clone()
 	} else if i.ctx.BackendResponse != nil {
-		i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
+		i.ctx.Response = i.ctx.BackendResponse.Clone()
+	}
+
+	// Add Fastly related server info but values are falco's one.
+	// Note that these headers could be removed in vcl_deliver subroutine
+	i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
+	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+	i.ctx.Response.Header.Set("Date", time.Now().Format(http.TimeFormat))
+	i.ctx.Response.Header.Set("Server", "Falco")
+	i.ctx.Response.Header.Set("Via", "Falco")
+
+	// Additionally set cache related headers
+	if i.ctx.CacheHitItem != nil {
+		i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
+		i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+	} else {
+		i.ctx.Response.Header.Set("X-Cache-Hits", "0")
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -700,7 +721,7 @@ func (i *Interpreter) ProcessDeliver() error {
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -720,18 +741,7 @@ func (i *Interpreter) ProcessDeliver() error {
 			}
 		}
 
-		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
-		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-
-		// Additionally set cache related headers
-		if i.ctx.CacheHitItem != nil {
-			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
-			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
-		} else {
-			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
-		}
-		// When Fastly-Debug header is present, add debug header but values are fakes
+		// When Fastly-Debug header is still present after vcl_deliver calling, add debug headers with virtual value
 		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-Path",
@@ -779,7 +789,7 @@ func (i *Interpreter) ProcessLog() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if _, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		}
 	}

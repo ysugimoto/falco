@@ -14,9 +14,9 @@ func (p *Parser) ParseIdent() *ast.Ident {
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
+	v.EndLine = p.curToken.Token.Line
 	// To point to the last character, minus 1
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 	return v
 }
 
@@ -25,9 +25,9 @@ func (p *Parser) ParseIP() *ast.IP {
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
+	v.EndLine = p.curToken.Token.Line
 	// To point to the last character, plus 1 because token is string so add half of offset
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) + (p.curToken.Token.Offset / 2)
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) + (p.curToken.Token.Offset / 2)
 	return v
 }
 
@@ -43,8 +43,8 @@ func (p *Parser) ParseLongString() (*ast.String, error) {
 	str, err := p.ParseString()
 	str.LongString = true
 	str.Delimiter = delimiter
-	str.Meta.Token.Position -= len(delimiter)
-	str.Meta.Token.Position -= 1
+	str.Token.Position -= len(delimiter)
+	str.Token.Position -= 1
 
 	if !p.PeekTokenIs(token.CLOSE_LONG_STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
@@ -57,8 +57,8 @@ func (p *Parser) ParseLongString() (*ast.String, error) {
 	str.GetMeta().Leading = openToken.Leading
 	str.GetMeta().Trailing = p.peekToken.Trailing
 	p.NextToken() // point to end delimiter
-	str.Meta.EndLine = p.curToken.Token.Line
-	str.Meta.EndPosition = p.curToken.Token.Position
+	str.EndLine = p.curToken.Token.Line
+	str.EndPosition = p.curToken.Token.Position
 
 	return str, err
 }
@@ -78,8 +78,8 @@ func (p *Parser) ParseString() (*ast.String, error) {
 		Meta:  p.curToken,
 		Value: parsed,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
-	v.Meta.EndPosition = p.curToken.Token.Position + len(parsed) - 1 + p.curToken.Token.Offset
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(parsed) - 1 + p.curToken.Token.Offset
 	return v, nil
 }
 
@@ -93,8 +93,8 @@ func (p *Parser) ParseInteger() (*ast.Integer, error) {
 		Meta:  p.curToken,
 		Value: i,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 	return v, nil
 }
 
@@ -108,8 +108,8 @@ func (p *Parser) ParseFloat() (*ast.Float, error) {
 		Meta:  p.curToken,
 		Value: f,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 	return v, nil
 }
 
@@ -119,8 +119,8 @@ func (p *Parser) ParseBoolean() *ast.Boolean {
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Type == token.TRUE,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 	return v
 }
 
@@ -152,7 +152,7 @@ func (p *Parser) ParseRTime() (*ast.RTime, error) {
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
-	v.Meta.EndLine = p.curToken.Token.Line
-	v.Meta.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
 	return v, nil
 }

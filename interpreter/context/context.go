@@ -3,15 +3,15 @@ package context
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/cache"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester/shared"
 )
 
@@ -45,8 +45,9 @@ var (
 )
 
 type Context struct {
+	TLSServer           bool
 	Resolver            resolver.Resolver
-	FastlySnippets      *snippets.Snippets
+	FastlySnippets      *snippet.Snippets
 	Acls                map[string]*value.Acl
 	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration
@@ -181,12 +182,6 @@ type Context struct {
 
 	// Marker that return request is purge request.
 	IsPurgeRequest bool
-
-	// Flag for a synthetic response has been set.
-	// It means that some VCL will set response phase like `set obj.response = "xxx"`
-	// but we should ignore when synthetic response has already set.
-	// Note that obj.response is deprecated after HTTP/1.1 but VCL still supports this spec.
-	HasSyntheticResponse bool
 
 	OverrideVariables map[string]value.Value
 }

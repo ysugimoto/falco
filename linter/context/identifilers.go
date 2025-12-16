@@ -20,6 +20,7 @@ func builtinIdentifiers() map[string]struct{} {
 		// https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/
 		"cbc": {},
 		"ctr": {},
+		"gcm": {},
 
 		// use for crypto.encrypt_xxx function padding argument
 		// https://developer.fastly.com/reference/vcl/functions/cryptographic/crypto-encrypt-hex/

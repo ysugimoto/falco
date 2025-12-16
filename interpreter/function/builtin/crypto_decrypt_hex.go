@@ -59,6 +59,11 @@ func Crypto_decrypt_hex(ctx *context.Context, args ...value.Value) (value.Value,
 
 	decrypted, err := codec.Decrypt(key.Value, iv.Value, buf)
 	if err != nil {
+		// Check if this is a GCM authentication failure
+		if _, ok := err.(*shared.BadDecryptError); ok {
+			ctx.FastlyError = &value.String{Value: "EBADDECRYPT"}
+			return &value.String{Value: ""}, nil
+		}
 		return value.Null, err
 	}
 

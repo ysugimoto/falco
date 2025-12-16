@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 type Console struct {
@@ -80,7 +80,7 @@ func (c *Console) generateSuggestions() error {
 			}).
 			Parse(consoleSuggestions),
 	)
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Suggestions": suggestions,
 		"Scopes": []string{
 			"RECV",

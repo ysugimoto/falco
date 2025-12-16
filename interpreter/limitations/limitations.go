@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 // Units
@@ -115,7 +116,7 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	}
 
 	// Request body size check
-	if req.Method == http.MethodPost || req.Method == http.MethodPut || req.Method == http.MethodPatch {
+	if req.Method == ghttp.MethodPost || req.Method == ghttp.MethodPut || req.Method == ghttp.MethodPatch {
 		var body bytes.Buffer
 		// We don't trust Content-Length header value, check actual body size
 		if _, err := body.ReadFrom(req.Body); err == nil {

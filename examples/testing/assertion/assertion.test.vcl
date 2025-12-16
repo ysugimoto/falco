@@ -5,6 +5,12 @@ sub test_restart {
 }
 
 // @scope: recv
+sub test_not_restart {
+  testing.call_subroutine("no_restart");
+  assert.not_restart();
+}
+
+// @scope: recv
 sub test_error {
   testing.call_subroutine("force_error");
   assert.error(800, "FORCE ERROR");

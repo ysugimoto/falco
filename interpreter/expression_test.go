@@ -2,12 +2,15 @@ package interpreter
 
 import (
 	"fmt"
-	"net/http"
+	ghttp "net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/token"
 )
@@ -86,7 +89,10 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition)
+			opt := &ExpressionOption{
+				condition: tt.withCondition,
+			}
+			value, err := ip.ProcessPrefixExpression(tt.expression, opt)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -173,7 +179,10 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, false)
+			opt := &ExpressionOption{
+				condition: false,
+			}
+			value, err := ip.ProcessPrefixExpression(tt.expression, opt)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -566,6 +575,89 @@ func TestProcessStringConcatIssue360(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assertInterpreter(t, tt.vcl, context.DeliverScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestIsNotSetSeriesCheck(t *testing.T) {
+	tests := []struct {
+		name   string
+		series []*series
+		expect bool
+	}{
+		{
+			name: "single notset variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.NS",
+					},
+				},
+			},
+			expect: true,
+		},
+		{
+			name: "single variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.S",
+					},
+				},
+			},
+			expect: false,
+		},
+		{
+			name: "double notset variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.NS",
+					},
+				},
+				{
+					Expression: &ast.Ident{
+						Value: "req.http.Undefined",
+					},
+				},
+			},
+			expect: true,
+		},
+		{
+			name: "either variable is set",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.S",
+					},
+				},
+				{
+					Expression: &ast.Ident{
+						Value: "req.http.Undefined",
+					},
+				},
+			},
+			expect: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := New()
+			i.ctx = context.New()
+			i.ctx.Scope = context.RecvScope
+			i.ctx.Request = http.WrapRequest(
+				httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil),
+			)
+			i.SetScope(context.RecvScope)
+			i.localVars.Declare("var.NS", "IP")
+			i.localVars.Declare("var.S", "STRING")
+			i.localVars.Set("var.S", "=", &value.String{Value: "S"})
+
+			actual := i.isNotSetExpressionSeries(tt.series)
+			if diff := cmp.Diff(tt.expect, actual); diff != "" {
+				t.Errorf("result mismatch, diff=%s", diff)
+			}
 		})
 	}
 }

@@ -170,6 +170,7 @@ MIT License
 - [@ivomurrell](https://github.com/ivomurrell)
 - [@MasonM](https://github.com/MasonM)
 - [@richardmarshall](https://github.com/richardmarshall)
+- [@jedisct1](https://github.com/jedisct1)
 
 ## Credits / Thanks
 

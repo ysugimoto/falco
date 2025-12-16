@@ -21,6 +21,7 @@ var typeToType = map[string]string{
 	"ACL":         "types.AclType",
 	"TABLE":       "types.TableType",
 	"STRING_LIST": "types.StringListType",
+	"REGEX":       "types.RegexType",
 }
 
 func main() {
@@ -47,7 +48,7 @@ func main() {
 	}
 }
 
-func quote(v interface{}) string {
+func quote(v any) string {
 	return `"` + fmt.Sprint(v) + `"`
 }
 

@@ -106,11 +106,6 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		return nil
 	case OBJ_RESPONSE:
-		// If synthetic response has already been set, ignore this assignment.
-		if v.ctx.HasSyntheticResponse {
-			return nil
-		}
-
 		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

@@ -61,7 +61,7 @@ func Assign(left, right value.Value) error {
 				lv.Value = rv.Value.Unix()
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
@@ -100,7 +100,7 @@ func Assign(left, right value.Value) error {
 				lv.Value = float64(rv.Value.Unix())
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for INTEGER type, got %s", right.Type()))
 		}
 	case value.StringType:
 		lv := value.Unwrap[*value.String](left)
@@ -110,7 +110,7 @@ func Assign(left, right value.Value) error {
 			lv.Value = rv.Value
 			// Note: left value turns "Set" value even right string is NotSet
 			// see: https://fiddle.fastly.dev/fiddle/68ca66ec
-			lv.IsNotSet = false
+			lv.IsNotSet = rv.IsNotSet
 		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to STRING"))
@@ -153,9 +153,9 @@ func Assign(left, right value.Value) error {
 		case value.IpType: // STRING = IP
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value.String()
-			lv.IsNotSet = false
+			lv.IsNotSet = rv.IsNotSet
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for STRING type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for STRING type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -182,7 +182,7 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value = time.Duration(rv.Value.Unix())
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for RTIME type, got %s", right.Type()))
 		}
 	case value.TimeType:
 		lv := value.Unwrap[*value.Time](left)
@@ -209,7 +209,7 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value = rv.Value.Add(0) // explicit clone
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for TIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for TIME type, got %s", right.Type()))
 		}
 	case value.BackendType:
 		lv := value.Unwrap[*value.Backend](left)
@@ -218,7 +218,7 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.Value
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for BACKEND type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for BACKEND type, got %s", right.Type()))
 		}
 	case value.BooleanType:
 		lv := value.Unwrap[*value.Boolean](left)
@@ -227,7 +227,7 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.Boolean](right)
 			lv.Value = rv.Value
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment BOOL type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment BOOL type, got %s", right.Type()))
 		}
 	case value.IpType:
 		lv := value.Unwrap[*value.IP](left)
@@ -235,7 +235,7 @@ func Assign(left, right value.Value) error {
 		case value.StringType: // IP = STRING
 			rv := value.Unwrap[*value.String](right)
 			if ip := net.ParseIP(rv.Value); ip == nil {
-				return errors.WithStack(fmt.Errorf("Invalid IP format, got %s", rv.Value))
+				return errors.WithStack(fmt.Errorf("invalid IP format, got %s", rv.Value))
 			} else {
 				lv.Value = ip
 				lv.IsNotSet = false
@@ -245,10 +245,10 @@ func Assign(left, right value.Value) error {
 			lv.Value = rv.Value
 			lv.IsNotSet = false
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid assignment for IP type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid assignment for IP type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use assignment for type %s", left.Type()))
 	}
 	return nil
 }

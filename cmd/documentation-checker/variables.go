@@ -26,7 +26,8 @@ var fastlyVariableCategoryPageUrls = []string{
 	"/reference/vcl/variables/rate-limiting/",
 	"/reference/vcl/variables/segmented-caching/",
 	"/reference/vcl/variables/server/",
-	"/reference/vcl/variables/waf/",
+	// Note: legacy waf related variables are no longer documented.
+	// "/reference/vcl/variables/waf/",
 }
 
 const predefinedPath = "../../__generator__/predefined.yml"

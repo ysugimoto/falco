@@ -6,9 +6,9 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type Severity string
@@ -269,11 +269,16 @@ func FunctionArgumentMismatch(m *ast.Meta, name string, expect, actual int) *Lin
 }
 
 func FunctionArgumentTypeMismatch(m *ast.Meta, name string, num int, expect, actual types.Type) *LintError {
-	suffix := "th"
-	if num == 1 {
+	var suffix string
+	switch num {
+	case 1:
 		suffix = "st"
-	} else if num == 2 {
+	case 2:
 		suffix = "nd"
+	case 3:
+		suffix = "rd"
+	default:
+		suffix = "th"
 	}
 
 	return &LintError{
@@ -369,7 +374,7 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
 	return &LintError{
 		Severity: ERROR,
-		Token:    gs.Meta.Token,
+		Token:    gs.Token,
 		Message: fmt.Sprintf(
 			`A jump backwards is not allowed. Goto destination "%s" must be defined after this statement`,
 			gs.Destination.Value,

@@ -3,7 +3,7 @@
 package context
 
 import (
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 type Functions map[string]*FunctionSpec
@@ -16,7 +16,7 @@ type FunctionSpec struct {
 type BuiltinFunction struct {
 	Arguments             [][]types.Type
 	Return                types.Type
-	Extra                 func(c *Context, name string) interface{}
+	Extra                 func(c *Context, name string) any
 	Scopes                int
 	Reference             string
 	IsUserDefinedFunction bool
@@ -440,7 +440,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32/",
+					},
+				},
+				"hash_xxh32_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32-from-base64/",
 					},
 				},
 				"hash_xxh64": &FunctionSpec{
@@ -451,7 +462,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "",
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64/",
+					},
+				},
+				"hash_xxh64_from_base64": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64-from-base64/",
 					},
 				},
 				"hmac_md5": &FunctionSpec{
@@ -518,6 +540,17 @@ func builtinFunctions() Functions {
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/cryptographic/digest-hmac-sha256-base64/",
+					},
+				},
+				"hmac_sha256_with_base64_key": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hmac-sha256-with-base64-key/",
 					},
 				},
 				"hmac_sha512": &FunctionSpec{
@@ -1819,7 +1852,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-contains/",
 					},
@@ -1832,7 +1865,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.TableType, types.StringType, types.StringType},
 							[]types.Type{types.TableType, types.StringType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup/",
 					},
@@ -1844,7 +1877,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.AclType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/",
 					},
@@ -1856,7 +1889,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BackendType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/",
 					},
@@ -1868,7 +1901,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BoolType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/",
 					},
@@ -1880,7 +1913,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.FloatType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/",
 					},
@@ -1892,7 +1925,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IntegerType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/",
 					},
@@ -1904,9 +1937,21 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IPType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
+					},
+				},
+				"lookup_regex": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.RegexType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.TableType, types.StringType},
+						},
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/",
 					},
 				},
 				"lookup_rtime": &FunctionSpec{
@@ -1916,7 +1961,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.RTimeType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/",
 					},

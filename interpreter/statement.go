@@ -15,7 +15,6 @@ import (
 	"github.com/ysugimoto/falco/interpreter/operator"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/types"
 )
 
 // _nopSeekCloser is like io.NopCloser, but for wrapping io.ReadSeeker.
@@ -38,7 +37,7 @@ func (i *Interpreter) ProcessBlockStatement(
 ) (value.Value, State, DebugState, error) {
 
 	var err error
-	var debugState DebugState = ds
+	var debugState = ds
 
 	for _, stmt := range statements {
 		// Call debugger
@@ -223,7 +222,7 @@ func (i *Interpreter) ProcessDeclareStatement(stmt *ast.DeclareStatement) error 
 	// Assign if the value is declared at the same time like:
 	// declare local var.S STRING = "Hello, World!";
 	if stmt.Value != nil {
-		v, err := i.ProcessExpression(stmt.Value, false)
+		v, err := i.ProcessExpression(stmt.Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -242,38 +241,46 @@ func (i *Interpreter) ProcessReturnStatement(stmt *ast.ReturnStatement) State {
 }
 
 func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
-	if strings.HasPrefix(stmt.Ident.Value, "var.") {
-		left, err := i.localVars.Get(stmt.Ident.Value)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
-			return errors.WithStack(err)
-		}
-		right, err := i.ProcessExpression(stmt.Value, false)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	// If set target ident is local variable, do it on specific method
+	if isLocalVariableIdent(stmt.Ident) {
+		return i.ProcessSetStatementLocalVariable(stmt)
+	}
 
-		if err := i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
-		left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
-			return errors.WithStack(err)
-		}
-		right, err := i.ProcessExpression(stmt.Value, false)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	// Otherwise, general defined variable like `req.http.*`
+	left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+		return errors.WithStack(err)
+	}
+	right, err := i.ProcessExpression(stmt.Value)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
-		if err := i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
-			return errors.WithStack(err)
-		}
+	if err := i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (i *Interpreter) ProcessSetStatementLocalVariable(stmt *ast.SetStatement) error {
+	left, err := i.localVars.Get(stmt.Ident.Value)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
+		return errors.WithStack(err)
+	}
+	right, err := i.ProcessExpression(stmt.Value, LocalVariableExpression())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := i.localVars.Set(stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -298,7 +305,7 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 	if err := isValidStatementExpression(value.StringType, stmt.Value); err != nil {
 		return errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(stmt.Value, false)
+	right, err := i.ProcessExpression(stmt.Value)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -342,13 +349,23 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	var err error
 	name := stmt.Subroutine.Value
 
+	// Evaluate arguments
+	var args []value.Value
+	for _, argExpr := range stmt.Arguments {
+		argVal, err := i.ProcessExpression(argExpr)
+		if err != nil {
+			return NONE, errors.WithStack(err)
+		}
+		args = append(args, argVal)
+	}
+
 	if sub, ok := i.ctx.SubroutineFunctions[name]; ok {
 		// If mocked functional subroutine exists, use it
 		if mocked, ok := i.ctx.MockedFunctioncalSubroutines[name]; ok {
 			sub = mocked
 		}
 
-		_, state, err = i.ProcessFunctionSubroutine(sub, ds)
+		_, state, err = i.ProcessFunctionSubroutine(sub, ds, args)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -357,7 +374,7 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 		if mocked, ok := i.ctx.MockedSubroutines[name]; ok {
 			sub = mocked
 		}
-		state, err = i.ProcessSubroutine(sub, ds)
+		state, err = i.ProcessSubroutine(sub, ds, args)
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
@@ -377,7 +394,7 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 	// Possibility error code is not defined
 	if stmt.Code != nil {
-		code, err := i.ProcessExpression(stmt.Code, false)
+		code, err := i.ProcessExpression(stmt.Code)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -388,7 +405,7 @@ func (i *Interpreter) ProcessErrorStatement(stmt *ast.ErrorStatement) error {
 	}
 	// Possibility error response is not defined
 	if stmt.Argument != nil {
-		arg, err := i.ProcessExpression(stmt.Argument, false)
+		arg, err := i.ProcessExpression(stmt.Argument)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -415,7 +432,7 @@ func (i *Interpreter) ProcessEsiStatement(stmt *ast.EsiStatement) error {
 }
 
 func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
-	log, err := i.ProcessExpression(stmt.Value, false)
+	log, err := i.ProcessExpression(stmt.Value)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -435,7 +452,7 @@ func (i *Interpreter) ProcessLogStatement(stmt *ast.LogStatement) error {
 }
 
 func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) error {
-	val, err := i.ProcessExpression(stmt.Value, false)
+	val, err := i.ProcessExpression(stmt.Value)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -445,12 +462,11 @@ func (i *Interpreter) ProcessSyntheticStatement(stmt *ast.SyntheticStatement) er
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
-	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 
 func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64Statement) error {
-	val, err := i.ProcessExpression(stmt.Value, false)
+	val, err := i.ProcessExpression(stmt.Value)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -459,7 +475,6 @@ func (i *Interpreter) ProcessSyntheticBase64Statement(stmt *ast.SyntheticBase64S
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	i.ctx.Object.Body = nopSeekCloser(strings.NewReader(v.Value))
-	i.ctx.HasSyntheticResponse = true
 	return nil
 }
 
@@ -505,7 +520,7 @@ func (i *Interpreter) ProcessFunctionCallStatement(stmt *ast.FunctionCallStateme
 			}
 		} else {
 			// Otherwize, make value by processing expression
-			a, err := i.ProcessExpression(stmt.Arguments[j], false)
+			a, err := i.ProcessExpression(stmt.Arguments[j])
 			if err != nil {
 				return NONE, errors.WithStack(err)
 			}
@@ -535,7 +550,7 @@ func (i *Interpreter) ProcessIfStatement(
 	isReturnAsValue bool,
 ) (value.Value, State, error) {
 	// if
-	cond, err := i.ProcessExpression(stmt.Condition, true)
+	cond, err := i.ProcessExpression(stmt.Condition, ConditionExpression())
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}
@@ -578,7 +593,7 @@ func (i *Interpreter) ProcessIfStatement(
 		if ds != DebugStepOut {
 			ds = i.Debugger.Run(ei)
 		}
-		cond, err := i.ProcessExpression(ei.Condition, true)
+		cond, err := i.ProcessExpression(ei.Condition, ConditionExpression())
 		if err != nil {
 			return value.Null, NONE, errors.WithStack(err)
 		}
@@ -646,12 +661,12 @@ func (i *Interpreter) ProcessSwitchStatement(
 			))
 		}
 	}
-	expr, err := i.ProcessExpression(stmt.Control.Expression, false)
+	expr, err := i.ProcessExpression(stmt.Control.Expression)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
 	}
 	// Control expression must evaluate to a value type
-	if _, ok := types.ValueTypeMap[string(expr.Type())]; !ok {
+	if !isValidFastlyTypeString(string(expr.Type())) {
 		return value.Null, NONE, errors.WithStack(exception.Runtime(
 			&stmt.GetMeta().Token,
 			"switch has invalid control type %s",
@@ -704,7 +719,7 @@ func (i *Interpreter) ProcessCaseStatement(
 	if stmt.Default == offset || isFallthrough {
 		matched = true
 	} else {
-		right, err := i.ProcessExpression(stmt.Cases[offset].Test.Right, false)
+		right, err := i.ProcessExpression(stmt.Cases[offset].Test.Right)
 		if err != nil {
 			return value.Null, NONE, false, err
 		}

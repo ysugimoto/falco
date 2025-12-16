@@ -371,6 +371,17 @@ func TestFormatCallStatement(t *testing.T) {
 }
 `,
 		},
+		{
+			name: "with arguments",
+			input: `sub vcl_recv {
+  call  feature_recv(var.foo,var.bar );
+}
+`,
+			expect: `sub vcl_recv {
+  call feature_recv(var.foo, var.bar);
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
