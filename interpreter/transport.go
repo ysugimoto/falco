@@ -5,11 +5,9 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/gobwas/glob"
@@ -19,12 +17,16 @@ import (
 	"github.com/ysugimoto/falco/config"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
 )
 
-const HTTPS_SCHEME = "https"
+const (
+	HTTPS_SCHEME = "https"
+	HTTP_SCHEME  = "http"
+)
 
 func getOverrideBackend(ctx *icontext.Context, backendName string) (*config.OverrideBackend, error) {
 	for key, val := range ctx.OverrideBackends {
@@ -70,7 +72,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	}
 
 	// scheme may be overrided by config
-	scheme := "http"
+	scheme := HTTP_SCHEME
 	if overrideBackend != nil {
 		if overrideBackend.SSL {
 			scheme = HTTPS_SCHEME
@@ -113,11 +115,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		url += "?" + v
 	}
 
-	req, err := http.NewRequest(
-		i.ctx.Request.Method,
-		url,
-		i.ctx.Request.Body,
-	)
+	req, err := http.NewRequest(i.ctx.Request.Method, url, i.ctx.Request.Body)
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to create backend request: %s", err)
 	}
@@ -179,36 +177,19 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 		return nil, errors.WithStack(err)
 	}
 
-	client := http.DefaultClient
-	if req.URL.Scheme == HTTPS_SCHEME {
-		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
-		if !ok {
-			return nil, errors.WithStack(errors.New("cannot clone http.DefaultTransport"))
-		}
-
-		transport := defaultTransport.Clone()
-		transport.TLSClientConfig = &tls.Config{
-			ServerName: req.URL.Hostname(),
-		}
-
-		client = &http.Client{
-			Transport: transport,
-		}
-	}
-
 	// Debug message
 	var suffix string
 	// nolint:errcheck
 	if overrideBackend, _ := getOverrideBackend(i.ctx, backend.Value.Name.Value); overrideBackend != nil {
-		suffix = " (overrided by config)"
+		suffix = " (overridden by config)"
 	}
 	i.Debugger.Message(
 		fmt.Sprintf("Fetching backend (%s) %s%s", backend.Value.Name.Value, req.URL.String(), suffix),
 	)
 
-	resp, err := client.Do(req)
+	resp, err := http.SendRequest(req)
 	if err != nil {
-		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Debug message
@@ -239,32 +220,9 @@ func (i *Interpreter) getBackendProperty(props []*ast.BackendProperty, key strin
 		return nil, nil
 	}
 
-	val, err := i.ProcessExpression(prop, false)
+	val, err := i.ProcessExpression(prop)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return val, nil
-}
-
-func (i *Interpreter) cloneResponse(resp *http.Response) *http.Response {
-	// rewind body reader
-	var buf bytes.Buffer
-	buf.ReadFrom(resp.Body) // nolint: errcheck
-	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-
-	return &http.Response{
-		StatusCode:       resp.StatusCode,
-		Status:           resp.Status,
-		Proto:            resp.Proto,
-		ProtoMajor:       resp.ProtoMajor,
-		ProtoMinor:       resp.ProtoMinor,
-		Header:           resp.Header.Clone(),
-		Body:             io.NopCloser(bytes.NewReader(buf.Bytes())),
-		ContentLength:    resp.ContentLength,
-		TransferEncoding: resp.TransferEncoding,
-		Close:            resp.Close,
-		Uncompressed:     resp.Uncompressed,
-		Trailer:          resp.Trailer.Clone(),
-		TLS:              resp.TLS,
-	}
 }

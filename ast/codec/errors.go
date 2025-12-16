@@ -22,12 +22,12 @@ func decodeError(err error) *DecodeError {
 
 func typeMismatch(expect, actual FrameType) *DecodeError {
 	return &DecodeError{
-		original: fmt.Errorf("Expect type %s but got %s", expect.String(), actual.String()),
+		original: fmt.Errorf("expect type %s but got %s", expect.String(), actual.String()),
 	}
 }
 
 func unexpectedFinByte() *DecodeError {
 	return &DecodeError{
-		original: fmt.Errorf("Unexpected FIN byte found"),
+		original: fmt.Errorf("unexpected FIN byte found"),
 	}
 }

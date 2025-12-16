@@ -3,11 +3,13 @@
 package builtin
 
 import (
-	"net/http"
+	ghttp "net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -25,13 +27,10 @@ func Test_Std_collect(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
-		if err != nil {
-			t.Errorf("[%d] Unexpected request creation error: %s", i, err)
-		}
+		req := httptest.NewRequest(ghttp.MethodGet, "https://example.com", nil)
 		req.Header.Set("Foo", "bar")
 		ret, err := Std_count(
-			&context.Context{Request: req},
+			&context.Context{Request: http.WrapRequest(req)},
 			&value.Ident{Value: tt.input},
 		)
 		if err != nil {
