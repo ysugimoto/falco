@@ -7,7 +7,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
-const Testing_call_subroutine_Name = "assert"
+const Testing_call_subroutine_Name = "testing.call_subroutine"
 
 var Testing_call_subroutine_ArgumentTypes = []value.Type{value.StringType}
 
@@ -35,7 +35,7 @@ func Testing_call_subroutine(
 ) (value.Value, error) {
 
 	if err := Testing_call_subroutine_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	var state interpreter.State
@@ -44,14 +44,16 @@ func Testing_call_subroutine(
 
 	// Functional subroutine
 	if sub, ok := ctx.SubroutineFunctions[name]; ok {
-		_, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass)
+		_, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass, nil)
 		// Scoped subroutine
 	} else if sub, ok := ctx.Subroutines[name]; ok {
-		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass)
+		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass, nil)
 		i.TestingState = state
+	} else {
+		return value.Null, errors.NewTestingError("subroutine %s is not defined in VCL", name)
 	}
 	if err != nil {
-		return value.Null, errors.NewTestingError(err.Error())
+		return value.Null, errors.NewTestingError("%s", err.Error())
 	}
 	return &value.String{Value: string(state)}, nil
 }

@@ -6,8 +6,9 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/linter/types"
+	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type Severity string
@@ -211,6 +212,22 @@ func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	}
 }
 
+func InvalidStringConcatenation(m *ast.Meta, ts string) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Cannot use %s for string concatenation", ts),
+	}
+}
+
+func TimeCalculatation(m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  "Time calculation found, it should be precalculated before the variable",
+	}
+}
+
 func UndefinedBackendProperty(m *ast.Meta, name string) *LintError {
 	return &LintError{
 		Severity: ERROR,
@@ -252,11 +269,16 @@ func FunctionArgumentMismatch(m *ast.Meta, name string, expect, actual int) *Lin
 }
 
 func FunctionArgumentTypeMismatch(m *ast.Meta, name string, num int, expect, actual types.Type) *LintError {
-	suffix := "th"
-	if num == 1 {
+	var suffix string
+	switch num {
+	case 1:
 		suffix = "st"
-	} else if num == 2 {
+	case 2:
 		suffix = "nd"
+	case 3:
+		suffix = "rd"
+	default:
+		suffix = "th"
 	}
 
 	return &LintError{
@@ -347,6 +369,83 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 		Token:    m.Token,
 		Message:  fmt.Sprintf("HTTP header %s cannot not be modified", name),
 	}
+}
+
+func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    gs.Token,
+		Message: fmt.Sprintf(
+			`A jump backwards is not allowed. Goto destination "%s" must be defined after this statement`,
+			gs.Destination.Value,
+		),
+	}
+}
+
+func CustomLinterCommandNotFound(name string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Custom linter command "%s" not found in your environment`, name),
+	}
+}
+
+func CustomLinterCommandFailed(message string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Custom linter command "%s" runs failed`, message),
+	}
+}
+
+func DeprecatedVariable(name string, m *ast.Meta) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf(`Variable "%s" is deprecated`, name),
+	}
+}
+
+func UncapturedRegexVariable(name string, m *ast.Meta) *LintError {
+	err := &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`Regex captured variable "%s" is uncaptured or reset on previous regular expression matching`,
+			name,
+		),
+	}
+	return err.Match(DEPRECATED)
+}
+
+func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
+	err := &LintError{
+		Severity: INFO,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`Regex captured variable "%s" may be overridden in previous expression`,
+			name,
+		),
+	}
+	return err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE)
+}
+
+func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {
+	e := &LintError{
+		Token:   m.Token,
+		Message: pe.Message,
+	}
+
+	// Convert severity
+	switch pe.Severity {
+	case plugin.ERROR:
+		e.Severity = ERROR
+	case plugin.WARNING:
+		e.Severity = WARNING
+	case plugin.INFO:
+		e.Severity = INFO
+	}
+	return e
 }
 
 type FatalError struct {

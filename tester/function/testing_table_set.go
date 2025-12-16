@@ -33,7 +33,7 @@ func Testing_table_set(
 ) (value.Value, error) {
 
 	if err := Testing_table_set_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	tableName := value.Unwrap[*value.Ident](args[0]).Value
@@ -44,7 +44,7 @@ func Testing_table_set(
 	}
 	// Currently this function supports for STRING table,
 	// common usecase for private edge dictionary.
-	if v.ValueType != nil && v.ValueType.Value != "STRING" {
+	if v.ValueType != nil && v.ValueType.Value != "STRING" { // nolint:goconst
 		return value.Null, errors.NewTestingError(
 			"value type mismatch for table %s: expects %s, got %s",
 			tableName,

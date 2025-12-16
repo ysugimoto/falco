@@ -41,7 +41,11 @@ Download binary from [releases page](https://github.com/ysugimoto/falco/releases
 $ brew install falco
 ```
 
-You can compile this project by yourself with `go install github.com/ysugimoto/falco/cmd/falco@latest`.
+You can compile this project by yourself with:
+
+```shell
+go install github.com/ysugimoto/falco/cmd/falco@latest
+```
 
 ## Usage
 
@@ -66,6 +70,8 @@ Subcommands:
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
     test      : Run local testing for provided VCLs
+    console   : Run terminal console
+    fmt       : Run formatter for provided VCLs
 
 See subcommands help with:
     falco [subcommand] -h
@@ -93,6 +99,14 @@ that you improve your VCL more robustly by passing the linter.
 
 See [linter documentation](https://github.com/ysugimoto/falco/blob/main/docs/linter.md) in detail.
 
+## Formatter
+
+Format provided VCL by our recommended styles.
+Currently we have a few options to control formatting style like [biomejs](https://github.com/biomejs/biome).
+Through the formatter, your VCL codes have unified format even multiple people are maintaining VCL.
+
+See [formatter documentation](./docs/formatter.md) in detail.
+
 ## Local Simulator / VCL Debugger
 
 `falco` has self-implemented interpreter for running VCL program locally.
@@ -109,6 +123,13 @@ You can run unit testing through the `falco` runtime.
 The unit testing file also can be written in VCL, and run test for each subroutine that you want individually.
 
 See [testing documentation](https://github.com/ysugimoto/falco/blob/main/docs/testing.md) in detail.
+
+## Console
+
+Falco supports simple terminal console to evaluate line input.
+You can confirm behavior without actual VCL file.
+
+See [console documentation](./docs/console.md) in detail.
 
 ## Terraform Support
 
@@ -128,10 +149,6 @@ To integrate `falco` into your GitHub Actions pipeline, e.g. for linting:
         target: test/vcl/file_to_be_linted.vcl
 
 See [ain/falco-github-action](https://github.com/ain/falco-github-action) for documentation.
-
-## Transforming
-
-`falco` plans to transpile Fastly VCL to the other programming language that works on the Compute@Edge, keep you posted when there is any progress.
 
 ## Contribution
 
@@ -153,6 +170,7 @@ MIT License
 - [@ivomurrell](https://github.com/ivomurrell)
 - [@MasonM](https://github.com/MasonM)
 - [@richardmarshall](https://github.com/richardmarshall)
+- [@jedisct1](https://github.com/jedisct1)
 
 ## Credits / Thanks
 

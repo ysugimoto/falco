@@ -17,6 +17,12 @@ func Ratelimit_penaltybox_has_Validate(args []value.Value) error {
 		return errors.ArgumentNotEnough(Ratelimit_penaltybox_has_Name, 2, args)
 	}
 	for i := range args {
+		if i == 1 { // second argument could accept string or IP type
+			if args[i].Type() != value.StringType && args[i].Type() != value.IpType {
+				return errors.TypeMismatch(Ratelimit_penaltybox_has_Name, i+1, Ratelimit_penaltybox_has_ArgumentTypes[i], args[i].Type())
+			}
+			continue
+		}
 		if args[i].Type() != Ratelimit_penaltybox_has_ArgumentTypes[i] {
 			return errors.TypeMismatch(Ratelimit_penaltybox_has_Name, i+1, Ratelimit_penaltybox_has_ArgumentTypes[i], args[i].Type())
 		}
@@ -34,6 +40,20 @@ func Ratelimit_penaltybox_has(ctx *context.Context, args ...value.Value) (value.
 		return value.Null, err
 	}
 
-	// TODO: Needs to be implemented
-	return &value.Boolean{Value: false}, nil
+	name := value.Unwrap[*value.Ident](args[0]).Value
+	var entry string
+	switch args[1].Type() {
+	case value.StringType:
+		entry = value.Unwrap[*value.String](args[1]).Value
+	case value.IpType:
+		entry = value.Unwrap[*value.IP](args[1]).String()
+	}
+
+	pb, ok := ctx.Penaltyboxes[name]
+	if !ok {
+		return value.Null, errors.New(Ratelimit_penaltybox_add_Name, "Penaltybox %s is not defined", name)
+	}
+	return &value.Boolean{
+		Value: pb.Has(entry),
+	}, nil
 }

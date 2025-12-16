@@ -2,7 +2,9 @@ package exception
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -44,7 +46,7 @@ func (e *Exception) Error() string {
 	return out
 }
 
-func Runtime(t *token.Token, format string, args ...interface{}) *Exception {
+func Runtime(t *token.Token, format string, args ...any) *Exception {
 	return &Exception{
 		Type:    RuntimeType,
 		Token:   t,
@@ -52,9 +54,30 @@ func Runtime(t *token.Token, format string, args ...interface{}) *Exception {
 	}
 }
 
-func System(format string, args ...interface{}) *Exception {
+func System(format string, args ...any) *Exception {
 	return &Exception{
 		Type:    SystemType,
 		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+func MaxCallStackExceeded(t *token.Token, stacks []*ast.SubroutineDeclaration) *Exception {
+	message := make([]string, len(stacks))
+	for i := range stacks {
+		message[i] = fmt.Sprintf(
+			"%s in %s:%d",
+			stacks[i].Name.Value,
+			stacks[i].GetMeta().Token.File,
+			stacks[i].GetMeta().Token.Line,
+		)
+	}
+
+	return &Exception{
+		Type:  RuntimeType,
+		Token: t,
+		Message: fmt.Sprintf(
+			"max call stack exceeded. Call stack:\n%s",
+			strings.Join(message, "\n"),
+		),
 	}
 }

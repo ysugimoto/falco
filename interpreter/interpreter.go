@@ -3,8 +3,9 @@ package interpreter
 import (
 	"fmt"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/cache"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -24,12 +26,14 @@ import (
 type Interpreter struct {
 	vars      variable.Variable
 	localVars variable.LocalVariables
+	lock      sync.Mutex
 
 	options []context.Option
 
 	ctx           *context.Context
 	process       *process.Process
 	cache         *cache.Cache
+	callStack     []*ast.SubroutineDeclaration
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
 
@@ -40,9 +44,11 @@ func New(options ...context.Option) *Interpreter {
 	return &Interpreter{
 		options:      options,
 		cache:        cache.New(),
+		callStack:    []*ast.SubroutineDeclaration{},
 		localVars:    variable.LocalVariables{},
 		Debugger:     DefaultDebugger{},
 		TestingState: NONE,
+		process:      process.New(),
 	}
 }
 
@@ -79,7 +85,7 @@ func (i *Interpreter) restart() error {
 	i.ctx.Response = nil
 
 	if err := i.ProcessRecv(); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -90,11 +96,11 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	main, err := ctx.Resolver.MainVCL()
 	if err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyVCLLimitation(main.Data); err != nil {
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	vcl, err := parser.New(
 		lexer.NewFromString(main.Data, lexer.WithFile(main.Name)),
@@ -102,19 +108,21 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	if err != nil {
 		// parse error
 		i.Debugger.Message(err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if ctx.FastlySnippets != nil {
-		for _, snip := range ctx.FastlySnippets.EmbedSnippets() {
-			s, err := parser.New(
-				lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name)),
-			).ParseVCL()
+		snippets, err := ctx.FastlySnippets.EmbedSnippets(ctx.TLSServer)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		for _, snip := range snippets {
+			s, err := parser.New(lexer.NewFromString(snip.Data, lexer.WithFile(snip.Name))).ParseVCL()
 			if err != nil {
 				// parse error
 				i.Debugger.Message(err.Error())
-				return err
+				return errors.WithStack(err)
 			}
 			vcl.Statements = append(s.Statements, vcl.Statements...)
 		}
@@ -122,6 +130,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	ctx.RequestStartTime = time.Now()
 	i.ctx = ctx
 	i.ctx.Request = r
+	r.Header.Set("Host", r.Host)
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {
@@ -132,16 +141,30 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx.Scope = context.InitScope
 	i.vars = variable.NewAllScopeVariables(i.ctx)
 
-	statements, err := i.resolveIncludeStatement(vcl.Statements, true)
-	if err != nil {
-		return err
+	// We should think about purge request.
+	// From Fastly spec, when the service receives purge request, HTTP related fields should be:
+	// - method is FASTLYPURGE
+	// - host header is original access based, but fastly_info.host_header value turns to api.fastly.com
+	i.ctx.IsPurgeRequest = r.Method == "FASTLYPURGE"
+	if i.ctx.IsPurgeRequest {
+		i.ctx.OriginalHost = "api.fastly.com"
 	}
-	if err := i.ProcessDeclarations(statements); err != nil {
-		return err
+
+	vcl.Statements, err = i.resolveIncludeStatement(vcl.Statements, true)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// instrumenting if coverage measurement is enabled
+	if i.ctx.Coverage != nil {
+		i.instrument(vcl)
+	}
+	if err := i.ProcessDeclarations(vcl.Statements); err != nil {
+		return errors.WithStack(err)
 	}
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
+
 	return nil
 }
 
@@ -171,13 +194,16 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true}
+			h := &atomic.Bool{}
+			h.Store(true)
+			i.ctx.Backends[t.Name.Value] = &value.Backend{Director: dc, Literal: true, Healthy: h}
 		case *ast.TableDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Tables[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Table %s is duplicated", t.Name.Value)
 			}
 			i.ctx.Tables[t.Name.Value] = t
+
 		case *ast.SubroutineDeclaration:
 			i.Debugger.Run(stmt)
 			if t.ReturnType != nil {
@@ -187,6 +213,7 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 				i.ctx.SubroutineFunctions[t.Name.Value] = t
 				continue
 			}
+
 			exists, ok := i.ctx.Subroutines[t.Name.Value]
 			if !ok {
 				i.ctx.Subroutines[t.Name.Value] = t
@@ -206,13 +233,29 @@ func (i *Interpreter) ProcessDeclarations(statements []ast.Statement) error {
 			if _, ok := i.ctx.Penaltyboxes[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Penaltybox %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Penaltyboxes[t.Name.Value] = t
+			i.ctx.Penaltyboxes[t.Name.Value] = value.NewPenaltybox(t)
 		case *ast.RatecounterDeclaration:
 			i.Debugger.Run(stmt)
 			if _, ok := i.ctx.Ratecounters[t.Name.Value]; ok {
 				return exception.Runtime(&t.Token, "Ratecounter %s is duplicated", t.Name.Value)
 			}
-			i.ctx.Ratecounters[t.Name.Value] = t
+			i.ctx.Ratecounters[t.Name.Value] = value.NewRatecounter(t)
+		}
+	}
+
+	// Inject edge dictionaries which provided via configuration
+	for name, dict := range i.ctx.InjectEdgeDictionaries {
+		if v, ok := i.ctx.Tables[name]; ok {
+			// If EdgeDictionary already defined, inject items.
+			// Edge Dictionary value type must be STRING
+			if v.ValueType.Value != "STRING" {
+				return exception.System("EdgeDictionary injection error: %s value type is not STRING", v.Name.Value)
+			}
+			i.InjectEdgeDictionaryItem(v, dict)
+		} else {
+			// Otherwise, add definition
+			d := i.createEdgeDictionaryDeclaration(name, dict)
+			i.ctx.Tables[name] = d
 		}
 	}
 	return nil
@@ -249,12 +292,31 @@ func (i *Interpreter) ProcessRecv() error {
 
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameRecv]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 	} else {
 		state = PASS
+	}
+
+	// When request is purge request the service processes vcl_recv subroutine only,
+	// don't call any directive after vcl_recv.
+	if i.ctx.IsPurgeRequest {
+		if !i.ctx.ReturnStatementCalled {
+			return exception.Runtime(
+				nil,
+				"Failed to accept purge request. The vcl_recv subroutine must determine next state with return statement",
+			)
+		}
+		if state != LOOKUP && state != PASS {
+			return exception.Runtime(
+				nil,
+				`Failed to accept purge request. The vcl_recv subroutine MUST return "lookup" or "pass" state with return statement`,
+			)
+		}
+		// We don't call following state machine subroutines.
+		return nil
 	}
 
 	switch state {
@@ -280,7 +342,7 @@ func (i *Interpreter) ProcessRecv() error {
 			i.process.Cached = true
 			i.ctx.State = "HIT"
 			i.ctx.CacheHitItem = v
-			i.ctx.Object = i.cloneResponse(v.Response)
+			i.ctx.Object = v.Response.Clone()
 			i.Debugger.Message(fmt.Sprintf("Move state: %s -> HIT", i.ctx.Scope))
 			err = i.ProcessHit()
 		} else {
@@ -316,7 +378,7 @@ func (i *Interpreter) ProcessHash() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameHash]; ok {
-		if state, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if state, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		} else if state != HASH && state != NONE {
 			return exception.Runtime(
@@ -352,7 +414,7 @@ func (i *Interpreter) ProcessMiss() error {
 	state := FETCH
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameMiss]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -397,7 +459,7 @@ func (i *Interpreter) ProcessHit() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameHit]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -460,7 +522,7 @@ func (i *Interpreter) ProcessPass() error {
 	state := PASS
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNamePass]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -518,9 +580,9 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 	// TODO: consider stale-white-revalidate and stale-if-error TTL
 
-	// Consider cache, create client response from backend response
+	// Update cache
 	defer func() {
-		resp := i.cloneResponse(i.ctx.BackendResponse)
+		resp := i.ctx.BackendResponse.Clone()
 		// Note: compare BackendResponseCacheable value
 		// because this value will be changed by user in vcl_fetch directive
 		if i.ctx.BackendResponseCacheable.Value {
@@ -533,7 +595,6 @@ func (i *Interpreter) ProcessFetch() error {
 				})
 			}
 		}
-		i.ctx.Response = resp
 	}()
 
 	// Simulate Fastly statement lifecycle
@@ -541,7 +602,7 @@ func (i *Interpreter) ProcessFetch() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameFetch]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -551,7 +612,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 
 	switch state {
-	case DELIVER, DELIVER_STALE, PASS:
+	case DELIVER, DELIVER_STALE, PASS, HIT_FOR_PASS:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
 		err = i.ProcessDeliver()
 	case ERROR:
@@ -580,27 +641,19 @@ func (i *Interpreter) ProcessError() error {
 	// @see: https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/
 	i.ctx.IsLocallyGenerated = &value.Boolean{Value: true}
 
-	if i.ctx.Object == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
-			i.ctx.Object.StatusCode = int(i.ctx.ObjectStatus.Value)
-			i.ctx.Object.Body = io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value))
-		} else {
-			i.ctx.Object = &http.Response{
-				StatusCode: int(i.ctx.ObjectStatus.Value),
-				Status:     http.StatusText(int(i.ctx.ObjectStatus.Value)),
-				Proto:      "HTTP/1.0",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header: http.Header{
-					"Content-Type": {"text/plain"},
-				},
-				Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
-				ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
-				Request:       i.ctx.Request,
-			}
-		}
-	}
+	i.ctx.Object = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    int(i.ctx.ObjectStatus.Value),
+			Status:        ghttp.StatusText(int(i.ctx.ObjectStatus.Value)),
+			Proto:         "HTTP/1.0",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader(i.ctx.ObjectResponse.Value)),
+			ContentLength: int64(len(i.ctx.ObjectResponse.Value)),
+			Request:       i.ctx.Request.Request,
+		},
+	)
 
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
@@ -608,7 +661,7 @@ func (i *Interpreter) ProcessError() error {
 	state := DELIVER
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameError]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -640,12 +693,26 @@ func (i *Interpreter) ProcessError() error {
 func (i *Interpreter) ProcessDeliver() error {
 	i.SetScope(context.DeliverScope)
 
-	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-		} else if i.ctx.Object != nil {
-			i.ctx.Response = i.cloneResponse(i.ctx.Object)
-		}
+	if i.ctx.Object != nil {
+		i.ctx.Response = i.ctx.Object.Clone()
+	} else if i.ctx.BackendResponse != nil {
+		i.ctx.Response = i.ctx.BackendResponse.Clone()
+	}
+
+	// Add Fastly related server info but values are falco's one.
+	// Note that these headers could be removed in vcl_deliver subroutine
+	i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
+	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
+	i.ctx.Response.Header.Set("Date", time.Now().Format(http.TimeFormat))
+	i.ctx.Response.Header.Set("Server", "Falco")
+	i.ctx.Response.Header.Set("Via", "Falco")
+
+	// Additionally set cache related headers
+	if i.ctx.CacheHitItem != nil {
+		i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
+		i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
+	} else {
+		i.ctx.Response.Header.Set("X-Cache-Hits", "0")
 	}
 
 	// Simulate Fastly statement lifecycle
@@ -654,7 +721,7 @@ func (i *Interpreter) ProcessDeliver() error {
 	state := LOG
 	sub, ok := i.ctx.Subroutines[context.FastlyVclNameDeliver]
 	if ok {
-		state, err = i.ProcessSubroutine(sub, DebugPass)
+		state, err = i.ProcessSubroutine(sub, DebugPass, nil)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -674,18 +741,7 @@ func (i *Interpreter) ProcessDeliver() error {
 			}
 		}
 
-		// Add Fastly related server info but values are falco's one
-		i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
-		i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-
-		// Additionally set cache related headers
-		if i.ctx.CacheHitItem != nil {
-			i.ctx.Response.Header.Set("X-Cache-Hits", fmt.Sprint(i.ctx.CacheHitItem.Hits))
-			i.ctx.Response.Header.Set("Age", fmt.Sprintf("%.0f", time.Since(i.ctx.CacheHitItem.EntryTime).Seconds()))
-		} else {
-			i.ctx.Response.Header.Set("X-Cache-Hits", "0")
-		}
-		// When Fastly-Debug header is present, add debug header but values are fakes
+		// When Fastly-Debug header is still present after vcl_deliver calling, add debug headers with virtual value
 		if i.ctx.Request.Header.Get("Fastly-Debug") != "" {
 			i.ctx.Response.Header.Set(
 				"Fastly-Debug-Path",
@@ -721,11 +777,11 @@ func (i *Interpreter) ProcessLog() error {
 	i.SetScope(context.LogScope)
 
 	if i.ctx.Response == nil {
-		if i.ctx.BackendResponse != nil {
-			v := *i.ctx.BackendResponse
-			i.ctx.Response = &v
-		} else if i.ctx.Object != nil {
+		if i.ctx.Object != nil {
 			v := *i.ctx.Object
+			i.ctx.Response = &v
+		} else if i.ctx.BackendResponse != nil {
+			v := *i.ctx.BackendResponse
 			i.ctx.Response = &v
 		}
 	}
@@ -733,7 +789,7 @@ func (i *Interpreter) ProcessLog() error {
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	if sub, ok := i.ctx.Subroutines[context.FastlyVclNameLog]; ok {
-		if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
+		if _, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -744,20 +800,20 @@ var expiresValueLayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 	if v := resp.Header.Get("Surrogate-Control"); v != "" {
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}
 	}
 	if v := resp.Header.Get("Cache-Control"); v != "" {
-		if strings.HasPrefix(v, "s-maxage=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "s-maxage=") + "s"); err == nil {
+		if sMaxAge, found := strings.CutPrefix(v, "s-maxage="); found {
+			if dur, err := time.ParseDuration(sMaxAge + "s"); err == nil {
 				return dur
 			}
 		}
-		if strings.HasPrefix(v, "max-age=") {
-			if dur, err := time.ParseDuration(strings.TrimPrefix(v, "max-age=") + "s"); err == nil {
+		if maxAge, found := strings.CutPrefix(v, "max-age="); found {
+			if dur, err := time.ParseDuration(maxAge + "s"); err == nil {
 				return dur
 			}
 		}

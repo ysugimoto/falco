@@ -1,3 +1,240 @@
+## v2.0.0
+
+- Support notset state in STRING and IP type (@ysugimoto)
+- Support Fastly remote resources (response object, condition, Force SSL) (@ysugimoto)
+
+## v1.21.1
+
+- Add assert.not_restart function and tests [#514](https://github.com/ysugimoto/falco/pull/514) (@emylincon)
+- Formatter supports custom subroutine parameters [#516](https://github.com/ysugimoto/falco/pull/516) (@ysugimoto)
+
+## v1.21.0
+
+- Add functionality for setting backend health during testing [#511](https://github.com/ysugimoto/falco/pull/511) (@emylincon)
+- Fix synthetic response and obj.response relevants [#509](https://github.com/ysugimoto/falco/pull/509) (@ysugimoto)
+- Ability to check origin host header [#492](https://github.com/ysugimoto/falco/pull/492) (@ysugimoto)
+- Add contributor [#508](https://github.com/ysugimoto/falco/pull/508) (@ysugimoto)
+- Copy ForceQury to add query sign even query string is empty [#507](https://github.com/ysugimoto/falco/pull/507) (@ysugimoto)
+- Add table.lookup_regex function + extensive tests [#504](https://github.com/ysugimoto/falco/pull/504) (@jedisct1)
+- Remove legacy waf related documentation reference [#502](https://github.com/ysugimoto/falco/pull/502) (@ysugimoto)
+- Support parameters in custom subs [#501](https://github.com/ysugimoto/falco/pull/501) (@jedisct1)
+- Add digest_hash_{xxh32,xxh64} and digest_hmac_sha256_with_base64_key [#498](https://github.com/ysugimoto/falco/pull/498) (@jedisct1)
+- Add support for AES-CCM in crypto.hex_{encrypt,decrypt} [#497](https://github.com/ysugimoto/falco/pull/497) (@jedisct1)
+- Add AES-GCM support to crypto functions [#495](https://github.com/ysugimoto/falco/pull/495) (@jedisct1)
+- Security update [#494](https://github.com/ysugimoto/falco/pull/494) (@ysugimoto)
+
+## v1.20.0
+
+- Implement ratelimit related features [#491](https://github.com/ysugimoto/falco/pull/491) (@ysugimoto)
+- Fix string concatenation with functional calls [#490](https://github.com/ysugimoto/falco/pull/490) (@MasonM)
+- Make querystring.get not decode query keys [#489](https://github.com/ysugimoto/falco/pull/489) (@yonran)
+- Order snippets by ascending priority [#488](https://github.com/ysugimoto/falco/pull/488) (@yonran)
+- Fix string concatenation with RTIME idents [#487](https://github.com/ysugimoto/falco/pull/487) (@MasonM)
+- Fully implement and fix `fastly.try_select_shield()` [#486](https://github.com/ysugimoto/falco/pull/486) (@MasonM)
+- Implement `director.{NAME}.healthy` and fix segfaults [#485](https://github.com/ysugimoto/falco/pull/485) (@MasonM)
+- Add `assert.is_json()` function [#483](https://github.com/ysugimoto/falco/pull/483) (@MasonM)
+- Fix object response handling, mainly error scope [#481](https://gthub.com/ysugimoto/falco/pull/481) (@ysugimoto)
+
+## v1.19.0
+
+- Support fastly purge request in interpreter [#477](https://github.com/ysugimoto/falco/pull/477) (@ysugimoto)
+- More injectable variables [#479](https://github.com/ysugimoto/falco/pull/479) (@ysugimoto)
+- Use log statement for testing printing [#471](https://github.com/ysugimoto/falco/pull/471) (@ysugimoto)
+- Improve builtin function tests [#464](https://github.com/ysugimoto/falco/pull/464) (@ysugimoto)
+- Update docs/testing.md to add missing testing.inject_variable description [#464](https://github.com/ysugimoto/falco/pull/464) (@taga3s)
+
+## v1.18.1
+
+- Fix table.lookup_xxx builtin function [#462](https://github.com/ysugimoto/falco/pull/462) (@ysugimoto)
+
+## v1.18.0
+
+- Fix typos in interpreter/limitations/limitations.go [#452](https://github.com/ysugimoto/falco/pull/452) (@taga3s)
+- Implement testing.get_env testing function [#455](https://github.com/ysugimoto/falco/pull/455) (@ysugimoto)
+- Add -w shorthand flag for Unit Testing watch mode [#458](https://github.com/ysugimoto/falco/pull/458) (@taga3s)
+- Implement prefer_ipv6 field in backend declaration [#460](https://github.com/ysugimoto/falco/pull/460) (@ysugimoto)
+- Implement testing tags [#461](https://github.com/ysugimoto/falco/pull/461) (@ysugimoto)
+
+## v1.17.0
+
+- Implement std.strcasecmp builtin function [#451](https://github.com/ysugimoto/falco/pull/451) (@ysugimoto)
+- Implement xxh32 and xxh64 builtin function [#450](https://github.com/ysugimoto/falco/pull/450) (@ysugimoto)
+- Implement wildcard support for unset statement [#449](https://github.com/ysugimoto/falco/pull/449) (@ysugimoto)
+- Implement skipping test feature [#448](https://github.com/ysugimoto/falco/pull/448) (@ysugimoto)
+- Fix objective header get only key name [#446](https://github.com/ysugimoto/falco/pull/446) (@ysugimoto)
+- Use modarnize package [#445](https://github.com/ysugimoto/falco/pull/445) (@ysugimoto)
+
+## v1.16.0
+
+- Support assign value with variable declaration [#444](https://github.com/ysugimoto/falco/pull/444) (@ysugimoto)
+- Support hit_for_pass return state in vcl_fetch directive [#443](https://github.com/ysugimoto/falco/pull/443) (@ysugimoto)
+- Colored output for common CI services [#442](https://github.com/ysugimoto/falco/pull/442) (@ysugimoto)
+- Dedupe test target files [#441](https://github.com/ysugimoto/falco/pull/441) (@ysugimoto)
+- Add hit_for_pass to valid return values for vcl_fetch subroutine [#440](https://github.com/ysugimoto/falco/pull/440) (@acme)
+- Support inline declarations in declare statements [#439](https://github.com/ysugimoto/falco/pull/439) (@acme)
+
+## v1.15.3
+
+- Tweak vendor detecting tests [#437](https://github.com/ysugimoto/falco/pull/437) (@ysugimoto)
+- Implement new predefined variables [#436](https://github.com/ysugimoto/falco/pull/436) (@ysugimoto)
+- Add VCL_ prefix at scope string in test result printing [#435](https://github.com/ysugimoto/falco/pull/435) (@ysugimoto)
+
+## v1.15.2
+
+- Pin GHA action version  [#426](https://github.com/ysugimoto/falco/pull/426) (@ysugimoto)
+- Implement new predefined variables [#428](https://github.com/ysugimoto/falco/pull/428) (@ysugimoto)
+- Implement `fastly.ddos_detected` predefined variables [#430](https://github.com/ysugimoto/falco/pull/430) (@ysugimoto)
+- Fix base64 decode function with single equal characters [#432](https://github.com/ysugimoto/falco/pull/432) (@ysugimoto)
+
+## v1.15.1
+
+-  Improve digest.ecdsa_verify function [#425](https://github.com/ysugimoto/falco/pull/425) (@ysugimoto)
+-  Fix/multiline expressions [#424](https://github.com/ysugimoto/falco/pull/424) (@ysugimoto)
+
+## v1.15.0
+
+-  Implement max call stack for calling subroutine recursively [#423](https://github.com/ysugimoto/falco/pull/423) (@ysugimoto)
+-  fix: resolve missing default transport settings in HTTPS by cloning http.DefaultTransport [#422](https://github.com/ysugimoto/falco/pull/422) (@3846masa)
+-  Improve set statement value expression [#420](https://github.com/ysugimoto/falco/pull/420) (@ysugimoto)
+-  Implement digest.ecdsa_verify function[#419](https://github.com/ysugimoto/falco/pull/419) (@ysugimoto)
+
+## v1.14.0
+
+- use pcre regexp for assetion function [#416](https://github.com/ysugimoto/falco/pull/416) (@ysugimoto)
+- Display coverage table [#415](https://github.com/ysugimoto/falco/pull/415) (@ysugimoto)
+- Implement test coverage measurement [#414](https://github.com/ysugimoto/falco/pull/414) (@ysugimoto)
+- Improve and new feature for parser package [#413](https://github.com/ysugimoto/falco/pull/413) (@ysugimoto)
+- Reset regex captured group when matched [#412](https://github.com/ysugimoto/falco/pull/412) (@ysugimoto)
+- remove goling linter-settings [#411](https://github.com/ysugimoto/falco/pull/411) (@ysugimoto)
+- fix objective header set like foo:bar [#410](https://github.com/ysugimoto/falco/pull/410) (@ysugimoto)
+- use pcre regular expression in interpreter [#409](https://github.com/ysugimoto/falco/pull/409) (@ysugimoto)
+
+## v1.13.0
+
+- list all configuration fields [#406](https://github.com/ysugimoto/falco/pull/406) (@ysugimoto)
+- implement edge dictionary injectable for testing process [#405](https://github.com/ysugimoto/falco/pull/405) (@ysugimoto)
+- implement assert.not_state assertion function [#403](https://github.com/ysugimoto/falco/pull/403) (@ysugimoto)
+- update golang 1.23.5 and golangci-lint v1.63, fix new reports [#402](https://github.com/ysugimoto/falco/pull/402) (@ysugimoto)
+- refactor linter context package [#401](https://github.com/ysugimoto/falco/pull/401) (@ysugimoto)
+- Fix scheduler action [#396](https://github.com/ysugimoto/falco/pull/396) (@ysugimoto)
+
+## v1.12.0
+
+- Add more logic and error definition for long string parsing [#394](https://github.com/ysugimoto/falco/pull/394) (@ysugimoto)
+- fix: formatting is broken if using elseif or elsif [#393](https://github.com/ysugimoto/falco/pull/393) (@ronnnnn)
+- fix: support --version option [#392](https://github.com/ysugimoto/falco/pull/392) (@ronnnnn)
+- Add TIME type support for conditional operators to interpreter [#390](https://github.com/ysugimoto/falco/pull/390) (@Co9xs)
+- Update falco simulate command in README [#389](https://github.com/ysugimoto/falco/pull/389) (@TakeshiOnishi)
+- Write formatter configuration in docs [#388](https://github.com/ysugimoto/falco/pull/388) (@ysugimoto)
+- Fix header subfield handling [#385](https://github.com/ysugimoto/falco/pull/385) (@gabrielg)
+- Allows subroutine calls in return statements [#384](https://github.com/ysugimoto/falco/pull/384) (@gabrielg)
+- Allow access to body set bu synthetic in tests [#382](https://github.com/ysugimoto/falco/pull/382) (@gabrielg)
+- Change fastly.error from FLOAT to STRING [#380](https://github.com/ysugimoto/falco/pull/380) (@gabrielg)
+- Add support for long strings with heredoc delimiters [#379](https://github.com/ysugimoto/falco/pull/379) (@gabrielg)
+- Implement scheduler for documentation-check [#377](https://github.com/ysugimoto/falco/pull/377) (@ysugimoto)
+- Fix grouped testing syntax [#376](https://github.com/ysugimoto/falco/pull/376) (@bungoume)
+- Fix fastly services recursively in terraform planned JSON [#375](https://github.com/ysugimoto/falco/pull/375) (@ysugimoto)
+- Lint custom statement [#374](https://github.com/ysugimoto/falco/pull/374) (@ysugimoto)
+- Lexer performance improvement [#372](https://github.com/ysugimoto/falco/pull/372) (@ysugimoto)
+- Benchmark Performance [#371](https://github.com/ysugimoto/falco/pull/371) (@ysugimoto)
+
+## v1.11.2
+
+- fix string concatenation problem for functioncall and if expression [#369](https://github.com/ysugimoto/falco/pull/369) (@ysugimoto)
+
+## v1.11.1
+
+- add assert.not_error function to function table [#368](https://github.com/ysugimoto/falco/pull/368) (@ysugimoto)
+
+## v1.11.0
+
+- add dap subcommand and support basic DAP features [#349](https://github.com/ysugimoto/falco/pull/349) (@rinx)
+- Fix tiny bug of base64 decode functions [#351](https://github.com/ysugimoto/falco/pull/351) (@ysugimoto)
+- implement `assert.not_error` assertion method [#352](https://github.com/ysugimoto/falco/pull/352) (@ysugimoto)
+- fix header existence logic, exactly treat as null or empty string [#353](https://github.com/ysugimoto/falco/pull/353) (@ysugimoto)
+- improve url encode and decode built-in functions [#354](https://github.com/ysugimoto/falco/pull/354) (@ysugimoto)
+- move base64 related logic to shared codec [#355](https://github.com/ysugimoto/falco/pull/355) (@ysugimoto)
+- Fix hex display: pad 01-0F values to two digits [#356](https://github.com/ysugimoto/falco/pull/356) (@bungoume)
+- fix literal comparing issue for injected variables [#357](https://github.com/ysugimoto/falco/pull/357) (@ysugimoto)
+- add `bereq.max_reuse_idle_time` variable support [#362](https://github.com/ysugimoto/falco/pull/362) (@ysugimoto)
+- add remote director resource to lint [#363](https://github.com/ysugimoto/falco/pull/363) (@ysugimoto)
+- Improve string concatenation logic [#364](https://github.com/ysugimoto/falco/pull/364) (@ysugimoto)
+- implement raising deprecated error [#366](https://github.com/ysugimoto/falco/pull/366) (@ysugimoto)
+- docs(dap): add a brief documentation about dap subcommand [#367](https://github.com/ysugimoto/falco/pull/367) (@rinx)
+
+## v1.10.0
+
+- add watch option for incremental testing [#347](https://github.com/ysugimoto/falco/pull/347) (@ysugimoto)
+- exact custom token [#346](https://github.com/ysugimoto/falco/pull/346) (@ysugimoto)
+- implement uuid version7 related new functions [#345](https://github.com/ysugimoto/falco/pull/345) (@ysugimoto)
+- inject value for tentative in simulator [#344](https://github.com/ysugimoto/falco/pull/344) (@ysugimoto)
+- correct typo in SortDeclaration default tag [#342](https://github.com/ysugimoto/falco/pull/342) (@acme)
+- adjust default TrailingCommentWidth to 1 [#341](https://github.com/ysugimoto/falco/pull/341) (@acme)
+- update timezone in test [#340](https://github.com/ysugimoto/falco/pull/340) (@acme)
+- add `--genearted` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/pull/339) (@ysugimoto)
+- support Fastly generated specific syntaxes [#338](https://github.com/ysugimoto/falco/pull/338) (@ysugimoto)
+
+## v1.9.1
+
+- strict macro linting [#336](https://github.com/ysugimoto/falco/pull/336) (@ysugimoto)
+- feat(formatter): prevent indentation of #FASTLY macros [#335](https://github.com/ysugimoto/falco/pull/335) (@acme)
+- fix(formatter): remove space between return and parenthesis [#334](https://github.com/ysugimoto/falco/pull/334) (@acme)
+- Add feature to disable only specific lint rules with ignore comment [#333](https://github.com/ysugimoto/falco/pull/333) (@nodaguti)
+- Set exit code to 1 when there are one or more lint errors [#332](https://github.com/ysugimoto/falco/pull/332) (@nodaguti)
+- Add extra format check for backend.share_key [#331](https://github.com/ysugimoto/falco/pull/331) (@nodaguti)
+- Fix broken result message of tester and use exactly the same format for both passed and failed tests [#330](https://github.com/ysugimoto/falco/pull/330) (@nodaguti)
+
+## v1.9.0
+
+- Arbitrary process flow marking [#327](https://github.com/ysugimoto/falco/pull/327) (@ysugimoto)
+- Actual proxy behavior in simulator [#328](https://github.com/ysugimoto/falco/pull/328) (@ysugimoto)
+- Reduce memory allocation using pool [#329](https://github.com/ysugimoto/falco/pull/329) (@ysugimoto)
+
+## v1.8.0
+
+- HTTPS server Support [#319](https://github.com/ysugimoto/falco/pull/319) (@ysugimoto)
+- Support fastly.try_select_shield new function [#320](https://github.com/ysugimoto/falco/pull/320) (@ysugimoto)
+- Injectable Edge Dictionary on Simulator [#321](https://github.com/ysugimoto/falco/pull/321) (@ysugimoto)
+- Subroutine mocking feature [#322](https://github.com/ysugimoto/falco/pull/322) (@ysugimoto)
+- Bump versions on CI [#323](https://github.com/ysugimoto/falco/pull/323) (@ysugimoto)
+- Implement plugin system [#324](https://github.com/ysugimoto/falco/pull/324) (@ysugimoto)
+
+## v1.7.0
+
+- Feature/testing syntax [#312](https://github.com/ysugimoto/falco/pull/312) (@ysugimoto)
+- Add linter rule of goto [#311](https://github.com/ysugimoto/falco/pull/311) (@ysugimoto)
+
+## v1.6.0
+
+- Errors with concurrent simulator requests due to global interpreter state [#282](https://github.com/ysugimoto/falco/pull/282) (@richardmarshall)
+- Fix offset/length handling in substr & utf8.substr [#283](https://github.com/ysugimoto/falco/pull/283) (@richardmarshall)
+- Regex patterns must be literals [#284](https://github.com/ysugimoto/falco/pull/284) (@richardmarshall)
+- Add missing backend.{name}.* variables [#285](https://github.com/ysugimoto/falco/pull/285) (@richardmarshall)
+- Feature/implement formatter [#291](https://github.com/ysugimoto/falco/pull/291) (@ysugimoto)
+- Add enforcing and ignoring subroutine scope in linter config [#296](https://github.com/ysugimoto/falco/pull/296) (@ysugimoto)
+- Improve parser/ast for complex comments [#302](https://github.com/ysugimoto/falco/pull/302) (@ysugimoto)
+- Feature/console subcommand [#303](https://github.com/ysugimoto/falco/pull/303) (@ysugimoto)
+
+
+## v1.5.0
+
+- Add assert.not_subroutine_called [#247](https://github.com/ysugimoto/falco/pull/247) (@bungoume)
+- Save/restore current subroutine locals when processing call statement [#254](https://github.com/ysugimoto/falco/pull/254) (@richardmarshall)
+- Handle % string escapes [#256](https://github.com/ysugimoto/falco/pull/256) (@richardmarshall)
+- testing.call_subroutine ignores invalid subroutine name [#259](https://github.com/ysugimoto/falco/pull/259) (@akrainiouk)
+- fixed double decoding in urldecod [#261](https://github.com/ysugimoto/falco/pull/261) (@akrainiouk)
+- req.url: fixed consistency with Fastly implementation [#262](https://github.com/ysugimoto/falco/pull/262) (@akrainiouk)
+- fix base64 decode related builtin function [#263](https://github.com/ysugimoto/falco/pull/263) (@ysugimoto)
+- Fixed parsing of += operator [#266](https://github.com/ysugimoto/falco/pull/266) (@akrainiouk)
+- keepalive_time added to supported backend properties [#269](https://github.com/ysugimoto/falco/pull/269) (@akrainiouk)
+- improve trailing/infix comment parsing [#270](https://github.com/ysugimoto/falco/pull/270) (@ysugimoto)
+- follow new fastly documentation [#271](https://github.com/ysugimoto/falco/pull/271) (@ysugimoto)
+- special dealing for req.hash addition assignment [#275](https://github.com/ysugimoto/falco/pull/275) (@ysugimoto)
+- Prioritize cache object [#277](https://github.com/ysugimoto/falco/pull/277) (@richardmarshall)
+- fix exprression comment parsing [#278](https://github.com/ysugimoto/falco/pull/278) (@ysugimoto)
+- Setup req.http.host in ProcessInit [#279](https://github.com/ysugimoto/falco/pull/279) (@richardmarshall)
+- Record test runtime errors [#280](https://github.com/ysugimoto/falco/pull/280) (@richardmarshall)
+
 ## v1.4.0
 
 - Additional builtin variables [#245](https://github.com/ysugimoto/falco/pull/245) (@richardmarshall)

@@ -33,7 +33,7 @@ func Assert_starts_with_Validate(args []value.Value) error {
 
 func Assert_starts_with(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_starts_with_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message
@@ -48,7 +48,7 @@ func Assert_starts_with(ctx *context.Context, args ...value.Value) (value.Value,
 	ret := &value.Boolean{Value: strings.HasPrefix(actual.Value, expect.Value)}
 	if !ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(actual, message)
+			return ret, errors.NewAssertionError(actual, "%s", message)
 		}
 		return ret, errors.NewAssertionError(
 			actual,

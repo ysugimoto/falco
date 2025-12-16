@@ -6,118 +6,150 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-func (p *Parser) parseAclDeclaration() (*ast.AclDeclaration, error) {
+func (p *Parser) ParseAclDeclaration() (*ast.AclDeclaration, error) {
 	acl := &ast.AclDeclaration{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.IDENT))
 	}
-	acl.Name = p.parseIdent()
+	acl.Name = p.ParseIdent()
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.LEFT_BRACE))
 	}
-	swapLeadingTrailing(p.curToken, acl.Name.Meta)
+	SwapLeadingTrailing(p.curToken, acl.Name.Meta)
 
-	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		p.nextToken() // point to CIDR start
-		cidr, err := p.parseAclCidr()
+	for !p.PeekTokenIs(token.RIGHT_BRACE) {
+		p.NextToken() // point to CIDR start
+		cidr, err := p.ParseAclCidr()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		} else if cidr != nil {
 			acl.CIDRs = append(acl.CIDRs, cidr)
 		}
 	}
-	acl.Meta.Trailing = p.trailing()
-	p.nextToken() // point to RIGHT BRACE
+	p.NextToken() // point to RIGHT BRACE
 
 	// RIGHT_BRACE leading comments are ACL infix comments
-	swapLeadingInfix(p.curToken, acl.Meta)
+	SwapLeadingInfix(p.curToken, acl.Meta)
+	acl.Trailing = p.Trailing()
+	acl.EndLine = p.curToken.Token.Line
+	acl.EndPosition = p.curToken.Token.Position
 
 	return acl, nil
 }
 
-func (p *Parser) parseAclCidr() (*ast.AclCidr, error) {
+func (p *Parser) ParseAclCidr() (*ast.AclCidr, error) {
 	cidr := &ast.AclCidr{
 		Meta: p.curToken,
 	}
 
 	// Set inverse if "!" token exists
 	var err error
-	if p.curTokenIs(token.NOT) {
+	if p.CurTokenIs(token.NOT) {
 		cidr.Inverse = &ast.Boolean{
 			Meta:  clearComments(p.curToken),
 			Value: true,
 		}
-		p.nextToken() // point to IP token
+		p.NextToken() // point to IP token
 	}
 
-	if !p.curTokenIs(token.STRING) {
-		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
-	}
-	cidr.IP = p.parseIP()
-	cidr.IP.Meta = clearComments(cidr.IP.Meta)
-
-	// If SLASH token is found on peek token, need to parse CIDR mask bit
-	if p.peekTokenIs(token.SLASH) {
-		p.nextToken() // point to SLASH
-		if !p.expectPeek(token.INT) {
-			return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.INT))
-		}
-
-		cidr.Mask, err = p.parseInteger()
+	switch p.curToken.Token.Type {
+	case token.STRING:
+		// If token is STRING, parse as IP
+		cidr.IP = p.ParseIP()
+	case token.OPEN_LONG_STRING:
+		// If token is LONG_STRING like {"192.168.0.1"}, parse as STRING and convert to IP
+		str, err := p.ParseLongString()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+		cidr.IP = &ast.IP{
+			Meta:  str.Meta,
+			Value: str.Value,
+		}
+	default:
+		return nil, errors.WithStack(UnexpectedToken(p.curToken, token.STRING))
 	}
 
-	if !p.peekTokenIs(token.SEMICOLON) {
+	// If inverse is not set, leading comment should be set as CIDR node leading comment
+	if cidr.Inverse == nil {
+		cidr.IP.Meta = clearComments(cidr.IP.Meta)
+	}
+
+	endPosition := cidr.IP.EndPosition
+	// If SLASH token is found on peek token, need to Parse CIDR mask bit
+	if p.PeekTokenIs(token.SLASH) {
+		p.NextToken() // point to SLASH
+		if !p.ExpectPeek(token.INT) {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.INT))
+		}
+
+		cidr.Mask, err = p.ParseInteger()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		endPosition = cidr.Mask.EndPosition
+	}
+
+	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	cidr.Meta.Trailing = p.trailing()
-	p.nextToken() // point to semicolon
+	cidr.EndLine = p.curToken.Token.Line
+	cidr.EndPosition = endPosition
+	p.NextToken() // point to semicolon
+
+	// semicolon leading comment will attach whatever IP or Mask
+	if cidr.Mask != nil {
+		SwapLeadingTrailing(p.curToken, cidr.Mask.Meta)
+	} else {
+		SwapLeadingTrailing(p.curToken, cidr.IP.Meta)
+	}
+	cidr.Trailing = p.Trailing()
 
 	return cidr, nil
 }
 
-func (p *Parser) parseBackendDeclaration() (*ast.BackendDeclaration, error) {
+func (p *Parser) ParseBackendDeclaration() (*ast.BackendDeclaration, error) {
 	b := &ast.BackendDeclaration{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	b.Name = p.parseIdent()
+	b.Name = p.ParseIdent()
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, b.Name.Meta)
+	SwapLeadingTrailing(p.curToken, b.Name.Meta)
 
-	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		prop, err := p.parseBackendProperty()
+	for !p.PeekTokenIs(token.RIGHT_BRACE) {
+		prop, err := p.ParseBackendProperty()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		b.Properties = append(b.Properties, prop)
 	}
 
-	if !p.peekTokenIs(token.RIGHT_BRACE) {
+	if !p.PeekTokenIs(token.RIGHT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.curToken, "RIGHT_BRACE"))
 	}
 
-	swapLeadingInfix(p.peekToken, b.Meta)
-	b.Meta.Trailing = p.trailing()
-	p.nextToken()
+	SwapLeadingInfix(p.peekToken, b.Meta)
+	p.NextToken() // point to RIGHT_BRACE
+	b.Trailing = p.Trailing()
+	b.EndLine = p.curToken.Token.Line
+	b.EndPosition = p.curToken.Token.Position
 
 	return b, nil
 }
 
-func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
-	if !p.expectPeek(token.DOT) {
+func (p *Parser) ParseBackendProperty() (*ast.BackendProperty, error) {
+	if !p.ExpectPeek(token.DOT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "DOT"))
 	}
 
@@ -125,91 +157,98 @@ func (p *Parser) parseBackendProperty() (*ast.BackendProperty, error) {
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	prop.Key = p.parseIdent()
+	prop.Key = p.ParseIdent()
 
-	if !p.expectPeek(token.ASSIGN) {
+	if !p.ExpectPeek(token.ASSIGN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 	}
-	swapLeadingTrailing(p.curToken, prop.Key.Meta)
-
-	p.nextToken() // point to right token
+	SwapLeadingTrailing(p.curToken, prop.Key.Meta)
+	p.NextToken() // point to right token
 
 	// When current token is "{", property key should be ".probe"
-	if p.curTokenIs(token.LEFT_BRACE) {
+	if p.CurTokenIs(token.LEFT_BRACE) {
 		probe := &ast.BackendProbeObject{
 			Meta: p.curToken,
 		}
 
-		for !p.peekTokenIs(token.RIGHT_BRACE) {
-			pp, err := p.parseBackendProperty()
+		for !p.PeekTokenIs(token.RIGHT_BRACE) {
+			pp, err := p.ParseBackendProperty()
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
 			probe.Values = append(probe.Values, pp)
 		}
 
-		probe.Meta.Trailing = p.trailing()
-		p.nextToken() // point to RIGHT_BRACE
-		swapLeadingInfix(p.curToken, probe.Meta)
+		p.NextToken() // point to RIGHT_BRACE
+		SwapLeadingInfix(p.curToken, probe.Meta)
+		probe.Trailing = p.Trailing()
 		prop.Value = probe
+		probe.EndLine = p.curToken.Token.Line
+		probe.EndPosition = p.curToken.Token.Position
+		prop.EndLine = p.curToken.Token.Line
+		prop.EndPosition = p.curToken.Token.Position
 		return prop, nil
 	}
 
-	// Otherwise, parse expression
-	exp, err := p.parseExpression(LOWEST)
+	// Otherwise, Parse expression
+	exp, err := p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	prop.Value = exp
 
-	if !p.peekTokenIs(token.SEMICOLON) {
+	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.Trailing = p.trailing()
-	p.nextToken() // point to SEMICOLON
+	prop.EndLine = prop.Value.GetMeta().EndLine
+	prop.EndPosition = prop.Value.GetMeta().EndPosition
+	p.NextToken() // point to SEMICOLON
+	prop.Trailing = p.Trailing()
 
 	return prop, nil
 }
 
-func (p *Parser) parseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
+func (p *Parser) ParseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 	d := &ast.DirectorDeclaration{
 		Meta: p.curToken,
 	}
 
 	// director name
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	d.Name = p.parseIdent()
+	d.Name = p.ParseIdent()
 
 	// director type
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	d.DirectorType = p.parseIdent()
+	SwapLeadingTrailing(p.curToken, d.Name.Meta)
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	d.DirectorType = p.ParseIdent()
+
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, d.DirectorType.Meta)
+	SwapLeadingTrailing(p.curToken, d.DirectorType.Meta)
 
 	// Parse declaration
-	for !p.peekTokenIs(token.RIGHT_BRACE) {
+	for !p.PeekTokenIs(token.RIGHT_BRACE) {
 		var prop ast.Expression
 		var err error
 
 		switch p.peekToken.Token.Type {
 		case token.DOT:
 			// single property definition like ".quorum = 10%;"
-			p.nextToken()
-			prop, err = p.parseDirectorProperty()
+			p.NextToken()
+			prop, err = p.ParseDirectorProperty()
 		case token.LEFT_BRACE:
-			p.nextToken()
+			p.NextToken()
 			// object definition e.g. { .backend = F_origin_1; .weight = 1; }
-			prop, err = p.parseDirectorBackend()
+			prop, err = p.ParseDirectorBackend()
 		default:
 			err = errors.WithStack(UnexpectedToken(p.peekToken))
 		}
@@ -219,53 +258,57 @@ func (p *Parser) parseDirectorDeclaration() (*ast.DirectorDeclaration, error) {
 		d.Properties = append(d.Properties, prop)
 	}
 
-	swapLeadingInfix(p.peekToken, d.Meta)
-	d.Meta.Trailing = p.trailing()
-	p.nextToken() // point to RIGHT_BRACE
+	SwapLeadingInfix(p.peekToken, d.Meta)
+	p.NextToken() // point to RIGHT_BRACE
+	d.Trailing = p.Trailing()
+	d.EndLine = p.curToken.Token.Line
+	d.EndPosition = p.curToken.Token.Position
 
 	return d, nil
 }
 
-func (p *Parser) parseDirectorProperty() (ast.Expression, error) {
+func (p *Parser) ParseDirectorProperty() (ast.Expression, error) {
 	prop := &ast.DirectorProperty{
 		Meta: p.curToken,
 	}
 
 	// token may token.BACKEND because backend object has ".backend" property key
-	if !p.expectPeek(token.IDENT) && !p.expectPeek(token.BACKEND) {
+	if !p.ExpectPeek(token.IDENT) && !p.ExpectPeek(token.BACKEND) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	prop.Key = p.parseIdent()
+	prop.Key = p.ParseIdent()
 
-	if !p.expectPeek(token.ASSIGN) {
+	if !p.ExpectPeek(token.ASSIGN) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 	}
-	swapLeadingTrailing(p.curToken, prop.Key.Meta)
+	SwapLeadingTrailing(p.curToken, prop.Key.Meta)
 
-	p.nextToken() // point to expression start token
+	p.NextToken() // point to expression start token
 
-	exp, err := p.parseExpression(LOWEST)
+	exp, err := p.ParseExpression(LOWEST)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	prop.Value = exp
 
-	if !p.peekTokenIs(token.SEMICOLON) {
+	if !p.PeekTokenIs(token.SEMICOLON) {
 		return nil, errors.WithStack(MissingSemicolon(p.curToken))
 	}
-	prop.Meta.Trailing = p.trailing()
-	p.nextToken() // point to SEMICOLON
+	prop.EndLine = exp.GetMeta().EndLine
+	prop.EndPosition = exp.GetMeta().EndPosition
+	p.NextToken() // point to SEMICOLON
+	prop.Trailing = p.Trailing()
 
 	return prop, nil
 }
 
-func (p *Parser) parseDirectorBackend() (ast.Expression, error) {
+func (p *Parser) ParseDirectorBackend() (ast.Expression, error) {
 	backend := &ast.DirectorBackendObject{
 		Meta: p.curToken,
 	}
 
-	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		if !p.expectPeek(token.DOT) {
+	for !p.PeekTokenIs(token.RIGHT_BRACE) {
+		if !p.ExpectPeek(token.DOT) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "DOT"))
 		}
 
@@ -274,122 +317,141 @@ func (p *Parser) parseDirectorBackend() (ast.Expression, error) {
 		}
 
 		// token may token.BACKEND because backend object has ".backend" property key
-		if !p.expectPeek(token.IDENT) && !p.expectPeek(token.BACKEND) {
+		if !p.ExpectPeek(token.IDENT) && !p.ExpectPeek(token.BACKEND) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 		}
-		prop.Key = p.parseIdent()
+		prop.Key = p.ParseIdent()
 
-		if !p.expectPeek(token.ASSIGN) {
+		if !p.ExpectPeek(token.ASSIGN) {
 			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "ASSIGN"))
 		}
-		swapLeadingTrailing(p.curToken, prop.Key.Meta)
+		SwapLeadingTrailing(p.curToken, prop.Key.Meta)
 
-		p.nextToken() // point to expression start token
+		p.NextToken() // point to expression start token
 
-		exp, err := p.parseExpression(LOWEST)
+		exp, err := p.ParseExpression(LOWEST)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		prop.Value = exp
 
-		if !p.peekTokenIs(token.SEMICOLON) {
+		if !p.PeekTokenIs(token.SEMICOLON) {
 			return nil, errors.WithStack(MissingSemicolon(p.curToken))
 		}
-		prop.Meta.Trailing = p.trailing()
-		p.nextToken() // point to SEMICOLON
+		prop.EndLine = exp.GetMeta().EndLine
+		prop.EndPosition = exp.GetMeta().EndPosition
+		prop.Trailing = p.Trailing()
+		p.NextToken() // point to SEMICOLON
 
 		backend.Values = append(backend.Values, prop)
 	}
 
-	swapLeadingInfix(p.peekToken, backend.Meta)
-	backend.Meta.Trailing = p.trailing()
-	p.nextToken() // point to RIGHT_BRACE
+	SwapLeadingInfix(p.peekToken, backend.Meta)
+	p.NextToken() // point to RIGHT_BRACE
+	backend.Trailing = p.Trailing()
+	backend.EndLine = p.curToken.Token.Line
+	backend.EndPosition = p.curToken.Token.Position
 
 	return backend, nil
 }
 
-func (p *Parser) parseTableDeclaration() (*ast.TableDeclaration, error) {
+func (p *Parser) ParseTableDeclaration() (*ast.TableDeclaration, error) {
 	t := &ast.TableDeclaration{
 		Meta:       p.curToken,
 		Properties: []*ast.TableProperty{},
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	t.Name = p.parseIdent()
+	t.Name = p.ParseIdent()
+	SwapLeadingTrailing(p.peekToken, t.Name.Meta)
 
 	// Table value type is optional
-	if p.peekTokenIs(token.IDENT) {
-		p.nextToken()
-		t.ValueType = p.parseIdent()
+	if p.PeekTokenIs(token.IDENT) {
+		p.NextToken()
+		t.ValueType = p.ParseIdent()
 	}
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
 
 	if t.ValueType != nil {
-		swapLeadingTrailing(p.curToken, t.ValueType.Meta)
+		SwapLeadingTrailing(p.curToken, t.ValueType.Meta)
 	} else {
-		swapLeadingTrailing(p.curToken, t.Name.Meta)
+		SwapLeadingTrailing(p.curToken, t.Name.Meta)
 	}
 
-	for !p.peekTokenIs(token.RIGHT_BRACE) {
-		prop, err := p.parseTableProperty()
+	for !p.PeekTokenIs(token.RIGHT_BRACE) {
+		prop, err := p.ParseTableProperty()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		t.Properties = append(t.Properties, prop)
 	}
 
-	swapLeadingInfix(p.peekToken, t.Meta)
-	t.Meta.Trailing = p.trailing()
-	p.nextToken() // point to RIGHT_BRACE
+	SwapLeadingInfix(p.peekToken, t.Meta)
+	p.NextToken() // point to RIGHT_BRACE
+	t.Trailing = p.Trailing()
+	t.EndLine = p.curToken.Token.Line
+	t.EndPosition = p.curToken.Token.Position
 
 	return t, nil
 }
 
-func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
-	if !p.expectPeek(token.STRING) {
+func (p *Parser) ParseTableProperty() (*ast.TableProperty, error) {
+	if !p.ExpectPeek(token.STRING) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
+	}
+	key, err := p.ParseString()
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 	prop := &ast.TableProperty{
 		Meta: p.curToken,
-		Key:  p.parseString(),
+		Key:  key,
 	}
 	prop.Key.Meta = clearComments(prop.Key.Meta)
 
-	if !p.expectPeek(token.COLON) {
+	if !p.ExpectPeek(token.COLON) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COLON"))
 	}
-	swapLeadingTrailing(p.curToken, prop.Key.Meta)
+	SwapLeadingTrailing(p.curToken, prop.Key.Meta)
 
-	p.nextToken() // point to table value token
+	p.NextToken() // point to table value token
 
 	switch p.curToken.Token.Type {
 	case token.IDENT:
-		prop.Value = p.parseIdent()
+		prop.Value = p.ParseIdent()
 	case token.STRING:
-		prop.Value = p.parseString()
-	case token.ACL, token.BACKEND:
-		prop.Value = p.parseIdent()
+		var err error
+		prop.Value, err = p.ParseString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case token.OPEN_LONG_STRING:
+		var err error
+		prop.Value, err = p.ParseLongString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 	case token.TRUE, token.FALSE:
-		prop.Value = p.parseBoolean()
+		prop.Value = p.ParseBoolean()
 	case token.FLOAT:
-		if v, err := p.parseFloat(); err != nil {
+		if v, err := p.ParseFloat(); err != nil {
 			return nil, errors.WithStack(err)
 		} else {
 			prop.Value = v
 		}
 	case token.INT:
-		if v, err := p.parseInteger(); err != nil {
+		if v, err := p.ParseInteger(); err != nil {
 			return nil, errors.WithStack(err)
 		} else {
 			prop.Value = v
 		}
 	case token.RTIME:
-		if v, err := p.parseRTime(); err != nil {
+		if v, err := p.ParseRTime(); err != nil {
 			return nil, errors.WithStack(err)
 		} else {
 			prop.Value = v
@@ -399,17 +461,24 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	}
 
 	// Tailing process: the last table property may not need COLON,
-	// so we have to be able to parse these case (COLON exists or not)
+	// so we have to be able to Parse these case (COLON exists or not)
 	switch p.peekToken.Token.Type {
 	case token.COMMA:
-		// usual case, user should add trailing comma for east properties :)
-		prop.Meta.Trailing = p.trailing()
+		// usual case, user should add Trailing comma for east properties :)
 		prop.HasComma = true
-		p.nextToken() // point to COMMA
+		prop.EndLine = prop.Value.GetMeta().EndLine
+		prop.EndPosition = prop.Value.GetMeta().EndPosition
+
+		p.NextToken() // point to COMMA
+		SwapLeadingTrailing(p.curToken, prop.Value.GetMeta())
+		prop.Trailing = p.Trailing()
 	case token.RIGHT_BRACE:
 		// if peed token is RIGHT_BRACE, it means table declaration end. if also be valid
-		// Note that in this case, we could not parse trailing comment. it is parsed as declaration infix comment.
-		prop.Meta.Trailing = p.trailing()
+		// Note that in this case, we could not Parse Trailing comment. it is Parsed as declaration infix comment.
+		prop.Trailing = p.Trailing()
+
+		prop.EndLine = prop.Value.GetMeta().EndLine
+		prop.EndPosition = prop.Value.GetMeta().EndPosition
 
 		// DO NOT advance token!
 
@@ -421,79 +490,130 @@ func (p *Parser) parseTableProperty() (*ast.TableProperty, error) {
 	return prop, nil
 }
 
-func (p *Parser) parseSubroutineDeclaration() (*ast.SubroutineDeclaration, error) {
+func (p *Parser) ParseSubroutineDeclaration() (*ast.SubroutineDeclaration, error) {
 	s := &ast.SubroutineDeclaration{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	s.Name = p.parseIdent()
+	s.Name = p.ParseIdent()
+
+	if p.PeekTokenIs(token.LEFT_PAREN) {
+		p.NextToken()
+		SwapLeadingTrailing(p.curToken, s.Name.Meta)
+
+		for !p.PeekTokenIs(token.RIGHT_PAREN) && !p.PeekTokenIs(token.EOF) {
+			if !p.ExpectPeek(token.IDENT) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT (parameter type)"))
+			}
+			paramType := p.ParseIdent()
+
+			if !p.ExpectPeek(token.IDENT) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT (parameter name)"))
+			}
+			paramName := p.ParseIdent()
+
+			s.Parameters = append(s.Parameters, &ast.SubroutineParameter{
+				Meta: p.curToken,
+				Type: paramType,
+				Name: paramName,
+			})
+
+			if p.PeekTokenIs(token.COMMA) {
+				p.NextToken()
+			} else if !p.PeekTokenIs(token.RIGHT_PAREN) {
+				return nil, errors.WithStack(UnexpectedToken(p.peekToken, "COMMA or RIGHT_PAREN"))
+			}
+		}
+
+		if !p.ExpectPeek(token.RIGHT_PAREN) {
+			return nil, errors.WithStack(UnexpectedToken(p.peekToken, "RIGHT_PAREN"))
+		}
+	}
 
 	// Custom subroutines might be returning a type
 	// https://developer.fastly.com/reference/vcl/subroutines/
 	// we dont need to validate the type here, linter will do that later.
-	if p.expectPeek(token.IDENT) {
-		s.ReturnType = p.parseIdent()
+	if p.ExpectPeek(token.IDENT) {
+		if len(s.Parameters) > 0 {
+			SwapLeadingTrailing(p.curToken, s.Parameters[len(s.Parameters)-1].Meta)
+		} else {
+			SwapLeadingTrailing(p.curToken, s.Name.Meta)
+		}
+		s.ReturnType = p.ParseIdent()
 	}
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, s.Name.Meta)
+	switch {
+	case s.ReturnType != nil:
+		SwapLeadingTrailing(p.curToken, s.ReturnType.Meta)
+	case len(s.Parameters) > 0:
+		SwapLeadingTrailing(p.curToken, s.Parameters[len(s.Parameters)-1].Meta)
+	default:
+		SwapLeadingTrailing(p.curToken, s.Name.Meta)
+	}
 
 	var err error
-	if s.Block, err = p.parseBlockStatement(); err != nil {
+	if s.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	// After block statement is parsed, cursor should point to RIGHT_BRACE, end of block statement
+	s.EndLine = p.curToken.Token.Line
+	s.EndPosition = p.curToken.Token.Position
+	// After block statement is Parsed, cursor should point to RIGHT_BRACE, end of block statement
 
 	return s, nil
 }
 
-func (p *Parser) parsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error) {
+func (p *Parser) ParsePenaltyboxDeclaration() (*ast.PenaltyboxDeclaration, error) {
 	pb := &ast.PenaltyboxDeclaration{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	pb.Name = p.parseIdent()
+	pb.Name = p.ParseIdent()
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, pb.Name.Meta)
+	SwapLeadingTrailing(p.curToken, pb.Name.Meta)
 
 	var err error
-	if pb.Block, err = p.parseBlockStatement(); err != nil {
+	if pb.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	pb.EndLine = p.curToken.Token.Line
+	pb.EndPosition = p.curToken.Token.Position
 
 	return pb, nil
 }
 
-func (p *Parser) parseRatecounterDeclaration() (*ast.RatecounterDeclaration, error) {
+func (p *Parser) ParseRatecounterDeclaration() (*ast.RatecounterDeclaration, error) {
 	r := &ast.RatecounterDeclaration{
 		Meta: p.curToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.ExpectPeek(token.IDENT) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "IDENT"))
 	}
-	r.Name = p.parseIdent()
+	r.Name = p.ParseIdent()
 
-	if !p.expectPeek(token.LEFT_BRACE) {
+	if !p.ExpectPeek(token.LEFT_BRACE) {
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "LEFT_BRACE"))
 	}
-	swapLeadingTrailing(p.curToken, r.Name.Meta)
+	SwapLeadingTrailing(p.curToken, r.Name.Meta)
 
 	var err error
-	if r.Block, err = p.parseBlockStatement(); err != nil {
+	if r.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	r.EndLine = p.curToken.Token.Line
+	r.EndPosition = p.curToken.Token.Position
 
 	return r, nil
 }

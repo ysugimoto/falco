@@ -63,19 +63,34 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
 	case CLIENT_SOCKET_CWND:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
 	case CLIENT_SOCKET_NEXTHOP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case CLIENT_SOCKET_PACE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case CLIENT_SOCKET_PLOSS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0}, nil
 
 	case ESI_ALLOW_INSIDE_CDATA:
 		return v.ctx.EsiAllowInsideCData, nil
 
 	case FASTLY_INFO_IS_CLUSTER_EDGE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 
 	// TODO: should be able to get from context after object checked
@@ -114,7 +129,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not parse remote address",
+				"could not parse remote address",
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
@@ -216,30 +231,38 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMicro()),
 		}, nil
 
-	// Digest ratio will return fixed value
+	// Digest ratio will return fixed value if not override
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
+	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
-	if val, err := GetTCPInfoVariable(name); err != nil {
+	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetQuicVariable(name); err != nil {
+	if val, err := GetQuicVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetTLSVariable(v.ctx.Request.TLS, name); err != nil {
+	if val, err := GetTLSVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVariable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
@@ -250,7 +273,9 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -262,14 +287,14 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 	return val, nil
 }
 
-func (v *DeliverScopeVariables) getFromRegex(name string) value.Value {
+func (v *DeliverScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	match := responseHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Response, match[1])
+	return getResponseHeaderValue(v.ctx.Response, match[1]), nil
 }
 
 func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {

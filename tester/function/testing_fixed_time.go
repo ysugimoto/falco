@@ -25,7 +25,7 @@ func Testing_fixed_time(
 ) (value.Value, error) {
 
 	if err := Testing_fixed_time_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	switch args[0].Type() {

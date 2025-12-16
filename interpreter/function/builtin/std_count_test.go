@@ -3,9 +3,13 @@
 package builtin
 
 import (
+	ghttp "net/http"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of std.count
@@ -13,5 +17,94 @@ import (
 // - ID
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-count/
 func Test_Std_count(t *testing.T) {
-	t.Skip("Test Builtin function std.count should be impelemented")
+	tests := []struct {
+		name    string
+		ident   string
+		expect  int64
+		isError bool
+	}{
+		{
+			name:   "Request Header",
+			ident:  "req.headers",
+			expect: 1,
+		},
+		{
+			name:   "Backend Request Header",
+			ident:  "bereq.headers",
+			expect: 2,
+		},
+		{
+			name:   "Backend Response Header",
+			ident:  "beresp.headers",
+			expect: 3,
+		},
+		{
+			name:   "Object Header",
+			ident:  "obj.headers",
+			expect: 4,
+		},
+		{
+			name:   "Response Header",
+			ident:  "resp.headers",
+			expect: 5,
+		},
+		{
+			name:    "Unexpected",
+			ident:   "req.foobar",
+			isError: true,
+		},
+	}
+
+	ctx := &context.Context{
+		Request: http.WrapRequest(
+			&ghttp.Request{Header: ghttp.Header{
+				"Header-1": {"1"},
+			}},
+		),
+		BackendRequest: http.WrapRequest(
+			&ghttp.Request{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+			}},
+		),
+		BackendResponse: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+			}},
+		),
+		Object: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+				"Header-4": {"4"},
+			}},
+		),
+		Response: http.WrapResponse(
+			&ghttp.Response{Header: ghttp.Header{
+				"Header-1": {"1"},
+				"Header-2": {"2"},
+				"Header-3": {"3"},
+				"Header-4": {"4"},
+				"Header-5": {"5"},
+			}},
+		),
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, err := Std_count(ctx, &value.Ident{Value: tt.ident})
+			if err != nil {
+				if !tt.isError {
+					t.Errorf("Unexpected error: %s", err)
+				}
+				return
+			}
+			if diff := cmp.Diff(&value.Integer{Value: tt.expect}, v); diff != "" {
+				t.Errorf("Return value mismatch, diff=%s", diff)
+			}
+		})
+	}
 }

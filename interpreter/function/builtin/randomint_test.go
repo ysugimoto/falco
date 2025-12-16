@@ -25,7 +25,7 @@ func Test_Randomint(t *testing.T) {
 
 	for i, tt := range tests {
 		// for randomize tests, try enough large loop
-		for j := 0; j < 10000; j++ {
+		for range 10000 {
 			ret, err := Randomint(
 				&context.Context{},
 				&value.Integer{Value: tt.from},

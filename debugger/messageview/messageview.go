@@ -53,7 +53,7 @@ func (m *MessageView) Append(mt EntryType, format string, args ...any) {
 }
 
 func (m *MessageView) drawMessages() {
-	w := m.TextView.BatchWriter()
+	w := m.BatchWriter()
 	defer w.Close()
 	w.Clear()
 

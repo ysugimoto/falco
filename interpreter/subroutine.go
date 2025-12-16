@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+	"net"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -10,18 +12,18 @@ import (
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/token"
 )
 
-func (i *Interpreter) ProcessTestSubroutine(scope context.Scope, sub *ast.SubroutineDeclaration) error {
-	i.SetScope(scope)
-	if _, err := i.ProcessSubroutine(sub, DebugPass); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
+const (
+	// Faslty does not document about max call stack but we define our expected stack count.
+	// Fastly forbid VCL that may cause an infinite loop to call subroutine but our interpreter could accept,
+	// so we need to suppress its behavior by definition and guard process.
+	maxCallStackExceedCount = 100
+)
 
-func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds DebugState, args []value.Value) (State, error) {
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -29,10 +31,24 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Validate arguments and set as local variables
+	if err := i.validateAndSetParameters(sub, args); err != nil {
+		return NONE, errors.WithStack(err)
+	}
+
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	// Try to extract fastly reserved subroutine macro
@@ -50,9 +66,9 @@ func (i *Interpreter) ProcessSubroutine(sub *ast.SubroutineDeclaration, ds Debug
 	return state, err
 }
 
-// nolint: gocognit
-func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState) (value.Value, State, error) {
-	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, sub))
+// nolint: gocognit, funlen
+func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, ds DebugState, args []value.Value) (value.Value, State, error) {
+	i.process.Flows = append(i.process.Flows, process.NewFlow(i.ctx, process.WithSubroutine(sub)))
 
 	// Store the current values and restore after subroutine has ended
 	regex := i.ctx.RegexMatchedValues
@@ -60,19 +76,41 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 	i.ctx.RegexMatchedValues = make(map[string]*value.String)
 	i.localVars = variable.LocalVariables{}
 
+	// Validate arguments and set as local variables
+	if err := i.validateAndSetParameters(sub, args); err != nil {
+		return value.Null, NONE, errors.WithStack(err)
+	}
+
+	// Push this subroutine to callstacks
+	i.callStack = append(i.callStack, sub)
+	// If expected stack count is exceeded, raise an error
+	if len(i.callStack) > maxCallStackExceedCount {
+		return value.Null, NONE, errors.WithStack(exception.MaxCallStackExceeded(&sub.GetMeta().Token, i.callStack))
+	}
+
 	defer func() {
 		i.ctx.RegexMatchedValues = regex
 		i.localVars = local
 		i.ctx.SubroutineCalls[sub.Name.Value]++
+		// Pop call stack
+		i.callStack = i.callStack[:len(i.callStack)-1]
 	}()
 
 	var err error
-	var debugState DebugState = ds
+	var debugState = ds
 
 	for _, stmt := range sub.Block.Statements {
 		// Call debugger
 		if debugState != DebugStepOut {
 			debugState = i.Debugger.Run(stmt)
+		}
+
+		// Find process marker and add flow if found
+		if name, found := findProcessMark(stmt.GetMeta().Leading); found {
+			i.process.Flows = append(
+				i.process.Flows,
+				process.NewFlow(i.ctx, process.WithName(name), process.WithToken(stmt.GetMeta().Token)),
+			)
 		}
 
 		switch t := stmt.(type) {
@@ -166,14 +204,20 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 			if state != NONE {
 				return value.Null, state, nil
 			}
-			// Check return value type is the same
-			if string(val.Type()) != sub.ReturnType.Value {
-				return val, NONE, exception.Runtime(
-					&t.GetMeta().Token,
-					"Invalid return type, expects=%s, but got=%s",
-					sub.ReturnType.Value,
-					val.Type(),
-				)
+			// Check return value type and perform implicit conversion if needed
+			expectedType := value.Type(sub.ReturnType.Value)
+			if val.Type() != expectedType {
+				// Try to perform implicit conversion
+				converted, err := i.convertValueToType(val, expectedType, &t.GetMeta().Token)
+				if err != nil {
+					return val, NONE, exception.Runtime(
+						&t.GetMeta().Token,
+						"Invalid return type, expects=%s, but got=%s",
+						sub.ReturnType.Value,
+						val.Type(),
+					)
+				}
+				val = converted
 			}
 			return val, NONE, nil
 		case *ast.ErrorStatement:
@@ -200,15 +244,9 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 }
 
 func (i *Interpreter) ProcessExpressionReturnStatement(stmt *ast.ReturnStatement) (value.Value, State, error) {
-	val, err := i.ProcessExpression(*stmt.ReturnExpression, false)
+	val, err := i.ProcessExpression(stmt.ReturnExpression)
 	if err != nil {
 		return value.Null, NONE, errors.WithStack(err)
-	}
-	if !val.IsLiteral() {
-		return value.Null, NONE, exception.Runtime(
-			&stmt.GetMeta().Token,
-			"Functional subroutine only can return value only accepts a literal value",
-		)
 	}
 
 	switch t := val.(type) {
@@ -244,7 +282,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 
 	var resolved []ast.Statement
 	// Find "FASTLY [macro]" comment and extract in infix comment of block statement
-	if hasFastlyBoilerplateMacro(sub.Block.InfixComment(), macroName) {
+	if hasFastlyBoilerplateMacro(sub.Block.Infix, macroName) {
 		for _, s := range snippets {
 			statements, err := loadStatementVCL(s.Name, s.Data)
 			if err != nil {
@@ -260,7 +298,7 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	// Find "FASTLY [macro]" comment and extract inside block statement
 	var found bool // guard flag, embedding macro should do only once
 	for _, stmt := range sub.Block.Statements {
-		if hasFastlyBoilerplateMacro(stmt.LeadingComment(), macroName) && !found {
+		if hasFastlyBoilerplateMacro(stmt.GetMeta().Leading, macroName) && !found {
 			for _, s := range snippets {
 				statements, err := loadStatementVCL(s.Name, s.Data)
 				if err != nil {
@@ -276,12 +314,116 @@ func (i *Interpreter) extractBoilerplateMacro(sub *ast.SubroutineDeclaration) er
 	return nil
 }
 
-func hasFastlyBoilerplateMacro(commentText, macroName string) bool {
-	for _, c := range strings.Split(commentText, "\n") {
-		c = strings.TrimLeft(c, " */#")
-		if strings.HasPrefix(strings.ToUpper(c), macroName) {
+func hasFastlyBoilerplateMacro(cs ast.Comments, macroName string) bool {
+	for _, c := range cs {
+		line := strings.TrimLeft(c.String(), " */#")
+		if strings.HasPrefix(strings.ToUpper(line), macroName) {
 			return true
 		}
 	}
 	return false
+}
+
+// validateAndSetParameters validates argument count and types against subroutine parameters,
+// performs implicit type conversion if needed, and sets them as local variables.
+func (i *Interpreter) validateAndSetParameters(sub *ast.SubroutineDeclaration, args []value.Value) error {
+	// Check argument count matches parameter count
+	if len(args) != len(sub.Parameters) {
+		return exception.Runtime(
+			&sub.GetMeta().Token,
+			"Subroutine %s expects %d arguments, but got %d",
+			sub.Name.Value,
+			len(sub.Parameters),
+			len(args),
+		)
+	}
+
+	// Validate and set each parameter
+	for idx, param := range sub.Parameters {
+		arg := args[idx]
+		expectedType := value.Type(param.Type.Value)
+
+		// Try to convert argument to expected type
+		converted, err := i.convertValueToType(arg, expectedType, &param.GetMeta().Token)
+		if err != nil {
+			return exception.Runtime(
+				&param.GetMeta().Token,
+				"Parameter %s expects type %s, but got %s",
+				param.Name.Value,
+				param.Type.Value,
+				arg.Type(),
+			)
+		}
+		i.localVars[param.Name.Value] = converted
+	}
+
+	return nil
+}
+
+// convertValueToType attempts to convert a value to the expected type using implicit conversion rules
+func (i *Interpreter) convertValueToType(val value.Value, expectedType value.Type, tk *token.Token) (value.Value, error) {
+	// If types match, no conversion needed
+	if val.Type() == expectedType {
+		return val, nil
+	}
+
+	switch expectedType {
+	case value.StringType:
+		// Almost any type can be converted to STRING
+		switch v := val.(type) {
+		case *value.Integer:
+			return &value.String{Value: fmt.Sprintf("%d", v.Value)}, nil
+		case *value.Float:
+			return &value.String{Value: fmt.Sprintf("%g", v.Value)}, nil
+		case *value.Boolean:
+			if v.Value {
+				return &value.String{Value: "1"}, nil
+			}
+			return &value.String{Value: "0"}, nil
+		case *value.IP:
+			return &value.String{Value: v.Value.String()}, nil
+		case *value.RTime:
+			return &value.String{Value: fmt.Sprintf("%fs", v.Value.Seconds())}, nil
+		}
+	case value.IntegerType:
+		switch v := val.(type) {
+		case *value.Float:
+			return &value.Integer{Value: int64(v.Value)}, nil
+		case *value.Boolean:
+			if v.Value {
+				return &value.Integer{Value: 1}, nil
+			}
+			return &value.Integer{Value: 0}, nil
+		}
+	case value.FloatType:
+		switch v := val.(type) {
+		case *value.Integer:
+			return &value.Float{Value: float64(v.Value)}, nil
+		case *value.Boolean:
+			if v.Value {
+				return &value.Float{Value: 1.0}, nil
+			}
+			return &value.Float{Value: 0.0}, nil
+		}
+	case value.BooleanType:
+		switch v := val.(type) {
+		case *value.Integer:
+			return &value.Boolean{Value: v.Value != 0}, nil
+		case *value.Float:
+			return &value.Boolean{Value: v.Value != 0}, nil
+		case *value.String:
+			return &value.Boolean{Value: v.Value != ""}, nil
+		}
+	case value.IpType:
+		if v, ok := val.(*value.String); ok {
+			ip := net.ParseIP(v.Value)
+			if ip == nil {
+				return nil, exception.Runtime(tk, "Invalid IP address: %s", v.Value)
+			}
+			return &value.IP{Value: ip}, nil
+		}
+	}
+
+	// No conversion available
+	return nil, exception.Runtime(tk, "Cannot convert %s to %s", val.Type(), expectedType)
 }

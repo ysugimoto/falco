@@ -1,11 +1,10 @@
 package function
 
 import (
-	"regexp"
-
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	regexp "go.elara.ws/pcre"
 )
 
 const Assert_not_match_Name = "assert.not_match"
@@ -33,7 +32,7 @@ func Assert_not_match_Validate(args []value.Value) error {
 
 func Assert_not_match(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_not_match_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// Check custom message
@@ -55,7 +54,7 @@ func Assert_not_match(ctx *context.Context, args ...value.Value) (value.Value, e
 	ret := &value.Boolean{Value: re.MatchString(actual.Value)}
 	if ret.Value {
 		if message != "" {
-			return ret, errors.NewAssertionError(actual, message)
+			return ret, errors.NewAssertionError(actual, "%s", message)
 		}
 		return ret, errors.NewAssertionError(
 			actual,

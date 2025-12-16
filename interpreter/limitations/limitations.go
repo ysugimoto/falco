@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 // Units
@@ -26,7 +27,7 @@ const (
 	MaxRequestHeaderSize      = 69 * KB
 	MaxResponseHeaderSize     = 69 * KB
 	MaxRequestHeaderCount     = 96
-	MaxReponseHeaderCount     = 96
+	MaxResponseHeaderCount    = 96
 	MaxRequestBodyPayloadSize = 8 * KB
 
 	// Surrogate key limitations but actually don't check these
@@ -55,20 +56,14 @@ func CheckFastlyVCLLimitation(vcl string) error {
 }
 
 func CheckFastlyResourceLimit(ctx *context.Context) error {
-	maxBackends := MaxBackendCounts
-	if ctx.OverrideMaxBackends > maxBackends {
-		maxBackends = ctx.OverrideMaxBackends
-	}
+	maxBackends := max(ctx.OverrideMaxBackends, MaxBackendCounts)
 	if len(ctx.Backends) > maxBackends {
 		return exception.System(
 			"Max backend count of %d exceeded. Provide --max_backends option or add configuration file to increase",
 			maxBackends,
 		)
 	}
-	maxAcls := MaxACLCounts
-	if ctx.OverrideMaxAcls > maxAcls {
-		maxAcls = ctx.OverrideMaxAcls
-	}
+	maxAcls := max(ctx.OverrideMaxAcls, MaxACLCounts)
 	if len(ctx.Acls) > maxAcls {
 		return exception.System(
 			"Max ACL count of %d exceeded. Provide --max_acls option or add configuration file to increase",
@@ -91,7 +86,7 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	var cookieSize int
 	for _, c := range req.Cookies() {
 		cookieSize += len([]byte(c.Raw))
-		// If max cookie size is greater than limitation, remove cookit header
+		// If max cookie size is greater than limitation, remove cookie header
 		// and add overflow header
 		if cookieSize > MaxCookieSize {
 			req.Header.Del("Cookie")
@@ -103,7 +98,7 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	var headerSize, headerCount int
 	for key, values := range req.Header {
 		headerSize += len(
-			[]byte(fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", "))),
+			fmt.Appendf([]byte{}, "%s: %s\n", key, strings.Join(values, ", ")),
 		)
 		if headerSize > MaxRequestHeaderSize {
 			return exception.System(
@@ -121,7 +116,7 @@ func CheckFastlyRequestLimit(req *http.Request) error {
 	}
 
 	// Request body size check
-	if req.Method == http.MethodPost || req.Method == http.MethodPut || req.Method == http.MethodPatch {
+	if req.Method == ghttp.MethodPost || req.Method == ghttp.MethodPut || req.Method == ghttp.MethodPatch {
 		var body bytes.Buffer
 		// We don't trust Content-Length header value, check actual body size
 		if _, err := body.ReadFrom(req.Body); err == nil {
@@ -143,19 +138,19 @@ func CheckFastlyResponseLimit(resp *http.Response) error {
 	var headerSize, headerCount int
 	for key, values := range resp.Header {
 		headerSize += len(
-			[]byte(fmt.Sprintf("%s: %s\n", key, strings.Join(values, ", "))),
+			fmt.Appendf([]byte{}, "%s: %s\n", key, strings.Join(values, ", ")),
 		)
-		if headerSize > MaxRequestHeaderSize {
+		if headerSize > MaxResponseHeaderSize {
 			return exception.System(
 				"Overflow response header size limitation of %d bytes",
-				MaxRequestHeaderSize,
+				MaxResponseHeaderSize,
 			)
 		}
 		headerCount++
-		if headerCount > MaxRequestHeaderCount {
+		if headerCount > MaxResponseHeaderCount {
 			return exception.System(
 				"Overflow response header count limitation of %d",
-				MaxRequestHeaderCount,
+				MaxResponseHeaderCount,
 			)
 		}
 	}

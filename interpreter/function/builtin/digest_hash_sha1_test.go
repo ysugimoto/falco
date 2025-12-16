@@ -28,6 +28,6 @@ func Test_Digest_hash_sha1(t *testing.T) {
 	v := value.Unwrap[*value.String](ret)
 	expect := "f7c3bc1d808e04732adf679965ccc34ca7ae3441"
 	if v.Value != expect {
-		t.Errorf("return value unmach, expect=%s, got=%s", expect, v.Value)
+		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
 }

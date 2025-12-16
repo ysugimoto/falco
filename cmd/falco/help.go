@@ -11,12 +11,18 @@ func printHelp(cmd string) {
 		printTerraformHelp()
 	case subcommandSimulate:
 		printSimulateHelp()
+	case subcommandDAP:
+		printDAPHelp()
 	case subcommandStats:
 		printStatsHelp()
 	case subcommandTest:
 		printTestHelp()
 	case subcommandLint:
 		printLintHelp()
+	case subcommandConsole:
+		printConsoleHelp()
+	case subcommandFormat:
+		printFormatHelp()
 	default:
 		printGlobalHelp()
 	}
@@ -42,10 +48,12 @@ Usage:
 
 Subcommands:
     lint      : Run lint (default)
-    terraform : Run lint from terraform planned JSON
     stats     : Analyze VCL statistics
     simulate  : Run simulator server with provided VCLs
+    dap       : Launch DAP server to debug VCLs
     test      : Run local testing for provided VCLs
+    console   : Run terminal console
+    fmt       : Run formatter for provided VCLs
 
 See subcommands help with:
     falco [subcommand] -h
@@ -88,19 +96,36 @@ Linting with terraform:
 	`))
 }
 
+func printDAPHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco dap
+
+Flags:
+    -h, --help         : Show this help
+
+This command launches Debug Adapter Protocol server.
+Execute this command by using your editor's DAP support.
+	`))
+}
+
 func printSimulateHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco simulate [flags]
+    falco simulate [flags] file
 
 Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
+    --proxy            : Enable actual proxy behavior
     -request           : Simulate request config
     -debug             : Enable debug mode
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --key              : Specify TLS server key file
+    --cert             : Specify TLS cert file
+    --refresh          : Refresh remote snippet cache
 
 Local simulator example:
     falco simulate -I . /path/to/vcl/main.vcl
@@ -113,7 +138,7 @@ Local debugger example:
 func printStatsHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco stats [flags]
+    falco stats [flags] file
 
 Flags:
     -I, --include_path : Add include path
@@ -135,12 +160,15 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -t, --timeout      : Set timeout to running test
     -f, --filter       : Override glob filter to find test files
+    -w, --watch        : Watch VCL file changes and run test
+    -t, --tag          : Provide tag for testing
     -json              : Output results as JSON
     -request           : Override request config
+    --timeout          : Set timeout to running test
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acls limitation
+    --coverage         : Report code coverage
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl
@@ -150,18 +178,49 @@ Local testing example:
 func printLintHelp() {
 	writeln(white, strings.TrimSpace(`
 Usage:
-    falco lint [flags]
+    falco lint [flags] file
 
 Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
-    -V, --version      : Display build version
     -v                 : Output lint warnings (verbose)
     -vv                : Output all lint results (very verbose)
     -json              : Output results as JSON (very verbose)
+    --generated        : Lint for Fastly generated VCL
+    --refresh          : Refresh remote snippet cache
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl
+	`))
+}
+
+func printConsoleHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco console [flags]
+
+Flags:
+    -s, --scope : Define initial scope
+    -h, --help  : Show this help
+
+Run console with fetch scope example:
+    falco console -s fetch
+	`))
+}
+
+func printFormatHelp() {
+	writeln(white, strings.TrimSpace(`
+Usage:
+    falco fmt [flags] ...files
+
+Flags:
+    -h, --help         : Show this help
+    -w, --write        : Overwrite format result
+
+files argument accepts glob file patterns
+
+Simple format example:
+    falco fmt /path/to/vcl/main.vcl
 	`))
 }

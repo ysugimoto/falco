@@ -3,11 +3,13 @@ package interpreter
 import (
 	"context"
 	"io"
-	"net/http"
+	ghttp "net/http"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -27,7 +29,11 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 				Properties: []*ast.BackendProperty{
 					{
 						Key:   &ast.Ident{Value: "host"},
-						Value: &ast.String{Value: "http://localhost:3124"},
+						Value: &ast.String{Value: "localhost"},
+					},
+					{
+						Key:   &ast.Ident{Value: "port"},
+						Value: &ast.String{Value: "80"},
 					},
 				},
 			},
@@ -39,21 +45,31 @@ func (i *Interpreter) TestProcessInit(r *http.Request) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	i.ctx.BackendResponse = &http.Response{
-		StatusCode:    http.StatusOK,
-		Status:        http.StatusText(http.StatusOK),
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        http.Header{},
-		Body:          io.NopCloser(strings.NewReader(testBackendResponseBody)),
-		ContentLength: int64(len(testBackendResponseBody)),
-		Close:         true,
-		Uncompressed:  false,
-		Trailer:       http.Header{},
-		Request:       i.ctx.BackendRequest.Clone(context.Background()),
+	i.ctx.BackendResponse = http.WrapResponse(
+		&ghttp.Response{
+			StatusCode:    ghttp.StatusOK,
+			Status:        ghttp.StatusText(ghttp.StatusOK),
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        ghttp.Header{},
+			Body:          io.NopCloser(strings.NewReader(testBackendResponseBody)),
+			ContentLength: int64(len(testBackendResponseBody)),
+			Close:         true,
+			Uncompressed:  false,
+			Trailer:       ghttp.Header{},
+			Request:       i.ctx.BackendRequest.Clone(context.Background()).Request,
+		},
+	)
+	i.ctx.Response = i.ctx.BackendResponse.Clone()
+	i.ctx.Object = i.ctx.BackendResponse.Clone()
+	return nil
+}
+
+func (i *Interpreter) ProcessTestSubroutine(scope icontext.Scope, sub *ast.SubroutineDeclaration) error {
+	i.SetScope(scope)
+	if _, err := i.ProcessSubroutine(sub, DebugPass, nil); err != nil {
+		return errors.WithStack(err)
 	}
-	i.ctx.Response = i.cloneResponse(i.ctx.BackendResponse)
-	i.ctx.Object = i.cloneResponse(i.ctx.BackendResponse)
 	return nil
 }

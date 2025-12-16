@@ -2,26 +2,26 @@ package variable
 
 import (
 	"bytes"
+	"crypto/md5"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"crypto/md5"
-	"crypto/sha256"
-	"encoding/base64"
-	"net/http"
-	"net/url"
-	"path/filepath"
 
 	"github.com/avct/uasurfer"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
@@ -39,17 +39,37 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	}
 }
 
+// return unescaped path value from the specified URL
+// this function makes the best effort to get the raw path
+// even when standard EscapedPath() chooses escaped version
+func getRawUrlPath(u *url.URL) string {
+	result := u.EscapedPath()
+	if u.RawPath != "" && result != u.RawPath {
+		result = u.RawPath
+	}
+	return result
+}
+
 // nolint: funlen,gocognit,gocyclo
 func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	req := v.ctx.Request
 
 	switch name {
 	case BEREQ_IS_CLUSTERING:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case CLIENT_CLASS_BOT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.IsBot()}, nil
 	case CLIENT_CLASS_BROWSER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.Browser.Name > 0}, nil
 
@@ -71,50 +91,106 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		RESP_STALE_IS_ERROR,
 		RESP_STALE_IS_REVALIDATING,
 		WORKSPACE_OVERFLOWED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_DISPLAY_TOUCHSCREEN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isTouch := ua.DeviceType == uasurfer.DevicePhone ||
 			ua.DeviceType == uasurfer.DeviceTablet ||
 			ua.DeviceType == uasurfer.DeviceWearable
 		return &value.Boolean{Value: isTouch}, nil
 	case CLIENT_PLATFORM_EREADER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.OS.Name == uasurfer.OSKindle}, nil
 	case CLIENT_PLATFORM_GAMECONSOLE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		isGame := ua.OS.Name == uasurfer.OSPlaystation ||
 			ua.OS.Name == uasurfer.OSXbox ||
 			ua.OS.Name == uasurfer.OSNintendo
 		return &value.Boolean{Value: isGame}, nil
 	case CLIENT_PLATFORM_MOBILE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DevicePhone}, nil
 	case CLIENT_PLATFORM_SMARTTV:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
 	case CLIENT_PLATFORM_TABLET:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTablet}, nil
 	case CLIENT_PLATFORM_TVPLAYER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.Boolean{Value: ua.DeviceType == uasurfer.DeviceTV}, nil
+	case CLIENT_PLATFORM_MODEL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{
+			Value: getPlatformModel(req.Header.Get("User-Agent")),
+		}, nil
+	case CLIENT_PLATFORM_VENDOR:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{
+			Value: getPlatformVendor(req.Header.Get("User-Agent")),
+		}, nil
 	case CLIENT_SESS_TIMEOUT:
 		return v.ctx.ClientSessTimeout, nil
 	case FASTLY_INFO_EDGE_IS_TLS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.TLS != nil}, nil
 	case FASTLY_INFO_IS_H2:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.ProtoMajor == 2}, nil
 	case FASTLY_INFO_IS_H3:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.ProtoMajor == 3}, nil
 	case FASTLY_INFO_HOST_HEADER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: v.ctx.OriginalHost}, nil
 	case FASTLY_INFO_H2_FINGERPRINT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		if req.ProtoMajor != 2 {
 			return &value.String{}, nil
 		}
 		// Format is undocumented, returning the value seen with the fiddle client.
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "|00|1:0:0:16|m,s,p,a"}, nil
 
 	// Backend is always healthy on simulator
@@ -130,10 +206,19 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: protocol}, nil
 	case CLIENT_GEO_LATITUDE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 37.7786941}, nil
 	case CLIENT_GEO_LONGITUDE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: -122.3981452}, nil
 	case FASTLY_ERROR:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: ""}, nil
 	case MATH_1_PI:
 		return &value.Float{Value: 1 / math.Pi}, nil
@@ -187,20 +272,32 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	// AS Number always indicates "Reserved" defined by RFC7300
 	// see: https://datatracker.ietf.org/doc/html/rfc7300
 	case CLIENT_AS_NUMBER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 4294967294}, nil
 	case CLIENT_AS_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "Reserved"}, nil
 
 	// Client display infos are unknown. Always returns -1
 	case CLIENT_DISPLAY_HEIGHT,
 		CLIENT_DISPLAY_PPI,
 		CLIENT_DISPLAY_WIDTH:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: -1}, nil
 
 	// Client geo values always return 0
 	case CLIENT_GEO_AREA_CODE,
 		CLIENT_GEO_METRO_CODE,
 		CLIENT_GEO_UTC_OFFSET:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 
 	// Alias of client.geo.utc_offset
@@ -209,6 +306,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Client could not fully identified so returns false
 	case CLIENT_IDENTIFIED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 
 	case CLIENT_PORT:
@@ -219,7 +319,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		port := req.RemoteAddr[idx+1:]
 		if num, err := strconv.ParseInt(port, 10, 64); err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Failed to convert port number from string",
+				"failed to convert port number from string",
 			))
 		} else {
 			return &value.Integer{Value: num}, nil
@@ -245,6 +345,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Returns tentative value -- you may know your customer_id in the contraction :-)
 	case REQ_CUSTOMER_ID:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "FalcoVirtualCustomerId"}, nil
 
 	// Returns fixed value which is presented on Fastly fiddle
@@ -287,20 +390,38 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: 1}, nil
 
 	case SERVER_BILLING_REGION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "Asia"}, nil // always returns Asia
 	case SERVER_PORT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: int64(3124)}, nil // fixed server port number
 	case SERVER_POP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "FALCO"}, nil // Intend to set string not exists in Fastly POP certainly
 
 	// workspace related values respects Fastly fiddle one
 	case WORKSPACE_BYTES_FREE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 125008}, nil
 	case WORKSPACE_BYTES_TOTAL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 139392}, nil
 
-	// backend.src_ip always incicates this server, means localhost
+	// backend.src_ip always indicates this server, means localhost
 	case BERESP_BACKEND_SRC_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case SERVER_IP:
 		addrs, err := net.InterfaceAddrs()
@@ -320,7 +441,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		if addr == nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Failed to get local server IP address",
+				"failed to get local server IP address",
 			))
 		}
 		return &value.IP{Value: addr}, nil
@@ -339,15 +460,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case TIME_ELAPSED:
 		return &value.RTime{Value: time.Since(v.ctx.RequestStartTime)}, nil
 	case CLIENT_BOT_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		if !ua.IsBot() {
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 	case CLIENT_BROWSER_VERSION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.Browser.Version
 		return &value.String{
@@ -376,9 +506,15 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		CLIENT_GEO_REGION_ASCII,
 		CLIENT_GEO_REGION_LATIN1,
 		CLIENT_GEO_REGION_UTF8:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "unknown"}, nil
 
 	case CLIENT_IDENTITY:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		if v.ctx.ClientIdentity == nil {
 			// default as client.ip
 			idx := strings.LastIndex(req.RemoteAddr, ":")
@@ -390,6 +526,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return v.ctx.ClientIdentity, nil
 
 	case CLIENT_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		idx := strings.LastIndex(req.RemoteAddr, ":")
 		if idx == -1 {
 			return &value.IP{Value: net.ParseIP(req.RemoteAddr)}, nil
@@ -397,9 +536,15 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
 
 	case CLIENT_OS_NAME:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		return &value.String{Value: ua.OS.Name.String()}, nil
 	case CLIENT_OS_VERSION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		ua := uasurfer.Parse(req.Header.Get("User-Agent"))
 		v := ua.OS.Version
 		return &value.String{
@@ -408,6 +553,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Always empty string
 	case CLIENT_PLATFORM_HWTYPE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: ""}, nil
 
 	case FASTLY_INFO_STATE:
@@ -426,14 +574,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Could not read request body",
+					"could not read request body",
 				))
 			}
 			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Request body is limited to 8KB",
+					"request body is limited to 8KB",
 				))
 			}
 			return &value.String{Value: b.String()}, nil
@@ -446,14 +594,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Could not read request body",
+					"could not read request body",
 				))
 			}
 			req.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 			// size is limited to 8KB
 			if len(b.Bytes()) > 1024*8 {
 				return value.Null, errors.WithStack(fmt.Errorf(
-					"Request body is limited to 8KB",
+					"request body is limited to 8KB",
 				))
 			}
 			return &value.String{
@@ -490,7 +638,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: id}, nil
 	case REQ_TOPURL: // FIXME: what is the difference of req.url ?
-		u := req.URL.Path
+		u := req.URL.EscapedPath()
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
 		}
@@ -499,9 +647,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: u}, nil
 	case REQ_URL:
-		u := req.URL.Path
+		u := getRawUrlPath(req.URL)
 		if v := req.URL.RawQuery; v != "" {
 			u += "?" + v
+		} else if req.URL.ForceQuery {
+			u += "?"
 		}
 		if v := req.URL.RawFragment; v != "" {
 			u += "#" + v
@@ -509,19 +659,19 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{Value: u}, nil
 	case REQ_URL_BASENAME:
 		return &value.String{
-			Value: filepath.Base(req.URL.Path),
+			Value: filepath.Base(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_DIRNAME:
 		return &value.String{
-			Value: filepath.Dir(req.URL.Path),
+			Value: filepath.Dir(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_EXT:
-		ext := filepath.Ext(req.URL.Path)
+		ext := filepath.Ext(getRawUrlPath(req.URL))
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
 	case REQ_URL_PATH:
-		return &value.String{Value: req.URL.Path}, nil
+		return &value.String{Value: getRawUrlPath(req.URL)}, nil
 	case REQ_URL_QS:
 		return &value.String{Value: req.URL.RawQuery}, nil
 	case REQ_VCL:
@@ -546,12 +696,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// Fixed values
 	case SERVER_DATACENTER:
-		return &value.String{Value: "FALCO"}, nil
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{Value: FALCO_DATACENTER}, nil
 	case SERVER_HOSTNAME:
-		return &value.String{Value: "cache-localsimulator"}, nil
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_IDENTITY:
-		return &value.String{Value: "cache-localsimulator"}, nil
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{Value: FALCO_SERVER_HOSTNAME}, nil
 	case SERVER_REGION:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: "US"}, nil
 	case STALE_EXISTS:
 		return v.ctx.StaleContents, nil
@@ -603,9 +765,24 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Time{Value: time.Now()}, nil
 	case TIME_START:
 		return &value.Time{Value: v.ctx.RequestStartTime}, nil
+	// https://github.com/ysugimoto/falco/issues/427
+	// Fastly has staging environment but we always return false
+	case FASTLY_IS_STAGING:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
+	// Falco could not get source port to connect to origin so returns zero as tentative
+	case BERESP_BACKEND_SRC_PORT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Integer{Value: 0}, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -616,44 +793,79 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	}
 
 	return value.Null, errors.WithStack(fmt.Errorf(
-		"Undefined variable %s", name,
+		"undefined variable %s", name,
 	))
 }
 
-func (v *AllScopeVariables) getFromRegex(name string) value.Value {
+func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// regex captured variables matching
 	if match := regexMatchedRegex.FindStringSubmatch(name); match != nil {
 		if val, ok := v.ctx.RegexMatchedValues[match[1]]; ok {
-			return val
+			return val, nil
 		}
+		// regex captured variable always returns string values even nothing capturing
+		// see: https://fiddle.fastly.dev/fiddle/3e5320ef
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	// HTTP request header matching
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.Request, match[1])
+		return getRequestHeaderValue(v.ctx.Request, match[1]), nil
 	}
 
 	// Ratecounter variable matching
-	if match := rateCounterRegex.FindStringSubmatch(name); match != nil {
-		var val float64
-		// all ratecounter variable value returns 1.0 fixed value
-		switch match[1] {
-		case "rate_10s",
-			"rate_1s",
-			"rate.60s",
-			"bucket.10s",
-			"bucket.20s",
-			"bucket.30s",
-			"bucket.40s",
-			"bucket.50s",
-			"bucket.60s":
-			val = 1.0
+	if matches := rateCounterRegex.FindStringSubmatch(name); matches != nil {
+		name, method, window := matches[1], matches[2], matches[3]
+		rc, ok := v.ctx.Ratecounters[name]
+		if !ok {
+			return nil, exception.Runtime(nil, "ratecounter '%s' is not defined", name)
 		}
-		return &value.Float{
-			Value: val,
+		// Get remote address by accessing client.ip variable
+		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
+		switch method {
+		case "bucket":
+			return getRateCounterBucketValue(v.ctx, rc, ip.String(), window)
+		case "rate":
+			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
+		default:
+			return nil, exception.Runtime(nil, "unexpected method '%s' found", method)
 		}
 	}
-	return nil
+
+	if match := backendConnectionsOpenRegex.FindStringSubmatch(name); match != nil {
+		return &value.Integer{}, nil
+	}
+
+	if match := backendConnectionsUsedRegex.FindStringSubmatch(name); match != nil {
+		return &value.Integer{}, nil
+	}
+
+	if match := backendHealthyRegex.FindStringSubmatch(name); match != nil {
+		if v, ok := v.ctx.Backends[match[1]]; ok {
+			if v.Healthy == nil {
+				return value.Null, exception.Runtime(nil, "backend '%s' healthy status not set", match[1])
+			}
+			return &value.Boolean{Value: v.Healthy.Load()}, nil
+		} else {
+			return value.Null, exception.Runtime(nil, "backend '%s' is not found", match[1])
+		}
+	}
+
+	if match := directorHealthyRegex.FindStringSubmatch(name); match != nil {
+		if v, ok := v.ctx.Backends[match[1]]; ok {
+			// Fastly doesn't seem to distinguish between "director.{NAME}.healthy" and "backend.{NAME}.healthy",
+			// so we don't need to check the director type here.
+			// Fiddle: https://fiddle.fastly.dev/fiddle/a691fc39
+			if v.Healthy == nil {
+				return value.Null, exception.Runtime(nil, "director '%s' healthy status not set", match[1])
+			}
+			return &value.Boolean{Value: v.Healthy.Load()}, nil
+		} else {
+			return value.Null, exception.Runtime(nil, "director '%s' is not found", match[1])
+		}
+	}
+
+	return nil, nil
 }
 
 func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -718,9 +930,11 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
 	case REQ_URL:
-		u := v.ctx.Request.URL.Path
+		u := getRawUrlPath(v.ctx.Request.URL)
 		if query := v.ctx.Request.URL.RawQuery; query != "" {
 			u += "?" + query
+		} else if v.ctx.Request.URL.ForceQuery {
+			u += "?"
 		}
 		if fragment := v.ctx.Request.URL.RawFragment; fragment != "" {
 			u += "#" + fragment
@@ -735,8 +949,10 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		}
 		// Update request URLs
 		v.ctx.Request.URL.Path = parsed.Path
+		v.ctx.Request.URL.RawPath = parsed.RawPath
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
+		v.ctx.Request.URL.ForceQuery = parsed.ForceQuery
 		return nil
 	}
 
@@ -760,7 +976,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	}
 
 	return errors.WithStack(fmt.Errorf(
-		"Variable %s is not found or could not set in scope: %s", name, s.String(),
+		"variable %s is not found or could not set in scope: %s", name, s.String(),
 	))
 }
 
@@ -769,7 +985,7 @@ func (v *AllScopeVariables) Add(s context.Scope, name string, val value.Value) e
 	match := requestHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return errors.WithStack(fmt.Errorf(
-			"Variable %s is not found or could not add. Normally add statement could use for HTTP header", name,
+			"variable %s is not found or could not add. Normally add statement could use for HTTP header", name,
 		))
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
@@ -788,7 +1004,7 @@ func (v *AllScopeVariables) Unset(s context.Scope, name string) error {
 	match := requestHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return errors.WithStack(fmt.Errorf(
-			"Variable %s is not found or could not unset", name,
+			"variable %s is not found or could not unset", name,
 		))
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {

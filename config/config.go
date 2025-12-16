@@ -12,50 +12,118 @@ var (
 	configurationFiles = []string{".falco.yaml", ".falco.yml"}
 )
 
+// Formatting value constants
+const (
+	IndentStyleSpace  = "space"
+	IndentStyleTab    = "tab"
+	CommentStyleNone  = "none"
+	CommentStyleSlash = "slash"
+	CommentStyleSharp = "sharp"
+)
+
 type OverrideBackend struct {
 	Host      string `yaml:"host"`
 	SSL       bool   `yaml:"ssl" default:"true"`
 	Unhealthy bool   `yaml:"unhealthy" default:"false"`
 }
 
+type EdgeDictionary map[string]string
+
 // Linter configuration
 type LinterConfig struct {
-	VerboseLevel   string            `yaml:"verbose"`
-	VerboseWarning bool              `cli:"v"`
-	VerboseInfo    bool              `cli:"vv"`
-	Rules          map[string]string `yaml:"rules"`
+	VerboseLevel            string              `yaml:"verbose"`
+	VerboseWarning          bool                `cli:"v"`
+	VerboseInfo             bool                `cli:"vv"`
+	Rules                   map[string]string   `yaml:"rules"`
+	EnforceSubroutineScopes map[string][]string `yaml:"enforce_subroutine_scopes"`
+	IgnoreSubroutines       []string            `yaml:"ignore_subroutines"`
+	IsGenerated             bool                `cli:"generated"`
 }
 
 // Simulator configuration
 type SimulatorConfig struct {
-	Port         int      `cli:"p,port" yaml:"port" default:"3124"`
-	IsDebug      bool     `cli:"debug"` // Enable only in CLI option
+	Port            int      `cli:"p,port" yaml:"port" default:"3124"`
+	IsDebug         bool     `cli:"debug"` // Enable only in CLI option
+	IsProxyResponse bool     `cli:"proxy"` // Enable only in CLI option
+	IncludePaths    []string // Copy from root field
+
+	// HTTPS related configuration. If both fields are spcified, simulator will serve with HTTPS
+	KeyFile  string `cli:"key" yaml:"key_file"`
+	CertFile string `cli:"cert" yaml:"cert_file"`
+
+	// Inject Edge Dictionary items
+	OverrideEdgeDictionaries map[string]EdgeDictionary `yaml:"edge_dictionary"`
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+
+	// Inject values that the simulator returns tentative value
+	// InjectValues map[string]any `yaml:"values"`
+}
+
+// Testing configuration
+type TestConfig struct {
+	Timeout      int      `cli:"timeout" yaml:"timeout"`
+	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
+	Tags         []string `cli:"t,tag"`
 	IncludePaths []string // Copy from root field
+	OverrideHost string   `yaml:"host" cli:"host"`
+	Watch        bool     `cli:"w,watch"`      // Enable only in CLI option
+	Coverage     bool     `cli:"coverage"`     // Enable only in CLI option
+	CoverageOut  string   `cli:"coverage-out"` // Enable only in CLI option
+
+	// Override Request configuration
+	OverrideRequest *RequestConfig
+
+	// Inject Edge Dictionary items
+	OverrideEdgeDictionaries map[string]EdgeDictionary `yaml:"edge_dictionary"`
+
+	// Override tentative variable values
+	CLIOverrideVariables  []string       `cli:"o,override"` // from CLI
+	YamlOverrideVariables map[string]any `yaml:"overrides"` // from .falco.yaml
+}
+
+// Console configuration
+type ConsoleConfig struct {
+	// Initial scope string, for example, recv, pass, fetch, etc...
+	Scope string `cli:"scope" default:"recv"`
 
 	// Override Request configuration
 	OverrideRequest *RequestConfig
 }
 
-// Testing configuration
-type TestConfig struct {
-	Timeout      int      `cli:"t,timeout" yaml:"timeout"`
-	Filter       string   `cli:"f,filter" default:"*.test.vcl"`
-	IncludePaths []string // Copy from root field
-	OverrideHost string   `yaml:"host"`
+// Format configuration
+type FormatConfig struct {
+	// CLI options
+	Overwrite bool `cli:"w,write" default:"false"`
 
-	// Override Request configuration
-	OverrideRequest *RequestConfig
+	// Formatter options
+	IndentWidth                int    `yaml:"indent_width" default:"2"`
+	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"1"`
+	IndentStyle                string `yaml:"indent_style" default:"space"`
+	LineWidth                  int    `yaml:"line_width" default:"120"`
+	ExplicitStringConat        bool   `yaml:"explicit_string_concat" default:"false"`
+	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
+	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
+	ElseIf                     bool   `yaml:"else_if" default:"false"`
+	AlwaysNextLineElseIf       bool   `yaml:"always_next_line_else_if" default:"false"`
+	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
+	SortDeclaration            bool   `yaml:"sort_declaration" default:"false"`
+	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
+	CommentStyle               string `yaml:"comment_style" default:"none"`
+	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
+	IndentCaseLabels           bool   `yaml:"indent_case_labels" default:"false"`
 }
 
 type Config struct {
 	// Root configurations
 	IncludePaths []string `cli:"I,include_path" yaml:"include_paths"`
-	Transforms   []string `cli:"t,transformer" yaml:"transformers"`
 	Help         bool     `cli:"h,help"`
-	Version      bool     `cli:"V"`
+	Version      bool     `cli:"V,version"`
 	Remote       bool     `cli:"r,remote" yaml:"remote"`
 	Json         bool     `cli:"json"`
 	Request      string   `cli:"request"`
+	Refresh      bool     `cli:"refresh"`
 
 	// Remote options, only provided via environment variable
 	FastlyServiceID string `env:"FASTLY_SERVICE_ID"`
@@ -77,6 +145,10 @@ type Config struct {
 	Simulator *SimulatorConfig `yaml:"simulator"`
 	// Testing configuration
 	Testing *TestConfig `yaml:"testing"`
+	// Console configuration
+	Console *ConsoleConfig `yaml:"console"`
+	// Format configuration
+	Format *FormatConfig `yaml:"format"`
 }
 
 func New(args []string) (*Config, error) {
@@ -92,12 +164,6 @@ func New(args []string) (*Config, error) {
 
 	c := &Config{
 		OverrideBackends: make(map[string]*OverrideBackend),
-		// Simulator: &SimulatorConfig{
-		// 	OverrideRequest:  &RequestConfig{},
-		// },
-		// Testing: &TestConfig{
-		// 	OverrideRequest: &RequestConfig{},
-		// },
 	}
 	if err := twist.Mix(c, options...); err != nil {
 		return nil, errors.WithStack(err)
@@ -123,6 +189,18 @@ func New(args []string) (*Config, error) {
 	// Copy common fields
 	c.Simulator.IncludePaths = c.IncludePaths
 	c.Testing.IncludePaths = c.IncludePaths
+
+	// On Fastly generated VCL, "vcl_pipe" subroutine will present internally.
+	// The "vcl_pipe" subroutine looks fastly managed but undocumented, so we will ignore linting
+	c.Linter.IgnoreSubroutines = append(c.Linter.IgnoreSubroutines, "vcl_pipe")
+	// If generated option provided for linter, modify default rules
+	if c.Linter.IsGenerated {
+		if c.Linter.Rules == nil {
+			c.Linter.Rules = make(map[string]string)
+		}
+		// Fastly generated VCL no longer has boiler-plate marco due to extracted so ignore it
+		c.Linter.Rules["subroutine/boilerplate-macro"] = "IGNORE" // TODO: use linter rule constants instead of string hard-coded
+	}
 
 	return c, nil
 }

@@ -1,11 +1,7 @@
 package variable
 
 import (
-	"io"
-	"strings"
 	"time"
-
-	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/context"
@@ -63,18 +59,26 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		// alias for obj.grace
 		return v.ctx.ObjectGrace, nil
 	case OBJ_STALE_WHILE_REVALIDATE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Return fixed value because we don't support SWR yet
 		return &value.RTime{Value: 60 * time.Second}, nil
 	case OBJ_STATUS:
 		return &value.Integer{Value: int64(v.ctx.Object.StatusCode)}, nil
 	case OBJ_TTL:
 		return v.ctx.ObjectTTL, nil
-	// Digest ratio will return fixed value
+	// Digest ratio will return fixed value if not override
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -86,10 +90,10 @@ func (v *HitScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	return val, nil
 }
 
-func (v *HitScopeVariables) getFromRegex(name string) value.Value {
+func (v *HitScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP request header matching
 	if match := objectHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.Object, match[1])
+		return getResponseHeaderValue(v.ctx.Object, match[1]), nil
 	}
 	return v.base.getFromRegex(name)
 }
@@ -105,7 +109,8 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
+		// obj.response indicates response header line, meand status text in http.Response
+		v.ctx.Object.Status = v.ctx.ObjectResponse.Value
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
@@ -113,7 +118,6 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
-		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {

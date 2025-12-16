@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
+	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type functionMeta struct {
@@ -17,11 +17,14 @@ type functionMeta struct {
 }
 
 var implicitCoersionTable = map[types.Type][]types.Type{
-	types.TimeType:   {types.StringType},
-	types.RTimeType:  {types.TimeType, types.StringType},
-	types.IPType:     {types.StringType},
-	types.IDType:     {types.StringType},
-	types.StringType: {types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType, types.IDType, types.RTimeType},
+	types.TimeType:  {types.StringType},
+	types.RTimeType: {types.TimeType, types.StringType},
+	types.IPType:    {types.StringType},
+	types.IDType:    {types.StringType},
+	types.StringType: {
+		types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType,
+		types.IDType, types.RTimeType, types.IPType, types.TimeType,
+	},
 }
 
 func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn functionMeta, ctx *context.Context) types.Type {
@@ -98,6 +101,17 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 					calledFn.meta, calledFn.name, i+1, v, arg,
 				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
 			}
+		}
+	}
+
+	// Special cases
+	if calledFn.name == "regsub" || calledFn.name == "regsuball" {
+		if !isTypeLiteral(calledFn.arguments[1]) {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    calledFn.arguments[1].GetMeta().Token,
+				Message:  "Regex patterns must be string literals.",
+			})
 		}
 	}
 

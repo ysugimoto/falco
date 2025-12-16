@@ -1,11 +1,16 @@
 package interpreter
 
 import (
+	"fmt"
+	ghttp "net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/token"
 )
@@ -84,7 +89,10 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, tt.withCondition)
+			opt := &ExpressionOption{
+				condition: tt.withCondition,
+			}
+			value, err := ip.ProcessPrefixExpression(tt.expression, opt)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -171,7 +179,10 @@ func TestPrefixExpression(t *testing.T) {
 
 		for _, tt := range tests {
 			ip := New(nil)
-			value, err := ip.ProcessPrefixExpression(tt.expression, false)
+			opt := &ExpressionOption{
+				condition: false,
+			}
+			value, err := ip.ProcessPrefixExpression(tt.expression, opt)
 			if tt.isError {
 				if err == nil {
 					t.Errorf("%s expects error but non-nil", tt.name)
@@ -337,6 +348,316 @@ func TestProcessExpression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestProcessStringConcat(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "normal concatenation",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + "bar" "baz"; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foobarbaz"},
+			},
+		},
+		{
+			name:    "invalid group expression",
+			vcl:     `sub vcl_recv { set req.http.Foo = ("foo" + "bar") + "baz"; }`,
+			isError: true,
+		},
+		{
+			name:    "invalid group expression 2",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + (now + 5m) + "; bar"; }`,
+			isError: true,
+		},
+		{
+			name:    "INTEGER concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 1; }`,
+			isError: true,
+		},
+		{
+			name:    "INTEGER concatenation 2",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + -1; }`,
+			isError: true,
+		},
+		{
+			name:    "FLOAT concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 0.5; }`,
+			isError: true,
+		},
+		{
+			name:    "RTIME literal concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + 6s; }`,
+			isError: true,
+		},
+		{
+			name: "RTIME ident concatenation",
+			vcl: `sub vcl_recv {
+				declare local var.R RTIME;
+				set var.R = 5m;
+				set req.http.Foo = "foo" var.R;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo300.000"},
+			},
+		},
+		{
+			name: "TIME concatenation",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + now; }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo" + now.Format(http.TimeFormat)},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with integer",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.atoi("10"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo10"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with boolean",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + math.is_finite(1.0); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo1"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with float",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + math.exp(1.0); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo2.718"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with IP",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.str2ip("192.0.2.1", "192.0.2.2"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo192.0.2.1"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with time",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.time("Mon, 02 Jan 2006 22:04:05 GMT", now); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "fooMon, 02 Jan 2006 22:04:05 GMT"},
+			},
+		},
+		{
+			name: "FunctionCall expression concatenation with ACL",
+			vcl: `
+			acl empty{}
+			table ext ACL { "ext": empty, }
+			sub vcl_recv {
+				set req.http.Foo = "foo" + table.lookup_acl(ext, req.url.ext, empty);
+			}`,
+			isError: true,
+		},
+		{
+			name: "FunctionCall expression concatenation with backend",
+			vcl: `
+			table t BACKEND { "test": F_origin_0, }
+			sub vcl_recv {
+				set req.http.Foo = "foo" + table.lookup_backend(t, "test2", req.backend);
+			}`,
+			isError: true,
+		},
+		{
+			name: "FunctionCall expression concatenation with string",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + std.itoa(10); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo10"},
+			},
+		},
+		{
+			name: "if expression concatenation, returns string",
+			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + if(req.http.Bar, "1", "0"); }`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "foo0"},
+			},
+		},
+		{
+			name:    "if expression concatenation, returns not string",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + if(req.http.Bar, 1, 0); }`,
+			isError: true,
+		},
+		{
+			name:    "prefix expression concatenation",
+			vcl:     `sub vcl_recv { set req.http.Foo = "foo" + !req.http.Bar; }`,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+// https://github.com/ysugimoto/falco/issues/360
+func TestProcessStringConcatIssue360(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "concat RTIME to left string",
+			vcl: `
+ sub vcl_deliver {
+ 	#FASTLY deliver
+ 	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" 5m ";";
+ }
+ `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME to left string with explicit plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" + 5m ";";
+  }
+  `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME to left TIME with explicit plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now + 5m ";";
+  }
+  `,
+			assertions: map[string]value.Value{
+				"resp.http.Set-Cookie": &value.String{
+					Value: fmt.Sprintf(
+						`test=abc; domain=fiddle.fastly.dev; path=/; expires=%s;`,
+						now.Add(5*time.Minute).Format(http.TimeFormat),
+					),
+				},
+			},
+		},
+		{
+			name: "concat RTIME to left TIME without plus sign",
+			vcl: `
+   sub vcl_deliver {
+   	#FASTLY deliver
+   	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now 5m ";";
+   }
+   `,
+			isError: true,
+		},
+		{
+			name: "concat RTIME variable to left TIME with plus sign",
+			vcl: `
+  sub vcl_deliver {
+  	#FASTLY deliver
+  	declare local var.R RTIME;
+  	set var.R = 5m;
+  	set resp.http.Set-Cookie = "test=abc; domain=fiddle.fastly.dev; path=/; expires=" now + var.R ";";
+  }
+   `,
+			isError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.DeliverScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
+func TestIsNotSetSeriesCheck(t *testing.T) {
+	tests := []struct {
+		name   string
+		series []*series
+		expect bool
+	}{
+		{
+			name: "single notset variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.NS",
+					},
+				},
+			},
+			expect: true,
+		},
+		{
+			name: "single variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.S",
+					},
+				},
+			},
+			expect: false,
+		},
+		{
+			name: "double notset variable series",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.NS",
+					},
+				},
+				{
+					Expression: &ast.Ident{
+						Value: "req.http.Undefined",
+					},
+				},
+			},
+			expect: true,
+		},
+		{
+			name: "either variable is set",
+			series: []*series{
+				{
+					Expression: &ast.Ident{
+						Value: "var.S",
+					},
+				},
+				{
+					Expression: &ast.Ident{
+						Value: "req.http.Undefined",
+					},
+				},
+			},
+			expect: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := New()
+			i.ctx = context.New()
+			i.ctx.Scope = context.RecvScope
+			i.ctx.Request = http.WrapRequest(
+				httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil),
+			)
+			i.SetScope(context.RecvScope)
+			i.localVars.Declare("var.NS", "IP")
+			i.localVars.Declare("var.S", "STRING")
+			i.localVars.Set("var.S", "=", &value.String{Value: "S"})
+
+			actual := i.isNotSetExpressionSeries(tt.series)
+			if diff := cmp.Diff(tt.expect, actual); diff != "" {
+				t.Errorf("result mismatch, diff=%s", diff)
+			}
 		})
 	}
 }

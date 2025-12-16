@@ -63,13 +63,25 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
 	case CLIENT_SOCKET_CWND:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
 	case CLIENT_SOCKET_NEXTHOP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case CLIENT_SOCKET_PACE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case CLIENT_SOCKET_PLOSS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0}, nil
 
 	case ESI_ALLOW_INSIDE_CDATA:
@@ -117,7 +129,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not parse remote address",
+				"could not parse remote address",
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
@@ -125,8 +137,14 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: v.ctx.Request.Method == "PURGE"}, nil
 
 	case REQ_BACKEND_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case REQ_BACKEND_IS_CLUSTER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case REQ_BACKEND_NAME:
 		var name string
@@ -174,18 +192,30 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		req.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 		readBytes += n
 		return &value.Integer{Value: readBytes}, nil
-	// Digest ratio will return fixed value
+	// Digest ratio will return fixed value if not override
 	case REQ_DIGEST_RATIO:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0.4}, nil
 
 	// FIXME: We need to send actual request to the backend
 	case RESP_BODY_BYTES_WRITTEN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case RESP_BYTES_WRITTEN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case RESP_COMPLETED:
 		return &value.Boolean{Value: true}, nil
 	case RESP_HEADER_BYTES_WRITTEN:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case RESP_IS_LOCALLY_GENERATED:
 		return v.ctx.IsLocallyGenerated, nil
@@ -232,14 +262,29 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// FIXME: segmented_caching related variables is just fake value
 	case SEGMENTED_CACHING_AUTOPURGED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_BLOCK_NUMBER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 1}, nil
 	case SEGMENTED_CACHING_BLOCK_SIZE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 1}, nil
 	case SEGMENTED_CACHING_CANCELLED: // nolint: misspell
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_CLIENT_REQ_IS_OPEN_ENDED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_CLIENT_REQ_IS_RANGE:
 		return &value.Boolean{Value: req.Header.Get("Range") != ""}, nil
@@ -264,44 +309,76 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.Integer{Value: low}, nil
 	case SEGMENTED_CACHING_COMPLETED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_ERROR:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.String{Value: ""}, nil
 	case SEGMENTED_CACHING_FAILED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_IS_INNER_REQ:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case SEGMENTED_CACHING_IS_OUTER_REQ:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: true}, nil
 	case SEGMENTED_CACHING_OBJ_COMPLETE_LENGTH:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case SEGMENTED_CACHING_ROUNDED_REQ_RANGE_HIGH:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case SEGMENTED_CACHING_ROUNDED_REQ_RANGE_LOW:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case SEGMENTED_CACHING_TOTAL_BLOCKS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
+	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
-	if val, err := GetTCPInfoVariable(name); err != nil {
+	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetQuicVariable(name); err != nil {
+	if val, err := GetQuicVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetTLSVariable(v.ctx.Request.TLS, name); err != nil {
+	if val, err := GetTLSVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVariable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
@@ -312,7 +389,9 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -324,17 +403,17 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	return val, nil
 }
 
-func (v *LogScopeVariables) getFromRegex(name string) value.Value {
+func (v *LogScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	if match := responseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
 			Value: v.ctx.Response.Header.Get(match[1]),
-		}
+		}, nil
 	}
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		return &value.String{
 			Value: v.ctx.BackendRequest.Header.Get(match[1]),
-		}
+		}, nil
 	}
 	return v.base.getFromRegex(name)
 }

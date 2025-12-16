@@ -31,7 +31,7 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		parsed, err := netip.ParseAddr(v.ctx.Request.RemoteAddr)
 		if err != nil {
 			return value.Null, errors.WithStack(fmt.Errorf(
-				"Could not parse remote address",
+				"could not parse remote address",
 			))
 		}
 		return &value.Boolean{Value: parsed.Is6()}, nil
@@ -40,20 +40,25 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return &value.Boolean{Value: v.ctx.Request.Method == PURGE}, nil
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
+	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
-	if val, err := GetQuicVariable(name); err != nil {
+	if val, err := GetQuicVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetTLSVariable(v.ctx.Request.TLS, name); err != nil {
+	if val, err := GetTLSVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
-	if val, err := GetFastlyInfoVariable(name); err != nil {
+	if val, err := GetFastlyInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
@@ -69,6 +74,14 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 
 func (v *HashScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	if name == "req.hash" {
+		// Special string assignment - normally "+=" operator cannot use for STRING type,
+		// But the exception case that "+=" operation can use for the "req.hash".
+		// See: https://fiddle.fastly.dev/fiddle/0f3fc0aa
+		if val.Type() == value.StringType && operator == "+=" {
+			hash := value.Unwrap[*value.String](val)
+			v.ctx.RequestHash.Value += hash.Value
+			return nil
+		}
 		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}

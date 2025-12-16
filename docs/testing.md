@@ -29,6 +29,8 @@ Flags:
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acl limitation
+    --watch            : Watch VCL file changes and run test
+    --coverage         : Report code coverage
 
 Local testing example:
     falco test -I . -I ./tests /path/to/vcl/main.vcl
@@ -78,6 +80,34 @@ falco test -I vcl_tests ./vcl/default.vcl
 
 falco finds `default.test.vcl` as testing file for both case.
 
+## Incremental Testing
+
+If you provide `--watch` option for testing command, test runner watches source and testing VCL file change and run tests.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --watch
+```
+
+Then falco observes `vcl_tests/*` and `vcl/*` file changes and run test incrementally.
+
+## Report Code Coverage
+
+If you provide `--coverage` option for testing command, falco collects and calculates code coverage after the test.
+For example,
+
+```shell
+falco test -I vcl_tests ./vcl/default.vcl --coverage
+```
+
+After testing finished, falco will display the coverage report.
+
+![CleanShot 2025-02-24 at 18 31 29@2x](https://github.com/user-attachments/assets/73071213-3924-4b8e-aabe-383f15feb5f3)
+
+> [!NOTE]
+> To collect the code coverage, falco needs instrumenting to your VCL code by transforming the AST.
+> This process is heavy so coverage mode is disabled when incremental testing is active.
+
 ## Testing Subroutine
 
 Unit testing file can be written as VCL subroutine, example is the following:
@@ -106,6 +136,36 @@ sub test_vcl_deliver {
 
 You can see many interesting syntaxes, The test case is controlled with annotation and assertion functions.
 
+## Grouped Testing
+
+falco supports special syntax of `describe`, `before_[scope]`, and `after_[scope]` - jest like syntax - only for the testing.
+Here is the example of grouped testing:
+
+```vcl
+// Grouping test
+describe grouped_tests {
+
+    // run before recv scoped subroutine
+    before_recv {
+        // you can use variables that is enable to access in RECV scope
+        set req.http.BeforeRecv = "1";
+    }
+
+    sub test_recv {
+        // ensure http header which is injected via hook
+        assert.equal(req.http.BeforeRecv, "1");
+        // Do unit testing for RECV scope
+    }
+
+    ...
+}
+```
+
+> [!NOTE]
+> Testing subroutines are stateful through the grouped testing.
+> A interpreter only be initialized for the group, the same interpreter will be used for each testing subroutine.
+> It is useful for testing across scopes but this behavior may be different from the jest one.
+
 ### Scope Recognition
 
 falco recognizes `@scope` annotation for execution scope.
@@ -113,9 +173,87 @@ falco recognizes `@scope` annotation for execution scope.
 `@scope: deliver` means the testing should run on `DELIVER` scope.
 You can specify multiply by separating commas like `@scope: hit,pass`.
 
+```vcl
+// @scope: recv,fetch,pass
+sub some_test_suite {
+    ...
+}
+```
+
 ### Suite Name
 
 You can specify the test suite name with `@suite` annotation value. Otherwise, the suite name will be set as the subroutine name.
+
+```vcl
+// @suite: test suite name here
+sub some_test_suite {
+    ...
+}
+```
+
+### Skipping Test
+
+You can skip test case by a couple of ways.
+
+#### Adding `@skip` annotation comment
+
+When you write `@skip` annotation comment in leading comment of testing subroutine, falco skips this testing subroutine.
+
+```vcl
+// @skip
+sub some_test_suite {
+    ...
+}
+```
+
+> [!NOTE]
+> Testing subroutines which is applied `@skip` annotation comment are always skipped.
+
+#### Specify `@tag` annotation and match against `-t,--tag` cli option
+
+When you write `@tag: [tag1],[tag2],...` annotation comment in leading comment of testing subroutine, falco evaluates tag maching and run if matched..
+
+```vcl
+// @tag: prod
+sub some_test_suite {
+    ...
+}
+```
+
+And you can provide matcher tags via `-t,--tag` option:
+
+```shell
+falco test -t prod /path/to/vcl/default.vcl
+```
+
+Then, falco evaluates whether `prod` tag matches against `@tag` values (on the above case, test will be run).
+And the `@tag` annotation could appect inverse flag like `!prod`:
+
+```vcl
+// @tag: !prod
+sub some_test_suite {
+    ...
+}
+```
+
+Then this test suite will be run if `prod` tag is NOT provided.
+We describes the falco treats and evaluates tag specification and providing cli option as the following table:
+
+
+| Tag Specification | Tag CLI Option | Run Test |
+|:-----------------:|:--------------:|:---------|
+| prod              | N/A            | **NO**   |
+| prod              | prod           | YES      |
+| prod              | dev            | **NO**   |
+| !prod             | N/A            | YES      |
+| !prod             | prod           | **NO**   |
+| !prod             | dev            | YES      |
+| N/A               | N/A            | YES      |
+| N/A               | prod           | YES      |
+| N/A               | dev            | YES      |
+
+> [!IMPORTANT]
+> Above table describes significant thing that if you specify some tag annotation, the test suite only runs when some tag option is provided.
 
 ### Testing preparation
 
@@ -158,15 +296,25 @@ We describe them following table and examples:
 | Name                         | Type       | Description                                                                                  |
 |:-----------------------------|:----------:|:---------------------------------------------------------------------------------------------|
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
+| testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
+| testing.origin_host_header   | STRING     | The value of `Host` header that will send to an origin                                       |
 | testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
+| testing.inject_variable      | FUNCTION   | Inject variable that returns tentative value                                                 |
 | testing.inspect              | FUNCTION   | Inspect predefined variables for any scopes                                                  |
 | testing.table_set            | FUNCTION   | Inject value for key to main VCL table                                                       |
 | testing.table_merge          | FUNCTION   | Merge values from testing VCL table to main VCL table                                        |
+| testing.mock                 | FUNCTION   | Mock the subroutine with specified subroutine in the testing VCL                             |
+| testing.restore_mock         | FUNCTION   | Restore specific mocked subroutine                                                           |
+| testing.restore_all_mocks    | FUNCTION   | Restore all mocked subroutines                                                               |
+| testing.get_env              | FUNCTION   | Get environment variable value on running machine                                            |
+| testing.fixed_access_rate    | FUNCTION   | Set fixed access rate value                                                                  |
+| testing.set_backend_health   | FUNCTION   | Set health status of backend                                                                 |
 | assert                       | FUNCTION   | Assert provided expression should be true                                                    |
 | assert.true                  | FUNCTION   | Assert actual value should be true                                                           |
 | assert.false                 | FUNCTION   | Assert actual value should be false                                                          |
+| assert.is_json               | FUNCTION   | Assert actual string should be valid JSON                                                    |
 | assert.is_notset             | FUNCTION   | Assert actual value should be NotSet                                                         |
 | assert.equal                 | FUNCTION   | Assert actual value should be equal to expected value (alias of assert.strict_equal)         |
 | assert.not_equal             | FUNCTION   | Assert actual value should not be equal to expected value (alias of assert.not_strict_equal) |
@@ -182,8 +330,53 @@ We describe them following table and examples:
 | assert.subroutine_called     | FUNCTION   | Assert subroutine has called in testing subroutine (with times)                              |
 | assert.not_subroutine_called | FUNCTION   | Assert subroutine has not called in testing subroutine                                       |
 | assert.restart               | FUNCTION   | Assert restart statement has called                                                          |
+| assert.not_restart           | FUNCTION   | Assert restart statement has not been called                                                 |
 | assert.state                 | FUNCTION   | Assert after state is expected one                                                           |
+| assert.not_state             | FUNCTION   | Assert after state is not expected one                                                       |
 | assert.error                 | FUNCTION   | Assert error status code (and response) if error statement has called                        |
+| assert.not_error             | FUNCTION   | Assert runtime state will not move to error status                                           |
+
+----
+
+### testing.synthetic_body STRING
+
+Returns the response body as set by a call to `synthetic` or `synthetic.base64`.
+Only valid in the `error` scope.
+
+```vcl
+// @scope: error
+sub generate_response {
+    synthetic "No dice.";
+}
+
+// @scope: error
+sub test_vcl {
+    testing.call_subroutine("generate_response");
+    assert.equal(testing.synthetic_body, "No dice.");
+}
+```
+
+----
+
+### testing.origin_host_header STRING
+
+Returns the `Host` header value that will send to the origin.
+This value is calculated from `backend` configuration so you need to choose the backend before accessing this variable.
+
+```vcl
+backend example {
+    .host = "example.com";
+    .port = "443";
+    .always_use_host_header = true;
+}
+
+// @scope: recv
+sub test_vcl {
+    // Choose backend before calling
+    set req.backend = example;
+    assert.equal(testing.origin_host_header, "example.com");
+}
+```
 
 ----
 
@@ -276,6 +469,26 @@ sub test_vcl {
 
 ----
 
+### testing.inject_variable(STRING var_name, ANY value)
+
+Inject variable that returns tentative value.
+
+> [!NOTE]
+> This function could override tentative values which are written in https://github.com/ysugimoto/falco/blob/main/docs/variables.md, typical variables could not be overridden.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Override server.region variable value
+    testing.inject_variable("server.region", "Asia");
+    testing.call_subroutine("vcl_recv");
+
+    assert.equal(req.http.Region, "Asia");
+}
+```
+
+----
+
 ### testing.table_set(ID table, STRING key, STRING value)
 
 Inject value for key to main VCL table.
@@ -318,6 +531,211 @@ sub test_vcl {
 
     // Assert injected value
     assert.equal(table.lookup(example_dict, "foo", ""), "bar");
+}
+```
+
+----
+
+### testing.mock(STRING from, STRING to)
+
+Mock the subroutine with testing subroutine.
+
+> [!NOTE]
+> You cannot mock Fastly reserved (lifecycle) subroutine that starts with `vcl_` like `vcl_recv`, `vcl_fetch`, etc.
+> But you can mock the functional subroutine that returns some value.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+// @scope: recv
+sub test_vcl {
+    // Mock the subroutine
+    testing.mock("add_header", "mock_add_header");
+
+    // vcl_recv has a dependency that calls "add_header" subroutine inside.
+    testing.call_subroutine("vcl_recv");
+
+    // Assert mocked subroutine result
+    assert.equal(req.http.Mocked, "1");
+}
+```
+
+----
+
+### testing.restore_mock(STRING from)
+
+Restore mocked subroutine to the original.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    after_recv {
+        // Restore mock
+        testing.restore_mock("add_header");
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
+}
+```
+
+----
+
+### testing.restore_all_mocks()
+
+Restore all mocked subroutines.
+Normally This function is used inside `describe` grouped testing hooks.
+
+```vcl
+
+sub mock_add_header {
+    set req.http.Mocked = "1";
+}
+
+describe add_header_mock {
+
+    before_recv {
+        // Mock subroutine
+        testing.mock("add_header", "mock_add_header");
+    }
+
+    after_recv {
+        // Restore all mocks
+        testing.restore_all_mocks();
+    }
+
+    // @scope: recv
+    sub test_vcl {
+        // Mock the subroutine
+        testing.mock("add_header", "mock_add_header");
+
+        // vcl_recv has a dependency that calls "add_header" subroutine inside.
+        testing.call_subroutine("vcl_recv");
+
+        // Assert mocked subroutine result
+        assert.equal(req.http.Mocked, "1");
+    }
+
+    // @scope: fetch
+    sub test_fetch {
+        // This subroutine no longer uses mocked subroutine
+        ...
+    }
+}
+```
+
+----
+
+### STRING testing.get_env(STRING name)
+
+Get environment value from `name`.
+This is only enabled on the testing environment and it will be useful for switching test to environment (dev,prod) differences.
+
+```vcl
+sub test_vcl {
+    if (testing.get_env("IS_DEV")) {
+        // skip this test on development environment
+        return;
+    }
+    ...do some assertions
+}
+```
+
+----
+
+### testing.fixed_access_rate(FLOAT|INTEGER rate)
+
+Set fixed access rate. This function affects to `ratelimit` related values and functions like:
+
+- `ratecounter.rc.bucket.10s`
+- `ratecounter.rc.bucket.20s`
+- `ratecounter.rc.bucket.30s`
+- `ratecounter.rc.bucket.40s`
+- `ratecounter.rc.bucket.50s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.bucket.60s`
+- `ratecounter.rc.rate.1s`
+- `ratecounter.rc.rate.10s`
+- `ratecounter.rc.rate.60s`
+- `ratelimit.check_rate()`
+- `ratelimit.check_rates()`
+
+```vcl
+ratecounter rc {}
+penaltybox pb {}
+
+sub test_vcl {
+    declare local var.exceeded BOOL;
+    set var.exceeded = false;
+
+    // set the fixed rate
+    testing.fixed_access_rate(100.0);
+
+    if (ratelimit.check_rate(client.ip, rc, 1, 10, 100, pb, 10s)) {
+        set var.exceeded  = true;
+    }
+
+    assert.true(var.exceeded);
+}
+```
+
+----
+
+### `testing.set_backend_health(BACKEND backend, BOOL healthy)`
+
+Sets the health status of a backend for testing purposes.
+
+**Parameters:**
+- `backend` - The backend to modify (e.g., `backend1`)
+- `healthy` - Boolean value: `true` for healthy, `false` for unhealthy
+
+**Example:**
+```vcl
+// Test backend health check variable
+// @scope: recv
+// @suite: Test unhealthy backend
+sub test_backend_health_status {
+  // Initially all backends are healthy
+  assert.true(backend.backend1.healthy);
+  assert.true(backend.backend2.healthy);
+  assert.true(backend.backend3.healthy);
+
+  // Mark backend1 as unhealthy
+  testing.set_backend_health(backend1, false);
+
+  // Now backend1 should be unhealthy
+  assert.false(backend.backend1.healthy);
+  assert.true(backend.backend2.healthy);
+  assert.true(backend.backend3.healthy);
 }
 ```
 
@@ -388,6 +806,28 @@ sub test_vcl {
 
     // Fail because experssion value is not BOOL false
     assert.false(req.http.Foo);
+}
+```
+
+----
+
+### assert.is_json(STRING actual [, STRING message])
+
+Assert actual string should be valid JSON.
+
+```vcl
+sub test_vcl {
+    declare local var.testing STRING;
+
+    set var.testing = "[1,2,3]";
+
+    // Pass because value contains valid JSON array.
+    assert.is_json(var.testing);
+
+    set var.testing = "[1,2,3,]";
+
+    // Fail because value contains array with trailing comma.
+    assert.is_json(var.testing);
 }
 ```
 
@@ -671,6 +1111,25 @@ sub test_vcl {
 
 ----
 
+### assert.not_restart([, STRING message])
+
+Assert restart statement has NOT been called.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will process normally without calling restart
+    testing.call_subroutine("vcl_recv");
+
+    // Assert restart statement has not been called
+    assert.not_restart();
+
+    // With custom error message
+    assert.not_restart("Expected no restart in this flow");
+}
+```
+
+----
+
 ### assert.state(ID state [, STRING message])
 
 Assert current state is expected.
@@ -682,6 +1141,22 @@ sub test_vcl {
 
     // Assert state moves to lookup
     assert.state(lookup);
+}
+```
+
+----
+
+### assert.not_state(ID state [, STRING message])
+
+Assert current state is not expected one.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will move state to lookup to lookup cache
+    testing.call_subroutine("vcl_recv");
+
+    // Assert state does not move to lookup
+    assert.not_state(lookup);
 }
 ```
 
@@ -701,6 +1176,22 @@ sub test_vcl {
 
     // Assert error statement has called with expected status and response text
     assert.error(900, "Fastly Internal");
+}
+```
+
+----
+
+### assert.not_error([STRING message])
+
+Assert runtime state will not move to error status.
+
+```vcl
+sub test_vcl {
+    // vcl_recv will call error statement with status code and response
+    testing.call_subroutine("vcl_recv");
+
+    // Assert error statement has not called
+    assert.not_error();
 }
 ```
 

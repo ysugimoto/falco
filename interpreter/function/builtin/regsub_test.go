@@ -15,33 +15,146 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/regsub/
 func Test_Regsub(t *testing.T) {
 	tests := []struct {
+		name        string
 		input       string
 		pattern     string
 		replacement string
 		expect      string
+		literal     bool
+		isError     bool
 	}{
-		{input: "www.example.com", pattern: "www\\.", replacement: "", expect: "example.com"},
-		{input: "/foo/bar/", pattern: "/$", replacement: "", expect: "/foo/bar"},
-		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaa"},
-		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: "\\1bar", expect: "foobar"},
+		{
+			name:        "remove www prefix",
+			input:       "www.example.com",
+			pattern:     `www\.`,
+			replacement: "",
+			expect:      "example.com",
+			literal:     true,
+		},
+		{
+			name:        "remove trailing slash",
+			input:       "/foo/bar/",
+			pattern:     "/$",
+			replacement: "",
+			expect:      "/foo/bar",
+			literal:     true,
+		},
+		{
+			name:        "replace first occurrence",
+			input:       "aaaa",
+			pattern:     "a",
+			replacement: "aa",
+			expect:      "aaaaa",
+			literal:     true,
+		},
+		{
+			name:        "capture group replacement",
+			input:       "foo;bar;baz",
+			pattern:     "([^;]*)(;.*)?$",
+			replacement: `\1bar`,
+			expect:      "foobar",
+			literal:     true,
+		},
+		{
+			name:        "identity replacement",
+			input:       "foo;bar",
+			pattern:     `^([^;]+)`,
+			replacement: `\1`,
+			expect:      "foo;bar",
+			literal:     true,
+		},
+		{
+			name:        "pattern must be literal",
+			input:       "aaaa",
+			pattern:     "a",
+			replacement: "aa",
+			literal:     false,
+			isError:     true,
+		},
+		{
+			name:        "URL path rewrite",
+			input:       "/old/path/file.html",
+			pattern:     "^/old/(.*)",
+			replacement: `/new/\1`,
+			expect:      "/new/path/file.html",
+			literal:     true,
+		},
+		{
+			name:        "backreference with digits",
+			input:       "foo123bar",
+			pattern:     `foo(\d+)`,
+			replacement: `found: [\1]`,
+			expect:      `found: [123]bar`,
+			literal:     true,
+		},
+		{
+			name:        "multiple backreferences",
+			input:       "John Doe",
+			pattern:     `^(\w+)\s+(\w+)$`,
+			replacement: `\2, \1`,
+			expect:      "Doe, John",
+			literal:     true,
+		},
+		{
+			name:        "remove query parameter",
+			input:       "/path?foo=bar&baz=qux",
+			pattern:     `\?.*$`,
+			replacement: "",
+			expect:      "/path",
+			literal:     true,
+		},
+		{
+			name:        "normalize whitespace (first match only)",
+			input:       "hello    world   test",
+			pattern:     `\s+`,
+			replacement: " ",
+			expect:      "hello world   test",
+			literal:     true,
+		},
+		{
+			name:        "case insensitive with (?i)",
+			input:       "Hello World",
+			pattern:     "(?i)hello",
+			replacement: "hi",
+			expect:      "hi World",
+			literal:     true,
+		},
+		{
+			name:        "no match returns original",
+			input:       "hello",
+			pattern:     "xyz",
+			replacement: "abc",
+			expect:      "hello",
+			literal:     true,
+		},
 	}
 
-	for i, tt := range tests {
-		ret, err := Regsub(
-			&context.Context{},
-			&value.String{Value: tt.input},
-			&value.String{Value: tt.pattern},
-			&value.String{Value: tt.replacement},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.StringType {
-			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.String](ret)
-		if v.Value != tt.expect {
-			t.Errorf("[%d] Return value unmatch, expect=%s, got=%s", i, tt.expect, v.Value)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ret, err := Regsub(
+				&context.Context{},
+				&value.String{Value: tt.input},
+				&value.String{Value: tt.pattern, Literal: tt.literal},
+				&value.String{Value: tt.replacement},
+			)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("Expected error but got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			if ret.Type() != value.StringType {
+				t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+				return
+			}
+			v := value.Unwrap[*value.String](ret)
+			if v.Value != tt.expect {
+				t.Errorf("Return value unmatch, expect=%q, got=%q", tt.expect, v.Value)
+			}
+		})
 	}
 }

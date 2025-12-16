@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 var scopeMap = map[string]string{
@@ -74,7 +75,7 @@ func (i *Interpreter) generatePredefined() error {
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.predefined").Parse(interpreterPredefinedVariables))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Variables": buf.String(),
 	}); err != nil {
 		return err
@@ -123,11 +124,21 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		if err := i.generateBuiltInFunctionTestFile(key, v); err != nil {
 			return err
 		}
-		signature := fmt.Sprintf(
-			"Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) { return builtin.%s(ctx, args...) }",
-			ucFirst(strings.ReplaceAll(key, ".", "_")),
+
+		buf.WriteString("Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {\n")
+		if indicies := i.createFunctionStringifyVariableIndicies(v.Arguments); indicies != "" {
+			buf.WriteString("var err error\n")
+			buf.WriteString(
+				fmt.Sprintf("args, err = stringifyVariableArguments(\"%s\", args, %s)\n", key, indicies),
+			)
+			buf.WriteString("if err != nil {\n")
+			buf.WriteString("return value.Null, errors.WithStack(err)\n")
+			buf.WriteString("}\n")
+		}
+		buf.WriteString(
+			fmt.Sprintf("return builtin.%s(ctx, args...)\n", ucFirst(strings.ReplaceAll(key, ".", "_"))),
 		)
-		buf.WriteString(signature + ",\n")
+		buf.WriteString("},\n")
 		buf.WriteString(fmt.Sprintf("CanStatementCall: %t,\n", v.Return == ""))
 		buf.WriteString("IsIdentArgument: func(i int) bool {\n")
 		buf.WriteString(fmt.Sprintf("return %s\n", i.createFunctionIdentArguments(v.Arguments)))
@@ -137,7 +148,7 @@ func (i *Interpreter) generateBuiltInFunction() error {
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.builtin").Parse(interpreterBuiltinFunctions))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Functions": buf.String(),
 	}); err != nil {
 		return err
@@ -157,6 +168,37 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		return err
 	}
 	return nil
+}
+
+func (i *Interpreter) createFunctionStringifyVariableIndicies(arguments [][]string) string {
+	// Find max length of arguments
+	var maxArgs []string
+	for _, args := range arguments {
+		if len(args) > len(maxArgs) {
+			maxArgs = args
+		}
+	}
+
+	stack := make(map[int]struct{})
+	// Find ID type argument position
+	for i, arg := range maxArgs {
+		if arg == "STRING" {
+			stack[i] = struct{}{}
+		}
+	}
+
+	if len(stack) == 0 {
+		return ""
+	}
+
+	indicies := make([]string, len(stack))
+	var idx int
+	for i := range stack {
+		indicies[idx] = fmt.Sprintf("%d: {}", i)
+		idx++
+	}
+	slices.Sort(indicies)
+	return fmt.Sprintf("map[int]struct{}{%s}", strings.Join(indicies, ", "))
 }
 
 func (i *Interpreter) createFunctionIdentArguments(arguments [][]string) string {
@@ -206,7 +248,7 @@ func (i *Interpreter) generateBuiltInFunctionFile(name string, fn *FunctionSpec)
 		template.New("interpreter.function").
 			Parse(interpreterFunctionImplementation),
 	)
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Name":          ucFirst(strings.ReplaceAll(name, ".", "_")),
 		"Original":      name,
 		"Reference":     fn.Ref,
@@ -252,7 +294,7 @@ func (i *Interpreter) generateBuiltInFunctionTestFile(name string, fn *FunctionS
 
 	out := new(bytes.Buffer)
 	tpl := template.Must(template.New("interpreter.function").Parse(interpreterFunctionTestImplementation))
-	if err := tpl.Execute(out, map[string]interface{}{
+	if err := tpl.Execute(out, map[string]any{
 		"Name":      ucFirst(strings.ReplaceAll(name, ".", "_")),
 		"Original":  name,
 		"Reference": fn.Ref,

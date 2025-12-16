@@ -31,6 +31,12 @@ client.sess_timeout:
   get: RTIME
   set: RTIME
 
+bereq.max_reuse_idle_time:
+  reference: # no references for this variable seem to exist.
+  on: [MISS, PASS]
+  get: RTIME
+  set: RTIME
+
 ## Following variables are documented.
 backend.conn.is_tls:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-conn-is-tls/"
@@ -181,6 +187,26 @@ backend.socket.tcpi_total_retrans:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-socket-tcpi-total-retrans/"
   on: [FETCH]
   get: INTEGER
+
+backend.%any%.connections_open:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-open/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+backend.%any%.connections_used:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/backend-connections-used/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+backend.%any%.healthy:
+  reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/backend-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+director.%any%.healthy:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/director-healthy/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
 
 bereq.between_bytes_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/"
@@ -956,6 +982,11 @@ tls.client.tlsexts_sha:
   on: [RECV, HASH, DELIVER, LOG]
   get: STRING
 
+tls.client.ja4:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/variables/client-connection/tls-client-ja4/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: STRING
+
 transport.bw_estimate:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/transport-bw-estimate/"
   on: [RECV, HASH, DELIVER, LOG]
@@ -995,41 +1026,49 @@ client.class.checker:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-checker/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.downloader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-downloader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.feedreader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-feedreader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.filter:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-filter/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.masquerading:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-masquerading/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.class.spam:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-class-spam/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.display.height:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-height/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.display.ppi:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-ppi/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.display.touchscreen:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-touchscreen/"
@@ -1040,6 +1079,7 @@ client.display.width:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-display-width/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
+  deprecated: true
 
 client.identified:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-identified/"
@@ -1060,6 +1100,7 @@ client.platform.ereader:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-ereader/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 client.platform.gameconsole:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-gameconsole/"
@@ -1095,6 +1136,7 @@ client.platform.tvplayer:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/client-platform-tvplayer/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
+  deprecated: true
 
 fastly_info.h2.is_push:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/fastly-info-h2-is-push/"
@@ -1838,7 +1880,7 @@ math.TAU:
 fastly.error:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-error/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
-  get: FLOAT
+  get: STRING
   unset: true
 
 fastly.ff.visits_this_pop:
@@ -2263,3 +2305,28 @@ ratecounter.%any%.rate.60s:
   reference: "https://developer.fastly.com/reference/vcl/variables/rate-limiting/ratecounter-rate-60s/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: FLOAT
+
+fastly.is_staging:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-is-staging/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+beresp.backend.src_port:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/beresp-backend-src-port/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: INTEGER
+
+fastly.ddos_detected:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-ddos-detected/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+client.platform.model:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+client.platform.vendor:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-vendor/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING

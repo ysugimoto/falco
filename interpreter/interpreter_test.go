@@ -45,10 +45,17 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 	ip := New(context.WithResolver(
 		resolver.NewStaticResolver("main", vcl),
 	))
-	ip.ServeHTTP(
-		httptest.NewRecorder(),
-		httptest.NewRequest(http.MethodGet, "http://localhost", nil),
-	)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	ip.ServeHTTP(rec, req)
+
+	if rec.Result().StatusCode != 200 {
+		if !isError {
+			t.Errorf("Interpreter responds not 200 code")
+			t.FailNow()
+		}
+		return
+	}
 
 	for name, val := range assertions {
 		v, err := ip.vars.Get(scope, name)
@@ -90,8 +97,11 @@ func TestProcessDeclarations(t *testing.T) {
 			DirectorType: &ast.Ident{Value: "client"},
 			Properties: []ast.Expression{
 				&ast.DirectorProperty{
-					Key:   &ast.Ident{Value: "quorum"},
-					Value: &ast.String{Value: "20%"},
+					Key: &ast.Ident{Value: "quorum"},
+					Value: &ast.PostfixExpression{
+						Left:     &ast.Integer{Value: 20},
+						Operator: "%",
+					},
 				},
 				&ast.DirectorBackendObject{
 					Values: []*ast.DirectorProperty{
@@ -119,11 +129,19 @@ func TestProcessDeclarations(t *testing.T) {
 	}); err != nil {
 		t.Errorf("%+v\n", err)
 	}
-	if _, ok := ip.ctx.Backends["backend_example"]; !ok {
+	backend, ok := ip.ctx.Backends["backend_example"]
+	if !ok {
 		t.Errorf("Failed to find backend_example in backends: %v\n", ip.ctx.Backends)
 	}
-	if _, ok := ip.ctx.Backends["director_example"]; !ok {
+	if backend.Healthy == nil || !backend.Healthy.Load() {
+		t.Errorf("Healthy status not set for backend_example")
+	}
+	backend, ok = ip.ctx.Backends["director_example"]
+	if !ok {
 		t.Errorf("Failed to find director_example in backends: %v\n", ip.ctx.Backends)
+	}
+	if backend.Healthy == nil || !backend.Healthy.Load() {
+		t.Errorf("Healthy status not set for director_example")
 	}
 }
 

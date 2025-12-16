@@ -367,6 +367,13 @@ time.sub:
     - [TIME, RTIME]
   return: TIME
 
+time.interval_elapsed_ratio:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/date-and-time/time-interval-elapsed-ratio/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TIME, TIME, TIME]
+  return: FLOAT
+
 time.units:
   reference: "https://developer.fastly.com/reference/vcl/functions/date-and-time/time-units/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
@@ -1147,6 +1154,14 @@ table.lookup_rtime:
   return: RTIME
   extra: LOOKUP_TABLE
 
+table.lookup_regex:
+  reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [TABLE, STRING]
+  return: REGEX
+  extra: LOOKUP_TABLE
+
 uuid.dns:
   reference: "https://developer.fastly.com/reference/vcl/functions/uuid/uuid-dns/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
@@ -1284,3 +1299,72 @@ header.unset:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
     - [ID, STRING]
+
+fastly.try_select_shield:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/miscellaneous/fastly-try-select-shield/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [BACKEND, BACKEND]
+  return: BACKEND
+
+uuid.is_version7:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-is-version7/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+uuid.version7:
+  reference: "https://developer.fastly.com/documentation/reference/vcl/functions/uuid/uuid-version7/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  return: STRING
+
+digest.ecdsa_verify:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-ecdsa-verify/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [ID, STRING, STRING, STRING, ID]
+    - [ID, STRING, STRING, STRING, ID, ID]
+  return: BOOL
+
+std.strcasecmp:
+  reference: "" # TODO: fill after documentation is found
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL
+
+digest.hash_xxh32:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_xxh64:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_xxh32_from_base64:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh32-from-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hash_xxh64_from_base64:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hash-xxh64-from-base64/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+digest.hmac_sha256_with_base64_key:
+  reference: "https://www.fastly.com/documentation/reference/vcl/functions/cryptographic/digest-hmac-sha256-with-base64-key/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: STRING

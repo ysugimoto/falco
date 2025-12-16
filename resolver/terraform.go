@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/snippet/terraform"
 )
 
 // TerraformResolver is in memory resolver, read and factory vcl data from terraform planned JSON input
@@ -45,6 +45,10 @@ func NewTerraformResolver(services []*terraform.FastlyService) []Resolver {
 
 func (s *TerraformResolver) Name() string {
 	return s.ServiceName
+}
+
+func (s *TerraformResolver) IncludePaths() []string {
+	return []string{}
 }
 
 func (s *TerraformResolver) MainVCL() (*VCL, error) {

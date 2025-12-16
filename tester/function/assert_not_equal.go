@@ -22,7 +22,7 @@ func Assert_not_equal_Validate(args []value.Value) error {
 
 func Assert_not_equal(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if err := Assert_not_equal_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// assert.not_equal is alias for assert.not_strict_equal

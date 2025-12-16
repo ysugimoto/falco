@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"net/http"
+	"slices"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,16 +15,8 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
-)
-
-const (
-	DIRECTORTYPE_RANDOM   = "random"
-	DIRECTORTYPE_FALLBACK = "fallback"
-	DIRECTORTYPE_HASH     = "hash"
-	DIRECTORTYPE_CLIENT   = "client"
-	DIRECTORTYPE_CHASH    = "chash"
-	DIRECTORTYPE_SHIELD   = "shield"
 )
 
 var (
@@ -74,29 +65,28 @@ func (i *Interpreter) getDirectorConfigBackend(o *ast.DirectorBackendObject) (*v
 func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop *ast.DirectorProperty) error {
 	switch prop.Key.Value {
 	case "quorum":
-		if conf.Type == DIRECTORTYPE_FALLBACK {
+		if conf.Type == value.DIRECTORTYPE_FALLBACK {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".quorum field must not be present in fallback director type",
 			)
 		}
-		if v, ok := prop.Value.(*ast.String); !ok {
+		expr, ok := prop.Value.(*ast.PostfixExpression)
+		if !ok {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
-				"quorum value must be percentage prefixed value",
+				"quorum value must be integer literal expression like 50%%",
 			)
-		} else if n, err := strconv.Atoi(strings.TrimSuffix(v.Value, "%")); err != nil {
-			return exception.Runtime(
-				&prop.GetMeta().Token,
-				"Invalid quorum value '%s' found. Value must be percentage string like '50%%'",
-				v.Value,
-			)
-		} else {
-			conf.Quorum = n
 		}
+		l, err := i.ProcessPostfixExpression(expr)
+		if err != nil {
+			return err
+		}
+		left := value.Unwrap[*value.Integer](l)
+		conf.Quorum = int(left.Value)
 		return nil
 	case "retries":
-		if conf.Type != DIRECTORTYPE_RANDOM {
+		if conf.Type != value.DIRECTORTYPE_RANDOM {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".retries field must be present only in random director type",
@@ -109,7 +99,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		}
 		return nil
 	case "key":
-		if conf.Type != DIRECTORTYPE_CHASH {
+		if conf.Type != value.DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".key field must be present only in chash director type",
@@ -124,7 +114,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		}
 		return nil
 	case "seed":
-		if conf.Type != DIRECTORTYPE_CHASH {
+		if conf.Type != value.DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".seed field must be present only in chash director type",
@@ -137,7 +127,7 @@ func (i *Interpreter) setDirectorConfigProperty(conf *value.DirectorConfig, prop
 		}
 		return nil
 	case "vnodes_per_node":
-		if conf.Type != DIRECTORTYPE_CHASH {
+		if conf.Type != value.DIRECTORTYPE_CHASH {
 			return exception.Runtime(
 				&prop.GetMeta().Token,
 				".vnodes_per_node field must be present only in chash director type",
@@ -164,12 +154,12 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 
 	// Validate director type
 	switch d.DirectorType.Value {
-	case DIRECTORTYPE_RANDOM,
-		DIRECTORTYPE_FALLBACK,
-		DIRECTORTYPE_HASH,
-		DIRECTORTYPE_CLIENT,
-		DIRECTORTYPE_CHASH,
-		DIRECTORTYPE_SHIELD:
+	case value.DIRECTORTYPE_RANDOM,
+		value.DIRECTORTYPE_FALLBACK,
+		value.DIRECTORTYPE_HASH,
+		value.DIRECTORTYPE_CLIENT,
+		value.DIRECTORTYPE_CHASH,
+		value.DIRECTORTYPE_SHIELD:
 		conf.Type = d.DirectorType.Value
 	default:
 		return nil, exception.Runtime(
@@ -189,7 +179,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 			}
 			// Validate reqired properties
 			switch conf.Type {
-			case DIRECTORTYPE_RANDOM, DIRECTORTYPE_HASH, DIRECTORTYPE_CLIENT:
+			case value.DIRECTORTYPE_RANDOM, value.DIRECTORTYPE_HASH, value.DIRECTORTYPE_CLIENT:
 				if backend.Weight == 0 {
 					return nil, exception.Runtime(
 						&t.GetMeta().Token,
@@ -220,7 +210,7 @@ func (i *Interpreter) getDirectorConfig(d *ast.DirectorDeclaration) (*value.Dire
 		}
 	}
 
-	if len(conf.Backends) == 0 && d.DirectorType.Value != DIRECTORTYPE_SHIELD {
+	if len(conf.Backends) == 0 && d.DirectorType.Value != value.DIRECTORTYPE_SHIELD {
 		return nil, exception.Runtime(
 			&d.GetMeta().Token,
 			"At least one backend must be specified in director '%s'",
@@ -236,15 +226,15 @@ func (i *Interpreter) createDirectorRequest(ctx *context.Context, dc *value.Dire
 	var err error
 
 	switch dc.Type {
-	case DIRECTORTYPE_RANDOM:
+	case value.DIRECTORTYPE_RANDOM:
 		backend, err = i.directorBackendRandom(dc)
-	case DIRECTORTYPE_FALLBACK:
+	case value.DIRECTORTYPE_FALLBACK:
 		backend, err = i.directorBackendFallback(dc)
-	case DIRECTORTYPE_HASH:
+	case value.DIRECTORTYPE_HASH:
 		backend, err = i.directorBackendHash(dc)
-	case DIRECTORTYPE_CLIENT:
+	case value.DIRECTORTYPE_CLIENT:
 		backend, err = i.directorBackendClient(dc)
-	case DIRECTORTYPE_CHASH:
+	case value.DIRECTORTYPE_CHASH:
 		backend, err = i.directorBackendConsistentHash(dc)
 	default:
 		return nil, exception.System("Unexpected director type '%s' provided", dc.Type)
@@ -364,7 +354,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 	hashTable := make(map[uint32]*value.Backend)
 
 	var healthyBackends int
-	max := uint32(math.Pow(10, 4)) // max 10000
+	maxNum := uint32(math.Pow(10, 4)) // max 10000
 	// Put backends to the circles
 	for _, v := range dc.Backends {
 		if !v.Backend.Healthy.Load() {
@@ -372,24 +362,22 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 		}
 		healthyBackends++
 		// typically loop three times in order to find suitable ring position
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			buf := make([]byte, 4)
 			binary.BigEndian.PutUint32(buf, dc.Seed)
 			hash := sha256.New() // TODO: consider to user hash/fnv for getting performance guarantee
 			hash.Write(buf)
 			hash.Write([]byte(v.Backend.Value.Name.Value))
-			hash.Write([]byte(fmt.Sprint(i)))
+			hash.Write(fmt.Append([]byte{}, i))
 			h := hash.Sum(nil)
-			num := binary.BigEndian.Uint32(h[:8]) % max
+			num := binary.BigEndian.Uint32(h[:8]) % maxNum
 			hashTable[num] = v.Backend
 			circles = append(circles, num)
 		}
 	}
 
 	// Sort slice for binary search
-	sort.Slice(circles, func(i, j int) bool {
-		return circles[i] < circles[j]
-	})
+	slices.Sort(circles)
 
 	var hashKey [32]byte
 	switch dc.Key {
@@ -408,7 +396,7 @@ func (i *Interpreter) directorBackendConsistentHash(dc *value.DirectorConfig) (*
 		hashKey = sha256.Sum256([]byte(identity))
 	}
 
-	key := binary.BigEndian.Uint32(hashKey[:8]) % max
+	key := binary.BigEndian.Uint32(hashKey[:8]) % maxNum
 	index := sort.Search(len(circles), func(i int) bool {
 		return circles[i] >= key
 	})
@@ -426,8 +414,8 @@ func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*
 
 	var target *value.Backend
 	for m := 4; m <= 16; m += 2 {
-		max := uint64(math.Pow(10, float64(m)))
-		num := binary.BigEndian.Uint64(hash[:8]) % max
+		maxNum := uint64(math.Pow(10, float64(m)))
+		num := binary.BigEndian.Uint64(hash[:8]) % maxNum
 
 		for _, v := range dc.Backends {
 			if !v.Backend.Healthy.Load() {
@@ -435,7 +423,7 @@ func (i *Interpreter) getBackendByHash(dc *value.DirectorConfig, hash []byte) (*
 			}
 			bh := sha256.Sum256([]byte(v.Backend.Value.String()))
 			b := binary.BigEndian.Uint64(bh[:8])
-			if b%(max*10) >= num && b%(max*10) < num+max {
+			if b%(maxNum*10) >= num && b%(maxNum*10) < num+maxNum {
 				target = v.Backend
 				goto DETERMINED
 			}

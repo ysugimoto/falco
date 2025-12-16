@@ -303,7 +303,7 @@ Fastly document: https://developer.fastly.com/reference/vcl/declarations/table/
 
 ## table/type-variation
 
-Invalid `value_type` spefication on TABLE. `value_type` is allowed to specify with `STRING`, `INTEGER`, `BOOL`, `FLOAT`, `BACKEND`, `ACL` and `RTIME`.
+Invalid `value_type` spefication on TABLE. `value_type` is allowed to specify with `STRING`, `INTEGER`, `BOOL`, `FLOAT`, `BACKEND`, `ACL`, `RTIME` and `REGEX`.
 
 Problem:
 
@@ -562,7 +562,7 @@ Syntax error on `declare` statement.
 Statement syntax is:
 
 ```vcl
-declare local (?<variable_name>var\.[a-zA-Z0-9_]+) (?<variable_type>(STRING|INTEGER|BOOL|FLOAT|BACKEND|ACL|RTIME)>;
+declare local (?<variable_name>var\.[a-zA-Z0-9_]+) (?<variable_type>(STRING|INTEGER|BOOL|FLOAT|BACKEND|ACL|RTIME|REGEX)>;
 ```
 
 For example:
@@ -738,7 +738,7 @@ Syntax error on `call` statement.
 call syntax is:
 
 ```vcl
-call (?<identifier>[a-zA-Z0-9\._]+);
+call (?<identifier>[a-zA-Z0-9\._]+)(\((?<arguments>.+,...)\))?;
 ```
 
 For example:
@@ -908,7 +908,7 @@ Failed to load include target module.
 
 ## regex/matched-value-override
 
-Regex matched operator `re.group.N` value will be overriden.
+Regex matched operator `re.group.N` value will be overridden.
 
 These variables could use if(else) block statement when condition has regex operator like `~` or `!~`.
 Note that group matched variable has potential of making bugs due to its spec:

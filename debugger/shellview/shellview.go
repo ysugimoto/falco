@@ -32,7 +32,7 @@ func New() *ShellView {
 }
 
 func (s *ShellView) writeShell() {
-	w := s.TextView.BatchWriter()
+	w := s.BatchWriter()
 	defer w.Close()
 	w.Clear()
 

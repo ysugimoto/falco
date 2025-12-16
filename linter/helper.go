@@ -2,16 +2,212 @@ package linter
 
 import (
 	"fmt"
-	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/context"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
-var captureRegex = regexp.MustCompile(`\([^\)]+\)`)
+// handlePCREComment skips a PCRE comment (?#...) and returns the new index.
+func handlePCREComment(pattern string, i int) int {
+	i += 3 // Skip (?#
+	for i < len(pattern) && pattern[i] != ')' {
+		if pattern[i] == '\\' {
+			i++ // Skip escaped character
+		}
+		i++
+	}
+	return i + 1 // Skip the closing )
+}
+
+// handlePCREConditional skips a PCRE conditional (?(...)) and returns the new index.
+func handlePCREConditional(pattern string, i int) int {
+	i += 3 // Move past "(?("
+	depth := 1
+	for i < len(pattern) && depth > 0 {
+		switch pattern[i] {
+		case '\\':
+			i++ // Skip escaped character
+		case '(':
+			depth++
+		case ')':
+			depth--
+		}
+		i++
+	}
+	return i - 1 // Back up one since we'll increment at the end of the outer loop
+}
+
+// isInlineModifierChar returns true if the character is a valid inline modifier character.
+func isInlineModifierChar(ch byte) bool {
+	return ch == 'i' || ch == 'm' || ch == 's' || ch == 'x' ||
+		ch == 'U' || ch == 'X' || ch == 'J' || ch == '-'
+}
+
+// handlePCREInlineModifier checks if the pattern has inline modifiers and whether
+// it forms a modified non-capturing group. Returns newIndex.
+func handlePCREInlineModifier(pattern string, i int) int {
+	// Scan ahead to see if there's a : which makes it a modified group
+	j := i + 3
+	for j < len(pattern) && isInlineModifierChar(pattern[j]) {
+		j++
+	}
+	// Whether it's a modified non-capturing group (?i:...) or just an inline modifier (?i),
+	// we skip it the same way
+	return i + 1
+}
+
+// handlePCRESpecialConstruct processes special PCRE constructs starting with (?
+// and returns (shouldContinue, shouldCount, newIndex).
+func handlePCRESpecialConstruct(pattern string, i int) (bool, bool, int) {
+	if i+2 >= len(pattern) {
+		return false, false, i
+	}
+
+	nextCh := pattern[i+2]
+	switch nextCh {
+	case ':':
+		// Non-capturing group (?:...)
+		return true, false, i + 1
+	case '=', '!':
+		// Lookahead (?=...) or negative lookahead (?!...)
+		return true, false, i + 1
+	case '<':
+		// Could be lookbehind (?<=...) or negative lookbehind (?<!...)
+		if i+3 < len(pattern) && (pattern[i+3] == '=' || pattern[i+3] == '!') {
+			return true, false, i + 1
+		}
+		// Could also be named group (?<name>...) - count it
+		return true, true, i + 1
+	case '>':
+		// Atomic group (?>...)
+		return true, false, i + 1
+	case '#':
+		// Comment (?#...) - skip until closing )
+		newIdx := handlePCREComment(pattern, i)
+		return true, false, newIdx
+	case 'P':
+		// Python-style named group (?P<name>...) or (?P=name)
+		if i+3 < len(pattern) && pattern[i+3] == '<' {
+			// Named capture group - count it
+			return true, true, i + 1
+		}
+		// (?P=name) is a backreference, not a group
+		return true, false, i + 1
+	case '\'':
+		// Perl-style named group (?'name'...)
+		return true, true, i + 1
+	case '(':
+		// Conditional (?(...)) or (?(condition)yes|no)
+		newIdx := handlePCREConditional(pattern, i)
+		return true, false, newIdx
+	case 'R', '&':
+		// Subroutine call (?R), (?&name), etc.
+		return true, false, i + 1
+	}
+
+	// Check for inline modifiers
+	if isInlineModifierChar(nextCh) {
+		newIdx := handlePCREInlineModifier(pattern, i)
+		return true, false, newIdx
+	}
+
+	// Some other special construct we might not recognize
+	// To be safe, don't count it as a capture group
+	return true, false, i + 1
+}
+
+// skipCharClassStart advances the index past special characters at the start
+// of a character class ([^...] or []...]).
+func skipCharClassStart(pattern string, i int) int {
+	// Check for negated character class [^...]
+	if i < len(pattern) && pattern[i] == '^' {
+		i++
+	}
+	// Check for ] at start of character class (it's literal)
+	if i < len(pattern) && pattern[i] == ']' {
+		i++
+	}
+	return i
+}
+
+// countPCRECaptureGroups counts the number of actual capture groups in a PCRE pattern.
+// It correctly handles:
+// - Non-capturing groups (?:...)
+// - Lookaheads/lookbehinds (?=...), (?!...), (?<=...), (?<!...)
+// - Atomic groups (?>...)
+// - Comments (?#...)
+// - Other special constructs that don't capture
+// - Escaped parentheses \( and \)
+// - Character classes [...]
+// - Named groups (?P<name>...) - counts as capture but PCRE doesn't support these for Fastly
+func countPCRECaptureGroups(pattern string) int {
+	count := 0
+	inCharClass := false
+	escaped := false
+	i := 0
+
+	for i < len(pattern) {
+		ch := pattern[i]
+
+		// Handle escape sequences
+		if escaped {
+			escaped = false
+			i++
+			continue
+		}
+
+		if ch == '\\' {
+			escaped = true
+			i++
+			continue
+		}
+
+		// Handle character classes
+		if ch == '[' && !inCharClass {
+			inCharClass = true
+			i++
+			i = skipCharClassStart(pattern, i)
+			continue
+		}
+
+		if ch == ']' && inCharClass {
+			inCharClass = false
+			i++
+			continue
+		}
+
+		// Inside character class, parentheses are literals
+		if inCharClass {
+			i++
+			continue
+		}
+
+		// Check for opening parenthesis
+		if ch == '(' {
+			// Look ahead to see if it's a special construct
+			if i+1 < len(pattern) && pattern[i+1] == '?' {
+				shouldContinue, shouldCount, newIdx := handlePCRESpecialConstruct(pattern, i)
+				if shouldCount {
+					count++
+				}
+				if shouldContinue {
+					i = newIdx
+					continue
+				}
+			}
+			// Regular capturing group
+			count++
+		}
+
+		i++
+	}
+
+	return count
+}
 
 var BackendPropertyTypes = map[string]types.Type{
 	"dynamic":                  types.BoolType,
@@ -27,10 +223,12 @@ var BackendPropertyTypes = map[string]types.Type{
 	"between_bytes_timeout":    types.RTimeType,
 	"connect_timeout":          types.RTimeType,
 	"first_byte_timeout":       types.RTimeType,
+	"keepalive_time":           types.RTimeType,
 	"max_connections":          types.IntegerType,
 	"host_header":              types.StringType,
 	"always_use_host_header":   types.BoolType,
 	"bypass_local_route_table": types.BoolType,
+	"prefer_ipv6":              types.BoolType,
 }
 
 var BackendProbePropertyTypes = map[string]types.Type{
@@ -56,7 +254,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		Rule: DIRECTOR_PROPS_RANDOM,
 		Props: map[string]types.Type{
 			"retries": types.IntegerType,
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -72,7 +270,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 	"hash": {
 		Rule: DIRECTOR_PROPS_HASH,
 		Props: map[string]types.Type{
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -81,7 +279,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 	"client": {
 		Rule: DIRECTOR_PROPS_CLIENT,
 		Props: map[string]types.Type{
-			"quorum":  types.StringType,
+			"quorum":  types.IntegerType,
 			"backend": types.BackendType,
 			"weight":  types.IntegerType,
 		},
@@ -93,7 +291,7 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 			"key":             types.BackendType, // TODO: need accept object or client
 			"seed":            types.IntegerType,
 			"vnodes_per_node": types.IntegerType,
-			"quorum":          types.StringType,
+			"quorum":          types.IntegerType,
 			"weight":          types.IntegerType,
 			"id":              types.StringType,
 			"backend":         types.BackendType,
@@ -104,19 +302,20 @@ var DirectorPropertyTypes = map[string]DirectorProps{
 		// We should do linting loughly because this type is only provided via Faslty Origin-Shielding
 		Props: map[string]types.Type{
 			"shield": types.StringType,
+			"is_ssl": types.BoolType,
 		},
 		Requires: []string{"shield"},
 	},
 }
 
 func isAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_'
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 // isValidName validates ident name has only [0-9a-zA-Z_]+
 func isValidName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) {
+		if isAlphaNumeric(r) || r == '_' {
 			continue
 		}
 		return false
@@ -127,10 +326,51 @@ func isValidName(name string) bool {
 // isValidVariableName validates ident name has only [0-9a-zA-Z_\.-:]+
 func isValidVariableName(name string) bool {
 	for _, r := range name {
-		if isAlphaNumeric(r) || r == '.' || r == '-' || r == ':' {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' {
 			continue
 		}
 		return false
+	}
+	return true
+}
+
+// isValidVariableNameWithWildcard validates ident name has only [0-9a-zA-Z_\.-:*]+ for unset/remove statement
+func isValidVariableNameWithWildcard(name string) bool {
+	asterisk := -1
+	colon := -1
+	dot := -1
+	for index, r := range name {
+		if isAlphaNumeric(r) || r == '_' || r == '.' || r == '-' || r == ':' || r == '*' {
+			// Store the poisition of asterisk
+			switch r {
+			case '*':
+				asterisk = index
+			case ':':
+				colon = index
+			case '.':
+				dot = index
+			}
+			continue
+		}
+		return false
+	}
+
+	// If asterisk character found, the poistion must be the end of name or must not be the after of colon.
+	// unset req.http.*       // <- invalid
+	// unset req.http.X-*Foo  // <- invalid
+	// unset req.http.VARS:*  // <- invalid
+	// unset req.http.X-*     // <- valid
+	// unset req.http.VARS:V* // <- valid
+	if asterisk != -1 {
+		if colon != -1 && asterisk == colon+1 {
+			return false
+		}
+		if asterisk == 0 || asterisk != len(name)-1 {
+			return false
+		}
+		if dot != -1 && asterisk == dot+1 {
+			return false
+		}
 	}
 	return true
 }
@@ -162,13 +402,15 @@ func isValidConditionExpression(cond ast.Expression) error {
 //
 // declare local var.Foo BOOL;
 // declare local var.Bar STRING;
-// set var.Bar = "foo" "bar";                      // -> valid, string concatenation operator can use
-// set var.Foo = (req.http.Host == "example.com"); // -> valid, equal operator cau use inside grouped expression set statement
-// set var.Foo = !false;                           // -> invalid, could not use in set statement
-// set var.Foo = req.http.Host == "example.com";   // -> invalid, equal operator could not use in set statement
+// set var.Bar = "foo" "bar";                         // -> valid, string concatenation operator can use
+// set var.Foo = (req.http.Host == "example.com");    // -> valid, equal operator cau use inside grouped expression set statement
+// set var.Bar = (req.http.Host == "example.com");    // -> invalid, expression must be an string
+// set var.Foo = !false;                              // -> invalid, could not use in set statement
+// set var.Bar = !tls.client.certificate.is_cert_bad; // -> invalid, expression must be an string
+// set var.Foo = req.http.Host == "example.com";      // -> invalid, equal operator could not use in set statement
 //
 // So we'd check validity following function.
-func isValidStatementExpression(exp ast.Expression) error {
+func isValidStatementExpression(leftType types.Type, exp ast.Expression) error {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
 		if t.Operator == "!" {
@@ -177,6 +419,10 @@ func isValidStatementExpression(exp ast.Expression) error {
 	case *ast.InfixExpression:
 		if t.Operator != "+" {
 			return fmt.Errorf("could not specify %s operator in statement", t.Operator)
+		}
+	case *ast.GroupedExpression:
+		if leftType != types.BoolType {
+			return fmt.Errorf("could not specify grouped expression excepting boolean statement")
 		}
 	}
 	return nil
@@ -191,7 +437,7 @@ func isValidReturnExpression(exp ast.Expression) error {
 		return isValidReturnExpression(t.Right)
 	case *ast.InfixExpression:
 		// Only comparison and boolean operators are allowed
-		if !(isBooleanOperator(t.Operator) || isComparisonOperator(t.Operator)) {
+		if !isBooleanOperator(t.Operator) && !isComparisonOperator(t.Operator) {
 			return fmt.Errorf("expected ;, got %s", t.Operator)
 		}
 		return isValidReturnExpression(t.Left)
@@ -199,21 +445,33 @@ func isValidReturnExpression(exp ast.Expression) error {
 	return nil
 }
 
-func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) error {
+// Push regex captured variable to the context if needed
+func pushRegexGroupVars(exp ast.Expression, ctx *context.Context) {
 	switch t := exp.(type) {
 	case *ast.PrefixExpression:
-		return pushRegexGroupVars(t.Right, ctx)
+		pushRegexGroupVars(t.Right, ctx)
+	case *ast.GroupedExpression:
+		pushRegexGroupVars(t.Right, ctx)
 	case *ast.InfixExpression:
 		if t.Operator == "~" || t.Operator == "!~" {
-			m := captureRegex.FindAllStringSubmatch(t.Right.String(), -1)
-			if m != nil {
-				return ctx.PushRegexVariables(len(m) + 1)
+			// Extract the pattern string from the regex expression
+			if str, ok := t.Right.(*ast.String); ok {
+				// Count capture groups using PCRE-aware parser
+				captureCount := countPCRECaptureGroups(str.Value)
+				if captureCount > 0 {
+					// +1 because re.group.0 contains the full match
+					ctx.PushRegexVariables(captureCount + 1)
+				} else {
+					ctx.ResetRegexVariables()
+				}
+			} else {
+				// If it's not a string literal, we can't analyze it at compile time
+				ctx.ResetRegexVariables()
 			}
 		} else {
-			return pushRegexGroupVars(t.Right, ctx)
+			pushRegexGroupVars(t.Right, ctx)
 		}
 	}
-	return nil
 }
 
 func isBooleanOperator(operator string) bool {
@@ -281,21 +539,11 @@ func isLiteralExpression(exp ast.Expression) bool {
 }
 
 func expectType(cur types.Type, expects ...types.Type) bool {
-	for i := range expects {
-		if expects[i] == cur {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expects, cur)
 }
 
 func expectState(cur string, expects ...string) bool {
-	for i := range expects {
-		if expects[i] == cur {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expects, cur)
 }
 
 func annotations(comments ast.Comments) []string {
@@ -304,8 +552,8 @@ func annotations(comments ast.Comments) []string {
 		l := strings.TrimLeft(comments[i].Value, " */#")
 		if strings.HasPrefix(l, "@") {
 			var an []string
-			if strings.HasPrefix(l, "@scope:") {
-				an = strings.Split(strings.TrimPrefix(l, "@scope:"), ",")
+			if trimmed, found := strings.CutPrefix(l, "@scope:"); found {
+				an = strings.Split(trimmed, ",")
 			} else {
 				an = strings.Split(strings.TrimPrefix(l, "@"), ",")
 			}
@@ -342,7 +590,7 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	}
 
 	// If could not via subroutine name, find by annotations
-	// typically defined is module file
+	// typically defined in module file
 	scopes := 0
 	for _, a := range annotations(s.Leading) {
 		switch strings.ToUpper(a) {
@@ -367,9 +615,45 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 		}
 	}
 	if scopes == 0 {
-		return context.RECV
+		// Unknown scope
+		return -1
 	}
 	return scopes
+}
+
+func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
+	var scopes int
+	for i := range scopeNames {
+		switch strings.ToUpper(scopeNames[i]) {
+		case "RECV":
+			scopes |= context.RECV
+		case "HASH":
+			scopes |= context.HASH
+		case "HIT":
+			scopes |= context.HIT
+		case "MISS":
+			scopes |= context.MISS
+		case "PASS":
+			scopes |= context.PASS
+		case "FETCH":
+			scopes |= context.FETCH
+		case "ERROR":
+			scopes |= context.ERROR
+		case "DELIVER":
+			scopes |= context.DELIVER
+		case "LOG":
+			scopes |= context.LOG
+		}
+	}
+	if scopes == 0 {
+		// Unknown scope
+		return -1
+	}
+	return scopes
+}
+
+func isIgnoredSubroutineInConfig(ignores []string, subroutineName string) bool {
+	return slices.Contains(ignores, subroutineName)
 }
 
 func getFastlySubroutineScope(name string) string {
@@ -396,15 +680,34 @@ func getFastlySubroutineScope(name string) string {
 	return ""
 }
 
-func hasFastlyBoilerPlateMacro(commentText, phrase string) bool {
-	comments := strings.Split(commentText, "\n")
-	for _, c := range comments {
-		c = strings.TrimLeft(c, " */#")
-		if strings.HasPrefix(strings.ToUpper(c), phrase) {
+// Fastly macro format Must be "#FASTLY [scope]"
+// - Comment sign must starts with single "#". "/" sign is not accepted
+// - Fixed "FASTLY" string must exactly present without whitespace after comment sign
+// - [scope] string is case-insensitive (recv/RECV can be accepcted, typically uppercase)
+// - Additional comment is also accepted like "#FASTLY RECV some extra comment"
+func hasFastlyBoilerPlateMacro(cs ast.Comments, scope string) bool {
+	for _, c := range cs {
+		// Uppercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToUpper(scope)) {
+			return true
+		}
+		// lowercase scope
+		if strings.HasPrefix(c.String(), "#FASTLY "+strings.ToLower(scope)) {
 			return true
 		}
 	}
 	return false
+}
+
+// According to fastly share_key must be alphanumeric and ASCII only
+func isValidBackendShareKey(shareKey string) bool {
+	for _, c := range shareKey {
+		if isAlphaNumeric(c) {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // According to fastly if a prober is configured with initial < threshold
@@ -486,4 +789,63 @@ func isProtectedHTTPHeaderName(name string) bool {
 		return true
 	}
 	return false
+}
+
+// Series expresses the series of string concatenation.
+type Series struct {
+	Operator   string // Operator will accept either of "+" or "-" or empty string.
+	Expression ast.Expression
+}
+
+func toSeriesExpressions(expr ast.Expression, ctx *context.Context) ([]*Series, *LintError) {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// If expression is ident, must be a variable
+		// e.g req.http.Header, var.declaredVariable
+		if _, err := ctx.Get(t.Value); err != nil {
+			switch err {
+			case context.ErrDeprecated, context.ErrUncapturedRegexVariable, context.ErrRegexVariableOverridden:
+				break
+			default:
+				return nil, InvalidStringConcatenation(expr.GetMeta(), t.Value)
+			}
+		}
+	case *ast.PrefixExpression:
+		if t.Operator != "+" && t.Operator != "-" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "PrefixExpression")
+		}
+		s, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		s[0].Operator = t.Operator
+		return s, nil
+	case *ast.GroupedExpression:
+		return nil, InvalidStringConcatenation(expr.GetMeta(), "GroupedExpression")
+	case *ast.InfixExpression:
+		if t.Operator != "+" {
+			return nil, InvalidStringConcatenation(expr.GetMeta(), "InfixExpression")
+		}
+		var series []*Series
+		left, err := toSeriesExpressions(t.Left, ctx)
+		if err != nil {
+			return nil, err
+		}
+		series = append(series, left...)
+
+		right, err := toSeriesExpressions(t.Right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if t.Explicit {
+			right[0].Operator = t.Operator
+		}
+		series = append(series, right...)
+		return series, nil
+	}
+
+	// Concatenatable expression
+	return []*Series{
+		{Expression: expr},
+	}, nil
 }

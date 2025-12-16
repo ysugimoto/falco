@@ -223,7 +223,9 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return v.ctx.EnableSSI, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -235,14 +237,14 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	return val, nil
 }
 
-func (v *FetchScopeVariables) getFromRegex(name string) value.Value {
+func (v *FetchScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP request header matching
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getRequestHeaderValue(v.ctx.BackendRequest, match[1])
+		return getRequestHeaderValue(v.ctx.BackendRequest, match[1]), nil
 	}
 
 	if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
-		return getResponseHeaderValue(v.ctx.BackendResponse, match[1])
+		return getResponseHeaderValue(v.ctx.BackendResponse, match[1]), nil
 	}
 	return v.base.getFromRegex(name)
 }
@@ -280,7 +282,8 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		// Update request URLs
 		bereq.URL.Path = parsed.Path
-		bereq.URL.RawQuery = parsed.RawPath
+		bereq.URL.RawPath = parsed.RawPath
+		bereq.URL.RawQuery = parsed.RawQuery
 		bereq.URL.RawFragment = parsed.RawFragment
 		return nil
 	case BERESP_BROTLI:

@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test benchmark
 
 BUILD_VERSION=$(or ${VERSION}, dev)
 
@@ -40,8 +40,18 @@ all: linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
 lint:
 	golangci-lint run
 
-local: test lint
-	go build ./cmd/falco
+modernize:
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
+
+local: test lint modernize
 
 clean:
 	rm ./dist/falco-*
+
+plugin_ci:
+	cd ./examples/plugin/lint_backend_name && \
+		go build -o falco-backend-name . && \
+		cp ./falco-backend-name /usr/local/bin/falco-backend-name
+
+benchmark:
+	cd cmd/benchmark && go test -bench . -benchmem

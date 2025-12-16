@@ -1,11 +1,8 @@
 package variable
 
 import (
-	"io"
 	"net"
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -27,18 +24,31 @@ func NewErrorScopeVariables(ctx *context.Context) *ErrorScopeVariables {
 	}
 }
 
+//nolint:funlen,gocyclo
 func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, error) {
 	switch name {
 	case CLIENT_SOCKET_CONGESTION_ALGORITHM:
 		return v.ctx.ClientSocketCongestionAlgorithm, nil
 	case CLIENT_SOCKET_CWND:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		// Sometimes change this value but we don't know how change it without set statement
 		return &value.Integer{Value: 60}, nil
 	case CLIENT_SOCKET_NEXTHOP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case CLIENT_SOCKET_PACE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: 0}, nil
 	case CLIENT_SOCKET_PLOSS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Float{Value: 0}, nil
 
 	case ESI_ALLOW_INSIDE_CDATA:
@@ -87,8 +97,14 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return v.ctx.ObjectTTL, nil
 
 	case REQ_BACKEND_IP:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case REQ_BACKEND_IS_CLUSTER:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: false}, nil
 	case REQ_BACKEND_NAME:
 		var name string
@@ -137,13 +153,15 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	}
 
 	// Look up shared variables
-	if val, err := GetTCPInfoVariable(name); err != nil {
+	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
 		return val, nil
 	}
 
-	if val := v.getFromRegex(name); val != nil {
+	if val, err := v.getFromRegex(name); err != nil {
+		return nil, err
+	} else if val != nil {
 		return val, nil
 	}
 
@@ -155,14 +173,14 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	return val, nil
 }
 
-func (v *ErrorScopeVariables) getFromRegex(name string) value.Value {
+func (v *ErrorScopeVariables) getFromRegex(name string) (value.Value, error) {
 	// HTTP response header matching
 	match := objectHttpHeaderRegex.FindStringSubmatch(name)
 	if match == nil {
 		return v.base.getFromRegex(name)
 	}
 
-	return getResponseHeaderValue(v.ctx.Object, match[1])
+	return getResponseHeaderValue(v.ctx.Object, match[1]), nil
 }
 
 func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
@@ -196,7 +214,8 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := doAssign(v.ctx.ObjectResponse, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.Object.Body = io.NopCloser(strings.NewReader(v.ctx.ObjectResponse.Value))
+		// obj.response indicates response header line, meand status text in http.Response
+		v.ctx.Object.Status = v.ctx.ObjectResponse.Value
 		return nil
 	case OBJ_STATUS:
 		i := &value.Integer{Value: 0}
@@ -204,7 +223,6 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 			return errors.WithStack(err)
 		}
 		v.ctx.Object.StatusCode = int(i.Value)
-		v.ctx.Object.Status = http.StatusText(int(i.Value))
 		return nil
 	case OBJ_TTL:
 		if err := doAssign(v.ctx.ObjectTTL, operator, val); err != nil {

@@ -46,28 +46,31 @@ func factoryFunctions(ctx context.Context) (*sync.Map, error) {
 	return &m, nil
 }
 
-func checkFunctions(m *sync.Map) error {
+func checkFunctions(m *sync.Map) ([]Function, error) {
 	fp, err := os.Open(builtinPath)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 	defer fp.Close()
 
-	variables := make(map[string]interface{})
-	if err := yaml.NewDecoder(fp).Decode(variables); err != nil {
-		return errors.WithStack(err)
+	defined := make(map[string]any)
+	if err := yaml.NewDecoder(fp).Decode(defined); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	m.Range(func(key, val interface{}) bool {
+	var lacked []Function
+	m.Range(func(key, val any) bool {
 		k := key.(string) // nolint:errcheck
 		v := val.(string) // nolint:errcheck
 
-		if _, ok := variables[k]; ok {
+		if _, ok := defined[k]; ok {
 			return true
 		}
-		write(yellow, "[!] ")
-		writeln(white, `"%s" is not defined, url: %s`, k, v)
+		lacked = append(lacked, Function{
+			name: k,
+			url:  v,
+		})
 		return true
 	})
-	return nil
+	return lacked, nil
 }

@@ -3,9 +3,13 @@
 package builtin
 
 import (
+	"net"
 	"testing"
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+	"time"
+
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of ratelimit.penaltybox_has
@@ -13,5 +17,94 @@ import (
 // - ID, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/rate-limiting/ratelimit-penaltybox-has/
 func Test_Ratelimit_penaltybox_has(t *testing.T) {
-	t.Skip("Test Builtin function ratelimit.penaltybox_has should be impelemented")
+	tests := []struct {
+		name      string
+		ident     string
+		entry     value.Value
+		expect    bool
+		isError   bool
+		expectErr string
+		sleep     time.Duration
+	}{
+		{
+			name:   "entry exists in penaltybox",
+			ident:  "my_penaltybox",
+			entry:  &value.String{Value: "some_entry"},
+			expect: true,
+		},
+		{
+			name:   "entry does not exist in penaltybox",
+			ident:  "my_penaltybox",
+			entry:  &value.String{Value: "not_exists"},
+			expect: false,
+		},
+		{
+			name:   "ip entry exists in penaltybox",
+			ident:  "my_penaltybox",
+			entry:  &value.IP{Value: net.ParseIP("192.168.0.1")},
+			expect: true,
+		},
+		{
+			name:      "penaltybox not found",
+			ident:     "not_found",
+			entry:     &value.String{Value: "some_entry"},
+			isError:   true,
+			expectErr: "[ratelimit.penaltybox_add] Penaltybox not_found is not defined",
+		},
+		{
+			name:   "entry expired",
+			ident:  "my_penaltybox",
+			entry:  &value.String{Value: "expired_entry"},
+			expect: false,
+			sleep:  2 * time.Second,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pb := value.NewPenaltybox(&ast.PenaltyboxDeclaration{
+				Name: &ast.Ident{Value: "my_penaltybox"},
+			})
+			pb.Add("some_entry", 10*time.Second)
+			pb.Add("192.168.0.1", 10*time.Second)
+			pb.Add("expired_entry", 1*time.Second)
+
+			if tt.sleep > 0 {
+				time.Sleep(tt.sleep)
+			}
+
+			ctx := &context.Context{
+				Penaltyboxes: map[string]*value.Penaltybox{
+					"my_penaltybox": pb,
+				},
+			}
+			ret, err := Ratelimit_penaltybox_has(
+				ctx,
+				&value.Ident{Value: tt.ident},
+				tt.entry,
+			)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("expected error but got nil")
+					return
+				}
+				if err.Error() != tt.expectErr {
+					t.Errorf("expected error %s, but got %s", tt.expectErr, err.Error())
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %s", err.Error())
+				return
+			}
+			if ret.Type() != value.BooleanType {
+				t.Errorf("return type is not BOOLEAN, got %s", ret.Type())
+				return
+			}
+			v := value.Unwrap[*value.Boolean](ret)
+			if v.Value != tt.expect {
+				t.Errorf("return value is not %t, got %t", tt.expect, v.Value)
+			}
+		})
+	}
 }

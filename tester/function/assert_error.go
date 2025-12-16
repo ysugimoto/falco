@@ -32,7 +32,7 @@ func Assert_error(
 ) (value.Value, error) {
 
 	if err := Assert_error_Validate(args); err != nil {
-		return nil, errors.NewTestingError(err.Error())
+		return nil, errors.NewTestingError("%s", err.Error())
 	}
 
 	// extract arguments
@@ -52,7 +52,7 @@ func Assert_error(
 		}
 		return &value.Boolean{}, errors.NewAssertionError(
 			&value.String{Value: i.TestingState.String()},
-			message,
+			"%s", message,
 		)
 	}
 
@@ -67,8 +67,7 @@ func Assert_error(
 			)
 		}
 		return &value.Boolean{}, errors.NewAssertionError(
-			ctx.ObjectStatus,
-			message,
+			ctx.ObjectStatus, "%s", message,
 		)
 	}
 
@@ -84,8 +83,7 @@ func Assert_error(
 				)
 			}
 			return &value.Boolean{}, errors.NewAssertionError(
-				ctx.ObjectResponse,
-				message,
+				ctx.ObjectResponse, "%s", message,
 			)
 		}
 	}

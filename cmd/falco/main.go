@@ -4,24 +4,32 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"encoding/json"
 
 	"github.com/fatih/color"
+	"github.com/fsnotify/fsnotify"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/console"
+	"github.com/ysugimoto/falco/dap"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
-	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/snippet"
+	"github.com/ysugimoto/falco/snippet/remote"
+	"github.com/ysugimoto/falco/snippet/terraform"
 	"github.com/ysugimoto/falco/tester"
+	"github.com/ysugimoto/falco/tester/shared"
 	"github.com/ysugimoto/falco/token"
 )
 
@@ -49,55 +57,99 @@ const (
 	subcommandLint      = "lint"
 	subcommandTerraform = "terraform"
 	subcommandSimulate  = "simulate"
+	subcommandDAP       = "dap"
 	subcommandStats     = "stats"
 	subcommandTest      = "test"
+	subcommandConsole   = "console"
+	subcommandFormat    = "fmt"
 )
 
-func write(c *color.Color, format string, args ...interface{}) {
+// Command return code constants
+const (
+	Success = 0
+	Fail    = 1
+)
+
+func write(c *color.Color, format string, args ...any) {
 	c.Fprint(output, emoji.Sprintf(format, args...))
 }
 
-func writeln(c *color.Color, format string, args ...interface{}) {
+func writeln(c *color.Color, format string, args ...any) {
 	write(c, format+"\n", args...)
 }
 
+func isCI() bool {
+	// Some common CI services like GitHub Actions, Circle CI has the `CI=true` environment variable
+	// so simply we check this environment whether variable is set
+	return os.Getenv("CI") != ""
+}
+
 func main() {
+	// Event falco is running on the CI (e.g GitHub Actions), we should display colored output
+	// https://github.com/ysugimoto/falco/issues/438
+	if isCI() {
+		// https://github.com/fatih/color?tab=readme-ov-file#github-actions
+		color.NoColor = false
+	}
+
 	c, err := config.New(os.Args[1:])
 	if err != nil {
 		writeln(red, "Failed to initialize config: %s", err)
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 	if c.Help {
 		printHelp(c.Commands.At(0))
-		os.Exit(1)
+		os.Exit(Success)
 	} else if c.Version {
 		writeln(white, version)
-		os.Exit(1)
+		os.Exit(Success)
 	}
 
-	var fetcher snippets.Fetcher
-	var action string
-	// falco could lint multiple services so resolver should be a slice
-	var resolvers []resolver.Resolver
+	var (
+		// falco could lint multiple services so resolver should be a slice
+		resolvers   []resolver.Resolver
+		fetcher     snippet.Fetcher
+		action      string
+		isTerraform bool
+	)
+
 	switch c.Commands.At(0) {
 	case subcommandTerraform:
-		fastlyServices, err := ParseStdin()
+		isTerraform = true
+		fastlyServices, err := terraform.ParseStdin(os.Stdin)
 		if err == nil {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
 		}
 		action = c.Commands.At(1)
 	case subcommandSimulate, subcommandLint, subcommandStats, subcommandTest:
-		// "lint", "simulate", "stats" and "test" command provides single file of service,
+		// "lint", "simulate", "stats", and "test" command provides single file of service,
 		// then resolvers size is always 1
 		resolvers, err = resolver.NewFileResolvers(c.Commands.At(1), c.IncludePaths)
 		action = c.Commands.At(0)
+	case subcommandConsole:
+		if err := console.Run(c.Console.Scope); err != nil {
+			os.Exit(Fail)
+		}
+		os.Exit(Success)
+	case subcommandDAP:
+		if err := dap.New(c.Simulator).Run(); err != nil {
+			os.Exit(Fail)
+		}
+		os.Exit(Success)
+	case subcommandFormat:
+		// "fmt" command accepts multiple target files
+		resolvers, err = resolver.NewGlobResolver(c.Commands[1:]...)
+		action = c.Commands.At(0)
+		if len(resolvers) == 0 {
+			err = fmt.Errorf("no input files speficied")
+		}
 	case "":
 		printHelp("")
-		os.Exit(1)
+		os.Exit(Fail)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
-			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
+			err = fmt.Errorf("unrecognized subcommand: %s", c.Commands.At(0))
 		} else {
 			// "lint" command provides single file of service, then resolvers size is always 1
 			resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
@@ -105,7 +157,8 @@ func main() {
 		}
 	}
 
-	if c.Remote {
+	// No need to use remove object on fmt command
+	if action != subcommandFormat && !isTerraform && c.Remote {
 		if !c.Json {
 			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		}
@@ -116,7 +169,7 @@ func main() {
 		// So user needs to set them with "-r" argument.
 		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
 			writeln(red, "Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
-			os.Exit(1)
+			os.Exit(Fail)
 		}
 		// Create remote fetcher
 		fetcher = remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
@@ -124,7 +177,7 @@ func main() {
 
 	if err != nil {
 		writeln(red, err.Error())
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 
 	var shouldExit bool
@@ -140,31 +193,35 @@ func main() {
 				}
 			}
 		}
-		runner, err := NewRunner(c, fetcher)
-		if err != nil {
-			writeln(red, err.Error())
-			os.Exit(1)
-		}
+		runner := NewRunner(c, fetcher)
 
 		var exitErr error
 		switch action {
 		case subcommandTest:
-			exitErr = runTest(runner, v)
+			// test can accept watch
+			if c.Testing.Watch {
+				exitErr = watchRunTest(runner, v)
+			} else {
+				exitErr = runTest(runner, v)
+			}
 		case subcommandSimulate:
 			exitErr = runSimulate(runner, v)
 		case subcommandStats:
 			exitErr = runStats(runner, v)
+		case subcommandFormat:
+			exitErr = runFormat(runner, v)
 		default:
 			exitErr = runLint(runner, v)
 		}
 
 		if exitErr == ErrExit {
 			shouldExit = true
+			break
 		}
 	}
 
 	if shouldExit {
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 }
 
@@ -190,36 +247,26 @@ func runLint(runner *Runner, rslv resolver.Resolver) error {
 	write(yellow, ":exclamation:%d warnings, ", result.Warnings)
 	writeln(cyan, ":speaker:%d recommendations.", result.Infos)
 
-	// Display message corresponds to runner result
-	if result.Errors == 0 {
-		switch {
-		case result.Warnings > 0:
-			writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
-			if runner.level < LevelWarning {
-				writeln(white, "Run command with the -v option to output warnings.")
-			}
-		case result.Infos > 0:
-			writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
-			if runner.level < LevelInfo {
-				writeln(white, "Run command with the -vv option to output recommendations.")
-			}
-		default:
-			writeln(green, "VCL looks great :sparkles:")
-		}
-	}
-
-	// if lint error is not zero, stop process
 	if result.Errors > 0 {
-		if len(runner.transformers) > 0 {
-			writeln(white, "Program aborted. Please fix lint errors before transforming.")
-		}
 		return ErrExit
 	}
 
-	if err := runner.Transform(result.Vcl); err != nil {
-		writeln(red, err.Error())
-		return ErrExit
+	// Display message corresponds to runner result
+	switch {
+	case result.Warnings > 0:
+		writeln(white, "VCL lint warnings encountered, but things should run OK :thumbsup:")
+		if runner.level < LevelWarning {
+			writeln(white, "Run command with the -v option to output warnings.")
+		}
+	case result.Infos > 0:
+		writeln(green, "VCL looks good :sparkles: Some recommendations are available :thumbsup:")
+		if runner.level < LevelInfo {
+			writeln(white, "Run command with the -vv option to output recommendations.")
+		}
+	default:
+		writeln(green, "VCL looks great :sparkles:")
 	}
+
 	return nil
 }
 
@@ -249,7 +296,7 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 		}
 		return nil
 	}
-	printStats := func(format string, args ...interface{}) {
+	printStats := func(format string, args ...any) {
 		fmt.Fprintf(os.Stdout, format+"\n", args...)
 	}
 
@@ -275,6 +322,107 @@ func runStats(runner *Runner, rslv resolver.Resolver) error {
 	return nil
 }
 
+func watchRunTest(runner *Runner, rslv resolver.Resolver) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		writeln(red, err.Error())
+		return ErrExit
+	}
+	defer watcher.Close()
+
+	// On watching mode, disable code coverage
+	if runner.config.Testing.Coverage {
+		writeln(yellow, ":warning: Disable code coverage on watch mode")
+		runner.config.Testing.Coverage = false
+	}
+
+	doneCh := make(chan struct{})
+	errCh := make(chan error)
+
+	clearTerminal := func() {
+		if runtime.GOOS == "windows" {
+			// Clear terminal, we're not sure Window could clear termina by following command...
+			exec.Command("cmd", "/c", "cls").Run() // nolint:errcheck
+		} else {
+			// Darwin, Linux could clear by sending escape sequence
+			fmt.Print("\033[H\033[2J")
+		}
+	}
+
+	go func() {
+		clearTerminal()
+		// Run test at least once
+		runTest(runner, rslv) // nolint:errcheck
+
+		writeln(cyan, "waiting for file changes...")
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					doneCh <- struct{}{}
+					return
+				}
+				switch event.Op {
+				case fsnotify.Create, fsnotify.Rename:
+					clearTerminal()
+					runTest(runner, rslv) // nolint:errcheck
+					writeln(cyan, "waiting for file changes...")
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					doneCh <- struct{}{}
+					return
+				}
+				writeln(red, err.Error())
+				errCh <- ErrExit
+				return
+			}
+		}
+	}()
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+
+		<-sig
+		doneCh <- struct{}{}
+	}()
+
+	for _, p := range rslv.IncludePaths() {
+		if err := watcher.Add(p); err != nil {
+			return ErrExit
+		}
+	}
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-doneCh:
+		return nil
+	}
+}
+
+// shorthand indent making
+func indent(level int) string {
+	return strings.Repeat(" ", level*2)
+}
+
+// print problem line
+func printCodeLine(lx *lexer.Lexer, tok token.Token) {
+	problemLine := tok.Line
+	lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
+	for l := problemLine - 1; l <= problemLine+1; l++ {
+		line, ok := lx.GetLine(l)
+		if !ok {
+			continue
+		}
+		c := white
+		if l == problemLine {
+			c = yellow
+		}
+		writeln(c, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+	}
+}
+
 func runTest(runner *Runner, rslv resolver.Resolver) error {
 	factory, err := runner.Test(rslv)
 	if err != nil {
@@ -286,7 +434,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(struct {
 			Tests   []*tester.TestResult `json:"tests"`
-			Summary *tester.TestCounter  `json:"summary"`
+			Summary *shared.Counter      `json:"summary"`
 		}{
 			Tests:   factory.Results,
 			Summary: factory.Statistics,
@@ -300,28 +448,7 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 		return nil
 	}
 
-	// shrthand indent making
-	indent := func(level int) string {
-		return strings.Repeat(" ", level*2)
-	}
-	// print problem line
-	printCodeLine := func(lx *lexer.Lexer, tok token.Token) {
-		problemLine := tok.Line
-		lineFormat := fmt.Sprintf(" %%%dd", int(math.Floor(math.Log10(float64(problemLine+1))+1)))
-		for l := problemLine - 1; l <= problemLine+1; l++ {
-			line, ok := lx.GetLine(l)
-			if !ok {
-				continue
-			}
-			color := white
-			if l == problemLine {
-				color = yellow
-			}
-			writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
-		}
-	}
-
-	var passedCount, failedCount, totalCount int
+	var passedCount, failedCount, skippedCount, totalCount int
 	for _, r := range factory.Results {
 		switch {
 		case len(r.Cases) == 0:
@@ -337,8 +464,24 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 
 		for _, c := range r.Cases {
 			totalCount++
-			if c.Error != nil {
-				writeln(redBold, "%s●  [%s] %s\n", indent(1), c.Scope, c.Name)
+			var prefix string
+			if c.Group != "" {
+				prefix = c.Group + " › "
+			}
+
+			switch {
+			case c.Skip:
+				writeln(yellow, "%s- [VCL_%s] %s%s", indent(1), c.Scope, prefix, c.Name)
+				skippedCount++
+			case c.Error != nil:
+				writeln(redBold, "%s● [VCL_%s] %s%s (%dms)\n", indent(1), c.Scope, prefix, c.Name, c.Time)
+				if len(c.Logs) > 0 {
+					writeln(yellow, "%s[Logs]", indent(2))
+					for i := range c.Logs {
+						writeln(white, "%s%s", indent(2), c.Logs[i])
+					}
+					writeln(white, "")
+				}
 				writeln(red, "%s%s", indent(2), c.Error.Error())
 				switch e := c.Error.(type) {
 				case *ife.AssertionError:
@@ -351,29 +494,60 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 				}
 				writeln(white, "")
 				failedCount++
-			} else {
-				writeln(green, "%s✓ [%s] %s", indent(1), c.Scope, c.Name)
+			default:
+				writeln(green, "%s✓ [VCL_%s] %s%s (%dms)", indent(1), c.Scope, prefix, c.Name, c.Time)
+				if len(c.Logs) > 0 {
+					writeln(yellow, "\n%s[Logs]", indent(2))
+					for i := range c.Logs {
+						writeln(white, "%s%s", indent(2), c.Logs[i])
+					}
+					writeln(white, "")
+				}
 				passedCount++
 			}
 		}
 	}
 
+	passedColor := white
 	if passedCount > 0 {
-		write(green, "%d passed, ", passedCount)
-	} else {
-		write(white, "%d passed, ", passedCount)
+		passedColor = green
 	}
+	failedColor := white
 	if failedCount > 0 {
-		write(red, "%d failed, ", failedCount)
-	} else {
-		write(white, "%d failed, ", failedCount)
+		failedColor = red
 	}
+	skippedColor := white
+	if skippedCount > 0 {
+		skippedColor = yellow
+	}
+
+	write(passedColor, "%d passed, ", passedCount)
+	write(failedColor, "%d failed, ", failedCount)
+	write(skippedColor, "%d skipped, ", skippedCount)
 	write(white, "%d total, ", totalCount)
 	writeln(white, "%d assertions", factory.Statistics.Asserts)
 
+	if factory.Coverage != nil {
+		writeln(white, "")
+		writeln(white, "Coverage Report")
+		if err := printCoverageTable(factory.Coverage); err != nil {
+			writeln(red, err.Error())
+			return ErrExit
+		}
+	}
+
 	if factory.Statistics.Fails > 0 {
 		return ErrExit
-	} else {
-		return nil
 	}
+	return nil
+}
+
+func runFormat(runner *Runner, rslv resolver.Resolver) error {
+	if err := runner.Format(rslv); err != nil {
+		if err != ErrParser {
+			writeln(red, err.Error())
+		}
+		return ErrExit
+	}
+	return nil
 }

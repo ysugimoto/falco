@@ -1,27 +1,29 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"io"
+	"maps"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/context"
 	"github.com/ysugimoto/falco/debugger"
+	"github.com/ysugimoto/falco/formatter"
 	"github.com/ysugimoto/falco/interpreter"
 	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter"
+	lcontext "github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/plugin"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester"
-	"github.com/ysugimoto/falco/types"
 )
 
 var (
@@ -36,6 +38,11 @@ const (
 	LevelInfo
 )
 
+type VCL struct {
+	File string
+	AST  *ast.VCL
+}
+
 type RunnerResult struct {
 	Infos    int
 	Warnings int
@@ -44,7 +51,7 @@ type RunnerResult struct {
 	LintErrors  map[string][]*linter.LintError
 	ParseErrors map[string]*parser.ParseError
 
-	Vcl *plugin.VCL
+	Vcl *VCL
 }
 
 type StatsResult struct {
@@ -58,13 +65,6 @@ type StatsResult struct {
 	Lines       int    `json:"lines"`
 }
 
-type Fetcher interface {
-	Backends() ([]*types.RemoteBackend, error)
-	Dictionaries() ([]*types.RemoteDictionary, error)
-	Acls() ([]*types.RemoteAcl, error)
-	Snippets() ([]*types.RemoteVCL, error)
-}
-
 type RunMode int
 
 const (
@@ -73,11 +73,10 @@ const (
 )
 
 type Runner struct {
-	transformers []*Transformer
-	overrides    map[string]linter.Severity
-	lexers       map[string]*lexer.Lexer
-	snippets     *snippets.Snippets
-	config       *config.Config
+	overrides map[string]linter.Severity
+	lexers    map[string]*lexer.Lexer
+	snippets  *snippet.Snippets
+	config    *config.Config
 
 	level       Level
 	lintErrors  map[string][]*linter.LintError
@@ -90,7 +89,7 @@ type Runner struct {
 }
 
 // Wrap writeln function in order to prevent to write when json mode turns on
-func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
+func (r *Runner) message(c *color.Color, format string, args ...any) {
 	// Suppress output when JSON mode turns on
 	// This is because JSON only should display JSON string
 	// so any other messages we must not output
@@ -100,7 +99,7 @@ func (r *Runner) message(c *color.Color, format string, args ...interface{}) {
 	write(c, format, args...)
 }
 
-func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
+func NewRunner(c *config.Config, fetcher snippet.Fetcher) *Runner {
 	r := &Runner{
 		level:       LevelError,
 		overrides:   make(map[string]linter.Severity),
@@ -112,25 +111,26 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 
 	// If fetch interface is provided, communicate with it
 	if fetcher != nil {
-		s, err := snippets.Fetch(fetcher)
-		if err != nil {
-			r.message(red, err.Error()+"\n")
-		}
-		r.snippets = s
-		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
-			r.message(red, err.Error()+"\n")
-		}
-	}
+		var snippets *snippet.Snippets
+		var err error
 
-	// Check transformer exists and format to absolute path
-	// Transformer is provided as independent binary, named "falco-transform-[name]"
-	// so, if transformer specified with "lambdaedge", program lookup "falco-transform-lambdaedge" binary existence
-	for i := range c.Transforms {
-		tf, err := NewTransformer(c.Transforms[i])
-		if err != nil {
-			return nil, err
+		// Lookup snippets cache
+		cache := fetcher.LookupCache(c.Refresh)
+		if cache != nil {
+			snippets = cache
+			r.message(white, "Use cached remote snippets.\n")
+		} else {
+			snippets, err = snippet.Fetch(fetcher)
 		}
-		r.transformers = append(r.transformers, tf)
+		if err != nil {
+			r.message(red, "%s\n", err.Error())
+		}
+		r.snippets = snippets
+		if err := r.snippets.FetchLoggingEndpoint(fetcher); err != nil {
+			r.message(red, "%s\n", err.Error())
+		}
+		// ...and save cache after the constructor
+		defer fetcher.WriteCache(snippets)
 	}
 
 	// Set verbose level
@@ -156,29 +156,14 @@ func NewRunner(c *config.Config, fetcher snippets.Fetcher) (*Runner, error) {
 		}
 	}
 
-	return r, nil
-}
-
-func (r *Runner) Transform(vcl *plugin.VCL) error {
-	// VCL data is shared between parser and transformar through the falco/io package.
-	encoded, err := plugin.Encode(vcl)
-	if err != nil {
-		return fmt.Errorf("Failed to encode VCL: %w", err)
-	}
-
-	for _, t := range r.transformers {
-		if err := t.Execute(bytes.NewReader(encoded)); err != nil {
-			return fmt.Errorf("Failed to execute %s transformer: %w", t.command, err)
-		}
-	}
-	return nil
+	return r
 }
 
 func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
-	options := []context.Option{context.WithResolver(rslv)}
+	options := []lcontext.Option{lcontext.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithSnippets(r.snippets))
+		options = append(options, lcontext.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -186,8 +171,8 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 		return nil, err
 	}
 
-	// Note: this context is not Go context, our parsing context :)
-	ctx := context.New(options...)
+	// Note: this context is not Go context, our linter context :)
+	ctx := lcontext.New(options...)
 	vcl, err := r.run(ctx, main, RunModeLint)
 	if err != nil && !r.config.Json {
 		return nil, err
@@ -203,7 +188,7 @@ func (r *Runner) Run(rslv resolver.Resolver) (*RunnerResult, error) {
 	}, nil
 }
 
-func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*plugin.VCL, error) {
+func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*VCL, error) {
 	vcl, err := r.parseVCL(main.Name, main.Data)
 	if err != nil {
 		return nil, err
@@ -211,7 +196,11 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		for _, snip := range r.snippets.EmbedSnippets() {
+		snippets, err := r.snippets.EmbedSnippets(false) // disable TLS on linting
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		for _, snip := range snippets {
 			s, err := r.parseVCL(snip.Name, snip.Data)
 			if err != nil {
 				return nil, err
@@ -220,12 +209,10 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	lt := linter.New()
+	lt := linter.New(r.config.Linter)
 	lt.Lint(vcl, ctx)
 
-	for k, v := range lt.Lexers() {
-		r.lexers[k] = v
-	}
+	maps.Copy(r.lexers, lt.Lexers())
 
 	// If runner is running as stat mode, prevent to output lint result
 	if mode&RunModeStat > 0 {
@@ -250,11 +237,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 	}
 
 	if len(lt.Errors) > 0 {
-		for _, err := range lt.Errors {
-			le, ok := err.(*linter.LintError)
-			if !ok {
-				continue
-			}
+		for _, le := range lt.Errors {
 			// check severity with overrides
 			severity := le.Severity
 			if v, ok := r.overrides[string(le.Rule)]; ok {
@@ -269,7 +252,7 @@ func (r *Runner) run(ctx *context.Context, main *resolver.VCL, mode RunMode) (*p
 		}
 	}
 
-	return &plugin.VCL{
+	return &VCL{
 		File: main.Name,
 		AST:  vcl,
 	}, nil
@@ -387,10 +370,10 @@ func (r *Runner) printLinterError(lx *lexer.Lexer, severity linter.Severity, err
 }
 
 func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
-	options := []context.Option{context.WithResolver(rslv)}
+	options := []lcontext.Option{lcontext.WithResolver(rslv)}
 	// If remote snippets exists, prepare parse and prepend to main VCL
 	if r.snippets != nil {
-		options = append(options, context.WithSnippets(r.snippets))
+		options = append(options, lcontext.WithSnippets(r.snippets))
 	}
 
 	main, err := rslv.MainVCL()
@@ -399,7 +382,7 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 	}
 
 	// Note: this context is not Go context, our parsing context :)
-	ctx := context.New(options...)
+	ctx := lcontext.New(options...)
 
 	if _, err := r.run(ctx, main, RunModeStat); err != nil {
 		return nil, err
@@ -424,11 +407,15 @@ func (r *Runner) Stats(rslv resolver.Resolver) (*StatsResult, error) {
 
 func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	sc := r.config.Simulator
+	isTLS := sc.KeyFile != "" && sc.CertFile != ""
 	options := []icontext.Option{
 		icontext.WithResolver(rslv),
 		icontext.WithMaxBackends(r.config.OverrideMaxBackends),
 		icontext.WithMaxAcls(r.config.OverrideMaxAcls),
+		icontext.WithActualResponse(sc.IsProxyResponse),
+		icontext.WithTLServer(isTLS),
 	}
+
 	if r.snippets != nil {
 		options = append(options, icontext.WithSnippets(r.snippets))
 	}
@@ -438,24 +425,38 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	if r.config.OverrideBackends != nil {
 		options = append(options, icontext.WithOverrideBackends(r.config.OverrideBackends))
 	}
+	// If simulator configuration has edge dictionaries, inject them
+	if sc.OverrideEdgeDictionaries != nil {
+		options = append(options, icontext.WithInjectEdgeDictionaries(sc.OverrideEdgeDictionaries))
+	}
 
 	i := interpreter.New(options...)
 
-	// If debugger flag is on, run debugger mode
 	if sc.IsDebug {
-		return debugger.New(interpreter.New(options...)).Run(sc.Port)
+		// If debugger flag is on, run debugger mode
+		return debugger.New(i).Run(sc)
 	}
 
 	// Otherwise, simply start simulator server
 	mux := http.NewServeMux()
 	mux.Handle("/", i)
-
 	s := &http.Server{
 		Handler: mux,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
-	writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
-	return s.ListenAndServe()
+
+	var err error
+	if isTLS {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d with TLS", sc.Port)
+		err = s.ListenAndServeTLS(sc.CertFile, sc.KeyFile)
+	} else {
+		writeln(green, "Simulator server starts on 0.0.0.0:%d", sc.Port)
+		err = s.ListenAndServe()
+	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
@@ -474,6 +475,26 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	if tc.OverrideHost != "" {
 		options = append(options, icontext.WithOverrideHost(tc.OverrideHost))
 	}
+	if tc.OverrideEdgeDictionaries != nil {
+		options = append(options, icontext.WithInjectEdgeDictionaries(tc.OverrideEdgeDictionaries))
+	}
+
+	// Factory override variables.
+	// The order is imporotant, should do yaml -> cli order because cli could override yaml configuration
+	overrides := make(map[string]any)
+	if tc.YamlOverrideVariables != nil {
+		maps.Copy(overrides, tc.YamlOverrideVariables)
+	}
+	if tc.CLIOverrideVariables != nil {
+		for _, v := range tc.CLIOverrideVariables {
+			key, val, parsed := r.parseOverrideVariables(v)
+			if !parsed {
+				continue
+			}
+			overrides[key] = val
+		}
+	}
+	options = append(options, icontext.WithOverrideVariables(overrides))
 
 	r.message(white, "Running tests...")
 	factory, err := tester.New(tc, options).Run(r.config.Commands.At(1))
@@ -484,4 +505,55 @@ func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
 	}
 	r.message(white, " Done.\n")
 	return factory, nil
+}
+
+func (r *Runner) parseOverrideVariables(v string) (string, any, bool) {
+	sep := strings.SplitN(v, "=", 2)
+	if len(sep) != 2 {
+		return "", "", false
+	}
+	key := strings.TrimSpace(sep[0])
+	val := strings.TrimSpace(sep[1])
+
+	// Simple type assertion of primitive value
+	if strings.EqualFold(val, "true") {
+		return key, true, true // bool:true
+	} else if strings.EqualFold(val, "false") {
+		return key, false, true // bool:true
+	} else if v, err := strconv.ParseInt(val, 10, 64); err != nil {
+		return key, v, true // integer
+	} else if v, err := strconv.ParseFloat(val, 64); err != nil {
+		return key, v, true // float
+	} else {
+		return key, val, true // string
+	}
+}
+
+func (r *Runner) Format(rslv resolver.Resolver) error {
+	main, err := rslv.MainVCL()
+	if err != nil {
+		return err
+	}
+	vcl, err := r.parseVCL(main.Name, main.Data)
+	if err != nil {
+		return err
+	}
+
+	formatted := formatter.New(r.config.Format).Format(vcl)
+	var w io.Writer
+	if r.config.Format.Overwrite {
+		writeln(cyan, "Formatted %s.", main.Name)
+		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		defer fp.Close()
+		w = fp
+	} else {
+		w = os.Stdout
+	}
+	if _, err := io.Copy(w, formatted); err != nil {
+		return err
+	}
+	return nil
 }

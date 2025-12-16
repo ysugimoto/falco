@@ -15,32 +15,138 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/regsuball/
 func Test_Regsuball(t *testing.T) {
 	tests := []struct {
+		name        string
 		input       string
 		pattern     string
 		replacement string
 		expect      string
+		literal     bool
+		isError     bool
 	}{
-		{input: "//foo///bar//baz", pattern: "/+", replacement: "/", expect: "/foo/bar/baz"},
-		{input: "aaaa", pattern: "a", replacement: "aa", expect: "aaaaaaaa"},
-		{input: "foo;bar;baz", pattern: "([^;]*)(;.*)?$", replacement: "\\1bar", expect: "foobar"},
+		{
+			name:        "normalize slashes",
+			input:       "//foo///bar//baz",
+			pattern:     "/+",
+			replacement: "/",
+			expect:      "/foo/bar/baz",
+			literal:     true,
+		},
+		{
+			name:        "replace all occurrences",
+			input:       "aaaa",
+			pattern:     "a",
+			replacement: "aa",
+			expect:      "aaaaaaaa",
+			literal:     true,
+		},
+		{
+			name:        "capture group with global",
+			input:       "foo;bar;baz",
+			pattern:     "([^;]*)(;.*)?$",
+			replacement: `\1bar`,
+			expect:      "foobar",
+			literal:     true,
+		},
+		{
+			name:        "pattern must be literal",
+			input:       "aaaa",
+			pattern:     "a",
+			replacement: "aa",
+			literal:     false,
+			isError:     true,
+		},
+		{
+			name:        "normalize whitespace",
+			input:       "hello    world   test",
+			pattern:     `\s+`,
+			replacement: " ",
+			expect:      "hello world test",
+			literal:     true,
+		},
+		{
+			name:        "remove all digits",
+			input:       "abc123def456ghi",
+			pattern:     `\d+`,
+			replacement: "",
+			expect:      "abcdefghi",
+			literal:     true,
+		},
+		{
+			name:        "remove HTML tags",
+			input:       "<p>Hello</p><span>World</span>",
+			pattern:     `<[^>]+>`,
+			replacement: "",
+			expect:      "HelloWorld",
+			literal:     true,
+		},
+		{
+			name:        "case insensitive global",
+			input:       "Hello hello HELLO",
+			pattern:     "(?i)hello",
+			replacement: "hi",
+			expect:      "hi hi hi",
+			literal:     true,
+		},
+		{
+			name:        "deduplicate repeated chars",
+			input:       "helllo woorld",
+			pattern:     `(.)\1+`,
+			replacement: `\1`,
+			expect:      "helo world",
+			literal:     true,
+		},
+		{
+			name:        "clean alphanumeric",
+			input:       "test-123_abc!@#",
+			pattern:     `[^a-zA-Z0-9]`,
+			replacement: "",
+			expect:      "test123abc",
+			literal:     true,
+		},
+		{
+			name:        "no matches returns original",
+			input:       "hello world",
+			pattern:     "xyz",
+			replacement: "abc",
+			expect:      "hello world",
+			literal:     true,
+		},
+		{
+			name:        "word boundaries",
+			input:       "test testing tested",
+			pattern:     `\btest\b`,
+			replacement: "exam",
+			expect:      "exam testing tested",
+			literal:     true,
+		},
 	}
 
-	for i, tt := range tests {
-		ret, err := Regsuball(
-			&context.Context{},
-			&value.String{Value: tt.input},
-			&value.String{Value: tt.pattern},
-			&value.String{Value: tt.replacement},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.StringType {
-			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.String](ret)
-		if v.Value != tt.expect {
-			t.Errorf("[%d] Return value unmatch, expect=%s, got=%s", i, tt.expect, v.Value)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ret, err := Regsuball(
+				&context.Context{},
+				&value.String{Value: tt.input},
+				&value.String{Value: tt.pattern, Literal: tt.literal},
+				&value.String{Value: tt.replacement},
+			)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("Expected error but got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			if ret.Type() != value.StringType {
+				t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+				return
+			}
+			v := value.Unwrap[*value.String](ret)
+			if v.Value != tt.expect {
+				t.Errorf("Return value unmatch, expect=%q, got=%q", tt.expect, v.Value)
+			}
+		})
 	}
 }

@@ -9,60 +9,122 @@ import (
 	"github.com/ysugimoto/falco/token"
 )
 
-func (p *Parser) parseIdent() *ast.Ident {
-	return &ast.Ident{
+func (p *Parser) ParseIdent() *ast.Ident {
+	v := &ast.Ident{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
+	v.EndLine = p.curToken.Token.Line
+	// To point to the last character, minus 1
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v
 }
 
-func (p *Parser) parseIP() *ast.IP {
-	return &ast.IP{
+func (p *Parser) ParseIP() *ast.IP {
+	v := &ast.IP{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
 	}
+	v.EndLine = p.curToken.Token.Line
+	// To point to the last character, plus 1 because token is string so add half of offset
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) + (p.curToken.Token.Offset / 2)
+	return v
 }
 
-func (p *Parser) parseString() *ast.String {
-	return &ast.String{
-		Meta:  p.curToken,
-		Value: p.curToken.Token.Literal,
+func (p *Parser) ParseLongString() (*ast.String, error) {
+	if !p.PeekTokenIs(token.STRING) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.STRING))
 	}
+
+	openToken := p.curToken
+	delimiter := p.curToken.Token.Literal
+	p.NextToken()
+
+	str, err := p.ParseString()
+	str.LongString = true
+	str.Delimiter = delimiter
+	str.Token.Position -= len(delimiter)
+	str.Token.Position -= 1
+
+	if !p.PeekTokenIs(token.CLOSE_LONG_STRING) {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
+	}
+	// Check open and close delimiter string is the same
+	if delimiter != p.peekToken.Token.Literal {
+		return nil, errors.WithStack(UnexpectedToken(p.peekToken, token.CLOSE_LONG_STRING))
+	}
+
+	str.GetMeta().Leading = openToken.Leading
+	str.GetMeta().Trailing = p.peekToken.Trailing
+	p.NextToken() // point to end delimiter
+	str.EndLine = p.curToken.Token.Line
+	str.EndPosition = p.curToken.Token.Position
+
+	return str, err
 }
 
-func (p *Parser) parseInteger() (*ast.Integer, error) {
-	v, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
+func (p *Parser) ParseString() (*ast.String, error) {
+	var err error
+	parsed := p.curToken.Token.Literal
+	// Escapes are only expanded in double-quoted strings.
+	if p.curToken.Token.Offset == 2 {
+		parsed, err = decodeStringEscapes(parsed)
+		if err != nil {
+			return nil, errors.WithStack(InvalidEscape(p.curToken, err.Error()))
+		}
+	}
+
+	v := &ast.String{
+		Meta:  p.curToken,
+		Value: parsed,
+	}
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(parsed) - 1 + p.curToken.Token.Offset
+	return v, nil
+}
+
+func (p *Parser) ParseInteger() (*ast.Integer, error) {
+	i, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
 	}
 
-	return &ast.Integer{
+	v := &ast.Integer{
 		Meta:  p.curToken,
-		Value: v,
-	}, nil
+		Value: i,
+	}
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }
 
-func (p *Parser) parseFloat() (*ast.Float, error) {
-	v, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
+func (p *Parser) ParseFloat() (*ast.Float, error) {
+	f, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "FLOAT"))
 	}
 
-	return &ast.Float{
+	v := &ast.Float{
 		Meta:  p.curToken,
-		Value: v,
-	}, nil
+		Value: f,
+	}
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }
 
 // nolint: unparam
-func (p *Parser) parseBoolean() *ast.Boolean {
-	return &ast.Boolean{
+func (p *Parser) ParseBoolean() *ast.Boolean {
+	v := &ast.Boolean{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Type == token.TRUE,
 	}
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v
 }
 
-func (p *Parser) parseRTime() (*ast.RTime, error) {
+func (p *Parser) ParseRTime() (*ast.RTime, error) {
 	var value string
 
 	literal := p.curToken.Token.Literal
@@ -86,8 +148,11 @@ func (p *Parser) parseRTime() (*ast.RTime, error) {
 	if _, err := strconv.ParseFloat(value, 64); err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "RTIME"))
 	}
-	return &ast.RTime{
+	v := &ast.RTime{
 		Meta:  p.curToken,
 		Value: p.curToken.Token.Literal,
-	}, nil
+	}
+	v.EndLine = p.curToken.Token.Line
+	v.EndPosition = p.curToken.Token.Position + len(p.curToken.Token.Literal) - 1
+	return v, nil
 }

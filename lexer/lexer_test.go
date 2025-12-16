@@ -74,12 +74,17 @@ sub vcl_recv {
 		error 750;
 	}
 
+	unset req.http.X-*;
 	add req.http.Cookie:session = uuid.version4();
 	esi;
 	log syslog "foo";
 	unset req.http.Cookie;
 	return(pass);
 	synthetic.base64 {"foo bar"};
+
+	synthetic.base64 {JSON"
+      {"foo": "bar"}
+"JSON};
 
 	switch (req.url) {
 	case "/":
@@ -94,13 +99,20 @@ sub vcl_recv {
 	}
 
 	set req.http.default:foo = "bar";
+	set req.http.pk = {"-----BEGIN PUBLIC KEY-----
+aabbccddIieEffggHHhEXAMPLEPUBLICKEY
+-----END PUBLIC KEY-----"};
 }`
 
 	expects := []token.Token{
 		{Type: token.LF, Literal: "\n"},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
 		{Type: token.STRING, Literal: " foobar "},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.LF, Literal: "\n"},
-		{Type: token.STRING, Literal: " foo\"bar "},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
+		{Type: token.STRING, Literal: ` foo\"bar `},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.LF, Literal: "\n"},
 
 		// import
@@ -180,7 +192,8 @@ sub vcl_recv {
 		{Type: token.DOT, Literal: "."},
 		{Type: token.IDENT, Literal: "quorum"},
 		{Type: token.ASSIGN, Literal: "="},
-		{Type: token.STRING, Literal: "20%"},
+		{Type: token.INT, Literal: "20"},
+		{Type: token.PERCENT, Literal: "%"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LEFT_BRACE, Literal: "{"},
@@ -250,7 +263,7 @@ sub vcl_recv {
 
 		{Type: token.SET, Literal: "set"},
 		{Type: token.IDENT, Literal: "var.foo"},
-		{Type: token.ADDITION, Literal: "="},
+		{Type: token.ADDITION, Literal: "+="},
 		{Type: token.INT, Literal: "1"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
@@ -414,6 +427,12 @@ sub vcl_recv {
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LF, Literal: "\n"},
 
+		// wildcard unset
+		{Type: token.UNSET, Literal: "unset"},
+		{Type: token.IDENT, Literal: "req.http.X-*"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+
 		{Type: token.ADD, Literal: "add"},
 		{Type: token.IDENT, Literal: "req.http.Cookie:session"},
 		{Type: token.ASSIGN, Literal: "="},
@@ -446,7 +465,17 @@ sub vcl_recv {
 		{Type: token.LF, Literal: "\n"},
 
 		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
 		{Type: token.STRING, Literal: "foo bar"},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.LF, Literal: "\n"},
+
+		{Type: token.SYNTHETIC_BASE64, Literal: "synthetic.base64"},
+		{Type: token.OPEN_LONG_STRING, Literal: `JSON`},
+		{Type: token.STRING, Literal: "\n      {\"foo\": \"bar\"}\n"},
+		{Type: token.CLOSE_LONG_STRING, Literal: `JSON`},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 		{Type: token.LF, Literal: "\n"},
@@ -495,6 +524,16 @@ sub vcl_recv {
 		{Type: token.IDENT, Literal: "req.http.default:foo"},
 		{Type: token.ASSIGN, Literal: "="},
 		{Type: token.STRING, Literal: "bar"},
+		{Type: token.SEMICOLON, Literal: ";"},
+
+		// Multiline string
+		{Type: token.LF, Literal: "\n"},
+		{Type: token.SET, Literal: "set"},
+		{Type: token.IDENT, Literal: "req.http.pk"},
+		{Type: token.ASSIGN, Literal: "="},
+		{Type: token.OPEN_LONG_STRING, Literal: ""},
+		{Type: token.STRING, Literal: "-----BEGIN PUBLIC KEY-----\naabbccddIieEffggHHhEXAMPLEPUBLICKEY\n-----END PUBLIC KEY-----"},
+		{Type: token.CLOSE_LONG_STRING, Literal: ""},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.LF, Literal: "\n"},
 
@@ -619,7 +658,9 @@ func TestComplecatedStatement(t *testing.T) {
 		{Type: token.LEFT_PAREN, Literal: "(", Line: 1, Position: 25},
 		{Type: token.IDENT, Literal: "var.payload", Line: 1, Position: 26},
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 37},
-		{Type: token.STRING, Literal: `^.*?"exp"\s*:\s*(\d+).*?$`, Line: 1, Position: 39},
+		{Type: token.OPEN_LONG_STRING, Literal: "", Line: 1, Position: 39},
+		{Type: token.STRING, Literal: `^.*?"exp"\s*:\s*(\d+).*?$`, Line: 1, Position: 40},
+		{Type: token.CLOSE_LONG_STRING, Literal: "", Line: 1, Position: 67},
 		{Type: token.COMMA, Literal: ",", Line: 1, Position: 68},
 		{Type: token.STRING, Literal: `\1`, Line: 1, Position: 70},
 		{Type: token.RIGHT_PAREN, Literal: ")", Line: 1, Position: 74},
@@ -676,4 +717,80 @@ func TestPeekToken(t *testing.T) {
 	if diff := cmp.Diff(token.Token{Type: token.EOF}, tok, cmpopts.IgnoreFields(token.Token{}, "Literal", "Line", "Position", "Offset")); diff != "" {
 		t.Errorf(`Assertion failed, diff= %s`, diff)
 	}
+}
+
+func TestCustomToken(t *testing.T) {
+	input := `describe foo {}`
+	l := NewFromString(input, WithCustomTokens(map[string]token.TokenType{
+		"describe": token.Custom("DESCRIBE"),
+	}))
+
+	expects := []token.Token{
+		{Type: token.TokenType("DESCRIBE"), Literal: "describe", Line: 1, Position: 1},
+		{Type: token.IDENT, Literal: "foo", Line: 1, Position: 10},
+		{Type: token.LEFT_BRACE, Literal: "{", Line: 1, Position: 14},
+		{Type: token.RIGHT_BRACE, Literal: "}", Line: 1, Position: 15},
+		{Type: token.EOF, Literal: "", Line: 1, Position: 16},
+	}
+	for i, tt := range expects {
+		tok := l.NextToken()
+
+		if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+			t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+		}
+	}
+}
+
+func TestFastlyControlSyntaxes(t *testing.T) {
+	t.Run("pragma syntax", func(t *testing.T) {
+		input := "pragma optional_param geoip_opt_in true;"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.PRAGMA, Literal: "pragma", Line: 1, Position: 1},
+			{Type: token.IDENT, Literal: "optional_param", Line: 1, Position: 8},
+			{Type: token.IDENT, Literal: "geoip_opt_in", Line: 1, Position: 23},
+			{Type: token.TRUE, Literal: "true", Line: 1, Position: 36},
+			{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 40},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 41},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
+
+	t.Run("other control syntax of C!", func(t *testing.T) {
+		input := "C!"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.FASTLY_CONTROL, Literal: "C!", Line: 1, Position: 1},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
+
+	t.Run("other control syntax of W!", func(t *testing.T) {
+		input := "W!"
+		l := NewFromString(input)
+		expects := []token.Token{
+			{Type: token.FASTLY_CONTROL, Literal: "W!", Line: 1, Position: 1},
+			{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+		}
+		for i, tt := range expects {
+			tok := l.NextToken()
+
+			if diff := cmp.Diff(tt, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+				t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+			}
+		}
+	})
 }

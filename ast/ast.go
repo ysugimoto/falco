@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/ysugimoto/falco/token"
 )
@@ -9,85 +10,105 @@ import (
 type Node interface {
 	String() string
 	GetMeta() *Meta
+	ID() uint64
 }
 
 type Statement interface {
 	Node
-	statement()
-	LeadingComment() string
-	TrailingComment() string
+	Statement()
+	LeadingComment(combinationMode) string
+	TrailingComment(combinationMode) string
+	InfixComment(combinationMode) string
 }
 
 type Expression interface {
 	Node
-	expression()
-	LeadingComment() string
-	TrailingComment() string
+	Expression()
+	LeadingComment(combinationMode) string
+	TrailingComment(combinationMode) string
+	InfixComment(combinationMode) string
 }
 
 // Meta struct of all nodes
 type Meta struct {
-	Token    token.Token
-	Leading  Comments
-	Trailing Comments
-	Infix    Comments
-	Nest     int
+	ID                 uint64
+	Token              token.Token
+	Leading            Comments
+	Trailing           Comments
+	Infix              Comments
+	Nest               int
+	PreviousEmptyLines int
+	EndLine            int
+	EndPosition        int
 }
 
-func (m *Meta) LeadingComment() string {
-	if len(m.Leading) == 0 {
+// combinationMode represents comment combination mode
+type combinationMode string
+
+const (
+	lineFeed combinationMode = "\n"
+	inline   combinationMode = " "
+)
+
+func (m *Meta) comment(cs Comments, sep combinationMode) string {
+	if len(cs) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
 
-	for i := range m.Leading {
-		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + "\n")
+	for i := range cs {
+		buf.WriteString(indent(m.Nest) + cs[i].String() + string(sep))
 	}
 
 	return buf.String()
 }
 
-func (m *Meta) LeadingInlineComment() string {
-	if len(m.Leading) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-
-	for i := range m.Leading {
-		buf.WriteString(indent(m.Nest) + m.Leading[i].String() + " ")
-	}
-
-	return buf.String()
+func (m *Meta) LeadingComment(cm combinationMode) string {
+	return m.comment(m.Leading, cm)
 }
 
-func (m *Meta) TrailingComment() string {
-	if len(m.Trailing) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-
-	for i := range m.Trailing {
-		buf.WriteString(m.Trailing[i].String())
-	}
-
-	return " " + buf.String()
+func (m *Meta) TrailingComment(cm combinationMode) string {
+	return paddingLeft(m.comment(m.Trailing, cm))
 }
 
-func (m *Meta) InfixComment() string {
-	if len(m.Infix) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-
-	for i := range m.Infix {
-		buf.WriteString(indent(m.Nest) + m.Infix[i].String() + "\n")
-	}
-
-	return buf.String()
+func (m *Meta) InfixComment(cm combinationMode) string {
+	return m.comment(m.Infix, cm)
 }
+
+func (m *Meta) Clone() *Meta {
+	return &Meta{
+		ID:                 m.ID,
+		Token:              m.Token,
+		Nest:               m.Nest,
+		Leading:            m.Leading,
+		Trailing:           m.Trailing,
+		Infix:              m.Infix,
+		PreviousEmptyLines: m.PreviousEmptyLines,
+		EndLine:            m.EndLine,
+		EndPosition:        m.EndPosition,
+	}
+}
+
+func (m *Meta) CloneWithoutComments() *Meta {
+	return &Meta{
+		ID:                 m.ID,
+		Token:              m.Token,
+		Nest:               m.Nest,
+		Leading:            Comments{},
+		Trailing:           Comments{},
+		Infix:              Comments{},
+		PreviousEmptyLines: m.PreviousEmptyLines,
+		EndLine:            m.EndLine,
+		EndPosition:        m.EndPosition,
+	}
+}
+
+var idCounter uint64
 
 func New(t token.Token, nest int, comments ...Comments) *Meta {
+	idCounter++
 	m := &Meta{
+		ID:       idCounter,
 		Token:    t,
 		Nest:     nest,
 		Leading:  Comments{},
@@ -118,3 +139,28 @@ type Operator struct {
 }
 
 func (o *Operator) String() string { return o.Operator }
+
+// Format redundant white space
+func padding(s string) string {
+	trimmed := strings.Trim(s, " ")
+	if trimmed == "" {
+		return ""
+	}
+	return " " + trimmed + " "
+}
+
+func paddingLeft(s string) string {
+	trimmed := strings.Trim(s, " ")
+	if trimmed == "" {
+		return ""
+	}
+	return " " + trimmed
+}
+
+func paddingRight(s string) string {
+	trimmed := strings.Trim(s, " ")
+	if trimmed == "" {
+		return ""
+	}
+	return trimmed + " "
+}

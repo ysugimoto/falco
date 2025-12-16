@@ -8,19 +8,28 @@ type DeclareStatement struct {
 	*Meta
 	Name      *Ident
 	ValueType *Ident
+	Value     Expression
 }
 
-func (d *DeclareStatement) statement()     {}
+func (d *DeclareStatement) ID() uint64     { return d.Meta.ID }
+func (d *DeclareStatement) Statement()     {}
 func (d *DeclareStatement) GetMeta() *Meta { return d.Meta }
 func (d *DeclareStatement) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(d.LeadingComment())
-	buf.WriteString(indent(d.Nest) + "declare local ")
-	buf.WriteString(d.Name.String())
-	buf.WriteString(" ")
-	buf.WriteString(d.ValueType.String() + ";")
-	buf.WriteString(d.TrailingComment())
+	buf.WriteString(d.LeadingComment(lineFeed))
+	buf.WriteString(indent(d.Nest))
+	buf.WriteString("declare")
+	buf.WriteString(paddingLeft(d.InfixComment(inline)))
+	buf.WriteString(" local")
+	buf.WriteString(padding(d.Name.String()))
+	buf.WriteString(d.ValueType.String())
+	if d.Value != nil {
+		buf.WriteString(" = ")
+		buf.WriteString(d.Value.String())
+	}
+	buf.WriteString(";")
+	buf.WriteString(d.TrailingComment(inline))
 	buf.WriteString("\n")
 
 	return buf.String()

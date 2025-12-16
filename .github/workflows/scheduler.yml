@@ -1,0 +1,43 @@
+name: Check lacked predefined variable and functions 
+
+on:
+  schedule:
+    # 0:00 UTC (9:00 JST)
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-documentation-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+      - name: setup go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
+        with:
+          go-version: 1.25.5
+      - name: run checker
+        id: checking
+        working-directory: cmd/documentation-checker
+        run: |
+          go run . > ./lacked.txt
+          LACKED=$(cat ./lacked.txt)
+          if [ "$LACKED" != "" ]; then
+            ISSUE=$(gh issue list -l automated --json title)
+            if [ "$ISSUE" == "[]" ]; then
+              gh issue create \
+                -F ./lacked.txt \
+                -a ysugimoto \
+                -t "[Automated] Need to implement new variables/functions" \
+                -l automated
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

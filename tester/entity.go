@@ -5,25 +5,35 @@ import (
 
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/tester/shared"
 )
 
 type TestCase struct {
 	Name  string
+	Group string
 	Error error
 	Scope string
 	Time  int64 // msec order
+	Skip  bool
+	Logs  []string
 }
 
 func (t *TestCase) MarshalJSON() ([]byte, error) {
 	v := struct {
-		Name  string `json:"name"`
-		Error string `json:"error,omitempty"`
-		Scope string `json:"scope"`
-		Time  int64  `json:"elapsed_time"`
+		Name  string   `json:"name"`
+		Error string   `json:"error,omitempty"`
+		Group string   `json:"group,omitempty"`
+		Scope string   `json:"scope"`
+		Time  int64    `json:"elapsed_time"`
+		Skip  bool     `json:"skip"`
+		Logs  []string `json:"logs"`
 	}{
 		Name:  t.Name,
+		Group: t.Group,
 		Scope: t.Scope,
 		Time:  t.Time,
+		Skip:  t.Skip,
+		Logs:  t.Logs,
 	}
 	if t.Error != nil {
 		switch e := t.Error.(type) {
@@ -55,26 +65,6 @@ func (t *TestResult) IsPassed() bool {
 
 type TestFactory struct {
 	Results    []*TestResult
-	Statistics *TestCounter
-	Logs       []string
-}
-
-type TestCounter struct {
-	Asserts int `json:"asserts"`
-	Passes  int `json:"passes"`
-	Fails   int `json:"fails"`
-}
-
-func NewTestCounter() *TestCounter {
-	return &TestCounter{}
-}
-
-func (c *TestCounter) Pass() {
-	c.Asserts++
-	c.Passes++
-}
-
-func (c *TestCounter) Fail() {
-	c.Asserts++
-	c.Fails++
+	Statistics *shared.Counter
+	Coverage   *shared.CoverageFactory
 }
