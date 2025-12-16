@@ -48,7 +48,7 @@ func main() {
 	}
 }
 
-func quote(v interface{}) string {
+func quote(v any) string {
 	return `"` + fmt.Sprint(v) + `"`
 }
 

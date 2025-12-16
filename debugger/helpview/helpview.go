@@ -43,7 +43,7 @@ func New() *HelpView {
 }
 
 func (h *HelpView) drawCommands() {
-	w := h.TextView.BatchWriter()
+	w := h.BatchWriter()
 	defer w.Close()
 	w.Clear()
 

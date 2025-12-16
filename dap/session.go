@@ -88,12 +88,12 @@ func (s *session) handler(ctx context.Context) error {
 	}
 
 	s.sendWg.Add(1)
-	go func() {
+	s.sendWg.Go(func() {
 		defer s.sendWg.Done()
 		if msg, ok := msg.(godap.RequestMessage); ok {
 			s.dispatch(ctx, msg)
 		}
-	}()
+	})
 
 	return nil
 }

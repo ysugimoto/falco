@@ -3,15 +3,15 @@ package context
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/cache"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester/shared"
 )
 
@@ -45,8 +45,9 @@ var (
 )
 
 type Context struct {
+	TLSServer           bool
 	Resolver            resolver.Resolver
-	FastlySnippets      *snippets.Snippets
+	FastlySnippets      *snippet.Snippets
 	Acls                map[string]*value.Acl
 	Backends            map[string]*value.Backend
 	Tables              map[string]*ast.TableDeclaration

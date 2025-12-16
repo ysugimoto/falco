@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 func TestContextSet(t *testing.T) {

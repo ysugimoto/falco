@@ -43,7 +43,7 @@ func (c *Decoder) decodeExpression(frame *Frame) (ast.Expression, error) {
 		expr, err = c.decodeString(frame)
 	default:
 		err = decodeError(fmt.Errorf(
-			"Unexpected FrameType found: %s", frame.String(),
+			"unexpected FrameType found: %s", frame.String(),
 		))
 	}
 

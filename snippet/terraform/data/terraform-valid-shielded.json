@@ -1,0 +1,64 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "type": "fastly_service_vcl",
+          "values": {
+            "acl": [
+              {
+                "acl_id": "this is another id",
+                "force_destroy": false,
+                "name": "foo_acl"
+              }
+            ],
+            "backend": [
+              {
+                "address": "foo.com",
+                "auto_loadbalance": false,
+                "between_bytes_timeout": 10000,
+                "connect_timeout": 1000,
+                "error_threshold": 0,
+                "first_byte_timeout": 15000,
+                "healthcheck": "foo_check",
+                "max_conn": 200,
+                "max_tls_version": "",
+                "min_tls_version": "1.2",
+                "name": "foo_backend",
+                "override_host": "",
+                "port": 443,
+                "request_condition": "",
+                "shield": "this-is-a-shield",
+                "ssl_ca_cert": "",
+                "ssl_check_cert": true,
+                "ssl_ciphers": "",
+                "ssl_client_cert": "",
+                "ssl_client_key": "",
+                "ssl_hostname": "",
+                "ssl_sni_hostname": "",
+                "use_ssl": true,
+                "weight": 100
+              }
+            ],
+            "dictionary": [
+              {
+                "dictionary_id": "this is an id",
+                "force_destroy": false,
+                "name": "foo_dictionary",
+                "write_only": false
+              }
+            ],
+            "vcl": [
+              {
+                "content": "sub vcl_recv { \n #FASTLY RECV \n if (req.http.foo ~ foo_acl && table.contains(foo_dictionary, \"foo\")){ \n set req.backend = ssl_shield_;\n}\n}",
+                "main": true,
+                "name": "main.vcl"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

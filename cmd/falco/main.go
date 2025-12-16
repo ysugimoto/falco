@@ -24,10 +24,10 @@ import (
 	"github.com/ysugimoto/falco/dap"
 	ife "github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/remote"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
-	"github.com/ysugimoto/falco/terraform"
+	"github.com/ysugimoto/falco/snippet"
+	"github.com/ysugimoto/falco/snippet/remote"
+	"github.com/ysugimoto/falco/snippet/terraform"
 	"github.com/ysugimoto/falco/tester"
 	"github.com/ysugimoto/falco/tester/shared"
 	"github.com/ysugimoto/falco/token"
@@ -64,6 +64,12 @@ const (
 	subcommandFormat    = "fmt"
 )
 
+// Command return code constants
+const (
+	Success = 0
+	Fail    = 1
+)
+
 func write(c *color.Color, format string, args ...any) {
 	c.Fprint(output, emoji.Sprintf(format, args...))
 }
@@ -89,23 +95,28 @@ func main() {
 	c, err := config.New(os.Args[1:])
 	if err != nil {
 		writeln(red, "Failed to initialize config: %s", err)
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 	if c.Help {
 		printHelp(c.Commands.At(0))
-		os.Exit(0)
+		os.Exit(Success)
 	} else if c.Version {
 		writeln(white, version)
-		os.Exit(0)
+		os.Exit(Success)
 	}
 
-	var fetcher snippets.Fetcher
-	var action string
-	// falco could lint multiple services so resolver should be a slice
-	var resolvers []resolver.Resolver
+	var (
+		// falco could lint multiple services so resolver should be a slice
+		resolvers   []resolver.Resolver
+		fetcher     snippet.Fetcher
+		action      string
+		isTerraform bool
+	)
+
 	switch c.Commands.At(0) {
 	case subcommandTerraform:
-		fastlyServices, err := ParseStdin()
+		isTerraform = true
+		fastlyServices, err := terraform.ParseStdin(os.Stdin)
 		if err == nil {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
@@ -118,27 +129,27 @@ func main() {
 		action = c.Commands.At(0)
 	case subcommandConsole:
 		if err := console.Run(c.Console.Scope); err != nil {
-			os.Exit(1)
+			os.Exit(Fail)
 		}
-		os.Exit(0)
+		os.Exit(Success)
 	case subcommandDAP:
 		if err := dap.New(c.Simulator).Run(); err != nil {
-			os.Exit(1)
+			os.Exit(Fail)
 		}
-		os.Exit(0)
+		os.Exit(Success)
 	case subcommandFormat:
 		// "fmt" command accepts multiple target files
 		resolvers, err = resolver.NewGlobResolver(c.Commands[1:]...)
 		action = c.Commands.At(0)
 		if len(resolvers) == 0 {
-			err = fmt.Errorf("No input files speficied")
+			err = fmt.Errorf("no input files speficied")
 		}
 	case "":
 		printHelp("")
-		os.Exit(1)
+		os.Exit(Fail)
 	default:
 		if filepath.Ext(c.Commands.At(0)) != ".vcl" {
-			err = fmt.Errorf("Unrecognized subcommand: %s", c.Commands.At(0))
+			err = fmt.Errorf("unrecognized subcommand: %s", c.Commands.At(0))
 		} else {
 			// "lint" command provides single file of service, then resolvers size is always 1
 			resolvers, err = resolver.NewFileResolvers(c.Commands.At(0), c.IncludePaths)
@@ -147,7 +158,7 @@ func main() {
 	}
 
 	// No need to use remove object on fmt command
-	if action != subcommandFormat && c.Remote {
+	if action != subcommandFormat && !isTerraform && c.Remote {
 		if !c.Json {
 			writeln(cyan, "Remote option supplied. Fetching snippets from Fastly.")
 		}
@@ -158,7 +169,7 @@ func main() {
 		// So user needs to set them with "-r" argument.
 		if c.FastlyServiceID == "" || c.FastlyApiKey == "" {
 			writeln(red, "Both FASTLY_SERVICE_ID and FASTLY_API_KEY environment variables must be specified")
-			os.Exit(1)
+			os.Exit(Fail)
 		}
 		// Create remote fetcher
 		fetcher = remote.NewFastlyApiFetcher(c.FastlyServiceID, c.FastlyApiKey, 5*time.Second)
@@ -166,7 +177,7 @@ func main() {
 
 	if err != nil {
 		writeln(red, err.Error())
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 
 	var shouldExit bool
@@ -205,11 +216,12 @@ func main() {
 
 		if exitErr == ErrExit {
 			shouldExit = true
+			break
 		}
 	}
 
 	if shouldExit {
-		os.Exit(1)
+		os.Exit(Fail)
 	}
 }
 
@@ -403,11 +415,11 @@ func printCodeLine(lx *lexer.Lexer, tok token.Token) {
 		if !ok {
 			continue
 		}
-		color := white
+		c := white
 		if l == problemLine {
-			color = yellow
+			c = yellow
 		}
-		writeln(color, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
+		writeln(c, "%s "+lineFormat+"| %s", indent(1), l, strings.ReplaceAll(line, "\t", "    "))
 	}
 }
 

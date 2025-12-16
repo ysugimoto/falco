@@ -4,7 +4,7 @@ package context
 
 import (
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 var (

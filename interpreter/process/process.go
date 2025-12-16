@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"strings"
 	"time"
 
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 

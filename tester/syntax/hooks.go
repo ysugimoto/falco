@@ -65,8 +65,8 @@ func (h *HookParser) Parse(p *parser.Parser) (ast.CustomStatement, error) {
 	if stmt.Block, err = p.ParseBlockStatement(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	stmt.Meta.EndLine = p.CurToken().Token.Line
-	stmt.Meta.EndPosition = p.CurToken().Token.Position
+	stmt.EndLine = p.CurToken().Token.Line
+	stmt.EndPosition = p.CurToken().Token.Position
 
 	return stmt, nil
 }

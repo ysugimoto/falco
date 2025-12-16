@@ -12,7 +12,7 @@ func BitwiseOR(left, right value.Value) error {
 	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize OR operator, left=%s, right=%s",
+				"left and right type must be INTEGER for bitwize OR operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)
@@ -37,7 +37,7 @@ func BitwiseAND(left, right value.Value) error {
 	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize OR operator, left=%s, right=%s",
+				"left and right type must be INTEGER for bitwize OR operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)
@@ -60,7 +60,7 @@ func BitwiseXOR(left, right value.Value) error {
 	if left.Type() != value.IntegerType || right.Type() != value.IntegerType {
 		return errors.WithStack(
 			fmt.Errorf(
-				"Left and Right type must be INTEGER for Bitwize XOR operator, left=%s, right=%s",
+				"left and right type must be INTEGER for bitwize XOR operator, left=%s, right=%s",
 				left.Type(), right.Type(),
 			),
 		)
