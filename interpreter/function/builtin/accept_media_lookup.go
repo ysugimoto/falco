@@ -60,15 +60,15 @@ func Accept_media_lookup(ctx *context.Context, args ...value.Value) (value.Value
 		patterns[v] = v
 
 		// Also add to group pattern
-		if idx := strings.Index(v, "/"); idx != -1 {
-			patterns[v[0:idx]+"/*"] = v
+		if left, _, ok := strings.Cut(v, "/"); ok {
+			patterns[left+"/*"] = v
 		}
 	}
 
 	for v := range strings.SplitSeq(accept.Value, ",") {
 		v = strings.TrimSpace(v)
-		if idx := strings.Index(v, ";"); idx != -1 {
-			v = v[0:idx]
+		if left, _, ok := strings.Cut(v, ";"); ok {
+			v = left
 		}
 		if m, ok := mediaTypes[v]; ok {
 			return &value.String{Value: m}, nil

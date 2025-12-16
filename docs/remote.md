@@ -85,6 +85,47 @@ Typically you don't need logging endpoints for linting or local testing.
 Prefetch [VCL Snippets](https://docs.fastly.com/en/guides/about-vcl-snippets) from Fastly and parse as `VCL`.
 falco support both of regular snippets and dynamic snippets, and could lint each scope snippets and `none` snippets that include manually.
 
+### Backends
+
+Prefetch Backends that are registered in current active version.
+
+If you defined backend named `my_backend`, falco deals with as backend:
+
+```
+backend my_backend {
+  ...properties
+}
+```
+
+### Directors
+
+Prefetch Directors that are registered in current active version.
+
+If you defined director named `my_director`, falco deals with as director:
+
+```
+director my_director [director-type] {
+  ...properties
+}
+```
+
+### Headers
+
+Prefetch [Headers](https://www.fastly.com/documentation/guides/full-site-delivery/headers/) from Fastly and render as statement on extracting [boilerplate macro](https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/about-fastly-vcl/#ways-to-add-vcl-code-to-service-configurations).
+
+### Condition
+
+Prefetch [Conditions](https://www.fastly.com/documentation/guides/full-site-delivery/conditions/) from Fastly and render as statement on extracting [boilerplate macro](https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/about-fastly-vcl/#ways-to-add-vcl-code-to-service-configurations).
+
+Usually the condition will be used with corresponding Headers, Request Settings, and Response Objects.
+
+### Request Settings
+
+Prefetch Request Settings from Fastly (e.g Force SSL) and render as statement on extracting [boilerplate macro](https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/about-fastly-vcl/#ways-to-add-vcl-code-to-service-configurations).
+
+### Response Objects
+
+Prefetch [Responses](https://www.fastly.com/documentation/guides/full-site-delivery/responses/) from Fastly and render as statement on extracting [boilerplate macro](https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/about-fastly-vcl/#ways-to-add-vcl-code-to-service-configurations).
 
 #### Root inclusion example
 
@@ -131,3 +172,10 @@ acl my_acl {
   ...
 }
 ```
+
+## Remote configuration caching
+
+If you are enabled `-r, --remote` CLI option to fetch remote resources, falco will make many API requests and then sometimes it exceeds API rate limit.
+To avoid API rate limit exceedance, and remote resources won't be changed frequently (except Edge Dictionary Item), falco makes cache file in your local machine temporarily and use them if found.
+
+You can refresh the cache by using `--refresh` CLI option.

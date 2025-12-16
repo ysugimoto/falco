@@ -125,6 +125,7 @@ Flags:
     --max_acls         : Override max acls limitation
     --key              : Specify TLS server key file
     --cert             : Specify TLS cert file
+    --refresh          : Refresh remote snippet cache
 
 Local simulator example:
     falco simulate -I . /path/to/vcl/main.vcl
@@ -187,6 +188,7 @@ Flags:
     -vv                : Output all lint results (very verbose)
     -json              : Output results as JSON (very verbose)
     --generated        : Lint for Fastly generated VCL
+    --refresh          : Refresh remote snippet cache
 
 Simple linting with very verbose example:
     falco lint -I . -vv /path/to/vcl/main.vcl

@@ -82,7 +82,7 @@ func Addition(left, right value.Value) error {
 				lv.Value += rv.Value.Unix()
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid addition INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
@@ -134,7 +134,7 @@ func Addition(left, right value.Value) error {
 				lv.Value += float64(rv.Value.Unix())
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition FLOAT type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid addition FLOAT type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -161,7 +161,7 @@ func Addition(left, right value.Value) error {
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value += time.Duration(rv.Value.Unix())
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid addition RTIME type, got %s", right.Type()))
 		}
 	case value.TimeType:
 		lv := value.Unwrap[*value.Time](left)
@@ -190,10 +190,10 @@ func Addition(left, right value.Value) error {
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = lv.Value.Add(rv.Value)
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid addition TIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid addition TIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use addition assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use addition assignment for type %s", left.Type()))
 	}
 	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 var (
@@ -95,7 +95,7 @@ func executeEsiInclude(ctx context.Context, req *http.Request, includeUrl []byte
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	resp, err := http.SendRequest(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

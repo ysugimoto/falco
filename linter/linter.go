@@ -9,10 +9,10 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/snippets"
+	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/token"
-	"github.com/ysugimoto/falco/types"
 )
 
 type Linter struct {
@@ -293,7 +293,7 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 			}
 			break
 		}
-		l.Error(fmt.Errorf("Unexpected node: %s", node.String()))
+		l.Error(fmt.Errorf("unexpected node: %s", node.String()))
 	}
 	return types.NeverType
 }
@@ -561,7 +561,7 @@ func (l *Linter) factoryRootDeclarations(statements []ast.Statement, ctx *contex
 			}
 			factory = append(factory, stmt)
 		default:
-			l.Error(fmt.Errorf("Unexpected statement declaration: %s", t.String()))
+			l.Error(fmt.Errorf("unexpected statement declaration: %s", t.String()))
 		}
 	}
 	return factory
@@ -571,7 +571,7 @@ func (l *Linter) lintFastlyBoilerPlateMacro(sub *ast.SubroutineDeclaration, ctx 
 	// prepare scoped snippets
 	scopedSnippets, ok := ctx.Snippets().ScopedSnippets[scope]
 	if !ok {
-		scopedSnippets = []snippets.SnippetItem{}
+		scopedSnippets = []snippet.Item{}
 	}
 
 	var resolved []ast.Statement
