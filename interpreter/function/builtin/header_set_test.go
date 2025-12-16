@@ -4,7 +4,7 @@ package builtin
 
 import (
 	"net"
-	"net/http"
+	ghttp "net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -31,8 +32,8 @@ func Test_Header_set(t *testing.T) {
 			{name: &value.String{Value: "Invalid%Header$<>"}, expect: ""},
 		}
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{Request: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "req"}, tt.name, &value.String{Value: "value"})
 			if err != nil {
@@ -88,8 +89,8 @@ func Test_Header_set(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{Request: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{Request: http.WrapRequest(req)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "req"}, tt.name, &value.String{Value: "value"})
 			if tt.isError {
@@ -160,8 +161,8 @@ func Test_Header_set(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			req := httptest.NewRequest(http.MethodGet, "http://localhost:3124", nil)
-			ctx := &context.Context{BackendRequest: req}
+			req := httptest.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+			ctx := &context.Context{BackendRequest: http.WrapRequest(req)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "bereq"}, tt.name, &value.String{Value: "value"})
 			if tt.isError {
@@ -232,8 +233,8 @@ func Test_Header_set(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{BackendResponse: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{BackendResponse: http.WrapResponse(resp)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "beresp"}, tt.name, &value.String{Value: "value"})
 			if tt.isError {
@@ -304,8 +305,8 @@ func Test_Header_set(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{Object: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{Object: http.WrapResponse(resp)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "obj"}, tt.name, &value.String{Value: "value"})
 			if tt.isError {
@@ -376,8 +377,8 @@ func Test_Header_set(t *testing.T) {
 		}
 
 		for i, tt := range tests {
-			resp := &http.Response{Header: http.Header{}}
-			ctx := &context.Context{Response: resp}
+			resp := &ghttp.Response{Header: ghttp.Header{}}
+			ctx := &context.Context{Response: http.WrapResponse(resp)}
 
 			_, err := Header_set(ctx, &value.Ident{Value: "resp"}, tt.name, &value.String{Value: "value"})
 			if tt.isError {

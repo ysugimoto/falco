@@ -6,7 +6,7 @@ import (
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Context) types.Type {
@@ -346,7 +346,7 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 	if scope == -1 {
 		err := &LintError{
 			Severity: WARNING,
-			Token:    decl.Meta.Token,
+			Token:    decl.Token,
 			Message: fmt.Sprintf(
 				`Cannot recognize subrountine call scope for "%s"`,
 				decl.Name.Value,

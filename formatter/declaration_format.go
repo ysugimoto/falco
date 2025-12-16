@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/ysugimoto/falco/ast"
 )
@@ -263,7 +264,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	lines := DelclarationPropertyLines{}
 
 	for _, prop := range props {
-		if prop.Meta.PreviousEmptyLines > 0 {
+		if prop.PreviousEmptyLines > 0 {
 			if f.conf.AlignDeclarationProperty {
 				lines.AlignKey()
 			}
@@ -274,8 +275,8 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 			lines = DelclarationPropertyLines{}
 		}
 		line := &DelclarationPropertyLine{
-			Leading:      f.formatComment(prop.Meta.Leading, "\n", 1),
-			Trailing:     f.trailing(prop.Meta.Trailing),
+			Leading:      f.formatComment(prop.Leading, "\n", 1),
+			Trailing:     f.trailing(prop.Trailing),
 			Operator:     ": ",
 			Key:          f.indent(1) + prop.Key.String(),
 			Value:        prop.Value.String(),
@@ -354,7 +355,19 @@ func (f *Formatter) formatSubroutineDeclaration(decl *ast.SubroutineDeclaration)
 	defer bufferPool.Put(buf)
 
 	buf.Reset()
-	buf.WriteString("sub " + decl.Name.String() + " ")
+	buf.WriteString("sub " + decl.Name.String())
+
+	// Format subroutine parameters if exists
+	if len(decl.Parameters) > 0 {
+		args := make([]string, len(decl.Parameters))
+		for i, param := range decl.Parameters {
+			args[i] = param.Type.String() + " " + param.Name.String()
+		}
+		buf.WriteString("(" + strings.Join(args, ", ") + ")")
+	}
+
+	buf.WriteString(" ")
+
 	// Functional Subroutine
 	if decl.ReturnType != nil {
 		buf.WriteString(decl.ReturnType.String() + " ")

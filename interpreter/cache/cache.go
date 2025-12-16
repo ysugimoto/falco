@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"net/http"
+	"github.com/ysugimoto/falco/interpreter/http"
 )
 
 const (

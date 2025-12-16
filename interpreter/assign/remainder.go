@@ -41,7 +41,7 @@ func Remainder(left, right value.Value) error {
 				lv.Value %= int64(rv.Value)
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid remainder INTEGER type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid remainder INTEGER type, got %s", right.Type()))
 		}
 	case value.FloatType:
 		lv := value.Unwrap[*value.Float](left)
@@ -71,7 +71,7 @@ func Remainder(left, right value.Value) error {
 				lv.Value = float64(int64(lv.Value) % int64(rv.Value))
 			}
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid remainder FLOAT type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid remainder FLOAT type, got %s", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
@@ -83,10 +83,10 @@ func Remainder(left, right value.Value) error {
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value %= (time.Duration(rv.Value) * time.Second)
 		default:
-			return errors.WithStack(fmt.Errorf("Invalid division RTIME type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("invalid division RTIME type, got %s", right.Type()))
 		}
 	default:
-		return errors.WithStack(fmt.Errorf("Could not use division assignment for type %s", left.Type()))
+		return errors.WithStack(fmt.Errorf("could not use division assignment for type %s", left.Type()))
 	}
 	return nil
 }

@@ -9,10 +9,10 @@ import (
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/lexer"
 	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/linter/types"
 	"github.com/ysugimoto/falco/parser"
 	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippets"
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/snippet"
 )
 
 var testConfig = &config.LinterConfig{
@@ -647,8 +647,8 @@ sub vcl_recv {
 }
 
 func TestFastlyScopedSnippetInclusion(t *testing.T) {
-	snippets := &snippets.Snippets{
-		ScopedSnippets: map[string][]snippets.SnippetItem{
+	snippets := &snippet.Snippets{
+		ScopedSnippets: map[string][]snippet.Item{
 			"recv": {
 				{
 					Name: "recv_injection",
@@ -668,8 +668,8 @@ sub vcl_recv {
 }
 
 func TestFastlySnippetInclusion(t *testing.T) {
-	snippets := &snippets.Snippets{
-		IncludeSnippets: map[string]snippets.SnippetItem{
+	snippets := &snippet.Snippets{
+		IncludeSnippets: map[string]snippet.Item{
 			"recv_injection": {
 				Name: "recv_injection",
 				Data: `set req.http.InjectedViaMacro = 1;`,

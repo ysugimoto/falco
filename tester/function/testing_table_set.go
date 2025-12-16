@@ -44,7 +44,7 @@ func Testing_table_set(
 	}
 	// Currently this function supports for STRING table,
 	// common usecase for private edge dictionary.
-	if v.ValueType != nil && v.ValueType.Value != "STRING" {
+	if v.ValueType != nil && v.ValueType.Value != "STRING" { // nolint:goconst
 		return value.Null, errors.NewTestingError(
 			"value type mismatch for table %s: expects %s, got %s",
 			tableName,
