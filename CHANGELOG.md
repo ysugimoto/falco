@@ -1,4 +1,14 @@
-## v.1.21.0
+## v2.0.0
+
+- Support notset state in STRING and IP type (@ysugimoto)
+- Support Fastly remote resources (response object, condition, Force SSL) (@ysugimoto)
+
+## v1.21.1
+
+- Add assert.not_restart function and tests [#514](https://github.com/ysugimoto/falco/pull/514) (@emylincon)
+- Formatter supports custom subroutine parameters [#516](https://github.com/ysugimoto/falco/pull/516) (@ysugimoto)
+
+## v1.21.0
 
 - Add functionality for setting backend health during testing [#511](https://github.com/ysugimoto/falco/pull/511) (@emylincon)
 - Fix synthetic response and obj.response relevants [#509](https://github.com/ysugimoto/falco/pull/509) (@ysugimoto)

@@ -113,8 +113,8 @@ func UrlDecode(src string) (string, error) {
 			}
 			return "", errors.WithStack(err)
 		}
-		switch {
-		case b == 0x25: // "%"
+
+		if b == 0x25 { // "%"
 			hex, err := reader.Peek(2)
 			if err != nil {
 				return "", errors.WithStack(err)
@@ -151,7 +151,7 @@ func UrlDecode(src string) (string, error) {
 
 				decoded = append(decoded, multiBytes...)
 			}
-		default:
+		} else {
 			decoded = append(decoded, byte(b))
 		}
 	}
