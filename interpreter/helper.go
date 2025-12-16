@@ -46,6 +46,15 @@ func isLocalVariableIdent(ident *ast.Ident) bool {
 	return strings.HasPrefix(ident.Value, "var.")
 }
 
+func isHeaderFieldIdent(ident *ast.Ident) bool {
+	parts := strings.Split(ident.Value, ".")
+	if len(parts) == 3 && parts[1] == "http" && strings.Contains(parts[2], ":") {
+		return true
+	} else {
+		return false
+	}
+}
+
 // Validate type string is Fastly supported value type
 func isValidFastlyTypeString(t string) bool {
 	switch t {
