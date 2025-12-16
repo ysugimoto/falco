@@ -60,8 +60,8 @@ func Std_time(ctx *context.Context, args ...value.Value) (value.Value, error) {
 
 	// If all formats are invalid, try to parse from unix epoch seconds
 	ss := s
-	if idx := strings.Index(s, "."); idx != -1 {
-		ss = s[0:idx]
+	if left, _, ok := strings.Cut(s, "."); ok {
+		ss = left
 	}
 	ts, err := strconv.ParseInt(ss, 10, 64)
 	if err != nil {

@@ -3,7 +3,7 @@
 package context
 
 import (
-	"github.com/ysugimoto/falco/types"
+	"github.com/ysugimoto/falco/linter/types"
 )
 
 type Functions map[string]*FunctionSpec
@@ -16,7 +16,7 @@ type FunctionSpec struct {
 type BuiltinFunction struct {
 	Arguments             [][]types.Type
 	Return                types.Type
-	Extra                 func(c *Context, name string) interface{}
+	Extra                 func(c *Context, name string) any
 	Scopes                int
 	Reference             string
 	IsUserDefinedFunction bool
@@ -1852,7 +1852,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-contains/",
 					},
@@ -1865,7 +1865,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.TableType, types.StringType, types.StringType},
 							[]types.Type{types.TableType, types.StringType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup/",
 					},
@@ -1877,7 +1877,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.AclType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-acl/",
 					},
@@ -1889,7 +1889,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BackendType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-backend/",
 					},
@@ -1901,7 +1901,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.BoolType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-bool/",
 					},
@@ -1913,7 +1913,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.FloatType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-float/",
 					},
@@ -1925,7 +1925,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IntegerType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-integer/",
 					},
@@ -1937,7 +1937,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.IPType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-ip/",
 					},
@@ -1949,7 +1949,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-regex/",
 					},
@@ -1961,7 +1961,7 @@ func builtinFunctions() Functions {
 						Arguments: [][]types.Type{
 							[]types.Type{types.TableType, types.StringType, types.RTimeType},
 						},
-						Extra:     func(c *Context, name string) interface{} { return c.Tables[name] },
+						Extra:     func(c *Context, name string) any { return c.Tables[name] },
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/table/table-lookup-rtime/",
 					},

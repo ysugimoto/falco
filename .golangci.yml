@@ -1,101 +1,114 @@
-# See full settings at https://github.com/golangci/golangci-lint
+version: "2"
 run:
   concurrency: 4
-  timeout: 3m
   tests: false
-issues:
-  exclude-dirs:
-    - dist
-    - docs
-    - .github
-    - playground
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    - govet
-    - errcheck
-    - staticcheck
-    - unused
-    - gosimple
-    - ineffassign
     - dogsled
-      #- dupl disable, because parser and lexer may have similer logic
+    - errcheck
     - funlen
     - gocognit
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-      #- gomnd
+    - govet
+    - ineffassign
     - lll
     - misspell
-    - whitespace
+    - staticcheck
     - unparam
-  fast: false
-
-linters-settings:
-  dogsled:
-    max-blank-identifiers: 2
-  dupl:
-    threshold: 200
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-  funlen:
-    lines: 200
-    statements: 100
-  gocognit:
-    min-complexity: 50
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-  gocritic:
-    settings:
-      nestingReduce:
-        bodyWidth: 3
-      rangeValCopy:
-        sizeThreshold: 2048
-
-    #see: https://go-critic.github.io/overview#checks-overview
-    enabled-checks:
-      - boolExprSimplify
-      - builtinShadow
-      - emptyFallthrough
-      - emptyStringTest
-      - equalFold
-      - evalOrder
-      - importShadow
-      - indexAlloc
-      - initClause
-      - methodExprCall
-      - nestingReduce
-      - nilValReturn
-      - octalLiteral
-      - paramTypeCombine
-      - ptrToRefParam
-      - rangeExprCopy
-      - rangeValCopy
-      - regexpPattern
-      - sloppyReassign
-      - stringXbytes
-      - truncateCmp
-      - typeAssertChain
-      - typeUnparen
-      - unlabelStmt
-      - unnecessaryBlock
-      - weakCond
-      - yodaStyleExpr
-  gocyclo:
-    min-complexity: 50
-  gofmt:
-    simplify: true
-  lll:
-    line-length: 150
-  misspell:
-    locale: US
-    ignore-words:
-      - sponser
-  whitespace:
-    multi-if: true
-    multi-func: true
+    - unused
+    - whitespace
+  settings:
+    dogsled:
+      max-blank-identifiers: 2
+    dupl:
+      threshold: 200
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    funlen:
+      lines: 200
+      statements: 100
+    gocognit:
+      min-complexity: 50
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocritic:
+      enabled-checks:
+        - boolExprSimplify
+        - builtinShadow
+        - emptyFallthrough
+        - emptyStringTest
+        - equalFold
+        - evalOrder
+        - importShadow
+        - indexAlloc
+        - initClause
+        - methodExprCall
+        - nestingReduce
+        - nilValReturn
+        - octalLiteral
+        - paramTypeCombine
+        - ptrToRefParam
+        - rangeExprCopy
+        - rangeValCopy
+        - regexpPattern
+        - sloppyReassign
+        - stringXbytes
+        - truncateCmp
+        - typeAssertChain
+        - typeUnparen
+        - unlabelStmt
+        - unnecessaryBlock
+        - weakCond
+        - yodaStyleExpr
+      settings:
+        nestingReduce:
+          bodyWidth: 3
+        rangeValCopy:
+          sizeThreshold: 2048
+    gocyclo:
+      min-complexity: 50
+    lll:
+      line-length: 150
+    misspell:
+      locale: US
+      ignore-rules:
+        - sponser
+    whitespace:
+      multi-if: true
+      multi-func: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - dist
+      - docs
+      - .github
+      - playground
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
+  exclusions:
+    generated: lax
+    paths:
+      - dist
+      - docs
+      - .github
+      - playground
+      - third_party$
+      - builtin$
+      - examples$

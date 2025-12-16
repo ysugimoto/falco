@@ -15,7 +15,7 @@ func main() {
 	// In this case, linting for *ast.BackendDeclaration object.
 	req, err := plugin.ReadLinterRequest[*ast.BackendDeclaration](os.Stdin)
 	if err != nil {
-		// If some error has occured, send back message to stderr
+		// If some error has occurred, send back message to stderr
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
@@ -30,5 +30,8 @@ func main() {
 	}
 
 	// Send back result message to stdout including some linting errors
-	resp.Write(os.Stdout)
+	if err := resp.Write(os.Stdout); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 }
