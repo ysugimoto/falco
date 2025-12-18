@@ -210,6 +210,46 @@ func (p *Parser) peekPrecedence() int {
 	return LOWEST
 }
 
+// isDeclarationToken checks if the token type is a top-level declaration keyword
+func (p *Parser) isDeclarationToken(t token.TokenType) bool {
+	switch t {
+	case token.ACL, token.IMPORT, token.INCLUDE, token.BACKEND,
+		token.DIRECTOR, token.TABLE, token.SUBROUTINE,
+		token.PENALTYBOX, token.RATECOUNTER:
+		return true
+	default:
+		// Check custom parsers
+		_, ok := p.customParsers[t]
+		return ok
+	}
+}
+
+// ParseVCLOrSnippet determines whether to parse as full VCL or as a snippet.
+// If the first non-comment token is not a declaration, treat it as a snippet.
+// Returns the parsed VCL and whether it was parsed as a snippet.
+func (p *Parser) ParseVCLOrSnippet() (*ast.VCL, error) {
+	// Check if first token is a declaration keyword
+	if p.isDeclarationToken(p.curToken.Token.Type) || p.CurTokenIs(token.EOF) {
+		return p.ParseVCL()
+	}
+
+	// Parse as snippet - the file contains statements, not declarations
+	statements, err := p.ParseSnippetVCL()
+	if err != nil {
+		return nil, err
+	}
+
+	// Return VCL with snippet flag set
+	vcl := &ast.VCL{
+		Statements: make([]ast.Statement, len(statements)),
+		IsSnippet:  true,
+	}
+	for i, s := range statements {
+		vcl.Statements[i] = s
+	}
+	return vcl, nil
+}
+
 func (p *Parser) ParseVCL() (*ast.VCL, error) {
 	vcl := &ast.VCL{}
 

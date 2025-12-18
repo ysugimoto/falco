@@ -1,3 +1,7 @@
+## Unreleased
+
+- Support linting VCL snippets without a `vcl_` subroutine block using `@scope` annotation (@acme)
+
 ## v2.0.0
 
 - Support notset state in STRING and IP type (@ysugimoto)
@@ -18,8 +22,8 @@
 - Add table.lookup_regex function + extensive tests [#504](https://github.com/ysugimoto/falco/pull/504) (@jedisct1)
 - Remove legacy waf related documentation reference [#502](https://github.com/ysugimoto/falco/pull/502) (@ysugimoto)
 - Support parameters in custom subs [#501](https://github.com/ysugimoto/falco/pull/501) (@jedisct1)
-- Add digest_hash_{xxh32,xxh64} and digest_hmac_sha256_with_base64_key [#498](https://github.com/ysugimoto/falco/pull/498) (@jedisct1)
-- Add support for AES-CCM in crypto.hex_{encrypt,decrypt} [#497](https://github.com/ysugimoto/falco/pull/497) (@jedisct1)
+- Add digest*hash*{xxh32,xxh64} and digest_hmac_sha256_with_base64_key [#498](https://github.com/ysugimoto/falco/pull/498) (@jedisct1)
+- Add support for AES-CCM in crypto.hex\_{encrypt,decrypt} [#497](https://github.com/ysugimoto/falco/pull/497) (@jedisct1)
 - Add AES-GCM support to crypto functions [#495](https://github.com/ysugimoto/falco/pull/495) (@jedisct1)
 - Security update [#494](https://github.com/ysugimoto/falco/pull/494) (@ysugimoto)
 
@@ -77,26 +81,26 @@
 
 - Tweak vendor detecting tests [#437](https://github.com/ysugimoto/falco/pull/437) (@ysugimoto)
 - Implement new predefined variables [#436](https://github.com/ysugimoto/falco/pull/436) (@ysugimoto)
-- Add VCL_ prefix at scope string in test result printing [#435](https://github.com/ysugimoto/falco/pull/435) (@ysugimoto)
+- Add VCL\_ prefix at scope string in test result printing [#435](https://github.com/ysugimoto/falco/pull/435) (@ysugimoto)
 
 ## v1.15.2
 
-- Pin GHA action version  [#426](https://github.com/ysugimoto/falco/pull/426) (@ysugimoto)
+- Pin GHA action version [#426](https://github.com/ysugimoto/falco/pull/426) (@ysugimoto)
 - Implement new predefined variables [#428](https://github.com/ysugimoto/falco/pull/428) (@ysugimoto)
 - Implement `fastly.ddos_detected` predefined variables [#430](https://github.com/ysugimoto/falco/pull/430) (@ysugimoto)
 - Fix base64 decode function with single equal characters [#432](https://github.com/ysugimoto/falco/pull/432) (@ysugimoto)
 
 ## v1.15.1
 
--  Improve digest.ecdsa_verify function [#425](https://github.com/ysugimoto/falco/pull/425) (@ysugimoto)
--  Fix/multiline expressions [#424](https://github.com/ysugimoto/falco/pull/424) (@ysugimoto)
+- Improve digest.ecdsa_verify function [#425](https://github.com/ysugimoto/falco/pull/425) (@ysugimoto)
+- Fix/multiline expressions [#424](https://github.com/ysugimoto/falco/pull/424) (@ysugimoto)
 
 ## v1.15.0
 
--  Implement max call stack for calling subroutine recursively [#423](https://github.com/ysugimoto/falco/pull/423) (@ysugimoto)
--  fix: resolve missing default transport settings in HTTPS by cloning http.DefaultTransport [#422](https://github.com/ysugimoto/falco/pull/422) (@3846masa)
--  Improve set statement value expression [#420](https://github.com/ysugimoto/falco/pull/420) (@ysugimoto)
--  Implement digest.ecdsa_verify function[#419](https://github.com/ysugimoto/falco/pull/419) (@ysugimoto)
+- Implement max call stack for calling subroutine recursively [#423](https://github.com/ysugimoto/falco/pull/423) (@ysugimoto)
+- fix: resolve missing default transport settings in HTTPS by cloning http.DefaultTransport [#422](https://github.com/ysugimoto/falco/pull/422) (@3846masa)
+- Improve set statement value expression [#420](https://github.com/ysugimoto/falco/pull/420) (@ysugimoto)
+- Implement digest.ecdsa_verify function[#419](https://github.com/ysugimoto/falco/pull/419) (@ysugimoto)
 
 ## v1.14.0
 
@@ -209,12 +213,11 @@
 - Errors with concurrent simulator requests due to global interpreter state [#282](https://github.com/ysugimoto/falco/pull/282) (@richardmarshall)
 - Fix offset/length handling in substr & utf8.substr [#283](https://github.com/ysugimoto/falco/pull/283) (@richardmarshall)
 - Regex patterns must be literals [#284](https://github.com/ysugimoto/falco/pull/284) (@richardmarshall)
-- Add missing backend.{name}.* variables [#285](https://github.com/ysugimoto/falco/pull/285) (@richardmarshall)
+- Add missing backend.{name}.\* variables [#285](https://github.com/ysugimoto/falco/pull/285) (@richardmarshall)
 - Feature/implement formatter [#291](https://github.com/ysugimoto/falco/pull/291) (@ysugimoto)
 - Add enforcing and ignoring subroutine scope in linter config [#296](https://github.com/ysugimoto/falco/pull/296) (@ysugimoto)
 - Improve parser/ast for complex comments [#302](https://github.com/ysugimoto/falco/pull/302) (@ysugimoto)
 - Feature/console subcommand [#303](https://github.com/ysugimoto/falco/pull/303) (@ysugimoto)
-
 
 ## v1.5.0
 
@@ -372,7 +375,6 @@ New features for the major version.
 
 - Allow function expressions in error statements [#94](https://github.com/ysugimoto/falco/pull/94) (@ivomurrell)
 - Fetch backend snippets from Fastly API [#95](https://github.com/ysugimoto/falco/pull/95) (@ivomurrell)
-
 
 ## v0.14.0
 

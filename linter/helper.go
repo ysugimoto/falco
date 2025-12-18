@@ -621,6 +621,48 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	return scopes
 }
 
+// getFileLevelScope extracts @scope annotation from file-level leading comments.
+// This is used for snippet files that have @scope at the beginning of the file.
+func getFileLevelScope(vcl *ast.VCL) int {
+	if len(vcl.Statements) == 0 {
+		return -1
+	}
+
+	// Get leading comments from first statement
+	meta := vcl.Statements[0].GetMeta()
+	if meta == nil {
+		return -1
+	}
+
+	scopes := 0
+	for _, a := range annotations(meta.Leading) {
+		switch strings.ToUpper(a) {
+		case "RECV":
+			scopes |= context.RECV
+		case "HASH":
+			scopes |= context.HASH
+		case "HIT":
+			scopes |= context.HIT
+		case "MISS":
+			scopes |= context.MISS
+		case "PASS":
+			scopes |= context.PASS
+		case "FETCH":
+			scopes |= context.FETCH
+		case "ERROR":
+			scopes |= context.ERROR
+		case "DELIVER":
+			scopes |= context.DELIVER
+		case "LOG":
+			scopes |= context.LOG
+		}
+	}
+	if scopes == 0 {
+		return -1
+	}
+	return scopes
+}
+
 func enforceSubroutineCallScopeFromConfig(scopeNames []string) int {
 	var scopes int
 	for i := range scopeNames {
