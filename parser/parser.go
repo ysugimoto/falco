@@ -244,9 +244,7 @@ func (p *Parser) ParseVCLOrSnippet() (*ast.VCL, error) {
 		Statements: make([]ast.Statement, len(statements)),
 		IsSnippet:  true,
 	}
-	for i, s := range statements {
-		vcl.Statements[i] = s
-	}
+	copy(vcl.Statements, statements)
 	return vcl, nil
 }
 
