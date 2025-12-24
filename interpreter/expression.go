@@ -241,7 +241,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 		// Evaluate arguments
 		var args []value.Value
 		for _, argExpr := range exp.Arguments {
-			argVal, err := i.ProcessExpression(argExpr)
+			argVal, err := i.ProcessExpression(argExpr, LocalVariableExpression())
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}
@@ -291,7 +291,7 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				)
 			}
 		} else {
-			a, err := i.processExpression(exp.Arguments[j], opt)
+			a, err := i.ProcessExpression(exp.Arguments[j], LocalVariableExpression())
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}
