@@ -44,7 +44,7 @@ var (
 
 func doUpdateHash(left *value.String, operator string, right value.Value) error {
 	if operator != "+=" {
-		return errors.WithStack(fmt.Errorf("Invalid operator, got %s", operator))
+		return errors.WithStack(fmt.Errorf("invalid operator, got %s", operator))
 	}
 	return assign.UpdateHash(left, right)
 }
