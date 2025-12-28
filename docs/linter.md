@@ -105,6 +105,26 @@ Following table describes annotation name and recognizing scope:
 | @deliver    | DELIVER | // @deliver<br>sub custom {} |
 | @log        | LOG     | // @log<br>sub custom {}     |
 
+## VCL Snippets
+
+`falco` can also lint VCL snippet files that contain only statements (without subroutine declarations). This is useful for linting Fastly VCL snippets that are injected into specific subroutines.
+
+To lint a snippet file, add a `@scope` annotation at the top of the file to specify which subroutine scope the snippet will run in:
+
+```vcl
+# @scope: deliver
+unset resp.http.Server;
+unset resp.http.X-Powered-By;
+```
+
+If a snippet file is missing the `@scope` annotation, `falco` will report an error:
+
+```
+falco lint snippet.vcl
+🔥 [ERROR] VCL snippet requires @scope annotation (e.g., # @scope: deliver) (snippet-scope-required)
+```
+
+The available scope values are the same as for subroutine annotations: `recv`, `miss`, `hash`, `pass`, `fetch`, `error`, `deliver`, and `log`.
 
 ## Linter Plugin
 

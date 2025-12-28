@@ -1266,3 +1266,103 @@ backend F_Host_1 {
 	}
 	assert(t, vcl, expect)
 }
+
+func TestParseVCLOrSnippet(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		isSnippet bool
+		wantErr   bool
+	}{
+		{
+			name: "regular VCL with subroutine",
+			input: `sub vcl_recv {
+				set req.http.foo = "bar";
+			}`,
+			isSnippet: false,
+			wantErr:   false,
+		},
+		{
+			name: "snippet with scope annotation",
+			input: `# @scope: deliver
+unset resp.http.server;`,
+			isSnippet: true,
+			wantErr:   false,
+		},
+		{
+			name: "snippet with multiple statements",
+			input: `# @scope: recv
+set req.http.foo = "bar";
+set req.http.baz = "qux";`,
+			isSnippet: true,
+			wantErr:   false,
+		},
+		{
+			name: "regular VCL with backend",
+			input: `backend my_backend {
+				.host = "example.com";
+			}`,
+			isSnippet: false,
+			wantErr:   false,
+		},
+		{
+			name:      "empty file",
+			input:     ``,
+			isSnippet: false,
+			wantErr:   false,
+		},
+		{
+			name: "snippet with if statement",
+			input: `# @scope: recv
+if (req.url ~ "^/api") {
+	set req.backend = api_backend;
+}`,
+			isSnippet: true,
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vcl, err := New(lexer.NewFromString(tt.input)).ParseVCLOrSnippet()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ParseVCLOrSnippet() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil && vcl.IsSnippet != tt.isSnippet {
+				t.Errorf("ParseVCLOrSnippet() IsSnippet = %v, want %v", vcl.IsSnippet, tt.isSnippet)
+			}
+		})
+	}
+}
+
+func TestIsDeclarationToken(t *testing.T) {
+	tests := []struct {
+		tokenType token.TokenType
+		want      bool
+	}{
+		{token.ACL, true},
+		{token.BACKEND, true},
+		{token.DIRECTOR, true},
+		{token.TABLE, true},
+		{token.SUBROUTINE, true},
+		{token.PENALTYBOX, true},
+		{token.RATECOUNTER, true},
+		{token.IMPORT, true},
+		{token.INCLUDE, true},
+		{token.SET, false},
+		{token.UNSET, false},
+		{token.IF, false},
+		{token.RETURN, false},
+		{token.CALL, false},
+	}
+
+	p := New(lexer.NewFromString(""))
+	for _, tt := range tests {
+		t.Run(string(tt.tokenType), func(t *testing.T) {
+			if got := p.isDeclarationToken(tt.tokenType); got != tt.want {
+				t.Errorf("isDeclarationToken(%v) = %v, want %v", tt.tokenType, got, tt.want)
+			}
+		})
+	}
+}
