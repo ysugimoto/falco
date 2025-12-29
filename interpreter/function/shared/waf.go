@@ -163,8 +163,7 @@ func ParseByteRanges(spec string) ([]bool, error) {
 	if spec == "" {
 		return allowed, nil
 	}
-	ranges := strings.Split(spec, ",")
-	for _, r := range ranges {
+	for r := range strings.SplitSeq(spec, ",") {
 		r = strings.TrimSpace(r)
 		if r == "" {
 			continue
