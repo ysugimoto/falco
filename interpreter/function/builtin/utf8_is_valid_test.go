@@ -39,7 +39,7 @@ func Test_Utf8_is_valid(t *testing.T) {
 			expect: true,
 		},
 		{
-			input: "	",
+			input:  "	",
 			expect: true,
 		},
 		{

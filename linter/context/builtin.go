@@ -2249,6 +2249,175 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
+		"waf": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"cmdline": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"cssDecode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"detectSQLi": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"detectXSS": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"hexencode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"htmlEntityDecode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"jsDecode": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"normalizePath": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"normalizePathWin": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"urlDecodeUni": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"urlDecodeUni_removeNulls": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"utf8toHex": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"validateByteRange": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"validateUrlEncoding": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+				"validateUtf8Encoding": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.BoolType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
+			},
+		},
 		"xml_escape": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{

@@ -43,40 +43,40 @@ func Test_Table_lookup_regex(t *testing.T) {
 	}
 
 	tests := []struct {
-		name             string
-		tableName        string
-		key              string
-		expectPattern    string
+		name                string
+		tableName           string
+		key                 string
+		expectPattern       string
 		expectUnsatisfiable bool
-		isError          bool
+		isError             bool
 	}{
 		{
-			name:             "table does not exist",
-			tableName:        "doesnotexist",
-			key:              "/images",
-			expectPattern:    "$unsatisfiable",
+			name:                "table does not exist",
+			tableName:           "doesnotexist",
+			key:                 "/images",
+			expectPattern:       "$unsatisfiable",
 			expectUnsatisfiable: true,
-			isError:          true,
+			isError:             true,
 		},
 		{
-			name:             "key found in table",
-			tableName:        "regex_patterns",
-			key:              "/images",
-			expectPattern:    "^(?:jpe?g|png)$",
+			name:                "key found in table",
+			tableName:           "regex_patterns",
+			key:                 "/images",
+			expectPattern:       "^(?:jpe?g|png)$",
 			expectUnsatisfiable: false,
 		},
 		{
-			name:             "another key found in table",
-			tableName:        "regex_patterns",
-			key:              "/articles",
-			expectPattern:    "^md$",
+			name:                "another key found in table",
+			tableName:           "regex_patterns",
+			key:                 "/articles",
+			expectPattern:       "^md$",
 			expectUnsatisfiable: false,
 		},
 		{
-			name:             "key not found returns unsatisfiable",
-			tableName:        "regex_patterns",
-			key:              "/videos",
-			expectPattern:    "$unsatisfiable",
+			name:                "key not found returns unsatisfiable",
+			tableName:           "regex_patterns",
+			key:                 "/videos",
+			expectPattern:       "$unsatisfiable",
 			expectUnsatisfiable: true,
 		},
 	}

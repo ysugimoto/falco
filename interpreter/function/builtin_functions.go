@@ -2698,6 +2698,231 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"waf.cmdline": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.cmdline", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_cmdline(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.cssDecode": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.cssDecode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_cssDecode(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.detectSQLi": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.detectSQLi", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_detectSQLi(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.detectXSS": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.detectXSS", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_detectXSS(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.hexencode": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.hexencode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_hexencode(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.htmlEntityDecode": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.htmlEntityDecode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_htmlEntityDecode(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.jsDecode": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.jsDecode", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_jsDecode(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.normalizePath": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.normalizePath", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_normalizePath(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.normalizePathWin": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.normalizePathWin", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_normalizePathWin(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.urlDecodeUni": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.urlDecodeUni", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_urlDecodeUni(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.urlDecodeUni_removeNulls": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.urlDecodeUni_removeNulls", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_urlDecodeUni_removeNulls(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.utf8toHex": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.utf8toHex", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_utf8toHex(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.validateByteRange": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.validateByteRange", args, map[int]struct{}{0: {}, 1: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_validateByteRange(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.validateUrlEncoding": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.validateUrlEncoding", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_validateUrlEncoding(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
+	"waf.validateUtf8Encoding": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("waf.validateUtf8Encoding", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Waf_validateUtf8Encoding(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"xml_escape": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

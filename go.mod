@@ -20,6 +20,7 @@ require (
 
 require (
 	github.com/c-bata/go-prompt v0.2.6
+	github.com/corazawaf/libinjection-go v0.1.2
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -31,8 +32,6 @@ require (
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
-
-require gopkg.in/yaml.v3 v3.0.1 // indirect
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect

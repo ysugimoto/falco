@@ -1368,3 +1368,108 @@ digest.hmac_sha256_with_base64_key:
   arguments:
     - [STRING, STRING]
   return: STRING
+
+waf.cmdline:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.cssDecode:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.detectSQLi:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+waf.detectXSS:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+waf.hexencode:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.htmlEntityDecode:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.jsDecode:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.normalizePath:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.normalizePathWin:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.urlDecodeUni:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.urlDecodeUni_removeNulls:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.utf8toHex:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
+waf.validateByteRange:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING, STRING]
+  return: BOOL
+
+waf.validateUrlEncoding:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
+waf.validateUtf8Encoding:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
