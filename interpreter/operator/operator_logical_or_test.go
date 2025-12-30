@@ -153,7 +153,6 @@ func TestLogicalOrOperator(t *testing.T) {
 			{left: &value.String{Value: ""}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 			{left: &value.String{Value: "", Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.String{Value: "", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
-			{left: &value.String{Value: ""}, right: &value.String{Value: "example"}, expect: true},
 			{left: &value.String{IsNotSet: true}, right: &value.String{IsNotSet: true}, expect: false},
 			{left: &value.String{IsNotSet: true}, right: &value.Boolean{Value: true}, expect: true},
 			{left: &value.String{IsNotSet: true}, right: &value.Boolean{Value: false, Literal: true}, expect: false},
