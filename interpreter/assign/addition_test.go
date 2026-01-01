@@ -1,6 +1,8 @@
 package assign
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net"
 	"testing"
 	"time"
@@ -317,4 +319,51 @@ func TestProcessAddition(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("left is hash", func(t *testing.T) {
+		now := &value.Time{Value: time.Now()}
+		tests := []struct {
+			left    string
+			right   value.Value
+			expect  string
+			isError bool
+		}{
+			{left: "left", right: &value.Integer{Value: 100}, expect: "cbd43b849383051fd270c42a3614e9544574afa3325f823b06543219da133033"},
+			{left: "left", right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{left: "left", right: &value.Float{Value: 50.0}, expect: "6d5f87d76d7b00535885df37de7b21f142b9d7d865ed11d102aa8b6289fe38f1"},
+			{left: "left", right: &value.Float{Value: 50.0, Literal: true}, isError: true},
+			{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "e719a4edc22647e49f6064ef26367146f7ea471ab3092c59aa435bec619f8ee7"},
+			{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: "left", right: now, expect: updateSha256("left", now.String())},
+			{left: "left", right: &value.String{Value: "example"}, expect: "9b1af6bc6577f3ce7c1d2300cdab08592aac9bfd8526550738399b91029119b1"},
+			{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "9b1af6bc6577f3ce7c1d2300cdab08592aac9bfd8526550738399b91029119b1"},
+			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "7691ef243c82556f63a1c9a016d301aff8a7e7f614f628f96e987d192d96a251"},
+			{left: "left", right: &value.Boolean{Value: true}, expect: "7b33826925bf0671910829e1b9177aac72bc84242ba2fee22719aeff0645284e"},
+			{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "b41fb5979081e7ae4d28ed5db718391297814c4f7e42d9cfbbf79c4c380e0ce6"},
+			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "014858541b453db616694915e30bbffaa4f1cc9bc95eb0299cb73d76768736d3"},
+		}
+
+		for i, tt := range tests {
+			left := &value.String{Value: tt.left}
+			err := UpdateHash(left, tt.right)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("Index %d: expects error but non-nil", i)
+				}
+				continue
+			}
+			if left.Value != tt.expect {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
+			}
+		}
+
+	})
+}
+
+func updateSha256(current, value string) string {
+	h := sha256.New()
+	h.Write([]byte(current))
+	h.Write([]byte(value))
+	hexStr := hex.EncodeToString(h.Sum(nil))
+	return hexStr
 }

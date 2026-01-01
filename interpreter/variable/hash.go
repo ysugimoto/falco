@@ -82,7 +82,7 @@ func (v *HashScopeVariables) Set(s context.Scope, name, operator string, val val
 			v.ctx.RequestHash.Value += hash.Value
 			return nil
 		}
-		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
+		if err := doUpdateHash(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
