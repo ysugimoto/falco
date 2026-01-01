@@ -43,7 +43,7 @@ func Test_Json_escape(t *testing.T) {
 			expect: "\\n",
 		},
 		{
-			input:  "	",
+			input: "	",
 			expect: "\\t",
 		},
 		{
