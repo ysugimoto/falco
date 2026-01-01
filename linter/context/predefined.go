@@ -716,16 +716,6 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-handshake-time-to-origin-ms/",
 					},
 				},
-				"hipaa": {
-					Items: map[string]*Object{},
-					Value: &Accessor{
-						Get:       types.BoolType,
-						Set:       types.BoolType,
-						Unset:     false,
-						Scopes:    FETCH,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-hipaa/",
-					},
-				},
 				"headers": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -734,6 +724,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    FETCH,
 						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-headers/",
+					},
+				},
+				"hipaa": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.BoolType,
+						Set:       types.BoolType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-hipaa/",
 					},
 				},
 				"http": {
@@ -2692,16 +2692,6 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
 					},
 				},
-				"hits": {
-					Items: map[string]*Object{},
-					Value: &Accessor{
-						Get:       types.IntegerType,
-						Set:       types.NeverType,
-						Unset:     false,
-						Scopes:    HIT | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/",
-					},
-				},
 				"headers": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -2710,6 +2700,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    HIT | ERROR,
 						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/cache-object/obj-headers/",
+					},
+				},
+				"hits": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IntegerType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-hits/",
 					},
 				},
 				"http": {
