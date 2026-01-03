@@ -1,3 +1,13 @@
+## v2.0.1
+
+- Fix logical condition with notset string [#527](https://github.com/ysugimoto/falco/pull/527) (@ysugimoto)
+- digest_hmac_* : add a 0x prefix [#522](https://github.com/ysugimoto/falco/pull/522) (@jedisct1)
+- Migrate golangci-lint v2 [#520](https://github.com/ysugimoto/falco/pull/520) (@ysugimoto)
+- Adjust modernize notification for go1.25 [#519](https://github.com/ysugimoto/falco/pull/519) (@ysugimoto)
+- Sync linter rules doc [#518](https://github.com/ysugimoto/falco/pull/518) (@ysugimoto)
+- Add documentation for more remote reosurce and caching [#517](https://github.com/ysugimoto/falco/pull/517) (@ysugimoto)
+
+
 ## v2.0.0
 
 - Support notset state in STRING and IP type (@ysugimoto)
