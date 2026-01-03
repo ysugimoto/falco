@@ -27,7 +27,7 @@ func Test_Digest_hmac_sha256(t *testing.T) {
 		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
 	}
 	v := value.Unwrap[*value.String](ret)
-	expect := "9e089ec13af881a8ac227a736c3e7c490ea3b4afca0c5f83dff6393b683a72e3"
+	expect := "0x9e089ec13af881a8ac227a736c3e7c490ea3b4afca0c5f83dff6393b683a72e3"
 	if v.Value != expect {
 		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}

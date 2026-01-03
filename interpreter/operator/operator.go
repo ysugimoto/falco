@@ -831,7 +831,7 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("logical AND operator: could not use string literal in left expression, value is %s", str.Value),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("logical AND operator: left type must be falsy type, got %s", left.Type()),
@@ -849,7 +849,7 @@ func LogicalAnd(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("logical AND operator: could not use string literal in right expression, value is %s", str.Value),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("logical AND operator: right type must be falsy type, got %s", right.Type()),
@@ -873,7 +873,7 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("logical OR operator: could not use string literal in left expression, value is %s", str.Value),
 			)
 		}
-		lv = str.Value != ""
+		lv = !str.IsNotSet
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("logical OR operator: left type must be falsy type, got %s", left.Type()),
@@ -891,7 +891,7 @@ func LogicalOr(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("logical OR operator: could not use string literal in right expression, value is %s", str.Value),
 			)
 		}
-		rv = str.Value != ""
+		rv = !str.IsNotSet
 	default:
 		return value.Null, errors.WithStack(
 			fmt.Errorf("logical OR operator: right type must be falsy type, got %s", right.Type()),

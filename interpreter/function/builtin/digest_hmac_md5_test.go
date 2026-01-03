@@ -27,7 +27,7 @@ func Test_Digest_hmac_md5(t *testing.T) {
 		t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
 	}
 	v := value.Unwrap[*value.String](ret)
-	expect := "bf8d470185ab817f3c92bb5cef1fd7d5"
+	expect := "0xbf8d470185ab817f3c92bb5cef1fd7d5"
 	if v.Value != expect {
 		t.Errorf("return value unmatch, expect=%s, got=%s", expect, v.Value)
 	}
