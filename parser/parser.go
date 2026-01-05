@@ -241,10 +241,9 @@ func (p *Parser) ParseVCLOrSnippet() (*ast.VCL, error) {
 
 	// Return VCL with snippet flag set
 	vcl := &ast.VCL{
-		Statements: make([]ast.Statement, len(statements)),
+		Statements: statements,
 		IsSnippet:  true,
 	}
-	copy(vcl.Statements, statements)
 	return vcl, nil
 }
 
