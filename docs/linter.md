@@ -124,7 +124,7 @@ falco lint snippet.vcl
 🔥 [ERROR] VCL snippet requires @scope annotation (e.g., # @scope: deliver) (snippet-scope-required)
 ```
 
-The available scope values are the same as for subroutine annotations: `recv`, `miss`, `hash`, `pass`, `fetch`, `error`, `deliver`, and `log`.
+The available scope values are the same as for subroutine annotations: `recv`, `hash`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, and `log`.
 
 ## Linter Plugin
 
