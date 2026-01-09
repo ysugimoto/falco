@@ -107,7 +107,7 @@ func stringifyVariableArguments(name string, args []value.Value, indicies map[in
 			return nil, fe.CannotConvertToString(name, i)
 		default:
 			// Other types, can convert non-literal value only
-			if t.IsLiteral() {
+			if t.IsLiteral() && t.Type() != value.BooleanType {
 				return nil, fe.CannotConvertToString(name, i)
 			}
 			// Stringify the argument value
