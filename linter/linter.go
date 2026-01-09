@@ -299,6 +299,11 @@ func (l *Linter) lint(node ast.Node, ctx *context.Context) types.Type {
 }
 
 func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
+	// Handle snippet mode - statements without subroutine wrapper
+	if vcl.IsSnippet {
+		return l.lintSnippetVCL(vcl, ctx)
+	}
+
 	// Resolve module, snippet inclusion
 	statements := l.resolveIncludeStatements(vcl.Statements, ctx, true)
 
@@ -308,6 +313,35 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 
 	// Lint each statement/declaration logics
 	for _, s := range statements {
+		l.lintStatement(s, ctx)
+	}
+
+	return types.NeverType
+}
+
+// lintSnippetVCL handles linting of VCL snippets (statements without subroutine wrapper).
+// It extracts the @scope annotation from file-level comments and lints statements in that context.
+func (l *Linter) lintSnippetVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
+	// Extract scope from file-level comments
+	scope := getFileLevelScope(vcl)
+	if scope <= 0 {
+		// No scope annotation found - report error
+		if len(vcl.Statements) > 0 {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    vcl.Statements[0].GetMeta().Token,
+				Message:  "VCL snippet requires @scope annotation (e.g., # @scope: deliver)",
+				Rule:     "snippet-scope-required",
+			})
+		}
+		return types.NeverType
+	}
+
+	// Set the context scope for linting
+	ctx.Scope(scope)
+
+	// Lint each statement in the snippet
+	for _, s := range vcl.Statements {
 		l.lintStatement(s, ctx)
 	}
 
