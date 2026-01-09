@@ -91,7 +91,7 @@ func TestStringImplicitConversion(t *testing.T) {
 					Name: &ast.Ident{Value: "example_1"},
 				},
 			},
-			isError: true,
+			expect: &value.Integer{Value: 9},
 		},
 		{
 			name: "Convert Backend literal raises an error",

@@ -34,9 +34,6 @@ func stringifyVariableArguments(name string, args []value.Value, indicies map[in
 			} else {
 				stringified[i] = &value.String{Value: t.Value.String()}
 			}
-		case *value.Backend:
-			// Backend value could not convert to string
-			return nil, fe.CannotConvertToString(name, i)
 		case *value.Acl:
 			// Acl value could not convert to string
 			return nil, fe.CannotConvertToString(name, i)
