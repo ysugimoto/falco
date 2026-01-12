@@ -136,3 +136,94 @@ return(pass);
 		})
 	}
 }
+
+func TestFormatBoilerplateFile(t *testing.T) {
+	// Test that formatting boilerplate.vcl doesn't change it, as
+	// it's already formatted in the official Fastly style.
+	c := &config.FormatConfig{
+		IndentWidth:                2,
+		IndentStyle:                "space",
+		TrailingCommentWidth:       1,
+		LineWidth:                  -1,
+		CommentStyle:               "sharp",
+		ReturnStatementParenthesis: true,
+	}
+
+	fp, err := os.Open("../examples/formatter/boilerplate.vcl")
+	if err != nil {
+		t.Fatalf("File open error: %s", err)
+	}
+	defer fp.Close()
+
+	originalContent, err := ioutil.ReadAll(fp)
+	if err != nil {
+		t.Fatalf("Failed to read file: %s", err)
+	}
+
+	// Reset file pointer for parsing
+	fp.Seek(0, 0)
+
+	vcl, err := parser.New(lexer.New(fp)).ParseVCL()
+	if err != nil {
+		t.Fatalf("Unexpected parser error: %s", err)
+	}
+
+	formatted := New(c).Format(vcl)
+	formattedContent, err := ioutil.ReadAll(formatted)
+	if err != nil {
+		t.Fatalf("Failed to read formatted output: %s", err)
+	}
+
+	if diff := cmp.Diff(string(originalContent), string(formattedContent)); diff != "" {
+		t.Errorf("Formatting boilerplate.vcl changed the file (should be idempotent):\n%s", diff)
+	}
+}
+
+func TestFormatGeneratedFile(t *testing.T) {
+	// Test that formatting generated.vcl produces the expected output.
+	// The original file is Fastly "generated VCL" which uses different conventions,
+	// so we compare against a pre-formatted expected output file.
+	c := &config.FormatConfig{
+		IndentWidth:                2,
+		IndentStyle:                "space",
+		TrailingCommentWidth:       1,
+		LineWidth:                  120,
+		CommentStyle:               "sharp",
+		ReturnStatementParenthesis: true,
+	}
+
+	fp, err := os.Open("../examples/formatter/generated.vcl")
+	if err != nil {
+		t.Fatalf("File open error: %s", err)
+	}
+	defer fp.Close()
+
+	vcl, err := parser.New(lexer.New(fp)).ParseVCL()
+	if err != nil {
+		t.Fatalf("Unexpected parser error: %s", err)
+	}
+
+	formatted := New(c).Format(vcl)
+	formattedContent, err := ioutil.ReadAll(formatted)
+	if err != nil {
+		t.Fatalf("Failed to read formatted output: %s", err)
+	}
+
+	expectedPath := "../examples/formatter/generated-formatted.vcl"
+	expectedContent, err := os.ReadFile(expectedPath)
+	if err != nil {
+		// If expected file doesn't exist, create it
+		if os.IsNotExist(err) {
+			if err := os.WriteFile(expectedPath, formattedContent, 0644); err != nil {
+				t.Fatalf("Failed to write expected file: %s", err)
+			}
+			t.Logf("Created expected file: %s", expectedPath)
+			return
+		}
+		t.Fatalf("Failed to read expected file: %s", err)
+	}
+
+	if diff := cmp.Diff(string(expectedContent), string(formattedContent)); diff != "" {
+		t.Errorf("Formatting generated.vcl produced unexpected output:\n%s", diff)
+	}
+}

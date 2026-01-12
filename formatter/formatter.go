@@ -112,9 +112,6 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 	for i, decl := range decls {
 		if i > 0 {
 			buf.WriteString("\n")
-			if decl.Type != Import && decl.Type != Include {
-				buf.WriteString("\n")
-			}
 		}
 		buf.WriteString(decl.Buffer)
 	}
