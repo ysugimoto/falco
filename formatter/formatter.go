@@ -22,7 +22,7 @@ type Formatter struct {
 	// Defined at config package, all built-in formatting rules includes with default values
 	conf *config.FormatConfig
 
-	// statful formatting - flag for formatting inside functional subroutine.
+	// stateful formatting - flag for formatting inside functional subroutine.
 	// If this flag turns on, the return statement MUST return the subroutine return type, not a state
 	// so it should not wrap the parenthesis even if configuration is true.
 	isFunctionalSubroutine bool
