@@ -112,6 +112,12 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 		}
 		l.Error(err.Match(DECLARE_STATEMENT_DUPLICATED))
 	}
+
+	// Lint the value expression if present
+	if stmt.Value != nil {
+		l.lint(stmt.Value, ctx)
+	}
+
 	return types.NeverType
 }
 
