@@ -1079,6 +1079,7 @@ h2.push:
   reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
+    - [STRING]
     - [STRING, STRING]
 
 table.contains:
