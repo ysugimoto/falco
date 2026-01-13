@@ -414,6 +414,18 @@ sub foo {
 
 	// insert
 
+	t.Run("pass: req.protocol equals https with HSTS header", func(t *testing.T) {
+		input := `
+// @deliver
+sub vcl_deliver {
+	#FASTLY DELIVER
+	if (req.protocol == "https") {
+		set resp.http.Strict-Transport-Security = "max-age=31536000; includeSubDomains";
+	}
+}`
+		assertNoError(t, input)
+	})
+
 	t.Run("condition type is not expected", func(t *testing.T) {
 		input := `
 sub foo {
