@@ -39,11 +39,67 @@ Your VCL will have dependent modules loaded via `include [module]`. `falco` acce
 
 ## User defined subroutine
 
-On linting, `falco` could not recognize when the user-defined subroutine is called, so you should apply the subroutine scope by adding annotation or its subroutine name. falco understands call scope by following rules:
+`falco` determines the scope of user-defined subroutines using three methods, in order of priority:
+
+1. **Explicit annotation** - `@scope` comment above the subroutine
+2. **Name suffix** - subroutine name ending with `_recv`, `_fetch`, etc.
+3. **Call graph inference** - automatically inferred from callers
+
+### Call graph inference
+
+`falco` automatically infers scope by analyzing the call graph. If your subroutine is called from a Fastly lifecycle subroutine (like `vcl_recv` or `vcl_miss`), it inherits that scope without needing annotations.
+
+```vcl
+sub add_cdn_header {
+  set bereq.http.CDN = "Fastly";
+}
+
+sub vcl_miss {
+  #FASTLY MISS
+  call add_cdn_header;  // add_cdn_header is inferred as MISS scope
+}
+```
+
+This works transitively through the call chain:
+
+```vcl
+sub helper_inner {
+  set bereq.http.X-Helper = "inner";
+}
+
+sub helper_outer {
+  call helper_inner;  // helper_inner inherits scope from helper_outer's callers
+}
+
+sub vcl_miss {
+  #FASTLY MISS
+  call helper_outer;  // Both helper_outer and helper_inner get MISS scope
+}
+```
+
+If a subroutine is called from multiple scopes, it receives the union of all caller scopes:
+
+```vcl
+sub to_origin {
+  set bereq.http.CDN = "Fastly";
+}
+
+sub vcl_miss {
+  #FASTLY MISS
+  call to_origin;
+}
+
+sub vcl_pass {
+  #FASTLY PASS
+  call to_origin;  // to_origin is inferred as MISS|PASS scope
+}
+```
+
+Subroutines that are never called from any lifecycle subroutine will trigger a warning, as their scope cannot be determined.
 
 ### Subroutine name
 
-If the subroutine name has a suffix of `_[scope]`, falco lint within that scope.
+Explicit scope declaration takes priority over inference. If the subroutine name has a suffix of `_[scope]`, falco lints within that scope regardless of where it's called from.
 
 ```vcl
 sub custom_recv { // name has `_recv` suffix, lint with RECV scope
