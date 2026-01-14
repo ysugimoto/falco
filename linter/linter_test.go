@@ -878,3 +878,78 @@ sub vcl_pipe {}
 `
 	assertError(t, input)
 }
+
+func TestSnippetLinting(t *testing.T) {
+	t.Run("snippet with @scope annotation lints correctly", func(t *testing.T) {
+		input := `# @scope: deliver
+unset resp.http.server;`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCLOrSnippet()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		if !vcl.IsSnippet {
+			t.Errorf("expected IsSnippet to be true")
+		}
+
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if len(l.Errors) > 0 {
+			t.Errorf("Lint error: %s", l.Errors)
+		}
+	})
+
+	t.Run("snippet without @scope annotation reports error", func(t *testing.T) {
+		input := `unset resp.http.server;`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCLOrSnippet()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		if !vcl.IsSnippet {
+			t.Errorf("expected IsSnippet to be true")
+		}
+
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("expected error for missing @scope annotation")
+		}
+	})
+
+	t.Run("snippet with multiple scopes", func(t *testing.T) {
+		input := `# @scope: recv, fetch
+set req.http.foo = "bar";`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCLOrSnippet()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+		if !vcl.IsSnippet {
+			t.Errorf("expected IsSnippet to be true")
+		}
+
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if len(l.Errors) > 0 {
+			t.Errorf("Lint error: %s", l.Errors)
+		}
+	})
+
+	t.Run("snippet with wrong scope reports variable error", func(t *testing.T) {
+		// bereq is not available in recv scope
+		input := `# @scope: recv
+set bereq.http.foo = "bar";`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCLOrSnippet()
+		if err != nil {
+			t.Errorf("unexpected parser error: %s", err)
+			t.FailNow()
+		}
+
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Errorf("expected error for variable not available in scope")
+		}
+	})
+}
