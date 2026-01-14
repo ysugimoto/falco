@@ -261,7 +261,7 @@ func (r *Runner) run(ctx *lcontext.Context, main *resolver.VCL, mode RunMode) (*
 func (r *Runner) parseVCL(name, code string) (*ast.VCL, error) {
 	lx := lexer.NewFromString(code, lexer.WithFile(name))
 	p := parser.New(lx)
-	vcl, err := p.ParseVCL()
+	vcl, err := p.ParseVCLOrSnippet()
 	if err != nil {
 		lx.NewLine()
 		pe, ok := errors.Cause(err).(*parser.ParseError)

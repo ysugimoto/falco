@@ -593,29 +593,59 @@ func getSubroutineCallScope(s *ast.SubroutineDeclaration) int {
 	// typically defined in module file
 	scopes := 0
 	for _, a := range annotations(s.Leading) {
-		switch strings.ToUpper(a) {
-		case "RECV":
-			scopes |= context.RECV
-		case "HASH":
-			scopes |= context.HASH
-		case "HIT":
-			scopes |= context.HIT
-		case "MISS":
-			scopes |= context.MISS
-		case "PASS":
-			scopes |= context.PASS
-		case "FETCH":
-			scopes |= context.FETCH
-		case "ERROR":
-			scopes |= context.ERROR
-		case "DELIVER":
-			scopes |= context.DELIVER
-		case "LOG":
-			scopes |= context.LOG
-		}
+		scopes |= annotationToScope(a)
 	}
 	if scopes == 0 {
 		// Unknown scope
+		return -1
+	}
+	return scopes
+}
+
+// annotationToScope converts a single annotation string to its corresponding scope value.
+func annotationToScope(annotation string) int {
+	switch strings.ToUpper(annotation) {
+	case "RECV":
+		return context.RECV
+	case "HASH":
+		return context.HASH
+	case "HIT":
+		return context.HIT
+	case "MISS":
+		return context.MISS
+	case "PASS":
+		return context.PASS
+	case "FETCH":
+		return context.FETCH
+	case "ERROR":
+		return context.ERROR
+	case "DELIVER":
+		return context.DELIVER
+	case "LOG":
+		return context.LOG
+	default:
+		return 0
+	}
+}
+
+// getFileLevelScope extracts @scope annotation from file-level leading comments.
+// This is used for snippet files that have @scope at the beginning of the file.
+func getFileLevelScope(vcl *ast.VCL) int {
+	if len(vcl.Statements) == 0 {
+		return -1
+	}
+
+	// Get leading comments from first statement
+	meta := vcl.Statements[0].GetMeta()
+	if meta == nil {
+		return -1
+	}
+
+	scopes := 0
+	for _, a := range annotations(meta.Leading) {
+		scopes |= annotationToScope(a)
+	}
+	if scopes == 0 {
 		return -1
 	}
 	return scopes

@@ -9,6 +9,7 @@ import (
 // VCL is a root of program
 type VCL struct {
 	Statements []Statement
+	IsSnippet  bool // True if parsed as a snippet (statements without subroutine wrapper)
 }
 
 func (v *VCL) String() string {

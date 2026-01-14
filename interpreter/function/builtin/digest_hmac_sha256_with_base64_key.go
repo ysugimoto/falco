@@ -52,6 +52,6 @@ func Digest_hmac_sha256_with_base64_key(ctx *context.Context, args ...value.Valu
 	mac.Write([]byte(input.Value))
 
 	return &value.String{
-		Value: hex.EncodeToString(mac.Sum(nil)),
+		Value: "0x" + hex.EncodeToString(mac.Sum(nil)),
 	}, nil
 }

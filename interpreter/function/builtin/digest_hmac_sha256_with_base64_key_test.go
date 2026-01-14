@@ -25,27 +25,27 @@ func Test_Digest_hmac_sha256_with_base64_key(t *testing.T) {
 		{
 			keyHex:  "5d694a15baddf0f503fec7e65ba434d3",
 			message: "st=1678885238~exp=1679749238~acl=/*",
-			expect:  "6a2915695030d8b83ae5c9c12d521a9f84d192398bb949e7b98f6efcc5bceb65",
+			expect:  "0x6a2915695030d8b83ae5c9c12d521a9f84d192398bb949e7b98f6efcc5bceb65",
 		},
 		{
 			keyHex:  "ed90b9a043b6659d36acf36d5aeaec96",
 			message: "st=1678885238~exp=1679749238~acl=/*",
-			expect:  "5569ac4c81d200e56ce25ace987c8ea6194539a7c4eba3b32493d44081ced2f0",
+			expect:  "0x5569ac4c81d200e56ce25ace987c8ea6194539a7c4eba3b32493d44081ced2f0",
 		},
 		{
 			keyHex:  "ed90b9a043b6650036acf36d5aeaec96",
 			message: "st=1678885238~exp=1679749238~acl=/*",
-			expect:  "eddcfce5527bf76c5e2d2b777904f3545f2249b5f080cf0f41d8b980ade703c7",
+			expect:  "0xeddcfce5527bf76c5e2d2b777904f3545f2249b5f080cf0f41d8b980ade703c7",
 		},
 		{
 			keyHex:  "5d694a00baddf0f503fec7e65ba434d3",
 			message: "st=1678885238~exp=1679749238~acl=/*",
-			expect:  "9309c89a4741fcac74592a7f3156d07402f168a2d829e25fb53798ad0c55788e",
+			expect:  "0x9309c89a4741fcac74592a7f3156d07402f168a2d829e25fb53798ad0c55788e",
 		},
 		{
 			keyHex:  "00694a15baddf0f503fec7e65ba434d3",
 			message: "st=1678885238~exp=1679749238~acl=/*",
-			expect:  "7cef7427845f419d1c9aea350723909e994ebd7ea0dd70deac68f2cef9250064",
+			expect:  "0x7cef7427845f419d1c9aea350723909e994ebd7ea0dd70deac68f2cef9250064",
 		},
 	}
 
