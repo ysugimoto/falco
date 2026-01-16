@@ -62,6 +62,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
 	} else if v != nil {
+		if v.Type() != value.StringType {
+			return nil, errors.WithStack(errors.New("backend property 'port' must be string"))
+		}
 		port = value.Unwrap[*value.String](v).Value
 	}
 
