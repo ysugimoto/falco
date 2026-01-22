@@ -206,7 +206,7 @@ sub vcl_miss {
 
   {
     if (req.http.Fastly-Check-SHA1) {
-       error 550 "Doesnt exist";
+       error 550 "Doesn't exist";
     }
 
 #--FASTLY BEREQ BEGIN
