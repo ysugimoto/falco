@@ -4,7 +4,6 @@ package builtin
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -28,7 +27,7 @@ func Randomstr_Validate(args []value.Value) error {
 }
 
 var Randomstr_default_characters = []rune(
-	"abcdedfhijklmnopqrstuvwxyzABCDEDFHIJKLMNOPQRSTUVWXYZ0123456789-_",
+	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_",
 )
 
 // Fastly built-in function implementation of randomstr
@@ -48,11 +47,14 @@ func Randomstr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		characters = []rune(value.Unwrap[*value.String](args[1]).Value)
 	}
 
-	rand.Seed(time.Now().UnixNano())
+	if len(characters) == 0 {
+		return value.Null, nil
+	}
+
 	ret := make([]rune, int(length.Value))
 
 	for i := 0; i < int(length.Value); i++ {
-		ret[i] = characters[rand.Intn(len(characters)-1)]
+		ret[i] = characters[rand.Intn(len(characters))]
 	}
 
 	return &value.String{Value: string(ret)}, nil
