@@ -39,6 +39,9 @@ func Digest_hmac_md5(ctx *context.Context, args ...value.Value) (value.Value, er
 	}
 
 	key := value.Unwrap[*value.String](args[0])
+	if key.Value == "" {
+		return value.Null, nil
+	}
 	input := value.Unwrap[*value.String](args[1])
 	mac := hmac.New(md5.New, []byte(key.Value))
 	mac.Write([]byte(input.Value))

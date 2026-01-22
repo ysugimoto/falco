@@ -39,6 +39,9 @@ func Digest_hmac_sha1(ctx *context.Context, args ...value.Value) (value.Value, e
 	}
 
 	key := value.Unwrap[*value.String](args[0])
+	if key.Value == "" {
+		return value.Null, nil
+	}
 	input := value.Unwrap[*value.String](args[1])
 	mac := hmac.New(sha1.New, []byte(key.Value))
 	mac.Write([]byte(input.Value))
