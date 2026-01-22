@@ -4,7 +4,6 @@ package builtin
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -40,13 +39,14 @@ func Randombool(ctx *context.Context, args ...value.Value) (value.Value, error) 
 	numerator := value.Unwrap[*value.Integer](args[0])
 	denominator := value.Unwrap[*value.Integer](args[1])
 
-	if denominator.Value <= 0 {
+	if numerator.Value <= 0 {
 		return &value.Boolean{Value: false}, nil
 	}
+	if denominator.Value <= 0 {
+		return &value.Boolean{Value: true}, nil
+	}
 
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rv := r.Float64()
-	ratio := float64(numerator.Value) / float64(denominator.Value)
+	rv := rand.Int63n(denominator.Value) + 1
 
-	return &value.Boolean{Value: rv < ratio}, nil
+	return &value.Boolean{Value: rv <= numerator.Value}, nil
 }

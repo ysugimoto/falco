@@ -24,8 +24,8 @@ func Test_Randombool_seeded(t *testing.T) {
 		{n: 1, d: 10, s: 1000006, expect: true},
 		{n: 3, d: 4, s: 1111107, expect: false},
 		{n: 3, d: 4, s: 1111119, expect: true},
-		{n: 5, d: 10, s: 2222222, expect: true},
-		{n: 5, d: 0, s: 2222222, expect: false},
+		{n: 5, d: 10, s: 2222222, expect: false},
+		{n: 5, d: 0, s: 2222222, expect: true},
 	}
 
 	for i, tt := range tests {
