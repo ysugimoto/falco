@@ -70,9 +70,9 @@ func (l Lines) String() string {
 // Check satisfying Alignable interface
 var _ Alignable = (*Lines)(nil)
 
-// DelclarationPropertyLine represents a single line of declaration properties.
+// DeclarationPropertyLine represents a single line of declaration properties.
 // This struct is used for acl, backend, director, and table properties
-type DelclarationPropertyLine struct {
+type DeclarationPropertyLine struct {
 	Key          string
 	Operator     string
 	Value        string
@@ -83,12 +83,12 @@ type DelclarationPropertyLine struct {
 	EndCharacter string
 }
 
-// Type alias for slice of DelclarationPropertyLine
-type DelclarationPropertyLines []*DelclarationPropertyLine
+// Type alias for slice of DeclarationPropertyLine
+type DeclarationPropertyLines []*DeclarationPropertyLine
 
 // Declaration property name will be aligned from configuration
 // so need to implement AlignKey() method to do it
-func (l DelclarationPropertyLines) AlignKey() {
+func (l DeclarationPropertyLines) AlignKey() {
 	var maxLength int
 
 	for i := range l {
@@ -108,8 +108,8 @@ func (l DelclarationPropertyLines) AlignKey() {
 	}
 }
 
-// DelclarationPropertyLines could be sorted by name alphabetically
-func (l DelclarationPropertyLines) Sort() {
+// DeclarationPropertyLines could be sorted by name alphabetically
+func (l DeclarationPropertyLines) Sort() {
 	sort.Slice(l, func(i, j int) bool {
 		// Ignore sorting target for object (e.g director backend, probe property in backend)
 		if l[i].isObject {
@@ -120,7 +120,7 @@ func (l DelclarationPropertyLines) Sort() {
 }
 
 // Implement Alignable interface
-func (l DelclarationPropertyLines) Align() {
+func (l DeclarationPropertyLines) Align() {
 	var maxLength int
 
 	for i := range l {
@@ -143,7 +143,7 @@ func (l DelclarationPropertyLines) Align() {
 }
 
 // Implement Alignable interface
-func (l DelclarationPropertyLines) String() string {
+func (l DeclarationPropertyLines) String() string {
 	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer bufferPool.Put(buf)
 
@@ -168,7 +168,7 @@ func (l DelclarationPropertyLines) String() string {
 }
 
 // Check satisfying Alignable interface
-var _ Alignable = (*DelclarationPropertyLines)(nil)
+var _ Alignable = (*DeclarationPropertyLines)(nil)
 
 // GroupedLines represents grouped lines
 // "grouped" means that lines are separated by empty line, for example:
@@ -181,7 +181,7 @@ var _ Alignable = (*DelclarationPropertyLines)(nil)
 //
 // These group should be aligned for each group.
 type GroupedLines struct {
-	// Accept Alignable interface in order to append Lines or DelclarationPropertyLines
+	// Accept Alignable interface in order to append Lines or DeclarationPropertyLines
 	Lines []Alignable
 }
 
@@ -208,7 +208,7 @@ func (g *GroupedLines) String() string {
 	return buf.String()
 }
 
-// Check satisfieng Alignable interface
+// Check satisfying Alignable interface
 var _ Alignable = (*GroupedLines)(nil)
 
 // DeclarationType represents formatted line name - can present on root scope
@@ -248,7 +248,7 @@ type Declaration struct {
 type Declarations []*Declaration
 
 func (d Declarations) Sort() {
-	// step.1 divide fastly subroutines, user defined subourines and others
+	// step.1 divide fastly subroutines, user defined subroutines and others
 	var fastlySubroutines Declarations
 	var userDefinedSubroutines Declarations
 	var others Declarations

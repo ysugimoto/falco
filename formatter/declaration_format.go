@@ -12,12 +12,12 @@ import (
 // Format acl declaration
 func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration {
 	group := &GroupedLines{}
-	lines := DelclarationPropertyLines{}
+	lines := DeclarationPropertyLines{}
 
 	for _, cidr := range decl.CIDRs {
 		if cidr.GetMeta().PreviousEmptyLines > 0 {
 			group.Lines = append(group.Lines, lines)
-			lines = DelclarationPropertyLines{}
+			lines = DeclarationPropertyLines{}
 		}
 		buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 		buf.Reset()
@@ -36,7 +36,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 		if v := f.formatComment(cidr.IP.Trailing, " ", 0); v != "" {
 			buf.WriteString(" " + v)
 		}
-		lines = append(lines, &DelclarationPropertyLine{
+		lines = append(lines, &DeclarationPropertyLine{
 			Leading:      f.formatComment(cidr.Leading, "\n", 1),
 			Trailing:     f.trailing(cidr.Trailing),
 			Key:          buf.String(),
@@ -97,7 +97,7 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Decl
 // Format backend properties with align property names, trailing comment if needed
 func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLevel int) string {
 	group := &GroupedLines{}
-	lines := DelclarationPropertyLines{}
+	lines := DeclarationPropertyLines{}
 
 	for _, prop := range props {
 		if prop.GetMeta().PreviousEmptyLines > 0 {
@@ -108,10 +108,10 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 				lines.Sort()
 			}
 			group.Lines = append(group.Lines, lines)
-			lines = DelclarationPropertyLines{}
+			lines = DeclarationPropertyLines{}
 		}
 
-		line := &DelclarationPropertyLine{
+		line := &DeclarationPropertyLine{
 			Leading:  f.formatComment(prop.Leading, "\n", nestLevel),
 			Trailing: f.trailing(prop.Trailing),
 			Key:      f.indent(nestLevel) + "." + prop.Key.String(),
@@ -152,7 +152,7 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 // Format director declaration
 func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *Declaration {
 	group := &GroupedLines{}
-	lines := DelclarationPropertyLines{}
+	lines := DeclarationPropertyLines{}
 
 	for _, prop := range decl.Properties {
 		if prop.GetMeta().PreviousEmptyLines > 0 {
@@ -163,9 +163,9 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 				lines.Sort()
 			}
 			group.Lines = append(group.Lines, lines)
-			lines = DelclarationPropertyLines{}
+			lines = DeclarationPropertyLines{}
 		}
-		line := &DelclarationPropertyLine{
+		line := &DeclarationPropertyLine{
 			Leading:  f.formatComment(prop.GetMeta().Leading, "\n", 1),
 			Trailing: f.trailing(prop.GetMeta().Trailing),
 			Key:      f.indent(1),
@@ -261,7 +261,7 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declarat
 // Format table declaration
 func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	group := &GroupedLines{}
-	lines := DelclarationPropertyLines{}
+	lines := DeclarationPropertyLines{}
 
 	for _, prop := range props {
 		if prop.PreviousEmptyLines > 0 {
@@ -272,9 +272,9 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 				lines.Sort()
 			}
 			group.Lines = append(group.Lines, lines)
-			lines = DelclarationPropertyLines{}
+			lines = DeclarationPropertyLines{}
 		}
-		line := &DelclarationPropertyLine{
+		line := &DeclarationPropertyLine{
 			Leading:      f.formatComment(prop.Leading, "\n", 1),
 			Trailing:     f.trailing(prop.Trailing),
 			Operator:     ": ",
@@ -303,7 +303,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	return group.String()
 }
 
-// Format penaltybox delclaration
+// Format penaltybox declaration
 func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration) *Declaration {
 	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer bufferPool.Put(buf)
@@ -326,7 +326,7 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 	}
 }
 
-// Format ratecounter delclaration
+// Format ratecounter declaration
 func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaration) *Declaration {
 	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer bufferPool.Put(buf)

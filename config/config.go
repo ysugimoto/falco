@@ -102,7 +102,7 @@ type FormatConfig struct {
 	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"1"`
 	IndentStyle                string `yaml:"indent_style" default:"space"`
 	LineWidth                  int    `yaml:"line_width" default:"120"`
-	ExplicitStringConat        bool   `yaml:"explicit_string_concat" default:"false"`
+	ExplicitStringConcat       bool   `yaml:"explicit_string_concat" default:"false"`
 	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
 	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
 	ElseIf                     bool   `yaml:"else_if" default:"false"`
