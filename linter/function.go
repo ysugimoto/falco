@@ -2,6 +2,7 @@ package linter
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
@@ -49,7 +50,7 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 	for _, a := range fn.Arguments {
 		// Special case of variadic arguments of types.StringListType,
 		// We do not compare argument length, just lint with "all argument types are STRING".
-		if a[0] == types.StringListType || len(a) == len(calledFn.arguments) {
+		if slices.Contains(a, types.StringListType) || len(a) == len(calledFn.arguments) {
 			argTypes = a
 			break
 		}
@@ -59,47 +60,47 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 			calledFn.meta, calledFn.name,
 			len(fn.Arguments), len(calledFn.arguments),
 		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-	} else if argTypes[0] == types.StringListType {
-		// Variadic arguments linting, at least one argument must be provided and must be a StringType
-		if len(calledFn.arguments) == 0 {
-			err := &LintError{
-				Severity: ERROR,
-				Token:    calledFn.token,
-				Message: fmt.Sprintf(
-					"Function %s requires at least one argument",
-					calledFn.name,
-				),
-			}
-			l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
-			return fn.Return
-		}
-
-		for i, arg := range calledFn.arguments {
-			a := l.lint(arg, ctx)
-			if !expectType(a, types.StringType) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, types.StringType, a,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
-			}
-		}
-		return fn.Return
 	}
 
 	for i, v := range argTypes {
-		arg := l.lint(calledFn.arguments[i], ctx)
+		if v == types.StringListType {
+			// Variadic arguments linting, at least one argument must be provided and must be a StringType
+			if i == len(calledFn.arguments) {
+				err := &LintError{
+					Severity: ERROR,
+					Token:    calledFn.token,
+					Message: fmt.Sprintf(
+						"Function %s requires at least one argument",
+						calledFn.name,
+					),
+				}
+				l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
+				return fn.Return
+			}
 
-		if t, ok := implicitCoersionTable[v]; ok {
-			if !expectType(arg, append(t, v)...) {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			for j := i; j < len(calledFn.arguments); j++ {
+				arg := l.lint(calledFn.arguments[j], ctx)
+				if !expectType(arg, types.StringType) {
+					l.Error(FunctionArgumentTypeMismatch(
+						calledFn.meta, calledFn.name, j+1, types.StringType, arg,
+					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+				}
 			}
 		} else {
-			// Otherwise, strict type check
-			if v != arg {
-				l.Error(FunctionArgumentTypeMismatch(
-					calledFn.meta, calledFn.name, i+1, v, arg,
-				).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+			arg := l.lint(calledFn.arguments[i], ctx)
+			if t, ok := implicitCoersionTable[v]; ok {
+				if !expectType(arg, append(t, v)...) {
+					l.Error(FunctionArgumentTypeMismatch(
+						calledFn.meta, calledFn.name, i+1, v, arg,
+					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+				}
+			} else {
+				// Otherwise, strict type check
+				if v != arg {
+					l.Error(FunctionArgumentTypeMismatch(
+						calledFn.meta, calledFn.name, i+1, v, arg,
+					).Match(FUNCTION_ARGUMENT_TYPE).Ref(fn.Reference))
+				}
 			}
 		}
 	}
