@@ -127,6 +127,14 @@ func Test_Regsub(t *testing.T) {
 			expect:      "hello",
 			literal:     true,
 		},
+		{
+			name:        "HIT MISS pattern replacement",
+			input:       "HIT-MISS something",
+			pattern:     "^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*",
+			replacement: `\2\3`,
+			expect:      "HIT",
+			literal:     true,
+		},
 	}
 
 	for _, tt := range tests {
