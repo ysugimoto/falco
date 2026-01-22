@@ -72,12 +72,12 @@ func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error)
 	if count < 0 {
 		result = make([]rune, 0, paddedCount)
 		result = append(result, origRunes...)
-		for i := 0; i < paddingCount; i++ {
+		for i := range paddingCount {
 			result = append(result, padRunes[i%len(padRunes)])
 		}
 	} else {
 		result = make([]rune, 0, paddedCount)
-		for i := 0; i < paddingCount; i++ {
+		for i := range paddingCount {
 			result = append(result, padRunes[i%len(padRunes)])
 		}
 		result = append(result, origRunes...)
