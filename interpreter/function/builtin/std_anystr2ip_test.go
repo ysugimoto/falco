@@ -16,42 +16,123 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/
 func Test_Std_anystr2ip(t *testing.T) {
 	tests := []struct {
-		input    string
-		fallback string
-		expect   string
+		name       string
+		input      string
+		fallback   string
+		expect     string
+		expectNull bool
 	}{
+		// Flexible IPv4 formats (hex/octal)
 		{
+			name:     "IPv4 hex and octal format",
 			input:    "0x8.010.2056",
 			fallback: "10.0.0.0",
 			expect:   "8.8.8.8",
 		},
 		{
+			name:     "IPv4 invalid falls back",
 			input:    "0x8.010.foo",
 			fallback: "10.0.0.0",
 			expect:   "10.0.0.0",
 		},
 		{
+			name:     "IPv4 mixed format",
 			input:    "0xc0.0.01001",
 			fallback: "10.0.0.0",
 			expect:   "192.0.2.1",
 		},
+		// Standard IPv4
+		{
+			name:     "Standard IPv4",
+			input:    "192.168.1.1",
+			fallback: "0.0.0.0",
+			expect:   "192.168.1.1",
+		},
+		// IPv6 support (Varnish supports this)
+		{
+			name:     "IPv6 full format",
+			input:    "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+			fallback: "0.0.0.0",
+			expect:   "2001:db8:85a3::8a2e:370:7334",
+		},
+		{
+			name:     "IPv6 abbreviated",
+			input:    "2001:db8::1",
+			fallback: "0.0.0.0",
+			expect:   "2001:db8::1",
+		},
+		{
+			name:     "IPv6 loopback",
+			input:    "::1",
+			fallback: "0.0.0.0",
+			expect:   "::1",
+		},
+		{
+			name:     "IPv6 in fallback",
+			input:    "invalid",
+			fallback: "::1",
+			expect:   "::1",
+		},
+		// Both invalid returns null
+		{
+			name:       "Both invalid returns null",
+			input:      "invalid",
+			fallback:   "also-invalid",
+			expectNull: true,
+		},
+		// Empty strings
+		{
+			name:     "Empty input uses fallback",
+			input:    "",
+			fallback: "1.2.3.4",
+			expect:   "1.2.3.4",
+		},
+		{
+			name:       "Both empty returns null",
+			input:      "",
+			fallback:   "",
+			expectNull: true,
+		},
+		// localhost support
+		{
+			name:     "localhost",
+			input:    "localhost",
+			fallback: "0.0.0.0",
+			expect:   "127.0.0.1",
+		},
+		{
+			name:     "LOCALHOST case insensitive",
+			input:    "LOCALHOST",
+			fallback: "0.0.0.0",
+			expect:   "127.0.0.1",
+		},
 	}
 
-	for i, tt := range tests {
-		ret, err := Std_anystr2ip(
-			&context.Context{},
-			&value.String{Value: tt.input},
-			&value.String{Value: tt.fallback},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.IpType {
-			t.Errorf("[%d] Unexpected return type, expect=IP, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.IP](ret)
-		if diff := cmp.Diff(tt.expect, v.String()); diff != "" {
-			t.Errorf("[%d] Remaining set-cookie value unmatch, diff=%s", i, diff)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ret, err := Std_anystr2ip(
+				&context.Context{},
+				&value.String{Value: tt.input},
+				&value.String{Value: tt.fallback},
+			)
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			if tt.expectNull {
+				if ret.Type() != value.NullType {
+					t.Errorf("Expected NULL, got=%s", ret.Type())
+				}
+				return
+			}
+			if ret.Type() != value.IpType {
+				t.Errorf("Unexpected return type, expect=IP, got=%s", ret.Type())
+				return
+			}
+			v := value.Unwrap[*value.IP](ret)
+			if diff := cmp.Diff(tt.expect, v.String()); diff != "" {
+				t.Errorf("Value mismatch, diff=%s", diff)
+			}
+		})
 	}
 }
