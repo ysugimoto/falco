@@ -4,7 +4,7 @@ package builtin
 
 import (
 	"math"
-	"strings"
+	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -38,17 +38,50 @@ func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error)
 	}
 
 	s := value.Unwrap[*value.String](args[0]).Value
-	width := value.Unwrap[*value.Integer](args[1]).Value
+	count := value.Unwrap[*value.Integer](args[1]).Value
 	pad := value.Unwrap[*value.String](args[2]).Value
 
-	w := int(math.Abs(float64(width)))
-	if len(s) >= w {
+	if pad == "" {
 		return &value.String{Value: s}, nil
 	}
 
-	p := []rune(strings.Repeat(pad, w-len(s)))
-	if width < 0 {
-		return &value.String{Value: s + string(p[0:w-len(s)])}, nil
+	if count == math.MinInt64 {
+		return &value.String{Value: ""}, nil
 	}
-	return &value.String{Value: string(p[0:w-len(s)]) + s}, nil
+
+	if !utf8.ValidString(pad) {
+		return value.Null, nil
+	}
+
+	if !utf8.ValidString(s) {
+		return value.Null, nil
+	}
+
+	origRunes := []rune(s)
+	padRunes := []rune(pad)
+	origCount := len(origRunes)
+	paddedCount := int(math.Abs(float64(count)))
+
+	if origCount >= paddedCount {
+		return &value.String{Value: s}, nil
+	}
+
+	paddingCount := paddedCount - origCount
+
+	var result []rune
+	if count < 0 {
+		result = make([]rune, 0, paddedCount)
+		result = append(result, origRunes...)
+		for i := 0; i < paddingCount; i++ {
+			result = append(result, padRunes[i%len(padRunes)])
+		}
+	} else {
+		result = make([]rune, 0, paddedCount)
+		for i := 0; i < paddingCount; i++ {
+			result = append(result, padRunes[i%len(padRunes)])
+		}
+		result = append(result, origRunes...)
+	}
+
+	return &value.String{Value: string(result)}, nil
 }
