@@ -41,9 +41,16 @@ func Math_log(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	case x.IsNAN:
 		return &value.Float{IsNAN: true}, nil
 	case x.IsNegativeInf:
-		return &value.Float{IsNegativeInf: true}, nil
+		ctx.FastlyError = &value.String{Value: "EDOM"}
+		return &value.Float{IsNAN: true}, nil
 	case x.IsPositiveInf:
 		return &value.Float{IsPositiveInf: true}, nil
+	case x.Value == 0:
+		ctx.FastlyError = &value.String{Value: "ERANGE"}
+		return &value.Float{IsNegativeInf: true}, nil
+	case x.Value < 0:
+		ctx.FastlyError = &value.String{Value: "EDOM"}
+		return &value.Float{IsNAN: true}, nil
 	}
 	return &value.Float{Value: math.Log(x.Value)}, nil
 }
