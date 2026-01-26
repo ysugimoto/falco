@@ -699,7 +699,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 							[]types.Type{types.StringType, types.StringType},
 						},
-						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER,
 						Reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/",
 					},
 				},
