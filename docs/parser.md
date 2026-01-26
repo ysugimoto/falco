@@ -204,7 +204,7 @@ restart <comment>; <comment>
 return <comment> (<comment> <state> <comment>) <comment>; <comment>
 ```
 
-Parenthesis is artbitrary.
+Parenthesis is arbitrary.
 
 ## Set Statement
 

@@ -46,23 +46,23 @@ See [configuration documentation](https://github.com/ysugimoto/falco/blob/develo
 
 Supporting rules are described the following table and sections.
 
-| Name (configuration field)  | Type   | Default | Description                                                                                    |
-|:----------------------------|:------:|:-------:|------------------------------------------------------------------------------------------------|
-| indent_width                | INT    | 2       | Specify indent width                                                                           |
-| indent_style                | STRING | space   | Specify indent style character. Either `space(whitespace)` or `tab(\t)` is accepted            |
-| trailing_comment_width      | INT    | 2       | Specify space size for trailing comment                                                        |
-| line_width                  | INT    | 120     | Specify max characters for each line. The overflowed characters are displayed at the next line |
-| explicit_string_concat      | BOOL   | false   | Explicitly write string concatenation operator `+` between expressions                         |
-| sort_declaration_property   | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetically           |
-| align_declaration_property  | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
-| else_if                     | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
-| always_next_line_else_if    | BOOL   | false   | If true, always `else if` and `else` keywords print to the next line                           |
-| return_statement_parentheis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
-| sort_declaration            | BOOL   | false   | Sort root declaration by specific order                                                        |
-| align_trailing_comment      | BOOL   | false   | Align trailing comments                                                                        |
-| comment_style               | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
-| should_use_unset            | BOOL   | false   | Replace `remove` statement into `unset` statement                                              |
-| indent_case_labels          | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
+| Name (configuration field)   | Type   | Default | Description                                                                                    |
+|:-----------------------------|:------:|:-------:|------------------------------------------------------------------------------------------------|
+| indent_width                 | INT    | 2       | Specify indent width                                                                           |
+| indent_style                 | STRING | space   | Specify indent style character. Either `space(whitespace)` or `tab(\t)` is accepted            |
+| trailing_comment_width       | INT    | 2       | Specify space size for trailing comment                                                        |
+| line_width                   | INT    | 120     | Specify max characters for each line. The overflowed characters are displayed at the next line |
+| explicit_string_concat       | BOOL   | false   | Explicitly write string concatenation operator `+` between expressions                         |
+| sort_declaration_property    | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetically           |
+| align_declaration_property   | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
+| else_if                      | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
+| always_next_line_else_if     | BOOL   | false   | If true, always `else if` and `else` keywords print to the next line                           |
+| return_statement_parenthesis | BOOL   | true    | Coerce surrounded return statement ident by parenthesis                                        |
+| sort_declaration             | BOOL   | false   | Sort root declaration by specific order                                                        |
+| align_trailing_comment       | BOOL   | false   | Align trailing comments                                                                        |
+| comment_style                | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
+| should_use_unset             | BOOL   | false   | Replace `remove` statement into `unset` statement                                              |
+| indent_case_labels           | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
 
 ---
 

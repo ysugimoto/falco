@@ -71,10 +71,10 @@ Following table describes subroutine name and recognizing scope:
 ### Annotation
 
 For some reasons, the subroutine name could not be changed. Or you want to use this function in multiple scopes. Multiple scopes
-are declared as comma seperated values.
+are declared as comma separated values.
 
 Then, if you apply a hint of scope on annotation, `falco` also understands scope. There are two ways to define the scope annotation:
-1. `@scope: <scope_name1>, <scope_name2>` this is the newest annotation method and it should be prefered over 2.
+1. `@scope: <scope_name1>, <scope_name2>` this is the newest annotation method and it should be preferred over 2.
 2. `@<scope_name1>, <scope_name2>`, this is used to maintain backwards compatibility and it may be deprecated in the future.
 
 ```vcl
@@ -140,10 +140,10 @@ Partially supports fetching Fastly managed VCL snippets. See [remote.md](https:/
 
 ## Ignoring errors
 
-Fastly also accepts some syntax and function which comes from Varnish (e.g `map()` function) but falco reports error for it. Then, you can put leading/trailing comemnts for each statements, falco will ignore the error.
+Fastly also accepts some syntax and function which comes from Varnish (e.g `map()` function) but falco reports error for it. Then, you can put leading/trailing comments for each statements, falco will ignore the error.
 
 The comment syntax is similar to eslint, but very simplified.
-Note that this feature only ignores linting error, the parser erorr will be reported.
+Note that this feature only ignores linting error, the parser error will be reported.
 
 ### Next Line
 
@@ -187,7 +187,7 @@ sub vcl_recv {
 
   // falco-ignore-start
   set req.http.Example = some.undefined.variable;
-  // falco-igore-end
+  // falco-ignore-end
 
   // You can disable specific rules only
   // falco-ignore-start function/arguments, function/argument-type

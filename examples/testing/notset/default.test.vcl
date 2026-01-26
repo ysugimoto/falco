@@ -1,4 +1,4 @@
-// All test cases refered to Fastly fiddle behaviors
+// All test cases referred to Fastly fiddle behaviors
 // see: https://fiddle.fastly.dev/fiddle/68510f85
 // see: https://fiddle.fastly.dev/fiddle/93d222ff
 

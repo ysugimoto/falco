@@ -172,7 +172,7 @@ Limitations are the following:
 - Origin-Shielding and clustering, fetch-related features are unsupported
 - Cache object is not stored persistently, only managed in-memory, so when the process is killed, all cache objects are deleted
 - `Stale-While-Revalidate` does not work
-- Extracted VCL in Faslty boilerplate marco is different. Only extracts VCL snippets
+- Extracted VCL in Fastly boilerplate marco is different. Only extracts VCL snippets
 - May not add some of Fastly specific request/response headers
 - WAF does not work
 - ESI will not work correctly
