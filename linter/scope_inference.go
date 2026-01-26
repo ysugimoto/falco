@@ -1,6 +1,8 @@
 package linter
 
 import (
+	"slices"
+
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
 )
@@ -99,11 +101,9 @@ func (l *Linter) detectRecursion(graph callGraph, ctx *context.Context) map[stri
 			visited[name] = true
 			path[name] = true
 
-			for _, callee := range graph[name] {
-				if dfs(callee) {
-					inCycle[name] = true
-					return true
-				}
+			if slices.ContainsFunc(graph[name], dfs) {
+				inCycle[name] = true
+				return true
 			}
 
 			path[name] = false
