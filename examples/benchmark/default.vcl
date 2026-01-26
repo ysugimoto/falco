@@ -4,7 +4,7 @@ include "mod_fetch";
 include "mod_deliver";
 
 
-## Example backend declaretions
+## Example backend declarations
 backend httpbin_org {
   .connect_timeout          = 1s;
   .dynamic                  = true;
