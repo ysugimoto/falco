@@ -75,11 +75,68 @@ func extractCalleesFromStatement(stmt ast.Statement) []string {
 	return callees
 }
 
+// detectRecursion checks for cycles in the call graph and reports errors.
+// It detects both self-recursion and mutual recursion.
+// Returns a map of subroutine names involved in cycles for reference.
+func (l *Linter) detectRecursion(graph callGraph, ctx *context.Context) map[string]bool {
+	inCycle := make(map[string]bool)
+
+	// For each subroutine, do a DFS to detect if it can reach itself
+	for startName := range graph {
+		visited := make(map[string]bool)
+		path := make(map[string]bool)
+
+		var dfs func(name string) bool
+		dfs = func(name string) bool {
+			if path[name] {
+				// Found a cycle - name is reachable from itself
+				return true
+			}
+			if visited[name] {
+				return false
+			}
+
+			visited[name] = true
+			path[name] = true
+
+			for _, callee := range graph[name] {
+				if dfs(callee) {
+					inCycle[name] = true
+					return true
+				}
+			}
+
+			path[name] = false
+			return false
+		}
+
+		if dfs(startName) {
+			inCycle[startName] = true
+		}
+	}
+
+	// Report errors for each subroutine involved in recursion
+	for name := range inCycle {
+		if sub, ok := ctx.Subroutines[name]; ok {
+			l.Error((&LintError{
+				Severity: ERROR,
+				Token:    sub.Decl.GetMeta().Token,
+				Message:  "Subroutine \"" + name + "\" is involved in recursive call which is not allowed in VCL",
+			}).Match(SUBROUTINE_RECURSIVE_CALL))
+		}
+	}
+
+	return inCycle
+}
+
 // inferSubroutineScopes propagates scope information through the call graph.
 // Starting from Fastly lifecycle subroutines (vcl_recv, vcl_miss, etc.) which have
 // known scopes, it traverses the call graph and assigns inferred scopes to
 // user-defined subroutines.
 func (l *Linter) inferSubroutineScopes(graph callGraph, ctx *context.Context) {
+	// First, detect and report any recursive calls
+	l.detectRecursion(graph, ctx)
+
 	// Track subroutines with explicit scopes (annotation or name suffix)
 	// These should not have their scope modified by inference
 	explicitScopes := make(map[string]bool)

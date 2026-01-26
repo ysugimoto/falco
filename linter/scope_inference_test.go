@@ -1,6 +1,7 @@
 package linter
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/ysugimoto/falco/linter/context"
@@ -388,8 +389,8 @@ sub vcl_recv {
 		}
 	})
 
-	t.Run("handles self-recursion without infinite loop", func(t *testing.T) {
-		// recursive_sub calls itself - should not cause infinite loop
+	t.Run("detects self-recursion as error", func(t *testing.T) {
+		// recursive_sub calls itself - should report error
 		input := `
 sub recursive_sub {
   if (req.http.Stop == "true") {
@@ -418,19 +419,24 @@ sub vcl_recv {
 			t.Errorf("expected recursive_sub to call itself, got %s", graph["recursive_sub"][0])
 		}
 
-		// Verify scope inference completes without hanging
+		// Verify recursion is detected as error
 		l := New(testConfig)
 		ctx := context.New()
 		l.lint(vcl, ctx)
 
-		if sub, ok := ctx.Subroutines["recursive_sub"]; !ok {
-			t.Errorf("recursive_sub subroutine not found in context")
-		} else if sub.Scopes != context.RECV {
-			t.Errorf("expected recursive_sub scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		hasRecursionError := false
+		for _, e := range l.Errors {
+			if e.Rule == SUBROUTINE_RECURSIVE_CALL {
+				hasRecursionError = true
+				break
+			}
+		}
+		if !hasRecursionError {
+			t.Errorf("expected error for self-recursion in recursive_sub")
 		}
 	})
 
-	t.Run("handles mutual recursion without infinite loop", func(t *testing.T) {
+	t.Run("detects mutual recursion as error", func(t *testing.T) {
 		// sub_a calls sub_b which calls sub_a - mutual recursion
 		input := `
 sub sub_a {
@@ -468,22 +474,29 @@ sub vcl_recv {
 			t.Errorf("expected sub_b to call sub_a, got %v", graph["sub_b"])
 		}
 
-		// Verify scope inference completes without hanging
+		// Verify mutual recursion is detected as error
 		l := New(testConfig)
 		ctx := context.New()
 		l.lint(vcl, ctx)
 
-		// Both subs should have RECV scope propagated
-		if sub, ok := ctx.Subroutines["sub_a"]; !ok {
-			t.Errorf("sub_a subroutine not found in context")
-		} else if sub.Scopes != context.RECV {
-			t.Errorf("expected sub_a scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		// Both subs should have recursion errors
+		recursionErrors := make(map[string]bool)
+		for _, e := range l.Errors {
+			if e.Rule == SUBROUTINE_RECURSIVE_CALL {
+				// Extract subroutine name from error message
+				if strings.Contains(e.Message, "sub_a") {
+					recursionErrors["sub_a"] = true
+				}
+				if strings.Contains(e.Message, "sub_b") {
+					recursionErrors["sub_b"] = true
+				}
+			}
 		}
-
-		if sub, ok := ctx.Subroutines["sub_b"]; !ok {
-			t.Errorf("sub_b subroutine not found in context")
-		} else if sub.Scopes != context.RECV {
-			t.Errorf("expected sub_b scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		if !recursionErrors["sub_a"] {
+			t.Errorf("expected recursion error for sub_a")
+		}
+		if !recursionErrors["sub_b"] {
+			t.Errorf("expected recursion error for sub_b")
 		}
 	})
 }
