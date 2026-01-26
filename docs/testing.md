@@ -211,7 +211,7 @@ sub some_test_suite {
 
 #### Specify `@tag` annotation and match against `-t,--tag` cli option
 
-When you write `@tag: [tag1],[tag2],...` annotation comment in leading comment of testing subroutine, falco evaluates tag maching and run if matched..
+When you write `@tag: [tag1],[tag2],...` annotation comment in leading comment of testing subroutine, falco evaluates tag matching and run if matched..
 
 ```vcl
 // @tag: prod
@@ -227,7 +227,7 @@ falco test -t prod /path/to/vcl/default.vcl
 ```
 
 Then, falco evaluates whether `prod` tag matches against `@tag` values (on the above case, test will be run).
-And the `@tag` annotation could appect inverse flag like `!prod`:
+And the `@tag` annotation could expect inverse flag like `!prod`:
 
 ```vcl
 // @tag: !prod
@@ -273,7 +273,7 @@ sub pre_condition_test {
 
     // Typically set query string might be set on vcl_recv.
     // But vcl_recv is not called in testing process, so you need to set in here.
-    set req.url = quetystring.add(req.url, "foo", "bar")
+    set req.url = querystring.add(req.url, "foo", "bar")
 
     // Override backend response before calling "vcl_fetch" for test case of 500 status code.
     // It means there is a `hook` point before calling `vcl_fetch`.
@@ -757,7 +757,7 @@ sub test_vcl {
     // Pass because expression to be true
     assert(req.http.Foo == var.testing);
 
-    // Pass because expression is thuthy
+    // Pass because expression is truthy
     assert(req.http.Foo);
 
     // Fail because expression to be false
@@ -769,7 +769,7 @@ sub test_vcl {
 
 ### assert.true(ANY actual [, STRING message])
 
-Assert actualvalue should be `true`.
+Assert actual value should be `true`.
 
 ```vcl
 sub test_vcl {
@@ -783,7 +783,7 @@ sub test_vcl {
     // Pass because expression value is  true
     assert.true(var.testing == true);
 
-    // Fail because experssion value is not BOOL true
+    // Fail because expression value is not BOOL true
     assert.true(req.http.Foo);
 }
 ```
@@ -792,7 +792,7 @@ sub test_vcl {
 
 ### assert.false(ANY actual [, STRING message])
 
-Assert actualvalue should be `false`.
+Assert actual value should be `false`.
 
 ```vcl
 sub test_vcl {
@@ -804,7 +804,7 @@ sub test_vcl {
     // Pass because expression value is  false
     assert.false(var.testing != true);
 
-    // Fail because experssion value is not BOOL false
+    // Fail because expression value is not BOOL false
     assert.false(req.http.Foo);
 }
 ```
@@ -835,7 +835,7 @@ sub test_vcl {
 
 ### assert.is_notset(ANY actual [, STRING message])
 
-Assert actualvalue should be [NotSet](https://developer.fastly.com/reference/vcl/types/#not-set).
+Assert actual value should be [NotSet](https://developer.fastly.com/reference/vcl/types/#not-set).
 
 ```vcl
 sub test_vcl {
@@ -970,7 +970,7 @@ sub test_vcl {
 
     set var.testing = "foobarbaz";
 
-    // Pass because value does not matche regular expression
+    // Pass because value does not match regular expression
     assert.not_match(var.testing, ".+other.+");
 
     // Fail because value matches regular expression

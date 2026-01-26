@@ -11,4 +11,4 @@ You can run unit test as following command:
 falco -I . test ./default.vcl
 ```
 
-Then test-runner will run and diplay testing results.
+Then test-runner will run and display testing results.
