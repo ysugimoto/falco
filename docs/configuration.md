@@ -36,7 +36,7 @@ format:
   align_declaration_property: false
   else_if: false
   always_next_line_else_if:  false
-  return_statement_parentheis: false
+  return_statement_parenthesis: false
   sort_declaration: false
   align_trailing_comment: false
   comment_style: none
@@ -88,9 +88,9 @@ All configurations of configuration files and CLI arguments are described follow
 | linter.verbose                          | String              | error       | -v, -vv            | Verbose level, `warning` or `info` is valid                                                                                           |
 | linter.rules                            | Object              | null        | -                  | Override linter rules                                                                                                                 |
 | linter.rules.[rule_name]                | String              | -           | -                  | Override linter error level for the rule name, see [rules](https://github.com/ysugimoto/falco/blob/develop/docs/rules.md)             |
-| linter.enforce_subroutine_scopes        | Object              | null        | -                  | Coerce subroutine scope for specified list of subroutine names. will be usefull for Fastly managed snippet that cannot be modified.   |
+| linter.enforce_subroutine_scopes        | Object              | null        | -                  | Coerce subroutine scope for specified list of subroutine names. will be useful for Fastly managed snippet that cannot be modified.   |
 | linter.enforce_subroutine_scopes.[name] | Array<String>       | []          | -                  | `name` is subroutine name and specify acceptable scope as an array.                                                                   |
-| linter.ignore_subroutines               | Array<String>       | []          | -                  | Ignore subroutine linting for specified list of subroutine names. will be usefull for Fastly managed snippet that cannot be modified. |
+| linter.ignore_subroutines               | Array<String>       | []          | -                  | Ignore subroutine linting for specified list of subroutine names. will be useful for Fastly managed snippet that cannot be modified. |
 | linter.generated                        | Boolean             | false       | --generated        | Lint VCL as **generated** VCL. generated means that VCL comes from `show VCL` data in Fastly management console.                      |
 | simulator                               | Object              | null        | -                  | Simulator configuration object                                                                                                        |
 | simulator.port                          | Integer             | 3124        | -p, --port         | Simulator server listen port                                                                                                          |

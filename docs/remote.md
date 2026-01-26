@@ -18,8 +18,8 @@ falco -r -v /path/to/example.vcl
 
 ### Environment variables
 
-Fastly API requires `API key` to authenticate, and `Service ID` to distinguish service, therefore you need to specift these values in your environment variable.
-The environment varialbe name is fixed:
+Fastly API requires `API key` to authenticate, and `Service ID` to distinguish service, therefore you need to specify these values in your environment variable.
+The environment variable name is fixed:
 
 | variable name     | usage |
 |:------------------|:----  |
@@ -137,7 +137,7 @@ include "snippet::example_snippet";
 
 #### Include in block statement
 
-You can include VCL Snippets in some of block statements (e.g sburoutine, if block, etc):
+You can include VCL Snippets in some of block statements (e.g subroutine, if block, etc):
 
 ```
 sub vcl_recv {
@@ -176,6 +176,6 @@ acl my_acl {
 ## Remote configuration caching
 
 If you are enabled `-r, --remote` CLI option to fetch remote resources, falco will make many API requests and then sometimes it exceeds API rate limit.
-To avoid API rate limit exceedance, and remote resources won't be changed frequently (except Edge Dictionary Item), falco makes cache file in your local machine temporarily and use them if found.
+To avoid exceeding the API rate limit, and remote resources won't be changed frequently (except Edge Dictionary Item), falco makes cache file in your local machine temporarily and use them if found.
 
 You can refresh the cache by using `--refresh` CLI option.

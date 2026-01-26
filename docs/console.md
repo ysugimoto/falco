@@ -32,7 +32,7 @@ Run console with fetch scope example:
 
 In console, some control commands that start with `\` are enabled.
 
-| Command            | Desctiption                                                  |
+| Command            | Description                                                  |
 |:------------------:|:-------------------------------------------------------------|
 | \s, \scope [scope] | Change input evaluation scope (recv, fetch, deliver, etc...) |
 | \h, \help          | Show this help                                               |
@@ -40,8 +40,8 @@ In console, some control commands that start with `\` are enabled.
 
 ## Console Behavior
 
-The console does single-line code evaluatation and must be valid of VCL syntax.
-And some predefined variables depends on the scope, then you can change artibrary scope by typing the `\s` command:
+The console does single-line code evaluation and must be valid of VCL syntax.
+And some predefined variables depends on the scope, then you can change arbitrary scope by typing the `\s` command:
 
 ```shell
 @RECV>> \s FETCH
@@ -64,5 +64,5 @@ If you want to see the variable value, type variable as expression:
 
 Falco evaluates expression and display value with its type.
 
-Note that console runtime uses interpreter, therefore the result depends on the intepreter implementation.
+Note that console runtime uses interpreter, therefore the result depends on the interpreter implementation.
 

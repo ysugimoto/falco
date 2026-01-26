@@ -303,7 +303,7 @@ Fastly document: https://developer.fastly.com/reference/vcl/declarations/table/
 
 ## table/type-variation
 
-Invalid `value_type` spefication on TABLE. `value_type` is allowed to specify with `STRING`, `INTEGER`, `BOOL`, `FLOAT`, `BACKEND`, `ACL`, `RTIME` and `REGEX`.
+Invalid `value_type` specification on TABLE. `value_type` is allowed to specify with `STRING`, `INTEGER`, `BOOL`, `FLOAT`, `BACKEND`, `ACL`, `RTIME` and `REGEX`.
 
 Problem:
 
@@ -674,7 +674,7 @@ remove req.http.X-Forwarded-For;
 
 Note: `remove` is just alias for `unset`.
 
-Faslty document: https://developer.fastly.com/reference/vcl/statements/remove/
+Fastly document: https://developer.fastly.com/reference/vcl/statements/remove/
 
 ## operator/conditional
 
@@ -694,7 +694,7 @@ if (beresp.status == 200) {
 }
 ```
 
-Faslty document: https://developer.fastly.com/reference/vcl/operators/#conditional-operators
+Fastly document: https://developer.fastly.com/reference/vcl/operators/#conditional-operators
 
 ## restart-statement/scope
 
@@ -792,7 +792,7 @@ Fastly document: https://developer.fastly.com/reference/vcl/statements/error/
 
 ## error-statement/code
 
-Faslty recommends error statement code should use in range of 600-699.
+Fastly recommends error statement code should use in range of 600-699.
 
 Problem:
 ```vcl
@@ -845,7 +845,7 @@ Fastly document: https://developer.fastly.com/reference/vcl/statements/synthetic
 
 ## condition/literal
 
-`if` condtion expression accepts STRING or BOOL (evaluate as truthy/falsy), but forbid to use literal.
+`if` condition expression accepts STRING or BOOL (evaluate as truthy/falsy), but forbid to use literal.
 
 For example:
 
@@ -873,7 +873,7 @@ Calling function arguments count mismatch.
 Problem:
 ```vcl
 declare local var.LocalIP IP;
-set var.LocalIP = std.ip("192.168.0.1"); // std.ip function expects 2 arguemnts but supply 1 argument
+set var.LocalIP = std.ip("192.168.0.1"); // std.ip function expects 2 arguments but supply 1 argument
 ```
 
 Fix:
