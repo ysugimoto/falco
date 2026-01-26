@@ -899,7 +899,7 @@ var builtinFunctions = map[string]*Function{
 		},
 	},
 	"h2.push": {
-		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			var err error
 			args, err = stringifyVariableArguments("h2.push", args, map[int]struct{}{0: {}, 1: {}})
