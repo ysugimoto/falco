@@ -3,7 +3,7 @@
 Following table describes variables that will return tentative values,
 but you can override these values by configuration or cli arguments for testing.
 
-## Overide by Configuration
+## Override by Configuration
 
 Put override configuration in `testing.overrides` section as map.
 
@@ -84,7 +84,7 @@ falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=o
 | client.socket.pace                         | 0                                  |
 | client.socket.ploss                        | 0                                  |
 | client.socket.cwnd                         | 60                                 |
-| fastly_info.is_clueter_edge                | false                              |
+| fastly_info.is_cluster_edge                | false                              |
 | obj.is_pci                                 | false                              |
 | req.backend.is_cluster                     | false                              |
 | resp.is_locally_generated                  | false                              |
@@ -192,7 +192,7 @@ falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=o
 | tls.client.certificate.raw_certificate_b64 | (empty string)                     |
 | tls.client.certificate.serial_number       | (empty string)                     |
 | transport.bw_estimate                      | 0                                  |
-| transpoty.type                             | "tcp"                              |
+| transport.type                             | "tcp"                              |
 | waf.failures                               | 0                                  |
 | waf.php_injection_score                    | 0                                  |
 | waf.rce_score                              | 0                                  |
