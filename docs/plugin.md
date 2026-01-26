@@ -32,7 +32,7 @@ func main() {
 	// In this case, linting for *ast.BackendDeclaration object.
 	req, err := plugin.ReadLinterRequest[*ast.BackendDeclaration](os.Stdin)
 	if err != nil {
- 		// If some error has occured, send back message to stderr
+ 		// If some error has occurred, send back message to stderr
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
@@ -103,7 +103,7 @@ backend example_com {
 ...(other declarations)
 ```
 
-And then you can run custom plugin linter via falco linter. In this case, the backend nake does not have `F_` prefix so linter reports `ERROR` on linting results.
+And then you can run custom plugin linter via falco linter. In this case, the backend name does not have `F_` prefix so linter reports `ERROR` on linting results.
 
 Additionally, you can put additional arguments to plugin:
 
@@ -124,7 +124,7 @@ This is useful for switch or control linting behavior in your plugin without imp
 ## Other Specs
 
 1. To reduce binary message between falco linter and plugin, we enable custom linter for each *statement* only. You often want to access all declarations on your plugin, but it cannot do for now. Therefore if you want to do linting for all backends, you need to put annotation comment to all backend declarations.
-2. From performance reason, we omit AST meta informations like filename, line number and position and all comments. Typically you don't need to read AST meta informations on linting but the falco main process displays plugin error with AST meta informations.
+2. From performance reason, we omit AST meta information like filename, line number and position and all comments. Typically you don't need to read AST meta information on linting but the falco main process displays plugin error with AST meta information.
 3. AST is read-only on the plugin so your plugin cannot modify AST tree.
-4. You can everythin in your plugin. It means you can do network access, reading local file, etc... that as possible as the programming language can if you don't mind the linting performance.
-5. Binary messsaging is just raw binary treating so you can implement plugin not only Go but also other languages that can process binary.
+4. You can do everything in your plugin. It means you can do network access, reading local file, etc... that as possible as the programming language can if you don't mind the linting performance.
+5. Binary messaging is just raw binary treating so you can implement plugin not only Go but also other languages that can process binary.
