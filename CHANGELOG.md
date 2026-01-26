@@ -5,7 +5,7 @@
 - Migrate golangci-lint v2 [#520](https://github.com/ysugimoto/falco/pull/520) (@ysugimoto)
 - Adjust modernize notification for go1.25 [#519](https://github.com/ysugimoto/falco/pull/519) (@ysugimoto)
 - Sync linter rules doc [#518](https://github.com/ysugimoto/falco/pull/518) (@ysugimoto)
-- Add documentation for more remote reosurce and caching [#517](https://github.com/ysugimoto/falco/pull/517) (@ysugimoto)
+- Add documentation for more remote resource and caching [#517](https://github.com/ysugimoto/falco/pull/517) (@ysugimoto)
 
 
 ## v2.0.0
@@ -21,10 +21,10 @@
 ## v1.21.0
 
 - Add functionality for setting backend health during testing [#511](https://github.com/ysugimoto/falco/pull/511) (@emylincon)
-- Fix synthetic response and obj.response relevants [#509](https://github.com/ysugimoto/falco/pull/509) (@ysugimoto)
+- Fix synthetic response and obj.response relevant [#509](https://github.com/ysugimoto/falco/pull/509) (@ysugimoto)
 - Ability to check origin host header [#492](https://github.com/ysugimoto/falco/pull/492) (@ysugimoto)
 - Add contributor [#508](https://github.com/ysugimoto/falco/pull/508) (@ysugimoto)
-- Copy ForceQury to add query sign even query string is empty [#507](https://github.com/ysugimoto/falco/pull/507) (@ysugimoto)
+- Copy ForceQuery to add query sign even query string is empty [#507](https://github.com/ysugimoto/falco/pull/507) (@ysugimoto)
 - Add table.lookup_regex function + extensive tests [#504](https://github.com/ysugimoto/falco/pull/504) (@jedisct1)
 - Remove legacy waf related documentation reference [#502](https://github.com/ysugimoto/falco/pull/502) (@ysugimoto)
 - Support parameters in custom subs [#501](https://github.com/ysugimoto/falco/pull/501) (@jedisct1)
@@ -72,7 +72,7 @@
 - Implement wildcard support for unset statement [#449](https://github.com/ysugimoto/falco/pull/449) (@ysugimoto)
 - Implement skipping test feature [#448](https://github.com/ysugimoto/falco/pull/448) (@ysugimoto)
 - Fix objective header get only key name [#446](https://github.com/ysugimoto/falco/pull/446) (@ysugimoto)
-- Use modarnize package [#445](https://github.com/ysugimoto/falco/pull/445) (@ysugimoto)
+- Use modernize package [#445](https://github.com/ysugimoto/falco/pull/445) (@ysugimoto)
 
 ## v1.16.0
 
@@ -110,12 +110,12 @@
 
 ## v1.14.0
 
-- use pcre regexp for assetion function [#416](https://github.com/ysugimoto/falco/pull/416) (@ysugimoto)
+- use pcre regexp for assertion function [#416](https://github.com/ysugimoto/falco/pull/416) (@ysugimoto)
 - Display coverage table [#415](https://github.com/ysugimoto/falco/pull/415) (@ysugimoto)
 - Implement test coverage measurement [#414](https://github.com/ysugimoto/falco/pull/414) (@ysugimoto)
 - Improve and new feature for parser package [#413](https://github.com/ysugimoto/falco/pull/413) (@ysugimoto)
 - Reset regex captured group when matched [#412](https://github.com/ysugimoto/falco/pull/412) (@ysugimoto)
-- remove goling linter-settings [#411](https://github.com/ysugimoto/falco/pull/411) (@ysugimoto)
+- remove golang linter-settings [#411](https://github.com/ysugimoto/falco/pull/411) (@ysugimoto)
 - fix objective header set like foo:bar [#410](https://github.com/ysugimoto/falco/pull/410) (@ysugimoto)
 - use pcre regular expression in interpreter [#409](https://github.com/ysugimoto/falco/pull/409) (@ysugimoto)
 
@@ -181,7 +181,7 @@
 - correct typo in SortDeclaration default tag [#342](https://github.com/ysugimoto/falco/pull/342) (@acme)
 - adjust default TrailingCommentWidth to 1 [#341](https://github.com/ysugimoto/falco/pull/341) (@acme)
 - update timezone in test [#340](https://github.com/ysugimoto/falco/pull/340) (@acme)
-- add `--genearted` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/pull/339) (@ysugimoto)
+- add `--generated` option and add vcl_pipe related linter rule [#339](https://github.com/ysugimoto/falco/pull/339) (@ysugimoto)
 - support Fastly generated specific syntaxes [#338](https://github.com/ysugimoto/falco/pull/338) (@ysugimoto)
 
 ## v1.9.1
@@ -232,7 +232,7 @@
 - Save/restore current subroutine locals when processing call statement [#254](https://github.com/ysugimoto/falco/pull/254) (@richardmarshall)
 - Handle % string escapes [#256](https://github.com/ysugimoto/falco/pull/256) (@richardmarshall)
 - testing.call_subroutine ignores invalid subroutine name [#259](https://github.com/ysugimoto/falco/pull/259) (@akrainiouk)
-- fixed double decoding in urldecod [#261](https://github.com/ysugimoto/falco/pull/261) (@akrainiouk)
+- fixed double decoding in urldecode [#261](https://github.com/ysugimoto/falco/pull/261) (@akrainiouk)
 - req.url: fixed consistency with Fastly implementation [#262](https://github.com/ysugimoto/falco/pull/262) (@akrainiouk)
 - fix base64 decode related builtin function [#263](https://github.com/ysugimoto/falco/pull/263) (@ysugimoto)
 - Fixed parsing of += operator [#266](https://github.com/ysugimoto/falco/pull/266) (@akrainiouk)
@@ -241,7 +241,7 @@
 - follow new fastly documentation [#271](https://github.com/ysugimoto/falco/pull/271) (@ysugimoto)
 - special dealing for req.hash addition assignment [#275](https://github.com/ysugimoto/falco/pull/275) (@ysugimoto)
 - Prioritize cache object [#277](https://github.com/ysugimoto/falco/pull/277) (@richardmarshall)
-- fix exprression comment parsing [#278](https://github.com/ysugimoto/falco/pull/278) (@ysugimoto)
+- fix expression comment parsing [#278](https://github.com/ysugimoto/falco/pull/278) (@ysugimoto)
 - Setup req.http.host in ProcessInit [#279](https://github.com/ysugimoto/falco/pull/279) (@richardmarshall)
 - Record test runtime errors [#280](https://github.com/ysugimoto/falco/pull/280) (@richardmarshall)
 
@@ -289,7 +289,7 @@
 ## v1.1.1
 
 - Feature/add equal fold assertion [#195](https://github.com/ysugimoto/falco/pull/195) (@ysugimoto)
-- add shield director type for origin-sheileding [#197](https://github.com/ysugimoto/falco/pull/197) (@ysugimoto)
+- add shield director type for origin-shielding [#197](https://github.com/ysugimoto/falco/pull/197) (@ysugimoto)
 - Implement STRING to ACL regex comparison [#200](https://github.com/ysugimoto/falco/pull/200) (@MasonM)
 - Fix type of client.geo.ip_override [#201](https://github.com/ysugimoto/falco/pull/201) (@MasonM)
 
@@ -315,7 +315,7 @@ New features for the major version.
 
 ## v0.23.2
 
-- fix up output methods on runne [#161](https://github.com/ysugimoto/falco/pull/161) (@ysugimoto)
+- fix up output methods on runner [#161](https://github.com/ysugimoto/falco/pull/161) (@ysugimoto)
 
 ## v0.23.1
 
@@ -348,7 +348,7 @@ New features for the major version.
 
 ## v0.19.1
 
-- supress output [#123](https://github.com/ysugimoto/falco/pull/123) (@ysugimoto)
+- suppress output [#123](https://github.com/ysugimoto/falco/pull/123) (@ysugimoto)
 
 ## v0.19.0
 
@@ -363,11 +363,11 @@ New features for the major version.
 ## v0.17.0
 
 - Sanitize invalid chars in backend name before adding them as snippets [#106](https://github.com/ysugimoto/falco/pull/106) (@davinci26)
-- Add more implicit conversion fuzy types [#107](https://github.com/ysugimoto/falco/pull/107) (@davinci26)
+- Add more implicit conversion fuzzy types [#107](https://github.com/ysugimoto/falco/pull/107) (@davinci26)
 - lint protected HTTP headers [#108](https://github.com/ysugimoto/falco/pull/108) (@ysugimoto)
 - Fix error with ast.GOTO and Encoder [#109](https://github.com/ysugimoto/falco/pull/109) (@davinci26)
 - display actual line and position even identity is not found in context [#112](https://github.com/ysugimoto/falco/pull/112) (@ysugimoto)
-- treat obective access in req.http contains semicolon character [#113](https://github.com/ysugimoto/falco/pull/113) (@ysugimoto)
+- treat objective access in req.http contains semicolon character [#113](https://github.com/ysugimoto/falco/pull/113) (@ysugimoto)
 - fix panic error for getting remote snippet [#115](https://github.com/ysugimoto/falco/pull/115) (@ysugimoto)
 - correct parser for reserved word [#117](https://github.com/ysugimoto/falco/pull/117) (@ysugimoto)
 
@@ -415,7 +415,7 @@ New features for the major version.
 
 ## v0.9.2
 
-- Support platform of `alipne`, `darwin-arm64` [#55](https://github.com/ysugimoto/falco/pull/55) (@ysugimoto)
+- Support platform of `alpine`, `darwin-arm64` [#55](https://github.com/ysugimoto/falco/pull/55) (@ysugimoto)
 
 ## v0.9.1
 
