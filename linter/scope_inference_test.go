@@ -387,4 +387,103 @@ sub vcl_recv {
 			t.Errorf("expected helper_b scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
 		}
 	})
+
+	t.Run("handles self-recursion without infinite loop", func(t *testing.T) {
+		// recursive_sub calls itself - should not cause infinite loop
+		input := `
+sub recursive_sub {
+  if (req.http.Stop == "true") {
+    return;
+  }
+  call recursive_sub;
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  call recursive_sub;
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		graph := buildCallGraph(vcl.Statements)
+
+		// recursive_sub should call itself
+		if len(graph["recursive_sub"]) != 1 {
+			t.Errorf("expected recursive_sub to have 1 callee, got %d", len(graph["recursive_sub"]))
+		}
+		if graph["recursive_sub"][0] != "recursive_sub" {
+			t.Errorf("expected recursive_sub to call itself, got %s", graph["recursive_sub"][0])
+		}
+
+		// Verify scope inference completes without hanging
+		l := New(testConfig)
+		ctx := context.New()
+		l.lint(vcl, ctx)
+
+		if sub, ok := ctx.Subroutines["recursive_sub"]; !ok {
+			t.Errorf("recursive_sub subroutine not found in context")
+		} else if sub.Scopes != context.RECV {
+			t.Errorf("expected recursive_sub scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		}
+	})
+
+	t.Run("handles mutual recursion without infinite loop", func(t *testing.T) {
+		// sub_a calls sub_b which calls sub_a - mutual recursion
+		input := `
+sub sub_a {
+  set req.http.X = "A";
+  if (req.http.Stop != "true") {
+    call sub_b;
+  }
+}
+
+sub sub_b {
+  set req.http.X = "B";
+  if (req.http.Stop != "true") {
+    call sub_a;
+  }
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  call sub_a;
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		graph := buildCallGraph(vcl.Statements)
+
+		// sub_a should call sub_b
+		if len(graph["sub_a"]) != 1 || graph["sub_a"][0] != "sub_b" {
+			t.Errorf("expected sub_a to call sub_b, got %v", graph["sub_a"])
+		}
+		// sub_b should call sub_a
+		if len(graph["sub_b"]) != 1 || graph["sub_b"][0] != "sub_a" {
+			t.Errorf("expected sub_b to call sub_a, got %v", graph["sub_b"])
+		}
+
+		// Verify scope inference completes without hanging
+		l := New(testConfig)
+		ctx := context.New()
+		l.lint(vcl, ctx)
+
+		// Both subs should have RECV scope propagated
+		if sub, ok := ctx.Subroutines["sub_a"]; !ok {
+			t.Errorf("sub_a subroutine not found in context")
+		} else if sub.Scopes != context.RECV {
+			t.Errorf("expected sub_a scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		}
+
+		if sub, ok := ctx.Subroutines["sub_b"]; !ok {
+			t.Errorf("sub_b subroutine not found in context")
+		} else if sub.Scopes != context.RECV {
+			t.Errorf("expected sub_b scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		}
+	})
 }
