@@ -74,14 +74,10 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 
 func (v *HashScopeVariables) Set(s context.Scope, name, operator string, val value.Value) error {
 	if name == "req.hash" {
-		// Special string assignment - normally "+=" operator cannot use for STRING type,
-		// But the exception case that "+=" operation can use for the "req.hash".
-		// See: https://fiddle.fastly.dev/fiddle/0f3fc0aa
-		if val.Type() == value.StringType && operator == "+=" {
-			hash := value.Unwrap[*value.String](val)
-			v.ctx.RequestHash.Value += hash.Value
-			return nil
-		}
+		// Special hash assignment - "+=" operator when applied to req.hash allows
+		// for variable of any type except ACL as a right hand argument.
+		// it also allows for STRING and BOOL literals.
+		// See: https://fiddle.fastly.dev/fiddle/07936f98
 		if err := doUpdateHash(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
