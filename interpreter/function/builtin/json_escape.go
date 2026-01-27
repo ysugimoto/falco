@@ -32,8 +32,8 @@ func Json_escape_Validate(args []value.Value) error {
 }
 
 var Json_escape_CharacterMap = map[rune][]rune{
-	0x22: []rune(`\"`),
-	0x5C: []rune(`\\`),
+	0x22: []rune("\\\""),
+	0x5C: []rune("\\\\"),
 	0x08: []rune("\\b"),
 	0x09: []rune("\\t"),
 	0x0A: []rune("\\n"),
