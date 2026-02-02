@@ -1077,8 +1077,9 @@ h2.disable_header_compression:
 
 h2.push:
   reference: "https://developer.fastly.com/reference/vcl/functions/tls-and-http/h2-push/"
-  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER]
   arguments:
+    - [STRING]
     - [STRING, STRING]
 
 table.contains:

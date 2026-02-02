@@ -16,16 +16,24 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/
 func Test_Utf8_strpad(t *testing.T) {
 	tests := []struct {
-		input  string
-		width  int64
-		pad    string
-		expect string
+		input      string
+		width      int64
+		pad        string
+		expect     string
+		expectNull bool
 	}{
 		{input: "abc", width: -10, pad: "-=", expect: "abc-=-=-=-"},
 		{input: "abc", width: 10, pad: "-=", expect: "-=-=-=-abc"},
 		{input: "abcdefghijklmn", width: 10, pad: "-=", expect: "abcdefghijklmn"},
 		{input: "abcdefghij", width: 10, pad: "-=", expect: "abcdefghij"},
 		{input: "abc", width: 7, pad: "🌸🌼", expect: "🌸🌼🌸🌼abc"},
+		{input: "abc", width: -7, pad: "🌸🌼", expect: "abc🌸🌼🌸🌼"},
+		{input: "世界", width: 5, pad: "-", expect: "---世界"},
+		{input: "世界", width: -5, pad: "-", expect: "世界---"},
+		{input: "abc", width: 10, pad: "", expect: "abc"},
+		{input: "\xe3", width: 10, pad: "-", expectNull: true},
+		{input: "abc", width: 10, pad: "\xe3", expectNull: true},
+		{input: "abc", width: -9223372036854775808, pad: "-", expect: ""},
 	}
 
 	for i, tt := range tests {
@@ -37,9 +45,22 @@ func Test_Utf8_strpad(t *testing.T) {
 		)
 		if err != nil {
 			t.Errorf("[%d] Unexpected error: %s", i, err)
+			continue
+		}
+		if tt.expectNull {
+			if ret.Type() != value.StringType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+				continue
+			}
+			v := value.Unwrap[*value.String](ret)
+			if !v.IsNotSet {
+				t.Errorf("[%d] Expected IsNotSet=true, got value=%s", i, v.Value)
+			}
+			continue
 		}
 		if ret.Type() != value.StringType {
 			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+			continue
 		}
 		v := value.Unwrap[*value.String](ret)
 		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {

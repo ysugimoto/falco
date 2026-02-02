@@ -224,6 +224,9 @@ func (p *Parser) ParseInfixStringConcatExpression(left ast.Expression, explicit 
 	}
 
 	precedence := p.curPrecedence()
+	if explicit {
+		p.NextToken() // point to right expression start (skip the + operator)
+	}
 	right, err := p.ParseExpression(precedence)
 	if err != nil {
 		return nil, errors.WithStack(err)
