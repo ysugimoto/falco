@@ -21,6 +21,11 @@ func Test_Utf8_codepoint_count(t *testing.T) {
 	}{
 		{input: "hello, 世界", expect: 9},
 		{input: "hello, world", expect: 12},
+		{input: "\xe3", expect: 0},
+		{input: "\xff\xfe", expect: 0},
+		{input: "", expect: 0},
+		{input: "🌸", expect: 1},
+		{input: "🌸🌼", expect: 2},
 	}
 
 	for i, tt := range tests {

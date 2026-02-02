@@ -40,13 +40,15 @@ func Randombool_seeded(ctx *context.Context, args ...value.Value) (value.Value, 
 	denominator := value.Unwrap[*value.Integer](args[1])
 	seed := value.Unwrap[*value.Integer](args[2])
 
-	if denominator.Value <= 0 {
+	if numerator.Value <= 0 {
 		return &value.Boolean{Value: false}, nil
+	}
+	if denominator.Value <= 0 {
+		return &value.Boolean{Value: true}, nil
 	}
 
 	r := rand.New(rand.NewSource(seed.Value))
-	rv := r.Float64()
-	ratio := float64(numerator.Value) / float64(denominator.Value)
+	rv := r.Int63n(denominator.Value) + 1
 
-	return &value.Boolean{Value: rv < ratio}, nil
+	return &value.Boolean{Value: rv <= numerator.Value}, nil
 }
