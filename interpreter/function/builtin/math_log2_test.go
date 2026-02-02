@@ -21,8 +21,10 @@ func Test_Math_log2(t *testing.T) {
 		err    *value.String
 	}{
 		{input: &value.Float{IsNAN: true}, expect: &value.Float{IsNAN: true}, err: nil},
-		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNegativeInf: true}, err: nil},
+		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
 		{input: &value.Float{IsPositiveInf: true}, expect: &value.Float{IsPositiveInf: true}, err: nil},
+		{input: &value.Float{Value: 0}, expect: &value.Float{IsNegativeInf: true}, err: &value.String{Value: "ERANGE"}},
+		{input: &value.Float{Value: -1}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
 		{input: &value.Float{Value: 0.5}, expect: &value.Float{Value: -1}, err: nil},
 	}
 

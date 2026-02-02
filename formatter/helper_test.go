@@ -13,7 +13,7 @@ func TestTrimMultipleLineFeeds(t *testing.T) {
 		expect string
 	}{
 		{
-			name:   "trim multile line feed",
+			name:   "trim multiple line feed",
 			input:  "\n\n\nfoo\n\nbar\n\n\nbaz",
 			expect: "\n\nfoo\n\nbar\n\nbaz",
 		},
@@ -21,7 +21,7 @@ func TestTrimMultipleLineFeeds(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ret := trimMutipleLineFeeds(tt.input)
+			ret := trimMultipleLineFeeds(tt.input)
 			if diff := cmp.Diff(ret, tt.expect); diff != "" {
 				t.Errorf("result mismatch, diff=%s", diff)
 			}

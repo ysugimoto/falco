@@ -592,10 +592,11 @@ func Strftime(ctx *context.Context, args ...value.Value) (value.Value, error) {
 				formatted.WriteString(t.Format("-0700"))
 			case 0x5A: // %0Z
 				formatted.WriteString(t.Format("MST"))
+			default:
+				return value.Null, errors.New(
+					Strftime_Name, "Unexpected format token: %s at position %d", []byte{vvv}, i,
+				)
 			}
-			return value.Null, errors.New(
-				Strftime_Name, "Unexpected format token: %s at position %d", []byte{vvv}, i,
-			)
 		default:
 			return value.Null, errors.New(
 				Strftime_Name, "Unexpected format token: %s at position %d", []byte{vv}, i,

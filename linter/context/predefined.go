@@ -433,6 +433,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-header-bytes-written/",
 					},
 				},
+				"headers": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IDType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    MISS | PASS | FETCH,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-request/bereq-headers/",
+					},
+				},
 				"http": {
 					Items: map[string]*Object{
 						"%any%": {
@@ -704,6 +714,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    FETCH,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-handshake-time-to-origin-ms/",
+					},
+				},
+				"headers": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IDType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    FETCH,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-headers/",
 					},
 				},
 				"hipaa": {
@@ -2672,6 +2692,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-grace/",
 					},
 				},
+				"headers": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IDType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | ERROR,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/cache-object/obj-headers/",
+					},
+				},
 				"hits": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -3289,6 +3319,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-header-bytes-read/",
 					},
 				},
+				"headers": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IDType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/req-headers/",
+					},
+				},
 				"http": {
 					Items: map[string]*Object{
 						"%any%": {
@@ -3416,7 +3456,7 @@ func predefinedVariables() Variables {
 				"protocol": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
-						Get:       types.BoolType,
+						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
@@ -3617,6 +3657,16 @@ func predefinedVariables() Variables {
 						Unset:     false,
 						Scopes:    LOG,
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-header-bytes-written/",
+					},
+				},
+				"headers": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.IDType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    DELIVER | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-response/resp-headers/",
 					},
 				},
 				"http": {

@@ -34,15 +34,12 @@ func stringifyVariableArguments(name string, args []value.Value, indicies map[in
 			} else {
 				stringified[i] = &value.String{Value: t.Value.String()}
 			}
-		case *value.Backend:
-			// Backend value could not convert to string
-			return nil, fe.CannotConvertToString(name, i)
 		case *value.Acl:
 			// Acl value could not convert to string
 			return nil, fe.CannotConvertToString(name, i)
 		default:
 			// Other types, can convert non-literal value only
-			if t.IsLiteral() {
+			if t.IsLiteral() && t.Type() != value.BooleanType {
 				return nil, fe.CannotConvertToString(name, i)
 			}
 			// Stringify the argument value
@@ -899,7 +896,7 @@ var builtinFunctions = map[string]*Function{
 		},
 	},
 	"h2.push": {
-		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
 			var err error
 			args, err = stringifyVariableArguments("h2.push", args, map[int]struct{}{0: {}, 1: {}})
