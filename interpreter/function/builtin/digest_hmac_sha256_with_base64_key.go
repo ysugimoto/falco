@@ -41,7 +41,7 @@ func Digest_hmac_sha256_with_base64_key(ctx *context.Context, args ...value.Valu
 
 	keyStr := value.Unwrap[*value.String](args[0])
 	if keyStr.Value == "" {
-		return value.Null, nil
+		return &value.String{IsNotSet: true}, nil
 	}
 	input := value.Unwrap[*value.String](args[1])
 
