@@ -24,7 +24,7 @@ func Test_Math_sin(t *testing.T) {
 		err    *value.String
 	}{
 		{input: &value.Float{IsNAN: true}, expect: &value.Float{IsNAN: true}, err: nil},
-		{input: &value.Float{Value: 0}, expect: &value.Float{Value: 1.0}, err: nil},
+		{input: &value.Float{Value: 0}, expect: &value.Float{Value: 0}, err: nil},
 		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
 		{input: &value.Float{IsPositiveInf: true}, expect: &value.Float{IsNAN: true}, err: &value.String{Value: "EDOM"}},
 		{input: &value.Float{Value: subnormalValue}, expect: &value.Float{Value: subnormalValue}, err: &value.String{Value: "ERANGE"}},
