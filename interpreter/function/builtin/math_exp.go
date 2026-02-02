@@ -41,7 +41,7 @@ func Math_exp(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	case x.IsNAN:
 		return &value.Float{IsNAN: true}, nil
 	case x.IsNegativeInf:
-		return &value.Float{IsNegativeInf: true}, nil
+		return &value.Float{Value: 0}, nil
 	case x.IsPositiveInf:
 		return &value.Float{IsPositiveInf: true}, nil
 	}

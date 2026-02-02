@@ -40,6 +40,10 @@ func Randomint_seeded(ctx *context.Context, args ...value.Value) (value.Value, e
 	to := value.Unwrap[*value.Integer](args[1])
 	seed := value.Unwrap[*value.Integer](args[2])
 
+	if from.Value > to.Value {
+		return &value.Integer{Value: 0}, nil
+	}
+
 	r := rand.New(rand.NewSource(seed.Value))
 	rv := r.Int63n(to.Value - from.Value + 1)
 

@@ -45,7 +45,7 @@ func Math_sin(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		ctx.FastlyError = &value.String{Value: "EDOM"}
 		return &value.Float{IsNAN: true}, nil
 	case x.Value == 0:
-		return &value.Float{Value: 1.0}, nil
+		return &value.Float{Value: 0}, nil
 	case shared.IsSubnormalFloat64(x.Value):
 		ctx.FastlyError = &value.String{Value: "ERANGE"}
 		return &value.Float{Value: x.Value}, nil

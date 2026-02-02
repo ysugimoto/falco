@@ -4,7 +4,6 @@ package builtin
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -40,8 +39,11 @@ func Randomint(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	from := value.Unwrap[*value.Integer](args[0])
 	to := value.Unwrap[*value.Integer](args[1])
 
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rv := r.Int63n(to.Value - from.Value + 1)
+	if from.Value > to.Value {
+		return &value.Integer{Value: 0}, nil
+	}
+
+	rv := rand.Int63n(to.Value - from.Value + 1)
 
 	return &value.Integer{
 		Value: rv + from.Value,
