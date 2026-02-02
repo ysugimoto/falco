@@ -210,19 +210,19 @@ director.%any%.healthy:
 
 bereq.between_bytes_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-between-bytes-timeout/"
-  on: [PASS, MISS]
+  on: [PASS, MISS, PIPE]
   get: RTIME
   set: RTIME
 
 bereq.connect_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/"
-  on: [PASS, MISS]
+  on: [PASS, MISS, PIPE]
   get: RTIME
   set: RTIME
 
 bereq.first_byte_timeout:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-first-byte-timeout/"
-  on: [PASS, MISS]
+  on: [PASS, MISS, PIPE]
   get: RTIME
   set: RTIME
 
@@ -304,57 +304,57 @@ bereq.is_clustering:
 
 bereq.http.%any%:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-http/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
   set: STRING
   unset: true
 
 bereq.method:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-method/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
   set: STRING
 
 bereq.proto:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-proto/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 bereq.request:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-request/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
   set: STRING
 
 bereq.url:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
   set: STRING
 
 bereq.url.basename:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-basename/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 bereq.url.dirname:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-dirname/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 bereq.url.ext:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-ext/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 bereq.url.path:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-path/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 bereq.url.qs:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-request/bereq-url-qs/"
-  on: [PASS, MISS, FETCH]
+  on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
 beresp.backend.name:
@@ -1199,7 +1199,7 @@ req.header_bytes_read:
 
 req.http.%any%:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-http/"
-  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG, PIPE]
   get: STRING
   set: STRING
   unset: true

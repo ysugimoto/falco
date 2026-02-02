@@ -152,6 +152,7 @@ func (l *Linter) inferSubroutineScopes(graph callGraph, ctx *context.Context) {
 		"vcl_error":   context.ERROR,
 		"vcl_deliver": context.DELIVER,
 		"vcl_log":     context.LOG,
+		"vcl_pipe":    context.PIPE,
 	}
 
 	// Set initial scopes for Fastly subroutines that exist in the code
