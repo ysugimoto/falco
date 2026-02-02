@@ -374,6 +374,21 @@ call example;
 `
 		assertNoError(t, input)
 	})
+
+	t.Run("subroutine with typed parameters and return type", func(t *testing.T) {
+		input := `
+sub concat_fetch(STRING var.left, STRING var.right) STRING {
+  declare local var.both STRING = var.left + var.right;
+  return var.both;
+}
+
+sub vcl_recv {
+  log concat_fetch("Hello, ", "world!");
+#FASTLY recv
+}
+`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintPenaltyboxDeclaration(t *testing.T) {
