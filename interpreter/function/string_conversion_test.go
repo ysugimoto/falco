@@ -60,9 +60,9 @@ func TestStringImplicitConversion(t *testing.T) {
 			expect:   &value.Integer{Value: 1}, // 1
 		},
 		{
-			name:     "Convert Bool literal raises an error",
+			name:     "Convert Bool literal",
 			argument: &value.Boolean{Value: true, Literal: true},
-			isError:  true,
+			expect:   &value.Integer{Value: 1}, // strlen of "1"
 		},
 		{
 			name:     "Convert IP",
@@ -85,13 +85,13 @@ func TestStringImplicitConversion(t *testing.T) {
 			expect:   &value.Integer{Value: 29},
 		},
 		{
-			name: "Convert Backend raises an error",
+			name: "Convert Backend",
 			argument: &value.Backend{
 				Value: &ast.BackendDeclaration{
 					Name: &ast.Ident{Value: "example_1"},
 				},
 			},
-			isError: true,
+			expect: &value.Integer{Value: 9},
 		},
 		{
 			name: "Convert Backend literal raises an error",

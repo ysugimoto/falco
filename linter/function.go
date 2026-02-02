@@ -22,7 +22,7 @@ var implicitCoersionTable = map[types.Type][]types.Type{
 	types.IPType:    {types.StringType},
 	types.IDType:    {types.StringType},
 	types.StringType: {
-		types.StringType, types.ReqBackendType, types.IntegerType, types.FloatType, types.BoolType,
+		types.StringType, types.ReqBackendType, types.BackendType, types.IntegerType, types.FloatType, types.BoolType,
 		types.IDType, types.RTimeType, types.IPType, types.TimeType,
 	},
 }

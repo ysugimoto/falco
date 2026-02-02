@@ -78,7 +78,7 @@ func TestConfigFromCLI(t *testing.T) {
 			TrailingCommentWidth:       1,
 			LineWidth:                  120,
 			IndentStyle:                "space",
-			ExplicitStringConat:        true,
+			ExplicitStringConcat:       true,
 			SortDeclarationProperty:    false,
 			AlignDeclarationProperty:   false,
 			ElseIf:                     false,

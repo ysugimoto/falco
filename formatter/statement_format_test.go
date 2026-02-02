@@ -311,7 +311,7 @@ func TestFormatRestartStatement(t *testing.T) {
 	}
 }
 
-func TestFormatEsitStatement(t *testing.T) {
+func TestFormatEsiStatement(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  string
@@ -598,7 +598,7 @@ func TestFormatReturnStatement(t *testing.T) {
 	}
 }
 
-func TestFormatSynthticStatement(t *testing.T) {
+func TestFormatSyntheticStatement(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  string
@@ -660,7 +660,7 @@ func TestFormatSynthticStatement(t *testing.T) {
 	}
 }
 
-func TestFormatSynthticBase64Statement(t *testing.T) {
+func TestFormatSyntheticBase64Statement(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  string
@@ -832,7 +832,7 @@ func TestFormatIfStatement(t *testing.T) {
 	} /* elseif_leading */ else if /* elseif_infix */ (/* elseif_condition_leading */ req.http.AnotherHost /* elseif_condition_trailing */) /* else_before_parenthesis */ {
 		set req.http.Foo = "another";
 	}
-	// More complecated case
+	// More complicated case
 	else if (req.http.Other) {
 		set req.http.Foo = "other";
 	} else {
@@ -852,7 +852,7 @@ func TestFormatIfStatement(t *testing.T) {
   ) /* else_before_parenthesis */ {
     set req.http.Foo = "another";
   }
-  // More complecated case
+  // More complicated case
   else if (req.http.Other) {
     set req.http.Foo = "other";
   } else {
@@ -872,7 +872,7 @@ func TestFormatIfStatement(t *testing.T) {
 	} /* elseif_leading */ elseif /* elseif_infix */ (/* elseif_condition_leading */ req.http.AnotherHost /* elseif_condition_trailing */) /* else_before_parenthesis */ {
 		set req.http.Foo = "another";
 	}
-	// More complecated case
+	// More complicated case
 	elsif (req.http.Other) {
 		set req.http.Foo = "other";
 	} else {
@@ -892,7 +892,7 @@ func TestFormatIfStatement(t *testing.T) {
   ) /* else_before_parenthesis */ {
     set req.http.Foo = "another";
   }
-  // More complecated case
+  // More complicated case
   elsif (req.http.Other) {
     set req.http.Foo = "other";
   } else {
