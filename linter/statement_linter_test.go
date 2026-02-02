@@ -605,6 +605,7 @@ func TestLintVariadicStringArguments(t *testing.T) {
 		input := `
 	sub foo {
 	  h2.disable_header_compression("Authorization", "Secret");
+	  header.filter_except(req, "Authorization", "Content-Type");
 	}
 	`
 
@@ -621,10 +622,30 @@ func TestLintVariadicStringArguments(t *testing.T) {
 		assertError(t, input)
 	})
 
+	t.Run("empty arguments for functions with both positional and variadic arguments ", func(t *testing.T) {
+		input := `
+	sub foo {
+		header.filter_except(req);
+	}
+	`
+
+		assertError(t, input)
+	})
+
 	t.Run("type error", func(t *testing.T) {
 		input := `
 	sub foo {
 	  h2.disable_header_compression(10);
+	}
+	`
+
+		assertError(t, input)
+	})
+
+	t.Run("type error for function with both positional and variadic arguments", func(t *testing.T) {
+		input := `
+	sub foo {
+		header.filter_except(req, "Authorization", 10);
 	}
 	`
 
