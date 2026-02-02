@@ -142,7 +142,7 @@ func Std_anystr2ip(ctx *context.Context, args ...value.Value) (value.Value, erro
 		return &value.IP{Value: ip}, nil
 	}
 
-	return value.Null, nil
+	return &value.IP{IsNotSet: true}, nil
 }
 
 // Std_anystr2ip_Parse attempts to parse an IP address string.

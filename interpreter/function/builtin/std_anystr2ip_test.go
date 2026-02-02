@@ -16,11 +16,11 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/std-anystr2ip/
 func Test_Std_anystr2ip(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      string
-		fallback   string
-		expect     string
-		expectNull bool
+		name         string
+		input        string
+		fallback     string
+		expect       string
+		expectNotSet bool
 	}{
 		// Flexible IPv4 formats (hex/octal)
 		{
@@ -73,12 +73,12 @@ func Test_Std_anystr2ip(t *testing.T) {
 			fallback: "::1",
 			expect:   "::1",
 		},
-		// Both invalid returns null
+		// Both invalid returns NotSet IP
 		{
-			name:       "Both invalid returns null",
-			input:      "invalid",
-			fallback:   "also-invalid",
-			expectNull: true,
+			name:         "Both invalid returns NotSet IP",
+			input:        "invalid",
+			fallback:     "also-invalid",
+			expectNotSet: true,
 		},
 		// Empty strings
 		{
@@ -88,10 +88,10 @@ func Test_Std_anystr2ip(t *testing.T) {
 			expect:   "1.2.3.4",
 		},
 		{
-			name:       "Both empty returns null",
-			input:      "",
-			fallback:   "",
-			expectNull: true,
+			name:         "Both empty returns NotSet IP",
+			input:        "",
+			fallback:     "",
+			expectNotSet: true,
 		},
 		// localhost support
 		{
@@ -119,9 +119,14 @@ func Test_Std_anystr2ip(t *testing.T) {
 				t.Errorf("Unexpected error: %s", err)
 				return
 			}
-			if tt.expectNull {
-				if ret.Type() != value.NullType {
-					t.Errorf("Expected NULL, got=%s", ret.Type())
+			if tt.expectNotSet {
+				if ret.Type() != value.IpType {
+					t.Errorf("Expected IP type, got=%s", ret.Type())
+					return
+				}
+				v := value.Unwrap[*value.IP](ret)
+				if !v.IsNotSet {
+					t.Errorf("Expected IsNotSet=true, got=false")
 				}
 				return
 			}
