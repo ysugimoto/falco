@@ -56,6 +56,14 @@ func Ratelimit_ratecounter_increment(ctx *context.Context, args ...value.Value) 
 	if !ok {
 		return nil, errors.New(Ratelimit_ratecounter_increment_Name, "Ratecounter %s is not defined", name)
 	}
+
+	// (testing) if fixed access rate has specified, use it
+	if ctx.FixedAccessRate != nil {
+		return &value.Integer{
+			Value: int64(*ctx.FixedAccessRate * 60),
+		}, nil
+	}
+
 	rc.Increment(entry, increment, 0)
 
 	// Returns bucket count for recent 1 minute
