@@ -398,6 +398,11 @@ beresp.hipaa:
   get: BOOL
   set: BOOL
 
+beresp.headers:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-headers/"
+  on: [FETCH]
+  get: ID
+
 beresp.http.%any%:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-http/"
   on: [FETCH]
@@ -483,6 +488,11 @@ obj.http.%any%:
   get: STRING
   set: STRING
   unset: true
+
+obj.headers:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/cache-object/obj-headers/"
+  on: [HIT, ERROR]
+  get: ID
 
 obj.is_pci:
   reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/"
@@ -1197,6 +1207,16 @@ req.header_bytes_read:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: INTEGER
 
+bereq.headers:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-request/bereq-headers/"
+  on: [MISS, PASS, FETCH]
+  get: ID
+
+req.headers:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/req-headers/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: ID
+
 req.http.%any%:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-request/req-http/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
@@ -1388,6 +1408,11 @@ resp.http.%any%:
   get: STRING
   set: STRING
   unset: true
+
+resp.headers:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-response/resp-headers/"
+  on: [DELIVER, LOG]
+  get: ID
 
 resp.is_locally_generated:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-response/resp-is-locally-generated/"
