@@ -52,7 +52,7 @@ Supporting rules are described the following table and sections.
 | indent_style                 | STRING | space   | Specify indent style character. Either `space(whitespace)` or `tab(\t)` is accepted            |
 | trailing_comment_width       | INT    | 2       | Specify space size for trailing comment                                                        |
 | line_width                   | INT    | 120     | Specify max characters for each line. The overflowed characters are displayed at the next line |
-| explicit_string_concat       | BOOL   | false   | Explicitly write string concatenation operator `+` between expressions                         |
+| explicit_string_concat       | BOOL   | true    | Explicitly write string concatenation operator `+` between expressions                         |
 | sort_declaration_property    | BOOL   | false   | If true, sort declaration properties like table, backend and director alphabetically           |
 | align_declaration_property   | BOOL   | false   | If true, align declaration properties like table, backend and director                         |
 | else_if                      | BOOL   | false   | Coerce use `else if` keyword for another if statement                                          |
@@ -188,7 +188,7 @@ sub vcl_recv {
 
 ### Explicit String Concat
 
-**default: false**
+**default: true**
 
 Print string concatenation character of `+` explicitly if true.
 
