@@ -688,6 +688,7 @@ Set fixed access rate. This function affects to `ratelimit` related values and f
 - `ratecounter.rc.rate.60s`
 - `ratelimit.check_rate()`
 - `ratelimit.check_rates()`
+- `ratelimit.ratecounter_increment()`
 
 ```vcl
 ratecounter rc {}

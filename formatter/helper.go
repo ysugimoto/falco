@@ -13,7 +13,7 @@ var multiLineFeedRegex = regexp.MustCompile(`\n{3,}`)
 var replace = "\n\n"
 
 // Replace over three line-feed characters to two characters
-func trimMutipleLineFeeds(lines string) string {
+func trimMultipleLineFeeds(lines string) string {
 	return multiLineFeedRegex.ReplaceAllString(lines, replace)
 }
 

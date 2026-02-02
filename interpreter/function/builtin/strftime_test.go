@@ -24,6 +24,9 @@ func Test_Strftime(t *testing.T) {
 		{input: "%Y-%m-%d %H:%M", expect: "2023-03-03 01:48"},
 		{input: "%a, %d %b %Y %T %z", expect: "Fri, 03 Mar 2023 01:48:10 +0000"},
 		{input: "%Y-%m-%dT%H:%M:%SZ", expect: "2023-03-03T01:48:10Z"},
+		{input: "%0I", expect: "01"},
+		{input: "%0m", expect: "03"},
+		{input: "%0d", expect: "03"},
 	}
 
 	for i, tt := range tests {

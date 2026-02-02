@@ -39,7 +39,7 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 
 	v := value.Unwrap[*value.String](args[0])
 	if !utf8.Valid([]byte(v.Value)) {
-		return &value.String{}, nil
+		return &value.String{IsNotSet: true}, nil
 	}
 	input := []rune(v.Value)
 	offset := int(value.Unwrap[*value.Integer](args[1]).Value)

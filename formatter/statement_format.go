@@ -78,10 +78,10 @@ func (f *Formatter) formatStatement(stmt ast.Statement) *Line {
 		line.Buffer += f.formatIfStatement(t)
 		switch {
 		case t.Alternative != nil:
-			// When "else" statament exists, trailing comment will be on it
+			// When "else" statement exists, trailing comment will be on it
 			trailingNode = t.Alternative
 		case len(t.Another) > 0:
-			// When one of "else if" statament exists, trailing comment will be on it
+			// When one of "else if" statement exists, trailing comment will be on it
 			trailingNode = t.Another[len(t.Another)-1]
 		default:
 			// Otherwise, trailing comment will be on consequence
@@ -153,7 +153,7 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	buf.WriteString(f.indent(stmt.Nest - 1))
 	buf.WriteString("}")
 
-	return trimMutipleLineFeeds(buf.String())
+	return trimMultipleLineFeeds(buf.String())
 }
 
 // Format declare local variable statement
@@ -270,7 +270,7 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 			buf.WriteString(f.formatComment(a.Leading, "\n", a.Nest))
 			buf.WriteString(f.indent(a.Nest))
 		} else {
-			// Otherwise, write with whitespace characeter
+			// Otherwise, write with whitespace character
 			buf.WriteString(" ")
 		}
 
@@ -339,7 +339,7 @@ func (f *Formatter) formatSwitchStatement(stmt *ast.SwitchStatement) string {
 	buf.WriteString(strings.TrimSpace(stmt.Control.String()))
 	buf.WriteString(" {\n")
 	for _, c := range stmt.Cases {
-		// If indent_cale_labels is false, subtrat 1 nest level
+		// If indent_case_labels is false, subtract 1 nest level
 		if !f.conf.IndentCaseLabels {
 			c.Nest--
 		}
@@ -383,7 +383,7 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 
 	for _, stmt := range cs.Statements {
 		meta := stmt.GetMeta()
-		// If indent_cale_labels is false, subtrat 1 nest level
+		// If indent_case_labels is false, subtract 1 nest level
 		if !f.conf.IndentCaseLabels {
 			meta.Nest--
 		}
@@ -405,7 +405,7 @@ func (f *Formatter) formatCaseSectionStatements(cs *ast.CaseStatement) string {
 		group.Align()
 	}
 
-	return trimMutipleLineFeeds(group.String())
+	return trimMultipleLineFeeds(group.String())
 }
 
 // Format break statement
@@ -507,7 +507,7 @@ func (f *Formatter) formatCallStatement(stmt *ast.CallStatement) string {
 	return buf.String()
 }
 
-// Fromat error statement
+// Format error statement
 func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer bufferPool.Put(buf)

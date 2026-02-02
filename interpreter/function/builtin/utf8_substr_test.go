@@ -18,11 +18,12 @@ import (
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/
 func Test_Utf8_substr(t *testing.T) {
 	tests := []struct {
-		input    string
-		offset   int64
-		length   int64
-		expect   string
-		noLength bool
+		input      string
+		offset     int64
+		length     int64
+		expect     string
+		noLength   bool
+		expectNull bool
 	}{
 		{input: "abあdefg", offset: 3, expect: "defg", noLength: true},
 		{input: "abあdefg", offset: 0, length: 2, expect: "ab"},
@@ -35,7 +36,7 @@ func Test_Utf8_substr(t *testing.T) {
 		{input: "abあdefg", offset: 1, length: -3, expect: "bあd"},
 		{input: "abあdefg", offset: -4, length: -3, expect: "d"},
 		{input: "abあdefg", offset: -4, length: 0, expect: ""},
-		{input: "\xe3", offset: 0, length: 1, expect: ""},
+		{input: "\xe3", offset: 0, length: 1, expectNull: true},
 		// Check extremes of length / offset values
 		{input: "abあdefg", offset: 2, length: math.MaxInt64 - 1, expect: ""},
 		{input: "abあdefg", offset: 1, length: math.MaxInt64, expect: ""},
@@ -63,6 +64,17 @@ func Test_Utf8_substr(t *testing.T) {
 		ret, err := Utf8_substr(&context.Context{}, args...)
 		if err != nil {
 			t.Errorf("[%d] Unexpected error: %s", i, err)
+			continue
+		}
+		if tt.expectNull {
+			if ret.Type() != value.StringType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+				continue
+			}
+			v := value.Unwrap[*value.String](ret)
+			if !v.IsNotSet {
+				t.Errorf("[%d] Expected IsNotSet=true, got value=%s", i, v.Value)
+			}
 			continue
 		}
 		if ret.Type() != value.StringType {

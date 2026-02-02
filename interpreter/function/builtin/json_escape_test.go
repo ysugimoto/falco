@@ -32,7 +32,11 @@ func Test_Json_escape(t *testing.T) {
 		},
 		{
 			input:  `"`,
-			expect: "\"",
+			expect: `\"`,
+		},
+		{
+			input:  `\`,
+			expect: `\\`,
 		},
 		{
 			input:  "\n",
