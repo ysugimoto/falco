@@ -22,7 +22,7 @@ func Test_Math_exp(t *testing.T) {
 		err    *value.String
 	}{
 		{input: &value.Float{IsNAN: true}, expect: &value.Float{IsNAN: true}, err: nil},
-		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{IsNegativeInf: true}, err: nil},
+		{input: &value.Float{IsNegativeInf: true}, expect: &value.Float{Value: 0}, err: nil},
 		{input: &value.Float{IsPositiveInf: true}, expect: &value.Float{IsPositiveInf: true}, err: nil},
 		{input: &value.Float{Value: math.MaxFloat64}, expect: &value.Float{Value: math.Inf(1)}, err: nil},
 		{input: &value.Float{Value: -math.MaxFloat64}, expect: &value.Float{Value: 0}, err: nil},
