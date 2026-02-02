@@ -48,7 +48,7 @@ func Randomstr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	if len(characters) == 0 {
-		return value.Null, nil
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	ret := make([]rune, int(length.Value))
