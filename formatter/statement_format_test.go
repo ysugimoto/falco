@@ -194,6 +194,26 @@ func TestFormatSetStatement(t *testing.T) {
                                                           /* before_semicolon */;  // set trailing comment
 }
 `,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            120,
+				ExplicitStringConat:  false,
+			},
+		},
+		{
+			name: "set with string concatenation",
+			input: `sub recv {
+  set var.hash = var.hash + req.url.path;
+}`,
+			expect: "sub recv {\n  set var.hash = var.hash + req.url.path;\n}\n",
+			conf: &config.FormatConfig{
+				IndentWidth:         2,
+				IndentStyle:         "space",
+				LineWidth:           120,
+				ExplicitStringConat: true,
+			},
 		},
 	}
 
