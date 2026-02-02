@@ -3416,7 +3416,7 @@ func predefinedVariables() Variables {
 				"protocol": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
-						Get:       types.BoolType,
+						Get:       types.StringType,
 						Set:       types.NeverType,
 						Unset:     false,
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,

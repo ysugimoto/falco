@@ -3964,7 +3964,6 @@ var promptSuggestions = map[string][]prompt.Suggest{
 		{Text: "geoip.region.utf8", Description: "Predefined Variable"},
 		{Text: "geoip.use_x_forwarded_for", Description: "Predefined Variable"},
 		{Text: "h2.disable_header_compression", Description: "Built-in Function"},
-		{Text: "h2.push", Description: "Built-in Function"},
 		{Text: "h3.alt_svc", Description: "Built-in Function"},
 		{Text: "header.filter", Description: "Built-in Function"},
 		{Text: "header.filter_except", Description: "Built-in Function"},
