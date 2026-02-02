@@ -67,8 +67,13 @@ func Test_Utf8_substr(t *testing.T) {
 			continue
 		}
 		if tt.expectNull {
-			if ret.Type() != value.NullType {
-				t.Errorf("[%d] Unexpected return type, expect=NULL, got=%s", i, ret.Type())
+			if ret.Type() != value.StringType {
+				t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
+				continue
+			}
+			v := value.Unwrap[*value.String](ret)
+			if !v.IsNotSet {
+				t.Errorf("[%d] Expected IsNotSet=true, got value=%s", i, v.Value)
 			}
 			continue
 		}

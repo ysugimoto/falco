@@ -50,11 +50,11 @@ func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error)
 	}
 
 	if !utf8.ValidString(pad) {
-		return value.Null, nil
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	if !utf8.ValidString(s) {
-		return value.Null, nil
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	origRunes := []rune(s)
