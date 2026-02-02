@@ -199,7 +199,7 @@ func TestFormatSetStatement(t *testing.T) {
 				IndentStyle:          "space",
 				TrailingCommentWidth: 2,
 				LineWidth:            120,
-				ExplicitStringConat:  false,
+				ExplicitStringConcat: false,
 			},
 		},
 		{
@@ -209,10 +209,10 @@ func TestFormatSetStatement(t *testing.T) {
 }`,
 			expect: "sub recv {\n  set var.hash = var.hash + req.url.path;\n}\n",
 			conf: &config.FormatConfig{
-				IndentWidth:         2,
-				IndentStyle:         "space",
-				LineWidth:           120,
-				ExplicitStringConat: true,
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				LineWidth:            120,
+				ExplicitStringConcat: true,
 			},
 		},
 	}
