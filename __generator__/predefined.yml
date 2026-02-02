@@ -226,6 +226,12 @@ bereq.first_byte_timeout:
   get: RTIME
   set: RTIME
 
+bereq.fetch_timeout:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/bereq-fetch-timeout/"
+  on: [PASS, MISS]
+  get: RTIME
+  set: RTIME
+
 beresp.backend.alternate_ips:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-alternate-ips/"
   on: [FETCH]

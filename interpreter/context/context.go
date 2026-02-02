@@ -127,6 +127,7 @@ type Context struct {
 	BetweenBytesTimeout                 *value.RTime
 	ConnectTimeout                      *value.RTime
 	FirstByteTimeout                    *value.RTime
+	FetchTimeout                        *value.RTime
 	BackendResponseGzip                 *value.Boolean
 	BackendResponseBrotli               *value.Boolean
 	BackendResponseCacheable            *value.Boolean
