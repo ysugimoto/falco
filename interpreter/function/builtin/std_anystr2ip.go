@@ -132,16 +132,39 @@ func Std_anystr2ip(ctx *context.Context, args ...value.Value) (value.Value, erro
 	addr := value.Unwrap[*value.String](args[0])
 	fallback := value.Unwrap[*value.String](args[1])
 
-	fallbackIP := &value.IP{Value: net.ParseIP(fallback.Value)}
+	// Try to parse the primary address
+	if ip := Std_anystr2ip_Parse(addr.Value); ip != nil {
+		return &value.IP{Value: ip}, nil
+	}
 
-	// TODO: support IPv6 string to parse
-	if strings.Contains(addr.Value, ":") {
-		return value.Null, errors.New(Std_anystr2ip_Name, "Does not support IPv6 format string")
+	// Try fallback
+	if ip := Std_anystr2ip_Parse(fallback.Value); ip != nil {
+		return &value.IP{Value: ip}, nil
 	}
-	// IPv4 parseing
-	if v, err := Std_anystr2ip_ParseIpv4(addr.Value); err != nil {
-		return fallbackIP, nil
-	} else {
-		return v, nil
+
+	return &value.IP{IsNotSet: true}, nil
+}
+
+// Std_anystr2ip_Parse attempts to parse an IP address string.
+// It first tries flexible IPv4 parsing (hex/octal notation), then falls back
+// to standard parsing which handles both IPv4 and IPv6.
+func Std_anystr2ip_Parse(addr string) net.IP {
+	if addr == "" {
+		return nil
 	}
+
+	// Handle "localhost" specially
+	if strings.EqualFold(addr, "localhost") {
+		return net.ParseIP("127.0.0.1")
+	}
+
+	// If no colon, try flexible IPv4 parsing first (handles hex/octal notation)
+	if !strings.Contains(addr, ":") {
+		if v, err := Std_anystr2ip_ParseIpv4(addr); err == nil {
+			return v.Value
+		}
+	}
+
+	// Fall back to standard parsing (handles standard IPv4 and IPv6)
+	return net.ParseIP(addr)
 }

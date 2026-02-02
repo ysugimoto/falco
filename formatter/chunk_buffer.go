@@ -50,7 +50,7 @@ func (c *Chunk) isLineComment() bool {
 	return string(prefix) != "/*"
 }
 
-// ChunkBuffer struct reperesents limited-line chunked string from configuration.
+// ChunkBuffer struct represents limited-line chunked string from configuration.
 type ChunkBuffer struct {
 	chunks []*Chunk
 	conf   *config.FormatConfig
@@ -106,7 +106,7 @@ func (c *ChunkBuffer) String() string {
 		buf.WriteString(c.chunks[i].buffer)
 		if c.chunks[i].isLineComment() {
 			buf.WriteString("\n")
-		} else if i < len(c.chunks)-1 {
+		} else if i < len(c.chunks)-1 && c.chunks[i].Type != Prefix {
 			buf.WriteString(" ")
 		}
 	}
@@ -169,7 +169,7 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 		// prefix operator
 		case Prefix:
 			if next := c.nextChunk(); next != nil {
-				buf.WriteString(chunk.buffer + next.buffer)
+				buf.WriteString(c.chunkString(state, chunk.buffer+next.buffer))
 			}
 		// group operator
 		case Group:

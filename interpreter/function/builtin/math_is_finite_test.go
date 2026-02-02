@@ -20,7 +20,7 @@ func Test_Math_is_finite(t *testing.T) {
 		expect *value.Boolean
 		err    *value.String
 	}{
-		{input: &value.Float{IsNAN: true}, expect: &value.Boolean{Value: true}, err: nil},
+		{input: &value.Float{IsNAN: true}, expect: &value.Boolean{Value: false}, err: nil},
 		{input: &value.Float{IsNegativeInf: true}, expect: &value.Boolean{Value: false}, err: nil},
 		{input: &value.Float{IsPositiveInf: true}, expect: &value.Boolean{Value: false}, err: nil},
 		{input: &value.Float{Value: 1.2}, expect: &value.Boolean{Value: true}, err: nil},

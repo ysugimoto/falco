@@ -38,7 +38,7 @@ func (f *Formatter) formatExpression(expr ast.Expression) *ChunkBuffer {
 	case *ast.IfExpression:
 		buf.Write(f.formatIfExpression(t), Token)
 
-	// Combinated expressions return *ChunkBuffer to merge
+	// Combined expressions return *ChunkBuffer to merge
 	case *ast.PrefixExpression:
 		buf.Append(f.formatPrefixExpression(t))
 	case *ast.GroupedExpression:
@@ -89,7 +89,7 @@ func (f *Formatter) formatRTime(expr *ast.RTime) string {
 	return expr.Value
 }
 
-// Combinated expressions
+// Combined expressions
 
 // Format prefix expression like "!foo"
 func (f *Formatter) formatPrefixExpression(expr *ast.PrefixExpression) *ChunkBuffer {
@@ -106,7 +106,7 @@ func (f *Formatter) formatInfixExpression(expr *ast.InfixExpression) *ChunkBuffe
 
 	operator := expr.Operator
 	if expr.Operator == "+" { // concatenation
-		if !f.conf.ExplicitStringConat {
+		if !f.conf.ExplicitStringConcat {
 			operator = ""
 		}
 	}
