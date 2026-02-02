@@ -194,6 +194,48 @@ sub foo {
 	})
 }
 
+func TestH2Push(t *testing.T) {
+	t.Run("pass: h2.push with one argument", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (fastly_info.is_h2 && req.url == "/html") {
+		h2.push("/image/png");
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: h2.push with two arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (fastly_info.is_h2 && req.url == "/html") {
+		h2.push("/image/png", "image");
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("error: h2.push with no arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	h2.push();
+}`
+		assertError(t, input)
+	})
+
+	t.Run("error: h2.push with too many arguments", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	h2.push("/image/png", "image", "extra");
+}`
+		assertError(t, input)
+	})
+}
+
 func TestReturnStatement(t *testing.T) {
 	t.Run("pass: without argument", func(t *testing.T) {
 		input := `

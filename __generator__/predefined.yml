@@ -845,7 +845,7 @@ req.is_ssl:
 req.protocol:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/req-protocol/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
-  get: BOOL
+  get: STRING
 
 tls.client.certificate.dn:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/tls-client-certificate-dn/"
