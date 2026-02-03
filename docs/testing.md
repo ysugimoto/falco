@@ -487,6 +487,20 @@ sub test_vcl {
 }
 ```
 
+You can also inject `req.body` and `req.body.base64` to test subroutines that depend on the request body.
+Since `req.body` is read-only in Fastly production, `set req.body` is not supported — use `testing.inject_variable` instead.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Inject request body for testing
+    testing.inject_variable("req.body", "bodytext");
+    testing.call_subroutine("vcl_recv");
+
+    assert.equal(req.body, "bodytext");
+}
+```
+
 ----
 
 ### testing.table_set(ID table, STRING key, STRING value)
