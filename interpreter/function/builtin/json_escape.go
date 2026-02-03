@@ -13,23 +13,27 @@ import (
 
 const Json_escape_Name = "json.escape"
 
-var Json_escape_ArgumentTypes = []value.Type{value.StringType}
-
 func Json_escape_Validate(args []value.Value) error {
 	if len(args) != 1 {
 		return errors.ArgumentNotEnough(Json_escape_Name, 1, args)
 	}
-	for i := range args {
-		if args[i].Type() != Json_escape_ArgumentTypes[i] {
-			return errors.TypeMismatch(Json_escape_Name, i+1, Json_escape_ArgumentTypes[i], args[i].Type())
+	arg := args[0]
+	switch arg.Type() {
+	case value.AclType, value.IdentType:
+		return errors.CannotConvertToString(Json_escape_Name, 1)
+	case value.StringType, value.BooleanType:
+		break
+	default:
+		if arg.IsLiteral() {
+			return errors.New(Json_escape_Name, "%s type cannot be used as literal", arg.Type())
 		}
 	}
 	return nil
 }
 
 var Json_escape_CharacterMap = map[rune][]rune{
-	0x22: []rune("\""),
-	0x5C: []rune("\\"),
+	0x22: []rune("\\\""),
+	0x5C: []rune("\\\\"),
 	0x08: []rune("\\b"),
 	0x09: []rune("\\t"),
 	0x0A: []rune("\\n"),
@@ -54,16 +58,15 @@ func Json_escape(ctx *context.Context, args ...value.Value) (value.Value, error)
 	if err := Json_escape_Validate(args); err != nil {
 		return value.Null, err
 	}
-
-	str := value.Unwrap[*value.String](args[0])
+	str := args[0].String()
 
 	// Preparation: check provided is valid in UTF-8 sequence
-	if !utf8.ValidString(str.Value) {
+	if !utf8.ValidString(str) {
 		return &value.String{Value: ""}, nil
 	}
 
 	var escaped []rune
-	for _, r := range []rune(str.Value) {
+	for _, r := range []rune(str) {
 		if v, ok := Json_escape_CharacterMap[r]; ok {
 			escaped = append(escaped, v...)
 			continue
