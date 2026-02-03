@@ -571,6 +571,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case REQ_BODY:
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
+			if req.Body == nil {
+				return &value.String{Value: ""}, nil
+			}
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
