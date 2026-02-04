@@ -57,12 +57,6 @@ func TestRateLimiter(t *testing.T) {
 	})
 }
 
-func assertEqual(t *testing.T, actual float64, expected float64) {
-	if actual != expected {
-		t.Errorf("Actual %f != Expected %f", actual, expected)
-	}
-}
-
 func withServer(t *testing.T, vcl string, test func(ip *Interpreter)) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
