@@ -413,6 +413,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/bereq-connect-timeout/",
 					},
 				},
+				"fetch_timeout": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.RTimeType,
+						Set:       types.RTimeType,
+						Unset:     false,
+						Scopes:    PASS | MISS,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/bereq-fetch-timeout/",
+					},
+				},
 				"first_byte_timeout": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
