@@ -38,6 +38,7 @@ const (
 	BEREQ_BODY_BYTES_WRITTEN                   = "bereq.body_bytes_written"
 	BEREQ_BYTES_WRITTEN                        = "bereq.bytes_written"
 	BEREQ_CONNECT_TIMEOUT                      = "bereq.connect_timeout"
+	BEREQ_FETCH_TIMEOUT                        = "bereq.fetch_timeout"
 	BEREQ_FIRST_BYTE_TIMEOUT                   = "bereq.first_byte_timeout"
 	BEREQ_HEADER_BYTES_WRITTEN                 = "bereq.header_bytes_written"
 	BEREQ_HEADERS                              = "bereq.headers"
