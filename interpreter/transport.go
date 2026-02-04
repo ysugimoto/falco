@@ -160,13 +160,18 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 		return nil, errors.WithStack(err)
 	}
 
-	firstByteTimeout := 15 * time.Second
+	timeout := 15 * time.Second // 15 seconds as default
 	if fbt != nil {
-		firstByteTimeout = value.Unwrap[*value.RTime](fbt).Value
+		timeout = value.Unwrap[*value.RTime](fbt).Value
 	}
 
-	ctx, timeout := context.WithTimeout(i.ctx.Request.Context(), firstByteTimeout)
-	defer timeout()
+	// Use bereq.fetch_timeout variable value if specified
+	if i.ctx.FetchTimeout != nil && i.ctx.FetchTimeout.Value > 0 {
+		timeout = i.ctx.FetchTimeout.Value
+	}
+
+	ctx, to := context.WithTimeout(i.ctx.Request.Context(), timeout)
+	defer to()
 
 	req := i.ctx.BackendRequest.Clone(ctx)
 

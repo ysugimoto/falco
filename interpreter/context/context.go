@@ -127,6 +127,7 @@ type Context struct {
 	BetweenBytesTimeout                 *value.RTime
 	ConnectTimeout                      *value.RTime
 	FirstByteTimeout                    *value.RTime
+	FetchTimeout                        *value.RTime
 	BackendResponseGzip                 *value.Boolean
 	BackendResponseBrotli               *value.Boolean
 	BackendResponseCacheable            *value.Boolean
@@ -256,6 +257,7 @@ func New(options ...Option) *Context {
 		BetweenBytesTimeout:                 &value.RTime{},
 		ConnectTimeout:                      &value.RTime{},
 		FirstByteTimeout:                    &value.RTime{Value: 15 * time.Second},
+		FetchTimeout:                        &value.RTime{},
 		BackendResponseGzip:                 &value.Boolean{},
 		BackendResponseBrotli:               &value.Boolean{},
 		BackendResponseCacheable:            &value.Boolean{},
