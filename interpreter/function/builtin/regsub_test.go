@@ -159,6 +159,30 @@ func Test_Regsub(t *testing.T) {
 			expect:      "[hello world]",
 			literal:     true,
 		},
+		{
+			name:        "backslash non-digit strips backslash",
+			input:       "test",
+			pattern:     `test`,
+			replacement: `\n\t`,
+			expect:      "nt",
+			literal:     true,
+		},
+		{
+			name:        "out of range capture group is empty",
+			input:       "test",
+			pattern:     `(test)`,
+			replacement: `[\1][\9]`,
+			expect:      "[test][]",
+			literal:     true,
+		},
+		{
+			name:        "trailing backslash preserved",
+			input:       "test",
+			pattern:     `test`,
+			replacement: `foo\`,
+			expect:      `foo\`,
+			literal:     true,
+		},
 	}
 
 	for _, tt := range tests {
