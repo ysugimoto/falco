@@ -127,6 +127,38 @@ func Test_Regsub(t *testing.T) {
 			expect:      "hello",
 			literal:     true,
 		},
+		{
+			name:        "non-participating capture groups",
+			input:       "HIT-MISS something",
+			pattern:     `^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*`,
+			replacement: `\2\3`,
+			expect:      "HIT",
+			literal:     true,
+		},
+		{
+			name:        "alternation with non-participating group left side",
+			input:       "foo",
+			pattern:     `(bar)|(foo)`,
+			replacement: `[\1][\2]`,
+			expect:      "[][foo]",
+			literal:     true,
+		},
+		{
+			name:        "alternation with non-participating group right side",
+			input:       "bar",
+			pattern:     `(bar)|(foo)`,
+			replacement: `[\1][\2]`,
+			expect:      "[bar][]",
+			literal:     true,
+		},
+		{
+			name:        "group 0 is entire match",
+			input:       "hello world",
+			pattern:     `(\w+) (\w+)`,
+			replacement: `[\0]`,
+			expect:      "[hello world]",
+			literal:     true,
+		},
 	}
 
 	for _, tt := range tests {
