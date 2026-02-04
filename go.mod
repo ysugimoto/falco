@@ -32,8 +32,6 @@ require (
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 )
 
-require gopkg.in/yaml.v3 v3.0.1 // indirect
-
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
@@ -55,3 +53,5 @@ require (
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.2.0 // indirect
 )
+
+replace go.elara.ws/pcre => github.com/dip-proto/go-pcre v0.0.0-20260204122309-dcbff9cb6240
