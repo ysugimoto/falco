@@ -245,6 +245,7 @@ type Subroutine struct {
 	Decl   *ast.SubroutineDeclaration
 	Body   *ast.BlockStatement
 	IsUsed bool // mark this subroutine is called at least once
+	Scopes int  // inferred scope(s) from call graph analysis (bitmask)
 }
 
 func (s *Subroutine) Type() Type         { return SubroutineType }

@@ -119,6 +119,14 @@ func Test_Regsuball(t *testing.T) {
 			expect:      "exam testing tested",
 			literal:     true,
 		},
+		{
+			name:        "non-participating capture groups in regsuball",
+			input:       "foo bar baz",
+			pattern:     `(foo)|(bar)|(baz)`,
+			replacement: `[\1][\2][\3]`,
+			expect:      "[foo][][] [][bar][] [][][baz]",
+			literal:     true,
+		},
 	}
 
 	for _, tt := range tests {
