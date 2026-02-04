@@ -33,6 +33,7 @@ const (
 	SUBROUTINE_DUPLICATED                = "subroutine/duplicated"
 	SUBROUTINE_INVALID_RETURN_TYPE       = "subroutine/invalid-return-type"
 	UNRECOGNIZE_CALL_SCOPE               = "subroutine/unrecognize-call-scope"
+	SUBROUTINE_RECURSIVE_CALL            = "subroutine/recursive-call"
 	FORBID_VCL_PIPE                      = "subroutine/forbid-vcl-pipe"
 	PENALTYBOX_SYNTAX                    = "penaltybox/syntax"
 	PENALTYBOX_DUPLICATED                = "penaltybox/duplicated"
@@ -109,5 +110,6 @@ var references = map[Rule]string{
 	SYNTHETIC_BASE64_STATEMENT_SCOPE: "https://developer.fastly.com/reference/vcl/statements/synthetic-base64/",
 	DISALLOW_EMPTY_RETURN:            "https://developer.fastly.com/reference/vcl/subroutines#returning-a-state",
 	UNRECOGNIZE_CALL_SCOPE:           "https://github.com/ysugimoto/falco/blob/main/docs/linter.md#user-defined-subroutine",
+	SUBROUTINE_RECURSIVE_CALL:        "https://www.fastly.com/documentation/reference/vcl/subroutines/#recursion",
 	FORBIDDEN_BACKWARD_JUMP:          "https://fiddle.fastly.dev/fiddle/4814c144",
 }

@@ -706,6 +706,8 @@ func getFastlySubroutineScope(name string) string {
 		return "deliver"
 	case "vcl_log":
 		return "log"
+	case "vcl_pipe":
+		return "pipe"
 	}
 	return ""
 }
