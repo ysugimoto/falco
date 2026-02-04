@@ -811,7 +811,7 @@ func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 }
 
 func (i *Interpreter) updateCache() {
-	resp := i.ctx.BackendResponse.Clone();
+	resp := i.ctx.BackendResponse.Clone()
 	// Note: compare BackendResponseCacheable value
 	// because this value will be changed by user in vcl_fetch directive
 	if i.ctx.BackendResponseCacheable.Value {
