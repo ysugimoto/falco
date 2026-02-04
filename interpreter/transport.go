@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gobwas/glob"
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/config"
@@ -133,6 +134,7 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 func (i *Interpreter) getOriginHostHeader(backend *value.Backend, defaultHost string) (*string, error) {
 	// Check backend is dynamic
 	if v, err := i.getBackendProperty(backend.Value.Properties, "dynamic"); err != nil {
+		pp.Println("dynamic get error")
 		return nil, errors.WithStack(err)
 	} else if v != nil && v.Type() == value.BooleanType {
 		// If backend is dynamic, lookup .host_header field value
