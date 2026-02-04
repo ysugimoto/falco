@@ -154,18 +154,24 @@ func lint(_ js.Value, args []js.Value) any {
 	l.Lint(ast, ctx)
 
 	// Collect errors
-	var errors []LintError
+	var lintErrors []LintError
 	if l.FatalError != nil {
-		errors = append(errors, LintError{
+		line, pos := 1, 1
+		var parseErr *parser.ParseError
+		if errors.As(l.FatalError.Error, &parseErr) {
+			line = parseErr.Token.Line
+			pos = parseErr.Token.Position
+		}
+		lintErrors = append(lintErrors, LintError{
 			Severity: "error",
 			Message:  l.FatalError.Error.Error(),
-			Line:     1,
-			Position: 1,
+			Line:     line,
+			Position: pos,
 		})
 	}
 
 	for _, le := range l.Errors {
-		errors = append(errors, LintError{
+		lintErrors = append(lintErrors, LintError{
 			Severity: strings.ToLower(string(le.Severity)),
 			Message:  le.Message,
 			Line:     le.Token.Line,
@@ -174,7 +180,7 @@ func lint(_ js.Value, args []js.Value) any {
 		})
 	}
 
-	return toJS(LintResult{Errors: errors})
+	return toJS(LintResult{Errors: lintErrors})
 }
 
 // toJS converts a Go struct to a JS object via JSON.
