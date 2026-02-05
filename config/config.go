@@ -47,7 +47,7 @@ type SimulatorConfig struct {
 	IsProxyResponse bool     `cli:"proxy"` // Enable only in CLI option
 	IncludePaths    []string // Copy from root field
 
-	// HTTPS related configuration. If both fields are spcified, simulator will serve with HTTPS
+	// HTTPS related configuration. If both fields are specified, simulator will serve with HTTPS
 	KeyFile  string `cli:"key" yaml:"key_file"`
 	CertFile string `cli:"cert" yaml:"cert_file"`
 
