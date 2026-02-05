@@ -235,10 +235,14 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 	buf.WriteString(" (")
 
 	// Condition expression chunk string may be printed with multi-lines.
-	chunk := f.formatExpression(stmt.Condition).ChunkedString(stmt.Nest, stmt.Nest*f.conf.IndentWidth)
-	if strings.Contains(chunk, "\n") {
+	chunk, multiline, preserveIndent := f.formatConditionExpression(stmt.Condition, stmt.Nest, stmt.Nest*f.conf.IndentWidth)
+	if multiline {
 		buf.WriteString("\n")
-		buf.WriteString(formatChunkedString(chunk, f.indent(stmt.Nest+1)))
+		if preserveIndent {
+			buf.WriteString(formatChunkedStringPreserveIndent(chunk, f.indent(stmt.Nest+1)))
+		} else {
+			buf.WriteString(formatChunkedString(chunk, f.indent(stmt.Nest+1)))
+		}
 		buf.WriteString(f.indent(stmt.Nest) + ") ")
 	} else {
 		buf.WriteString(chunk + ") ")
@@ -284,10 +288,14 @@ func (f *Formatter) formatIfStatement(stmt *ast.IfStatement) string {
 			buf.WriteString(" " + v)
 		}
 		buf.WriteString(" (")
-		chunk := f.formatExpression(a.Condition).ChunkedString(a.Nest, getLineOffset(buf))
-		if strings.Contains(chunk, "\n") {
+		chunk, multiline, preserveIndent := f.formatConditionExpression(a.Condition, a.Nest, getLineOffset(buf))
+		if multiline {
 			buf.WriteString("\n")
-			buf.WriteString(formatChunkedString(chunk, f.indent(a.Nest+1)))
+			if preserveIndent {
+				buf.WriteString(formatChunkedStringPreserveIndent(chunk, f.indent(a.Nest+1)))
+			} else {
+				buf.WriteString(formatChunkedString(chunk, f.indent(a.Nest+1)))
+			}
 			buf.WriteString(f.indent(a.Nest) + ") ")
 		} else {
 			buf.WriteString(chunk + ") ")
