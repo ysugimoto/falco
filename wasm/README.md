@@ -18,17 +18,6 @@ FalcoVCL.format(vcl: string, options?: FormatOptions): { formatted?: string, err
 FalcoVCL.lint(vcl: string, options?: LintOptions): { errors?: LintError[], error?: string }
 ```
 
-## Limitations
-
-**Regex validation**: The native Falco CLI uses PCRE for regex validation, but PCRE's native code cannot run in WebAssembly. The Wasm build uses Go's standard `regexp` package instead, which lacks support for some PCRE features:
-
-- Lookahead (`(?=...)`, `(?!...)`)
-- Lookbehind (`(?<=...)`, `(?<!...)`)
-- Atomic groups (`(?>...)`)
-- Possessive quantifiers (`*+`, `++`, `?+`)
-
-VCL patterns using these features will pass validation in the WASM build but may fail in production or when using the native CLI.
-
 ## Usage
 
 ```html
