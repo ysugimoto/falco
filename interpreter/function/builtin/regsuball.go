@@ -6,7 +6,7 @@ import (
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
-	regexp "go.elara.ws/pcre"
+	pcre "go.elara.ws/pcre"
 )
 
 const Regsuball_Name = "regsuball"
@@ -42,16 +42,15 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	pattern := value.Unwrap[*value.String](args[1])
 	replacement := value.Unwrap[*value.String](args[2])
 
-	re, err := regexp.Compile(pattern.Value)
+	re, err := pcre.Compile(pattern.Value)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 		return &value.String{Value: input.Value}, errors.New(
-			Regsub_Name, "Invalid regular expression pattern: %s", pattern.Value,
+			Regsuball_Name, "Invalid regular expression pattern: %s", pattern.Value,
 		)
 	}
 
-	expand := regsubExpandRE.ReplaceAllString(replacement.Value, regSubExpandReplace)
 	return &value.String{
-		Value: re.ReplaceAllString(input.Value, expand),
+		Value: replaceAllString(re, input.Value, replacement.Value),
 	}, nil
 }

@@ -580,23 +580,6 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 	// TODO: consider stale-white-revalidate and stale-if-error TTL
 
-	// Update cache
-	defer func() {
-		resp := i.ctx.BackendResponse.Clone()
-		// Note: compare BackendResponseCacheable value
-		// because this value will be changed by user in vcl_fetch directive
-		if i.ctx.BackendResponseCacheable.Value {
-			if i.ctx.BackendResponseTTL.Value.Seconds() > 0 {
-				now := time.Now()
-				i.cache.Set(i.ctx.RequestHash.String(), &cache.CacheItem{
-					Response:  resp,
-					Expires:   now.Add(i.ctx.BackendResponseTTL.Value),
-					EntryTime: now,
-				})
-			}
-		}
-	}()
-
 	// Simulate Fastly statement lifecycle
 	// see: https://developer.fastly.com/learning/vcl/using/#the-vcl-request-lifecycle
 	state := DELIVER
@@ -611,6 +594,7 @@ func (i *Interpreter) ProcessFetch() error {
 		}
 	}
 
+	i.updateCache()
 	switch state {
 	case DELIVER, DELIVER_STALE, PASS, HIT_FOR_PASS:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> DELIVER", i.ctx.Scope))
@@ -824,4 +808,20 @@ func (i *Interpreter) determineCacheTTL(resp *http.Response) time.Duration {
 		}
 	}
 	return time.Duration(2 * time.Minute)
+}
+
+func (i *Interpreter) updateCache() {
+	resp := i.ctx.BackendResponse.Clone()
+	// Note: compare BackendResponseCacheable value
+	// because this value will be changed by user in vcl_fetch directive
+	if i.ctx.BackendResponseCacheable.Value {
+		if i.ctx.BackendResponseTTL.Value.Seconds() > 0 {
+			now := time.Now()
+			i.cache.Set(i.ctx.RequestHash.String(), &cache.CacheItem{
+				Response:  resp,
+				Expires:   now.Add(i.ctx.BackendResponseTTL.Value),
+				EntryTime: now,
+			})
+		}
+	}
 }

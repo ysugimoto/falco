@@ -18,6 +18,7 @@ const (
 	ERROR   int = 0x001000000
 	DELIVER int = 0x010000000
 	LOG     int = 0x100000000
+	PIPE    int = 0x1000000000
 )
 
 func ScopeString(s int) string {
@@ -40,6 +41,8 @@ func ScopeString(s int) string {
 		return "DELIVER"
 	case LOG:
 		return "LOG"
+	case PIPE:
+		return "PIPE"
 	default:
 		return "UNKNOWN"
 	}
