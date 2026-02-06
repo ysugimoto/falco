@@ -38,6 +38,8 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 		return v.ctx.ConnectTimeout, nil
 	case BEREQ_FIRST_BYTE_TIMEOUT:
 		return v.ctx.FirstByteTimeout, nil
+	case BEREQ_FETCH_TIMEOUT:
+		return v.ctx.FetchTimeout, nil
 	case BEREQ_METHOD:
 		return &value.String{Value: bereq.Method}, nil
 	case BEREQ_PROTO:
@@ -144,6 +146,11 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 		return nil
 	case BEREQ_FIRST_BYTE_TIMEOUT:
 		if err := doAssign(v.ctx.FirstByteTimeout, operator, val); err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	case BEREQ_FETCH_TIMEOUT:
+		if err := doAssign(v.ctx.FetchTimeout, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil

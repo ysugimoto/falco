@@ -3,7 +3,7 @@
 package builtin
 
 import (
-	"regexp"
+	"strings"
 
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/function/errors"
@@ -11,27 +11,51 @@ import (
 	pcre "go.elara.ws/pcre"
 )
 
-const (
-	Regsub_Name = "regsub"
+const Regsub_Name = "regsub"
 
-	regSubExpandReplace = "${$1}"
-)
+var Regsub_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
 
-var (
-	Regsub_ArgumentTypes = []value.Type{value.StringType, value.StringType, value.StringType}
-
-	regsubExpandRE = regexp.MustCompile(`\\([0-9]+)`)
-)
+func expandReplacement(input, replacement string, indices []int) string {
+	var result strings.Builder
+	for i := 0; i < len(replacement); i++ {
+		if replacement[i] != '\\' || i+1 >= len(replacement) {
+			result.WriteByte(replacement[i])
+			continue
+		}
+		i++
+		if next := replacement[i]; next >= '0' && next <= '9' {
+			if idx := int(next-'0') * 2; idx+1 < len(indices) && indices[idx] >= 0 {
+				result.WriteString(input[indices[idx]:indices[idx+1]])
+			}
+		} else {
+			result.WriteByte(next)
+		}
+	}
+	return result.String()
+}
 
 func replaceOneString(re *pcre.Regexp, input, replacement string) string {
-	replace := true
-	return re.ReplaceAllStringFunc(input, func(m string) string {
-		if !replace {
-			return m
-		}
-		replace = false
-		return re.ReplaceAllString(m, replacement)
-	})
+	indices := re.FindStringSubmatchIndex(input)
+	if indices == nil {
+		return input
+	}
+	return input[:indices[0]] + expandReplacement(input, replacement, indices) + input[indices[1]:]
+}
+
+func replaceAllString(re *pcre.Regexp, input, replacement string) string {
+	allIndices := re.FindAllStringSubmatchIndex(input, -1)
+	if allIndices == nil {
+		return input
+	}
+	var result strings.Builder
+	lastEnd := 0
+	for _, indices := range allIndices {
+		result.WriteString(input[lastEnd:indices[0]])
+		result.WriteString(expandReplacement(input, replacement, indices))
+		lastEnd = indices[1]
+	}
+	result.WriteString(input[lastEnd:])
+	return result.String()
 }
 
 func Regsub_Validate(args []value.Value) error {
@@ -54,7 +78,6 @@ func Regsub_Validate(args []value.Value) error {
 // - STRING, STRING, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/strings/regsub/
 func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
-	// Argument validations
 	if err := Regsub_Validate(args); err != nil {
 		return value.Null, err
 	}
@@ -71,8 +94,7 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
-	expand := regsubExpandRE.ReplaceAllString(replacement.Value, regSubExpandReplace)
 	return &value.String{
-		Value: replaceOneString(re, input.Value, expand),
+		Value: replaceOneString(re, input.Value, replacement.Value),
 	}, nil
 }

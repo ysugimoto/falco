@@ -25,6 +25,7 @@ var scopeMap = map[string]string{
 	"ERROR":   "ErrorScope",
 	"DELIVER": "DeliverScope",
 	"LOG":     "LogScope",
+	"PIPE":    "PipeScope",
 }
 
 const packagePath = "github.com/ysugimoto/falco/interpreter/function/"

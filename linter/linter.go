@@ -311,6 +311,12 @@ func (l *Linter) lintVCL(vcl *ast.VCL, ctx *context.Context) types.Type {
 	// To support subroutine hoisting, add root statements to context firstly and lint each statements after that.
 	l.factoryRootDeclarations(statements, ctx)
 
+	// Build call graph and infer scopes for user-defined subroutines
+	// This allows subroutines without @scope annotation to have their scope
+	// inferred from their callers
+	graph := buildCallGraph(statements)
+	l.inferSubroutineScopes(graph, ctx)
+
 	// Lint each statement/declaration logics
 	for _, s := range statements {
 		l.lintStatement(s, ctx)

@@ -342,6 +342,12 @@ func (l *Linter) lintSubRoutineDeclaration(decl *ast.SubroutineDeclaration, ctx 
 			scope = enforceSubroutineCallScopeFromConfig(enforces)
 		}
 	}
+	// If still unknown, try to use inferred scope from call graph analysis
+	if scope == -1 {
+		if sub, ok := ctx.Subroutines[decl.Name.Value]; ok && sub.Scopes > 0 {
+			scope = sub.Scopes
+		}
+	}
 	// Raise lint error about unrecognized subroutine
 	if scope == -1 {
 		err := &LintError{

@@ -21,6 +21,7 @@ var fastlyReservedSubroutines = map[string]bool{
 	"vcl_error":   true,
 	"vcl_deliver": true,
 	"vcl_log":     true,
+	"vcl_pipe":    true,
 }
 
 func IsFastlySubroutine(name string) bool {
