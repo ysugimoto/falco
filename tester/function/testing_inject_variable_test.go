@@ -36,7 +36,7 @@ func Test_inject_variable(t *testing.T) {
 			req, _ := http.NewRequest("GET", "http://example.local/", nil) // nolint:errcheck
 			c := &context.Context{
 				OverrideVariables: map[string]value.Value{},
-				Request:            req,
+				Request:           req,
 			}
 			v := variable.NewAllScopeVariables(c)
 			before, err := v.Get(context.RecvScope, tt.name)
