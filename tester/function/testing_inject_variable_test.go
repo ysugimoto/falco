@@ -26,7 +26,7 @@ func Test_inject_variable(t *testing.T) {
 
 		for _, tt := range tests {
 			c := &context.Context{
-				OverrideVariables: map[string]value.Value{},
+				OverrideVariables: map[string]any{},
 			}
 			v := variable.NewAllScopeVariables(c)
 			before, err := v.Get(context.RecvScope, tt.name)

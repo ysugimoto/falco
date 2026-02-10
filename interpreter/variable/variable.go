@@ -86,7 +86,20 @@ func doAssign(left value.Value, operator string, right value.Value) error {
 
 func lookupOverride(ctx *context.Context, name string) value.Value {
 	if v, ok := ctx.OverrideVariables[name]; ok {
-		return v
+		switch t := v.(type) {
+		case value.Value:
+			return t
+		case int:
+			return &value.Integer{Value: int64(t)}
+		case int64:
+			return &value.Integer{Value: t}
+		case float64:
+			return &value.Float{Value: t}
+		case bool:
+			return &value.Boolean{Value: t}
+		case string:
+			return &value.String{Value: t}
+		}
 	}
 	return nil
 }

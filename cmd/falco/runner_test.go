@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
@@ -660,5 +661,38 @@ func TestSkippingTests(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+func Test_parseOverrideVariables(t *testing.T) {
+	tests := []struct {
+		input    string
+		wantKey  string
+		wantVal  any
+		wantType reflect.Type
+		wantOk   bool
+	}{
+		{"foo=bar", "foo", "bar", reflect.TypeFor[string](), true},
+		{"num=42", "num", int64(42), reflect.TypeFor[int64](), true},
+		{"flt=3.14", "flt", 3.14, reflect.TypeFor[float64](), true},
+		{"flag=true", "flag", true, reflect.TypeFor[bool](), true},
+		{"flag=false", "flag", false, reflect.TypeFor[bool](), true},
+		{"badinput", "", "", nil, false},
+	}
+	for _, tt := range tests {
+		key, val, ok := (&Runner{}).parseOverrideVariables(tt.input)
+		if key != tt.wantKey || ok != tt.wantOk {
+			t.Errorf("input %q: got key=%q ok=%v, want key=%q ok=%v", tt.input, key, ok, tt.wantKey, tt.wantOk)
+		}
+		if ok && tt.wantType != nil && reflect.TypeOf(val) != tt.wantType {
+			t.Errorf("input %q: got type %T, want %v", tt.input, val, tt.wantType)
+		}
+		if ok && tt.wantType != nil && tt.wantType.Kind() == reflect.Float64 {
+			if diff := val.(float64) - tt.wantVal.(float64); diff < -1e-9 || diff > 1e-9 {
+				t.Errorf("input %q: got %v, want %v", tt.input, val, tt.wantVal)
+			}
+		} else if ok && val != tt.wantVal {
+			t.Errorf("input %q: got %v, want %v", tt.input, val, tt.wantVal)
+		}
 	}
 }

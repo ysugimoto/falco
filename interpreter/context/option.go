@@ -1,10 +1,10 @@
 package context
 
 import (
+	"maps"
 	"time"
 
 	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippet"
 	"github.com/ysugimoto/falco/tester/shared"
@@ -68,18 +68,7 @@ func WithActualResponse(is bool) Option {
 
 func WithOverrideVariables(variables map[string]any) Option {
 	return func(c *Context) {
-		for k, v := range variables {
-			switch t := v.(type) {
-			case int:
-				c.OverrideVariables[k] = &value.Integer{Value: int64(t)}
-			case string:
-				c.OverrideVariables[k] = &value.String{Value: t}
-			case float64:
-				c.OverrideVariables[k] = &value.Float{Value: float64(t)}
-			case bool:
-				c.OverrideVariables[k] = &value.Boolean{Value: t}
-			}
-		}
+		maps.Copy(c.OverrideVariables, variables)
 	}
 }
 
