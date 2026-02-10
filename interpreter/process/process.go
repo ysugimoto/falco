@@ -56,6 +56,11 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		}
 	}
 
+	var errMsg string
+	if p.Error != nil {
+		errMsg = p.Error.Error()
+	}
+
 	return json.MarshalIndent(struct {
 		Flows          []*Flow `json:"flows"`
 		Logs           []*Log  `json:"logs"`
@@ -64,7 +69,7 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		Cached         bool    `json:"cached"`
 		ElapsedTimeUs  int64   `json:"elapsed_time_us"`
 		ElapsedTimeMs  int64   `json:"elapsed_time_ms"`
-		Error          error   `json:"error,omitempty"`
+		Error          string  `json:"error,omitempty"`
 		ClientResponse struct {
 			StatusCode    int               `json:"status_code"`
 			ResponseBytes int               `json:"body_bytes"`
@@ -78,7 +83,7 @@ func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 		Cached:        false,
 		ElapsedTimeUs: time.Now().UnixMicro() - p.StartTime,
 		ElapsedTimeMs: time.Now().UnixMilli() - (p.StartTime / 1000),
-		Error:         p.Error,
+		Error:         errMsg,
 		ClientResponse: struct {
 			StatusCode    int               `json:"status_code"`
 			ResponseBytes int               `json:"body_bytes"`
