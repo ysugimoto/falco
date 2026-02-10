@@ -44,9 +44,10 @@ func Testing_call_subroutine(
 
 	// Functional subroutine
 	if sub, ok := ctx.SubroutineFunctions[name]; ok {
-		_, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass, nil)
+		ctx.TestingReturnValue, state, err = i.ProcessFunctionSubroutine(sub, interpreter.DebugPass, nil)
 		// Scoped subroutine
 	} else if sub, ok := ctx.Subroutines[name]; ok {
+		ctx.TestingReturnValue = nil
 		state, err = i.ProcessSubroutine(sub, interpreter.DebugPass, nil)
 		i.TestingState = state
 	} else {
