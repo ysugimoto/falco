@@ -235,7 +235,7 @@ func (v *ErrorScopeVariables) Set(s context.Scope, name, operator string, val va
 		}
 		return nil
 	case REQ_HASH:
-		if err := doAssign(v.ctx.RequestHash, operator, val); err != nil {
+		if err := doUpdateHash(v.ctx.RequestHash, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
