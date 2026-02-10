@@ -353,12 +353,13 @@ func TestProcessExpression(t *testing.T) {
 }
 
 func TestProcessStringConcat(t *testing.T) {
-	now := time.Now()
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	tests := []struct {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
 		isError    bool
+		opts       []context.Option
 	}{
 		{
 			name: "normal concatenation",
@@ -412,8 +413,9 @@ func TestProcessStringConcat(t *testing.T) {
 			name: "TIME concatenation",
 			vcl:  `sub vcl_recv { set req.http.Foo = "foo" + now; }`,
 			assertions: map[string]value.Value{
-				"req.http.Foo": &value.String{Value: "foo" + now.Format(http.TimeFormat)},
+				"req.http.Foo": &value.String{Value: "foo" + fixedTime.Format(http.TimeFormat)},
 			},
+			opts: []context.Option{context.WithFixedTime(fixedTime)},
 		},
 		{
 			name: "FunctionCall expression concatenation with integer",
@@ -497,19 +499,20 @@ func TestProcessStringConcat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError, tt.opts...)
 		})
 	}
 }
 
 // https://github.com/ysugimoto/falco/issues/360
 func TestProcessStringConcatIssue360(t *testing.T) {
-	now := time.Now()
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	tests := []struct {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
 		isError    bool
+		opts       []context.Option
 	}{
 		{
 			name: "concat RTIME to left string",
@@ -543,10 +546,11 @@ func TestProcessStringConcatIssue360(t *testing.T) {
 				"resp.http.Set-Cookie": &value.String{
 					Value: fmt.Sprintf(
 						`test=abc; domain=fiddle.fastly.dev; path=/; expires=%s;`,
-						now.Add(5*time.Minute).Format(http.TimeFormat),
+						fixedTime.Add(5*time.Minute).Format(http.TimeFormat),
 					),
 				},
 			},
+			opts: []context.Option{context.WithFixedTime(fixedTime)},
 		},
 		{
 			name: "concat RTIME to left TIME without plus sign",
@@ -574,7 +578,7 @@ func TestProcessStringConcatIssue360(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.DeliverScope, tt.assertions, tt.isError)
+			assertInterpreter(t, tt.vcl, context.DeliverScope, tt.assertions, tt.isError, tt.opts...)
 		})
 	}
 }
