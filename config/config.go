@@ -113,6 +113,7 @@ type FormatConfig struct {
 	CommentStyle               string `yaml:"comment_style" default:"none"`
 	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
 	IndentCaseLabels           bool   `yaml:"indent_case_labels" default:"false"`
+	BreakCompoundConditions    bool   `yaml:"break_compound_conditions" default:"false"`
 }
 
 type Config struct {

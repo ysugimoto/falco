@@ -87,6 +87,7 @@ func TestConfigFromCLI(t *testing.T) {
 			AlignTrailingComment:       false,
 			CommentStyle:               "none",
 			ShouldUseUnset:             false,
+			BreakCompoundConditions:    false,
 		},
 		OverrideBackends: make(map[string]*OverrideBackend),
 	}
