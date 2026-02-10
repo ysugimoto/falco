@@ -18,7 +18,7 @@ func TestParseCommand(t *testing.T) {
 	c := parseCommands(args)
 
 	if diff := cmp.Diff(c, Commands{"foo"}); diff != "" {
-		t.Errorf("Unmatch parsed commands, diff=%s", diff)
+		t.Errorf("Unmatched parsed commands, diff=%s", diff)
 	}
 }
 
@@ -93,7 +93,7 @@ func TestConfigFromCLI(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(c, expect, cmpopts.IgnoreFields(Config{}, "FastlyServiceID", "FastlyApiKey")); diff != "" {
-		t.Errorf("Unmatch Config struct, diff=%s", diff)
+		t.Errorf("Unmatched Config struct, diff=%s", diff)
 	}
 }
 
@@ -106,9 +106,9 @@ func TestConfigFromEnv(t *testing.T) {
 		t.Errorf("Failed to initialize config: %s", err)
 	}
 	if c.FastlyServiceID != "example_service_id" {
-		t.Errorf("Unmatch FastlyServiceID field, expect=%s, got=%s", "example_service_id", c.FastlyServiceID)
+		t.Errorf("Unmatched FastlyServiceID field, expect=%s, got=%s", "example_service_id", c.FastlyServiceID)
 	}
 	if c.FastlyApiKey != "example_api_key" {
-		t.Errorf("Unmatch FastlyApiKey field, expect=%s, got=%s", "example_api_key", c.FastlyApiKey)
+		t.Errorf("Unmatched FastlyApiKey field, expect=%s, got=%s", "example_api_key", c.FastlyApiKey)
 	}
 }

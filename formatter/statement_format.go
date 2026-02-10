@@ -126,7 +126,7 @@ func (f *Formatter) formatBlockStatement(stmt *ast.BlockStatement) string {
 	lines := Lines{}
 
 	for _, s := range stmt.Statements {
-		if s.GetMeta().PreviousEmptyLines > 0 {
+		if s.GetMeta().PreviousEmptyLines > 0 && len(lines) > 0 {
 			group.Lines = append(group.Lines, lines)
 			lines = Lines{}
 		}
