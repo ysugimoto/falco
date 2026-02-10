@@ -1,6 +1,8 @@
 package context
 
 import (
+	"time"
+
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/resolver"
@@ -90,5 +92,11 @@ func WithCoverage(cv *shared.Coverage) Option {
 func WithTLServer(tls bool) Option {
 	return func(c *Context) {
 		c.TLSServer = tls
+	}
+}
+
+func WithFixedTime(t time.Time) Option {
+	return func(c *Context) {
+		c.FixedTime = &t
 	}
 }

@@ -1,6 +1,8 @@
 package assign
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -8,6 +10,26 @@ import (
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+func UpdateHash(left *value.String, right value.Value) error {
+	if right.Type() != value.StringType && right.Type() != value.BooleanType && right.IsLiteral() {
+		return errors.WithStack(fmt.Errorf("only STRING and BOOL literals are allowed, got %s", right.Type()))
+	}
+	if right.Type() == value.IdentType {
+		return errors.WithStack(fmt.Errorf("unsupported type %s", right.Type()))
+	}
+	// DISCLAIMER: as Fastly does not document the details of req.hash += implementation
+	// we are unable to replicating it. Instead, we are just trying to come up with some
+	// reasonable behavior that would serve the purpose.
+	// This means that actual hash value is not expected to match req.digest returned by
+	// Fastly implementation.
+	h := sha256.New()
+	h.Write([]byte(left.String()))
+	h.Write([]byte(right.String()))
+	hexStr := hex.EncodeToString(h.Sum(nil))
+	left.Value = hexStr
+	return nil
+}
 
 // nolint: funlen,gocognit,gocyclo
 func Addition(left, right value.Value) error {

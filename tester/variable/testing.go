@@ -16,6 +16,7 @@ const (
 	TESTING_STATE              = "testing.state"
 	TESTING_SYNTHETIC_BODY     = "testing.synthetic_body"
 	TESTING_ORIGIN_HOST_HEADER = "testing.origin_host_header"
+	TESTING_RETURN_VALUE       = "testing.return_value"
 )
 
 type TestingVariables struct {
@@ -56,6 +57,11 @@ func (v *TestingVariables) Get(ctx *context.Context, scope context.Scope, name s
 		return &value.String{
 			Value: ctx.Request.Header.Get("Host"),
 		}, nil
+	case TESTING_RETURN_VALUE:
+		if ctx.TestingReturnValue == nil {
+			return value.Null, nil
+		}
+		return ctx.TestingReturnValue, nil
 	}
 
 	return nil, errors.New("Not Found")
