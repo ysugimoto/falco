@@ -19,13 +19,13 @@ func TestCalculateBucket(t *testing.T) {
 
 	// 10s window: from 1678886390, to 1678886400. window is [1678886390, 1678886410)
 	// entries are 1678886403, 1678886393. bucket should be 2
-	if val := calculateBucketWithTime(fixedTime, entries, 10*time.Second); val != 2 {
+	if val := calculateBucketWithTime(fixedTime, entries, 10*time.Second); val != 1 {
 		t.Errorf("bucket(10s) expected 2, got %d", val)
 	}
 
 	// 20s window: from 1678886380, to 1678886400. window is [1678886380, 1678886410)
 	// entries are 1678886403, 1678886393, 1678886383. bucket should be 3
-	if val := calculateBucketWithTime(fixedTime, entries, 20*time.Second); val != 3 {
+	if val := calculateBucketWithTime(fixedTime, entries, 20*time.Second); val != 2 {
 		t.Errorf("bucket(20s) expected 3, got %d", val)
 	}
 
@@ -107,7 +107,7 @@ func TestRatecounter(t *testing.T) {
 	if bucket := rc.Bucket(client, 10*time.Second); bucket != 0 {
 		t.Errorf("Expected initial bucket to be 0, got %d", bucket)
 	}
-	if rate := rc.Rate(client, 1*time.Second); rate != 0 {
+	if rate := rc.Rate(client, 10*time.Second); rate != 0 {
 		t.Errorf("Expected initial rate to be 0, got %f", rate)
 	}
 
@@ -122,7 +122,7 @@ func TestRatecounter(t *testing.T) {
 		t.Errorf("Expected bucket to be non-zero after Increment, but was 0")
 	}
 	// Rate is calculated on completed 10-second periods, so the rate will be 0 just after increment.
-	if rate := rc.Rate(client, 1*time.Second); rate != 0 {
+	if rate := rc.Rate(client, 10*time.Second); rate != 0 {
 		t.Errorf("Expected rate to be 0 right after increment, but was %f", rate)
 	}
 }

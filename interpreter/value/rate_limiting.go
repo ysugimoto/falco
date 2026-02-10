@@ -15,33 +15,23 @@ type rateEntry struct {
 }
 
 func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duration) int64 {
-	var from, to int64
-
-	// Calculate window range timestamps.
-	// Fastly says the window is not continuous, the window has reset for each 0 second unit,
-	// and bucket always contains the bucket range of 0 second unit.
-	// see https://www.fastly.com/documentation/guides/concepts/rate-limiting/#estimated-bucket-counts
-	mod := now % 10
-	to = now - mod
-	from = to - int64(window.Seconds())
+	// Window slides by 1 second at each whole-second boundary.
+	// At time T, the window covers [T - window + 1, T] inclusive.
+	// See: https://developer.fastly.com/reference/vcl/declarations/ratecounter
+	windowSec := int64(window.Seconds())
+	from := now - windowSec + 1
 
 	var bucket int64
 	for _, entry := range entries {
-		if from <= entry.Timestamp && to+10 > entry.Timestamp {
+		if entry.Timestamp >= from && entry.Timestamp <= now {
 			bucket += entry.Count
 		}
 	}
 	return bucket
 }
 
-func calculateRateWithTime(to int64, entries []rateEntry, window time.Duration) float64 {
-	from := to - int64(window.Seconds())
-	var bucket int64
-	for _, entry := range entries {
-		if from <= entry.Timestamp && to > entry.Timestamp {
-			bucket += entry.Count
-		}
-	}
+func calculateRateWithTime(now int64, entries []rateEntry, window time.Duration) float64 {
+	bucket := calculateBucketWithTime(now, entries, window)
 	if bucket == 0 {
 		return 0
 	}
@@ -81,13 +71,13 @@ func NewRatecounter(decl *ast.RatecounterDeclaration) *Ratecounter {
 
 // Increment() increments access entry manually.
 // This function should be called via ratelimit.ratecounter_increment() VCL function
-func (r *Ratecounter) Increment(entry string, delta int64, window time.Duration) {
+func (r *Ratecounter) Increment(entry string, delta int64) {
 	if _, ok := r.Clients[entry]; !ok {
 		r.Clients[entry] = []rateEntry{}
 	}
 	r.Clients[entry] = append(r.Clients[entry], rateEntry{
 		Count:     delta,
-		Timestamp: time.Now().Add(-window).Unix(),
+		Timestamp: time.Now().Unix(),
 	})
 	// Set accessible
 	r.IsAccessible = true
