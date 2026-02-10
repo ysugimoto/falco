@@ -11,14 +11,14 @@ import (
 )
 
 // Fastly can accept other type of variable as STRING type argument.
-// This is not strict typings but we should implement the same bahavior.
+// This is not strict typings but we should implement the same behavior.
 // Pre-generate index numbers of STRING type argument for each functions
 // and stringify its value if the value is not a STRING type nor literals.
-func stringifyVariableArguments(name string, args []value.Value, indicies map[int]struct{}) ([]value.Value, error) {
+func stringifyVariableArguments(name string, args []value.Value, indices map[int]struct{}) ([]value.Value, error) {
 	stringified := make([]value.Value, len(args))
 	for i := range args {
 		// The argument of index is not a STRING type, skip it
-		if _, ok := indicies[i]; !ok {
+		if _, ok := indices[i]; !ok {
 			stringified[i] = args[i]
 			continue
 		}
