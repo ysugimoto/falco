@@ -152,6 +152,8 @@ type Context struct {
 	// For testing fields
 	// Stored subroutine return state
 	ReturnState *value.String
+	// Stored functional subroutine return value
+	TestingReturnValue value.Value
 	// Injected fixed time for `now`, `now.sec`, etc
 	FixedTime *time.Time
 	// Count of subroutine called

@@ -27,7 +27,7 @@ backend example {
 	)
 }
 
-func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool) {
+func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool, opts ...context.Option) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -42,9 +42,10 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 	}
 
 	vcl = defaultBackend(parsed) + "\n" + vcl
-	ip := New(context.WithResolver(
+	allOpts := append([]context.Option{context.WithResolver(
 		resolver.NewStaticResolver("main", vcl),
-	))
+	)}, opts...)
+	ip := New(allOpts...)
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
 	ip.ServeHTTP(rec, req)
