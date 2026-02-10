@@ -112,7 +112,7 @@ func TestRatecounter(t *testing.T) {
 	}
 
 	// After increment, IsAccessible should be true
-	rc.Increment(client, 1, 0)
+	rc.Increment(client, 1)
 	if !rc.IsAccessible {
 		t.Errorf("Expected IsAccessible to be true after Increment, but was false")
 	}
