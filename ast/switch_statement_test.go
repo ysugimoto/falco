@@ -5,7 +5,7 @@ import (
 )
 
 func TestSwitchStatement(t *testing.T) {
-	switchs := &SwitchStatement{
+	switches := &SwitchStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("/* This is comment */"), comments("// This is switch infix")),
 		Control: &SwitchControl{
 			Meta: New(T, 0, comments("/* before_paren */"), comments("/* after_paren */")),
@@ -116,5 +116,5 @@ default: /* This is comment */
 } /* This is comment */
 `
 
-	assert(t, switchs.String(), expect)
+	assert(t, switches.String(), expect)
 }

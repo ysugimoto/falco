@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestSynthericBase64Statement(t *testing.T) {
+func TestSyntheticBase64Statement(t *testing.T) {
 	s := &SyntheticBase64Statement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Value: &String{

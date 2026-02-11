@@ -42,6 +42,7 @@ format:
   comment_style: none
   should_use_unset: false
   indent_case_labels: false
+  break_compound_conditions: false
 
 ## Simulator configuration
 simulator:
@@ -112,7 +113,6 @@ All configurations of configuration files and CLI arguments are described follow
 | override_backends.[name].host           | String              | -           | -                  | Backend host to override                                                                                                              |
 | override_backends.[name].ssl            | Boolean             | true        | -                  | Use HTTPS when set `true`                                                                                                             |
 | override_backends.[name].unhealthy      | Boolean             | false       | -                  | Override backend to be unhealthy when set `true`                                                                                      |
-
 
 
 

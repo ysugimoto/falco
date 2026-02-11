@@ -927,6 +927,122 @@ func TestFormatIfStatement(t *testing.T) {
 			},
 		},
 		{
+			name: "compound condition forced line breaks",
+			input: `sub vcl_recv {
+	if ((beresp.status == 500 || beresp.status == 503) && req.restarts < 1 && (req.request == "GET" || req.request == "HEAD")) {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    (
+      beresp.status == 500 ||
+      beresp.status == 503
+    ) &&
+    req.restarts < 1 &&
+    (
+      req.request == "GET" ||
+      req.request == "HEAD"
+    )
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				TrailingCommentWidth:    2,
+				LineWidth:               200,
+				BreakCompoundConditions: true,
+			},
+		},
+		{
+			name: "compound condition in else if",
+			input: `sub vcl_recv {
+	if (req.http.A == "1") {
+		set req.http.OK = "1";
+	} else if ((req.http.B == "2" || req.http.B == "3") && req.http.C == "4") {
+		set req.http.OK = "2";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (req.http.A == "1") {
+    set req.http.OK = "1";
+  } else if (
+    (
+      req.http.B == "2" ||
+      req.http.B == "3"
+    ) &&
+    req.http.C == "4"
+  ) {
+    set req.http.OK = "2";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				TrailingCommentWidth:    2,
+				LineWidth:               200,
+				BreakCompoundConditions: true,
+			},
+		},
+		{
+			name: "simple compound condition breaks",
+			input: `sub vcl_recv {
+	if (req.http.A == "1" && req.http.B == "2") {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    req.http.A == "1" &&
+    req.http.B == "2"
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				TrailingCommentWidth:    2,
+				LineWidth:               200,
+				BreakCompoundConditions: true,
+			},
+		},
+		{
+			name: "negated compound condition",
+			input: `sub vcl_recv {
+	if (!(req.http.A == "1" || req.http.B == "2")) {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    !(
+      req.http.A == "1" ||
+      req.http.B == "2"
+    )
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				TrailingCommentWidth:    2,
+				LineWidth:               200,
+				BreakCompoundConditions: true,
+			},
+		},
+		{
 			name: "chunked condition format with infix comments",
 			input: `sub vcl_recv {
 	if (req.http.Header1 == "1" && req.http.Header2 /* comment */  == /* comment */ "2" && req.http.Header3 == "3") {
