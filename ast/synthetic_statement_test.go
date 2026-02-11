@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestSynthericStatement(t *testing.T) {
+func TestSyntheticStatement(t *testing.T) {
 	s := &SyntheticStatement{
 		Meta: New(T, 0, comments("// This is comment"), comments("// This is comment")),
 		Value: &String{
