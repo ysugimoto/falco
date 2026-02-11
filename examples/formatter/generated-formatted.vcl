@@ -291,7 +291,6 @@ sub vcl_deliver {
 }
 
 sub vcl_error {
-
   #--FASTLY ERROR BEGIN
 
   if (obj.status == 801) {
@@ -353,7 +352,6 @@ sub vcl_pipe {
 }
 
 sub vcl_pass {
-
   #--FASTLY PASS BEGIN
   {
 
