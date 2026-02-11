@@ -128,22 +128,23 @@ sub vcl_recv {
         const tokOffset = toOffset(tok.line, tok.position);
         // Add any text between last token and this one
         if (tokOffset > lastOffset) {
-          html += escapeHtml(vcl.slice(lastOffset, tokOffset));
+          html += escapeHtmlText(vcl.slice(lastOffset, tokOffset));
         }
         // Render token
         let literal = tok.literal;
         if (tok.category === 'string') literal = '"' + literal + '"';
-        html += `<span class="tok-${tok.category}">${escapeHtml(literal)}</span>`;
+        html += `<span class="tok-${tok.category}">${escapeHtmlText(literal)}</span>`;
         lastOffset = tokOffset + literal.length;
       }
       // Add remaining text
       if (lastOffset < vcl.length) {
-        html += escapeHtml(vcl.slice(lastOffset));
+        html += escapeHtmlText(vcl.slice(lastOffset));
       }
       document.getElementById("result").innerHTML = html;
     }
 
-    function escapeHtml(str) {
+    // Only escapes characters needed for safe text node insertion (not attribute values).
+    function escapeHtmlText(str) {
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
