@@ -83,3 +83,15 @@ func formatChunkedString(chunk, indent string) string {
 	}
 	return buf.String()
 }
+
+// Format multiple line chunk string with specified indent preserving leading spaces.
+func formatChunkedStringPreserveIndent(chunk, indent string) string {
+	buf := bufferPool.Get().(*bytes.Buffer) // nolint:errcheck
+	defer bufferPool.Put(buf)
+
+	buf.Reset()
+	for line := range strings.SplitSeq(chunk, "\n") {
+		buf.WriteString(indent + line + "\n")
+	}
+	return buf.String()
+}
