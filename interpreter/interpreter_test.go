@@ -27,7 +27,7 @@ backend example {
 	)
 }
 
-func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool) {
+func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions map[string]value.Value, isError bool, opts ...context.Option) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -42,9 +42,10 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 	}
 
 	vcl = defaultBackend(parsed) + "\n" + vcl
-	ip := New(context.WithResolver(
+	allOpts := append([]context.Option{context.WithResolver(
 		resolver.NewStaticResolver("main", vcl),
-	))
+	)}, opts...)
+	ip := New(allOpts...)
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
 	ip.ServeHTTP(rec, req)
@@ -185,5 +186,32 @@ func TestProcessBackends(t *testing.T) {
 		}); err == nil {
 			t.Error("Expected error due to duplicated backends")
 		}
+	})
+}
+
+func TestSyntheticAfterRestart(t *testing.T) {
+	vcl := `
+      sub vcl_recv {
+        if (req.restarts > 0) {
+          error 601 "restart triggered";
+        }
+      }
+      sub vcl_deliver {
+        if (req.restarts == 0) {
+          return (restart);
+        }
+      }
+      sub vcl_error {
+        set obj.status = 200;
+        set obj.http.synthetic-returned = "yes";
+        synthetic "synthetic response";
+      }
+    `
+	t.Run("Synthetic after restart", func(t *testing.T) {
+		assertInterpreter(t, vcl, context.DeliverScope, map[string]value.Value{
+			"req.restarts":                 &value.Integer{Value: 1},
+			"resp.status":                  &value.Integer{Value: 200},
+			"resp.http.synthetic-returned": &value.String{Value: "yes"},
+		}, false)
 	})
 }

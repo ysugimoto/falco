@@ -128,6 +128,72 @@ return(pass);
 				ReturnStatementParenthesis: true,
 			},
 		},
+		{
+			name: "#FASTLY macro with blank line after",
+			input: `sub vcl_hit {
+#FASTLY hit
+
+  if (!obj.cacheable) {
+    return(pass);
+  }
+  return(deliver);
+}`,
+			expect: `sub vcl_hit {
+#FASTLY hit
+
+  if (!obj.cacheable) {
+    return(pass);
+  }
+  return(deliver);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "sharp",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
+			name: "Comment at block start with blank line after",
+			input: `sub test {
+  # First comment
+
+  set req.http.Foo = "bar";
+}`,
+			expect: `sub test {
+  # First comment
+
+  set req.http.Foo = "bar";
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "sharp",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
+			name: "Blank line between statements preserved",
+			input: `sub test {
+  set req.http.Foo = "bar";
+
+  set req.http.Baz = "qux";
+}`,
+			expect: `sub test {
+  set req.http.Foo = "bar";
+
+  set req.http.Baz = "qux";
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "sharp",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {

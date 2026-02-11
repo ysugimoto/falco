@@ -25,6 +25,7 @@ var scopeMap = map[string]string{
 	"ERROR":   "ErrorScope",
 	"DELIVER": "DeliverScope",
 	"LOG":     "LogScope",
+	"PIPE":    "PipeScope",
 }
 
 const packagePath = "github.com/ysugimoto/falco/interpreter/function/"
@@ -41,7 +42,7 @@ func newInterpreter() *Interpreter {
 		builtinInput:     "./builtin.yml",
 		builtinOutput:    "../interpreter/function/builtin_functions.go",
 		predefinedInput:  "./predefined.yml",
-		predefinedOutput: "../interpreter/variable/predfined.go",
+		predefinedOutput: "../interpreter/variable/predefined.go",
 	}
 }
 
@@ -126,10 +127,10 @@ func (i *Interpreter) generateBuiltInFunction() error {
 		}
 
 		buf.WriteString("Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {\n")
-		if indicies := i.createFunctionStringifyVariableIndicies(v.Arguments); indicies != "" {
+		if indices := i.createFunctionStringifyVariableIndices(v.Arguments); indices != "" {
 			buf.WriteString("var err error\n")
 			buf.WriteString(
-				fmt.Sprintf("args, err = stringifyVariableArguments(\"%s\", args, %s)\n", key, indicies),
+				fmt.Sprintf("args, err = stringifyVariableArguments(\"%s\", args, %s)\n", key, indices),
 			)
 			buf.WriteString("if err != nil {\n")
 			buf.WriteString("return value.Null, errors.WithStack(err)\n")
@@ -170,7 +171,7 @@ func (i *Interpreter) generateBuiltInFunction() error {
 	return nil
 }
 
-func (i *Interpreter) createFunctionStringifyVariableIndicies(arguments [][]string) string {
+func (i *Interpreter) createFunctionStringifyVariableIndices(arguments [][]string) string {
 	// Find max length of arguments
 	var maxArgs []string
 	for _, args := range arguments {
@@ -191,14 +192,14 @@ func (i *Interpreter) createFunctionStringifyVariableIndicies(arguments [][]stri
 		return ""
 	}
 
-	indicies := make([]string, len(stack))
+	indices := make([]string, len(stack))
 	var idx int
 	for i := range stack {
-		indicies[idx] = fmt.Sprintf("%d: {}", i)
+		indices[idx] = fmt.Sprintf("%d: {}", i)
 		idx++
 	}
-	slices.Sort(indicies)
-	return fmt.Sprintf("map[int]struct{}{%s}", strings.Join(indicies, ", "))
+	slices.Sort(indices)
+	return fmt.Sprintf("map[int]struct{}{%s}", strings.Join(indices, ", "))
 }
 
 func (i *Interpreter) createFunctionIdentArguments(arguments [][]string) string {

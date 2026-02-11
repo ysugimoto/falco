@@ -127,6 +127,7 @@ type Context struct {
 	BetweenBytesTimeout                 *value.RTime
 	ConnectTimeout                      *value.RTime
 	FirstByteTimeout                    *value.RTime
+	FetchTimeout                        *value.RTime
 	BackendResponseGzip                 *value.Boolean
 	BackendResponseBrotli               *value.Boolean
 	BackendResponseCacheable            *value.Boolean
@@ -151,6 +152,8 @@ type Context struct {
 	// For testing fields
 	// Stored subroutine return state
 	ReturnState *value.String
+	// Stored functional subroutine return value
+	TestingReturnValue value.Value
 	// Injected fixed time for `now`, `now.sec`, etc
 	FixedTime *time.Time
 	// Count of subroutine called
@@ -256,6 +259,7 @@ func New(options ...Option) *Context {
 		BetweenBytesTimeout:                 &value.RTime{},
 		ConnectTimeout:                      &value.RTime{},
 		FirstByteTimeout:                    &value.RTime{Value: 15 * time.Second},
+		FetchTimeout:                        &value.RTime{},
 		BackendResponseGzip:                 &value.Boolean{},
 		BackendResponseBrotli:               &value.Boolean{},
 		BackendResponseCacheable:            &value.Boolean{},

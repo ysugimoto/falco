@@ -470,6 +470,44 @@ sub vcl_recv {
 
 ---
 
+## Break Compound Conditions
+
+**default: false**
+
+If true, compound conditions in `if` and `else if` are split into multiple lines.
+Grouped sub-conditions that include `&&`/`||` are formatted with their own
+indented multi-line block.
+
+```vcl
+sub vcl_recv {
+  if ((beresp.status == 500 || beresp.status == 503) && req.restarts < 1 && (req.request == "GET" || req.request == "HEAD")) {
+    ...
+  }
+}
+```
+
+Formatted (break_compound_conditions: true):
+
+```vcl
+sub vcl_recv {
+  if (
+    (
+      beresp.status == 500 ||
+      beresp.status == 503
+    ) &&
+    req.restarts < 1 &&
+    (
+      req.request == "GET" ||
+      req.request == "HEAD"
+    )
+  ) {
+    ...
+  }
+}
+```
+
+---
+
 ## Comment Style
 
 **default: none**
