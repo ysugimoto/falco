@@ -43,7 +43,7 @@
 - Fully implement and fix `fastly.try_select_shield()` [#486](https://github.com/ysugimoto/falco/pull/486) (@MasonM)
 - Implement `director.{NAME}.healthy` and fix segfaults [#485](https://github.com/ysugimoto/falco/pull/485) (@MasonM)
 - Add `assert.is_json()` function [#483](https://github.com/ysugimoto/falco/pull/483) (@MasonM)
-- Fix object response handling, mainly error scope [#481](https://gthub.com/ysugimoto/falco/pull/481) (@ysugimoto)
+- Fix object response handling, mainly error scope [#481](https://github.com/ysugimoto/falco/pull/481) (@ysugimoto)
 
 ## v1.19.0
 
@@ -257,9 +257,9 @@
 
 - Feat/state related asserter [#232](https://github.com/ysugimoto/falco/pull/232) (@ysugimoto)
 - Fix not_set value related implementation [#231](https://github.com/ysugimoto/falco/pull/231) (@ysugimoto)
-- Fix time default value [#230](https://gthub.com/ysugimoto/falco/pull/230) (@ysugimoto)
+- Fix time default value [#230](https://github.com/ysugimoto/falco/pull/230) (@ysugimoto)
 - Implement table manipulation testing functions [#229](https://github.com/ysugimoto/falco/pull/229) (@ysugimoto)
-- User defined function fixes [@228](https://github.com/ysugimoto/falco/pull/228) (@richardmarshall)
+- User defined function fixes [#228](https://github.com/ysugimoto/falco/pull/228) (@richardmarshall)
 
 ## v1.2.1
 
