@@ -419,7 +419,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 
 	// backend.src_ip always indicates this server, means localhost
 	case BERESP_BACKEND_SRC_IP:
-		if v := lookupOverride(v.ctx, name); v != nil {
+		if v := lookupOverrideAsIP(v.ctx, name); v != nil {
 			return v, nil
 		}
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
@@ -526,7 +526,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return v.ctx.ClientIdentity, nil
 
 	case CLIENT_IP:
-		if v := lookupOverride(v.ctx, name); v != nil {
+		if v := lookupOverrideAsIP(v.ctx, name); v != nil {
 			return v, nil
 		}
 		idx := strings.LastIndex(req.RemoteAddr, ":")
