@@ -954,7 +954,7 @@ sub test_vcl {
     // Fail because value does not match regular expression
     assert.match(var.testing, "bar");
 
-    // Fail because value type is not a string
+    // Fail because value type is not a string (default client.ip is 192.0.2.1)
     assert.match(client.ip, "10");
 }
 ```
