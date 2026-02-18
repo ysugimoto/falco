@@ -656,6 +656,21 @@ func builtinFunctions() Functions {
 		},
 		"fastly": &FunctionSpec{
 			Items: map[string]*FunctionSpec{
+				"ff": &FunctionSpec{
+					Items: map[string]*FunctionSpec{
+						"last_hop_was_serviceid": &FunctionSpec{
+							Items: map[string]*FunctionSpec{},
+							Value: &BuiltinFunction{
+								Return: types.BoolType,
+								Arguments: [][]types.Type{
+									[]types.Type{types.StringType},
+								},
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/",
+							},
+						},
+					},
+				},
 				"hash": &FunctionSpec{
 					Items: map[string]*FunctionSpec{},
 					Value: &BuiltinFunction{
