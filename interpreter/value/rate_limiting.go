@@ -11,23 +11,17 @@ import (
 // rateEntry represents single access entry for a client
 type rateEntry struct {
 	Count     int64
-	Timestamp int64 // unix time second
+	Timestamp int64 // unix time millisecond
 }
 
 func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duration) int64 {
-	var from, to int64
-
-	// Calculate window range timestamps.
-	// Fastly says the window is not continuous, the window has reset for each 0 second unit,
-	// and bucket always contains the bucket range of 0 second unit.
-	// see https://www.fastly.com/documentation/guides/concepts/rate-limiting/#estimated-bucket-counts
-	mod := now % 10
-	to = now - mod
-	from = to - int64(window.Seconds())
+	currentEpoch := now / 10000
+	numSlots := int64(window.Seconds()) / 10
 
 	var bucket int64
 	for _, entry := range entries {
-		if from <= entry.Timestamp && to+10 > entry.Timestamp {
+		entryEpoch := entry.Timestamp / 10000
+		if entryEpoch > currentEpoch-numSlots && entryEpoch <= currentEpoch {
 			bucket += entry.Count
 		}
 	}
@@ -35,30 +29,26 @@ func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duratio
 }
 
 func calculateRateWithTime(now int64, entries []rateEntry, window time.Duration) float64 {
-	var from, to int64
-
-	mod := now % 10
-	to = now - mod
-	from = to - int64(window.Seconds())
-
-	var bucket int64
+	windowSec := int64(window.Seconds())
+	cutoff := now - window.Milliseconds()
+	var total int64
 	for _, entry := range entries {
-		if from <= entry.Timestamp && to > entry.Timestamp {
-			bucket += entry.Count
+		if entry.Timestamp > cutoff {
+			total += entry.Count
 		}
 	}
-	if bucket == 0 {
+	if total == 0 {
 		return 0
 	}
-	return math.Floor(float64(bucket) / window.Seconds())
+	return math.Floor(float64(total) / float64(windowSec))
 }
 
 func calculateBucket(entries []rateEntry, window time.Duration) int64 {
-	return calculateBucketWithTime(time.Now().Unix(), entries, window)
+	return calculateBucketWithTime(time.Now().UnixMilli(), entries, window)
 }
 
 func calculateRate(entries []rateEntry, window time.Duration) float64 {
-	return calculateRateWithTime(time.Now().Unix(), entries, window)
+	return calculateRateWithTime(time.Now().UnixMilli(), entries, window)
 }
 
 // Ratecounter represents ratecounter declaration with holding client map
@@ -86,15 +76,14 @@ func NewRatecounter(decl *ast.RatecounterDeclaration) *Ratecounter {
 
 // Increment() increments access entry manually.
 // This function should be called via ratelimit.ratecounter_increment() VCL function
-func (r *Ratecounter) Increment(entry string, delta int64, window time.Duration) {
+func (r *Ratecounter) Increment(entry string, delta int64) {
 	if _, ok := r.Clients[entry]; !ok {
 		r.Clients[entry] = []rateEntry{}
 	}
 	r.Clients[entry] = append(r.Clients[entry], rateEntry{
 		Count:     delta,
-		Timestamp: time.Now().Add(-window).Unix(),
+		Timestamp: time.Now().UnixMilli(),
 	})
-	// Set accessible
 	r.IsAccessible = true
 }
 
