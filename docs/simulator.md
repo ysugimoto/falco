@@ -21,6 +21,7 @@ Flags:
     -I, --include_path : Add include path
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
+    -o, --override     : Override tentative variable value (e.g., -o "req.protocol=https")
     --proxy            : Enable actual proxy behavior
     -request           : Simulate request config
     -debug             : Enable debug mode
@@ -79,6 +80,30 @@ falco simulate /path/to/your/default.vcl --key /path/to/localhost-key.pem --cert
 ```
 
 Then falco serve with https://localhost:3124.
+
+## Overriding Tentative Variables
+
+You can override tentative variable values via the `-o` (or `--override`) flag or `.falco.yml` configuration file. This is useful for simulating different conditions like HTTPS requests without needing actual TLS certificates.
+
+**Via CLI flag:**
+
+```shell
+# Override a single variable
+falco simulate -I . -o "req.protocol=https" /path/to/your/default.vcl
+
+# Override multiple variables
+falco simulate -I . -o "req.protocol=https" -o "server.region=ASIA" /path/to/your/default.vcl
+```
+
+**Via `.falco.yml` configuration:**
+
+```yaml
+simulator:
+  overrides:
+    req.protocol: https
+    server.region: ASIA
+    client.geo.country_code: JP
+```
 
 ## Override Edge Dictionary Items
 
