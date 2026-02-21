@@ -569,8 +569,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: fmt.Sprint(time.Now().Unix())}, nil
 	case REQ_BODY:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
+			if req.Body == nil {
+				return &value.String{Value: ""}, nil
+			}
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
@@ -589,8 +595,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return &value.String{Value: ""}, nil
 		}
 	case REQ_BODY_BASE64:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
+			if req.Body == nil {
+				return &value.String{Value: ""}, nil
+			}
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
