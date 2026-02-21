@@ -11,19 +11,17 @@ import (
 // rateEntry represents single access entry for a client
 type rateEntry struct {
 	Count     int64
-	Timestamp int64 // unix time second
+	Timestamp int64 // unix time millisecond
 }
 
 func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duration) int64 {
-	// Window slides by 1 second at each whole-second boundary.
-	// At time T, the window covers [T - window + 1, T] inclusive.
-	// See: https://developer.fastly.com/reference/vcl/declarations/ratecounter
-	windowSec := int64(window.Seconds())
-	from := now - windowSec + 1
+	currentEpoch := now / 10000
+	numSlots := int64(window.Seconds()) / 10
 
 	var bucket int64
 	for _, entry := range entries {
-		if entry.Timestamp >= from && entry.Timestamp <= now {
+		entryEpoch := entry.Timestamp / 10000
+		if entryEpoch > currentEpoch-numSlots && entryEpoch <= currentEpoch {
 			bucket += entry.Count
 		}
 	}
@@ -31,19 +29,26 @@ func calculateBucketWithTime(now int64, entries []rateEntry, window time.Duratio
 }
 
 func calculateRateWithTime(now int64, entries []rateEntry, window time.Duration) float64 {
-	bucket := calculateBucketWithTime(now, entries, window)
-	if bucket == 0 {
+	windowSec := int64(window.Seconds())
+	cutoff := now - window.Milliseconds()
+	var total int64
+	for _, entry := range entries {
+		if entry.Timestamp > cutoff {
+			total += entry.Count
+		}
+	}
+	if total == 0 {
 		return 0
 	}
-	return math.Floor(float64(bucket) / window.Seconds())
+	return math.Floor(float64(total) / float64(windowSec))
 }
 
 func calculateBucket(entries []rateEntry, window time.Duration) int64 {
-	return calculateBucketWithTime(time.Now().Unix(), entries, window)
+	return calculateBucketWithTime(time.Now().UnixMilli(), entries, window)
 }
 
 func calculateRate(entries []rateEntry, window time.Duration) float64 {
-	return calculateRateWithTime(time.Now().Unix(), entries, window)
+	return calculateRateWithTime(time.Now().UnixMilli(), entries, window)
 }
 
 // Ratecounter represents ratecounter declaration with holding client map
@@ -77,9 +82,8 @@ func (r *Ratecounter) Increment(entry string, delta int64) {
 	}
 	r.Clients[entry] = append(r.Clients[entry], rateEntry{
 		Count:     delta,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 	})
-	// Set accessible
 	r.IsAccessible = true
 }
 

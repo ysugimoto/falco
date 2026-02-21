@@ -12,9 +12,9 @@ func TestCalculateBucket(t *testing.T) {
 	fixedTime := int64(1678886408)
 
 	entries := []rateEntry{
-		{Count: 1, Timestamp: fixedTime - 5},  // 1678886403
-		{Count: 1, Timestamp: fixedTime - 15}, // 1678886393
-		{Count: 1, Timestamp: fixedTime - 25}, // 1678886383
+		{Count: 1, Timestamp: fixedTime - 5000},  // 1678886403
+		{Count: 1, Timestamp: fixedTime - 15000}, // 1678886393
+		{Count: 1, Timestamp: fixedTime - 25000}, // 1678886383
 	}
 
 	// 10s window: from 1678886390, to 1678886400. window is [1678886390, 1678886410)
@@ -57,6 +57,18 @@ func TestCalculateRate(t *testing.T) {
 	}
 
 	// 60s window: bucket is 3, rate is floor(3 / 60) = 0
+	if val := calculateRateWithTime(fixedTime, entries, 60*time.Second); val != 0 {
+		t.Errorf("rate(60s) expected 0, got %f", val)
+	}
+}
+
+func TestCalculateRateReplicate(t *testing.T) {
+	fixedTime := int64(1678886408)
+	entries := []rateEntry{
+		{Count: 1, Timestamp: fixedTime - 5},  // 1678886403
+		{Count: 1, Timestamp: fixedTime - 15}, // 1678886393
+		{Count: 1, Timestamp: fixedTime - 25}, // 1678886383
+	}
 	if val := calculateRateWithTime(fixedTime, entries, 60*time.Second); val != 0 {
 		t.Errorf("rate(60s) expected 0, got %f", val)
 	}

@@ -98,5 +98,5 @@ func check_ratelimit(ctx *context.Context, entry string, rcName string, delta, w
 
 	// Compare the rate and limit
 	rate := rc.Rate(entry, time.Duration(window)*time.Second)
-	return rate >= float64(limit), nil
+	return rate > float64(limit), nil
 }
