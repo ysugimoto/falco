@@ -64,13 +64,16 @@ type Ratecounter struct {
 	// - `ratelimit.check_rates`
 	// - `ratelimit.ratecounter_increment`
 	// This field managed whether either of above functions is called
-	IsAccessible bool
+	// Last incremented entry (used to estimate values ratecounter.{NAME} rate and bucket variables)
+	// Also LastIncremented != nil serves as IsAccessible flag
+	LastIncremented *string
 }
 
 func NewRatecounter(decl *ast.RatecounterDeclaration) *Ratecounter {
 	return &Ratecounter{
-		Decl:    decl,
-		Clients: make(map[string][]rateEntry),
+		Decl:            decl,
+		Clients:         make(map[string][]rateEntry),
+		LastIncremented: nil,
 	}
 }
 
@@ -84,13 +87,13 @@ func (r *Ratecounter) Increment(entry string, delta int64) {
 		Count:     delta,
 		Timestamp: time.Now().UnixMilli(),
 	})
-	r.IsAccessible = true
+	r.LastIncremented = &entry
 }
 
 // Bucket() returns access count for provided window.
 // This function will be called for specific variables like ratecounter.{NAME}.bucket.10s
 func (r *Ratecounter) Bucket(entry string, window time.Duration) int64 {
-	if !r.IsAccessible {
+	if r.LastIncremented == nil {
 		return 0
 	}
 	entries, ok := r.Clients[entry]
@@ -103,7 +106,7 @@ func (r *Ratecounter) Bucket(entry string, window time.Duration) int64 {
 // Rate() returns access rate for provided window.
 // This function will be called for specific variables like ratecounter.{NAME}.rate.1s
 func (r *Ratecounter) Rate(entry string, window time.Duration) float64 {
-	if !r.IsAccessible {
+	if r.LastIncremented == nil {
 		return 0
 	}
 	entries, ok := r.Clients[entry]
