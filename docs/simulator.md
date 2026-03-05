@@ -38,7 +38,7 @@ Local debugger example:
 
 ### Configuration
 
-You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/main/docs/configuration.md) in detail.
 
 
 You can start the simulator as follows:
@@ -181,6 +181,6 @@ Limitations are the following:
 - Could not look at private edge dictionary item due to Fastly API not responding to its item
 - Lots of predefined variables and builtin functions return empty or tentative value
 
-Variables that return tentative or inaccurate values are described at [variables.md](https://github.com/ysugimoto/falco/blob/develop/docs/variables.md).
-Functions that return tentative value or unexpected behavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/develop/docs/functions.md).
+Variables that return tentative or inaccurate values are described at [variables.md](https://github.com/ysugimoto/falco/blob/main/docs/variables.md).
+Functions that return tentative value or unexpected behavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/main/docs/functions.md).
 
