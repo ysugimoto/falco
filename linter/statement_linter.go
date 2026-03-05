@@ -115,6 +115,19 @@ func (l *Linter) lintDeclareStatement(stmt *ast.DeclareStatement, ctx *context.C
 
 	// Lint the value expression if present
 	if stmt.Value != nil {
+		// For BOOL type, Fastly only accepts simple forms:
+		// a single variable/literal, a function call, a parenthesized expression, or a sub call.
+		// A bare infix expression like "true == false" is not accepted — parentheses are required.
+		if vt == types.BoolType {
+			if _, ok := stmt.Value.(*ast.InfixExpression); ok {
+				err := &LintError{
+					Severity: ERROR,
+					Token:    stmt.Value.GetMeta().Token,
+					Message:  "Cannot use operator expression in BOOL declaration assignment without parentheses",
+				}
+				l.Error(err.Match(DECLARE_STATEMENT_SYNTAX))
+			}
+		}
 		l.lint(stmt.Value, ctx)
 	}
 
