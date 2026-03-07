@@ -820,13 +820,12 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 		if !ok {
 			return nil, exception.Runtime(nil, "ratecounter '%s' is not defined", name)
 		}
-		// Get remote address by accessing client.ip variable
-		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
+		entry := rc.LastIncremented
 		switch method {
 		case "bucket":
-			return getRateCounterBucketValue(v.ctx, rc, ip.String(), window)
+			return getRateCounterBucketValue(v.ctx, rc, entry, window)
 		case "rate":
-			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
+			return getRateCounterRateValue(v.ctx, rc, entry, window)
 		default:
 			return nil, exception.Runtime(nil, "unexpected method '%s' found", method)
 		}
