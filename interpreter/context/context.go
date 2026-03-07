@@ -186,7 +186,7 @@ type Context struct {
 	// Marker that return request is purge request.
 	IsPurgeRequest bool
 
-	OverrideVariables map[string]value.Value
+	OverrideVariables map[string]any
 }
 
 func New(options ...Option) *Context {
@@ -285,7 +285,7 @@ func New(options ...Option) *Context {
 		RegexMatchedValues: make(map[string]*value.String),
 		SubroutineCalls:    make(map[string]int),
 
-		OverrideVariables: make(map[string]value.Value),
+		OverrideVariables: make(map[string]any),
 	}
 
 	// collect options
