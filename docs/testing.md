@@ -4,7 +4,7 @@ You can run VCL unit test on our interpreter to make sure the subroutine works a
 
 ## Note
 
-Some variables are limited because to interpreter runs locally, so the variables that are used in your production VCL may have unexpected values, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) about limitations before.
+Some variables are limited because to interpreter runs locally, so the variables that are used in your production VCL may have unexpected values, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/main/docs/simulator.md) about limitations before.
 
 ## Usage
 
@@ -38,7 +38,7 @@ Local testing example:
 
 ### Configuration
 
-You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/main/docs/configuration.md) in detail.
 
 
 You can run testing as following:
