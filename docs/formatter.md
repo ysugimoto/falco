@@ -42,7 +42,7 @@ falco fmt /path/to/your/*.vcl /path/to/another/**/*.vcl
 ## Format rules
 
 Formatting rules have default parameter which we recommend but you can override them with `format` section in configuration file.
-See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+See [configuration documentation](https://github.com/ysugimoto/falco/blob/main/docs/configuration.md) in detail.
 
 Supporting rules are described the following table and sections.
 
