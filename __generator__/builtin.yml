@@ -619,6 +619,13 @@ addr.is_ipv6:
     - [IP]
   return: BOOL
 
+fastly.ff.last_hop_was_serviceid:
+  reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: BOOL
+
 fastly.hash:
   reference: "https://developer.fastly.com/reference/vcl/functions/miscellaneous/fastly-hash/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
