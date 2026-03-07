@@ -48,9 +48,16 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 
 	var argTypes []types.Type
 	for _, a := range fn.Arguments {
-		// Special case of variadic arguments of types.StringListType,
-		// We do not compare argument length, just lint with "all argument types are STRING".
-		if slices.Contains(a, types.StringListType) || len(a) == len(calledFn.arguments) {
+		if slices.Contains(a, types.StringListType) {
+			// For variadic StringListType variants, the caller must provide
+			// at least as many arguments as the non-variadic prefix
+			// (i.e. all positions before the StringListType slot).
+			nonVariadic := slices.Index(a, types.StringListType)
+			if len(calledFn.arguments) >= nonVariadic {
+				argTypes = a
+				break
+			}
+		} else if len(a) == len(calledFn.arguments) {
 			argTypes = a
 			break
 		}
@@ -60,6 +67,7 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 			calledFn.meta, calledFn.name,
 			len(fn.Arguments), len(calledFn.arguments),
 		).Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
+		return fn.Return
 	}
 
 	for i, v := range argTypes {
