@@ -860,6 +860,21 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"fastly.ff.last_hop_was_serviceid": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("fastly.ff.last_hop_was_serviceid", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Fastly_ff_last_hop_was_serviceid(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"fastly.hash": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
