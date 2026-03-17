@@ -54,6 +54,32 @@ sub foo {
 }`
 		assertError(t, input)
 	})
+
+	t.Run("BOOL declaration with bare infix expression is error", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.b BOOL = true == false;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("BOOL declaration with parenthesized expression is ok", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.b BOOL = (true == false);
+	set var.b = true;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("BOOL declaration with simple value is ok", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.b BOOL = true;
+	set var.b = false;
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintSetStatement(t *testing.T) {
