@@ -2,6 +2,7 @@ package variable
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -89,4 +90,20 @@ func lookupOverride(ctx *context.Context, name string) value.Value {
 		return v
 	}
 	return nil
+}
+
+// lookupOverrideAsIP looks up an override variable and coerces a string value to IP type.
+// This is used for variables like client.ip that return IP type values,
+// so that string overrides (e.g. "10.0.0.1") are treated as IP values.
+func lookupOverrideAsIP(ctx *context.Context, name string) value.Value {
+	v := lookupOverride(ctx, name)
+	if v == nil {
+		return nil
+	}
+	if s, ok := v.(*value.String); ok {
+		if ip := net.ParseIP(s.Value); ip != nil {
+			return &value.IP{Value: ip}
+		}
+	}
+	return v
 }

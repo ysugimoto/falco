@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
 	"testing"
 
 	"net/http"
@@ -214,4 +215,99 @@ func TestSyntheticAfterRestart(t *testing.T) {
 			"resp.http.synthetic-returned": &value.String{Value: "yes"},
 		}, false)
 	})
+}
+
+func TestCustomStatusTextPreserved(t *testing.T) {
+	tests := []struct {
+		name           string
+		vcl            string
+		enableHTTP2    bool
+		expectedStatus string
+		expectedBody   string
+	}{
+		{
+			name: "custom status text via obj.response in vcl_error",
+			vcl: `
+				sub vcl_recv {
+					error 700;
+				}
+				sub vcl_error {
+					set obj.status = 200;
+					set obj.response = "custom status text";
+					synthetic "response body";
+				}
+			`,
+			enableHTTP2:    false,
+			expectedStatus: "200 custom status text",
+			expectedBody:   "response body",
+		},
+		{
+			name: "default status text when obj.response is not set",
+			vcl: `
+				sub vcl_recv {
+					error 503;
+				}
+				sub vcl_error {
+					synthetic "response body";
+				}
+			`,
+			enableHTTP2:    false,
+			expectedStatus: "503 Service Unavailable",
+			expectedBody:   "response body",
+		},
+		{
+			name: "custom status text not preserved over HTTP/2",
+			vcl: `
+				sub vcl_recv {
+					error 700;
+				}
+				sub vcl_error {
+					set obj.status = 200;
+					set obj.response = "custom status text";
+					synthetic "response body";
+				}
+			`,
+			enableHTTP2:    true,
+			expectedStatus: "200 OK",
+			expectedBody:   "response body",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ip := New(
+				context.WithResolver(resolver.NewStaticResolver("main", tt.vcl)),
+				context.WithActualResponse(true),
+			)
+
+			server := httptest.NewUnstartedServer(ip)
+			if tt.enableHTTP2 {
+				server.EnableHTTP2 = true
+				server.StartTLS()
+			} else {
+				server.Start()
+			}
+			defer server.Close()
+
+			client := server.Client()
+
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				t.Fatalf("Failed to make request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.Status != tt.expectedStatus {
+				t.Errorf("Expected status %q, got %q", tt.expectedStatus, resp.Status)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("Failed to read body: %s", err)
+			}
+			if string(body) != tt.expectedBody {
+				t.Errorf("Expected body %q, got %q", tt.expectedBody, string(body))
+			}
+		})
+	}
 }
