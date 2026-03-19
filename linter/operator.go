@@ -160,6 +160,24 @@ func (l *Linter) lintAddSubOperator(op *ast.Operator, left, right types.Type, is
 		default:
 			l.Error(InvalidTypeOperator(op.Meta, op.Operator, left, right).Match(OPERATOR_CONDITIONAL))
 		}
+	case types.StringType:
+		if op.Operator != "+=" {
+			l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_CONDITIONAL))
+			return
+		}
+		switch right {
+		// allows both variable and literal
+		case types.StringType, types.BoolType:
+			return
+		// allows variable only, disallow literal
+		case types.IntegerType, types.FloatType, types.RTimeType, types.TimeType, types.IPType, types.ReqBackendType:
+			if isLiteral {
+				l.Error(InvalidTypeOperator(op.Meta, op.Operator, left, right).Match(OPERATOR_CONDITIONAL))
+			}
+		// disallow
+		default:
+			l.Error(InvalidTypeOperator(op.Meta, op.Operator, left, right).Match(OPERATOR_CONDITIONAL))
+		}
 	default:
 		// disallow other types
 		l.Error(InvalidOperator(op.Meta, op.Operator, left).Match(OPERATOR_CONDITIONAL))

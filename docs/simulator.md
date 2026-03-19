@@ -60,6 +60,23 @@ The server response is a JSON which indicates VCL process information, including
 
 Particularly VCL subroutine flow is useful for debugging.
 
+## Default Client IP
+
+In the simulator, `client.ip` is determined from the actual connecting client's IP address. When accessing the simulator locally, this will typically be `127.0.0.1`.
+
+In testing and console modes, `client.ip` defaults to `192.0.2.1` (RFC 5737 TEST-NET-1). You can override this value using the `-request` option with a request configuration file:
+
+```json
+{
+  "remote_ip": "203.0.113.5"
+}
+```
+
+```shell
+falco test -request request.json /path/to/your/default.vcl
+falco simulate -request request.json /path/to/your/default.vcl
+```
+
 ## Important Notice
 
 **falco's interpreter is just a `simulator`, so we could not be depicted Fastly's actual behavior.

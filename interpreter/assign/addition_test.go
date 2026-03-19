@@ -90,25 +90,26 @@ func TestProcessAddition(t *testing.T) {
 
 	t.Run("left is STRING", func(t *testing.T) {
 		now := time.Now()
+		nowStr := (&value.Time{Value: now}).String()
 		tests := []struct {
 			left    string
 			right   value.Value
 			expect  string
 			isError bool
 		}{
-			{left: "left", right: &value.Integer{Value: 100}, isError: true},
-			{left: "left", right: &value.Integer{Value: 100, Literal: true}, isError: true},
-			{left: "left", right: &value.Float{Value: 50.0}, isError: true},
-			{left: "left", right: &value.Float{Value: 50.0, Literal: true}, isError: true},
-			{left: "left", right: &value.RTime{Value: 100 * time.Second}, isError: true},
-			{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: "left", right: &value.Time{Value: now}, isError: true},
-			{left: "left", right: &value.String{Value: "example"}, isError: true},
-			{left: "left", right: &value.String{Value: "example", Literal: true}, isError: true},
-			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: "left", right: &value.Boolean{Value: true}, isError: true},
-			{left: "left", right: &value.Boolean{Value: false, Literal: true}, isError: true},
-			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: "left", right: &value.Integer{Value: 100}, expect: "left100"},
+			{left: "left", right: &value.Integer{Value: 100, Literal: true}, expect: "left100"},
+			{left: "left", right: &value.Float{Value: 50.0}, expect: "left50.000"},
+			{left: "left", right: &value.Float{Value: 50.0, Literal: true}, expect: "left50.000"},
+			{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "left100.000"},
+			{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: "left100.000"},
+			{left: "left", right: &value.Time{Value: now}, expect: "left" + nowStr},
+			{left: "left", right: &value.String{Value: "example"}, expect: "leftexample"},
+			{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "leftexample"},
+			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "leftfoo"},
+			{left: "left", right: &value.Boolean{Value: true}, expect: "left1"},
+			{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "left0"},
+			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "left127.0.0.1"},
 		}
 
 		for i, tt := range tests {

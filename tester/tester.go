@@ -150,6 +150,8 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 					errChan <- errors.WithStack(err)
 					return
 				}
+				// Set default RemoteAddr so that client.ip returns a valid value
+				mockRequest.RemoteAddr = "192.0.2.1:11111"
 				if err := i.TestProcessInit(mockRequest); err != nil {
 					errChan <- errors.WithStack(err)
 					return
@@ -215,6 +217,8 @@ func (t *Tester) runDescribedTests(
 	if err != nil {
 		return cases, errors.WithStack(err)
 	}
+	// Set default RemoteAddr so that client.ip returns a valid value
+	mockRequest.RemoteAddr = "192.0.2.1:11111"
 
 	// describe should run as group testing, create interpreter once through tests
 	i := t.setupInterpreter(defs)
