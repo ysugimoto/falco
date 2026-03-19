@@ -35,3 +35,9 @@ request.json
 bench.*.txt
 issue-*
 *.prof
+
+# WebAssembly build output
+wasm/falco.wasm
+wasm/node_modules/
+wasm/package-lock.json
+wasm/wasm_exec.js
