@@ -289,6 +289,55 @@ func TestCountPCRECaptureGroups(t *testing.T) {
 	}
 }
 
+func TestExtractExtensionsFromRegex(t *testing.T) {
+	tests := []struct {
+		name   string
+		pattern string
+		expect []string
+	}{
+		{"single extension", `\.jpg$`, []string{"jpg"}},
+		{"single extension png", `\.png$`, []string{"png"}},
+		{"multiple extensions", `\.(avif|gif|jpg|png|webp)$`, []string{"avif", "gif", "jpg", "png", "webp"}},
+		{"two extensions", `\.(css|js)$`, []string{"css", "js"}},
+		{"not extension: path prefix", `^/api/`, nil},
+		{"not extension: no dollar anchor", `\.jpg`, nil},
+		{"not extension: general regex", `^/([^\?]*)?(\?.*)?$`, nil},
+		{"not extension: dot without backslash", `.(jpg)$`, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := extractExtensionsFromRegex(tt.pattern)
+			if diff := cmp.Diff(tt.expect, actual); diff != "" {
+				t.Errorf("extractExtensionsFromRegex(%q) mismatch, diff=%s", tt.pattern, diff)
+			}
+		})
+	}
+}
+
+func TestBuildExtSuggestion(t *testing.T) {
+	tests := []struct {
+		name     string
+		operator string
+		exts     []string
+		expect   string
+	}{
+		{"single ext match", "~", []string{"jpg"}, `req.url.ext == "jpg"`},
+		{"single ext negated", "!~", []string{"jpg"}, `req.url.ext != "jpg"`},
+		{"multi ext match", "~", []string{"avif", "gif", "jpg"}, `req.url.ext ~ "^(avif|gif|jpg)$"`},
+		{"multi ext negated", "!~", []string{"css", "js"}, `req.url.ext !~ "^(css|js)$"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := buildExtSuggestion(tt.operator, tt.exts)
+			if diff := cmp.Diff(tt.expect, actual); diff != "" {
+				t.Errorf("buildExtSuggestion mismatch, diff=%s", diff)
+			}
+		})
+	}
+}
+
 func TestIsValidVariableNameWithWildcard(t *testing.T) {
 	tests := []struct {
 		name   string

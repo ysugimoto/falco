@@ -430,6 +430,14 @@ func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
 	return err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE)
 }
 
+func RegexUrlExtension(m *ast.Meta, suggestion string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Use req.url.ext instead of matching file extensions with a regex, e.g: %s", suggestion),
+	}
+}
+
 func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {
 	e := &LintError{
 		Token:   m.Token,

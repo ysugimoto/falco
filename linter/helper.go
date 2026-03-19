@@ -2,6 +2,7 @@ package linter
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -821,6 +822,50 @@ func isProtectedHTTPHeaderName(name string) bool {
 		return true
 	}
 	return false
+}
+
+// extractExtensionsFromRegex detects regex patterns that match file extensions
+// and returns the extracted extensions. Returns nil if the pattern is not an
+// extension-matching regex.
+// Examples:
+//
+//	"\.jpg$"                       → ["jpg"]
+//	"\.(avif|gif|jpg|png|webp)$"   → ["avif", "gif", "jpg", "png", "webp"]
+var extensionMatchingRegex = regexp.MustCompile(
+	`^(?:\^.*)?\\\.\(?` + // optional anchor + literal dot (with optional open paren)
+		`([a-zA-Z0-9]+(?:\|[a-zA-Z0-9]+)*)` + // capture: extensions separated by |
+		`\)?\$$`, // optional close paren + end anchor
+)
+
+func extractExtensionsFromRegex(pattern string) []string {
+	m := extensionMatchingRegex.FindStringSubmatch(pattern)
+	if m == nil {
+		return nil
+	}
+	return strings.Split(m[1], "|")
+}
+
+// buildExtSuggestion builds a suggested req.url.ext expression from the
+// original operator and extracted extensions.
+// Examples:
+//
+//	"~",  ["jpg"]                     → `req.url.ext == "jpg"`
+//	"!~", ["jpg"]                     → `req.url.ext != "jpg"`
+//	"~",  ["avif","gif","jpg"]        → `req.url.ext ~ "^(avif|gif|jpg)$"`
+//	"!~", ["avif","gif","jpg"]        → `req.url.ext !~ "^(avif|gif|jpg)$"`
+func buildExtSuggestion(operator string, exts []string) string {
+	if len(exts) == 1 {
+		op := "=="
+		if operator == "!~" {
+			op = "!="
+		}
+		return fmt.Sprintf(`req.url.ext %s "%s"`, op, exts[0])
+	}
+	op := "~"
+	if operator == "!~" {
+		op = "!~"
+	}
+	return fmt.Sprintf(`req.url.ext %s "^(%s)$"`, op, strings.Join(exts, "|"))
 }
 
 // Series expresses the series of string concatenation.
