@@ -371,6 +371,17 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 	}
 }
 
+func OverwriteVary(m *ast.Meta, name, subfield string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			`Overwriting %s may discard important Vary values set by the origin. Use a subfield like set %s:%s = "" instead`,
+			name, name, subfield,
+		),
+	}
+}
+
 func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
 	return &LintError{
 		Severity: ERROR,

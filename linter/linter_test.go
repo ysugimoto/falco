@@ -953,3 +953,50 @@ set bereq.http.foo = "bar";`
 		}
 	})
 }
+
+func TestOverwriteVary(t *testing.T) {
+	t.Run("warning: overwriting beresp.http.Vary", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: overwriting resp.http.Vary", func(t *testing.T) {
+		input := `
+sub vcl_deliver {
+    #FASTLY deliver
+    set resp.http.Vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: case insensitive", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("pass: using subfield syntax", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary:Cookie = "";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: appending with +=", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary += ", Accept-Encoding";
+}`
+		assertNoError(t, input)
+	})
+}

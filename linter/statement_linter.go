@@ -144,6 +144,16 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 		l.Error(ProtectedHTTPHeader(stmt.Ident.GetMeta(), stmt.Ident.Value))
 	}
 
+	// Warn when overwriting Vary header entirely — the origin may have set
+	// important Vary values that would be discarded. Suggest subfield syntax.
+	if stmt.Operator.Operator == "=" && isVaryHeader(stmt.Ident.Value) {
+		subfield := "value"
+		if s, ok := stmt.Value.(*ast.String); ok {
+			subfield = strings.TrimSpace(s.Value)
+		}
+		l.Error(OverwriteVary(stmt.Ident.GetMeta(), stmt.Ident.Value, subfield).Match(OVERWRITE_VARY))
+	}
+
 	left, err := ctx.Set(stmt.Ident.Value)
 	if err != nil {
 		err := &LintError{
