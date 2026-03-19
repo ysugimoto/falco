@@ -4,7 +4,7 @@ You can run VCL unit test on our interpreter to make sure the subroutine works a
 
 ## Note
 
-Some variables are limited because to interpreter runs locally, so the variables that are used in your production VCL may have unexpected values, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/develop/docs/simulator.md) about limitations before.
+Some variables are limited because to interpreter runs locally, so the variables that are used in your production VCL may have unexpected values, and it may affect to testing. Please see [simulator documentation](https://github.com/ysugimoto/falco/blob/main/docs/simulator.md) about limitations before.
 
 ## Usage
 
@@ -38,7 +38,7 @@ Local testing example:
 
 ### Configuration
 
-You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/main/docs/configuration.md) in detail.
 
 
 You can run testing as following:
@@ -484,6 +484,20 @@ sub test_vcl {
     testing.call_subroutine("vcl_recv");
 
     assert.equal(req.http.Region, "Asia");
+}
+```
+
+You can also inject `req.body` and `req.body.base64` to test subroutines that depend on the request body.
+Since `req.body` is read-only in Fastly production, `set req.body` is not supported — use `testing.inject_variable` instead.
+
+```vcl
+// @scope: recv
+sub test_vcl {
+    // Inject request body for testing
+    testing.inject_variable("req.body", "bodytext");
+    testing.call_subroutine("vcl_recv");
+
+    assert.equal(req.body, "bodytext");
 }
 ```
 
@@ -954,7 +968,7 @@ sub test_vcl {
     // Fail because value does not match regular expression
     assert.match(var.testing, "bar");
 
-    // Fail because value type is not a string
+    // Fail because value type is not a string (default client.ip is 192.0.2.1)
     assert.match(client.ip, "10");
 }
 ```

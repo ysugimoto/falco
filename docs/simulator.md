@@ -38,7 +38,7 @@ Local debugger example:
 
 ### Configuration
 
-You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/develop/docs/configuration.md) in detail.
+You can override default configurations via `.falco.yml` configuration file or cli arguments. See [configuration documentation](https://github.com/ysugimoto/falco/blob/main/docs/configuration.md) in detail.
 
 
 You can start the simulator as follows:
@@ -59,6 +59,23 @@ The server response is a JSON which indicates VCL process information, including
 - Actual HTTP Response without body
 
 Particularly VCL subroutine flow is useful for debugging.
+
+## Default Client IP
+
+In the simulator, `client.ip` is determined from the actual connecting client's IP address. When accessing the simulator locally, this will typically be `127.0.0.1`.
+
+In testing and console modes, `client.ip` defaults to `192.0.2.1` (RFC 5737 TEST-NET-1). You can override this value using the `-request` option with a request configuration file:
+
+```json
+{
+  "remote_ip": "203.0.113.5"
+}
+```
+
+```shell
+falco test -request request.json /path/to/your/default.vcl
+falco simulate -request request.json /path/to/your/default.vcl
+```
 
 ## Important Notice
 
@@ -181,6 +198,6 @@ Limitations are the following:
 - Could not look at private edge dictionary item due to Fastly API not responding to its item
 - Lots of predefined variables and builtin functions return empty or tentative value
 
-Variables that return tentative or inaccurate values are described at [variables.md](https://github.com/ysugimoto/falco/blob/develop/docs/variables.md).
-Functions that return tentative value or unexpected behavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/develop/docs/functions.md).
+Variables that return tentative or inaccurate values are described at [variables.md](https://github.com/ysugimoto/falco/blob/main/docs/variables.md).
+Functions that return tentative value or unexpected behavior are described at [functions.md](https://github.com/ysugimoto/falco/blob/main/docs/functions.md).
 

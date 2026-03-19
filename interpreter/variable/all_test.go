@@ -124,6 +124,75 @@ func TestReqUrl(t *testing.T) {
 	}
 }
 
+func TestReqBodyWithNilBody(t *testing.T) {
+	tests := []struct {
+		name     string
+		method   string
+		varName  string
+		expected string
+	}{
+		{
+			name:     "req.body with nil body on POST",
+			method:   ghttp.MethodPost,
+			varName:  REQ_BODY,
+			expected: "",
+		},
+		{
+			name:     "req.body with nil body on PUT",
+			method:   ghttp.MethodPut,
+			varName:  REQ_BODY,
+			expected: "",
+		},
+		{
+			name:     "req.body with nil body on PATCH",
+			method:   ghttp.MethodPatch,
+			varName:  REQ_BODY,
+			expected: "",
+		},
+		{
+			name:     "req.body.base64 with nil body on POST",
+			method:   ghttp.MethodPost,
+			varName:  REQ_BODY_BASE64,
+			expected: "",
+		},
+		{
+			name:     "req.body.base64 with nil body on PUT",
+			method:   ghttp.MethodPut,
+			varName:  REQ_BODY_BASE64,
+			expected: "",
+		},
+		{
+			name:     "req.body.base64 with nil body on PATCH",
+			method:   ghttp.MethodPatch,
+			varName:  REQ_BODY_BASE64,
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vars := &AllScopeVariables{
+				ctx: &context.Context{
+					Request: http.WrapRequest(&ghttp.Request{
+						Method: tt.method,
+						// Body is intentionally nil
+					}),
+					OverrideVariables: map[string]value.Value{},
+				},
+			}
+			result, err := vars.Get(context.RecvScope, tt.varName)
+			if err != nil {
+				t.Errorf("Unexpected error: %s", err)
+				return
+			}
+			v := value.Unwrap[*value.String](result)
+			if diff := cmp.Diff(v.Value, tt.expected); diff != "" {
+				t.Errorf("Return value unmatch, diff=%s", diff)
+			}
+		})
+	}
+}
+
 func TestGetClientModel(t *testing.T) {
 	tests := []struct {
 		name   string
