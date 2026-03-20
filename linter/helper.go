@@ -832,7 +832,7 @@ func isProtectedHTTPHeaderName(name string) bool {
 //	"\.jpg$"                       → ["jpg"]
 //	"\.(avif|gif|jpg|png|webp)$"   → ["avif", "gif", "jpg", "png", "webp"]
 var extensionMatchingRegex = regexp.MustCompile(
-	`^(?:\^.*)?\\\.\(?` + // optional anchor + literal dot (with optional open paren)
+	`^(?:\^\.\*)?\\\.\(?(?:\?:)?` + // optional anchor + literal dot (with optional open paren or non-capturing group)
 		`([a-zA-Z0-9]+(?:\|[a-zA-Z0-9]+)*)` + // capture: extensions separated by |
 		`\)?\$$`, // optional close paren + end anchor
 )

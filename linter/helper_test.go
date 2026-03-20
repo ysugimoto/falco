@@ -303,6 +303,11 @@ func TestExtractExtensionsFromRegex(t *testing.T) {
 		{"not extension: no dollar anchor", `\.jpg`, nil},
 		{"not extension: general regex", `^/([^\?]*)?(\?.*)?$`, nil},
 		{"not extension: dot without backslash", `.(jpg)$`, nil},
+		{"anchored wildcard single", `^.*\.jpg$`, []string{"jpg"}},
+		{"anchored wildcard multiple", `^.*\.(gif|jpg|png)$`, []string{"gif", "jpg", "png"}},
+		{"not extension: anchored path", `^/images/logo\.jpg$`, nil},
+		{"non-capturing group", `\.(?:avif|gif|jpg)$`, []string{"avif", "gif", "jpg"}},
+		{"anchored wildcard non-capturing", `^.*\.(?:gif|jpg|png)$`, []string{"gif", "jpg", "png"}},
 	}
 
 	for _, tt := range tests {
