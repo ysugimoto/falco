@@ -569,8 +569,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: fmt.Sprint(time.Now().Unix())}, nil
 	case REQ_BODY:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
+			if req.Body == nil {
+				return &value.String{Value: ""}, nil
+			}
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
@@ -589,8 +595,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return &value.String{Value: ""}, nil
 		}
 	case REQ_BODY_BASE64:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		switch req.Method {
 		case http.MethodPatch, http.MethodPost, http.MethodPut:
+			if req.Body == nil {
+				return &value.String{Value: ""}, nil
+			}
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(req.Body); err != nil {
 				return value.Null, errors.WithStack(fmt.Errorf(
@@ -820,13 +832,12 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 		if !ok {
 			return nil, exception.Runtime(nil, "ratecounter '%s' is not defined", name)
 		}
-		// Get remote address by accessing client.ip variable
-		ip, _ := v.Get(context.RecvScope, CLIENT_IP) // nolint:errcheck
+		entry := rc.LastIncremented
 		switch method {
 		case "bucket":
-			return getRateCounterBucketValue(v.ctx, rc, ip.String(), window)
+			return getRateCounterBucketValue(v.ctx, rc, entry, window)
 		case "rate":
-			return getRateCounterRateValue(v.ctx, rc, ip.String(), window)
+			return getRateCounterRateValue(v.ctx, rc, entry, window)
 		default:
 			return nil, exception.Runtime(nil, "unexpected method '%s' found", method)
 		}
