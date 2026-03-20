@@ -1,3 +1,12 @@
+## v2.2.0
+
+- feat(linter): warn when overwriting Vary header [#582](https://github.com/ysugimoto/falco/pull/582) (@acme)
+- fix: infer call scope for user-defined functions with return types [#577](https://github.com/ysugimoto/falco/pull/577) (@acme)
+- Fix panic in linter for variadic StringListType functions [#573](https://github.com/ysugimoto/falco/pull/573) (@jedisct1)
+- feat: add WebAssembly build for browser-based VCL tooling [#556](https://github.com/ysugimoto/falco/pull/556) (@acme)
+- Fix: rate limiter persistence [#552](https://github.com/ysugimoto/falco/pull/552) (@akrainiouk)
+- Fix nil req.Body panic and support testing.inject_variable for req.body [#551](https://github.com/ysugimoto/falco/pull/551) (@bungoume)
+
 ## v2.1.0
 
 - fix: Fix GetField to correctly handle quoted strings with escaped quotes [#581](https://github.com/ysugimoto/falco/pull/581) (@3846masa)
