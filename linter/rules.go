@@ -74,6 +74,7 @@ const (
 	TIME_CALCULATION                     = "operator/time-calculation"
 	DEPRECATED                           = "deprecated"
 	UNCAPTURED_REGEX_VARIABLE            = "regex/uncaptured-variable"
+	OVERWRITE_VARY                       = "set-statement/overwrite-vary"
 	REGEX_URL_EXTENSION                  = "regex/url-extension"
 )
 
@@ -113,5 +114,4 @@ var references = map[Rule]string{
 	UNRECOGNIZE_CALL_SCOPE:           "https://github.com/ysugimoto/falco/blob/main/docs/linter.md#user-defined-subroutine",
 	SUBROUTINE_RECURSIVE_CALL:        "https://www.fastly.com/documentation/reference/vcl/subroutines/#recursion",
 	FORBIDDEN_BACKWARD_JUMP:          "https://fiddle.fastly.dev/fiddle/4814c144",
-	REGEX_URL_EXTENSION:              "https://developer.fastly.com/reference/vcl/variables/request/req-url-ext/",
 }
