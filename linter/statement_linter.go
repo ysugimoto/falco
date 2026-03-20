@@ -145,9 +145,9 @@ func (l *Linter) lintSetStatement(stmt *ast.SetStatement, ctx *context.Context) 
 	}
 
 	// Warn when overwriting Vary header entirely — the origin may have set
-	// important Vary values that would be discarded. Suggest subfield syntax.
+	// important Vary values that would be discarded.
 	if stmt.Operator.Operator == "=" && isVaryHeader(stmt.Ident.Value) {
-		subfield := "value"
+		var subfield string
 		if s, ok := stmt.Value.(*ast.String); ok {
 			subfield = strings.TrimSpace(s.Value)
 		}
