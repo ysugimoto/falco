@@ -64,7 +64,7 @@ func Ratelimit_ratecounter_increment(ctx *context.Context, args ...value.Value) 
 		}, nil
 	}
 
-	rc.Increment(entry, increment, 0)
+	rc.Increment(entry, increment)
 
 	// Returns bucket count for recent 1 minute
 	return &value.Integer{

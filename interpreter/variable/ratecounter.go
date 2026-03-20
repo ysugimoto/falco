@@ -11,7 +11,7 @@ import (
 // Handle ratecounter related variables
 // ref: https://www.fastly.com/documentation/guides/concepts/rate-limiting/#using-two-count-periods-vcl-only
 
-func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, client, window string) (value.Value, error) {
+func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, client *string, window string) (value.Value, error) {
 	var duration time.Duration
 
 	switch window {
@@ -38,12 +38,16 @@ func getRateCounterBucketValue(ctx *context.Context, rc *value.Ratecounter, clie
 		}, nil
 	}
 
+	if client == nil {
+		return &value.Integer{Value: 0}, nil
+	}
+
 	return &value.Integer{
-		Value: rc.Bucket(client, duration),
+		Value: rc.Bucket(*client, duration),
 	}, nil
 }
 
-func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client, window string) (value.Value, error) {
+func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client *string, window string) (value.Value, error) {
 	var duration time.Duration
 
 	switch window {
@@ -63,8 +67,11 @@ func getRateCounterRateValue(ctx *context.Context, rc *value.Ratecounter, client
 			Value: *ctx.FixedAccessRate,
 		}, nil
 	}
+	if client == nil {
+		return &value.Float{Value: 0}, nil
+	}
 
 	return &value.Float{
-		Value: rc.Rate(client, duration),
+		Value: rc.Rate(*client, duration),
 	}, nil
 }
