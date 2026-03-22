@@ -51,7 +51,5 @@ func Time_hex_to_time(ctx *context.Context, args ...value.Value) (value.Value, e
 		)
 	}
 
-	return &value.Time{
-		Value: time.Unix(int64(ts/divisor), 0),
-	}, nil
+	return &value.Time{Value: time.Unix(int64(ts/divisor), 0).UTC()}, nil
 }

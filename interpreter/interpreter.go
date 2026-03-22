@@ -582,7 +582,7 @@ func (i *Interpreter) ProcessFetch() error {
 	}
 
 	// Mark request process has ended
-	i.ctx.RequestEndTime = time.Now()
+	i.ctx.RequestEndTime = time.Now().UTC()
 
 	// Set cacheable strategy
 	isCacheable := cache.IsCacheableStatusCode(i.ctx.BackendResponse.StatusCode)

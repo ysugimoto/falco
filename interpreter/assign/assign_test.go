@@ -172,14 +172,14 @@ func TestProcessAssignment(t *testing.T) {
 			expect  time.Time
 			isError bool
 		}{
-			{left: now, right: &value.Integer{Value: 100}, expect: time.Unix(100, 0)},
+			{left: now, right: &value.Integer{Value: 100}, expect: time.Unix(100, 0).UTC()},
 			{left: now, right: &value.Integer{Value: 100, Literal: true}, isError: true},
-			{left: now, right: &value.Float{Value: 50.0}, expect: time.Unix(50, 0)},
+			{left: now, right: &value.Float{Value: 50.0}, expect: time.Unix(50, 0).UTC()},
 			{left: now, right: &value.Float{Value: 50.0, Literal: true}, isError: true},
 			{left: now, right: &value.String{Value: "example"}, isError: true},
 			{left: now, right: &value.String{Value: "example", Literal: true}, isError: true},
-			{left: now, right: &value.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
-			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
+			{left: now, right: &value.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0).UTC()},
+			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0).UTC()},
 			{left: now, right: &value.Time{Value: now2}, expect: now2},
 			{left: now, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: now, right: &value.Boolean{Value: true}, isError: true},

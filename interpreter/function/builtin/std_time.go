@@ -54,7 +54,7 @@ func Std_time(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	for _, format := range Std_time_SupportFormats {
 		t, err = time.Parse(format, s)
 		if err == nil {
-			return &value.Time{Value: t}, nil
+			return &value.Time{Value: t.UTC()}, nil
 		}
 	}
 
@@ -73,5 +73,5 @@ func Std_time(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	if t.Unix() < 0 {
 		return &value.Time{OutOfBounds: true}, nil
 	}
-	return &value.Time{Value: t}, nil
+	return &value.Time{Value: t.UTC()}, nil
 }

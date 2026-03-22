@@ -118,12 +118,12 @@ func GetTCPInfoVariable(ctx *context.Context, name string) (value.Value, error) 
 		if v := lookupOverride(ctx, name); v != nil {
 			return v, nil
 		}
-		return &value.Time{Value: time.Now().Add(-24 * time.Hour)}, nil
+		return &value.Time{Value: time.Now().Add(-24 * time.Hour).UTC()}, nil
 	case TLS_CLIENT_CERTIFICATE_NOT_AFTER:
 		if v := lookupOverride(ctx, name); v != nil {
 			return v, nil
 		}
-		return &value.Time{Value: time.Now().Add(-24 * time.Hour).Add(24 * time.Hour * 365)}, nil
+		return &value.Time{Value: time.Now().Add(-24 * time.Hour).Add(24 * time.Hour * 365).UTC()}, nil
 	}
 
 	return nil, nil
