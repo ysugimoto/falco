@@ -7,7 +7,6 @@ import (
 	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/linter/context"
 	"github.com/ysugimoto/falco/linter/types"
-	regexp "go.elara.ws/pcre"
 )
 
 func (l *Linter) lintIP(exp *ast.IP) types.Type {
@@ -297,13 +296,24 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		}
 		// And, if right expression is STRING, regex must be valid
 		if v, ok := exp.Right.(*ast.String); ok {
-			if _, err := regexp.Compile(v.Value); err != nil {
+			if err := validateRegex(v.Value); err != nil {
 				err := &LintError{
 					Severity: ERROR,
 					Token:    exp.Right.GetMeta().Token,
 					Message:  "regex string is invalid, " + err.Error(),
 				}
 				l.Error(err)
+			}
+		}
+		// Check if regex is matching file extensions on req.url or req.url.path
+		if ident, ok := exp.Left.(*ast.Ident); ok {
+			if ident.Value == "req.url" || ident.Value == "req.url.path" {
+				if str, ok := exp.Right.(*ast.String); ok {
+					if exts := extractExtensionsFromRegex(str.Value); exts != nil {
+						suggestion := buildExtSuggestion(exp.Operator, exts)
+						l.Error(RegexUrlExtension(exp.GetMeta(), suggestion).Match(REGEX_URL_EXTENSION))
+					}
+				}
 			}
 		}
 		return types.BoolType

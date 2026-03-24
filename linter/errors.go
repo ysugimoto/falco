@@ -371,6 +371,24 @@ func ProtectedHTTPHeader(m *ast.Meta, name string) *LintError {
 	}
 }
 
+func OverwriteVary(m *ast.Meta, name, subfield string) *LintError {
+	msg := fmt.Sprintf(
+		"Overwriting %s may discard important Vary values set by the origin",
+		name,
+	)
+	if subfield != "" {
+		msg += fmt.Sprintf(
+			`. Use a subfield like set %s:%s = "" instead`,
+			name, subfield,
+		)
+	}
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  msg,
+	}
+}
+
 func ForbiddenBackwardJump(gs *ast.GotoStatement) *LintError {
 	return &LintError{
 		Severity: ERROR,
@@ -428,6 +446,14 @@ func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
 		),
 	}
 	return err.Match(REGEX_MATCHED_VALUE_MAY_OVERRIDE)
+}
+
+func RegexUrlExtension(m *ast.Meta, suggestion string) *LintError {
+	return &LintError{
+		Severity: WARNING,
+		Token:    m.Token,
+		Message:  fmt.Sprintf("Use req.url.ext instead of matching file extensions with a regex, e.g: %s", suggestion),
+	}
 }
 
 func FromPluginError(pe *plugin.Error, m *ast.Meta) *LintError {

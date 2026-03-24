@@ -74,6 +74,8 @@ const (
 	TIME_CALCULATION                     = "operator/time-calculation"
 	DEPRECATED                           = "deprecated"
 	UNCAPTURED_REGEX_VARIABLE            = "regex/uncaptured-variable"
+	OVERWRITE_VARY                       = "set-statement/overwrite-vary"
+	REGEX_URL_EXTENSION                  = "regex/url-extension"
 )
 
 var references = map[Rule]string{
