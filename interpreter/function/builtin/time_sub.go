@@ -47,14 +47,10 @@ func Time_sub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	switch args[1].Type() {
 	case value.TimeType:
 		t2 := value.Unwrap[*value.Time](args[1]).Value
-		return &value.Time{
-			Value: t1.Add(-(time.Second * time.Duration(t2.Second()))),
-		}, nil
+		return &value.Time{Value: t1.Add(-(time.Second * time.Duration(t2.Second()))).UTC()}, nil
 	case value.RTimeType:
 		t2 := value.Unwrap[*value.RTime](args[1]).Value
-		return &value.Time{
-			Value: t1.Add(-t2),
-		}, nil
+		return &value.Time{Value: t1.Add(-t2).UTC()}, nil
 	default:
 		// unreached, but need for linting
 		return value.Null, errors.New(Time_sub_Name, "Unexpected type of second argument: %s", args[1].Type())
