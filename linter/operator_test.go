@@ -410,3 +410,61 @@ sub foo {
 		assertErrorWithSeverity(t, input, INFO)
 	})
 }
+
+func TestLintAdditionAssignOperator(t *testing.T) {
+	t.Run("req.hash += string is allowed", func(t *testing.T) {
+		input := `
+sub vcl_hash {
+	#FASTLY HASH
+	set req.hash += req.url;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("req.hash += string literal is allowed", func(t *testing.T) {
+		input := `
+sub vcl_hash {
+	#FASTLY HASH
+	set req.hash += "cache-key";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("+= on STRING variable is allowed", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.S STRING;
+	set var.S = "foo";
+	set var.S += "bar";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("+= on INTEGER type is allowed", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.I INTEGER;
+	set var.I = 1;
+	set var.I += 2;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("+= on HTTP header is allowed", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.Foo += "bar";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("-= on STRING type is disallowed", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.S STRING;
+	set var.S = "foo";
+	set var.S -= "bar";
+}`
+		assertError(t, input)
+	})
+}

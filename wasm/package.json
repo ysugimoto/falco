@@ -1,0 +1,15 @@
+{
+  "name": "falco-wasm-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/browser": "^4.0.0",
+    "@vitest/browser-playwright": "^4.0.18",
+    "playwright": "^1.50.0",
+    "vitest": "^4.0.0"
+  }
+}

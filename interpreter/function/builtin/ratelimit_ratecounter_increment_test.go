@@ -10,7 +10,7 @@ import (
 
 func Test_Ratelimit_ratecounter_increment(t *testing.T) {
 	rc := value.NewRatecounter(nil)
-	rc.Increment("127.0.0.1", 1, 0)
+	rc.Increment("127.0.0.1", 1)
 
 	tests := []struct {
 		name         string
