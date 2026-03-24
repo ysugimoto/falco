@@ -823,6 +823,15 @@ func isProtectedHTTPHeaderName(name string) bool {
 	return false
 }
 
+// isVaryHeader returns true when name refers to an HTTP Vary header
+// without a subfield (e.g. "beresp.http.Vary" but not "beresp.http.Vary:Cookie").
+func isVaryHeader(name string) bool {
+	lower := strings.ToLower(name)
+	return lower == "beresp.http.vary" ||
+		lower == "resp.http.vary" ||
+		lower == "obj.http.vary"
+}
+
 // Series expresses the series of string concatenation.
 type Series struct {
 	Operator   string // Operator will accept either of "+" or "-" or empty string.

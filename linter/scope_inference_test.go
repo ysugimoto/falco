@@ -260,6 +260,138 @@ sub vcl_miss {
 		}
 	})
 
+	t.Run("infers scope for user-defined function called as expression", func(t *testing.T) {
+		// is_cacheable is a user-defined function with return type BOOL
+		// It's called as an expression inside vcl_fetch, so scope should be inferred as FETCH
+		input := `
+sub is_cacheable BOOL {
+  if (beresp.status == 200) {
+    return true;
+  }
+  return false;
+}
+
+sub vcl_fetch {
+  #FASTLY FETCH
+  if (is_cacheable()) {
+    set beresp.ttl = 3600s;
+  }
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		l := New(testConfig)
+		ctx := context.New()
+		l.lint(vcl, ctx)
+
+		// Should have no "unrecognize-call-scope" warning
+		for _, e := range l.Errors {
+			if e.Rule == UNRECOGNIZE_CALL_SCOPE {
+				t.Errorf("unexpected unrecognize-call-scope warning: %s", e.Message)
+			}
+		}
+
+		// Assert the inferred scope
+		if sub, ok := ctx.Subroutines["is_cacheable"]; !ok {
+			t.Errorf("is_cacheable subroutine not found in context")
+		} else if sub.Scopes != context.FETCH {
+			t.Errorf("expected is_cacheable scope to be FETCH (%d), got %d", context.FETCH, sub.Scopes)
+		}
+	})
+
+	t.Run("infers scope for user-defined function in return statement", func(t *testing.T) {
+		// compute_ttl is called in a return expression inside another function
+		// which is called from vcl_fetch
+		input := `
+sub compute_ttl INTEGER {
+  if (beresp.status == 200) {
+    return 3600;
+  }
+  return 60;
+}
+
+sub vcl_fetch {
+  #FASTLY FETCH
+  set beresp.ttl = compute_ttl();
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		l := New(testConfig)
+		ctx := context.New()
+		l.lint(vcl, ctx)
+
+		// Should have no "unrecognize-call-scope" warning
+		for _, e := range l.Errors {
+			if e.Rule == UNRECOGNIZE_CALL_SCOPE {
+				t.Errorf("unexpected unrecognize-call-scope warning: %s", e.Message)
+			}
+		}
+
+		if sub, ok := ctx.Subroutines["compute_ttl"]; !ok {
+			t.Errorf("compute_ttl subroutine not found in context")
+		} else if sub.Scopes != context.FETCH {
+			t.Errorf("expected compute_ttl scope to be FETCH (%d), got %d", context.FETCH, sub.Scopes)
+		}
+	})
+
+	t.Run("infers scope for user-defined function called transitively", func(t *testing.T) {
+		// inner_check is called from outer_check which is called from vcl_recv
+		// Scope should propagate through the function call chain
+		input := `
+sub inner_check BOOL {
+  if (req.http.X-Secret == "valid") {
+    return true;
+  }
+  return false;
+}
+
+sub outer_check BOOL {
+  return inner_check();
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  if (outer_check()) {
+    set req.http.X-Authorized = "true";
+  }
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		l := New(testConfig)
+		ctx := context.New()
+		l.lint(vcl, ctx)
+
+		// Neither function should have unrecognize-call-scope warning
+		for _, e := range l.Errors {
+			if e.Rule == UNRECOGNIZE_CALL_SCOPE {
+				t.Errorf("unexpected unrecognize-call-scope warning: %s", e.Message)
+			}
+		}
+
+		if sub, ok := ctx.Subroutines["outer_check"]; !ok {
+			t.Errorf("outer_check subroutine not found in context")
+		} else if sub.Scopes != context.RECV {
+			t.Errorf("expected outer_check scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		}
+
+		if sub, ok := ctx.Subroutines["inner_check"]; !ok {
+			t.Errorf("inner_check subroutine not found in context")
+		} else if sub.Scopes != context.RECV {
+			t.Errorf("expected inner_check scope to be RECV (%d), got %d", context.RECV, sub.Scopes)
+		}
+	})
+
 	t.Run("detects scope conflict with DELIVER-only variable in MISS context", func(t *testing.T) {
 		// This subroutine uses resp.http.X which is only available in DELIVER/LOG
 		// but is called from vcl_miss - should error
@@ -497,6 +629,103 @@ sub vcl_recv {
 		}
 		if !recursionErrors["sub_b"] {
 			t.Errorf("expected recursion error for sub_b")
+		}
+	})
+
+	t.Run("builds graph with function call expressions", func(t *testing.T) {
+		// is_ok is a user-defined function called as an expression in an if condition
+		// buildCallGraph should detect this as a callee of vcl_recv
+		input := `
+sub is_ok BOOL {
+  return true;
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  if (is_ok()) {
+    set req.http.X = "ok";
+  }
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		graph := buildCallGraph(vcl.Statements)
+
+		if len(graph["vcl_recv"]) != 1 {
+			t.Errorf("expected vcl_recv to have 1 callee, got %d", len(graph["vcl_recv"]))
+		}
+		if len(graph["vcl_recv"]) > 0 && graph["vcl_recv"][0] != "is_ok" {
+			t.Errorf("expected vcl_recv to call is_ok, got %s", graph["vcl_recv"][0])
+		}
+	})
+
+	t.Run("builds graph with function call in set statement", func(t *testing.T) {
+		input := `
+sub compute_value STRING {
+  return "hello";
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  set req.http.X = compute_value();
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		graph := buildCallGraph(vcl.Statements)
+
+		if len(graph["vcl_recv"]) != 1 {
+			t.Errorf("expected vcl_recv to have 1 callee, got %d", len(graph["vcl_recv"]))
+		}
+		if len(graph["vcl_recv"]) > 0 && graph["vcl_recv"][0] != "compute_value" {
+			t.Errorf("expected vcl_recv to call compute_value, got %s", graph["vcl_recv"][0])
+		}
+	})
+
+	t.Run("builds graph with function call in return expression", func(t *testing.T) {
+		input := `
+sub inner BOOL {
+  return true;
+}
+
+sub outer BOOL {
+  return inner();
+}
+
+sub vcl_recv {
+  #FASTLY RECV
+  if (outer()) {
+    set req.http.X = "1";
+  }
+}
+`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+
+		graph := buildCallGraph(vcl.Statements)
+
+		// outer should call inner
+		if len(graph["outer"]) != 1 {
+			t.Errorf("expected outer to have 1 callee, got %d", len(graph["outer"]))
+		}
+		if len(graph["outer"]) > 0 && graph["outer"][0] != "inner" {
+			t.Errorf("expected outer to call inner, got %s", graph["outer"][0])
+		}
+
+		// vcl_recv should call outer
+		if len(graph["vcl_recv"]) != 1 {
+			t.Errorf("expected vcl_recv to have 1 callee, got %d", len(graph["vcl_recv"]))
+		}
+		if len(graph["vcl_recv"]) > 0 && graph["vcl_recv"][0] != "outer" {
+			t.Errorf("expected vcl_recv to call outer, got %s", graph["vcl_recv"][0])
 		}
 	})
 }

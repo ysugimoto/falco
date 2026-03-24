@@ -12,7 +12,8 @@ import (
 type callGraph map[string][]string
 
 // buildCallGraph constructs a call graph by analyzing all subroutine declarations.
-// It extracts `call` statements from each subroutine body and records the edges.
+// It extracts `call` statements and function call expressions from each subroutine
+// body and records the edges.
 func buildCallGraph(statements []ast.Statement) callGraph {
 	graph := make(callGraph)
 
@@ -46,7 +47,8 @@ func extractCallees(block *ast.BlockStatement) []string {
 }
 
 // extractCalleesFromStatement extracts callee names from a single statement,
-// recursively handling nested blocks (if/else, switch, etc.).
+// recursively handling nested blocks (if/else, switch, etc.) and expressions
+// that may contain function calls (for user-defined functions with return types).
 func extractCalleesFromStatement(stmt ast.Statement) []string {
 	var callees []string
 
@@ -54,9 +56,17 @@ func extractCalleesFromStatement(stmt ast.Statement) []string {
 	case *ast.CallStatement:
 		callees = append(callees, s.Subroutine.Value)
 
+	case *ast.FunctionCallStatement:
+		callees = append(callees, s.Function.Value)
+		for _, arg := range s.Arguments {
+			callees = append(callees, extractCalleesFromExpression(arg)...)
+		}
+
 	case *ast.IfStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Condition)...)
 		callees = append(callees, extractCallees(s.Consequence)...)
 		for _, alt := range s.Another {
+			callees = append(callees, extractCalleesFromExpression(alt.Condition)...)
 			callees = append(callees, extractCallees(alt.Consequence)...)
 		}
 		if s.Alternative != nil {
@@ -72,6 +82,73 @@ func extractCalleesFromStatement(stmt ast.Statement) []string {
 
 	case *ast.BlockStatement:
 		callees = append(callees, extractCallees(s)...)
+
+	case *ast.SetStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Value)...)
+
+	case *ast.AddStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Value)...)
+
+	case *ast.ReturnStatement:
+		if s.ReturnExpression != nil {
+			callees = append(callees, extractCalleesFromExpression(s.ReturnExpression)...)
+		}
+
+	case *ast.LogStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Value)...)
+
+	case *ast.SyntheticStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Value)...)
+
+	case *ast.ErrorStatement:
+		callees = append(callees, extractCalleesFromExpression(s.Code)...)
+		if s.Argument != nil {
+			callees = append(callees, extractCalleesFromExpression(s.Argument)...)
+		}
+
+	case *ast.DeclareStatement:
+		if s.Value != nil {
+			callees = append(callees, extractCalleesFromExpression(s.Value)...)
+		}
+	}
+
+	return callees
+}
+
+// extractCalleesFromExpression recursively extracts function call names from
+// an expression tree. This captures calls to user-defined functions with return
+// types, which are invoked as expressions rather than `call` statements.
+func extractCalleesFromExpression(expr ast.Expression) []string {
+	if expr == nil {
+		return nil
+	}
+
+	var callees []string
+
+	switch e := expr.(type) {
+	case *ast.FunctionCallExpression:
+		callees = append(callees, e.Function.Value)
+		for _, arg := range e.Arguments {
+			callees = append(callees, extractCalleesFromExpression(arg)...)
+		}
+
+	case *ast.InfixExpression:
+		callees = append(callees, extractCalleesFromExpression(e.Left)...)
+		callees = append(callees, extractCalleesFromExpression(e.Right)...)
+
+	case *ast.GroupedExpression:
+		callees = append(callees, extractCalleesFromExpression(e.Right)...)
+
+	case *ast.PrefixExpression:
+		callees = append(callees, extractCalleesFromExpression(e.Right)...)
+
+	case *ast.PostfixExpression:
+		callees = append(callees, extractCalleesFromExpression(e.Left)...)
+
+	case *ast.IfExpression:
+		callees = append(callees, extractCalleesFromExpression(e.Condition)...)
+		callees = append(callees, extractCalleesFromExpression(e.Consequence)...)
+		callees = append(callees, extractCalleesFromExpression(e.Alternative)...)
 	}
 
 	return callees

@@ -1,4 +1,4 @@
-.PHONY: test benchmark
+.PHONY: test benchmark wasm wasm_exec
 
 BUILD_VERSION=$(or ${VERSION}, dev)
 
@@ -55,3 +55,11 @@ plugin_ci:
 
 benchmark:
 	cd cmd/benchmark && go test -bench . -benchmem
+
+wasm:
+	@mkdir -p wasm
+	GOOS=js GOARCH=wasm go build -ldflags="-s -w" -o wasm/falco.wasm ./cmd/wasm
+
+wasm_exec:
+	@mkdir -p wasm
+	cp "$$(find "$$(go env GOROOT)" -name 'wasm_exec.js' 2>/dev/null | head -1)" wasm/
