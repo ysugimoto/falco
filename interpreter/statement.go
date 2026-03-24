@@ -32,7 +32,7 @@ func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
 	ds DebugState,
-	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
+// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
 	isReturnAsValue bool,
 ) (value.Value, State, DebugState, error) {
 
@@ -269,7 +269,6 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 }
 
 func (i *Interpreter) ProcessSetStatementHeaderField(stmt *ast.SetStatement) error {
-	// Otherwise, general defined variable like `req.http.*`
 	left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
 	if err != nil {
 		return errors.WithStack(err)
@@ -277,6 +276,8 @@ func (i *Interpreter) ProcessSetStatementHeaderField(stmt *ast.SetStatement) err
 	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
 		return errors.WithStack(err)
 	}
+	// for header fields, undefined values are treated the same as for local variables,
+	// thus we interpret left hand side as local variable expression
 	right, err := i.ProcessExpression(stmt.Value, LocalVariableExpression())
 	if err != nil {
 		return errors.WithStack(err)
