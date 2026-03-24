@@ -514,8 +514,8 @@ func TestFastlyGeneratedVCLLinting(t *testing.T) {
 	if ret.Infos != 2 {
 		t.Errorf("Infos expects 2, got %d", ret.Infos)
 	}
-	if ret.Warnings != 3 {
-		t.Errorf("Warning expects 3, got %d", ret.Warnings)
+	if ret.Warnings != 6 {
+		t.Errorf("Warning expects 6, got %d", ret.Warnings)
 	}
 	if ret.Errors > 0 {
 		t.Errorf("Errors expects 0, got %d", ret.Errors)

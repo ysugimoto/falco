@@ -28,6 +28,10 @@ func Testing_override_host(
 	case value.StringType:
 		override := value.Unwrap[*value.String](args[0]).Value
 		ctx.OriginalHost = override
+		if ctx.Request != nil {
+			ctx.Request.Header.Set("Host", override)
+			ctx.Request.Assign("Host")
+		}
 	default:
 		return value.Null, errors.NewTestingError(
 			"First argument of %s must be STRING type, %s provided",
