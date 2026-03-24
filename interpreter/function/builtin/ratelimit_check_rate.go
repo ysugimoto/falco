@@ -94,9 +94,9 @@ func check_ratelimit(ctx *context.Context, entry string, rcName string, delta, w
 		return false, errors.New(Ratelimit_check_rate_Name, "Ratecounter %s is not defined", rcName)
 	}
 	// Increment delta
-	rc.Increment(entry, delta, time.Duration(window)*time.Second)
+	rc.Increment(entry, delta)
 
 	// Compare the rate and limit
 	rate := rc.Rate(entry, time.Duration(window)*time.Second)
-	return rate >= float64(limit), nil
+	return rate > float64(limit), nil
 }

@@ -89,15 +89,45 @@ func (i *Interpreter) sendResponse(w ghttp.ResponseWriter) {
 		return
 	}
 
-	// We have to use (*http.Response).Write(io.Writer)
-	// in order to write custom status text which is set via obj.response variable.
-	//
-	// Typically, on handling HTTP, http.ResponseWriter interface is enough to respond regular HTTP specs
-	// but could not set custom status text on the status line.
-	//
-	// Fortunately (*http.Response).Write(io.Writer) method will support to output custom status text
-	// so we need to send HTTP response via this method.
-	i.ctx.Response.Write(w) // nolint:errcheck
+	// Hijack preserves custom status text from obj.response (HTTP/1.x only).
+	// HTTP/2 does not support Hijack and has no reason phrase in the protocol,
+	// so we fall back to the standard ResponseWriter.
+	if i.sendRawResponse(w) != nil {
+		i.sendFormattedResponse(w)
+	}
+}
+
+// sendRawResponse writes the HTTP response directly to the hijacked connection,
+// preserving custom status text set via obj.response (e.g. "HTTP/1.1 200 Custom Text").
+func (i *Interpreter) sendRawResponse(w ghttp.ResponseWriter) error {
+	hj, ok := w.(ghttp.Hijacker)
+	if !ok {
+		return errors.New("hijack not supported")
+	}
+	conn, buf, err := hj.Hijack()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	i.ctx.Response.Write(buf) // nolint:errcheck
+	buf.Flush()               // nolint:errcheck
+	return nil
+}
+
+// sendFormattedResponse writes the response using the standard http.ResponseWriter API.
+// Custom status text from obj.response is not preserved because WriteHeader only accepts
+// a status code integer, but this matches HTTP/2 behavior where reason phrase does not exist.
+func (i *Interpreter) sendFormattedResponse(w ghttp.ResponseWriter) {
+	resp := i.ctx.Response
+	for key, values := range resp.Header {
+		for _, v := range values {
+			w.Header().Add(key, v)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	if resp.Body != nil {
+		io.Copy(w, resp.Body) // nolint:errcheck
+	}
 }
 
 func (i *Interpreter) sendPurgeRequestResponse(w ghttp.ResponseWriter, err error) {

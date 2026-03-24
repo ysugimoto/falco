@@ -50,7 +50,7 @@ func ScopeString(s int) string {
 
 func ScopesString(s int) string {
 	var sb strings.Builder
-	for i := RECV; i != LOG; i <<= 4 {
+	for i := RECV; i <= PIPE; i <<= 4 {
 		scope := ScopeString(s & i)
 		if scope != "UNKNOWN" {
 			sb.WriteString(scope)

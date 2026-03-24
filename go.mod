@@ -30,9 +30,8 @@ require (
 	github.com/pion/dtls/v2 v2.2.12
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
 	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
+	gopkg.in/yaml.v3 v3.0.1
 )
-
-require gopkg.in/yaml.v3 v3.0.1 // indirect
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
@@ -55,3 +54,5 @@ require (
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.2.0 // indirect
 )
+
+replace go.elara.ws/pcre => github.com/dip-proto/go-pcre v0.0.0-20260204122309-dcbff9cb6240

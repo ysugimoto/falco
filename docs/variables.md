@@ -45,6 +45,7 @@ falco test /path/to/main.vcl -o "client.class.checker=true" -o "client.as.name=o
 | client.geo.metro_code                      | 0                                  |
 | client.geo.utc_offset                      | 0                                  |
 | client.identified                          | false                              |
+| client.ip                                  | 192.0.2.1 (testing/console only)   |
 | client.requests                            | 1                                  |
 | req.vcl.generation                         | 1                                  |
 | req.vcl.version                            | 1                                  |

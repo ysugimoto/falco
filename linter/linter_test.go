@@ -953,3 +953,75 @@ set bereq.http.foo = "bar";`
 		}
 	})
 }
+
+func TestOverwriteVary(t *testing.T) {
+	t.Run("warning: overwriting beresp.http.Vary", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: overwriting resp.http.Vary", func(t *testing.T) {
+		input := `
+sub vcl_deliver {
+    #FASTLY deliver
+    set resp.http.Vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: case insensitive", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.vary = "Cookie";
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: no subfield suggestion for non-literal RHS", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary = req.http.X-Vary;
+}`
+		vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+		if err != nil {
+			t.Fatalf("unexpected parser error: %s", err)
+		}
+		l := New(testConfig)
+		l.lint(vcl, context.New())
+		if len(l.Errors) == 0 {
+			t.Fatalf("Expected warning but got no errors")
+		}
+		le := l.Errors[0]
+		if le.Severity != WARNING {
+			t.Errorf("Expected WARNING severity, got %s", le.Severity)
+		}
+		expect := "Overwriting beresp.http.Vary may discard important Vary values set by the origin"
+		if le.Message != expect {
+			t.Errorf("Expected message %q, got %q", expect, le.Message)
+		}
+	})
+
+	t.Run("pass: using subfield syntax", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary:Cookie = "";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: appending with +=", func(t *testing.T) {
+		input := `
+sub vcl_fetch {
+    #FASTLY fetch
+    set beresp.http.Vary += ", Accept-Encoding";
+}`
+		assertNoError(t, input)
+	})
+}

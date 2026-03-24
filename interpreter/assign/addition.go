@@ -197,6 +197,9 @@ func Addition(left, right value.Value) error {
 		default:
 			return errors.WithStack(fmt.Errorf("invalid addition TIME type, got %s", right.Type()))
 		}
+	case value.StringType:
+		lv := value.Unwrap[*value.String](left)
+		lv.Value += right.String()
 	default:
 		return errors.WithStack(fmt.Errorf("could not use addition assignment for type %s", left.Type()))
 	}

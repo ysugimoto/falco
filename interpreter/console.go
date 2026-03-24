@@ -23,6 +23,8 @@ func (i *Interpreter) ConsoleProcessInit() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	// Set default RemoteAddr so that client.ip returns a valid value
+	i.ctx.Request.RemoteAddr = "192.0.2.1:11111"
 	i.ctx.BackendRequest, err = http.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
 	if err != nil {
 		return errors.WithStack(err)

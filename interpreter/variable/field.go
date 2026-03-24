@@ -36,8 +36,8 @@ func GetField(subject, key, sep string) *value.String {
 
 	// Due to fastly behavior with header values that do not conform to RFC-8941
 	// we don't always want to strip quotes.
-	if strings.HasPrefix(val, "\"") {
-		val = strings.Trim(val, "\"")
+	if len(val) >= 2 && strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`) {
+		val = strings.ReplaceAll(val[1:len(val)-1], `\"`, `"`)
 	}
 	return &value.String{Value: val}
 }
