@@ -72,6 +72,8 @@ func WithOverrideVariables(variables map[string]any) Option {
 			switch t := v.(type) {
 			case int:
 				c.OverrideVariables[k] = &value.Integer{Value: int64(t)}
+			case int64:
+				c.OverrideVariables[k] = &value.Integer{Value: t}
 			case string:
 				c.OverrideVariables[k] = &value.String{Value: t}
 			case float64:

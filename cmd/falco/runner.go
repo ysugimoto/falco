@@ -520,9 +520,9 @@ func (r *Runner) parseOverrideVariables(v string) (string, any, bool) {
 		return key, true, true // bool:true
 	} else if strings.EqualFold(val, "false") {
 		return key, false, true // bool:true
-	} else if v, err := strconv.ParseInt(val, 10, 64); err != nil {
+	} else if v, err := strconv.ParseInt(val, 10, 64); err == nil {
 		return key, v, true // integer
-	} else if v, err := strconv.ParseFloat(val, 64); err != nil {
+	} else if v, err := strconv.ParseFloat(val, 64); err == nil {
 		return key, v, true // float
 	} else {
 		return key, val, true // string
