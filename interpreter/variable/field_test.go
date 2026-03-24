@@ -64,6 +64,7 @@ func TestGetField(t *testing.T) {
 		{input: `a=1,b="a,c=asdf",d=asdf`, field: "b", expect: "a,c=asdf"},
 		{input: `a=1,b="a,c=asdf",d=asdf`, field: "c", expect: `asdf"`},
 		{input: `a=1,b="a,c=asdf",d=asdf`, field: "d", expect: "asdf"},
+		{input: `a=1,b="\"asdf\""`, field: "b", expect: `"asdf"`},
 		{input: `a=c\,adf,b=asdf`, field: "a", expect: `c\`},
 		{input: `a=c\,adf,b=asdf`, field: "c", notSet: true},
 		{input: `a=c\,adf,b=asdf`, field: "adf", expect: ""},
