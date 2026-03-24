@@ -32,7 +32,7 @@ func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
 	ds DebugState,
-// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
+	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
 	isReturnAsValue bool,
 ) (value.Value, State, DebugState, error) {
 
