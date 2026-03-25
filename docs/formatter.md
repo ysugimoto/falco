@@ -18,13 +18,34 @@ Usage:
     falco fmt [flags] ...files
 
 Flags:
-    -h, --help         : Show this help
-    -w, --write        : Overwrite format result
+    -h, --help                       : Show this help
+    -w, --write                      : Overwrite format result
+
+Formatter Flags:
+    --indent_width [INT]             : Indent width (default: 2)
+    --indent_style [STRING]          : Indent style, "space" or "tab" (default: space)
+    --trailing_comment_width [INT]   : Trailing comment space size (default: 1)
+    --line_width [INT]               : Max line width, -1 to disable (default: 120)
+    --explicit_string_concat         : Use explicit "+" for string concat (default: true)
+    --sort_declaration_property      : Sort declaration properties alphabetically
+    --align_declaration_property     : Align declaration properties
+    --else_if                        : Coerce "else if" keyword
+    --always_next_line_else_if       : Print else/else if on next line
+    --return_statement_parenthesis   : Wrap return ident in parenthesis (default: true)
+    --sort_declaration               : Sort root declarations by directive order
+    --align_trailing_comment         : Align trailing comments
+    --comment_style [STRING]         : Comment style, "sharp" or "slash" (default: none)
+    --should_use_unset               : Replace "remove" with "unset"
+    --indent_case_labels             : Indent case labels in switch
+    --break_compound_conditions      : Break compound conditions into multiple lines
 
 files argument accepts glob file patterns
 
 Simple format example:
     falco fmt /path/to/vcl/main.vcl
+
+Format with options example:
+    falco fmt --break_compound_conditions --indent_width 4 /path/to/vcl/main.vcl
 ```
 
 Simply you can run formatter as following:

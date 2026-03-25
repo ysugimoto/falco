@@ -42,6 +42,7 @@ sub vcl_recv {
   <button onclick="doParse()">Parse</button>
   <button onclick="doFormat()">Format</button>
   <button onclick="doLint()">Lint</button>
+  <label><input type="checkbox" id="breakCompoundConditions"> Break compound conditions</label>
 
   <h2>Result</h2>
   <pre id="result">Click a button above to see results.</pre>
@@ -175,7 +176,8 @@ sub vcl_recv {
       }
       const result = FalcoVCL.format(getVCL(), {
         indentWidth: 2,
-        indentStyle: "space"
+        indentStyle: "space",
+        breakCompoundConditions: document.getElementById("breakCompoundConditions").checked
       });
       if (result.error) {
         // Try to parse line:position from error message
