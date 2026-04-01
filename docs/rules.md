@@ -327,32 +327,6 @@ Note: The COMMA of last table property can omit.
 
 Fastly document: https://developer.fastly.com/reference/vcl/declarations/table/#type-variations
 
-## table/item-limitation
-
-Table properties is limited under 1000 items.
-
-Problem:
-
-```vcl
-table example_table {
-  "some_key": "value",
-  ...(1000 items) // limited under 1000 items
-}
-```
-
-Fix:
-
-```vcl
-table example_table {
-  "some_key": "value",
-  ...(under 999 items)
-}
-```
-
-Note: 1000 items as default, but you may increase this limitation by contacting to Fastly support.
-
-Fastly document: https://developer.fastly.com/reference/vcl/declarations/table/#limitations
-
 ## table/duplicated
 
 Duplicate TABLE declaration.
