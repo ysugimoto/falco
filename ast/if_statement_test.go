@@ -70,3 +70,43 @@ else /* infix */ {
 
 	assert(t, ifs.String(), expect)
 }
+
+func TestIfStatementStringDoesNotCorruptElseIfLeadingComments(t *testing.T) {
+	elseIfComments := comments("/* else_if_block */")
+	ifComments := comments("/* if_block */")
+
+	ifs := &IfStatement{
+		Meta:    New(T, 0),
+		Keyword: "if",
+		Condition: &Ident{
+			Meta:  New(T, 0),
+			Value: "req.http.Host",
+		},
+		Consequence: &BlockStatement{
+			Meta:       New(T, 0, ifComments),
+			Statements: []Statement{},
+		},
+		Another: []*IfStatement{
+			{
+				Meta:    New(T, 0),
+				Keyword: "else if",
+				Condition: &Ident{
+					Meta:  New(T, 0),
+					Value: "req.http.X-Foo",
+				},
+				Consequence: &BlockStatement{
+					Meta:       New(T, 0, elseIfComments),
+					Statements: []Statement{},
+				},
+			},
+		},
+	}
+
+	ifs.String()
+
+	got := ifs.Another[0].Consequence.Leading[0].Value
+	if got != "/* else_if_block */" {
+		t.Errorf("else-if leading comment was corrupted: got %q, want %q",
+			got, "/* else_if_block */")
+	}
+}
