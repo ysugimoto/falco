@@ -98,22 +98,22 @@ type FormatConfig struct {
 	Overwrite bool `cli:"w,write" default:"false"`
 
 	// Formatter options
-	IndentWidth                int    `yaml:"indent_width" default:"2"`
-	TrailingCommentWidth       int    `yaml:"trailing_comment_width" default:"1"`
-	IndentStyle                string `yaml:"indent_style" default:"space"`
-	LineWidth                  int    `yaml:"line_width" default:"120"`
-	ExplicitStringConcat       bool   `yaml:"explicit_string_concat" default:"true"`
-	SortDeclarationProperty    bool   `yaml:"sort_declaration_property" default:"false"`
-	AlignDeclarationProperty   bool   `yaml:"align_declaration_property" default:"false"`
-	ElseIf                     bool   `yaml:"else_if" default:"false"`
-	AlwaysNextLineElseIf       bool   `yaml:"always_next_line_else_if" default:"false"`
-	ReturnStatementParenthesis bool   `yaml:"return_statement_parenthesis" default:"true"`
-	SortDeclaration            bool   `yaml:"sort_declaration" default:"false"`
-	AlignTrailingComment       bool   `yaml:"align_trailing_comment" default:"false"`
-	CommentStyle               string `yaml:"comment_style" default:"none"`
-	ShouldUseUnset             bool   `yaml:"should_use_unset" default:"false"`
-	IndentCaseLabels           bool   `yaml:"indent_case_labels" default:"false"`
-	BreakCompoundConditions    bool   `yaml:"break_compound_conditions" default:"false"`
+	IndentWidth                int    `cli:"indent_width" yaml:"indent_width" default:"2"`
+	TrailingCommentWidth       int    `cli:"trailing_comment_width" yaml:"trailing_comment_width" default:"1"`
+	IndentStyle                string `cli:"indent_style" yaml:"indent_style" default:"space"`
+	LineWidth                  int    `cli:"line_width" yaml:"line_width" default:"120"`
+	ExplicitStringConcat       bool   `cli:"explicit_string_concat" yaml:"explicit_string_concat" default:"true"`
+	SortDeclarationProperty    bool   `cli:"sort_declaration_property" yaml:"sort_declaration_property" default:"false"`
+	AlignDeclarationProperty   bool   `cli:"align_declaration_property" yaml:"align_declaration_property" default:"false"`
+	ElseIf                     bool   `cli:"else_if" yaml:"else_if" default:"false"`
+	AlwaysNextLineElseIf       bool   `cli:"always_next_line_else_if" yaml:"always_next_line_else_if" default:"false"`
+	ReturnStatementParenthesis bool   `cli:"return_statement_parenthesis" yaml:"return_statement_parenthesis" default:"true"`
+	SortDeclaration            bool   `cli:"sort_declaration" yaml:"sort_declaration" default:"false"`
+	AlignTrailingComment       bool   `cli:"align_trailing_comment" yaml:"align_trailing_comment" default:"false"`
+	CommentStyle               string `cli:"comment_style" yaml:"comment_style" default:"none"`
+	ShouldUseUnset             bool   `cli:"should_use_unset" yaml:"should_use_unset" default:"false"`
+	IndentCaseLabels           bool   `cli:"indent_case_labels" yaml:"indent_case_labels" default:"false"`
+	BreakCompoundConditions    bool   `cli:"break_compound_conditions" yaml:"break_compound_conditions" default:"false"`
 }
 
 type Config struct {
