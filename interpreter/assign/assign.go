@@ -192,16 +192,16 @@ func Assign(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
-			lv.Value = time.Unix(rv.Value, 0)
+			lv.Value = time.Unix(rv.Value, 0).UTC()
 		case value.FloatType: // TIME = FLOAT
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to TIME"))
 			}
 			rv := value.Unwrap[*value.Float](right)
-			lv.Value = time.Unix(int64(rv.Value), 0)
+			lv.Value = time.Unix(int64(rv.Value), 0).UTC()
 		case value.RTimeType: // TIME = RTIME
 			rv := value.Unwrap[*value.RTime](right)
-			lv.Value = time.Unix(int64(rv.Value.Seconds()), 0)
+			lv.Value = time.Unix(int64(rv.Value.Seconds()), 0).UTC()
 		case value.TimeType: // TIME = TIME
 			if right.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("TIME literal could not assign to TIME"))

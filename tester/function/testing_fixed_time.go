@@ -31,10 +31,10 @@ func Testing_fixed_time(
 	switch args[0].Type() {
 	case value.IntegerType:
 		v := value.Unwrap[*value.Integer](args[0])
-		t := time.Unix(v.Value, 0)
+		t := time.Unix(v.Value, 0).UTC()
 		ctx.FixedTime = &t
 	case value.TimeType:
-		t := value.Unwrap[*value.Time](args[0]).Value
+		t := value.Unwrap[*value.Time](args[0]).Value.UTC()
 		ctx.FixedTime = &t
 	case value.StringType:
 		fixed := value.Unwrap[*value.String](args[0]).Value
@@ -42,6 +42,7 @@ func Testing_fixed_time(
 		if err != nil {
 			return value.Null, errors.NewTestingError("Invalid time format: %s", err)
 		}
+		ft = ft.UTC()
 		ctx.FixedTime = &ft
 	default:
 		return value.Null, errors.NewTestingError(

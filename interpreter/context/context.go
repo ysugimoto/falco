@@ -206,7 +206,7 @@ func New(options ...Option) *Context {
 		MockedFunctioncalSubroutines: make(map[string]*ast.SubroutineDeclaration),
 
 		CacheHitItem:                    nil,
-		RequestStartTime:                time.Now(),
+		RequestStartTime:                time.Now().UTC(),
 		State:                           "NONE",
 		Backend:                         nil,
 		ClientIdentity:                  nil,
