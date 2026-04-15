@@ -305,6 +305,17 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 				l.Error(err)
 			}
 		}
+		// Check if regex is matching file extensions on req.url or req.url.path
+		if ident, ok := exp.Left.(*ast.Ident); ok {
+			if ident.Value == "req.url" || ident.Value == "req.url.path" {
+				if str, ok := exp.Right.(*ast.String); ok {
+					if exts := extractExtensionsFromRegex(str.Value); exts != nil {
+						suggestion := buildExtSuggestion(exp.Operator, exts)
+						l.Error(RegexUrlExtension(exp.GetMeta(), suggestion).Match(REGEX_URL_EXTENSION))
+					}
+				}
+			}
+		}
 		return types.BoolType
 	case "&&", "||":
 		// AND / OR operator compares left and right with truthy or falsy
