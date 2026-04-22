@@ -430,6 +430,25 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		options = append(options, icontext.WithInjectEdgeDictionaries(sc.OverrideEdgeDictionaries))
 	}
 
+	// Factory override variables.
+	// The order is important, should do yaml -> cli order because cli could override yaml configuration
+	overrides := make(map[string]any)
+	if sc.YamlOverrideVariables != nil {
+		maps.Copy(overrides, sc.YamlOverrideVariables)
+	}
+	if sc.CLIOverrideVariables != nil {
+		for _, v := range sc.CLIOverrideVariables {
+			key, val, parsed := r.parseOverrideVariables(v)
+			if !parsed {
+				continue
+			}
+			overrides[key] = val
+		}
+	}
+	if len(overrides) > 0 {
+		options = append(options, icontext.WithOverrideVariables(overrides))
+	}
+
 	i := interpreter.New(options...)
 
 	if sc.IsDebug {
