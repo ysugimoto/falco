@@ -444,6 +444,23 @@ func TestFormatErrorStatement(t *testing.T) {
 }
 `,
 		},
+		{
+			name: "formatting with string concatenation",
+			input: `sub vcl_recv {
+  error 600 "https://" + req.http.Host + "/splash";
+}
+`,
+			expect: `sub vcl_recv {
+  error 600 "https://" + req.http.Host + "/splash";
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				LineWidth:            120,
+				ExplicitStringConcat: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1145,6 +1162,62 @@ set req.http.Foo = "baz";
 
   // After second statement should be kept with single empty line
   set req.http.Foo = "baz";
+}
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}
+
+func TestFormatStringEscapes(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "preserve percent escape sequences",
+			input: `sub vcl_recv {
+  if (req.url ~ "/%257") {
+    error 403;
+  }
+}
+`,
+			expect: `sub vcl_recv {
+  if (req.url ~ "/%257") {
+    error 403;
+  }
+}
+`,
+		},
+		{
+			name: "preserve multiple escape sequences",
+			input: `sub vcl_recv {
+  if (req.url ~ "/search/%24" || req.url ~ "/search/%7B" || req.url ~ "/search/%7D") {
+    error 404;
+  }
+}
+`,
+			expect: `sub vcl_recv {
+  if (req.url ~ "/search/%24" || req.url ~ "/search/%7B" || req.url ~ "/search/%7D") {
+    error 404;
+  }
+}
+`,
+		},
+		{
+			name: "preserve unicode escape sequences",
+			input: `sub vcl_recv {
+  set req.http.X-Test = "%u0024%u00A3";
+}
+`,
+			expect: `sub vcl_recv {
+  set req.http.X-Test = "%u0024%u00A3";
 }
 `,
 		},
