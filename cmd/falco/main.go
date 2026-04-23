@@ -18,6 +18,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/kyokomi/emoji"
 	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/config"
 	"github.com/ysugimoto/falco/console"
@@ -85,7 +86,11 @@ func isCI() bool {
 }
 
 func main() {
-	// Event falco is running on the CI (e.g GitHub Actions), we should display colored output
+	// Disable colors if stderr is not a TTY (e.g., redirected to a file)
+	if !isatty.IsTerminal(os.Stderr.Fd()) && !isatty.IsCygwinTerminal(os.Stderr.Fd()) {
+		color.NoColor = true
+	}
+	// But if running on CI (e.g GitHub Actions), force colored output
 	// https://github.com/ysugimoto/falco/issues/438
 	if isCI() {
 		// https://github.com/fatih/color?tab=readme-ov-file#github-actions
