@@ -28,9 +28,7 @@ func (v LocalVariables) Declare(name, valueType string) error {
 	case "RTIME":
 		val = &value.RTime{}
 	case "TIME":
-		val = &value.Time{
-			Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
-		}
+		val = &value.Time{Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}
 	case "REGEX":
 		val = value.UnsatisfiableRegex.Copy()
 	default:

@@ -232,7 +232,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 
 	case TIME_END:
-		return &value.Time{Value: v.ctx.RequestEndTime}, nil
+		return &value.Time{Value: v.ctx.RequestEndTime.UTC()}, nil
 	case TIME_END_MSEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMilli()),
