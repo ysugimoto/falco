@@ -81,8 +81,8 @@ func (f *Formatter) formatString(expr *ast.String) string {
 	if expr.LongString {
 		return fmt.Sprintf(`{%s"%s"%s}`, expr.Delimiter, expr.Value, expr.Delimiter)
 	}
-	// Otherwise, double-quoted string
-	return fmt.Sprintf(`"%s"`, expr.Value)
+	// Otherwise, double-quoted string - use original token literal to preserve escapes
+	return fmt.Sprintf(`"%s"`, expr.Token.Literal)
 }
 
 func (f *Formatter) formatRTime(expr *ast.RTime) string {
