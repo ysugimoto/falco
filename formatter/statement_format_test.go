@@ -444,6 +444,23 @@ func TestFormatErrorStatement(t *testing.T) {
 }
 `,
 		},
+		{
+			name: "formatting with string concatenation",
+			input: `sub vcl_recv {
+  error 600 "https://" + req.http.Host + "/splash";
+}
+`,
+			expect: `sub vcl_recv {
+  error 600 "https://" + req.http.Host + "/splash";
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				LineWidth:            120,
+				ExplicitStringConcat: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {
