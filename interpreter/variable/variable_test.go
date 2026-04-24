@@ -22,6 +22,13 @@ func TestOverrideVariables(t *testing.T) {
 			},
 			expect: "overridden",
 		},
+		{
+			name: "client.geo.area_code",
+			overrides: map[string]any{
+				"client.geo.area_code": int64(200),
+			},
+			expect: int64(200),
+		},
 	}
 
 	for _, tt := range tests {
@@ -37,6 +44,8 @@ func TestOverrideVariables(t *testing.T) {
 			switch t := tt.expect.(type) {
 			case int:
 				expect = &value.Integer{Value: int64(t)}
+			case int64:
+				expect = &value.Integer{Value: t}
 			case string:
 				expect = &value.String{Value: t}
 			case float64:
