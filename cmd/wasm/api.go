@@ -299,6 +299,7 @@ func defaultFormatConfig() *config.FormatConfig {
 		CommentStyle:               config.CommentStyleNone,
 		ShouldUseUnset:             false,
 		IndentCaseLabels:           false,
+		BreakCompoundConditions:    true,
 	}
 }
 
@@ -345,6 +346,9 @@ func applyFormatOptions(conf *config.FormatConfig, opts js.Value) {
 	}
 	if v := opts.Get("indentCaseLabels"); !v.IsUndefined() {
 		conf.IndentCaseLabels = v.Bool()
+	}
+	if v := opts.Get("breakCompoundConditions"); !v.IsUndefined() {
+		conf.BreakCompoundConditions = v.Bool()
 	}
 }
 
