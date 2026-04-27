@@ -662,3 +662,74 @@ func TestSkippingTests(t *testing.T) {
 		})
 	}
 }
+
+func TestParseOverrideVariables(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expectKey string
+		expectVal any
+		parsed    bool
+	}{
+		{
+			name:      "parse bool true",
+			input:     "feature.enabled=true",
+			expectKey: "feature.enabled",
+			expectVal: true,
+			parsed:    true,
+		},
+		{
+			name:      "parse bool false",
+			input:     "feature.enabled=false",
+			expectKey: "feature.enabled",
+			expectVal: false,
+			parsed:    true,
+		},
+		{
+			name:      "parse int64",
+			input:     "client.geo.area_code=200",
+			expectKey: "client.geo.area_code",
+			expectVal: int64(200),
+			parsed:    true,
+		},
+		{
+			name:      "parse float64",
+			input:     "req.digest.ratio=0.8",
+			expectKey: "req.digest.ratio",
+			expectVal: float64(0.8),
+			parsed:    true,
+		},
+		{
+			name:      "parse string",
+			input:     "client.as.name=Foobar",
+			expectKey: "client.as.name",
+			expectVal: "Foobar",
+			parsed:    true,
+		},
+		{
+			name:   "invalid override format",
+			input:  "invalid",
+			parsed: false,
+		},
+	}
+
+	r := &Runner{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			key, val, parsed := r.parseOverrideVariables(tt.input)
+			if parsed != tt.parsed {
+				t.Errorf("parsed expects %v, got %v", tt.parsed, parsed)
+				return
+			}
+			if !tt.parsed {
+				return
+			}
+			if key != tt.expectKey {
+				t.Errorf("key expects %s, got %s", tt.expectKey, key)
+			}
+			if val != tt.expectVal {
+				t.Errorf("value expects %v (%T), got %v (%T)", tt.expectVal, tt.expectVal, val, val)
+			}
+		})
+	}
+}
