@@ -24,11 +24,20 @@ func Test_inject_variable(t *testing.T) {
 				tentative: "US",
 				override:  "ASIA",
 			},
+			{
+				name:      "req.protocol",
+				tentative: "http",
+				override:  "https",
+			},
 		}
 
 		for _, tt := range tests {
+			// create minimal interpreter request so variable lookups that
+			// reference `ctx.Request` (eg. req.protocol) won't panic
+			req, _ := ihttp.NewRequest("GET", "http://example.local/", nil) // nolint:errcheck
 			c := &context.Context{
 				OverrideVariables: map[string]value.Value{},
+				Request:           req,
 			}
 			v := variable.NewAllScopeVariables(c)
 			before, err := v.Get(context.RecvScope, tt.name)

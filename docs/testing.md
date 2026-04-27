@@ -26,6 +26,7 @@ Flags:
     -h, --help         : Show this help
     -r, --remote       : Connect with Fastly API
     -json              : Output results as JSON
+    -o, --override     : Override tentative variable value (e.g., -o "req.protocol=https")
     -request           : Override request config
     --max_backends     : Override max backends limitation
     --max_acls         : Override max acl limitation
@@ -46,6 +47,32 @@ You can run testing as following:
 ```shell
 falco test -I . /path/to/your/default.vcl
 ```
+
+### Overriding Tentative Variables
+
+You can override tentative variable values via the `-o` (or `--override`) flag or `.falco.yml` configuration file. This is useful for simulating different conditions in your tests without modifying the VCL code.
+
+**Via CLI flag:**
+
+```shell
+# Override a single variable
+falco test -I . -o "req.protocol=https" /path/to/your/default.vcl
+
+# Override multiple variables
+falco test -I . -o "req.protocol=https" -o "server.region=ASIA" /path/to/your/default.vcl
+```
+
+**Via `.falco.yml` configuration:**
+
+```yaml
+testing:
+  overrides:
+    req.protocol: https
+    server.region: ASIA
+    client.geo.country_code: JP
+```
+
+You can also use the `testing.inject_variable()` function within your test VCL to override variables per test case.
 
 ## How to write test VCL
 
