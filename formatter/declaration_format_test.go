@@ -348,6 +348,18 @@ table /* before_name */ routing_table /* after_name */ BACKEND /* after_type */ 
 			},
 		},
 		{
+			name: "long string keys and values",
+			input: `table redirects {
+				{"/from/%23test"}:{"https://example.com/to/%23sid%23"},
+				{"/normal"}:{"https://example.com/normal"},
+			}`,
+			expect: `table redirects {
+  {"/from/%23test"}: {"https://example.com/to/%23sid%23"},
+  {"/normal"}: {"https://example.com/normal"},
+}
+`,
+		},
+		{
 			name: "alignment properties",
 			input: `table routing_table BACKEND {
 				"a.example.com":F_backendA,
