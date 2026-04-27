@@ -57,6 +57,10 @@ type SimulatorConfig struct {
 	// Override Request configuration
 	OverrideRequest *RequestConfig
 
+	// Override tentative variable values
+	CLIOverrideVariables  []string       `cli:"o,override"` // from CLI
+	YamlOverrideVariables map[string]any `yaml:"overrides"` // from .falco.yaml
+
 	// Inject values that the simulator returns tentative value
 	// InjectValues map[string]any `yaml:"values"`
 }

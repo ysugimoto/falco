@@ -56,5 +56,12 @@ func Testing_inject_variable(
 		// Note: *value.Time value could not be specified as literal
 	}
 	ctx.OverrideVariables[name.Value] = args[1]
+
+	// If overriding request protocol, also set req.is_ssl accordingly
+	if name.Value == "req.protocol" {
+		if s, ok := args[1].(*value.String); ok {
+			ctx.OverrideVariables["req.is_ssl"] = &value.Boolean{Value: s.Value == "https"}
+		}
+	}
 	return value.Null, nil
 }
