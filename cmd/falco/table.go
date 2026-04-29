@@ -160,7 +160,7 @@ func transformFileMap(c *shared.CoverageFactory) (map[string]*shared.CoverageFac
 				fileMap[file].Statements[id] = 0
 			}
 			fileMap[file].Statements[id] += c.Statements[id]
-		case strings.HasPrefix(id, "brancn"):
+		case strings.HasPrefix(id, "branch"):
 			if _, ok := fileMap[file].Branches[id]; !ok {
 				fileMap[file].Branches[id] = 0
 			}
