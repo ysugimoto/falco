@@ -1,3 +1,14 @@
+## v2.3.0
+
+- Fixed branch typo on coverage table [#595](https://github.com/ysugimoto/falco/pull/595) (@rmgpinto)
+- fix: disable ANSI colors when stderr is redirected [#592](https://github.com/ysugimoto/falco/pull/592) (@acme)
+- if_statement: fix else-if comment restored from the wrong variable [#590](https://github.com/ysugimoto/falco/pull/590) (@jedisct1)
+- fix: preserve percent escapes in formatter output [#589](https://github.com/ysugimoto/falco/pull/589) (@acme)
+- fix(formatter): use formatExpression for error statement args [#588](https://github.com/ysugimoto/falco/pull/588) (@acme)
+- correctly parse int options, second time [#587](https://github.com/ysugimoto/falco/pull/587) (@morbidick)
+- feat(linter): add regex/url-extension rule [#583](https://github.com/ysugimoto/falco/pull/583) (@acme)
+- implement overwriting req.protocol [#566](https://github.com/ysugimoto/falco/pull/566) (@morbidick)
+
 ## v2.2.0
 
 - feat(linter): warn when overwriting Vary header [#582](https://github.com/ysugimoto/falco/pull/582) (@acme)
