@@ -352,6 +352,38 @@ func TestProcessExpression(t *testing.T) {
 	}
 }
 
+func TestFunctionCallExpression(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "Function call expression with call to header.get",
+			vcl: `
+            sub func(STRING var.value) STRING {
+                set req.http.x-func-arg = var.value;
+                return var.value;
+            }
+            sub vcl_recv {
+                declare local var.null STRING;
+                declare local var.result STRING = func("[" var.null "]");
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.x-func-arg": &value.String{Value: "[]"}, // used to be [(null)]
+			},
+			isError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
 func TestProcessStringConcat(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	tests := []struct {

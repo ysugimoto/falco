@@ -476,6 +476,21 @@ func TestFunctionCallStatement(t *testing.T) {
 			},
 			isError: true,
 		},
+		{
+			name: "null handling in function argument evaluation",
+			vcl: `
+                sub proc(STRING var.value) {
+                    set req.http.x-proc-arg = var.value;
+                }
+				sub vcl_recv {
+					declare local var.null STRING;
+					call proc("[" var.null "]");
+				}`,
+			assertions: map[string]value.Value{
+				"req.http.x-proc-arg": &value.String{Value: "[]"}, // used to be [(null)]
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {

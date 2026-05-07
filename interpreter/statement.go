@@ -32,8 +32,7 @@ func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
 	ds DebugState,
-	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
-	isReturnAsValue bool,
+	isReturnAsValue bool, // if true indicates return statement may return value.Value in functional subroutine
 ) (value.Value, State, DebugState, error) {
 
 	var err error
@@ -352,7 +351,7 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	// Evaluate arguments
 	var args []value.Value
 	for _, argExpr := range stmt.Arguments {
-		argVal, err := i.ProcessExpression(argExpr)
+		argVal, err := i.ProcessExpression(argExpr, LocalVariableExpression())
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
