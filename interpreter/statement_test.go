@@ -477,7 +477,7 @@ func TestFunctionCallStatement(t *testing.T) {
 			isError: true,
 		},
 		{
-			name: "null handling in function argument evaluation",
+			name: "null handling in procedure argument evaluation",
 			vcl: `
                 sub proc(STRING var.value) {
                     set req.http.x-proc-arg = var.value;
@@ -487,7 +487,7 @@ func TestFunctionCallStatement(t *testing.T) {
 					call proc("[" var.null "]");
 				}`,
 			assertions: map[string]value.Value{
-				"req.http.x-proc-arg": &value.String{Value: "[]"}, // used to be [(null)]
+				"req.http.x-proc-arg": &value.String{Value: "[]"},
 			},
 			isError: false,
 		},

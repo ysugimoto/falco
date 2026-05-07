@@ -360,7 +360,7 @@ func TestFunctionCallExpression(t *testing.T) {
 		isError    bool
 	}{
 		{
-			name: "Function call expression with call to header.get",
+			name: "Function call with its argument expression using null value",
 			vcl: `
             sub func(STRING var.value) STRING {
                 set req.http.x-func-arg = var.value;
@@ -371,7 +371,7 @@ func TestFunctionCallExpression(t *testing.T) {
                 declare local var.result STRING = func("[" var.null "]");
 			}`,
 			assertions: map[string]value.Value{
-				"req.http.x-func-arg": &value.String{Value: "[]"}, // used to be [(null)]
+				"req.http.x-func-arg": &value.String{Value: "[]"},
 			},
 			isError: false,
 		},
