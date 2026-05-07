@@ -92,6 +92,8 @@ func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 	if !found {
 		// Skip when set value is notset
 		if isNotSetValue(val) {
+			r.Header.Del(name)
+			r.Unassign(name)
 			return
 		}
 

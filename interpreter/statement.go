@@ -32,7 +32,7 @@ func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
 	ds DebugState,
-	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
+// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
 	isReturnAsValue bool,
 ) (value.Value, State, DebugState, error) {
 
@@ -276,8 +276,9 @@ func (i *Interpreter) ProcessSetStatementHeaderField(stmt *ast.SetStatement) err
 	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
 		return errors.WithStack(err)
 	}
-	// for header fields, undefined values are treated the same as for local variables,
-	// thus we interpret left hand side as local variable expression
+	// for header fields, undefined values are treated the same wa as for local
+	// variables, thus we interpret left hand side as a local variable and
+	// evaluate the right hand side in LocalVariableExpression mode
 	right, err := i.ProcessExpression(stmt.Value, LocalVariableExpression())
 	if err != nil {
 		return errors.WithStack(err)

@@ -1,7 +1,9 @@
 package interpreter
 
 import (
+	"io"
 	ghttp "net/http"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -13,7 +15,7 @@ import (
 
 func TestSetStatementOutcome(t *testing.T) {
 	t.Run("set local var to null", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		declare(t, ip, "var.foo", "STRING")
 		set(t, ip, &ast.Ident{Value: "var.foo"}, &ast.Ident{Value: "var.NULL"})
@@ -22,7 +24,7 @@ func TestSetStatementOutcome(t *testing.T) {
 	})
 
 	t.Run("set local val to concatenated string with null element", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		declare(t, ip, "var.dst", "STRING")
 		set(t, ip, &ast.Ident{Value: "var.dst"}, &ast.InfixExpression{
@@ -34,8 +36,8 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertValuesEqual(t, &value.String{Value: "prefix-"}, v)
 	})
 
-	t.Run("initialize http header to null", func(t *testing.T) {
-		ip := setupInterpreter(t)
+	t.Run("initialize req header to null", func(t *testing.T) {
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header"}, &ast.Ident{Value: "var.NULL"})
 		log(t, ip, &ast.Ident{Value: "req.http.x-header"})
@@ -44,8 +46,28 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
 	})
 
+	t.Run("initialize resp header to null", func(t *testing.T) {
+		ip := setupInterpreter(t, context.DeliverScope)
+		declare(t, ip, "var.NULL", "STRING")
+		set(t, ip, &ast.Ident{Value: "resp.http.x-header"}, &ast.Ident{Value: "var.NULL"})
+		log(t, ip, &ast.Ident{Value: "resp.http.x-header"})
+		v := getVar(t, ip, "resp.http.x-header")
+		assertValuesEqual(t, &value.String{IsNotSet: true}, v)
+		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
+	})
+
+	t.Run("initialize beresp header to null", func(t *testing.T) {
+		ip := setupInterpreter(t, context.FetchScope)
+		declare(t, ip, "var.NULL", "STRING")
+		set(t, ip, &ast.Ident{Value: "beresp.http.x-header"}, &ast.Ident{Value: "var.NULL"})
+		log(t, ip, &ast.Ident{Value: "beresp.http.x-header"})
+		v := getVar(t, ip, "beresp.http.x-header")
+		assertValuesEqual(t, &value.String{IsNotSet: true}, v)
+		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
+	})
+
 	t.Run("set header to concatenated string with null element", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header"}, &ast.InfixExpression{
 			Left:     &ast.String{Value: "prefix-"},
@@ -57,7 +79,7 @@ func TestSetStatementOutcome(t *testing.T) {
 	})
 
 	t.Run("set header field to null", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header:field"}, &ast.Ident{Value: "var.NULL"})
 		log(t, ip, &ast.Ident{Value: "req.http.x-header:field"})
@@ -67,7 +89,7 @@ func TestSetStatementOutcome(t *testing.T) {
 	})
 
 	t.Run("reset preinitialized header field to null", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header:preserved"}, &ast.String{Value: "preserved-value"})
 		set(t, ip, &ast.Ident{Value: "req.http.x-header:field"}, &ast.String{Value: "foo"})
@@ -79,7 +101,7 @@ func TestSetStatementOutcome(t *testing.T) {
 	})
 
 	t.Run("set header field to concatenated string with null element", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header:foo"}, &ast.InfixExpression{
 			Left:     &ast.String{Value: "prefix-"},
@@ -90,8 +112,8 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertValuesEqual(t, &value.String{Value: "prefix-"}, v)
 	})
 
-	t.Run("reset existing header to null", func(t *testing.T) {
-		ip := setupInterpreter(t)
+	t.Run("reset existing request header to null", func(t *testing.T) {
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		set(t, ip, &ast.Ident{Value: "req.http.x-header"}, &ast.String{Value: "foo"})
 		assertIntsEqual(t, 1, len(ip.ctx.Request.Header))
@@ -107,8 +129,25 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
 	})
 
+	t.Run("reset existing response header to null", func(t *testing.T) {
+		ip := setupInterpreter(t, context.DeliverScope)
+		declare(t, ip, "var.NULL", "STRING")
+		set(t, ip, &ast.Ident{Value: "resp.http.x-header"}, &ast.String{Value: "foo"})
+		assertIntsEqual(t, 1, len(ip.ctx.Response.Header))
+		set(t, ip, &ast.Ident{Value: "resp.http.x-header"}, &ast.Ident{Value: "var.NULL"})
+		assertIntsEqual(t, 0, len(ip.ctx.Response.Header))
+		log(t, ip, &ast.Ident{Value: "resp.http.x-header"})
+		v, err := ip.vars.Get(context.DeliverScope, "resp.http.x-header")
+		if err != nil {
+			t.Errorf("var.foo must be declared: %s", err)
+			return
+		}
+		assertValuesEqual(t, &value.String{IsNotSet: true}, v)
+		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
+	})
+
 	t.Run("json.excape of null to local var", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		declare(t, ip, "var.escaped", "STRING")
 		set(t, ip, &ast.Ident{Value: "var.escaped"}, &ast.FunctionCallExpression{
@@ -119,7 +158,7 @@ func TestSetStatementOutcome(t *testing.T) {
 	})
 
 	t.Run("json.excape of null to http header", func(t *testing.T) {
-		ip := setupInterpreter(t)
+		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		escapeOfNull := &ast.FunctionCallExpression{
 			Function:  &ast.Ident{Value: "json.escape"},
@@ -210,16 +249,29 @@ func assertValuesEqual(t *testing.T, expect, actual value.Value) {
 	}
 }
 
-func setupInterpreter(t *testing.T) *Interpreter {
+func setupInterpreter(t *testing.T, scope context.Scope) *Interpreter {
 	name := t.Name()
 	ip := New(nil)
 	ip.ctx = context.New()
-	ip.SetScope(context.RecvScope)
+	ip.SetScope(scope)
 	req, err := http.NewRequest(ghttp.MethodGet, "https://example.com", nil)
 	if err != nil {
 		t.Errorf("%s: unexpected error returned: %s", name, err)
 	}
 	ip.ctx.Request = req
 	ip.ctx.BackendRequest = req
+	res := http.WrapResponse(&ghttp.Response{
+		StatusCode:    ghttp.StatusOK,
+		Status:        ghttp.StatusText(ghttp.StatusOK),
+		Proto:         "HTTP/1.1",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        ghttp.Header{},
+		Body:          io.NopCloser(strings.NewReader("")),
+		ContentLength: 0,
+	})
+	ip.ctx.BackendResponse = res
+	ip.ctx.Response = res
+	ip.ctx.Object = res
 	return ip
 }
