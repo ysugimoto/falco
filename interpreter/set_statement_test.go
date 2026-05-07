@@ -146,7 +146,7 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
 	})
 
-	t.Run("json.excape of null to local var", func(t *testing.T) {
+	t.Run("json.escape of null to local var", func(t *testing.T) {
 		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		declare(t, ip, "var.escaped", "STRING")
@@ -157,7 +157,7 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertValuesEqual(t, &value.String{Value: ""}, getLocalVar(t, ip, "var.escaped"))
 	})
 
-	t.Run("json.excape of null to http header", func(t *testing.T) {
+	t.Run("json.escape of null to http header", func(t *testing.T) {
 		ip := setupInterpreter(t, context.RecvScope)
 		declare(t, ip, "var.NULL", "STRING")
 		escapeOfNull := &ast.FunctionCallExpression{
