@@ -1891,7 +1891,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-accessibility/",
 									},
 								},
 								"is_ai_crawler": {
@@ -1901,7 +1901,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-ai-crawler/",
 									},
 								},
 								"is_ai_fetcher": {
@@ -1911,7 +1911,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-ai-fetcher/",
 									},
 								},
 								"is_content_fetcher": {
@@ -1921,7 +1921,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-content-fetcher/",
 									},
 								},
 								"is_monitoring_and_site_tools": {
@@ -1931,7 +1931,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-monitoring-and-site-tools/",
 									},
 								},
 								"is_online_marketing": {
@@ -1941,7 +1941,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-online-marketing/",
 									},
 								},
 								"is_page_preview": {
@@ -1951,7 +1951,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-page-preview/",
 									},
 								},
 								"is_platform_integrations": {
@@ -1961,7 +1961,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-platform-integrations/",
 									},
 								},
 								"is_research": {
@@ -1971,7 +1971,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-research/",
 									},
 								},
 								"is_search_engine_crawler": {
@@ -1981,7 +1981,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-search-engine-crawler/",
 									},
 								},
 								"is_search_engine_optimization": {
@@ -1991,7 +1991,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-search-engine-optimization/",
 									},
 								},
 								"is_security_tools": {
@@ -2001,7 +2001,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-security-tools/",
 									},
 								},
 								"is_verified": {
@@ -2011,7 +2011,7 @@ func predefinedVariables() Variables {
 										Set:       types.NeverType,
 										Unset:     false,
 										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-										Reference: "",
+										Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-verified/",
 									},
 								},
 							},
@@ -2020,7 +2020,7 @@ func predefinedVariables() Variables {
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "",
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category/",
 							},
 						},
 						"name": {
@@ -2030,7 +2030,7 @@ func predefinedVariables() Variables {
 								Set:       types.NeverType,
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-								Reference: "",
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-name/",
 							},
 						},
 					},
@@ -4957,6 +4957,7 @@ func predefinedVariables() Variables {
 			},
 		},
 	}
+
 }
 
 func newRegexMatchedValues() map[string]int {
