@@ -2352,6 +2352,68 @@ fastly.ddos_detected:
   on: [RECV, HASH, DELIVER, LOG]
   get: BOOL
 
+fastly.bot.name:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+fastly.bot.category:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+fastly.bot.category.is_accessibility:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_ai_crawler:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_ai_fetcher:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_content_fetcher:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_monitoring_and_site_tools:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_online_marketing:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_page_preview:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_platform_integrations:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_research:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_search_engine_crawler:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_search_engine_optimization:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_security_tools:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_verified:
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
 client.platform.model:
   reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]

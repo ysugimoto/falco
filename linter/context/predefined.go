@@ -1880,6 +1880,161 @@ func predefinedVariables() Variables {
 		},
 		"fastly": &Object{
 			Items: map[string]*Object{
+				"bot": {
+					Items: map[string]*Object{
+						"category": {
+							Items: map[string]*Object{
+								"is_accessibility": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_ai_crawler": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_ai_fetcher": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_content_fetcher": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_monitoring_and_site_tools": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_online_marketing": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_page_preview": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_platform_integrations": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_research": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_search_engine_crawler": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_search_engine_optimization": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_security_tools": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+								"is_verified": {
+									Items: map[string]*Object{},
+									Value: &Accessor{
+										Get:       types.BoolType,
+										Set:       types.NeverType,
+										Unset:     false,
+										Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+										Reference: "",
+									},
+								},
+							},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "",
+							},
+						},
+						"name": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.StringType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+								Reference: "",
+							},
+						},
+					},
+				},
 				"ddos_detected": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -4802,7 +4957,6 @@ func predefinedVariables() Variables {
 			},
 		},
 	}
-
 }
 
 func newRegexMatchedValues() map[string]int {
