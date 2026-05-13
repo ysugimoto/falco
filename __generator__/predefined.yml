@@ -1934,6 +1934,11 @@ fastly_info.state:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: STRING
 
+fastly_info.version:
+  reference: ""
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
 req.backend.ip:
   reference: "https://developer.fastly.com/reference/vcl/variables/miscellaneous/req-backend-ip/"
   on: [ERROR, DELIVER, LOG]
