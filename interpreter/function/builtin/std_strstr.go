@@ -41,7 +41,10 @@ func Std_strstr(ctx *context.Context, args ...value.Value) (value.Value, error) 
 
 	idx := strings.Index(haystack, needle)
 	if idx == -1 {
-		return &value.String{Value: ""}, nil
+		// Fastly returns NOT SET when the needle is not found. That is
+		// distinct from an empty string: NOT SET is falsy in a boolean
+		// context, an empty string is truthy.
+		return &value.String{IsNotSet: true}, nil
 	}
 
 	return &value.String{Value: haystack[idx:]}, nil
