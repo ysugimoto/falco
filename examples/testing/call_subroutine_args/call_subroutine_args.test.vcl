@@ -59,6 +59,8 @@ sub test_scoped_subroutine {
 // @scope: fetch
 // @suite: fetch subroutine call with extra args still works
 sub test_scoped_subroutine_with_args {
+  set req.url = "/api/v1";
   testing.call_subroutine("vcl_fetch");
+  assert.equal(beresp.cacheable, true);
   assert.state(pass);
 }

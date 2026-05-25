@@ -20,25 +20,13 @@ sub classify_path(STRING var.expected) STRING {
 }
 
 
-// @scope: fetch
-sub sas_fetch_akamai_caching(STRING var.mode, INTEGER var.cache_lifetime, INTEGER var.default_maxage, STRING var.force_revalidate_stale, BOOL var.enhanced_rfc_support) {
-
-  // === MODE: CACHE ===
-  // Cache content on Akamai platform servers for specified time
-  if (var.mode ~ "^cache\z") {
-    set beresp.http.X-CacheMode = "cache";
+sub cache_path(STRING var.mode, STRING var.path) BOOL {
+  if (var.mode ~ "^cache\z" && req.url.path == var.path) {
     set beresp.cacheable = true;
-    set beresp.ttl = var.cache_lifetime;
-
-    // CRITICAL: Adjust TTL for shield/cluster cached responses
-    // When shielding or clustering is enabled, responses from shield/cluster include
-    // an Age header indicating how long the object has been cached.
-    // We must subtract this from the TTL to maintain correct cache lifetime.
-    // Reference: See performance.vcl examples in codebase
-    if (beresp.http.Age) {
-      set beresp.ttl -= std.atoi(beresp.http.Age);
-    }
+    set beresp.ttl = 3600s;
+    return true;
   }
+  return false;
 }
 
 
@@ -50,6 +38,6 @@ sub vcl_recv {
 
 sub vcl_fetch {
 #FASTLY FETCH
-  call sas_fetch_akamai_caching("cache", 3600, 1800, "none", false);
+  call cache_path("cache", "/api/v1");
   return(pass);
 }
