@@ -723,10 +723,126 @@ func (l *Linter) lintFunctionCallStatement(exp *ast.FunctionCallStatement, ctx *
 		return types.NeverType
 	}
 
+	// testing.call_subroutine has variadic extra arguments whose types depend
+	// on the target subroutine's parameter list. Validate it separately.
+	if exp.Function.Value == context.TestingCallSubroutineName {
+		return l.lintTestingCallSubroutine(exp, ctx)
+	}
+
 	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.Value,
 		token:     exp.Function.GetMeta().Token,
 		arguments: exp.Arguments,
 		meta:      exp.Meta,
 	}, ctx)
+}
+
+// lintTestingCallSubroutine applies dedicated validation for
+// testing.call_subroutine(name STRING, arg1, arg2, ...).
+func (l *Linter) lintTestingCallSubroutine(
+	exp *ast.FunctionCallStatement,
+	ctx *context.Context,
+) types.Type {
+
+	tok := exp.Function.GetMeta().Token
+	args := exp.Arguments
+
+	// Must have at least one argument: the subroutine name.
+	if len(args) == 0 {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    tok,
+			Message: fmt.Sprintf(
+				"function %s requires at least one STRING argument (subroutine name)",
+				context.TestingCallSubroutineName,
+			),
+		})
+		return types.NeverType
+	}
+
+	// First argument must be a STRING.
+	firstType := l.lint(args[0], ctx)
+	if firstType != types.StringType {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    args[0].GetMeta().Token,
+			Message: fmt.Sprintf(
+				"function %s: first argument must be STRING (subroutine name), got %s",
+				context.TestingCallSubroutineName, firstType,
+			),
+		})
+	}
+
+	// Deep validation only possible when the name is a string literal.
+	strLit, ok := args[0].(*ast.String)
+	if !ok {
+		// Name is a runtime expression; skip deep validation.
+		return types.NeverType
+	}
+	subName := strLit.Value
+
+	sub, found := ctx.Subroutines[subName]
+	if !found {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    args[0].GetMeta().Token,
+			Message: fmt.Sprintf(
+				"function %s: subroutine %q is not defined",
+				context.TestingCallSubroutineName, subName,
+			),
+		})
+		return types.NeverType
+	}
+
+	params := sub.Decl.Parameters
+	extraArgs := args[1:]
+
+	if len(extraArgs) != len(params) {
+		l.Error(&LintError{
+			Severity: ERROR,
+			Token:    tok,
+			Message: fmt.Sprintf(
+				"function %s: subroutine %q expects %d argument(s), got %d",
+				context.TestingCallSubroutineName, subName, len(params), len(extraArgs),
+			),
+		})
+		return types.NeverType
+	}
+
+	for i, arg := range extraArgs {
+		param := params[i]
+		expectedType, ok := types.ValueTypeMap[param.Type.Value]
+		if !ok {
+			// Unknown parameter type; skip type check for this argument.
+			continue
+		}
+		actualType := l.lint(arg, ctx)
+		if t, ok := implicitCoersionTable[expectedType]; ok {
+			if !expectType(actualType, append(t, expectedType)...) {
+				l.Error(&LintError{
+					Severity: ERROR,
+					Token:    arg.GetMeta().Token,
+					Message: fmt.Sprintf(
+						"function %s: argument %d type mismatch: "+
+							"subroutine %q parameter %q expects %s, got %s",
+						context.TestingCallSubroutineName, i+2,
+						subName, param.Name.Value, expectedType, actualType,
+					),
+				})
+			}
+		} else if actualType != expectedType {
+			l.Error(&LintError{
+				Severity: ERROR,
+				Token:    arg.GetMeta().Token,
+				Message: fmt.Sprintf(
+					"function %s: argument %d type mismatch: "+
+						"subroutine %q parameter %q expects %s, got %s",
+					context.TestingCallSubroutineName, i+2,
+					subName, param.Name.Value, expectedType, actualType,
+				),
+			})
+		}
+	}
+
+	return types.NeverType
 }
