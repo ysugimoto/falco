@@ -298,3 +298,36 @@ var UnsatisfiableRegex = &Regex{
 	Literal:       false,
 	Unsatisfiable: true,
 }
+
+// ClearLiteral returns a copy of v with its Literal flag cleared to false.
+// This is needed when storing subroutine argument values as local parameter
+// variables: a variable that holds the value of a literal is itself not a
+// literal (VCL's regex operator forbids a literal on the left-hand side, but
+// allows a local variable that happens to contain the same string).
+func ClearLiteral(v Value) Value {
+	switch t := v.(type) {
+	case *String:
+		return &String{Value: t.Value, Literal: false, IsNotSet: t.IsNotSet, Collection: t.Collection}
+	case *Integer:
+		return &Integer{Value: t.Value, Literal: false}
+	case *Float:
+		return &Float{
+			Value: t.Value, Literal: false,
+			IsNAN: t.IsNAN, IsNegativeInf: t.IsNegativeInf, IsPositiveInf: t.IsPositiveInf,
+		}
+	case *Boolean:
+		return &Boolean{Value: t.Value, Literal: false}
+	case *RTime:
+		return &RTime{Value: t.Value, Literal: false, IsNotSet: t.IsNotSet}
+	case *IP:
+		return &IP{Value: t.Value, Literal: false}
+	case *Backend:
+		return &Backend{Value: t.Value, Director: t.Director, Literal: false}
+	case *Acl:
+		return &Acl{Value: t.Value, Literal: false}
+	case *Ident:
+		return &Ident{Value: t.Value, Literal: false}
+	default:
+		return v
+	}
+}

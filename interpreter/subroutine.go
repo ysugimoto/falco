@@ -354,7 +354,10 @@ func (i *Interpreter) validateAndSetParameters(sub *ast.SubroutineDeclaration, a
 				arg.Type(),
 			)
 		}
-		i.localVars[param.Name.Value] = converted
+		// Strip the Literal flag: the parameter is accessed via a variable
+		// name (var.X) so it must not be treated as a literal even when its
+		// value came from a literal expression at the call site.
+		i.localVars[param.Name.Value] = value.ClearLiteral(converted)
 	}
 
 	return nil
