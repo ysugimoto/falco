@@ -188,6 +188,49 @@ func TestProcessBackends(t *testing.T) {
 			t.Error("Expected error due to duplicated backends")
 		}
 	})
+
+	t.Run("Uninitialized backend assigned to req.backend", func(t *testing.T) {
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              set req.backend = var.backend;
+              error 600 "synthetic response";
+			}
+            sub vcl_error {
+              set obj.status = 200;
+              synthetic "synthetic response";
+            }
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.backend": &value.Backend{},
+		}, false)
+	})
+
+	t.Run("Uninitialized backend assigned to string variable", func(t *testing.T) {
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              declare local var.str STRING = var.backend;
+              set req.http.backend = var.str;
+			}
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.backend": &value.String{Value: "(none)"},
+		}, false)
+	})
+
+	t.Run("Uninitialized backend assigned to req.backend", func(t *testing.T) {
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              set req.backend = var.backend;
+			}
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.backend": &value.String{Value: "(none)"},
+		}, true)
+	})
+
 }
 
 func TestSyntheticAfterRestart(t *testing.T) {
