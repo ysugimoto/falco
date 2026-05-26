@@ -32,7 +32,7 @@ func New() *Process {
 
 func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 	var backend string
-	if p.Backend != nil {
+	if p.Backend != nil && (p.Backend.Value != nil || p.Backend.Director != nil) {
 		backend = p.Backend.Value.Name.Value
 	}
 
