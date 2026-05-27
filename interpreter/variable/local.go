@@ -2,7 +2,6 @@ package variable
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
@@ -11,32 +10,9 @@ import (
 type LocalVariables map[string]value.Value
 
 func (v LocalVariables) Declare(name, valueType string) error {
-	var val value.Value
-	switch valueType {
-	case "INTEGER":
-		val = &value.Integer{}
-	case "FLOAT":
-		val = &value.Float{}
-	case "BOOL":
-		val = &value.Boolean{}
-	case "BACKEND":
-		val = &value.Backend{}
-	case "IP":
-		val = &value.IP{IsNotSet: true}
-	case "STRING":
-		val = &value.String{IsNotSet: true}
-	case "RTIME":
-		val = &value.RTime{}
-	case "TIME":
-		val = &value.Time{
-			Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
-		}
-	case "REGEX":
-		val = value.UnsatisfiableRegex.Copy()
-	default:
-		return errors.WithStack(fmt.Errorf(
-			"unexpected value type: %s", valueType,
-		))
+	val, err := value.Create(value.Type(valueType))
+	if err != nil {
+		return err
 	}
 	v[name] = val
 	return nil

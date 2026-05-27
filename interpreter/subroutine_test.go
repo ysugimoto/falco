@@ -152,6 +152,27 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Str-Value": &value.String{Value: "TEST"},
 			},
 		},
+		{
+			name: "Functional subroutine automatically converts literal string to REGEX arg",
+			vcl: `
+            sub match(STRING var.value, REGEX var.pattern) STRING {
+                log var.value "~" var.pattern; 
+				if (var.value ~ var.pattern) {
+					return "match";
+				}
+				return "not match";
+			}
+
+			sub vcl_recv {
+				set req.http.X-Match-Value = match("foobar", "foo");
+                set req.http.X-Not-Match-Value = match("foobar", "baz");
+			}
+			`,
+			assertions: map[string]value.Value{
+				"req.http.X-Match-Value":     &value.String{Value: "match"},
+				"req.http.X-Not-Match-Value": &value.String{Value: "not match"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
