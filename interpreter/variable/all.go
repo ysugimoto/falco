@@ -198,8 +198,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Boolean{Value: true}, nil
 
 	case REQ_IS_SSL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Boolean{Value: req.TLS != nil}, nil
 	case REQ_PROTOCOL:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		protocol := "http"
 		if req.TLS != nil {
 			protocol = "https"

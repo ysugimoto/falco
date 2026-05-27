@@ -626,3 +626,82 @@ func TestStringConcatenationIssue360(t *testing.T) {
 		})
 	}
 }
+
+func TestLintRegexUrlExtension(t *testing.T) {
+	t.Run("warning: req.url with single extension regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url ~ "\.jpg$") {
+		restart;
+	}
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: req.url.path with single extension regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url.path ~ "\.png$") {
+		restart;
+	}
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: req.url.path with multiple extensions regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url.path ~ "\.(avif|gif|jpg|png|webp)$") {
+		restart;
+	}
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("warning: negated regex match", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url !~ "\.css$") {
+		restart;
+	}
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	t.Run("pass: req.url with non-extension regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url ~ "^/api/") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: req.url.ext comparison", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.url.ext == "jpg") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass: other variable with extension regex", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY recv
+	if (req.http.X-Original-URL ~ "\.jpg$") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+}

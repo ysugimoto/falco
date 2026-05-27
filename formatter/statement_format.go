@@ -521,10 +521,10 @@ func (f *Formatter) formatErrorStatement(stmt *ast.ErrorStatement) string {
 	defer bufferPool.Put(buf)
 
 	buf.Reset()
-	buf.WriteString("error " + stmt.Code.String())
+	buf.WriteString("error " + f.formatExpression(stmt.Code).String())
 	// argument is arbitrary
 	if stmt.Argument != nil {
-		buf.WriteString(" " + stmt.Argument.String())
+		buf.WriteString(" " + f.formatExpression(stmt.Argument).ChunkedString(stmt.Nest, buf.Len()))
 	}
 	buf.WriteString(";")
 

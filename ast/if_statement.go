@@ -43,9 +43,10 @@ func (i *IfStatement) String() string {
 		buf.WriteString(")")
 		buf.WriteString(paddingLeft(a.Consequence.LeadingComment(inline)))
 		buf.WriteString(" ")
+		aTmp := a.Consequence.Leading
 		a.Consequence.Leading = Comments{}
 		buf.WriteString(a.Consequence.String())
-		a.Consequence.Leading = tmp
+		a.Consequence.Leading = aTmp
 		buf.WriteString(a.TrailingComment(inline))
 	}
 	if i.Alternative != nil {
