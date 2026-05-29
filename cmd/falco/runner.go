@@ -457,8 +457,16 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 	}
 
 	// Otherwise, simply start simulator server.
+	//
+	// The interpreter is exposed as the server's root handler directly, without
+	// an http.ServeMux in front of it. http.ServeMux calls path.Clean on every
+	// incoming request and 301-redirects to the cleaned path whenever it differs
+	// from the raw path, which collapses `//` and resolves `.`/`..` segments
+	// before VCL ever runs. Real Fastly preserves those path oddities in
+	// req.url / req.url.path, so the simulator must forward them unchanged. This
+	// wiring is covered by TestSimulatorPreservesRawPath.
 	s := &http.Server{
-		Handler: simulateHandler(i),
+		Handler: i,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
 
@@ -474,21 +482,6 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-// simulateHandler returns the http.Handler mounted by `falco simulate`.
-//
-// The interpreter is exposed as the server's root handler directly, without
-// an http.ServeMux in front of it. http.ServeMux calls path.Clean on every
-// incoming request and 301-redirects to the cleaned path whenever it differs
-// from the raw path, which collapses `//` and resolves `.`/`..` segments
-// before VCL ever runs. Real Fastly preserves those path oddities in
-// req.url / req.url.path, so the simulator must forward them unchanged.
-//
-// This helper exists so the wiring is covered by a regression test; see
-// TestSimulateHandlerPreservesRawPath.
-func simulateHandler(i http.Handler) http.Handler {
-	return i
 }
 
 func (r *Runner) Test(rslv resolver.Resolver) (*tester.TestFactory, error) {
