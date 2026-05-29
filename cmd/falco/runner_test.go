@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
@@ -741,12 +740,14 @@ func TestParseOverrideVariables(t *testing.T) {
 	}
 }
 
-// TestSimulateHandlerPreservesRawPath is a regression test for a bug where
-// `falco simulate` wrapped the interpreter in an http.ServeMux, which calls
-// path.Clean on every request and 301-redirects whenever the cleaned path
-// differs (collapsing `//`, resolving `.`/`..`). Real Fastly preserves those
-// path oddities in req.url, so the simulator must too. See simulateHandler.
-func TestSimulateHandlerPreservesRawPath(t *testing.T) {
+// TestSimulatorPreservesRawPath is a regression test for a bug where
+// `falco simulate` (and the debugger console) wrapped the interpreter in an
+// http.ServeMux, which calls path.Clean on every request and 301-redirects
+// whenever the cleaned path differs (collapsing `//`, resolving `.`/`..`).
+// Real Fastly preserves those path oddities in req.url, so the simulator must
+// too. The fix serves the interpreter as the root handler directly; this test
+// mirrors that wiring and fails with a 301 if a ServeMux is reintroduced.
+func TestSimulatorPreservesRawPath(t *testing.T) {
 	// Minimal VCL that echoes the raw req.url observed in vcl_recv into a
 	// synthetic 200 response body, mirroring the probe VCL from the original
 	// bug report. Using `error` + synthetic means we don't need a backend and
@@ -774,7 +775,9 @@ sub vcl_error {
 		icontext.WithActualResponse(true),
 	)
 
-	srv := httptest.NewServer(simulateHandler(i))
+	// Serve the interpreter directly, exactly as runner.go and the debugger
+	// console do. No http.ServeMux in front of it.
+	srv := httptest.NewServer(i)
 	defer srv.Close()
 
 	// Cases that the ServeMux-wrapped handler previously 301'd. We do not
@@ -830,49 +833,5 @@ sub vcl_error {
 				t.Errorf("body = %q, want %q", got, want)
 			}
 		})
-	}
-}
-
-// TestSimulateHandlerIsNotServeMux documents the intent of simulateHandler:
-// it must not wrap the interpreter in an http.ServeMux, which would
-// canonicalize request paths before VCL runs.
-func TestSimulateHandlerIsNotServeMux(t *testing.T) {
-	// A sentinel handler we can recognize.
-	var sentinel http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(r.URL.Path))
-	})
-
-	h := simulateHandler(sentinel)
-	if _, isMux := h.(*http.ServeMux); isMux {
-		t.Fatal("simulateHandler returned an http.ServeMux; it must expose the interpreter directly to preserve raw paths")
-	}
-
-	// End-to-end: issue a request with `//` and ensure the path is delivered
-	// verbatim, not canonicalized.
-	srv := httptest.NewServer(h)
-	defer srv.Close()
-
-	client := &http.Client{
-		CheckRedirect: func(*http.Request, []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	u, _ := url.Parse(srv.URL)
-	u.Path = "/a//b"
-	u.RawPath = "/a//b"
-	resp, err := client.Do(&http.Request{Method: http.MethodGet, URL: u, Header: http.Header{}})
-	if err != nil {
-		t.Fatalf("request: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200 (mux would 301)", resp.StatusCode)
-	}
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, resp.Body); err != nil {
-		t.Fatalf("read: %s", err)
-	}
-	if got := buf.String(); !strings.Contains(got, "/a//b") {
-		t.Errorf("handler saw path %q, want it to contain %q", got, "/a//b")
 	}
 }
