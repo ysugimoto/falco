@@ -529,6 +529,26 @@ func TestIfStatement(t *testing.T) {
 			},
 			isError: false,
 		},
+		{
+			// Regression: std.strstr must return NOT SET when the needle is
+			// not found, so `if (std.strstr(...))` is falsy. An earlier bug
+			// returned an empty (but set) string, which made the condition
+			// unconditionally truthy.
+			name: "std.strstr miss is falsy",
+			vcl: `
+			sub vcl_recv {
+				set req.url = "/foo";
+				if (std.strstr(req.url, "/nothing-that-matches")) {
+					header.set(req, "foo", "truthy");
+				} else {
+					header.set(req, "foo", "falsy");
+				}
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "falsy"},
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {
