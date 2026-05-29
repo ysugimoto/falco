@@ -745,8 +745,9 @@ func TestParseOverrideVariables(t *testing.T) {
 // http.ServeMux, which calls path.Clean on every request and 301-redirects
 // whenever the cleaned path differs (collapsing `//`, resolving `.`/`..`).
 // Real Fastly preserves those path oddities in req.url, so the simulator must
-// too. The fix serves the interpreter as the root handler directly; this test
-// mirrors that wiring and fails with a 301 if a ServeMux is reintroduced.
+// too. The fix serves the interpreter as the root handler directly instead of
+// wrapping it in an http.ServeMux; this test exercises that handler and fails
+// with a 301 if a ServeMux is reintroduced in front of it.
 func TestSimulatorPreservesRawPath(t *testing.T) {
 	// Minimal VCL that echoes the raw req.url observed in vcl_recv into a
 	// synthetic 200 response body, mirroring the probe VCL from the original

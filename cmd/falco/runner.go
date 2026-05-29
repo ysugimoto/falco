@@ -456,15 +456,10 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		return debugger.New(i).Run(sc)
 	}
 
-	// Otherwise, simply start simulator server.
-	//
-	// The interpreter is exposed as the server's root handler directly, without
-	// an http.ServeMux in front of it. http.ServeMux calls path.Clean on every
-	// incoming request and 301-redirects to the cleaned path whenever it differs
-	// from the raw path, which collapses `//` and resolves `.`/`..` segments
-	// before VCL ever runs. Real Fastly preserves those path oddities in
-	// req.url / req.url.path, so the simulator must forward them unchanged. This
-	// wiring is covered by TestSimulatorPreservesRawPath.
+	// Otherwise, simply start simulator server. Serve the interpreter as the
+	// root handler directly: an http.ServeMux would path.Clean-301 requests
+	// with `//`, `/./`, or `/../`, hiding those raw paths from VCL. Real Fastly
+	// preserves them in req.url / req.url.path, so the simulator must too.
 	s := &http.Server{
 		Handler: i,
 		Addr:    fmt.Sprintf(":%d", sc.Port),

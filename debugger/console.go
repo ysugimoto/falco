@@ -144,11 +144,10 @@ func (c *Console) Run(sc *config.SimulatorConfig) error {
 	)
 
 	go func() {
-		// Install the debugger console as the root handler directly. Wrapping
-		// it in an http.ServeMux would cause path.Clean-based 301 redirects for
-		// requests whose raw paths contain '//' or '.'/'..' segments, hiding
-		// them from VCL. Real Fastly preserves those paths in req.url, so we
-		// must too.
+		// Serve the console as the root handler directly. An http.ServeMux
+		// would path.Clean-301 requests with `//`, `/./`, or `/../`, hiding
+		// those raw paths from VCL. Real Fastly preserves them in req.url, so
+		// we must too.
 		s := &http.Server{
 			Handler: c,
 			Addr:    fmt.Sprintf(":%d", sc.Port),
