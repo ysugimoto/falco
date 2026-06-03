@@ -26,7 +26,6 @@ const (
 	DIRECTOR_BACKEND_REQUIRED            = "director/backend-required"
 	TABLE_SYNTAX                         = "table/syntax"
 	TABLE_TYPE_VARIATION                 = "table/type-variation"
-	TABLE_ITEM_LIMITATION                = "table/item-limitation"
 	TABLE_DUPLICATED                     = "table/duplicated"
 	SUBROUTINE_SYNTAX                    = "subroutine/syntax"
 	SUBROUTINE_BOILERPLATE_MACRO         = "subroutine/boilerplate-macro"
@@ -89,7 +88,6 @@ var references = map[Rule]string{
 	DIRECTOR_PROPS_CHASH:             "https://developer.fastly.com/reference/vcl/declarations/director/#consistent-hashing",
 	TABLE_SYNTAX:                     "https://developer.fastly.com/reference/vcl/declarations/table/",
 	TABLE_TYPE_VARIATION:             "https://developer.fastly.com/reference/vcl/declarations/table/#type-variations",
-	TABLE_ITEM_LIMITATION:            "https://developer.fastly.com/reference/vcl/declarations/table/#limitations",
 	SUBROUTINE_SYNTAX:                "https://developer.fastly.com/reference/vcl/subroutines/",
 	SUBROUTINE_BOILERPLATE_MACRO:     "https://developer.fastly.com/learning/vcl/using/#adding-vcl-to-your-service-configuration",
 	PENALTYBOX_SYNTAX:                "https://developer.fastly.com/reference/vcl/declarations/penaltybox/",

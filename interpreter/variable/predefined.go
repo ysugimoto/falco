@@ -190,6 +190,7 @@ const (
 	FASTLY_INFO_IS_H3                          = "fastly_info.is_h3"
 	FASTLY_INFO_REQUEST_ID                     = "fastly_info.request_id"
 	FASTLY_INFO_STATE                          = "fastly_info.state"
+	FASTLY_INFO_VERSION                        = "fastly_info.version"
 	GEOIP_AREA_CODE                            = "geoip.area_code"
 	GEOIP_CITY                                 = "geoip.city"
 	GEOIP_CITY_ASCII                           = "geoip.city.ascii"
