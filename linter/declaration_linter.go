@@ -242,18 +242,6 @@ func (l *Linter) lintTableDeclaration(decl *ast.TableDeclaration, ctx *context.C
 		l.Error(InvalidName(decl.Name.GetMeta(), decl.Name.Value, "table").Match(TABLE_SYNTAX))
 	}
 
-	// Table item is limited under 1000 by default
-	// https://developer.fastly.com/reference/vcl/declarations/table/#limitations
-	// But user can increase limitation by contacting to support.
-	if len(decl.Properties) > 1000 {
-		err := &LintError{
-			Severity: WARNING,
-			Token:    decl.Name.GetMeta().Token,
-			Message:  fmt.Sprintf(`Table "%s" items are limited to 1000`, decl.Name.Value),
-		}
-		l.Error(err.Match(TABLE_ITEM_LIMITATION))
-	}
-
 	// table value type
 	var valueType types.Type
 	if decl.ValueType == nil {
