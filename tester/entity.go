@@ -27,9 +27,9 @@ func (t *TestCase) MarshalJSON() ([]byte, error) {
 		Time     int64    `json:"elapsed_time"`
 		Skip     bool     `json:"skip"`
 		Logs     []string `json:"logs"`
-		File     *string  `json:"file,omitempty"`
-		Line     *int     `json:"line,omitempty"`
-		Position *int     `json:"position,omitempty"`
+		File     string   `json:"file,omitempty"`     // blank is reserved for no value
+		Line     int      `json:"line,omitempty"`     // 1-based 0 is reserved for no value
+		Position int      `json:"position,omitempty"` // 1-based
 	}{
 		Name:  t.Name,
 		Group: t.Group,
@@ -42,14 +42,14 @@ func (t *TestCase) MarshalJSON() ([]byte, error) {
 		switch e := t.Error.(type) {
 		case *errors.AssertionError:
 			v.Error = e.Message
-			v.File = &e.Token.File
-			v.Line = &e.Token.Line
-			v.Position = &e.Token.Position
+			v.File = e.Token.File
+			v.Line = e.Token.Line
+			v.Position = e.Token.Position
 		case *errors.TestingError:
 			v.Error = e.Message
-			v.File = &e.Token.File
-			v.Line = &e.Token.Line
-			v.Position = &e.Token.Position
+			v.File = e.Token.File
+			v.Line = e.Token.Line
+			v.Position = e.Token.Position
 		default:
 			v.Error = e.Error()
 		}
