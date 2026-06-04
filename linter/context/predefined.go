@@ -2046,6 +2046,16 @@ func predefinedVariables() Variables {
 						Reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/fastly-info-is-h3/",
 					},
 				},
+				"oh_fingerprint": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.StringType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "",
+					},
+				},
 				"request_id": {
 					Items: map[string]*Object{},
 					Value: &Accessor{
@@ -4812,6 +4822,7 @@ func predefinedVariables() Variables {
 			},
 		},
 	}
+
 }
 
 func newRegexMatchedValues() map[string]int {
