@@ -1882,6 +1882,16 @@ func predefinedVariables() Variables {
 			Items: map[string]*Object{
 				"bot": {
 					Items: map[string]*Object{
+						"analyzed": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-analyzed/",
+							},
+						},
 						"category": {
 							Items: map[string]*Object{
 								"is_accessibility": {
@@ -2021,6 +2031,16 @@ func predefinedVariables() Variables {
 								Unset:     false,
 								Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
 								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category/",
+							},
+						},
+						"detected": {
+							Items: map[string]*Object{},
+							Value: &Accessor{
+								Get:       types.BoolType,
+								Set:       types.NeverType,
+								Unset:     false,
+								Scopes:    RECV | HASH | DELIVER | LOG,
+								Reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-detected/",
 							},
 						},
 						"name": {

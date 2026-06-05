@@ -2427,6 +2427,16 @@ fastly.bot.category.is_verified:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
 
+fastly.bot.analyzed:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-analyzed/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.detected:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-detected/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
 client.platform.model:
   reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
