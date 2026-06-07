@@ -88,13 +88,13 @@ func Testing_call_subroutine(
 	}
 
 	if isFunctional {
-		retVal, state, err := i.ProcessFunctionSubroutine(
+		retVal, _, err := i.ProcessFunctionSubroutine(
 			sub, interpreter.DebugPass, subArgs,
 		)
+		ctx.TestingReturnValue = retVal
 		if err != nil {
 			return nil, errors.NewTestingError("%s", err.Error())
 		}
-		_ = state
 		return &CallResult{
 			Value:        retVal,
 			IsFunctional: true,

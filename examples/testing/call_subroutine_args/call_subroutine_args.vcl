@@ -20,6 +20,8 @@ sub classify_path(STRING var.expected) STRING {
 }
 
 
+// cache_path returns true when the request path equals var.path
+// @scope: fetch
 sub cache_path(STRING var.mode, STRING var.path) BOOL {
   if (var.mode ~ "^cache\z" && req.url.path == var.path) {
     set beresp.cacheable = true;
