@@ -2455,6 +2455,21 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"url.normalize": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("url.normalize", args, map[int]struct{}{0: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Url_normalize(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"urldecode": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
