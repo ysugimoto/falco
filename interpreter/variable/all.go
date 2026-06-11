@@ -778,11 +778,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case NOW:
 		// For testing - if fixed time is injected, return it
 		if v.ctx.FixedTime != nil {
-			return &value.Time{Value: (*v.ctx.FixedTime).UTC()}, nil
+			return value.NewTime(*v.ctx.FixedTime), nil
 		}
-		return &value.Time{Value: time.Now().UTC()}, nil
+		return value.NewTime(time.Now()), nil
 	case TIME_START:
-		return &value.Time{Value: v.ctx.RequestStartTime.UTC()}, nil
+		return value.NewTime(v.ctx.RequestStartTime), nil
 	// https://github.com/ysugimoto/falco/issues/427
 	// Fastly has staging environment but we always return false
 	case FASTLY_IS_STAGING:
