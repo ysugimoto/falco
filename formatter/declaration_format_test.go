@@ -47,6 +47,20 @@ func TestAclDeclarationFormat(t *testing.T) {
 }  // trailing
 `,
 		},
+		{
+			name: "multiple trailing comments are consistently indented",
+			input: `acl name {
+			  "192.0.2.0"/24;
+			  # comment 1
+			  # comment 2
+			}`,
+			expect: `acl name {
+  "192.0.2.0"/24;
+  # comment 1
+  # comment 2
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -217,6 +231,20 @@ backend /* before_name */ example /* after_name */ {
 				LineWidth:                80,
 			},
 		},
+		{
+			name: "multiple trailing comments are consistently indented",
+			input: `backend example {
+				.host = "example.com";
+				# comment 1
+				# comment 2
+			}`,
+			expect: `backend example {
+  .host = "example.com";
+  # comment 1
+  # comment 2
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -253,6 +281,20 @@ director /* before_name */ example /* after_name */ hash /* after_type */ {
   { .backend = F_backend3; .weight = 1; }
   // infix
 }  // trailing
+`,
+		},
+		{
+			name: "multiple trailing comments are consistently indented",
+			input: `director example hash {
+				{ .backend=F_backend1; .weight=1; }
+				# comment 1
+				# comment 2
+			}`,
+			expect: `director example hash {
+  { .backend = F_backend1; .weight = 1; }
+  # comment 1
+  # comment 2
+}
 `,
 		},
 		{
@@ -380,6 +422,32 @@ table /* before_name */ routing_table /* after_name */ BACKEND /* after_type */ 
 				LineWidth:                80,
 			},
 		},
+		{
+			name: "consecutive commented-out properties are consistently indented",
+			input: `table t1 {
+			# "a": "x" # DISABLED 1
+			# "b": "y" # DISABLED 2
+			}`,
+			expect: `table t1 {
+  # "a": "x" # DISABLED 1
+  # "b": "y" # DISABLED 2
+}
+`,
+		},
+		{
+			name: "commented-out properties around a real entry are consistently indented",
+			input: `table t2 {
+			# "a": "x" # DISABLED 1
+			"c.example.com": "z",
+			# "b": "y" # DISABLED 2
+			}`,
+			expect: `table t2 {
+  # "a": "x" # DISABLED 1
+  "c.example.com": "z",
+  # "b": "y" # DISABLED 2
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -408,6 +476,18 @@ penaltybox /* before_name */ banned_users /* after_name */ {
 }  // trailing comment
 `,
 		},
+		{
+			name: "multiple comments are consistently indented",
+			input: `penaltybox banned_users {
+			# comment 1
+			# comment 2
+			}`,
+			expect: `penaltybox banned_users {
+  # comment 1
+  # comment 2
+}
+`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -434,6 +514,18 @@ func TestRatecounterDeclarationFormat(t *testing.T) {
 ratecounter /* before_name */ requests_rate /* after_name */ {
   # no properties
 }  // trailing comment
+`,
+		},
+		{
+			name: "multiple comments are consistently indented",
+			input: `ratecounter requests_rate {
+			# comment 1
+			# comment 2
+			}`,
+			expect: `ratecounter requests_rate {
+  # comment 1
+  # comment 2
+}
 `,
 		},
 	}
