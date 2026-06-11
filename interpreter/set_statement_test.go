@@ -46,6 +46,19 @@ func TestSetStatementOutcome(t *testing.T) {
 		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
 	})
 
+	t.Run("initialize req header with dotted name to null", func(t *testing.T) {
+		// A whole header (no field) must remain unset even when its name
+		// contains dots; guards isHeaderFieldIdent against matching on
+		// ".http." alone (it must require a field separator).
+		ip := setupInterpreter(t, context.RecvScope)
+		declare(t, ip, "var.NULL", "STRING")
+		set(t, ip, &ast.Ident{Value: "req.http.x.header"}, &ast.Ident{Value: "var.NULL"})
+		log(t, ip, &ast.Ident{Value: "req.http.x.header"})
+		v := getVar(t, ip, "req.http.x.header")
+		assertValuesEqual(t, &value.String{IsNotSet: true}, v)
+		assertStringsEqual(t, "(null)", ip.process.Logs[0].Message)
+	})
+
 	t.Run("initialize resp header to null", func(t *testing.T) {
 		ip := setupInterpreter(t, context.DeliverScope)
 		declare(t, ip, "var.NULL", "STRING")
@@ -84,6 +97,18 @@ func TestSetStatementOutcome(t *testing.T) {
 		set(t, ip, &ast.Ident{Value: "req.http.x-header:field"}, &ast.Ident{Value: "var.NULL"})
 		log(t, ip, &ast.Ident{Value: "req.http.x-header:field"})
 		v := getVar(t, ip, "req.http.x-header:field")
+		assertValuesEqual(t, &value.String{Value: ""}, v)
+		assertStringsEqual(t, "", ip.process.Logs[0].Message)
+	})
+
+	t.Run("set header field to null with dotted header name", func(t *testing.T) {
+		// Header names may contain dots; null still resolves to an empty string
+		// for the field form (regression for the dotted-name detection bug).
+		ip := setupInterpreter(t, context.RecvScope)
+		declare(t, ip, "var.NULL", "STRING")
+		set(t, ip, &ast.Ident{Value: "req.http.x.header:field"}, &ast.Ident{Value: "var.NULL"})
+		log(t, ip, &ast.Ident{Value: "req.http.x.header:field"})
+		v := getVar(t, ip, "req.http.x.header:field")
 		assertValuesEqual(t, &value.String{Value: ""}, v)
 		assertStringsEqual(t, "", ip.process.Logs[0].Message)
 	})

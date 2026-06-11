@@ -243,8 +243,6 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	// If set target ident is local variable, do it on specific method
 	if isLocalVariableIdent(stmt.Ident) {
 		return i.ProcessSetStatementLocalVariable(stmt)
-	} else if isHeaderFieldIdent(stmt.Ident) {
-		return i.ProcessSetStatementHeaderField(stmt)
 	}
 
 	// Otherwise, general defined variable like `req.http.*`
@@ -255,30 +253,15 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
 		return errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(stmt.Value)
-	if err != nil {
-		return errors.WithStack(err)
-	}
 
-	if err := i.vars.Set(i.ctx.Scope, stmt.Ident.Value, stmt.Operator.Operator, right); err != nil {
-		return errors.WithStack(err)
+	// For header fields (e.g. req.http.x-header:field), undefined values are
+	// treated the same way as for local variables (null becomes an empty
+	// string), so evaluate the right hand side in LocalVariableExpression mode.
+	var opts []expOption
+	if isHeaderFieldIdent(stmt.Ident) {
+		opts = append(opts, LocalVariableExpression())
 	}
-
-	return nil
-}
-
-func (i *Interpreter) ProcessSetStatementHeaderField(stmt *ast.SetStatement) error {
-	left, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
-		return errors.WithStack(err)
-	}
-	// for header fields, undefined values are treated the same wa as for local
-	// variables, thus we interpret left hand side as a local variable and
-	// evaluate the right hand side in LocalVariableExpression mode
-	right, err := i.ProcessExpression(stmt.Value, LocalVariableExpression())
+	right, err := i.ProcessExpression(stmt.Value, opts...)
 	if err != nil {
 		return errors.WithStack(err)
 	}
