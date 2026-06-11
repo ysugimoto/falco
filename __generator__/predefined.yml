@@ -778,6 +778,11 @@ fastly_info.is_h3:
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   get: BOOL
 
+fastly_info.oh_fingerprint:
+  reference: # no references for this variable seem to exist.
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
 quic.cc.cwnd:
   reference: "https://developer.fastly.com/reference/vcl/variables/client-connection/quic-cc-cwnd/"
   on: [RECV, HASH, DELIVER, LOG]
