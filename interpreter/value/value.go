@@ -218,6 +218,22 @@ type Time struct {
 	IsNotSet    bool
 }
 
+// NewTime constructs a Time value, normalizing the instant to UTC.
+//
+// Fastly evaluates all TIME values in UTC/GMT. To keep behavior independent of
+// the host machine's local timezone, the invariant for this type is that
+// Time.Value is always in UTC. Construct Time values through NewTime (or mutate
+// them through Set) so the invariant holds at a single boundary instead of
+// relying on every call site to remember .UTC().
+func NewTime(t time.Time) *Time {
+	return &Time{Value: t.UTC()}
+}
+
+// Set assigns a new instant to an existing Time, preserving the UTC invariant.
+func (v *Time) Set(t time.Time) {
+	v.Value = t.UTC()
+}
+
 func (v *Time) String() string {
 	if v.OutOfBounds {
 		return "[out of bounds]"

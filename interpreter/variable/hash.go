@@ -45,6 +45,11 @@ func (v *HashScopeVariables) Get(s context.Scope, name string) (value.Value, err
 			return v, nil
 		}
 		return &value.Boolean{Value: false}, nil
+	case FASTLY_BOT_ANALYZED, FASTLY_BOT_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
