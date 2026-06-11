@@ -61,8 +61,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 	buf.WriteString("acl " + decl.Name.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
@@ -82,8 +81,7 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Decl
 	buf.WriteString("backend " + decl.Name.String() + " {\n")
 	buf.WriteString(f.formatBackendProperties(decl.Properties, 1))
 	if len(decl.Infix) > 0 {
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
@@ -221,8 +219,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 	buf.WriteString("director " + decl.Name.String() + " " + decl.DirectorType.String() + " {\n")
 	buf.WriteString(group.String())
 	if len(decl.Infix) > 0 {
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
@@ -246,8 +243,7 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declarat
 	buf.WriteString(" {\n")
 	buf.WriteString(f.formatTableProperties(decl.Properties))
 	if len(decl.Infix) > 0 {
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
@@ -314,8 +310,7 @@ func (f *Formatter) formatPenaltyboxDeclaration(decl *ast.PenaltyboxDeclaration)
 	// penaltybox does not have properties
 	if len(decl.Block.Infix) > 0 {
 		buf.WriteString("\n")
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
@@ -337,8 +332,7 @@ func (f *Formatter) formatRatecounterDeclaration(decl *ast.RatecounterDeclaratio
 	// ratecounter does not have properties
 	if len(decl.Block.Infix) > 0 {
 		buf.WriteString("\n")
-		buf.WriteString(f.indent(1))
-		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 0))
+		buf.WriteString(f.formatComment(decl.Block.Infix, "\n", 1))
 	}
 	buf.WriteString("}")
 
