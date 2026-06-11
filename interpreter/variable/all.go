@@ -192,6 +192,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return v, nil
 		}
 		return &value.String{Value: "|00|1:0:0:16|m,s,p,a"}, nil
+	case FASTLY_INFO_OH_FINGERPRINT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		// Undocumented variable, value can be supplied via testing override.
+		return &value.String{}, nil
 
 	// Backend is always healthy on simulator
 	case REQ_BACKEND_HEALTHY:
