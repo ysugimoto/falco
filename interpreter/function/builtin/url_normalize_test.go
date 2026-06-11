@@ -121,6 +121,21 @@ func Test_Url_normalize(t *testing.T) {
 			expect: "FTP://Example.COM:21/Path",
 		},
 		{
+			name:   "protocol-relative input is treated as a path and preserved",
+			input:  "//example.com/path",
+			expect: "//example.com/path",
+		},
+		{
+			name:   "input containing userinfo is returned unchanged",
+			input:  "http://user:pass@EX.com:80/",
+			expect: "http://user:pass@EX.com:80/",
+		},
+		{
+			name:   "fragment-only input becomes empty",
+			input:  "#section",
+			expect: "",
+		},
+		{
 			name:   "invalid URL syntax is returned unchanged",
 			input:  "http://[::1",
 			expect: "http://[::1",

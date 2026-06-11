@@ -42,19 +42,32 @@ func Url_normalize(ctx *context.Context, args ...value.Value) (value.Value, erro
 	return &value.String{Value: urlNormalize(args[0].String())}, nil
 }
 
-// urlNormalize implements the normalization rules documented for url.normalize:
-// lowercase scheme and host, remove default ports, normalize empty paths to "/",
-// decode percent-encoded unreserved characters, uppercase remaining escapes,
-// collapse "." and ".." path segments, preserve query verbatim, and discard
-// fragments. URLs whose scheme is not http or https, and URLs whose syntax is
-// invalid, are returned unchanged.
+// urlNormalize normalizes an http/https URL or a bare path per url.normalize.
+// Unsupported schemes, userinfo, or invalid syntax are returned unchanged.
 func urlNormalize(input string) string {
+	// Drop the fragment.
+	if i := strings.IndexByte(input, '#'); i >= 0 {
+		input = input[:i]
+	}
+	if input == "" {
+		return ""
+	}
+
+	// Anything starting with "/" (including "//host/path") is a path, not an authority.
+	if strings.HasPrefix(input, "/") {
+		return urlNormalizePathOnly(input)
+	}
+
 	u, err := url.Parse(input)
 	if err != nil {
 		return input
 	}
 	scheme := strings.ToLower(u.Scheme)
-	if scheme != "" && scheme != "http" && scheme != "https" {
+	if scheme != "http" && scheme != "https" {
+		return input
+	}
+	// Fastly's normalizer does not support userinfo.
+	if u.User != nil {
 		return input
 	}
 
@@ -80,9 +93,6 @@ func urlNormalize(input string) string {
 		if port != "" {
 			host += ":" + port
 		}
-		if u.User != nil {
-			host = u.User.String() + "@" + host
-		}
 	}
 
 	var sb strings.Builder
@@ -97,6 +107,24 @@ func urlNormalize(input string) string {
 		sb.WriteString(u.RawQuery)
 	}
 	return sb.String()
+}
+
+// urlNormalizePathOnly normalizes a bare path, preserving the query verbatim.
+func urlNormalizePathOnly(input string) string {
+	path := input
+	query := ""
+	hasQuery := false
+	if i := strings.IndexByte(input, '?'); i >= 0 {
+		path = input[:i]
+		query = input[i+1:]
+		hasQuery = true
+	}
+	path = urlNormalizePathEscapes(path)
+	path = urlRemoveDotSegments(path)
+	if hasQuery {
+		return path + "?" + query
+	}
+	return path
 }
 
 // urlNormalizePathEscapes decodes percent-encoded octets whose value falls in
