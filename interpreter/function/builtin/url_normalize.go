@@ -111,14 +111,7 @@ func urlNormalize(input string) string {
 
 // urlNormalizePathOnly normalizes a bare path, preserving the query verbatim.
 func urlNormalizePathOnly(input string) string {
-	path := input
-	query := ""
-	hasQuery := false
-	if i := strings.IndexByte(input, '?'); i >= 0 {
-		path = input[:i]
-		query = input[i+1:]
-		hasQuery = true
-	}
+	path, query, hasQuery := strings.Cut(input, "?")
 	path = urlNormalizePathEscapes(path)
 	path = urlRemoveDotSegments(path)
 	if hasQuery {
