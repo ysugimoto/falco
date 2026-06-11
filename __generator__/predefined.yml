@@ -2362,6 +2362,91 @@ fastly.ddos_detected:
   on: [RECV, HASH, DELIVER, LOG]
   get: BOOL
 
+fastly.bot.name:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-name/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+fastly.bot.category:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: STRING
+
+fastly.bot.category.is_accessibility:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-accessibility/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_ai_crawler:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-ai-crawler/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_ai_fetcher:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-ai-fetcher/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_content_fetcher:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-content-fetcher/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_monitoring_and_site_tools:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-monitoring-and-site-tools/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_online_marketing:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-online-marketing/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_page_preview:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-page-preview/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_platform_integrations:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-platform-integrations/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_research:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-research/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_search_engine_crawler:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-search-engine-crawler/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_search_engine_optimization:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-search-engine-optimization/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_security_tools:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-security-tools/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.category.is_verified:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-category-is-verified/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.analyzed:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-analyzed/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
+fastly.bot.detected:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/fastly-bot-detected/"
+  on: [RECV, HASH, DELIVER, LOG]
+  get: BOOL
+
 client.platform.model:
   reference: "https://www.fastly.com/documentation/reference/vcl/variables/client-request/client-platform-model/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
