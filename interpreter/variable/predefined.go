@@ -188,6 +188,7 @@ const (
 	FASTLY_INFO_IS_CLUSTER_SHIELD              = "fastly_info.is_cluster_shield"
 	FASTLY_INFO_IS_H2                          = "fastly_info.is_h2"
 	FASTLY_INFO_IS_H3                          = "fastly_info.is_h3"
+	FASTLY_INFO_OH_FINGERPRINT                 = "fastly_info.oh_fingerprint"
 	FASTLY_INFO_REQUEST_ID                     = "fastly_info.request_id"
 	FASTLY_INFO_STATE                          = "fastly_info.state"
 	FASTLY_INFO_VERSION                        = "fastly_info.version"
