@@ -32,8 +32,7 @@ func nopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
 func (i *Interpreter) ProcessBlockStatement(
 	statements []ast.Statement,
 	ds DebugState,
-	// isReturnAsValue indicates return statement may return value.Value in functional subroutine if true
-	isReturnAsValue bool,
+	isReturnAsValue bool, // if true indicates return statement may return value.Value in functional subroutine
 ) (value.Value, State, DebugState, error) {
 
 	var err error
@@ -254,7 +253,15 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	if err := isValidStatementExpression(left.Type(), stmt.Value); err != nil {
 		return errors.WithStack(err)
 	}
-	right, err := i.ProcessExpression(stmt.Value)
+
+	// For header fields (e.g. req.http.x-header:field), undefined values are
+	// treated the same way as for local variables (null becomes an empty
+	// string), so evaluate the right hand side in LocalVariableExpression mode.
+	var opts []expOption
+	if isHeaderFieldIdent(stmt.Ident) {
+		opts = append(opts, LocalVariableExpression())
+	}
+	right, err := i.ProcessExpression(stmt.Value, opts...)
 	if err != nil {
 		return errors.WithStack(err)
 	}

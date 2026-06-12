@@ -232,7 +232,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 
 	case TIME_END:
-		return &value.Time{Value: v.ctx.RequestEndTime}, nil
+		return value.NewTime(v.ctx.RequestEndTime), nil
 	case TIME_END_MSEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMilli()),
@@ -356,6 +356,11 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
 	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
+	case FASTLY_BOT_ANALYZED, FASTLY_BOT_DETECTED:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}

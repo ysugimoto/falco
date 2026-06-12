@@ -958,11 +958,7 @@ func TimeCalculation(left, right value.Value, operator string) (value.Value, err
 
 	// If operator is "-", subtract from left time.
 	if operator == "-" {
-		return &value.Time{
-			Value: lv.Value.Add(-rv.Value),
-		}, nil
+		return value.NewTime(lv.Value.Add(-rv.Value)), nil
 	}
-	return &value.Time{
-		Value: lv.Value.Add(rv.Value),
-	}, nil
+	return value.NewTime(lv.Value.Add(rv.Value)), nil
 }

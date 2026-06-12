@@ -829,6 +829,13 @@ json.escape:
     - [STRING]
   return: STRING
 
+url.normalize:
+  reference: "https://developer.fastly.com/reference/vcl/functions/strings/url-normalize/"
+  on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
+  arguments:
+    - [STRING]
+  return: STRING
+
 regsub:
   reference: "https://developer.fastly.com/reference/vcl/functions/strings/regsub/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
