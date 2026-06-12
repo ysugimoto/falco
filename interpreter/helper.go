@@ -46,6 +46,13 @@ func isLocalVariableIdent(ident *ast.Ident) bool {
 	return strings.HasPrefix(ident.Value, "var.")
 }
 
+// isHeaderFieldIdent reports whether the supplied identifier refers to an http
+// header field (i.e. is of the form <object>.http.<header>:<field>).
+func isHeaderFieldIdent(ident *ast.Ident) bool {
+	name, _, found := strings.Cut(ident.Value, ":")
+	return found && strings.Contains(name, ".http.")
+}
+
 // Validate type string is Fastly supported value type
 func isValidFastlyTypeString(t string) bool {
 	switch t {
