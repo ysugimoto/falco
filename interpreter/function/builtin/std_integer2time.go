@@ -38,5 +38,5 @@ func Std_integer2time(ctx *context.Context, args ...value.Value) (value.Value, e
 
 	t := value.Unwrap[*value.Integer](args[0])
 
-	return &value.Time{Value: time.Unix(t.Value, 0).UTC()}, nil
+	return value.NewTime(time.Unix(t.Value, 0)), nil
 }
