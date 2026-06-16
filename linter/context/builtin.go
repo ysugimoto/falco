@@ -2065,6 +2065,21 @@ func builtinFunctions() Functions {
 				},
 			},
 		},
+		"url": &FunctionSpec{
+			Items: map[string]*FunctionSpec{
+				"normalize": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/url-normalize/",
+					},
+				},
+			},
+		},
 		"urldecode": &FunctionSpec{
 			Items: map[string]*FunctionSpec{},
 			Value: &BuiltinFunction{

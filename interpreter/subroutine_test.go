@@ -58,6 +58,7 @@ func TestFunctionSubroutine(t *testing.T) {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
+		isError    bool
 	}{
 		{
 			name: "Functional subroutine returns a value",
@@ -155,7 +156,8 @@ func TestFunctionSubroutine(t *testing.T) {
 		{
 			// A STRING parameter that received a literal argument must not be
 			// treated as a literal: the regex operator forbids a literal on the
-			// left-hand side, so this would error without value.ClearLiteral.
+			// left-hand side. convertValueToType reassigns the argument so the
+			// literal flag does not propagate into the parameter variable.
 			name: "Functional subroutine parameter is usable as regex left-hand side",
 			vcl: `sub is_cache(STRING var.mode) BOOL {
 				if (var.mode ~ "^cache$") {
@@ -174,11 +176,90 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Is-Cache": &value.String{Value: "1"},
 			},
 		},
+		{
+			name: "Functional subroutine automatically converts literal string to REGEX arg",
+			vcl: `
+            sub match(STRING var.value, REGEX var.pattern) STRING {
+                log var.value "~" var.pattern; 
+				if (var.value ~ var.pattern) {
+					return "match";
+				}
+				return "not match";
+			}
+
+			sub vcl_recv {
+				set req.http.X-Match-Value = match("foobar", "foo");
+                set req.http.X-Not-Match-Value = match("foobar", "baz");
+			}
+			`,
+			assertions: map[string]value.Value{
+				"req.http.X-Match-Value":     &value.String{Value: "match"},
+				"req.http.X-Not-Match-Value": &value.String{Value: "not match"},
+			},
+		},
+		// Negative cases: conversions that are rejected by Fastly and must
+		// therefore be rejected when passing function arguments. Verified
+		// against the Fastly compiler via Fiddle.
+		{
+			name: "INTEGER literal cannot be passed to STRING parameter",
+			vcl: `
+			sub f(STRING var.s) STRING { return var.s; }
+			sub vcl_recv { set req.http.X = f(123); }
+			`,
+			isError: true,
+		},
+		{
+			name: "INTEGER literal cannot be passed to BOOL parameter",
+			vcl: `
+			sub f(BOOL var.b) STRING { if (var.b) { return "t"; } return "f"; }
+			sub vcl_recv { set req.http.X = f(1); }
+			`,
+			isError: true,
+		},
+		{
+			name: "BOOL literal cannot be passed to INTEGER parameter",
+			vcl: `
+			sub f(INTEGER var.i) STRING { return var.i; }
+			sub vcl_recv { set req.http.X = f(true); }
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal FLOAT cannot be passed to INTEGER parameter",
+			vcl: `
+			sub f(INTEGER var.i) STRING { return var.i; }
+			sub vcl_recv {
+				declare local var.f FLOAT;
+				set var.f = 1.5;
+				set req.http.X = f(var.f);
+			}
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal STRING cannot be passed to IP parameter",
+			vcl: `
+			sub f(IP var.ip) STRING { return var.ip; }
+			sub vcl_recv { set req.http.X = f(req.http.Host); }
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal STRING cannot be passed to REGEX parameter",
+			vcl: `
+			sub m(STRING var.v, REGEX var.p) STRING {
+				if (var.v ~ var.p) { return "y"; }
+				return "n";
+			}
+			sub vcl_recv { set req.http.X = m("foobar", req.http.Pat); }
+			`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, false)
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
 	}
 }

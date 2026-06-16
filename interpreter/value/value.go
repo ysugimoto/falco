@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 )
 
@@ -56,6 +57,38 @@ type Value interface {
 }
 
 type null struct{}
+
+// Create creates new value of the specified type.
+func Create(valueType Type) (Value, error) {
+	switch valueType {
+	case "INTEGER":
+		return &Integer{}, nil
+	case "FLOAT":
+		return &Float{}, nil
+	case "BOOL":
+		return &Boolean{}, nil
+	case "BACKEND":
+		return &Backend{}, nil
+	case "ACL":
+		return &Acl{}, nil
+	case "IP":
+		return &IP{IsNotSet: true}, nil
+	case "STRING":
+		return &String{IsNotSet: true}, nil
+	case "RTIME":
+		return &RTime{}, nil
+	case "TIME":
+		return &Time{
+			Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
+		}, nil
+	case "REGEX":
+		return UnsatisfiableRegex.Copy(), nil
+	default:
+		return nil, errors.WithStack(fmt.Errorf(
+			"unexpected value type: %s", valueType,
+		))
+	}
+}
 
 func (v *null) String() string  { return "NULL" }
 func (v *null) Type() Type      { return NullType }
@@ -218,6 +251,22 @@ type Time struct {
 	IsNotSet    bool
 }
 
+// NewTime constructs a Time value, normalizing the instant to UTC.
+//
+// Fastly evaluates all TIME values in UTC/GMT. To keep behavior independent of
+// the host machine's local timezone, the invariant for this type is that
+// Time.Value is always in UTC. Construct Time values through NewTime (or mutate
+// them through Set) so the invariant holds at a single boundary instead of
+// relying on every call site to remember .UTC().
+func NewTime(t time.Time) *Time {
+	return &Time{Value: t.UTC()}
+}
+
+// Set assigns a new instant to an existing Time, preserving the UTC invariant.
+func (v *Time) Set(t time.Time) {
+	v.Value = t.UTC()
+}
+
 func (v *Time) String() string {
 	if v.OutOfBounds {
 		return "[out of bounds]"
@@ -247,7 +296,7 @@ func (v *Backend) String() string {
 	if v.Value != nil {
 		return v.Value.Name.Value
 	}
-	return ""
+	return "(none)"
 }
 func (v *Backend) Type() Type      { return BackendType }
 func (v *Backend) IsLiteral() bool { return v.Literal }
@@ -297,37 +346,4 @@ var UnsatisfiableRegex = &Regex{
 	Value:         "$unsatisfiable",
 	Literal:       false,
 	Unsatisfiable: true,
-}
-
-// ClearLiteral returns a copy of v with its Literal flag cleared to false.
-// This is needed when storing subroutine argument values as local parameter
-// variables: a variable that holds the value of a literal is itself not a
-// literal (VCL's regex operator forbids a literal on the left-hand side, but
-// allows a local variable that happens to contain the same string).
-func ClearLiteral(v Value) Value {
-	switch t := v.(type) {
-	case *String:
-		return &String{Value: t.Value, Literal: false, IsNotSet: t.IsNotSet, Collection: t.Collection}
-	case *Integer:
-		return &Integer{Value: t.Value, Literal: false}
-	case *Float:
-		return &Float{
-			Value: t.Value, Literal: false,
-			IsNAN: t.IsNAN, IsNegativeInf: t.IsNegativeInf, IsPositiveInf: t.IsPositiveInf,
-		}
-	case *Boolean:
-		return &Boolean{Value: t.Value, Literal: false}
-	case *RTime:
-		return &RTime{Value: t.Value, Literal: false, IsNotSet: t.IsNotSet}
-	case *IP:
-		return &IP{Value: t.Value, Literal: false}
-	case *Backend:
-		return &Backend{Value: t.Value, Director: t.Director, Literal: false}
-	case *Acl:
-		return &Acl{Value: t.Value, Literal: false}
-	case *Ident:
-		return &Ident{Value: t.Value, Literal: false}
-	default:
-		return v
-	}
 }
