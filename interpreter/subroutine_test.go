@@ -152,6 +152,28 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Str-Value": &value.String{Value: "TEST"},
 			},
 		},
+		{
+			// A STRING parameter that received a literal argument must not be
+			// treated as a literal: the regex operator forbids a literal on the
+			// left-hand side, so this would error without value.ClearLiteral.
+			name: "Functional subroutine parameter is usable as regex left-hand side",
+			vcl: `sub is_cache(STRING var.mode) BOOL {
+				if (var.mode ~ "^cache$") {
+					return true;
+				}
+				return false;
+			}
+
+			sub vcl_recv {
+				declare local var.b BOOL;
+				set var.b = is_cache("cache");
+				set req.http.X-Is-Cache = var.b;
+			}
+			`,
+			assertions: map[string]value.Value{
+				"req.http.X-Is-Cache": &value.String{Value: "1"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

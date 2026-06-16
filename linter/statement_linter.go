@@ -726,7 +726,7 @@ func (l *Linter) lintFunctionCallStatement(exp *ast.FunctionCallStatement, ctx *
 	// testing.call_subroutine has variadic extra arguments whose types depend
 	// on the target subroutine's parameter list. Validate it separately.
 	if exp.Function.Value == context.TestingCallSubroutineName {
-		return l.lintTestingCallSubroutine(exp, ctx)
+		return l.lintTestingCallSubroutine(exp.Function, exp.Arguments, ctx)
 	}
 
 	return l.lintFunctionArguments(fn, functionMeta{
@@ -740,12 +740,12 @@ func (l *Linter) lintFunctionCallStatement(exp *ast.FunctionCallStatement, ctx *
 // lintTestingCallSubroutine applies dedicated validation for
 // testing.call_subroutine(name STRING, arg1, arg2, ...).
 func (l *Linter) lintTestingCallSubroutine(
-	exp *ast.FunctionCallStatement,
+	fn *ast.Ident,
+	args []ast.Expression,
 	ctx *context.Context,
 ) types.Type {
 
-	tok := exp.Function.GetMeta().Token
-	args := exp.Arguments
+	tok := fn.GetMeta().Token
 
 	// Must have at least one argument: the subroutine name.
 	if len(args) == 0 {
@@ -844,5 +844,15 @@ func (l *Linter) lintTestingCallSubroutine(
 		}
 	}
 
-	return types.NeverType
+	// Successful validation: surface the value type produced by the call so
+	// that expression-form usage (set var.x = testing.call_subroutine(...))
+	// type-checks. Functional subroutines yield their declared return type;
+	// scoped subroutines yield the STRING state name.
+	if sub.Decl.ReturnType != nil {
+		if rt, ok := types.ValueTypeMap[sub.Decl.ReturnType.Value]; ok {
+			return rt
+		}
+		return types.NeverType
+	}
+	return types.StringType
 }
