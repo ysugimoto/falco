@@ -359,7 +359,7 @@ func (i *Interpreter) ProcessCallStatement(stmt *ast.CallStatement, ds DebugStat
 	// Evaluate arguments
 	var args []value.Value
 	for _, argExpr := range stmt.Arguments {
-		argVal, err := i.ProcessExpression(argExpr)
+		argVal, err := i.ProcessExpression(argExpr, LocalVariableExpression())
 		if err != nil {
 			return NONE, errors.WithStack(err)
 		}
