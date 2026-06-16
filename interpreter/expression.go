@@ -241,6 +241,8 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 		// Evaluate arguments
 		var args []value.Value
 		for _, argExpr := range exp.Arguments {
+			// Subroutine arguments treat null the same way as the set statement
+			// context, i.e. converted to an empty string rather than "(null)".
 			argVal, err := i.ProcessExpression(argExpr, LocalVariableExpression())
 			if err != nil {
 				return value.Null, errors.WithStack(err)
@@ -291,7 +293,15 @@ func (i *Interpreter) ProcessFunctionCallExpression(exp *ast.FunctionCallExpress
 				)
 			}
 		} else {
-			a, err := i.ProcessExpression(exp.Arguments[j], LocalVariableExpression())
+			// Builtin function arguments treat null the same way as the set
+			// statement context (null -> empty string), while preserving the
+			// inherited condition context so unknown variables keep their
+			// condition-context semantics.
+			argOpts := []expOption{LocalVariableExpression()}
+			if opt.Condition() {
+				argOpts = append(argOpts, ConditionExpression())
+			}
+			a, err := i.ProcessExpression(exp.Arguments[j], argOpts...)
 			if err != nil {
 				return value.Null, errors.WithStack(err)
 			}

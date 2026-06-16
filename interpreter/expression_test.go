@@ -375,6 +375,19 @@ func TestFunctionCallExpression(t *testing.T) {
 			},
 			isError: false,
 		},
+		{
+			name: "Builtin function call with null value in argument expression",
+			vcl: `
+            sub vcl_recv {
+                declare local var.null STRING;
+                set req.http.x-builtin-arg = std.strlen("[" var.null "]");
+			}`,
+			assertions: map[string]value.Value{
+				// null collapses to empty string -> strlen("[]") == 2
+				"req.http.x-builtin-arg": &value.String{Value: "2"},
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {
