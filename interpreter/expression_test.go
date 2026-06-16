@@ -352,6 +352,51 @@ func TestProcessExpression(t *testing.T) {
 	}
 }
 
+func TestFunctionCallExpression(t *testing.T) {
+	tests := []struct {
+		name       string
+		vcl        string
+		assertions map[string]value.Value
+		isError    bool
+	}{
+		{
+			name: "Function call with its argument expression using null value",
+			vcl: `
+            sub func(STRING var.value) STRING {
+                set req.http.x-func-arg = var.value;
+                return var.value;
+            }
+            sub vcl_recv {
+                declare local var.null STRING;
+                declare local var.result STRING = func("[" var.null "]");
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.x-func-arg": &value.String{Value: "[]"},
+			},
+			isError: false,
+		},
+		{
+			name: "Builtin function call with null value in argument expression",
+			vcl: `
+            sub vcl_recv {
+                declare local var.null STRING;
+                set req.http.x-builtin-arg = std.strlen("[" var.null "]");
+			}`,
+			assertions: map[string]value.Value{
+				// null collapses to empty string -> strlen("[]") == 2
+				"req.http.x-builtin-arg": &value.String{Value: "2"},
+			},
+			isError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
+		})
+	}
+}
+
 func TestProcessStringConcat(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	tests := []struct {

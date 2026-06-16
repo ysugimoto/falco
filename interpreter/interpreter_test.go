@@ -69,7 +69,7 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 			return
 		}
 		if diff := cmp.Diff(val, v); diff != "" {
-			t.Errorf("Value assertion error, diff: %s", diff)
+			t.Errorf("Value assertion error for '%s', diff: %s", name, diff)
 		}
 	}
 
@@ -188,6 +188,49 @@ func TestProcessBackends(t *testing.T) {
 			t.Error("Expected error due to duplicated backends")
 		}
 	})
+
+	t.Run("Uninitialized backend assigned to req.backend", func(t *testing.T) {
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              set req.backend = var.backend;
+              error 600 "synthetic response";
+			}
+            sub vcl_error {
+              set obj.status = 200;
+              synthetic "synthetic response";
+            }
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.backend": &value.Backend{},
+		}, false)
+	})
+
+	t.Run("Uninitialized backend assigned to string variable", func(t *testing.T) {
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              declare local var.str STRING = var.backend;
+              set req.http.backend = var.str;
+			}
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+			"req.http.backend": &value.String{Value: "(none)"},
+		}, false)
+	})
+
+	t.Run("Uninitialized req.backend errors instead of crashing", func(t *testing.T) {
+		// No backend is ever determined, so the request must fail with a
+		// runtime error rather than panicking on the uninitialized backend.
+		vcl := `
+			sub vcl_recv {
+              declare local var.backend BACKEND;
+              set req.backend = var.backend;
+			}
+        `
+		assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{}, true)
+	})
+
 }
 
 func TestSyntheticAfterRestart(t *testing.T) {

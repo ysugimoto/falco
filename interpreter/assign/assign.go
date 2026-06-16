@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/value"
+	"go.elara.ws/pcre"
 )
 
 // Fastly has various assignment operators and required correspond types for each operator
@@ -144,7 +145,7 @@ func Assign(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Backend](right)
-			lv.Value = rv.Value.Name.Value
+			lv.Value = rv.String()
 			lv.IsNotSet = false
 		case value.BooleanType: // STRING = BOOL
 			rv := value.Unwrap[*value.Boolean](right)
@@ -154,6 +155,10 @@ func Assign(left, right value.Value) error {
 			rv := value.Unwrap[*value.IP](right)
 			lv.Value = rv.Value.String()
 			lv.IsNotSet = rv.IsNotSet
+		case value.RegexType: // STRING = REGEX
+			rv := value.Unwrap[*value.Regex](right)
+			lv.Value = rv.Value
+			lv.IsNotSet = false
 		default:
 			return errors.WithStack(fmt.Errorf("invalid assignment for STRING type, got %s", right.Type()))
 		}
@@ -246,6 +251,27 @@ func Assign(left, right value.Value) error {
 			lv.IsNotSet = false
 		default:
 			return errors.WithStack(fmt.Errorf("invalid assignment for IP type, got %s", right.Type()))
+		}
+	case value.RegexType:
+		lv := value.Unwrap[*value.Regex](left)
+		switch right.Type() {
+		case value.StringType: // REGEX = STRING
+			rv := value.Unwrap[*value.String](right)
+			if !rv.IsLiteral() {
+				return errors.WithStack(fmt.Errorf("string value must be a literal for REGEX assignment"))
+			}
+			_, err := pcre.Compile(rv.Value)
+			if err != nil {
+				return errors.WithStack(fmt.Errorf("failed to compile regular expression from string: %s, error: %s", rv.Value, err.Error()))
+			}
+			lv.Value = rv.Value
+			lv.Unsatisfiable = false
+		case value.RegexType: // REGEX = REGEX
+			rv := value.Unwrap[*value.Regex](right)
+			lv.Value = rv.Value
+			lv.Unsatisfiable = rv.Unsatisfiable
+		default:
+			return errors.WithStack(fmt.Errorf("invalid assignment for REGEX type, got %s", right.Type()))
 		}
 	default:
 		return errors.WithStack(fmt.Errorf("could not use assignment for type %s", left.Type()))
