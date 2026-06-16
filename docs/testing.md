@@ -325,7 +325,7 @@ We describe them following table and examples:
 | testing.state                | STRING     | Return state which is called `return` statement in a subroutine                              |
 | testing.synthetic_body       | STRING     | The body generated via a call to `synthetic` or `synthetic.base64`                           |
 | testing.origin_host_header   | STRING     | The value of `Host` header that will send to an origin                                       |
-| testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL                                                 |
+| testing.call_subroutine      | FUNCTION   | Call subroutine which is defined in main VCL; accepts optional args and returns a value for functional subroutines |
 | testing.fixed_time           | FUNCTION   | Use fixed time whole the test suite                                                          |
 | testing.override_host        | FUNCTION   | Override request host with provided argument in the test case                                |
 | testing.inject_variable      | FUNCTION   | Inject variable that returns tentative value                                                 |
@@ -407,16 +407,68 @@ sub test_vcl {
 
 ----
 
-### testing.call_subroutine(STRING subroutine)
+### testing.call_subroutine(STRING subroutine [, ...args])
 
 Call subroutine that is defined at main VCL and included modules.
-This function can also call Fastly reserved subroutine like `vcl_recv` for testing but ensure the call corresponds to the expected scope.
+This function can also call Fastly reserved subroutine like `vcl_recv` for testing
+but ensure the call corresponds to the expected scope.
+
+For functional subroutines (subroutines that accept typed parameters and return a value),
+pass the arguments after the subroutine name and capture the return value with `set`.
+
+**Calling a scoped subroutine (no extra args):**
 
 ```vcl
 // @scope: recv
 sub test_vcl {
     // call vcl_recv Fastly reserved subroutine in RECV scope
     testing.call_subroutine("vcl_recv");
+}
+```
+
+**Calling a functional BOOL subroutine with arguments:**
+
+```vcl
+// url_path_is_either returns true when the request path matches
+// either of the two provided path strings.
+// @scope: recv
+sub url_path_is_either(STRING var.path1, STRING var.path2) BOOL {
+    if (req.url.path == var.path1 || req.url.path == var.path2) {
+        return true;
+    }
+    return false;
+}
+
+// @scope: recv
+// @suite: functional BOOL subroutine returns true for first matching path
+sub test_path_matches_first {
+    set req.url = "/path1/foo";
+    declare local var.result BOOL;
+    set var.result = testing.call_subroutine("url_path_is_either", "/path1/foo", "/path2/bar");
+    assert.true(var.result);
+}
+```
+
+**Calling a functional STRING subroutine with arguments:**
+
+```vcl
+// classify_path returns "matched" when the request path equals
+// var.expected, otherwise "unmatched".
+// @scope: recv
+sub classify_path(STRING var.expected) STRING {
+    if (req.url.path == var.expected) {
+        return "matched";
+    }
+    return "unmatched";
+}
+
+// @scope: recv
+// @suite: functional STRING subroutine returns matched for known path
+sub test_classify_matched {
+    set req.url = "/api/v1";
+    declare local var.label STRING;
+    set var.label = testing.call_subroutine("classify_path", "/api/v1");
+    assert.equal(var.label, "matched");
 }
 ```
 
