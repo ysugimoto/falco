@@ -145,7 +145,7 @@ func Assign(left, right value.Value) error {
 				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
 			}
 			rv := value.Unwrap[*value.Backend](right)
-			lv.Value = rv.Value.Name.Value
+			lv.Value = rv.String()
 			lv.IsNotSet = false
 		case value.BooleanType: // STRING = BOOL
 			rv := value.Unwrap[*value.Boolean](right)

@@ -296,7 +296,7 @@ func (v *Backend) String() string {
 	if v.Value != nil {
 		return v.Value.Name.Value
 	}
-	return ""
+	return "(none)"
 }
 func (v *Backend) Type() Type      { return BackendType }
 func (v *Backend) IsLiteral() bool { return v.Literal }
