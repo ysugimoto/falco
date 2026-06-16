@@ -69,6 +69,8 @@ func Create(valueType Type) (Value, error) {
 		return &Boolean{}, nil
 	case "BACKEND":
 		return &Backend{}, nil
+	case "ACL":
+		return &Acl{}, nil
 	case "IP":
 		return &IP{IsNotSet: true}, nil
 	case "STRING":

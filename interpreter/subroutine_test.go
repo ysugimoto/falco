@@ -58,6 +58,7 @@ func TestFunctionSubroutine(t *testing.T) {
 		name       string
 		vcl        string
 		assertions map[string]value.Value
+		isError    bool
 	}{
 		{
 			name: "Functional subroutine returns a value",
@@ -173,11 +174,69 @@ func TestFunctionSubroutine(t *testing.T) {
 				"req.http.X-Not-Match-Value": &value.String{Value: "not match"},
 			},
 		},
+		// Negative cases: conversions that are rejected by Fastly and must
+		// therefore be rejected when passing function arguments. Verified
+		// against the Fastly compiler via Fiddle.
+		{
+			name: "INTEGER literal cannot be passed to STRING parameter",
+			vcl: `
+			sub f(STRING var.s) STRING { return var.s; }
+			sub vcl_recv { set req.http.X = f(123); }
+			`,
+			isError: true,
+		},
+		{
+			name: "INTEGER literal cannot be passed to BOOL parameter",
+			vcl: `
+			sub f(BOOL var.b) STRING { if (var.b) { return "t"; } return "f"; }
+			sub vcl_recv { set req.http.X = f(1); }
+			`,
+			isError: true,
+		},
+		{
+			name: "BOOL literal cannot be passed to INTEGER parameter",
+			vcl: `
+			sub f(INTEGER var.i) STRING { return var.i; }
+			sub vcl_recv { set req.http.X = f(true); }
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal FLOAT cannot be passed to INTEGER parameter",
+			vcl: `
+			sub f(INTEGER var.i) STRING { return var.i; }
+			sub vcl_recv {
+				declare local var.f FLOAT;
+				set var.f = 1.5;
+				set req.http.X = f(var.f);
+			}
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal STRING cannot be passed to IP parameter",
+			vcl: `
+			sub f(IP var.ip) STRING { return var.ip; }
+			sub vcl_recv { set req.http.X = f(req.http.Host); }
+			`,
+			isError: true,
+		},
+		{
+			name: "non-literal STRING cannot be passed to REGEX parameter",
+			vcl: `
+			sub m(STRING var.v, REGEX var.p) STRING {
+				if (var.v ~ var.p) { return "y"; }
+				return "n";
+			}
+			sub vcl_recv { set req.http.X = m("foobar", req.http.Pat); }
+			`,
+			isError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, false)
+			assertInterpreter(t, tt.vcl, context.RecvScope, tt.assertions, tt.isError)
 		})
 	}
 }
