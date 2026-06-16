@@ -32,8 +32,11 @@ func New() *Process {
 
 func (p *Process) Finalize(resp *http.Response) ([]byte, error) {
 	var backend string
-	if p.Backend != nil && (p.Backend.Value != nil || p.Backend.Director != nil) {
-		backend = p.Backend.Value.Name.Value
+	if p.Backend != nil {
+		// String() handles both director-backed backends (Value == nil,
+		// Director != nil) and uninitialized backends (both nil), so it must
+		// not be replaced with a raw p.Backend.Value.Name.Value dereference.
+		backend = p.Backend.String()
 	}
 
 	var statusCode int
