@@ -1,0 +1,80 @@
+package variable
+
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/value"
+)
+
+// backendWithPort builds a context whose current backend declares the given
+// port property, e.g. ".port = "8443";".
+func backendWithPort(port string) *context.Context {
+	return &context.Context{
+		Backend: &value.Backend{
+			Value: &ast.BackendDeclaration{
+				Name: &ast.Ident{Value: "example"},
+				Properties: []*ast.BackendProperty{
+					{
+						Key:   &ast.Ident{Value: "port"},
+						Value: &ast.String{Value: port},
+					},
+				},
+			},
+		},
+	}
+}
+
+// req.backend.port and beresp.backend.port are INTEGER per Fastly:
+// https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/req-backend-port/
+// https://www.fastly.com/documentation/reference/vcl/variables/backend-connection/beresp-backend-port/
+//
+// The port property is stored as an *ast.String. Reading it via
+// p.Value.String() yields the quoted form (`"8443"`), which strconv.ParseInt
+// rejects; the value must be read from the *ast.String's Value field. Each
+// scope must also return the result as a *value.Integer.
+func TestBackendPortReturnsInteger(t *testing.T) {
+	tests := []struct {
+		name string
+		get  func(*context.Context) (value.Value, error)
+	}{
+		{
+			name: "req.backend.port in deliver scope",
+			get: func(c *context.Context) (value.Value, error) {
+				return NewDeliverScopeVariables(c).Get(context.DeliverScope, REQ_BACKEND_PORT)
+			},
+		},
+		{
+			name: "req.backend.port in error scope",
+			get: func(c *context.Context) (value.Value, error) {
+				return NewErrorScopeVariables(c).Get(context.ErrorScope, REQ_BACKEND_PORT)
+			},
+		},
+		{
+			name: "req.backend.port in log scope",
+			get: func(c *context.Context) (value.Value, error) {
+				return NewLogScopeVariables(c).Get(context.LogScope, REQ_BACKEND_PORT)
+			},
+		},
+		{
+			name: "beresp.backend.port in fetch scope",
+			get: func(c *context.Context) (value.Value, error) {
+				return NewFetchScopeVariables(c).Get(context.FetchScope, BERESP_BACKEND_PORT)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.get(backendWithPort("8443"))
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if diff := cmp.Diff(value.Value(&value.Integer{Value: 8443}), got); diff != "" {
+				t.Errorf("port value mismatch, diff: %s", diff)
+			}
+		})
+	}
+}
