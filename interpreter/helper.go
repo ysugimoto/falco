@@ -53,6 +53,12 @@ func isHeaderFieldIdent(ident *ast.Ident) bool {
 	return found && strings.Contains(name, ".http.")
 }
 
+// isRequestHeaderIdent reports whether the identifier refers to a request header
+// (req.http.*). Each write to one is assembled in the request workspace.
+func isRequestHeaderIdent(ident *ast.Ident) bool {
+	return strings.HasPrefix(ident.Value, "req.http.")
+}
+
 // Validate type string is Fastly supported value type
 func isValidFastlyTypeString(t string) bool {
 	switch t {
