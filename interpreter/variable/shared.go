@@ -390,12 +390,14 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	return nil, nil
 }
 
-func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value) (bool, error) {
+func SetBackendRequestHeader(ctx *context.Context, name, operator string, val value.Value) (bool, error) {
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return true, errors.WithStack(err)
 		}
-		setRequestHeaderValue(ctx.BackendRequest, match[1], val)
+		if err := assignRequestHeaderValue(ctx.BackendRequest, match[1], operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
 		return true, nil
 	}
 	return false, nil

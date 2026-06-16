@@ -374,7 +374,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		return nil
 	}
 
-	if ok, err := SetBackendRequestHeader(v.ctx, name, val); err != nil {
+	if ok, err := SetBackendRequestHeader(v.ctx, name, operator, val); err != nil {
 		return errors.WithStack(err)
 	} else if ok {
 		return nil
@@ -383,8 +383,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.BackendResponse, match[1], val)
-		return nil
+		return assignResponseHeaderValue(v.ctx.BackendResponse, match[1], operator, val)
 	}
 
 	// If not found, pass to all scope value

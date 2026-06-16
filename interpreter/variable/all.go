@@ -993,8 +993,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 				"BACKEND literal %s cannot be assigned to %s in scope: %s", v.String(), name, s.String(),
 			))
 		}
-		setRequestHeaderValue(v.ctx.Request, match[1], val)
-		return nil
+		return assignRequestHeaderValue(v.ctx.Request, match[1], operator, val)
 	}
 
 	if injectedVariable != nil {

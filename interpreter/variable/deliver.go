@@ -340,8 +340,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 
-		setResponseHeaderValue(v.ctx.Response, match[1], val)
-		return nil
+		return assignResponseHeaderValue(v.ctx.Response, match[1], operator, val)
 	}
 
 	// If not found, pass to all scope value
