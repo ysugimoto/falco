@@ -63,6 +63,28 @@ func getValue(t *testing.T, testIndex int, vars *AllScopeVariables, varName stri
 	return value.Unwrap[*value.String](result)
 }
 
+func TestReqBackendUnset(t *testing.T) {
+	// When no backend has been determined yet, ctx.Backend is nil. Reading
+	// req.backend must return an empty BACKEND value instead of dereferencing
+	// the nil ctx.Backend.
+	vars := createScopeVars("http://localhost/")
+	if vars.ctx.Backend != nil {
+		t.Fatalf("precondition failed: ctx.Backend should be nil")
+	}
+
+	v, err := vars.Get(context.RecvScope, "req.backend")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	b, ok := v.(*value.Backend)
+	if !ok {
+		t.Fatalf("expected *value.Backend, got %T", v)
+	}
+	if b.Value != nil || b.Director != nil {
+		t.Errorf("expected empty backend, got %+v", b)
+	}
+}
+
 type Expect struct {
 	url      string
 	path     string

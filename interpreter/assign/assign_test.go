@@ -318,4 +318,38 @@ func TestProcessAssignment(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("left is REGEX", func(t *testing.T) {
+		tests := []struct {
+			left    string
+			right   value.Value
+			expect  value.Regex
+			isError bool
+		}{
+			{left: "example", right: value.UnsatisfiableRegex, expect: *value.UnsatisfiableRegex},
+			{left: "example", right: &value.Regex{Value: "pattern"}, expect: value.Regex{Value: "pattern"}},
+			{left: "example", right: &value.String{Value: "pattern", Literal: true}, expect: value.Regex{Value: "pattern"}},
+			{left: "example", right: &value.String{Value: "pattern", Literal: false}, isError: true},
+			{left: "example", right: &value.Integer{Value: 100}, isError: true},
+		}
+		for i, tt := range tests {
+			left := &value.Regex{Value: tt.left}
+			err := Assign(left, tt.right)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("Index %d: expects error but non-nil", i)
+				}
+				continue
+			}
+			if left.Value != tt.expect.Value {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect.Value, left.Value)
+			}
+			if left.Unsatisfiable != tt.expect.Unsatisfiable {
+				t.Errorf("Index %d: expect unsatisfiable %t, got %t", i, tt.expect.Unsatisfiable, left.Unsatisfiable)
+			}
+			if left.Literal != tt.expect.Literal {
+				t.Errorf("Index %d: expect literal %t, got %t", i, tt.expect.Literal, left.Literal)
+			}
+		}
+	})
 }

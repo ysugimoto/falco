@@ -409,7 +409,7 @@ func (i *Interpreter) ProcessHash() error {
 func (i *Interpreter) ProcessMiss() error {
 	i.SetScope(context.MissScope)
 
-	if i.ctx.Backend == nil {
+	if i.ctx.Backend == nil || (i.ctx.Backend.Value == nil && i.ctx.Backend.Director == nil) {
 		return exception.Runtime(nil, "No backend determined in MISS")
 	}
 

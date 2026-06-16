@@ -2,17 +2,16 @@ package interpreter
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/interpreter/assign"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/process"
 	"github.com/ysugimoto/falco/interpreter/value"
 	"github.com/ysugimoto/falco/interpreter/variable"
-	"github.com/ysugimoto/falco/token"
 )
 
 const (
@@ -206,20 +205,17 @@ func (i *Interpreter) ProcessFunctionSubroutine(sub *ast.SubroutineDeclaration, 
 			}
 			// Check return value type and perform implicit conversion if needed
 			expectedType := value.Type(sub.ReturnType.Value)
-			if val.Type() != expectedType {
-				// Try to perform implicit conversion
-				converted, err := i.convertValueToType(val, expectedType, &t.GetMeta().Token)
-				if err != nil {
-					return val, NONE, exception.Runtime(
-						&t.GetMeta().Token,
-						"Invalid return type, expects=%s, but got=%s",
-						sub.ReturnType.Value,
-						val.Type(),
-					)
-				}
-				val = converted
+			converted, err := convertValueToType(val, expectedType)
+			if err != nil {
+				return val, NONE, exception.Runtime(
+					&t.GetMeta().Token,
+					"Invalid return type, expects=%s, but got=%s. Conversion failed: %s",
+					sub.ReturnType.Value,
+					val.Type(),
+					err.Error(),
+				)
 			}
-			return val, NONE, nil
+			return converted, NONE, nil
 		case *ast.ErrorStatement:
 			// error statement force change state to ERROR
 			err = i.ProcessErrorStatement(t)
@@ -341,17 +337,15 @@ func (i *Interpreter) validateAndSetParameters(sub *ast.SubroutineDeclaration, a
 	// Validate and set each parameter
 	for idx, param := range sub.Parameters {
 		arg := args[idx]
-		expectedType := value.Type(param.Type.Value)
-
-		// Try to convert argument to expected type
-		converted, err := i.convertValueToType(arg, expectedType, &param.GetMeta().Token)
+		converted, err := convertValueToType(arg, value.Type(param.Type.Value))
 		if err != nil {
 			return exception.Runtime(
 				&param.GetMeta().Token,
-				"Parameter %s expects type %s, but got %s",
+				"Invalid parameter %s, expects=%s, but got=%s. Conversion failed: %s",
 				param.Name.Value,
 				param.Type.Value,
 				arg.Type(),
+				err.Error(),
 			)
 		}
 		i.localVars[param.Name.Value] = converted
@@ -360,70 +354,51 @@ func (i *Interpreter) validateAndSetParameters(sub *ast.SubroutineDeclaration, a
 	return nil
 }
 
-// convertValueToType attempts to convert a value to the expected type using implicit conversion rules
-func (i *Interpreter) convertValueToType(val value.Value, expectedType value.Type, tk *token.Token) (value.Value, error) {
-	// If types match, no conversion needed
-	if val.Type() == expectedType {
+// convertValueToType attempts to convert a value to the expected type using implicit
+// conversion rules.
+// Under the hood it delegates actual conversion to assign.Assign function but on top of it,
+// it enforces additional restrictions specific to function arguments and return values.
+func convertValueToType(val value.Value, expectedType value.Type) (value.Value, error) {
+	// shortcut for values that do not require conversion.
+	// literals do require reassignment to prevent IsLiteral flag from
+	// propagating into the function argument or return value.
+	// Because of that they are still delegated to Assign function.
+	if val.Type() == expectedType && !val.IsLiteral() {
 		return val, nil
 	}
-
+	// additional restrictions specific to function calls
+	// on top of what is already enforced by Assign function
 	switch expectedType {
-	case value.StringType:
-		// Almost any type can be converted to STRING
-		switch v := val.(type) {
-		case *value.Integer:
-			return &value.String{Value: fmt.Sprintf("%d", v.Value)}, nil
-		case *value.Float:
-			return &value.String{Value: fmt.Sprintf("%g", v.Value)}, nil
-		case *value.Boolean:
-			if v.Value {
-				return &value.String{Value: "1"}, nil
-			}
-			return &value.String{Value: "0"}, nil
-		case *value.IP:
-			return &value.String{Value: v.Value.String()}, nil
-		case *value.RTime:
-			return &value.String{Value: fmt.Sprintf("%fs", v.Value.Seconds())}, nil
-		}
 	case value.IntegerType:
-		switch v := val.(type) {
-		case *value.Float:
-			return &value.Integer{Value: int64(v.Value)}, nil
-		case *value.Boolean:
-			if v.Value {
-				return &value.Integer{Value: 1}, nil
-			}
-			return &value.Integer{Value: 0}, nil
+		switch val.Type() {
+		case value.FloatType, value.RTimeType, value.TimeType:
+			return nil, fmt.Errorf("expected an INTEGER variable")
 		}
 	case value.FloatType:
-		switch v := val.(type) {
-		case *value.Integer:
-			return &value.Float{Value: float64(v.Value)}, nil
-		case *value.Boolean:
-			if v.Value {
-				return &value.Float{Value: 1.0}, nil
-			}
-			return &value.Float{Value: 0.0}, nil
+		switch val.Type() {
+		case value.RTimeType, value.TimeType:
+			return nil, fmt.Errorf("expected a FLOAT or INTEGER variable")
 		}
-	case value.BooleanType:
-		switch v := val.(type) {
-		case *value.Integer:
-			return &value.Boolean{Value: v.Value != 0}, nil
-		case *value.Float:
-			return &value.Boolean{Value: v.Value != 0}, nil
-		case *value.String:
-			return &value.Boolean{Value: v.Value != ""}, nil
+	case value.RTimeType:
+		switch val.Type() {
+		case value.IntegerType, value.FloatType, value.TimeType:
+			return nil, fmt.Errorf("expected an RTIME variable")
+		}
+	case value.TimeType:
+		switch val.Type() {
+		case value.IntegerType, value.FloatType, value.RTimeType:
+			return nil, fmt.Errorf("expected a TIME variable")
 		}
 	case value.IpType:
-		if v, ok := val.(*value.String); ok {
-			ip := net.ParseIP(v.Value)
-			if ip == nil {
-				return nil, exception.Runtime(tk, "Invalid IP address: %s", v.Value)
-			}
-			return &value.IP{Value: ip}, nil
+		if !val.IsLiteral() && val.Type() == value.StringType {
+			return nil, fmt.Errorf("expected an IP variable")
 		}
 	}
-
-	// No conversion available
-	return nil, exception.Runtime(tk, "Cannot convert %s to %s", val.Type(), expectedType)
+	if result, err := value.Create(expectedType); err != nil {
+		return nil, err
+	} else if err := assign.Assign(result, val); err != nil {
+		return nil, err
+	} else {
+		return result, nil
+	}
 }

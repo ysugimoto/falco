@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/ast"
 )
 
@@ -56,6 +57,38 @@ type Value interface {
 }
 
 type null struct{}
+
+// Create creates new value of the specified type.
+func Create(valueType Type) (Value, error) {
+	switch valueType {
+	case "INTEGER":
+		return &Integer{}, nil
+	case "FLOAT":
+		return &Float{}, nil
+	case "BOOL":
+		return &Boolean{}, nil
+	case "BACKEND":
+		return &Backend{}, nil
+	case "ACL":
+		return &Acl{}, nil
+	case "IP":
+		return &IP{IsNotSet: true}, nil
+	case "STRING":
+		return &String{IsNotSet: true}, nil
+	case "RTIME":
+		return &RTime{}, nil
+	case "TIME":
+		return &Time{
+			Value: time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
+		}, nil
+	case "REGEX":
+		return UnsatisfiableRegex.Copy(), nil
+	default:
+		return nil, errors.WithStack(fmt.Errorf(
+			"unexpected value type: %s", valueType,
+		))
+	}
+}
 
 func (v *null) String() string  { return "NULL" }
 func (v *null) Type() Type      { return NullType }
@@ -263,7 +296,7 @@ func (v *Backend) String() string {
 	if v.Value != nil {
 		return v.Value.Name.Value
 	}
-	return ""
+	return "(none)"
 }
 func (v *Backend) Type() Type      { return BackendType }
 func (v *Backend) IsLiteral() bool { return v.Literal }

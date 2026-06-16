@@ -90,7 +90,7 @@ func TestDeclareStatement(t *testing.T) {
 				Name:      &ast.Ident{Value: "var.foo"},
 				ValueType: &ast.Ident{Value: "ACL"},
 			},
-			isError: true,
+			expect: &value.Acl{},
 		},
 		{
 			name: "Assign value with declaration",
@@ -475,6 +475,21 @@ func TestFunctionCallStatement(t *testing.T) {
 				"req.http.foo": &value.String{Value: "0"},
 			},
 			isError: true,
+		},
+		{
+			name: "null handling in procedure argument evaluation",
+			vcl: `
+                sub proc(STRING var.value) {
+                    set req.http.x-proc-arg = var.value;
+                }
+				sub vcl_recv {
+					declare local var.null STRING;
+					call proc("[" var.null "]");
+				}`,
+			assertions: map[string]value.Value{
+				"req.http.x-proc-arg": &value.String{Value: "[]"},
+			},
+			isError: false,
 		},
 	}
 
