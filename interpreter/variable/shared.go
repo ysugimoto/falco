@@ -53,6 +53,41 @@ func GetFastlyInfoVariable(ctx *context.Context, name string) (value.Value, erro
 	return nil, nil
 }
 
+// Fastly bot classification variables.
+// These are only accessible in RECV, HASH, DELIVER and LOG scopes
+// (see https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/).
+// The interpreter has no real bot detection data, so these return their
+// zero values unless explicitly overridden (e.g. via testing override).
+func GetFastlyBotVariable(ctx *context.Context, name string) (value.Value, error) {
+	switch name {
+	case FASTLY_BOT_ANALYZED,
+		FASTLY_BOT_DETECTED,
+		FASTLY_BOT_CATEGORY_IS_ACCESSIBILITY,
+		FASTLY_BOT_CATEGORY_IS_AI_CRAWLER,
+		FASTLY_BOT_CATEGORY_IS_AI_FETCHER,
+		FASTLY_BOT_CATEGORY_IS_CONTENT_FETCHER,
+		FASTLY_BOT_CATEGORY_IS_MONITORING_AND_SITE_TOOLS,
+		FASTLY_BOT_CATEGORY_IS_ONLINE_MARKETING,
+		FASTLY_BOT_CATEGORY_IS_PAGE_PREVIEW,
+		FASTLY_BOT_CATEGORY_IS_PLATFORM_INTEGRATIONS,
+		FASTLY_BOT_CATEGORY_IS_RESEARCH,
+		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_CRAWLER,
+		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_OPTIMIZATION,
+		FASTLY_BOT_CATEGORY_IS_SECURITY_TOOLS,
+		FASTLY_BOT_CATEGORY_IS_VERIFIED:
+		if v := lookupOverride(ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
+	case FASTLY_BOT_NAME, FASTLY_BOT_CATEGORY:
+		if v := lookupOverride(ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{Value: ""}, nil
+	}
+	return nil, nil
+}
+
 func GetQuicVariable(ctx *context.Context, name string) (value.Value, error) {
 	switch name {
 	// QUIC related values return zero
