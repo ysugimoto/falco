@@ -168,6 +168,10 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	if err := limitations.CheckFastlyResourceLimit(i.ctx); err != nil {
 		return errors.WithStack(err)
 	}
+	if err := limitations.CheckFastlyCallTreeLimit(i.ctx); err != nil {
+		i.Debugger.Message(err.Error())
+		return errors.WithStack(err)
+	}
 
 	return nil
 }

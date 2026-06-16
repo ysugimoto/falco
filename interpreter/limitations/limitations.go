@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"maps"
 	ghttp "net/http"
+	"sort"
 	"strings"
 
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/exception"
 	"github.com/ysugimoto/falco/interpreter/http"
@@ -39,6 +42,18 @@ const (
 	MaxVarnishRestarts   = 3
 	MaxLogLineSize       = 16 * KB
 
+	// MaxSubroutineCallTree is the ceiling Fastly enforces on the fully inlined
+	// subroutine call graph. The cost of a subroutine is the sum, over each of
+	// its `call` statements, of one plus the callee's own cost, so nested calls
+	// multiply. Past this, Fastly rejects activation with "Too many sub calls".
+	MaxSubroutineCallTree = 25000
+
+	// MaxRequestWorkspaceSize is the size of the per-request workspace. Request
+	// headers are assembled into this workspace and the previous copy is never
+	// reclaimed, even across restarts, so a VCL that rewrites a header many
+	// times eventually overflows it and Fastly returns "503 Header overflow".
+	MaxRequestWorkspaceSize = 256 * KB
+
 	// Increasable limitations by contacting Fastly support
 	// These are defaults, you can override by configuration
 	MaxACLCounts     = 1000
@@ -53,6 +68,105 @@ func CheckFastlyVCLLimitation(vcl string) error {
 		)
 	}
 	return nil
+}
+
+// CheckFastlyCallTreeLimit emulates Fastly's compile-time check on the fully
+// inlined subroutine call graph. Fastly inlines every `call` statement, so a
+// subroutine that calls another many times multiplies the callee's whole
+// subtree. When the expansion of any subroutine exceeds MaxSubroutineCallTree,
+// activation fails with "Too many sub calls".
+func CheckFastlyCallTreeLimit(ctx *context.Context) error {
+	subroutines := make(
+		map[string]*ast.SubroutineDeclaration,
+		len(ctx.Subroutines)+len(ctx.SubroutineFunctions),
+	)
+	maps.Copy(subroutines, ctx.Subroutines)
+	maps.Copy(subroutines, ctx.SubroutineFunctions)
+
+	costs := make(map[string]int, len(subroutines))
+	visiting := make(map[string]bool, len(subroutines))
+
+	var cost func(name string) int
+	cost = func(name string) int {
+		if c, ok := costs[name]; ok {
+			return c
+		}
+		sub, ok := subroutines[name]
+		if !ok {
+			return 0
+		}
+		// Guard against recursive VCL (which Fastly rejects anyway) so the walk
+		// always terminates; the interpreter reports the recursion separately
+		// through its runtime call-stack guard.
+		if visiting[name] {
+			return 0
+		}
+		visiting[name] = true
+		var total int
+		for _, call := range collectCallStatements(sub.Block) {
+			total += 1 + cost(call.Subroutine.Value)
+		}
+		visiting[name] = false
+		costs[name] = total
+		return total
+	}
+
+	// Report deterministically by visiting subroutines in name order.
+	names := make([]string, 0, len(subroutines))
+	for name := range subroutines {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		if c := cost(name); c > MaxSubroutineCallTree {
+			return exception.Runtime(
+				&subroutines[name].GetMeta().Token,
+				"Too many sub calls: subroutine %s expands to %d calls, exceeding the limit of %d",
+				name, c, MaxSubroutineCallTree,
+			)
+		}
+	}
+	return nil
+}
+
+// collectCallStatements returns every `call` statement reachable inside a
+// subroutine block, descending into nested if/else and switch blocks.
+func collectCallStatements(block *ast.BlockStatement) []*ast.CallStatement {
+	if block == nil {
+		return nil
+	}
+	var calls []*ast.CallStatement
+	walkCallStatements(block.Statements, &calls)
+	return calls
+}
+
+func walkCallStatements(statements []ast.Statement, calls *[]*ast.CallStatement) {
+	for _, stmt := range statements {
+		switch t := stmt.(type) {
+		case *ast.CallStatement:
+			*calls = append(*calls, t)
+		case *ast.BlockStatement:
+			walkCallStatements(t.Statements, calls)
+		case *ast.IfStatement:
+			walkIfCallStatements(t, calls)
+		case *ast.SwitchStatement:
+			for _, c := range t.Cases {
+				walkCallStatements(c.Statements, calls)
+			}
+		}
+	}
+}
+
+func walkIfCallStatements(stmt *ast.IfStatement, calls *[]*ast.CallStatement) {
+	if stmt.Consequence != nil {
+		walkCallStatements(stmt.Consequence.Statements, calls)
+	}
+	for _, another := range stmt.Another {
+		walkIfCallStatements(another, calls)
+	}
+	if stmt.Alternative != nil && stmt.Alternative.Consequence != nil {
+		walkCallStatements(stmt.Alternative.Consequence.Statements, calls)
+	}
 }
 
 func CheckFastlyResourceLimit(ctx *context.Context) error {
