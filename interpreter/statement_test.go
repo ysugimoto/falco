@@ -90,7 +90,7 @@ func TestDeclareStatement(t *testing.T) {
 				Name:      &ast.Ident{Value: "var.foo"},
 				ValueType: &ast.Ident{Value: "ACL"},
 			},
-			isError: true,
+			expect: &value.Acl{},
 		},
 		{
 			name: "Assign value with declaration",

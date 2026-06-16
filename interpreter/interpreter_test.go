@@ -69,7 +69,7 @@ func assertInterpreter(t *testing.T, vcl string, scope context.Scope, assertions
 			return
 		}
 		if diff := cmp.Diff(val, v); diff != "" {
-			t.Errorf("Value assertion error, diff: %s", diff)
+			t.Errorf("Value assertion error for '%s', diff: %s", name, diff)
 		}
 	}
 
