@@ -78,3 +78,38 @@ func TestBackendPortReturnsInteger(t *testing.T) {
 		})
 	}
 }
+
+// When the backend is nil or declares no port property, getBackendPort falls
+// back to INTEGER 0 rather than erroring.
+func TestBackendPortFallsBackToZero(t *testing.T) {
+	tests := []struct {
+		name    string
+		backend *value.Backend
+	}{
+		{
+			name:    "nil backend",
+			backend: nil,
+		},
+		{
+			name: "backend without port property",
+			backend: &value.Backend{
+				Value: &ast.BackendDeclaration{
+					Name:       &ast.Ident{Value: "example"},
+					Properties: []*ast.BackendProperty{},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getBackendPort(tt.backend)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if diff := cmp.Diff(value.Value(&value.Integer{Value: 0}), got); diff != "" {
+				t.Errorf("port value mismatch, diff: %s", diff)
+			}
+		})
+	}
+}
