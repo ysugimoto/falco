@@ -2,11 +2,17 @@ package main
 
 import (
 	"bytes"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/interpreter"
+	icontext "github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/linter"
 	"github.com/ysugimoto/falco/resolver"
 	"github.com/ysugimoto/falco/snippet/terraform"
@@ -729,6 +735,103 @@ func TestParseOverrideVariables(t *testing.T) {
 			}
 			if val != tt.expectVal {
 				t.Errorf("value expects %v (%T), got %v (%T)", tt.expectVal, tt.expectVal, val, val)
+			}
+		})
+	}
+}
+
+// TestSimulatorPreservesRawPath is a regression test for a bug where
+// `falco simulate` (and the debugger console) wrapped the interpreter in an
+// http.ServeMux, which calls path.Clean on every request and 301-redirects
+// whenever the cleaned path differs (collapsing `//`, resolving `.`/`..`).
+// Real Fastly preserves those path oddities in req.url, so the simulator must
+// too. The fix serves the interpreter as the root handler directly instead of
+// wrapping it in an http.ServeMux; this test exercises that handler and fails
+// with a 301 if a ServeMux is reintroduced in front of it.
+func TestSimulatorPreservesRawPath(t *testing.T) {
+	// Minimal VCL that echoes the raw req.url observed in vcl_recv into a
+	// synthetic 200 response body, mirroring the probe VCL from the original
+	// bug report. Using `error` + synthetic means we don't need a backend and
+	// we get a deterministic 200 OK whose body is the path VCL saw.
+	const probeVCL = `
+sub vcl_recv {
+#FASTLY recv
+  set req.http.X-Probe-Url = req.url;
+  error 600;
+}
+
+sub vcl_error {
+#FASTLY error
+  if (obj.status == 600) {
+    set obj.status = 200;
+    set obj.response = "OK";
+    synthetic {"req.url="} + req.http.X-Probe-Url;
+    return(deliver);
+  }
+}
+`
+	rslv := resolver.NewStaticResolver("main", probeVCL)
+	i := interpreter.New(
+		icontext.WithResolver(rslv),
+		icontext.WithActualResponse(true),
+	)
+
+	// Serve the interpreter directly, exactly as runner.go and the debugger
+	// console do. No http.ServeMux in front of it.
+	srv := httptest.NewServer(i)
+	defer srv.Close()
+
+	// Cases that the ServeMux-wrapped handler previously 301'd. We do not
+	// include a %2F case here: ServeMux does not percent-decode, so %2F was
+	// never affected by the bug, and the interpreter's trace rendering of
+	// req.url is a separate concern from routing.
+	cases := []string{
+		"/search//search/bar",
+		"/a/./b",
+		"/a/../b",
+		"/search/bar/.",
+	}
+
+	// http.Client follows redirects by default; disable that so a regression
+	// which reintroduces ServeMux is caught as a 301 rather than silently
+	// following to the cleaned path.
+	client := &http.Client{
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	for _, raw := range cases {
+		t.Run(raw, func(t *testing.T) {
+			u, err := url.Parse(srv.URL)
+			if err != nil {
+				t.Fatalf("parse base URL: %s", err)
+			}
+			// Set Path and RawPath so net/http sends the raw form without
+			// collapsing `//` or resolving dot-segments.
+			u.Path = raw
+			u.RawPath = raw
+
+			req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+			if err != nil {
+				t.Fatalf("build request: %s", err)
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatalf("do request: %s", err)
+			}
+			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %s", err)
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d, want 200 (mux would 301); body=%s", resp.StatusCode, body)
+			}
+			want := "req.url=" + raw
+			if got := string(body); got != want {
+				t.Errorf("body = %q, want %q", got, want)
 			}
 		})
 	}

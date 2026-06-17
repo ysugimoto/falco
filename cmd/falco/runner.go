@@ -456,11 +456,12 @@ func (r *Runner) Simulate(rslv resolver.Resolver) error {
 		return debugger.New(i).Run(sc)
 	}
 
-	// Otherwise, simply start simulator server
-	mux := http.NewServeMux()
-	mux.Handle("/", i)
+	// Otherwise, simply start simulator server. Serve the interpreter as the
+	// root handler directly: an http.ServeMux would path.Clean-301 requests
+	// with `//`, `/./`, or `/../`, hiding those raw paths from VCL. Real Fastly
+	// preserves them in req.url / req.url.path, so the simulator must too.
 	s := &http.Server{
-		Handler: mux,
+		Handler: i,
 		Addr:    fmt.Sprintf(":%d", sc.Port),
 	}
 

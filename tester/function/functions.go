@@ -77,11 +77,18 @@ func testingFunctions(i *interpreter.Interpreter, defs *Definiions) Functions {
 		"testing.call_subroutine": {
 			Scope: allScope,
 			Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
-				v, err := Testing_call_subroutine(ctx, i, args...)
+				cr, err := Testing_call_subroutine(ctx, i, args...)
 				if err != nil {
 					return value.Null, err
 				}
-				ctx.ReturnState = value.Unwrap[*value.String](v)
+				if cr.IsFunctional {
+					// Functional subroutine — return the typed value directly
+					// (may be any VCL type, including value.Null).
+					return cr.Value, nil
+				}
+				// Scoped subroutine — store state, return value.Null so
+				// that statement-call mode works correctly.
+				ctx.ReturnState = value.Unwrap[*value.String](cr.Value)
 				return value.Null, nil
 			},
 			CanStatementCall: true,

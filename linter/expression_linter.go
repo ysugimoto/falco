@@ -405,6 +405,13 @@ func (l *Linter) lintFunctionCallExpression(exp *ast.FunctionCallExpression, ctx
 		return types.NeverType
 	}
 
+	// testing.call_subroutine has a dynamic signature whose extra arguments
+	// depend on the target subroutine's parameter list. Validate it separately,
+	// mirroring the statement-call path.
+	if exp.Function.Value == context.TestingCallSubroutineName {
+		return l.lintTestingCallSubroutine(exp.Function, exp.Arguments, ctx)
+	}
+
 	return l.lintFunctionArguments(fn, functionMeta{
 		name:      exp.Function.String(),
 		token:     exp.Function.GetMeta().Token,

@@ -144,10 +144,12 @@ func (c *Console) Run(sc *config.SimulatorConfig) error {
 	)
 
 	go func() {
-		mux := http.NewServeMux()
-		mux.Handle("/", c)
+		// Serve the console as the root handler directly. An http.ServeMux
+		// would path.Clean-301 requests with `//`, `/./`, or `/../`, hiding
+		// those raw paths from VCL. Real Fastly preserves them in req.url, so
+		// we must too.
 		s := &http.Server{
-			Handler: mux,
+			Handler: c,
 			Addr:    fmt.Sprintf(":%d", sc.Port),
 		}
 

@@ -2,13 +2,40 @@ package variable
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+// getBackendPort reads the "port" property from a backend declaration and
+// returns it as an INTEGER, matching Fastly's req.backend.port and
+// beresp.backend.port (both INTEGER). The property is parsed as an
+// *ast.String literal (e.g. .port = "443";), so its Value must be read
+// directly; calling String() would re-serialize it to the quoted VCL form
+// and fail to parse. Returns 0 when the backend or port property is absent.
+func getBackendPort(backend *value.Backend) (value.Value, error) {
+	if backend == nil {
+		return &value.Integer{Value: 0}, nil
+	}
+	for _, p := range backend.Value.Properties {
+		if p.Key.Value != PORT {
+			continue
+		}
+		if s, ok := p.Value.(*ast.String); ok {
+			n, err := strconv.ParseInt(s.Value, 10, 64)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return &value.Integer{Value: n}, nil
+		}
+	}
+	return &value.Integer{Value: 0}, nil
+}
 
 func GetFastlyInfoVariable(ctx *context.Context, name string) (value.Value, error) {
 	switch name {
@@ -22,6 +49,41 @@ func GetFastlyInfoVariable(ctx *context.Context, name string) (value.Value, erro
 			return v, nil
 		}
 		return &value.Integer{Value: 1}, nil
+	}
+	return nil, nil
+}
+
+// Fastly bot classification variables.
+// These are only accessible in RECV, HASH, DELIVER and LOG scopes
+// (see https://www.fastly.com/documentation/reference/vcl/variables/miscellaneous/).
+// The interpreter has no real bot detection data, so these return their
+// zero values unless explicitly overridden (e.g. via testing override).
+func GetFastlyBotVariable(ctx *context.Context, name string) (value.Value, error) {
+	switch name {
+	case FASTLY_BOT_ANALYZED,
+		FASTLY_BOT_DETECTED,
+		FASTLY_BOT_CATEGORY_IS_ACCESSIBILITY,
+		FASTLY_BOT_CATEGORY_IS_AI_CRAWLER,
+		FASTLY_BOT_CATEGORY_IS_AI_FETCHER,
+		FASTLY_BOT_CATEGORY_IS_CONTENT_FETCHER,
+		FASTLY_BOT_CATEGORY_IS_MONITORING_AND_SITE_TOOLS,
+		FASTLY_BOT_CATEGORY_IS_ONLINE_MARKETING,
+		FASTLY_BOT_CATEGORY_IS_PAGE_PREVIEW,
+		FASTLY_BOT_CATEGORY_IS_PLATFORM_INTEGRATIONS,
+		FASTLY_BOT_CATEGORY_IS_RESEARCH,
+		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_CRAWLER,
+		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_OPTIMIZATION,
+		FASTLY_BOT_CATEGORY_IS_SECURITY_TOOLS,
+		FASTLY_BOT_CATEGORY_IS_VERIFIED:
+		if v := lookupOverride(ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
+	case FASTLY_BOT_NAME, FASTLY_BOT_CATEGORY:
+		if v := lookupOverride(ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.String{Value: ""}, nil
 	}
 	return nil, nil
 }
@@ -328,12 +390,14 @@ func GetWafVariables(ctx *context.Context, name string) (value.Value, error) {
 	return nil, nil
 }
 
-func SetBackendRequestHeader(ctx *context.Context, name string, val value.Value) (bool, error) {
+func SetBackendRequestHeader(ctx *context.Context, name, operator string, val value.Value) (bool, error) {
 	if match := backendRequestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return true, errors.WithStack(err)
 		}
-		setRequestHeaderValue(ctx.BackendRequest, match[1], val)
+		if err := assignRequestHeaderValue(ctx.BackendRequest, match[1], operator, val); err != nil {
+			return true, errors.WithStack(err)
+		}
 		return true, nil
 	}
 	return false, nil

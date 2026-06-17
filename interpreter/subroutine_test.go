@@ -154,6 +154,29 @@ func TestFunctionSubroutine(t *testing.T) {
 			},
 		},
 		{
+			// A STRING parameter that received a literal argument must not be
+			// treated as a literal: the regex operator forbids a literal on the
+			// left-hand side. convertValueToType reassigns the argument so the
+			// literal flag does not propagate into the parameter variable.
+			name: "Functional subroutine parameter is usable as regex left-hand side",
+			vcl: `sub is_cache(STRING var.mode) BOOL {
+				if (var.mode ~ "^cache$") {
+					return true;
+				}
+				return false;
+			}
+
+			sub vcl_recv {
+				declare local var.b BOOL;
+				set var.b = is_cache("cache");
+				set req.http.X-Is-Cache = var.b;
+			}
+			`,
+			assertions: map[string]value.Value{
+				"req.http.X-Is-Cache": &value.String{Value: "1"},
+			},
+		},
+		{
 			name: "Functional subroutine automatically converts literal string to REGEX arg",
 			vcl: `
             sub match(STRING var.value, REGEX var.pattern) STRING {

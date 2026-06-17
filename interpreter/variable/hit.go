@@ -130,8 +130,7 @@ func (v *HitScopeVariables) Set(s context.Scope, name, operator string, val valu
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.Object, match[1], val)
-		return nil
+		return assignResponseHeaderValue(v.ctx.Object, match[1], operator, val)
 	}
 
 	// If not found, pass to all scope value
