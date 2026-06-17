@@ -2,7 +2,6 @@ package variable
 
 import (
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -113,22 +112,7 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		}
 		return &value.String{Value: name}, nil
 	case REQ_BACKEND_PORT:
-		if v.ctx.Backend == nil {
-			return &value.Integer{Value: 0}, nil
-		}
-		var port int64
-		for _, p := range v.ctx.Backend.Value.Properties {
-			if p.Key.Value != PORT {
-				continue
-			}
-			n, err := strconv.ParseInt(p.Value.String(), 10, 64)
-			if err != nil {
-				return value.Null, errors.WithStack(err)
-			}
-			port = n
-			break
-		}
-		return &value.Integer{Value: port}, nil
+		return getBackendPort(v.ctx.Backend)
 
 	case REQ_ESI:
 		return v.ctx.EnableSSI, nil

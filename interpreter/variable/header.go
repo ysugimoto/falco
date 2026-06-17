@@ -62,8 +62,10 @@ func getResponseHeaderValue(r *http.Response, name string) *value.String {
 func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
-		// Skip when set value is notset
+		// Setting header to undefined value is equivalent to deleting it
 		if isNotSetValue(val) {
+			r.Header.Del(name)
+			r.Unassign(name)
 			return
 		}
 
@@ -88,8 +90,10 @@ func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 	name, key, found := strings.Cut(name, ":")
 	if !found {
-		// Skip when set value is notset
+		// Setting header to undefined value is equivalent to deleting it
 		if isNotSetValue(val) {
+			r.Header.Del(name)
+			r.Unassign(name)
 			return
 		}
 

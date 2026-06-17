@@ -172,15 +172,15 @@ func TestProcessAssignment(t *testing.T) {
 			expect  time.Time
 			isError bool
 		}{
-			{left: now, right: &value.Integer{Value: 100}, expect: time.Unix(100, 0)},
+			{left: now, right: &value.Integer{Value: 100}, expect: time.Unix(100, 0).UTC()},
 			{left: now, right: &value.Integer{Value: 100, Literal: true}, isError: true},
-			{left: now, right: &value.Float{Value: 50.0}, expect: time.Unix(50, 0)},
+			{left: now, right: &value.Float{Value: 50.0}, expect: time.Unix(50, 0).UTC()},
 			{left: now, right: &value.Float{Value: 50.0, Literal: true}, isError: true},
 			{left: now, right: &value.String{Value: "example"}, isError: true},
 			{left: now, right: &value.String{Value: "example", Literal: true}, isError: true},
-			{left: now, right: &value.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
-			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0)},
-			{left: now, right: &value.Time{Value: now2}, expect: now2},
+			{left: now, right: &value.RTime{Value: 100 * time.Second}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0).UTC()},
+			{left: now, right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: time.Unix(int64((100 * time.Second).Seconds()), 0).UTC()},
+			{left: now, right: &value.Time{Value: now2}, expect: now2.UTC()},
 			{left: now, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: now, right: &value.Boolean{Value: true}, isError: true},
 			{left: now, right: &value.Boolean{Value: false, Literal: true}, isError: true},
@@ -315,6 +315,40 @@ func TestProcessAssignment(t *testing.T) {
 			}
 			if left.Value.String() != tt.expect.String() {
 				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
+			}
+		}
+	})
+
+	t.Run("left is REGEX", func(t *testing.T) {
+		tests := []struct {
+			left    string
+			right   value.Value
+			expect  value.Regex
+			isError bool
+		}{
+			{left: "example", right: value.UnsatisfiableRegex, expect: *value.UnsatisfiableRegex},
+			{left: "example", right: &value.Regex{Value: "pattern"}, expect: value.Regex{Value: "pattern"}},
+			{left: "example", right: &value.String{Value: "pattern", Literal: true}, expect: value.Regex{Value: "pattern"}},
+			{left: "example", right: &value.String{Value: "pattern", Literal: false}, isError: true},
+			{left: "example", right: &value.Integer{Value: 100}, isError: true},
+		}
+		for i, tt := range tests {
+			left := &value.Regex{Value: tt.left}
+			err := Assign(left, tt.right)
+			if tt.isError {
+				if err == nil {
+					t.Errorf("Index %d: expects error but non-nil", i)
+				}
+				continue
+			}
+			if left.Value != tt.expect.Value {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect.Value, left.Value)
+			}
+			if left.Unsatisfiable != tt.expect.Unsatisfiable {
+				t.Errorf("Index %d: expect unsatisfiable %t, got %t", i, tt.expect.Unsatisfiable, left.Unsatisfiable)
+			}
+			if left.Literal != tt.expect.Literal {
+				t.Errorf("Index %d: expect literal %t, got %t", i, tt.expect.Literal, left.Literal)
 			}
 		}
 	})

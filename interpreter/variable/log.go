@@ -153,22 +153,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: name}, nil
 	case REQ_BACKEND_PORT:
-		if v.ctx.Backend == nil {
-			return &value.Integer{Value: 0}, nil
-		}
-		var port int64
-		for _, p := range v.ctx.Backend.Value.Properties {
-			if p.Key.Value != "port" {
-				continue
-			}
-			n, err := strconv.ParseInt(p.Value.String(), 10, 64)
-			if err != nil {
-				return value.Null, errors.WithStack(err)
-			}
-			port = n
-			break
-		}
-		return &value.Integer{Value: port}, nil
+		return getBackendPort(v.ctx.Backend)
 	case REQ_BODY_BYTES_READ:
 		var buf bytes.Buffer
 		n, err := buf.ReadFrom(req.Body)
@@ -232,7 +217,7 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.Integer{Value: int64(v.ctx.Response.StatusCode)}, nil
 
 	case TIME_END:
-		return &value.Time{Value: v.ctx.RequestEndTime}, nil
+		return value.NewTime(v.ctx.RequestEndTime), nil
 	case TIME_END_MSEC:
 		return &value.String{
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMilli()),
@@ -356,6 +341,11 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case FASTLY_INFO_REQUEST_ID:
 		return v.ctx.RequestID, nil
 	case FASTLY_DDOS_DETECTED:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		return &value.Boolean{Value: false}, nil
+	case FASTLY_BOT_ANALYZED, FASTLY_BOT_DETECTED:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}
