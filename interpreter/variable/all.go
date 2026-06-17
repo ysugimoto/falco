@@ -485,31 +485,6 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
 
-	// Fastly bot categorization variables.
-	// The interpreter has no real bot detection data, so these return their
-	// zero values unless explicitly overridden (e.g. via testing override).
-	case FASTLY_BOT_NAME, FASTLY_BOT_CATEGORY:
-		if v := lookupOverride(v.ctx, name); v != nil {
-			return v, nil
-		}
-		return &value.String{Value: ""}, nil
-	case FASTLY_BOT_CATEGORY_IS_ACCESSIBILITY,
-		FASTLY_BOT_CATEGORY_IS_AI_CRAWLER,
-		FASTLY_BOT_CATEGORY_IS_AI_FETCHER,
-		FASTLY_BOT_CATEGORY_IS_CONTENT_FETCHER,
-		FASTLY_BOT_CATEGORY_IS_MONITORING_AND_SITE_TOOLS,
-		FASTLY_BOT_CATEGORY_IS_ONLINE_MARKETING,
-		FASTLY_BOT_CATEGORY_IS_PAGE_PREVIEW,
-		FASTLY_BOT_CATEGORY_IS_PLATFORM_INTEGRATIONS,
-		FASTLY_BOT_CATEGORY_IS_RESEARCH,
-		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_CRAWLER,
-		FASTLY_BOT_CATEGORY_IS_SEARCH_ENGINE_OPTIMIZATION,
-		FASTLY_BOT_CATEGORY_IS_SECURITY_TOOLS,
-		FASTLY_BOT_CATEGORY_IS_VERIFIED:
-		if v := lookupOverride(v.ctx, name); v != nil {
-			return v, nil
-		}
-		return &value.Boolean{Value: false}, nil
 	case CLIENT_BROWSER_NAME:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
@@ -1018,8 +993,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 				"BACKEND literal %s cannot be assigned to %s in scope: %s", v.String(), name, s.String(),
 			))
 		}
-		setRequestHeaderValue(v.ctx.Request, match[1], val)
-		return nil
+		return assignRequestHeaderValue(v.ctx.Request, match[1], operator, val)
 	}
 
 	if injectedVariable != nil {

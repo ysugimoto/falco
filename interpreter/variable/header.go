@@ -4,9 +4,45 @@ import (
 	"net/textproto"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/interpreter/http"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+// assignHeaderValue stores val into a header, honoring the assignment operator.
+// "=" overwrites, while "+=" (and the other compound operators) read the current
+// value and apply the operation, so on Fastly `set req.http.X += "y"` appends to
+// the header rather than overwriting it. The current value is read lazily so the
+// common "=" case stays cheap. get and set adapt this to request or response
+// headers.
+func assignHeaderValue(operator string, val value.Value, get func() *value.String, set func(value.Value)) error {
+	if operator == "=" {
+		set(val)
+		return nil
+	}
+	left := get()
+	if err := doAssign(left, operator, val); err != nil {
+		return errors.WithStack(err)
+	}
+	// A compound assignment always leaves the header set.
+	left.IsNotSet = false
+	set(left)
+	return nil
+}
+
+func assignRequestHeaderValue(r *http.Request, name, operator string, val value.Value) error {
+	return assignHeaderValue(operator, val,
+		func() *value.String { return getRequestHeaderValue(r, name) },
+		func(v value.Value) { setRequestHeaderValue(r, name, v) },
+	)
+}
+
+func assignResponseHeaderValue(r *http.Response, name, operator string, val value.Value) error {
+	return assignHeaderValue(operator, val,
+		func() *value.String { return getResponseHeaderValue(r, name) },
+		func(v value.Value) { setResponseHeaderValue(r, name, v) },
+	)
+}
 
 func isNotSetValue(v value.Value) bool {
 	switch t := v.(type) {

@@ -91,6 +91,8 @@ func New(opts ...Option) *Context {
 		Variables:        predefinedVariables(),
 	}
 
+	registerTestingFunctions(c)
+
 	for i := range opts {
 		opts[i](c)
 	}

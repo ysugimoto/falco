@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 
@@ -148,22 +147,7 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		}
 		return &value.String{Value: name}, nil
 	case REQ_BACKEND_PORT:
-		if v.ctx.Backend == nil {
-			return &value.Integer{Value: 0}, nil
-		}
-		var port int64
-		for _, p := range v.ctx.Backend.Value.Properties {
-			if p.Key.Value != PORT {
-				continue
-			}
-			n, err := strconv.ParseInt(p.Value.String(), 10, 64)
-			if err != nil {
-				return value.Null, errors.WithStack(err)
-			}
-			port = n
-			break
-		}
-		return &value.Integer{Value: port}, nil
+		return getBackendPort(v.ctx.Backend)
 	case REQ_BODY_BYTES_READ:
 		var buf bytes.Buffer
 		n, err := buf.ReadFrom(req.Body)
@@ -244,14 +228,14 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 			return v, nil
 		}
 		return &value.Boolean{Value: false}, nil
-	case FASTLY_BOT_ANALYZED, FASTLY_BOT_DETECTED:
-		if v := lookupOverride(v.ctx, name); v != nil {
-			return v, nil
-		}
-		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
+	if val, err := GetFastlyBotVariable(v.ctx, name); err != nil {
+		return value.Null, errors.WithStack(err)
+	} else if val != nil {
+		return val, nil
+	}
 	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
@@ -356,8 +340,7 @@ func (v *DeliverScopeVariables) Set(s context.Scope, name, operator string, val 
 			return errors.WithStack(err)
 		}
 
-		setResponseHeaderValue(v.ctx.Response, match[1], val)
-		return nil
+		return assignResponseHeaderValue(v.ctx.Response, match[1], operator, val)
 	}
 
 	// If not found, pass to all scope value

@@ -401,12 +401,24 @@ func (p *Parser) ParseTableDeclaration() (*ast.TableDeclaration, error) {
 }
 
 func (p *Parser) ParseTableProperty() (*ast.TableProperty, error) {
-	if !p.ExpectPeek(token.STRING) {
+	var key *ast.String
+	switch p.peekToken.Token.Type {
+	case token.STRING:
+		p.NextToken()
+		var err error
+		key, err = p.ParseString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case token.OPEN_LONG_STRING:
+		p.NextToken()
+		var err error
+		key, err = p.ParseLongString()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	default:
 		return nil, errors.WithStack(UnexpectedToken(p.peekToken, "STRING"))
-	}
-	key, err := p.ParseString()
-	if err != nil {
-		return nil, errors.WithStack(err)
 	}
 	prop := &ast.TableProperty{
 		Meta: p.curToken,
