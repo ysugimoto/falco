@@ -2,13 +2,40 @@ package variable
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/ast"
 	"github.com/ysugimoto/falco/interpreter/context"
 	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
+
+// getBackendPort reads the "port" property from a backend declaration and
+// returns it as an INTEGER, matching Fastly's req.backend.port and
+// beresp.backend.port (both INTEGER). The property is parsed as an
+// *ast.String literal (e.g. .port = "443";), so its Value must be read
+// directly; calling String() would re-serialize it to the quoted VCL form
+// and fail to parse. Returns 0 when the backend or port property is absent.
+func getBackendPort(backend *value.Backend) (value.Value, error) {
+	if backend == nil {
+		return &value.Integer{Value: 0}, nil
+	}
+	for _, p := range backend.Value.Properties {
+		if p.Key.Value != PORT {
+			continue
+		}
+		if s, ok := p.Value.(*ast.String); ok {
+			n, err := strconv.ParseInt(s.Value, 10, 64)
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return &value.Integer{Value: n}, nil
+		}
+	}
+	return &value.Integer{Value: 0}, nil
+}
 
 func GetFastlyInfoVariable(ctx *context.Context, name string) (value.Value, error) {
 	switch name {
