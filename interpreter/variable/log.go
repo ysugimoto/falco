@@ -345,14 +345,14 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return v, nil
 		}
 		return &value.Boolean{Value: false}, nil
-	case FASTLY_BOT_ANALYZED, FASTLY_BOT_DETECTED:
-		if v := lookupOverride(v.ctx, name); v != nil {
-			return v, nil
-		}
-		return &value.Boolean{Value: false}, nil
 	}
 
 	// Look up shared variables
+	if val, err := GetFastlyBotVariable(v.ctx, name); err != nil {
+		return value.Null, errors.WithStack(err)
+	} else if val != nil {
+		return val, nil
+	}
 	if val, err := GetTCPInfoVariable(v.ctx, name); err != nil {
 		return value.Null, errors.WithStack(err)
 	} else if val != nil {
