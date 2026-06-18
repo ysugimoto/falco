@@ -887,3 +887,108 @@ sub vcl_recv {
 	}
 
 }
+
+func TestLintTestingCallSubroutine(t *testing.T) {
+	t.Run("statement form, scoped subroutine", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub vcl_recv {
+  #FASTLY RECV
+  return(pass);
+}
+// @scope: recv
+sub test_x {
+  testing.call_subroutine("vcl_recv");
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("expression form, functional STRING subroutine", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub classify_path(STRING var.expected) STRING {
+  if (req.url.path == var.expected) {
+    return "matched";
+  }
+  return "unmatched";
+}
+// @scope: recv
+sub test_x {
+  declare local var.label STRING;
+  set var.label = testing.call_subroutine("classify_path", "/api/v1");
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("expression form, functional BOOL subroutine", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub is_either(STRING var.a, STRING var.b) BOOL {
+  if (req.url.path == var.a || req.url.path == var.b) {
+    return true;
+  }
+  return false;
+}
+// @scope: recv
+sub test_x {
+  declare local var.r BOOL;
+  set var.r = testing.call_subroutine("is_either", "/a", "/b");
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("missing subroutine name argument", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub test_x {
+  testing.call_subroutine();
+}`
+		assertError(t, input)
+	})
+
+	t.Run("subroutine name not a STRING", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub test_x {
+  testing.call_subroutine(1);
+}`
+		assertError(t, input)
+	})
+
+	t.Run("undefined target subroutine", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub test_x {
+  testing.call_subroutine("no_such_sub");
+}`
+		assertError(t, input)
+	})
+
+	t.Run("argument count mismatch", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub classify_path(STRING var.expected) STRING {
+  return var.expected;
+}
+// @scope: recv
+sub test_x {
+  declare local var.label STRING;
+  set var.label = testing.call_subroutine("classify_path", "/a", "/b");
+}`
+		assertError(t, input)
+	})
+
+	t.Run("argument type mismatch", func(t *testing.T) {
+		input := `
+// @scope: recv
+sub takes_int(INTEGER var.n) STRING {
+  return "x";
+}
+// @scope: recv
+sub test_x {
+  declare local var.label STRING;
+  set var.label = testing.call_subroutine("takes_int", "not-an-int");
+}`
+		assertError(t, input)
+	})
+}

@@ -192,6 +192,12 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return v, nil
 		}
 		return &value.String{Value: "|00|1:0:0:16|m,s,p,a"}, nil
+	case FASTLY_INFO_OH_FINGERPRINT:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
+		// Undocumented variable, value can be supplied via testing override.
+		return &value.String{}, nil
 
 	// Backend is always healthy on simulator
 	case REQ_BACKEND_HEALTHY:
@@ -453,7 +459,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.IP{Value: addr}, nil
 
 	case REQ_BACKEND:
-		return &value.Backend{Value: v.ctx.Backend.Value, Director: v.ctx.Backend.Director}, nil
+		if v.ctx.Backend == nil {
+			return &value.Backend{Value: nil, Director: nil}, nil
+		} else {
+			return &value.Backend{Value: v.ctx.Backend.Value, Director: v.ctx.Backend.Director}, nil
+		}
 	case REQ_GRACE:
 		return v.Get(s, "req.max_stale_if_error")
 
@@ -474,6 +484,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return &value.String{Value: ""}, nil
 		}
 		return &value.String{Value: ua.Browser.Name.String()}, nil
+
 	case CLIENT_BROWSER_NAME:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
@@ -778,11 +789,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	case NOW:
 		// For testing - if fixed time is injected, return it
 		if v.ctx.FixedTime != nil {
-			return &value.Time{Value: *v.ctx.FixedTime}, nil
+			return value.NewTime(*v.ctx.FixedTime), nil
 		}
-		return &value.Time{Value: time.Now()}, nil
+		return value.NewTime(time.Now()), nil
 	case TIME_START:
-		return &value.Time{Value: v.ctx.RequestStartTime}, nil
+		return value.NewTime(v.ctx.RequestStartTime), nil
 	// https://github.com/ysugimoto/falco/issues/427
 	// Fastly has staging environment but we always return false
 	case FASTLY_IS_STAGING:
@@ -982,8 +993,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 				"BACKEND literal %s cannot be assigned to %s in scope: %s", v.String(), name, s.String(),
 			))
 		}
-		setRequestHeaderValue(v.ctx.Request, match[1], val)
-		return nil
+		return assignRequestHeaderValue(v.ctx.Request, match[1], operator, val)
 	}
 
 	if injectedVariable != nil {

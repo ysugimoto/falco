@@ -31,7 +31,7 @@ format:
   indent_style: space
   trailing_comment_width: 2                                                        |
   line_width: 120
-  explicit_string_concat: false
+  explicit_string_concat: true
   sort_declaration_property: false
   align_declaration_property: false
   else_if: false

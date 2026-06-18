@@ -288,7 +288,7 @@ func defaultFormatConfig() *config.FormatConfig {
 		IndentStyle:                config.IndentStyleSpace,
 		TrailingCommentWidth:       1,
 		LineWidth:                  120,
-		ExplicitStringConcat:       false,
+		ExplicitStringConcat:       true,
 		SortDeclarationProperty:    false,
 		AlignDeclarationProperty:   false,
 		ElseIf:                     false,

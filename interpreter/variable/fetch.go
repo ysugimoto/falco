@@ -150,15 +150,7 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	case BERESP_BACKEND_NAME:
 		return &value.String{Value: v.ctx.Backend.Value.Name.Value}, nil
 	case BERESP_BACKEND_PORT:
-		for _, p := range v.ctx.Backend.Value.Properties {
-			if p.Key.Value != "port" {
-				continue
-			}
-			if s, ok := p.Value.(*ast.String); ok {
-				return &value.String{Value: s.Value}, nil
-			}
-		}
-		return &value.String{Value: ""}, nil
+		return getBackendPort(v.ctx.Backend)
 	case BERESP_BACKEND_REQUESTS:
 		return &value.Integer{Value: 1}, nil
 
@@ -382,7 +374,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		return nil
 	}
 
-	if ok, err := SetBackendRequestHeader(v.ctx, name, val); err != nil {
+	if ok, err := SetBackendRequestHeader(v.ctx, name, operator, val); err != nil {
 		return errors.WithStack(err)
 	} else if ok {
 		return nil
@@ -391,8 +383,7 @@ func (v *FetchScopeVariables) Set(s context.Scope, name, operator string, val va
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		setResponseHeaderValue(v.ctx.BackendResponse, match[1], val)
-		return nil
+		return assignResponseHeaderValue(v.ctx.BackendResponse, match[1], operator, val)
 	}
 
 	// If not found, pass to all scope value

@@ -409,7 +409,7 @@ func (i *Interpreter) ProcessHash() error {
 func (i *Interpreter) ProcessMiss() error {
 	i.SetScope(context.MissScope)
 
-	if i.ctx.Backend == nil {
+	if i.ctx.Backend == nil || (i.ctx.Backend.Value == nil && i.ctx.Backend.Director == nil) {
 		return exception.Runtime(nil, "No backend determined in MISS")
 	}
 
@@ -701,7 +701,7 @@ func (i *Interpreter) ProcessDeliver() error {
 	// Note that these headers could be removed in vcl_deliver subroutine
 	i.ctx.Response.Header.Set("X-Served-By", cache.LocalDatacenterString)
 	i.ctx.Response.Header.Set("X-Cache", i.ctx.State)
-	i.ctx.Response.Header.Set("Date", time.Now().Format(http.TimeFormat))
+	i.ctx.Response.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
 	i.ctx.Response.Header.Set("Server", "Falco")
 	i.ctx.Response.Header.Set("Via", "Falco")
 
