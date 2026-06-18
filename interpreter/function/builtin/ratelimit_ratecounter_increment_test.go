@@ -4,8 +4,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func Test_Ratelimit_ratecounter_increment(t *testing.T) {

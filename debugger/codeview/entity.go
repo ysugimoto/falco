@@ -3,7 +3,7 @@ package codeview
 import (
 	"bytes"
 
-	"github.com/ysugimoto/falco/debugger/colors"
+	"github.com/ysugimoto/falco/v2/debugger/colors"
 )
 
 const hightlightOffset = 3

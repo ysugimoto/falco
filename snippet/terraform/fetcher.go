@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ysugimoto/falco/snippet"
+	"github.com/ysugimoto/falco/v2/snippet"
 )
 
 type TerraformFetcher struct {

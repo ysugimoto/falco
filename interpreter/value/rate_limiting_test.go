@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func TestCalculateBucket(t *testing.T) {

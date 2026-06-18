@@ -5,8 +5,8 @@ package builtin
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of json.escape
@@ -43,7 +43,7 @@ func Test_Json_escape(t *testing.T) {
 			expect: "\\n",
 		},
 		{
-			input: "	",
+			input:  "	",
 			expect: "\\t",
 		},
 		{

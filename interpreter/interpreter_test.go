@@ -10,11 +10,11 @@ import (
 	"net/url"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/resolver"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 func defaultBackend(url *url.URL) string {

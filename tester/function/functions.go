@@ -4,12 +4,12 @@ import (
 	"maps"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter"
-	"github.com/ysugimoto/falco/interpreter/context"
-	ifn "github.com/ysugimoto/falco/interpreter/function"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/tester/shared"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	ifn "github.com/ysugimoto/falco/v2/interpreter/function"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/tester/shared"
 )
 
 const allScope = context.AnyScope

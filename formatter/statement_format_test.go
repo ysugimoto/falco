@@ -3,7 +3,7 @@ package formatter
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/v2/config"
 )
 
 func TestFormatImportStatement(t *testing.T) {

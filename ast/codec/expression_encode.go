@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"math"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func (c *Encoder) encodeExpression(expr ast.Expression) *Frame {

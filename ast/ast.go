@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type Node interface {

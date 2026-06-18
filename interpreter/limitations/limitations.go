@@ -7,9 +7,9 @@ import (
 	ghttp "net/http"
 	"strings"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
 )
 
 // Units

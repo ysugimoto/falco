@@ -20,10 +20,10 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/limitations"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/limitations"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Enables to access variables for all scopes

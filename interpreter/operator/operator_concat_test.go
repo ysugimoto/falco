@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func TestConcatOperator(t *testing.T) {

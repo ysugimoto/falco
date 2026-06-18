@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 func TestLintBangPrefixExpression(t *testing.T) {

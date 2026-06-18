@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/cache"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/limitations"
-	"github.com/ysugimoto/falco/interpreter/process"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/variable"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/cache"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/limitations"
+	"github.com/ysugimoto/falco/v2/interpreter/process"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/variable"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 type Interpreter struct {

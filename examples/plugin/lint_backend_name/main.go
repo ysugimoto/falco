@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/plugin"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/plugin"
 )
 
 func main() {

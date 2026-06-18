@@ -9,7 +9,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/tester/shared"
+	"github.com/ysugimoto/falco/v2/tester/shared"
 )
 
 var (

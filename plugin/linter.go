@@ -7,8 +7,8 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/ast/codec"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/ast/codec"
 )
 
 type LintStatement interface {
