@@ -135,6 +135,7 @@ func (i *Interpreter) ProcessInit(r *http.Request) error {
 	i.ctx = ctx
 	i.ctx.Request = r
 	r.Header.Set("Host", r.Host)
+	i.chargeInboundRequestWorkspace()
 
 	// OriginalHost value may be overridden. If not empty, set the request value
 	if i.ctx.OriginalHost == "" {

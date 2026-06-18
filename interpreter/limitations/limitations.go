@@ -54,6 +54,12 @@ const (
 	// times eventually overflows it and Fastly returns "503 Header overflow".
 	MaxRequestWorkspaceSize = 256 * KB
 
+	// BaseRequestWorkspaceOverhead approximates what Fastly has already consumed
+	// before any user VCL runs (internal structures and injected headers). A
+	// production service shows ~8.5KB, varying by POP and connection, so we charge
+	// a conservative 10KB on top of the inbound headers we can see.
+	BaseRequestWorkspaceOverhead = 10 * KB
+
 	// Increasable limitations by contacting Fastly support
 	// These are defaults, you can override by configuration
 	MaxACLCounts     = 1000

@@ -1,10 +1,12 @@
 package interpreter
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/interpreter/limitations"
 	"github.com/ysugimoto/falco/interpreter/value"
 )
 
@@ -51,6 +53,54 @@ func TestRequestWorkspaceLimit(t *testing.T) {
 		}`
 		assertInterpreter(t, vcl, context.RecvScope, nil, true)
 	})
+}
+
+func TestRequestWorkspaceAccounting(t *testing.T) {
+	// The probe reads workspace.bytes_free right after the write under test, so it
+	// equals the workspace minus the inbound baseline and the write cost. The
+	// baseline is the fixed overhead plus the only inbound header the test request
+	// carries, Host (localhost).
+	baseline := int64(limitations.BaseRequestWorkspaceOverhead) +
+		int64(roundUpToPointer(len("Host")+len("localhost")+3))
+	free := func(writeCost int64) int64 {
+		return int64(limitations.MaxRequestWorkspaceSize) - baseline - writeCost
+	}
+
+	tests := []struct {
+		name  string
+		write string
+		free  int64
+	}{
+		{
+			// roundUp8(5 + 5 + 3) = roundUp8(13) = 16
+			name:  "bare name plus value plus three, rounded to 8",
+			write: `set req.http.X-Foo = "hello";`,
+			free:  free(16),
+		},
+		{
+			// The req.http. prefix is not counted: roundUp8(1 + 1 + 3) = 8,
+			// not roundUp8(len("req.http.a") + 1) = 16.
+			name:  "short header does not pay for the req.http. prefix",
+			write: `set req.http.a = "b";`,
+			free:  free(8),
+		},
+		{
+			// add charges the appended line the same way: roundUp8(3 + 5 + 3) = 16
+			name:  "add charges the appended value",
+			write: `add req.http.Via = "proxy";`,
+			free:  free(16),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vcl := "sub vcl_recv {\n  " + tt.write + "\n" +
+				"  set req.http.Probe = workspace.bytes_free;\n}"
+			assertInterpreter(t, vcl, context.RecvScope, map[string]value.Value{
+				"req.http.Probe": &value.String{Value: strconv.FormatInt(tt.free, 10)},
+			}, false)
+		})
+	}
 }
 
 func TestSubroutineCallTreeLimit(t *testing.T) {
