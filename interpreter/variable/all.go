@@ -422,10 +422,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}
-		free := int64(limitations.MaxRequestWorkspaceSize - v.ctx.RequestWorkspaceBytes)
-		if free < 0 {
-			free = 0
-		}
+		free := max(int64(limitations.MaxRequestWorkspaceSize-v.ctx.RequestWorkspaceBytes), 0)
 		return &value.Integer{Value: free}, nil
 	case WORKSPACE_BYTES_TOTAL:
 		if v := lookupOverride(v.ctx, name); v != nil {
