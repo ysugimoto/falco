@@ -285,13 +285,32 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 	return nil
 }
 
-// accountRequestWorkspace charges a request-header write of the given assembled
-// value against the per-request workspace. Fastly assembles a fresh copy of the
-// header value in the workspace and never reclaims the previous one, even across
-// restarts, so rewriting a header in a loop eventually overflows it and the
-// request fails with "503 Header overflow".
+// chargeInboundRequestWorkspace seeds RequestWorkspaceBytes with what Fastly has
+// already spent when vcl_recv begins: a fixed overhead plus every inbound header
+// line, each charged the same way a VCL write is.
+func (i *Interpreter) chargeInboundRequestWorkspace() {
+	i.ctx.RequestWorkspaceBytes += limitations.BaseRequestWorkspaceOverhead
+	if i.ctx.Request == nil {
+		return
+	}
+	for name, values := range i.ctx.Request.Header {
+		for _, v := range values {
+			i.ctx.RequestWorkspaceBytes += roundUpToPointer(len(name) + len(v) + 3)
+		}
+	}
+}
+
+// accountRequestWorkspace charges a request-header write against the per-request
+// workspace. Fastly assembles a fresh copy of the value and never reclaims the
+// previous one, even across restarts, so rewriting a header in a loop eventually
+// overflows it and the request fails with "503 Header overflow".
+//
+// Measured on a production Fastly service, a write consumes
+// roundUp8(len(name) + len(value) + 3): the bare header name, the value, and
+// three bytes of fixed overhead, rounded up to an 8 byte boundary.
 func (i *Interpreter) accountRequestWorkspace(ident *ast.Ident, val value.Value) error {
-	i.ctx.RequestWorkspaceBytes += len(ident.Value) + len([]byte(val.String()))
+	name := requestHeaderName(ident)
+	i.ctx.RequestWorkspaceBytes += roundUpToPointer(len(name) + len([]byte(val.String())) + 3)
 	if i.ctx.RequestWorkspaceBytes > limitations.MaxRequestWorkspaceSize {
 		return exception.Runtime(
 			&ident.GetMeta().Token,
