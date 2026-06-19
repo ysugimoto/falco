@@ -145,7 +145,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				// so we always initialize interpreter, inject testing functions for each subroutine
 				i := t.setupInterpreter(defs)
 
-				mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+				mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", ghttp.NoBody)
 				if err != nil {
 					errChan <- errors.WithStack(err)
 					return
@@ -213,7 +213,7 @@ func (t *Tester) runDescribedTests(
 ) ([]*TestCase, error) {
 
 	var cases []*TestCase
-	mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+	mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", ghttp.NoBody)
 	if err != nil {
 		return cases, errors.WithStack(err)
 	}

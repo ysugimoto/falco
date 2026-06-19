@@ -839,6 +839,9 @@ func (v *AllScopeVariables) getFromRegex(name string) (value.Value, error) {
 
 	// HTTP request header matching
 	if match := requestHttpHeaderRegex.FindStringSubmatch(name); match != nil {
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return getRequestHeaderValue(v.ctx.Request, match[1]), nil
 	}
 

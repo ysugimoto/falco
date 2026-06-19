@@ -19,13 +19,13 @@ func (i *Interpreter) ConsoleProcessInit() error {
 	i.ctx = context.New(i.options...)
 
 	// On console process, all request/response variables should be set initially
-	i.ctx.Request, err = http.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+	i.ctx.Request, err = http.NewRequest(ghttp.MethodGet, "http://localhost:3124", ghttp.NoBody)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	// Set default RemoteAddr so that client.ip returns a valid value
 	i.ctx.Request.RemoteAddr = "192.0.2.1:11111"
-	i.ctx.BackendRequest, err = http.NewRequest(ghttp.MethodGet, "http://localhost:3124", nil)
+	i.ctx.BackendRequest, err = http.NewRequest(ghttp.MethodGet, "http://localhost:3124", ghttp.NoBody)
 	if err != nil {
 		return errors.WithStack(err)
 	}
