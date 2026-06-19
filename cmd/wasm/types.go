@@ -65,4 +65,5 @@ type FormatOptions struct {
 	CommentStyle             string `json:"commentStyle,omitempty"` // "none", "slash", "sharp"
 	ShouldUseUnset           bool   `json:"shouldUseUnset,omitempty"`
 	IndentCaseLabels         bool   `json:"indentCaseLabels,omitempty"`
+	BreakCompoundConditions  bool   `json:"breakCompoundConditions,omitempty"`
 }
