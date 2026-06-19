@@ -443,6 +443,12 @@ func TestTester(t *testing.T) {
 			filter: "*default.test.vcl",
 			passes: 2,
 		},
+		{
+			name:   "request byte-count reads with no body",
+			main:   "../../examples/testing/request_byte_reads/request_byte_reads.vcl",
+			filter: "*request_byte_reads.test.vcl",
+			passes: 2,
+		},
 	}
 
 	for _, tt := range tests {
