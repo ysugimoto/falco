@@ -79,6 +79,11 @@ type Context struct {
 	RequestStartTime time.Time
 	CacheHitItem     *cache.CacheItem
 
+	// RequestWorkspaceBytes tracks how much of the per-request workspace has been
+	// consumed by assembling request headers. Fastly never reclaims it within a
+	// request, not even across restarts, so this is never reset once set.
+	RequestWorkspaceBytes int
+
 	// Interpreter states, following variables could be set in each subroutine directives
 	Restarts                            int
 	State                               string

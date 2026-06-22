@@ -417,17 +417,18 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: "FALCO"}, nil // Intend to set string not exists in Fastly POP certainly
 
-	// workspace related values respects Fastly fiddle one
+	// 256KB workspace; bytes_free is what the accounting so far leaves unused.
 	case WORKSPACE_BYTES_FREE:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}
-		return &value.Integer{Value: 125008}, nil
+		free := max(int64(limitations.MaxRequestWorkspaceSize-v.ctx.RequestWorkspaceBytes), 0)
+		return &value.Integer{Value: free}, nil
 	case WORKSPACE_BYTES_TOTAL:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}
-		return &value.Integer{Value: 139392}, nil
+		return &value.Integer{Value: int64(limitations.MaxRequestWorkspaceSize)}, nil
 
 	// backend.src_ip always indicates this server, means localhost
 	case BERESP_BACKEND_SRC_IP:
