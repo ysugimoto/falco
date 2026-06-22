@@ -42,7 +42,7 @@ format:
   comment_style: none
   should_use_unset: false
   indent_case_labels: false
-  break_compound_conditions: false
+  break_compound_conditions: true
 
 ## Simulator configuration
 simulator:

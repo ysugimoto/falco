@@ -270,6 +270,54 @@ func (i *Interpreter) ProcessSetStatement(stmt *ast.SetStatement) error {
 		return errors.WithStack(err)
 	}
 
+	// A `set` assembles the full new header value, which for a compound operator
+	// such as `+=` differs from the right-hand side, so charge the stored value.
+	if isRequestHeaderIdent(stmt.Ident) {
+		assembled, err := i.vars.Get(i.ctx.Scope, stmt.Ident.Value)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err := i.accountRequestWorkspace(stmt.Ident, assembled); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}
+
+// chargeInboundRequestWorkspace seeds RequestWorkspaceBytes with what Fastly has
+// already spent when vcl_recv begins: a fixed overhead plus every inbound header
+// line, each charged the same way a VCL write is.
+func (i *Interpreter) chargeInboundRequestWorkspace() {
+	i.ctx.RequestWorkspaceBytes += limitations.BaseRequestWorkspaceOverhead
+	if i.ctx.Request == nil {
+		return
+	}
+	for name, values := range i.ctx.Request.Header {
+		for _, v := range values {
+			i.ctx.RequestWorkspaceBytes += roundUpToPointer(len(name) + len(v) + 3)
+		}
+	}
+}
+
+// accountRequestWorkspace charges a request-header write against the per-request
+// workspace. Fastly assembles a fresh copy of the value and never reclaims the
+// previous one, even across restarts, so rewriting a header in a loop eventually
+// overflows it and the request fails with "503 Header overflow".
+//
+// Measured on a production Fastly service, a write consumes
+// roundUp8(len(name) + len(value) + 3): the bare header name, the value, and
+// three bytes of fixed overhead, rounded up to an 8 byte boundary.
+func (i *Interpreter) accountRequestWorkspace(ident *ast.Ident, val value.Value) error {
+	name := requestHeaderName(ident)
+	i.ctx.RequestWorkspaceBytes += roundUpToPointer(len(name) + len([]byte(val.String())) + 3)
+	if i.ctx.RequestWorkspaceBytes > limitations.MaxRequestWorkspaceSize {
+		return exception.Runtime(
+			&ident.GetMeta().Token,
+			"Header overflow: request workspace limitation of %d bytes exceeded",
+			limitations.MaxRequestWorkspaceSize,
+		)
+	}
 	return nil
 }
 
@@ -318,6 +366,12 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 	}
 	if err := i.vars.Add(i.ctx.Scope, stmt.Ident.Value, right); err != nil {
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
+	}
+	// `add` appends a fresh header line, so charge the value being added.
+	if isRequestHeaderIdent(stmt.Ident) {
+		if err := i.accountRequestWorkspace(stmt.Ident, right); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	return nil
 }

@@ -63,6 +63,7 @@ Supporting rules are described the following table and sections.
 | comment_style                | STRING | none    | Coerce comment character. Either `sharp(#)` or `slash(/)` is accepted                          |
 | should_use_unset             | BOOL   | false   | Replace `remove` statement into `unset` statement                                              |
 | indent_case_labels           | BOOL   | false   | If true, add indent for each `case` statement in `switch`                                      |
+| break_compound_conditions    | BOOL   | true    | If true, split compound `if`/`else if` conditions into multiple indented lines                 |
 
 ---
 
@@ -472,7 +473,7 @@ sub vcl_recv {
 
 ## Break Compound Conditions
 
-**default: false**
+**default: true**
 
 If true, compound conditions in `if` and `else if` are split into multiple lines.
 Grouped sub-conditions that include `&&`/`||` are formatted with their own
