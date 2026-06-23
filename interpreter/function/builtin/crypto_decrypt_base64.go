@@ -5,10 +5,10 @@ package builtin
 import (
 	"encoding/base64"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/function/shared"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/function/shared"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Crypto_decrypt_base64_Name = "crypto.decrypt_base64"

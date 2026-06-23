@@ -5,7 +5,7 @@
 
 ----
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/ysugimoto/falco.svg)](https://pkg.go.dev/github.com/ysugimoto/falco)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ysugimoto/falco/v2.svg)](https://pkg.go.dev/github.com/ysugimoto/falco/v2)
 ![Build](https://github.com/ysugimoto/falco/actions/workflows/build.yml/badge.svg)
 
 
@@ -44,7 +44,7 @@ $ brew install falco
 You can compile this project by yourself with:
 
 ```shell
-go install github.com/ysugimoto/falco/cmd/falco@latest
+go install github.com/ysugimoto/falco/v2/cmd/falco@latest
 ```
 
 ## Usage

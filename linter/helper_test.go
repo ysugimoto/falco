@@ -291,9 +291,9 @@ func TestCountPCRECaptureGroups(t *testing.T) {
 
 func TestExtractExtensionsFromRegex(t *testing.T) {
 	tests := []struct {
-		name   string
+		name    string
 		pattern string
-		expect []string
+		expect  []string
 	}{
 		{"single extension", `\.jpg$`, []string{"jpg"}},
 		{"single extension png", `\.png$`, []string{"png"}},

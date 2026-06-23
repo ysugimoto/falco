@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/snippet"
+	"github.com/ysugimoto/falco/v2/snippet"
 )
 
 type FastlyApiFetcher struct {

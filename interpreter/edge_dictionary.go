@@ -1,9 +1,9 @@
 package interpreter
 
 import (
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 // Inject edge dictionary item from configuration.

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter/types"
-	"github.com/ysugimoto/falco/plugin"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/linter/types"
+	"github.com/ysugimoto/falco/v2/plugin"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type Severity string

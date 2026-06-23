@@ -3,8 +3,8 @@ package interpreter
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func TestSubroutine(t *testing.T) {

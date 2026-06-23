@@ -7,13 +7,13 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/debugger/codeview"
-	"github.com/ysugimoto/falco/debugger/colors"
-	"github.com/ysugimoto/falco/debugger/helpview"
-	"github.com/ysugimoto/falco/debugger/messageview"
-	"github.com/ysugimoto/falco/debugger/shellview"
-	"github.com/ysugimoto/falco/interpreter"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/debugger/codeview"
+	"github.com/ysugimoto/falco/v2/debugger/colors"
+	"github.com/ysugimoto/falco/v2/debugger/helpview"
+	"github.com/ysugimoto/falco/v2/debugger/messageview"
+	"github.com/ysugimoto/falco/v2/debugger/shellview"
+	"github.com/ysugimoto/falco/v2/interpreter"
 )
 
 type Console struct {

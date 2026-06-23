@@ -7,7 +7,7 @@ package context
 
 import (
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/linter/types"
+	"github.com/ysugimoto/falco/v2/linter/types"
 )
 
 var (
@@ -42,7 +42,7 @@ const linterBuiltinFunctions = `
 package context
 
 import (
-	"github.com/ysugimoto/falco/linter/types"
+	"github.com/ysugimoto/falco/v2/linter/types"
 )
 
 type Functions map[string]*FunctionSpec
@@ -72,10 +72,10 @@ package function
 
 import (
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/function/builtin"
-	fe "github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/function/builtin"
+	fe "github.com/ysugimoto/falco/v2/interpreter/function/errors"
 )
 
 // Fastly can accept other type of variable as STRING type argument.
@@ -128,9 +128,9 @@ const interpreterFunctionImplementation = `
 package builtin
 
 import (
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 )
 
 const {{ .Name }}_Name = "{{ .Original }}"
@@ -187,8 +187,8 @@ package builtin
 import (
 	"testing"
 
-	// "github.com/ysugimoto/falco/interpreter/context"
-	// "github.com/ysugimoto/falco/interpreter/value"
+	// "github.com/ysugimoto/falco/v2/interpreter/context"
+	// "github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of {{ .Original }}

@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 func New(name, format string, args ...any) error {

@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/parser"
 
-	"github.com/ysugimoto/falco/lexer"
+	"github.com/ysugimoto/falco/v2/lexer"
 )
 
 func TestScopeInference(t *testing.T) {

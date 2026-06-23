@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // fastly.bot.* variables are only accessible in RECV, HASH, DELIVER and LOG

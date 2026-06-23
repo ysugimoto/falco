@@ -3,7 +3,7 @@ package linter
 import (
 	"strings"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 // ignore signatures
