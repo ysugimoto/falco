@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:wasm": "make -C .. wasm wasm_exec",
+    "pretest": "npm run build:wasm",
     "test": "vitest run",
+    "pretest:watch": "npm run build:wasm",
     "test:watch": "vitest"
   },
   "devDependencies": {

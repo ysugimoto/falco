@@ -107,12 +107,14 @@ describe('FalcoVCL.lint', () => {
         line: 1,
         position: 1,
         rule: 'subroutine/boilerplate-macro',
+        file: 'main.vcl',
       },
       {
         severity: 'error',
         message: 'undefined variable "undefined_var"',
         line: 1,
         position: 33,
+        file: 'main.vcl',
       },
       {
         severity: 'error',
@@ -120,6 +122,7 @@ describe('FalcoVCL.lint', () => {
         line: 1,
         position: 31,
         rule: 'operator/assignment',
+        file: 'main.vcl',
       },
     ]);
   });
@@ -129,8 +132,148 @@ describe('FalcoVCL.lint', () => {
     expect(result.error).toBeUndefined();
   });
 
+  it('returns a parse error as a structured entry in errors (not the error string)', () => {
+    const result = FalcoVCL.lint('sub { invalid }');
+    // Position must come from structured data, not the free-form error string.
+    expect(result.error).toBeUndefined();
+    expect(result.errors).toEqual([
+      {
+        severity: 'error',
+        message: 'Unexpected token "{", expects IDENT',
+        line: 1,
+        position: 5,
+        file: 'main.vcl',
+      },
+    ]);
+    expect(typeof result.errors[0].line).toBe('number');
+    expect(typeof result.errors[0].position).toBe('number');
+  });
+
+  it('attributes a parse error to the supplied mainFile', () => {
+    const result = FalcoVCL.lint('sub { invalid }', { mainFile: 'entry.vcl' });
+    expect(result.error).toBeUndefined();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].file).toBe('entry.vcl');
+    expect(result.errors[0].position).toBe(5);
+  });
+
   it('returns error when called without arguments', () => {
     const result = FalcoVCL.lint();
     expect(result.error).toBe('lint requires a VCL string argument');
+  });
+});
+
+describe('FalcoVCL.lint include resolution', () => {
+  const mainVcl = [
+    'include "shared/custom";',
+    '',
+    'sub vcl_recv {',
+    '  #FASTLY RECV',
+    '  call custom_logic;',
+    '}',
+  ].join('\n');
+
+  const customVcl = [
+    'sub custom_logic {',
+    '  set req.http.X-Custom = "1";',
+    '}',
+  ].join('\n');
+
+  it('reports an undefined subroutine when the include is not supplied', () => {
+    // Baseline: without the include map, the cross-file symbol is unknown.
+    const result = FalcoVCL.lint(mainVcl);
+    expect(result.error).toBeUndefined();
+    const unresolved = result.errors.filter(e => /custom_logic/.test(e.message));
+    expect(unresolved.length).toBeGreaterThan(0);
+  });
+
+  it('resolves a cross-file subroutine from the includes map', () => {
+    const result = FalcoVCL.lint(mainVcl, {
+      includes: { 'shared/custom': customVcl },
+      mainFile: 'main.vcl',
+    });
+    expect(result.error).toBeUndefined();
+    // The included subroutine is now known, so no "not defined" error for it.
+    const unresolved = result.errors.filter(e => /custom_logic/.test(e.message));
+    expect(unresolved).toEqual([]);
+  });
+
+  it('accepts include keys with an explicit .vcl suffix', () => {
+    const result = FalcoVCL.lint(mainVcl, {
+      includes: { 'shared/custom.vcl': customVcl },
+    });
+    expect(result.error).toBeUndefined();
+    const unresolved = result.errors.filter(e => /custom_logic/.test(e.message));
+    expect(unresolved).toEqual([]);
+  });
+
+  it('reports an error when an included module is missing from the map', () => {
+    const result = FalcoVCL.lint('include "missing";\n', { includes: { 'other': customVcl } });
+    expect(result.error).toBeUndefined();
+    const resolveErrors = result.errors.filter(e =>
+      /Failed to resolve include module/.test(e.message)
+    );
+    expect(resolveErrors.length).toBeGreaterThan(0);
+  });
+
+  it('resolves nested includes from the map', () => {
+    const main = 'include "a";\n\nsub vcl_recv {\n  #FASTLY RECV\n  call from_a;\n}\n';
+    const a = 'include "b";\n\nsub from_a {\n  call from_b;\n}\n';
+    const b = 'sub from_b {\n  set req.http.X-B = "1";\n}\n';
+    const result = FalcoVCL.lint(main, { includes: { a, b } });
+    expect(result.error).toBeUndefined();
+    const unresolved = result.errors.filter(e =>
+      /(from_a|from_b)/.test(e.message)
+    );
+    expect(unresolved).toEqual([]);
+  });
+
+  it('exposes the parsed AST in the lint result', () => {
+    const result = FalcoVCL.lint('sub vcl_recv { return(pass); }');
+    expect(result.error).toBeUndefined();
+    expect(result.ast).toBeDefined();
+    expect(result.ast).not.toBeNull();
+  });
+
+  it('attributes a main-file error to the default main file name', () => {
+    const main = 'sub vcl_recv {\n  #FASTLY RECV\n  set req.http.X-Main = undefined_main;\n}\n';
+    const result = FalcoVCL.lint(main);
+    expect(result.error).toBeUndefined();
+    const errs = result.errors.filter(e => /undefined_main/.test(e.message));
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs.every(e => e.file === 'main.vcl')).toBe(true);
+  });
+
+  it('attributes a main-file error to the supplied mainFile option', () => {
+    const main = 'sub vcl_recv {\n  #FASTLY RECV\n  set req.http.X-Main = undefined_main;\n}\n';
+    const result = FalcoVCL.lint(main, { mainFile: 'entry.vcl' });
+    expect(result.error).toBeUndefined();
+    const errs = result.errors.filter(e => /undefined_main/.test(e.message));
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs.every(e => e.file === 'entry.vcl')).toBe(true);
+  });
+
+  it('attributes an included-file error to that include module key', () => {
+    const main = [
+      'include "shared/custom";',
+      '',
+      'sub vcl_recv {',
+      '  #FASTLY RECV',
+      '  call custom_logic;',
+      '}',
+    ].join('\n');
+    const custom = [
+      'sub custom_logic {',
+      '  set req.http.X-Custom = undefined_in_include;',
+      '}',
+    ].join('\n');
+    const result = FalcoVCL.lint(main, {
+      includes: { 'shared/custom': custom },
+      mainFile: 'main.vcl',
+    });
+    expect(result.error).toBeUndefined();
+    const errs = result.errors.filter(e => /undefined_in_include/.test(e.message));
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs.every(e => e.file === 'shared/custom.vcl')).toBe(true);
   });
 });
