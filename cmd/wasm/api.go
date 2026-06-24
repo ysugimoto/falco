@@ -128,16 +128,47 @@ func lint(_ js.Value, args []js.Value) any {
 		opts = parseLintOptions(args[1])
 	}
 
-	// Parse VCL to AST
-	lx := lexer.NewFromString(vcl)
+	mainName := opts.MainFile
+	if mainName == "" {
+		mainName = "main.vcl"
+	}
+
+	// Parse VCL to AST. Attribute positions to the main file name so cross-file
+	// diagnostics carry a file reference.
+	lx := lexer.NewFromString(vcl, lexer.WithFile(mainName))
 	p := parser.New(lx)
 	ast, err := p.ParseVCLOrSnippet()
 	if err != nil {
+		// Surface parse-error position as structured data (mirroring the FatalError
+		// path below) so consumers don't have to scrape line/position from a string.
+		var parseErr *parser.ParseError
+		if errors.As(err, &parseErr) {
+			file := parseErr.Token.File
+			if file == "" {
+				file = mainName
+			}
+			return toJS(LintResult{
+				Errors: []LintError{{
+					Severity: "error",
+					Message:  parseErr.Message,
+					Line:     parseErr.Token.Line,
+					Position: parseErr.Token.Position,
+					File:     file,
+				}},
+			})
+		}
+		// Non-ParseError parse failures: fall back to the free-form error string.
 		return toJS(LintResult{Error: "Parse error: " + err.Error()})
 	}
 
-	// Create linter context with scope if specified
-	ctx := context.New()
+	// Create linter context with scope if specified. When includes are supplied,
+	// back the resolver with the in-memory file map so `include "..."` statements
+	// resolve cross-file, matching CLI -I semantics.
+	var ctxOpts []context.Option
+	if len(opts.Includes) > 0 {
+		ctxOpts = append(ctxOpts, context.WithResolver(newMapResolver(opts.Includes)))
+	}
+	ctx := context.New(ctxOpts...)
 	if opts.Scope != "" {
 		scope := parseScope(opts.Scope)
 		if scope > 0 {
@@ -154,19 +185,24 @@ func lint(_ js.Value, args []js.Value) any {
 	l.Lint(ast, ctx)
 
 	// Collect errors
-	var lintErrors []LintError
+	lintErrors := []LintError{}
 	if l.FatalError != nil {
 		line, pos := 1, 1
+		file := mainName
 		var parseErr *parser.ParseError
 		if errors.As(l.FatalError.Error, &parseErr) {
 			line = parseErr.Token.Line
 			pos = parseErr.Token.Position
+			if parseErr.Token.File != "" {
+				file = parseErr.Token.File
+			}
 		}
 		lintErrors = append(lintErrors, LintError{
 			Severity: "error",
 			Message:  l.FatalError.Error.Error(),
 			Line:     line,
 			Position: pos,
+			File:     file,
 		})
 	}
 
@@ -177,10 +213,11 @@ func lint(_ js.Value, args []js.Value) any {
 			Line:     le.Token.Line,
 			Position: le.Token.Position,
 			Rule:     string(le.Rule),
+			File:     le.Token.File,
 		})
 	}
 
-	return toJS(LintResult{Errors: lintErrors})
+	return toJS(LintResult{Errors: lintErrors, AST: ast})
 }
 
 // toJS converts a Go struct to a JS object via JSON.
@@ -358,5 +395,27 @@ func parseLintOptions(opts js.Value) LintOptions {
 	if v := opts.Get("scope"); !v.IsUndefined() {
 		o.Scope = v.String()
 	}
+	if v := opts.Get("mainFile"); !v.IsUndefined() && !v.IsNull() {
+		o.MainFile = v.String()
+	}
+	if v := opts.Get("includes"); !v.IsUndefined() && !v.IsNull() {
+		o.Includes = parseStringMap(v)
+	}
 	return o
+}
+
+// parseStringMap converts a JS object of string values to a Go map.
+// Non-string values are skipped.
+func parseStringMap(v js.Value) map[string]string {
+	keys := js.Global().Get("Object").Call("keys", v)
+	n := keys.Length()
+	m := make(map[string]string, n)
+	for i := 0; i < n; i++ {
+		key := keys.Index(i).String()
+		val := v.Get(key)
+		if val.Type() == js.TypeString {
+			m[key] = val.String()
+		}
+	}
+	return m
 }

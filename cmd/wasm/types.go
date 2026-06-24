@@ -30,17 +30,26 @@ type LintError struct {
 	Line     int    `json:"line"`
 	Position int    `json:"position"`
 	Rule     string `json:"rule,omitempty"`
+	File     string `json:"file,omitempty"`
 }
 
 // LintResult is the response from lint().
 type LintResult struct {
 	Errors []LintError `json:"errors"`
+	AST    any         `json:"ast,omitempty"` // The parsed main-file VCL AST (same shape as parse())
 	Error  string      `json:"error,omitempty"`
 }
 
 // LintOptions configures linting behavior.
 type LintOptions struct {
 	Scope string `json:"scope,omitempty"` // recv, hash, hit, miss, pass, fetch, error, deliver, log, pipe
+	// Includes maps include module paths to their VCL source. When supplied,
+	// `include "..."` statements resolve against this in-memory map instead of
+	// a filesystem, matching CLI -I semantics (.vcl suffix handling).
+	Includes map[string]string `json:"includes,omitempty"`
+	// MainFile is the logical filename for the main source, used for position
+	// attribution in diagnostics. Defaults to "main.vcl".
+	MainFile string `json:"mainFile,omitempty"`
 }
 
 // ParseResult is the response from parse().

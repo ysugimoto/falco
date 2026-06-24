@@ -62,4 +62,4 @@ wasm:
 
 wasm_exec:
 	@mkdir -p wasm
-	cp "$$(find "$$(go env GOROOT)" -name 'wasm_exec.js' 2>/dev/null | head -1)" wasm/
+	cp -f "$$(find "$$(go env GOROOT)" -name 'wasm_exec.js' 2>/dev/null | head -1)" wasm/
