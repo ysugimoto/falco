@@ -250,3 +250,74 @@ func TestUnmarshalWithRequestSetting(t *testing.T) {
 		t.Errorf("Unmarshalled request settings mismatch, diff=%s", diff)
 	}
 }
+
+func TestUnmarshalWithDynamicSnippetContent(t *testing.T) {
+	fileName := "./data/terraform-dynamic-snippet.json"
+	buf, err := os.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s", err, fileName)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error %s unmarshalling %s", err, fileName)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+
+	svc := services[0]
+	if len(svc.DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(svc.DynamicSnippets))
+	}
+
+	ds := svc.DynamicSnippets[0]
+	if ds.Name != "My Dynamic Snippet" {
+		t.Errorf("Dynamic snippet name: want %q, got %q", "My Dynamic Snippet", ds.Name)
+	}
+	if ds.Type != "recv" {
+		t.Errorf("Dynamic snippet type: want %q, got %q", "recv", ds.Type)
+	}
+	expectedContent := `set req.http.X-Dynamic = "1";`
+	if ds.Content != expectedContent {
+		t.Errorf("Dynamic snippet content: want %q, got %q", expectedContent, ds.Content)
+	}
+}
+
+func TestTerraformFetcherIncludesDynamicSnippets(t *testing.T) {
+	fileName := "./data/terraform-dynamic-snippet.json"
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Failed to read %s: %s", fileName, err)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal: %s", err)
+	}
+
+	fetcher := NewTerraformFetcher(services)
+	snippets, err := fetcher.Snippets()
+	if err != nil {
+		t.Fatalf("Snippets() returned error: %s", err)
+	}
+
+	found := false
+	for _, s := range snippets {
+		if s.Name == "My Dynamic Snippet" {
+			found = true
+			if s.Type != "recv" {
+				t.Errorf("Type: want %q, got %q", "recv", s.Type)
+			}
+			expectedContent := `set req.http.X-Dynamic = "1";`
+			if s.Content != expectedContent {
+				t.Errorf("Content: want %q, got %q", expectedContent, s.Content)
+			}
+		}
+	}
+	if !found {
+		t.Error("Dynamic snippet not found in fetcher.Snippets() output")
+	}
+}

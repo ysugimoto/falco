@@ -38,6 +38,14 @@ type Snippet struct {
 	Priority int64  `json:"priority"`
 }
 
+type DynamicSnippet struct {
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Content   string `json:"content"`
+	Priority  int64  `json:"priority"`
+	SnippetID string `json:"snippet_id"`
+}
+
 type LoggingEndpoint struct {
 	Name string `json:"name"`
 }
@@ -95,9 +103,10 @@ type RequestSetting struct {
 }
 
 type FastlyResources struct {
-	Services        map[string]*FastlyService
-	AclEntries      []*fastlyAclEntryValues
-	DictionaryItems []*fastlyDictionaryItems
+	Services               map[string]*FastlyService
+	AclEntries             []*fastlyAclEntryValues
+	DictionaryItems        []*fastlyDictionaryItems
+	DynamicSnippetContents []*fastlyDynamicSnippetContent
 }
 
 type FastlyService struct {
@@ -108,6 +117,7 @@ type FastlyService struct {
 	Dictionaries     []*Dictionary
 	Directors        []*Director
 	Snippets         []*Snippet
+	DynamicSnippets  []*DynamicSnippet
 	Conditions       []*Condition
 	Headers          []*Header
 	ResponseObjects  []*ResponseObject
@@ -124,6 +134,7 @@ type fastlyServiceValues struct {
 	Director        []*Director       `json:"director"`
 	Dictionary      []*Dictionary     `json:"dictionary"`
 	Snippets        []*Snippet        `json:"snippet"`
+	DynamicSnippets []*DynamicSnippet `json:"dynamicsnippet"`
 	Conditions      []*Condition      `json:"condition"`
 	Headers         []*Header         `json:"header"`
 	ResponseObjects []*ResponseObject `json:"response_object"`
@@ -172,4 +183,11 @@ type fastlyDictionaryItems struct {
 	ServiceId string `json:"service_id"`
 	Index     string
 	Items     map[string]string `json:"items"`
+}
+
+type fastlyDynamicSnippetContent struct {
+	ServiceID      string `json:"service_id"`
+	SnippetID      string `json:"snippet_id"`
+	Content        string `json:"content"`
+	ManageSnippets bool   `json:"manage_snippets"`
 }
