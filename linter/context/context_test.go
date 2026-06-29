@@ -52,6 +52,16 @@ func TestContextSet(t *testing.T) {
 			t.Errorf("expected nil but got error: %s", err)
 		}
 	})
+
+	t.Run("Able to set header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if v, err := c.Set("req.http.one.two"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
 }
 
 func TestContextGet(t *testing.T) {
@@ -59,6 +69,16 @@ func TestContextGet(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
 		if v, err := c.Get("req.http.Cookie:session"); err != nil {
+			t.Errorf("unexpected error %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
+
+	t.Run("Can get header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if v, err := c.Get("req.http.one.two"); err != nil {
 			t.Errorf("unexpected error %s", err)
 		} else if v != types.StringType {
 			t.Errorf("Value must be STRING but got %s", v)
@@ -116,6 +136,14 @@ func TestContextUnset(t *testing.T) {
 	t.Run("Success or no effect", func(t *testing.T) {
 		c := New()
 		if err := c.Unset("req.http.Cookie:session"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		}
+	})
+
+	t.Run("Unset header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if err := c.Unset("req.http.one.two"); err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		}
 	})
