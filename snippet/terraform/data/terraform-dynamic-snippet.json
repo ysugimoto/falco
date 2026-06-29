@@ -19,8 +19,7 @@
                 "name": "My Dynamic Snippet",
                 "type": "recv",
                 "priority": 110,
-                "snippet_id": "abc123",
-                "content": ""
+                "snippet_id": "abc123"
               }
             ],
             "vcl": [

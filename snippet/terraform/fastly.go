@@ -189,5 +189,5 @@ type fastlyDynamicSnippetContent struct {
 	ServiceID      string `json:"service_id"`
 	SnippetID      string `json:"snippet_id"`
 	Content        string `json:"content"`
-	ManageSnippets bool   `json:"manage_snippets"`
+	ManageSnippets bool   `json:"manage_snippets"` // reserved; not currently used by the linter.
 }
