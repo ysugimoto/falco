@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/v2/snippet"
 )
 
 func TestUnmarshallValidTfJson(t *testing.T) {
@@ -273,16 +274,15 @@ func TestUnmarshalWithDynamicSnippetContent(t *testing.T) {
 		t.Fatalf("Expected 1 dynamic snippet, got %d", len(svc.DynamicSnippets))
 	}
 
-	ds := svc.DynamicSnippets[0]
-	if ds.Name != "My Dynamic Snippet" {
-		t.Errorf("Dynamic snippet name: want %q, got %q", "My Dynamic Snippet", ds.Name)
+	expected := &DynamicSnippet{
+		Name:      "My Dynamic Snippet",
+		Type:      "recv",
+		Content:   `set req.http.X-Dynamic = "1";`,
+		Priority:  110,
+		SnippetID: "abc123",
 	}
-	if ds.Type != "recv" {
-		t.Errorf("Dynamic snippet type: want %q, got %q", "recv", ds.Type)
-	}
-	expectedContent := `set req.http.X-Dynamic = "1";`
-	if ds.Content != expectedContent {
-		t.Errorf("Dynamic snippet content: want %q, got %q", expectedContent, ds.Content)
+	if diff := cmp.Diff(expected, svc.DynamicSnippets[0]); diff != "" {
+		t.Errorf("Unmarshalled dynamic snippet mismatch, diff=%s", diff)
 	}
 }
 
@@ -304,21 +304,16 @@ func TestTerraformFetcherIncludesDynamicSnippets(t *testing.T) {
 		t.Fatalf("Snippets() returned error: %s", err)
 	}
 
-	found := false
-	for _, s := range snippets {
-		if s.Name == "My Dynamic Snippet" {
-			found = true
-			if s.Type != "recv" {
-				t.Errorf("Type: want %q, got %q", "recv", s.Type)
-			}
-			expectedContent := `set req.http.X-Dynamic = "1";`
-			if s.Content != expectedContent {
-				t.Errorf("Content: want %q, got %q", expectedContent, s.Content)
-			}
-		}
+	expected := []*snippet.VCLSnippet{
+		{
+			Name:     "My Dynamic Snippet",
+			Type:     "recv",
+			Content:  `set req.http.X-Dynamic = "1";`,
+			Priority: 110,
+		},
 	}
-	if !found {
-		t.Error("Dynamic snippet not found in fetcher.Snippets() output")
+	if diff := cmp.Diff(expected, snippets); diff != "" {
+		t.Errorf("Fetcher Snippets() mismatch, diff=%s", diff)
 	}
 }
 
@@ -365,8 +360,14 @@ func TestDynamicSnippetEmptySnippetIDNotJoined(t *testing.T) {
 	if len(services[0].DynamicSnippets) != 1 {
 		t.Fatalf("Expected 1 dynamic snippet, got %d", len(services[0].DynamicSnippets))
 	}
-	if got := services[0].DynamicSnippets[0].Content; got != "" {
-		t.Errorf("Expected empty content for unmatched empty snippet_id, got %q", got)
+
+	expected := &DynamicSnippet{
+		Name:     "ds",
+		Type:     "recv",
+		Priority: 10,
+	}
+	if diff := cmp.Diff(expected, services[0].DynamicSnippets[0]); diff != "" {
+		t.Errorf("Dynamic snippet should not receive content via empty snippet_id, diff=%s", diff)
 	}
 }
 
@@ -410,7 +411,13 @@ func TestDynamicSnippetContentUnknownServiceID(t *testing.T) {
 	if len(services) != 1 {
 		t.Fatalf("Expected 1 service, got %d", len(services))
 	}
-	if got := services[0].DynamicSnippets[0].Content; got != "" {
-		t.Errorf("Expected empty content for unknown service_id, got %q", got)
+	expected := &DynamicSnippet{
+		Name:      "ds",
+		Type:      "recv",
+		Priority:  10,
+		SnippetID: "abc123",
+	}
+	if diff := cmp.Diff(expected, services[0].DynamicSnippets[0]); diff != "" {
+		t.Errorf("Dynamic snippet should not receive content for unknown service_id, diff=%s", diff)
 	}
 }
