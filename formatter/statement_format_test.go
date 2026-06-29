@@ -215,6 +215,18 @@ func TestFormatSetStatement(t *testing.T) {
 				ExplicitStringConcat: true,
 			},
 		},
+		{
+			name: "set with RTIME week unit",
+			input: `sub vcl_fetch {
+  set beresp.stale_if_error = 8w;
+}`,
+			expect: "sub vcl_fetch {\n  set beresp.stale_if_error = 8w;\n}\n",
+			conf: &config.FormatConfig{
+				IndentWidth: 2,
+				IndentStyle: "space",
+				LineWidth:   120,
+			},
+		},
 	}
 
 	for _, tt := range tests {

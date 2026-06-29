@@ -794,3 +794,33 @@ func TestFastlyControlSyntaxes(t *testing.T) {
 		}
 	})
 }
+
+func TestRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly.
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	tests := []struct {
+		input   string
+		literal string
+	}{
+		{input: "100ms", literal: "100ms"},
+		{input: "5s", literal: "5s"},
+		{input: "5m", literal: "5m"},
+		{input: "6h", literal: "6h"},
+		{input: "3d", literal: "3d"},
+		{input: "8w", literal: "8w"},
+		{input: "1y", literal: "1y"},
+		{input: "5.3d", literal: "5.3d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			tok := l.NextToken()
+			if tok.Type != token.RTIME {
+				t.Errorf("expected RTIME token, got %s (%q)", tok.Type, tok.Literal)
+			}
+			if tok.Literal != tt.literal {
+				t.Errorf("expected literal %q, got %q", tt.literal, tok.Literal)
+			}
+		})
+	}
+}

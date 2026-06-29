@@ -95,6 +95,13 @@ func (i *Interpreter) processExpression(exp ast.Expression, opt *ExpressionOptio
 				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
 			}
 			val *= 24
+		case strings.HasSuffix(t.Value, "w"):
+			num := strings.TrimSuffix(t.Value, "w")
+			val, err = time.ParseDuration(num + "h")
+			if err != nil {
+				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
+			}
+			val *= 24 * 7
 		case strings.HasSuffix(t.Value, "y"):
 			num := strings.TrimSuffix(t.Value, "y")
 			val, err = time.ParseDuration(num + "h")

@@ -324,3 +324,22 @@ func TestParseRTime(t *testing.T) {
 		t.Errorf("ast mismatch, diff=%s", diff)
 	}
 }
+
+func TestParseRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly, including week ("w").
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	inputs := []string{"100ms", "5s", "5m", "6h", "3d", "8w", "1y", "5.3d"}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			r, err := p.ParseRTime()
+			if err != nil {
+				t.Errorf("unexpected rtime parse error for %q: %s", input, err)
+				return
+			}
+			if r.Value != input {
+				t.Errorf("expected value %q, got %q", input, r.Value)
+			}
+		})
+	}
+}

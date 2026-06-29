@@ -72,6 +72,10 @@ func Table_lookup_rtime(ctx *context.Context, args ...value.Value) (value.Value,
 			num := strings.TrimSuffix(v.Value, "d")
 			val, _ = time.ParseDuration(num + "h")
 			val *= 24
+		case strings.HasSuffix(v.Value, "w"):
+			num := strings.TrimSuffix(v.Value, "w")
+			val, _ = time.ParseDuration(num + "h")
+			val *= 24 * 7
 		case strings.HasSuffix(v.Value, "y"):
 			num := strings.TrimSuffix(v.Value, "y")
 			val, _ = time.ParseDuration(num + "h")

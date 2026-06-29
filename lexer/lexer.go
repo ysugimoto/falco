@@ -418,7 +418,7 @@ func (l *Lexer) NextToken() token.Token {
 			num := l.readNumber()
 			// VCL has special type of "RTIME", it indicates relative-time.
 			// To parse it, we look up unit string after digit Literal
-			// and if "ms", "m", "s", "d", "y" character is found, it deals with RTIME token.
+			// and if "ms", "s", "m", "h", "d", "w", "y" character is found, it deals with RTIME token.
 			// https://developer.fastly.com/reference/vcl/types/rtime/
 			switch l.char {
 			case 'm':
@@ -428,9 +428,9 @@ func (l *Lexer) NextToken() token.Token {
 					t.Literal = num + "ms" // millisecond
 				} else {
 					t = newToken(token.RTIME, l.char, line, index)
-					t.Literal = num + "m" // month
+					t.Literal = num + "m" // minute
 				}
-			case 's', 'h', 'd', 'y': // second, hour, day, year
+			case 's', 'h', 'd', 'w', 'y': // second, hour, day, week, year
 				t = newToken(token.RTIME, l.char, line, index)
 				t.Literal = num + string(l.char)
 			default:
