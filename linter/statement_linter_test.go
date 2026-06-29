@@ -129,6 +129,16 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("header name containing dots", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.one.two = "x";
+	set req.http.a.b.c.d = req.http.one.two;
+}`
+
+		assertNoError(t, input)
+	})
+
 	t.Run("invalid variable name", func(t *testing.T) {
 		input := `
 sub foo {
@@ -171,6 +181,16 @@ func TestLintUnsetStatement(t *testing.T) {
 		input := `
 sub foo {
 	unset req.http.Host;
+}`
+
+		assertNoError(t, input)
+	})
+
+	t.Run("header name containing dots", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.one.two = "x";
+	unset req.http.one.two;
 }`
 
 		assertNoError(t, input)

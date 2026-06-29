@@ -421,17 +421,21 @@ func (c *Context) Get(name string) (types.Type, error) {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
+	for i := range len(remains) {
+		key := remains[i]
 		if v, ok := obj.Items[key]; !ok {
 			// Special case, VCL allows to Set/Get/Unset for {NAME} of any key name.
 			// If program would set to this property, we enables to assign with its types (may string type).
 			if v, ok := obj.Items["%any%"]; ok {
-				key = strings.ToLower(key)
+				key, leaf := resolveAnyKey(v, remains, i)
 				obj.Items[key] = &Object{
 					Items: map[string]*Object{},
 					Value: v.Value,
 				}
 				obj = obj.Items[key]
+				if leaf {
+					break
+				}
 			} else {
 				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 			}
@@ -482,18 +486,22 @@ func (c *Context) Set(name string) (types.Type, error) {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
+	for i := range len(remains) {
+		key := remains[i]
 		if v, ok := obj.Items[key]; !ok {
 			// Special case, VCL allows to Set/Get/Unset for {NAME} of any key name.
 			// If program set to this property, we enables to assign with its types (may string type).
 			// And, almost name indicates HTTP header so case insensitive.
 			if v, ok := obj.Items["%any%"]; ok {
-				key = strings.ToLower(key)
+				key, leaf := resolveAnyKey(v, remains, i)
 				obj.Items[key] = &Object{
 					Items: map[string]*Object{},
 					Value: v.Value,
 				}
 				obj = obj.Items[key]
+				if leaf {
+					break
+				}
 			} else {
 				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 			}
@@ -587,12 +595,17 @@ func (c *Context) Unset(name string) error {
 		return fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
+	for i := range len(remains) {
+		key := remains[i]
 		if v, ok := obj.Items[key]; !ok {
 			if v, ok := obj.Items["%any%"]; ok {
+				_, leaf := resolveAnyKey(v, remains, i)
 				obj = &Object{
 					Items: map[string]*Object{},
 					Value: v.Value,
+				}
+				if leaf {
+					break
 				}
 			} else {
 				return fmt.Errorf(`undefined variable "%s"`, name)
@@ -654,6 +667,22 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 	}
 
 	return obj.Value, nil
+}
+
+// resolveAnyKey resolves a path segment that falls back to the "%any%" wildcard
+// slot. It returns the lookup key and whether the slot is a leaf, i.e. resolution
+// is complete and the caller should stop walking the path.
+//
+// A leaf %any% slot (no nested items) is an HTTP header container. Header names
+// may contain dots (e.g. req.http.one.two), so the key is the whole remaining
+// path joined; a non-leaf slot (backend/director/ratecounter) keys only on the
+// current segment. Keys are lower-cased because header names are case-insensitive.
+// Callers that only need the leaf flag (e.g. Unset) may ignore the returned key.
+func resolveAnyKey(anySlot *Object, remains []string, i int) (string, bool) {
+	if len(anySlot.Items) == 0 {
+		return strings.ToLower(strings.Join(remains[i:], ".")), true
+	}
+	return strings.ToLower(remains[i]), false
 }
 
 func splitName(name string) (string, []string) {
