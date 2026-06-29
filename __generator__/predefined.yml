@@ -500,6 +500,11 @@ obj.headers:
   on: [HIT, ERROR]
   get: ID
 
+obj.is_hipaa:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-hipaa/"
+  on: [HIT, DELIVER, ERROR, LOG]
+  get: BOOL
+
 obj.is_pci:
   reference: "https://developer.fastly.com/reference/vcl/variables/cache-object/obj-is-pci/"
   on: [HIT, DELIVER, ERROR, LOG]

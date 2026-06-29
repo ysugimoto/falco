@@ -109,8 +109,16 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			return &value.Integer{Value: int64(v.ctx.CacheHitItem.Hits)}, nil
 		}
 		return &value.Integer{Value: 0}, nil
+	case OBJ_IS_HIPAA:
+		if v.ctx.CacheHitItem != nil {
+			return &value.Boolean{Value: v.ctx.CacheHitItem.IsHIPAA}, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	case OBJ_IS_PCI:
-		return &value.Boolean{Value: false}, nil // fixed value
+		if v.ctx.CacheHitItem != nil {
+			return &value.Boolean{Value: v.ctx.CacheHitItem.IsPCI}, nil
+		}
+		return &value.Boolean{Value: false}, nil
 	case OBJ_LASTUSE:
 		if v.ctx.CacheHitItem != nil {
 			return &value.RTime{Value: v.ctx.CacheHitItem.LastUsed}, nil

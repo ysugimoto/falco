@@ -273,6 +273,7 @@ const (
 	OBJ_GRACE                                         = "obj.grace"
 	OBJ_HEADERS                                       = "obj.headers"
 	OBJ_HITS                                          = "obj.hits"
+	OBJ_IS_HIPAA                                      = "obj.is_hipaa"
 	OBJ_IS_PCI                                        = "obj.is_pci"
 	OBJ_LASTUSE                                       = "obj.lastuse"
 	OBJ_PROTO                                         = "obj.proto"
