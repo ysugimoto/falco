@@ -746,9 +746,9 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			rv := value.Unwrap[*value.Acl](right)
 			ip := net.ParseIP(lv.Value)
 			if ip == nil {
-				return value.Null, errors.WithStack(
-					fmt.Errorf("failed to parse IP from string %s", lv.Value),
-				)
+				// Fastly treats a non-IP (or empty) string operand as a
+				// non-match rather than raising an error.
+				return &value.Boolean{Value: false}, nil
 			}
 			res, err := matchesAcl(*rv, ip)
 			if err != nil {
@@ -787,24 +787,55 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 }
 
 func matchesAcl(acl value.Acl, ip net.IP) (bool, error) {
+	// Fastly evaluates ACL entries using longest-prefix match: among all
+	// entries that contain the address, the most specific one (longest network
+	// prefix) wins, and that entry's negation flag (a leading "!") decides the
+	// result. Negated entries are exclusions, so an address matches only when
+	// its most-specific containing entry is NOT negated. If no entry contains
+	// the address, it does not match.
+	bestPrefix := -1
+	result := false
 	for _, entry := range acl.Value.CIDRs {
-		var mask int64 = 32
-		if entry.Mask != nil {
-			mask = entry.Mask.Value
+		inverse := entry.Inverse != nil && entry.Inverse.Value
+
+		var nets []*net.IPNet
+		if entry.Mask == nil && entry.IP.Value == "localhost" {
+			// Fastly treats the literal "localhost" as exactly the loopback
+			// addresses 127.0.0.1 and ::1 (not the whole 127.0.0.0/8 range).
+			for _, cidr := range []string{"127.0.0.1/32", "::1/128"} {
+				_, ipnet, err := net.ParseCIDR(cidr)
+				if err != nil {
+					return false, fmt.Errorf("failed to parse CIDR %s", cidr)
+				}
+				nets = append(nets, ipnet)
+			}
+		} else {
+			var mask int64 = 32
+			if entry.Mask != nil {
+				mask = entry.Mask.Value
+			} else if parsed := net.ParseIP(entry.IP.Value); parsed != nil && parsed.To4() == nil {
+				// A bare IPv6 address defaults to a full /128 prefix.
+				mask = 128
+			}
+			cidr := fmt.Sprintf("%s/%d", entry.IP.Value, mask)
+			_, ipnet, err := net.ParseCIDR(cidr)
+			if err != nil {
+				return false, fmt.Errorf("failed to parse CIDR %s", cidr)
+			}
+			nets = append(nets, ipnet)
 		}
 
-		cidr := fmt.Sprintf("%s/%d", entry.IP.Value, mask)
-		_, ipnet, err := net.ParseCIDR(cidr)
-		if err != nil {
-			return false, fmt.Errorf("failed to parse CIDR %s", cidr)
-		}
-		if ipnet.Contains(ip) {
-			return true, nil
-		} else if entry.Inverse != nil && entry.Inverse.Value {
-			return true, nil
+		for _, ipnet := range nets {
+			if !ipnet.Contains(ip) {
+				continue
+			}
+			if ones, _ := ipnet.Mask.Size(); ones > bestPrefix {
+				bestPrefix = ones
+				result = !inverse
+			}
 		}
 	}
-	return false, nil
+	return result, nil
 }
 
 func NotRegex(ctx *context.Context, left, right value.Value) (value.Value, error) {
