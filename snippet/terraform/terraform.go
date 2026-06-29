@@ -299,6 +299,12 @@ func collectServices(r *FastlyResources) []*FastlyService {
 		if !ok {
 			continue
 		}
+		// snippet_id may be empty (known after apply) for snippets created in
+		// the same plan. Skip empty IDs to avoid joining content onto the wrong
+		// snippet via an empty-string match.
+		if dsc.SnippetID == "" {
+			continue
+		}
 		for _, ds := range svc.DynamicSnippets {
 			if ds.SnippetID == dsc.SnippetID {
 				ds.Content = dsc.Content

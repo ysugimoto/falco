@@ -321,3 +321,96 @@ func TestTerraformFetcherIncludesDynamicSnippets(t *testing.T) {
 		t.Error("Dynamic snippet not found in fetcher.Snippets() output")
 	}
 }
+
+func TestDynamicSnippetEmptySnippetIDNotJoined(t *testing.T) {
+	// When snippet_id is "known after apply", it appears as an empty string in
+	// the plan JSON for both the inline block and the content resource. The
+	// content must not be joined onto the snippet via an empty-string match.
+	jsonData := `{
+      "planned_values": {
+        "root_module": {
+          "resources": [
+            {
+              "type": "fastly_service_vcl",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {
+                "id": "svc1",
+                "name": "emptySnippetIDTest",
+                "dynamicsnippet": [
+                  {"name": "ds", "type": "recv", "priority": 10, "snippet_id": ""}
+                ],
+                "vcl": [
+                  {"content": "sub vcl_recv {\n  #FASTLY recv\n}\n", "main": true, "name": "main.vcl"}
+                ]
+              }
+            },
+            {
+              "type": "fastly_service_dynamic_snippet_content",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {"service_id": "svc1", "snippet_id": "", "content": "# should not be joined"}
+            }
+          ]
+        }
+      }
+    }`
+
+	services, err := unmarshalTerraformPlannedInput([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling: %s", err)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	if len(services[0].DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(services[0].DynamicSnippets))
+	}
+	if got := services[0].DynamicSnippets[0].Content; got != "" {
+		t.Errorf("Expected empty content for unmatched empty snippet_id, got %q", got)
+	}
+}
+
+func TestDynamicSnippetContentUnknownServiceID(t *testing.T) {
+	// A fastly_service_dynamic_snippet_content resource may reference a
+	// service_id that is not present in the plan. This must be ignored
+	// gracefully without affecting existing services.
+	jsonData := `{
+      "planned_values": {
+        "root_module": {
+          "resources": [
+            {
+              "type": "fastly_service_vcl",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {
+                "id": "svc1",
+                "name": "unknownServiceTest",
+                "dynamicsnippet": [
+                  {"name": "ds", "type": "recv", "priority": 10, "snippet_id": "abc123"}
+                ],
+                "vcl": [
+                  {"content": "sub vcl_recv {\n  #FASTLY recv\n}\n", "main": true, "name": "main.vcl"}
+                ]
+              }
+            },
+            {
+              "type": "fastly_service_dynamic_snippet_content",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {"service_id": "does-not-exist", "snippet_id": "abc123", "content": "# orphaned"}
+            }
+          ]
+        }
+      }
+    }`
+
+	services, err := unmarshalTerraformPlannedInput([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling: %s", err)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	if got := services[0].DynamicSnippets[0].Content; got != "" {
+		t.Errorf("Expected empty content for unknown service_id, got %q", got)
+	}
+}
