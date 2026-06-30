@@ -84,9 +84,28 @@ func (p *Parser) ParseString() (*ast.String, error) {
 }
 
 func (p *Parser) ParseInteger() (*ast.Integer, error) {
-	i, err := strconv.ParseInt(p.curToken.Token.Literal, 10, 64)
+	lit := p.curToken.Token.Literal
+
+	// Only the "0x" prefix selects base 16; a leading zero is decimal, not octal.
+	base := 10
+	digits := lit
+	if len(lit) > 2 && lit[0] == '0' && (lit[1] == 'x' || lit[1] == 'X') {
+		base = 16
+		digits = lit[2:]
+	}
+
+	i, err := strconv.ParseInt(digits, base, 64)
 	if err != nil {
-		return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
+		// A literal's magnitude must fit signed int64. The sole exception is 2^63
+		// (INT_MIN's magnitude), valid only under a unary minus (negating
+		// math.MinInt64 wraps back to itself). Larger magnitudes and uint64
+		// "masks" overflow and are rejected, matching Fastly.
+		negated := p.prevToken != nil && p.prevToken.Token.Type == token.MINUS
+		if u, uerr := strconv.ParseUint(digits, base, 64); uerr == nil && u == 1<<63 && negated {
+			i = int64(u)
+		} else {
+			return nil, errors.WithStack(TypeConversionError(p.curToken, "INTEGER"))
+		}
 	}
 
 	v := &ast.Integer{
@@ -99,7 +118,17 @@ func (p *Parser) ParseInteger() (*ast.Integer, error) {
 }
 
 func (p *Parser) ParseFloat() (*ast.Float, error) {
-	f, err := strconv.ParseFloat(p.curToken.Token.Literal, 64)
+	lit := p.curToken.Token.Literal
+
+	// Fastly accepts hex floats without a 'p' exponent (e.g. 0x1.8); Go requires
+	// one, so append "p0" to parse (the source literal is preserved).
+	parseLit := lit
+	isHexFloat := len(lit) > 2 && lit[0] == '0' && (lit[1] == 'x' || lit[1] == 'X')
+	if isHexFloat && !strings.Contains(lit, "p") {
+		parseLit = lit + "p0"
+	}
+
+	f, err := strconv.ParseFloat(parseLit, 64)
 	if err != nil {
 		return nil, errors.WithStack(TypeConversionError(p.curToken, "FLOAT"))
 	}
