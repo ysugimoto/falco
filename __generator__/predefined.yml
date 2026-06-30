@@ -239,7 +239,7 @@ beresp.backend.alternate_ips:
 
 beresp.backend.ip:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-connection/beresp-backend-ip/"
-  on: [FETCH]
+  on: [FETCH, ERROR, DELIVER, LOG]
   get: IP
 
 beresp.backend.port:
@@ -365,7 +365,7 @@ bereq.url.qs:
 
 beresp.backend.name:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-backend-name/"
-  on: [FETCH]
+  on: [FETCH, ERROR, DELIVER, LOG]
   get: STRING
 
 beresp.brotli:
