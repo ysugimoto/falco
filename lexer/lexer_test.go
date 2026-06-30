@@ -794,3 +794,193 @@ func TestFastlyControlSyntaxes(t *testing.T) {
 		}
 	})
 }
+
+func TestRtimeLiteral(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect []token.Token
+	}{
+		{
+			name:  "adjacent second",
+			input: "60s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "spaced second",
+			input: "60 s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "spaced millisecond",
+			input: "100 ms",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "100ms", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+		{
+			name:  "spaced day terminated by semicolon",
+			input: "2 d;",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "2d", Line: 1, Position: 1},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "multiple spaces",
+			input: "30  m",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "30m", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "set statement with spaced rtime",
+			input: "set beresp.ttl = 60 s;",
+			expect: []token.Token{
+				{Type: token.SET, Literal: "set", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "beresp.ttl", Line: 1, Position: 5},
+				{Type: token.ASSIGN, Literal: "=", Line: 1, Position: 16},
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 18},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 22},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 23},
+			},
+		},
+		{
+			name:  "adjacent week",
+			input: "5w",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5w", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+			},
+		},
+		{
+			name:  "spaced week",
+			input: "5 w",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5w", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "number followed by non-unit identifier is not rtime",
+			input: "60 string",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "string", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 10},
+			},
+		},
+		{
+			name:  "number followed by unit-prefixed identifier is not rtime",
+			input: "60 second",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "second", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 10},
+			},
+		},
+		{
+			name:  "tab separator",
+			input: "60\ts",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "spaced float",
+			input: "5.3 d",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5.3d", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			// Newline is intentionally NOT a unit separator (only space/tab),
+			// so `60\ns` is an INT followed by an identifier, not an RTIME.
+			name:  "newline is not a unit separator",
+			input: "60\ns",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.LF, Literal: "\n", Line: 1, Position: 3},
+				{Type: token.IDENT, Literal: "s", Line: 2, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 2, Position: 2},
+			},
+		},
+		{
+			// Only the first whitespace-separated word is considered as a unit,
+			// so `100 m s` is RTIME `100m` plus a separate identifier `s`
+			// (it is NOT collapsed into `100ms`).
+			name:  "ambiguous minute then s is not millisecond",
+			input: "100 m s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "100m", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 7},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 8},
+			},
+		},
+		{
+			// The '-' in the unit-word charset must not swallow a following
+			// negative literal: `60 -5d` is INT, MINUS, RTIME `5d`.
+			name:  "space then negative rtime keeps minus separate",
+			input: "60 -5d",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.MINUS, Literal: "-", Line: 1, Position: 4},
+				{Type: token.RTIME, Literal: "5d", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expect {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset", "File")); diff != "" {
+					t.Errorf("Tests[%d] failed, diff= %s", i, diff)
+				}
+			}
+		})
+	}
+}
+
+func TestRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly.
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	tests := []struct {
+		input   string
+		literal string
+	}{
+		{input: "100ms", literal: "100ms"},
+		{input: "5s", literal: "5s"},
+		{input: "5m", literal: "5m"},
+		{input: "6h", literal: "6h"},
+		{input: "3d", literal: "3d"},
+		{input: "8w", literal: "8w"},
+		{input: "1y", literal: "1y"},
+		{input: "5.3d", literal: "5.3d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			tok := l.NextToken()
+			if tok.Type != token.RTIME {
+				t.Errorf("expected RTIME token, got %s (%q)", tok.Type, tok.Literal)
+			}
+			if tok.Literal != tt.literal {
+				t.Errorf("expected literal %q, got %q", tt.literal, tok.Literal)
+			}
+		})
+	}
+}
