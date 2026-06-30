@@ -78,6 +78,57 @@ func (l *Lexer) peekChar() rune {
 	return rune(b[0])
 }
 
+// peekSpacedRtimeUnit reports the RTIME unit in a whitespace-separated literal
+// like `60 s`, returning the unit and how many trailing chars to consume. It
+// matches only when the whitespace-separated word is exactly a valid unit.
+func (l *Lexer) peekSpacedRtimeUnit() (string, int, bool) {
+	isIdentByte := func(b byte) bool {
+		return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' ||
+			b >= '0' && b <= '9' || b == '_' || b == '.' || b == '-'
+	}
+
+	n := 0
+	// Skip leading spaces/tabs.
+	for {
+		b, err := l.r.Peek(n + 1)
+		if err != nil {
+			return "", 0, false
+		}
+		if b[n] == ' ' || b[n] == '\t' {
+			n++
+			continue
+		}
+		break
+	}
+
+	// Capture the following identifier-like word.
+	start := n
+	for {
+		b, err := l.r.Peek(n + 1)
+		if err != nil {
+			break
+		}
+		if !isIdentByte(b[n]) {
+			break
+		}
+		n++
+	}
+	if n == start {
+		return "", 0, false
+	}
+
+	b, err := l.r.Peek(n)
+	if err != nil {
+		return "", 0, false
+	}
+	switch word := string(b[start:n]); word {
+	case "ms", "s", "m", "h", "d", "w", "y":
+		return word, n, true
+	default:
+		return "", 0, false
+	}
+}
+
 func (l *Lexer) peekUntil(cond func(b byte) bool) (string, error) {
 	var peekBytes int
 	for {
@@ -418,7 +469,7 @@ func (l *Lexer) NextToken() token.Token {
 			num := l.readNumber()
 			// VCL has special type of "RTIME", it indicates relative-time.
 			// To parse it, we look up unit string after digit Literal
-			// and if "ms", "m", "s", "d", "y" character is found, it deals with RTIME token.
+			// and if "ms", "s", "m", "h", "d", "w", "y" character is found, it deals with RTIME token.
 			// https://developer.fastly.com/reference/vcl/types/rtime/
 			switch l.char {
 			case 'm':
@@ -428,11 +479,22 @@ func (l *Lexer) NextToken() token.Token {
 					t.Literal = num + "ms" // millisecond
 				} else {
 					t = newToken(token.RTIME, l.char, line, index)
-					t.Literal = num + "m" // month
+					t.Literal = num + "m" // minute
 				}
-			case 's', 'h', 'd', 'y': // second, hour, day, year
+			case 's', 'h', 'd', 'w', 'y': // second, hour, day, week, year
 				t = newToken(token.RTIME, l.char, line, index)
 				t.Literal = num + string(l.char)
+			case ' ', '\t':
+				// Fastly allows whitespace before the unit, e.g. `60 s` == `60s`.
+				if unit, consume, ok := l.peekSpacedRtimeUnit(); ok {
+					t = newToken(token.RTIME, l.char, line, index)
+					t.Literal = num + unit
+					for range consume {
+						l.readChar()
+					}
+					break
+				}
+				fallthrough
 			default:
 				// If literal contains ".", token should be FLOAT
 				if strings.Count(num, ".") == 1 {
