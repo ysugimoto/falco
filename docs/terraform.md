@@ -69,3 +69,29 @@ You MUST include Fastly Provider planned result in output either root module or 
 ### Note
 
 You can define multiple custom VCLs in `vcl` field in `fastly_service_vcl` resource, but falco treats only the main module which is defined with `main = true` initially, and will not evaluate other vcl definitions until they are included by a `include` statement in main VCL.
+
+## Dynamic Snippet Support
+
+`falco terraform` supports
+`fastly_service_dynamic_snippet_content` resources
+alongside inline `dynamicsnippet` blocks within
+`fastly_service_vcl`. The inline block declares
+snippet metadata (`name`, `type`, `priority`,
+`snippet_id`), while the external resource provides
+the `content`, linked by `snippet_id` and
+`service_id`.
+
+Dynamic snippets flow through the same pipeline as
+regular VCL snippets, so all `falco terraform`
+actions (`lint`, `test`, `simulate`, `stats`) evaluate
+them automatically.
+
+### Known limitation
+
+When a `dynamicsnippet` block is newly created in the
+same Terraform plan, `snippet_id` may be marked as
+`(known after apply)` and appear as an empty string in
+the plan JSON. In this case, the content join will
+silently fail and the dynamic snippet will not be
+evaluated. This is expected — the snippet does not yet
+exist on the service, so there is nothing to lint.
