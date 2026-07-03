@@ -88,10 +88,8 @@ them automatically.
 
 ### Known limitation
 
-When a `dynamicsnippet` block is newly created in the
-same Terraform plan, `snippet_id` may be marked as
-`(known after apply)` and appear as an empty string in
-the plan JSON. In this case, the content join will
-silently fail and the dynamic snippet will not be
-evaluated. This is expected — the snippet does not yet
-exist on the service, so there is nothing to lint.
+Content is linked to its snippet by `snippet_id`. For
+snippets created in the same plan, `snippet_id` is `(known
+after apply)`, so the link cannot be made and the snippet
+is skipped. It will be linted once a later plan assigns a
+concrete `snippet_id`.
