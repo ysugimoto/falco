@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func createScopeVars(urlStr string) *AllScopeVariables {
@@ -389,6 +389,48 @@ func TestGetClientVendor(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetFromRegexRequestHeaderOverride(t *testing.T) {
+	// testing.inject_variable stores values in ctx.OverrideVariables. The
+	// request header read path must consult that map so injected headers are
+	// returned in tests -- the only way to set protected headers like
+	// req.http.Fastly-FF, which `set` rejects.
+	t.Run("returns injected override for request header", func(t *testing.T) {
+		vars := &AllScopeVariables{
+			ctx: &context.Context{
+				Request: http.WrapRequest(&ghttp.Request{Header: ghttp.Header{}}),
+				OverrideVariables: map[string]value.Value{
+					"req.http.Fastly-FF": &value.String{Value: "injected"},
+				},
+			},
+		}
+		val, err := vars.getFromRegex("req.http.Fastly-FF")
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if diff := cmp.Diff(val, &value.String{Value: "injected"}); diff != "" {
+			t.Errorf("Return value unmatch, diff: %s", diff)
+		}
+	})
+
+	t.Run("falls through to actual header when no override", func(t *testing.T) {
+		req := http.WrapRequest(&ghttp.Request{Header: ghttp.Header{}})
+		req.Header.Set("X-Custom", "real")
+		vars := &AllScopeVariables{
+			ctx: &context.Context{
+				Request:           req,
+				OverrideVariables: map[string]value.Value{},
+			},
+		}
+		val, err := vars.getFromRegex("req.http.X-Custom")
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if diff := cmp.Diff(val, &value.String{Value: "real"}); diff != "" {
+			t.Errorf("Return value unmatch, diff: %s", diff)
+		}
+	})
 }
 
 func TestGetFromRegex(t *testing.T) {

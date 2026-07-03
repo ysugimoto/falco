@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of digest.time_hmac_sha512

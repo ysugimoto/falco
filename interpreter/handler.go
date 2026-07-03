@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/limitations"
-	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/limitations"
+	"github.com/ysugimoto/falco/v2/interpreter/variable"
 )
 
 // Implements http.Handler

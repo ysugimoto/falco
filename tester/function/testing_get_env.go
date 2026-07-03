@@ -3,9 +3,9 @@ package function
 import (
 	"os"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Testing_get_env_Name = "testing.get_env"

@@ -3,11 +3,11 @@ package function
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 func Test_restore_mock(t *testing.T) {

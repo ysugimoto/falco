@@ -9,9 +9,9 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/pkg/errors"
 	"github.com/rivo/tview"
-	"github.com/ysugimoto/falco/debugger/colors"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/debugger/colors"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type CodeView struct {

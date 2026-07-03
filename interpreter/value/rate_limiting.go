@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 // rateEntry represents single access entry for a client

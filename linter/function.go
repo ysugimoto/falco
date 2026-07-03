@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/linter/types"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/linter/types"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type functionMeta struct {

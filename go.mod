@@ -1,4 +1,4 @@
-module github.com/ysugimoto/falco
+module github.com/ysugimoto/falco/v2
 
 go 1.25.5
 
@@ -56,3 +56,14 @@ require (
 )
 
 replace go.elara.ws/pcre => github.com/dip-proto/go-pcre v0.0.0-20260204122309-dcbff9cb6240
+
+// These versions were published under the module path
+// github.com/ysugimoto/falco without the required /v2 suffix and are
+// not importable. Use the next published release or later.
+retract (
+	v2.0.0
+	v2.0.1
+	v2.1.0
+	v2.2.0
+	v2.3.0
+)

@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func (c *Decoder) decodeExpression(frame *Frame) (ast.Expression, error) {

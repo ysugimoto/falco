@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func TestGetRequestHeaderValue(t *testing.T) {

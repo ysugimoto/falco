@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/v2/config"
 )
 
 // This map is used for the expression can be chunked or not.

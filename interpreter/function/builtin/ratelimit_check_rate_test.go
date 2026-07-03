@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func Test_Ratelimit_check_rate(t *testing.T) {

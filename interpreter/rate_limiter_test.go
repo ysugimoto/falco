@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/resolver"
 )
 
 func TestRateLimiter(t *testing.T) {

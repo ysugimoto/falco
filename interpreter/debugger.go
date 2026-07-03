@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 type DebugState int

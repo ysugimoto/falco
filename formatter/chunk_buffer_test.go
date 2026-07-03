@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/v2/config"
 )
 
 func TestChunkBuffer(t *testing.T) {

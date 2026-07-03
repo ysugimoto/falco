@@ -3,9 +3,9 @@ package variable
 import (
 	"time"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Handle ratecounter related variables

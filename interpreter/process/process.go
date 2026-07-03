@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 type Process struct {

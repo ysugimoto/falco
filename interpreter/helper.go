@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func findProcessMark(comments ast.Comments) (string, bool) {
@@ -51,6 +51,29 @@ func isLocalVariableIdent(ident *ast.Ident) bool {
 func isHeaderFieldIdent(ident *ast.Ident) bool {
 	name, _, found := strings.Cut(ident.Value, ":")
 	return found && strings.Contains(name, ".http.")
+}
+
+// isRequestHeaderIdent reports whether the identifier refers to a request header
+// (req.http.*). Each write to one is assembled in the request workspace.
+func isRequestHeaderIdent(ident *ast.Ident) bool {
+	return strings.HasPrefix(ident.Value, "req.http.")
+}
+
+// requestHeaderName returns the bare header name Fastly charges the workspace
+// for (e.g. `X-Foo`), not the VCL identifier.
+func requestHeaderName(ident *ast.Ident) string {
+	name := strings.TrimPrefix(ident.Value, "req.http.")
+	if before, _, found := strings.Cut(name, ":"); found {
+		name = before
+	}
+	return name
+}
+
+// roundUpToPointer rounds a workspace allocation up to the next 8 byte boundary,
+// as Fastly does for every header allocation.
+func roundUpToPointer(n int) int {
+	const align = 8
+	return (n + align - 1) &^ (align - 1)
 }
 
 // Validate type string is Fastly supported value type

@@ -5,14 +5,14 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter/cache"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippet"
-	"github.com/ysugimoto/falco/tester/shared"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/interpreter/cache"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/resolver"
+	"github.com/ysugimoto/falco/v2/snippet"
+	"github.com/ysugimoto/falco/v2/tester/shared"
 )
 
 // Reserved vcl names in Fastly
@@ -78,6 +78,11 @@ type Context struct {
 	RequestEndTime   time.Time
 	RequestStartTime time.Time
 	CacheHitItem     *cache.CacheItem
+
+	// RequestWorkspaceBytes tracks how much of the per-request workspace has been
+	// consumed by assembling request headers. Fastly never reclaims it within a
+	// request, not even across restarts, so this is never reset once set.
+	RequestWorkspaceBytes int
 
 	// Interpreter states, following variables could be set in each subroutine directives
 	Restarts                            int

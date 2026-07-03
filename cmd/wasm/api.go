@@ -10,13 +10,13 @@ import (
 	"syscall/js"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/formatter"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter"
-	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/formatter"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/linter"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 // parse parses VCL source code and returns the AST as JSON.
@@ -299,6 +299,7 @@ func defaultFormatConfig() *config.FormatConfig {
 		CommentStyle:               config.CommentStyleNone,
 		ShouldUseUnset:             false,
 		IndentCaseLabels:           false,
+		BreakCompoundConditions:    true,
 	}
 }
 
@@ -345,6 +346,9 @@ func applyFormatOptions(conf *config.FormatConfig, opts js.Value) {
 	}
 	if v := opts.Get("indentCaseLabels"); !v.IsUndefined() {
 		conf.IndentCaseLabels = v.Bool()
+	}
+	if v := opts.Get("breakCompoundConditions"); !v.IsUndefined() {
+		conf.BreakCompoundConditions = v.Bool()
 	}
 }
 

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 	pcre "go.elara.ws/pcre"
 )
 

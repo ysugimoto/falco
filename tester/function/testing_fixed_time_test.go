@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/variable"
 )
 
 func Test_fixed_time(t *testing.T) {

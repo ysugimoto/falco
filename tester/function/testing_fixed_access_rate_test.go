@@ -3,8 +3,8 @@ package function
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func Test_Testing_fixed_access_rate(t *testing.T) {

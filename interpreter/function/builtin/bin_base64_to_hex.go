@@ -7,9 +7,9 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Bin_base64_to_hex_Name = "bin.base64_to_hex"

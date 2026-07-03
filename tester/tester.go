@@ -8,21 +8,21 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/variable"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/resolver"
-	tf "github.com/ysugimoto/falco/tester/function"
-	"github.com/ysugimoto/falco/tester/shared"
-	"github.com/ysugimoto/falco/tester/syntax"
-	tv "github.com/ysugimoto/falco/tester/variable"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/variable"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/resolver"
+	tf "github.com/ysugimoto/falco/v2/tester/function"
+	"github.com/ysugimoto/falco/v2/tester/shared"
+	"github.com/ysugimoto/falco/v2/tester/syntax"
+	tv "github.com/ysugimoto/falco/v2/tester/variable"
 )
 
 var (
@@ -145,7 +145,7 @@ func (t *Tester) run(testFile string) (*TestResult, error) {
 				// so we always initialize interpreter, inject testing functions for each subroutine
 				i := t.setupInterpreter(defs)
 
-				mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+				mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", ghttp.NoBody)
 				if err != nil {
 					errChan <- errors.WithStack(err)
 					return
@@ -213,7 +213,7 @@ func (t *Tester) runDescribedTests(
 ) ([]*TestCase, error) {
 
 	var cases []*TestCase
-	mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", nil)
+	mockRequest, err := http.NewRequest(ghttp.MethodGet, "http://localhost", ghttp.NoBody)
 	if err != nil {
 		return cases, errors.WithStack(err)
 	}

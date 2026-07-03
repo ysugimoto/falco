@@ -3,7 +3,7 @@ package context
 import (
 	"maps"
 
-	"github.com/ysugimoto/falco/linter/types"
+	"github.com/ysugimoto/falco/v2/linter/types"
 )
 
 // TestingCallSubroutineName is the fully-qualified name used in VCL test files.

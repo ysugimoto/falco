@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // assignHeaderValue stores val into a header, honoring the assignment operator.

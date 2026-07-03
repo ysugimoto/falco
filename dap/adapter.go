@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ysugimoto/falco/config"
+	"github.com/ysugimoto/falco/v2/config"
 )
 
 type Adapter struct {

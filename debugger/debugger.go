@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/debugger/codeview"
-	"github.com/ysugimoto/falco/debugger/helpview"
-	"github.com/ysugimoto/falco/debugger/messageview"
-	"github.com/ysugimoto/falco/debugger/shellview"
-	"github.com/ysugimoto/falco/interpreter"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/debugger/codeview"
+	"github.com/ysugimoto/falco/v2/debugger/helpview"
+	"github.com/ysugimoto/falco/v2/debugger/messageview"
+	"github.com/ysugimoto/falco/v2/debugger/shellview"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 const debuggerMark = "@debugger"

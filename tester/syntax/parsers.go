@@ -1,6 +1,6 @@
 package syntax
 
-import "github.com/ysugimoto/falco/parser"
+import "github.com/ysugimoto/falco/v2/parser"
 
 func CustomParsers() []parser.CustomParser {
 	var i int

@@ -3,11 +3,11 @@ package context
 import (
 	"time"
 
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippet"
-	"github.com/ysugimoto/falco/tester/shared"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/resolver"
+	"github.com/ysugimoto/falco/v2/snippet"
+	"github.com/ysugimoto/falco/v2/tester/shared"
 )
 
 type Option func(c *Context)

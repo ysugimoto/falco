@@ -5,7 +5,7 @@ package builtin
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
 )
 
 // Fastly built-in function testing implementation of h3.alt_svc

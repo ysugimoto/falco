@@ -3,7 +3,7 @@ package value
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func TestBackend_String(t *testing.T) {

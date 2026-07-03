@@ -6,10 +6,10 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 
-	"github.com/ysugimoto/falco/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
 
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Digest_hash_sha1_Name = "digest.hash_sha1"

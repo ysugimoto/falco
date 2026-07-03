@@ -5,7 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/ysugimoto/falco/debugger/colors"
+	"github.com/ysugimoto/falco/v2/debugger/colors"
 )
 
 const cursor = "[:white:] [:-:]"

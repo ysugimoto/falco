@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 func assert(t *testing.T, input, expect string, conf *config.FormatConfig) string {

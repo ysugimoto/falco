@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/tester/shared"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/tester/shared"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 var fake = &ast.Meta{Token: token.Null}

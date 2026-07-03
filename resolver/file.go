@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 // FileResolver is filesystem resolver, basically used for built vcl files

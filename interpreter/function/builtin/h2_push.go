@@ -3,9 +3,9 @@
 package builtin
 
 import (
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const H2_push_Name = "h2.push"

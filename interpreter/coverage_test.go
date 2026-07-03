@@ -5,12 +5,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/tester/shared"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/tester/shared"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 var opts = cmp.Options{

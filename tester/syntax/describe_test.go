@@ -5,10 +5,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 func meta(nest, prevLine int, leading, infix, trailing string) *ast.Meta {

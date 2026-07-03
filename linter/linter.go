@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/linter/context"
-	"github.com/ysugimoto/falco/linter/types"
-	"github.com/ysugimoto/falco/parser"
-	"github.com/ysugimoto/falco/snippet"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/linter/types"
+	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/snippet"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type Linter struct {

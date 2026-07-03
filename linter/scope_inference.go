@@ -3,8 +3,8 @@ package linter
 import (
 	"slices"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/linter/context"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/linter/context"
 )
 
 // callGraph represents the call relationships between subroutines.

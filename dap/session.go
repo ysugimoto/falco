@@ -11,10 +11,10 @@ import (
 	"sync"
 
 	godap "github.com/google/go-dap"
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/resolver"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	icontext "github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/resolver"
 	"golang.org/x/sync/errgroup"
 )
 

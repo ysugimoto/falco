@@ -3,12 +3,12 @@ package function
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter"
-	iCtx "github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	iCtx "github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 // newCallSubCtx returns a minimal context with all subroutine maps initialised

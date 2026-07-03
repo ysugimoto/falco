@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ysugimoto/falco/config"
-	"github.com/ysugimoto/falco/interpreter"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/linter"
-	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippet/terraform"
+	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/interpreter"
+	icontext "github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/linter"
+	"github.com/ysugimoto/falco/v2/resolver"
+	"github.com/ysugimoto/falco/v2/snippet/terraform"
 )
 
 type RepoExampleTestMetadata struct {
@@ -441,6 +441,12 @@ func TestTester(t *testing.T) {
 			name:   "do not omit query sign",
 			main:   "../../examples/testing/query_sign/default.vcl",
 			filter: "*default.test.vcl",
+			passes: 2,
+		},
+		{
+			name:   "request byte-count reads with no body",
+			main:   "../../examples/testing/request_byte_reads/request_byte_reads.vcl",
+			filter: "*request_byte_reads.test.vcl",
 			passes: 2,
 		},
 	}

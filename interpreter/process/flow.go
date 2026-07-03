@@ -3,7 +3,7 @@ package process
 import (
 	"context"
 
-	icontext "github.com/ysugimoto/falco/interpreter/context"
+	icontext "github.com/ysugimoto/falco/v2/interpreter/context"
 )
 
 type Flow struct {

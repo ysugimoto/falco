@@ -3,8 +3,8 @@ package types
 import (
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type Type int

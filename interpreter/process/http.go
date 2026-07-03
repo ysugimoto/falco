@@ -3,7 +3,7 @@ package process
 import (
 	"strings"
 
-	"github.com/ysugimoto/falco/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
 )
 
 type HttpFlow struct {

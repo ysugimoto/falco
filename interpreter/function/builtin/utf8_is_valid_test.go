@@ -5,8 +5,8 @@ package builtin
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of utf8.is_valid
@@ -39,7 +39,7 @@ func Test_Utf8_is_valid(t *testing.T) {
 			expect: true,
 		},
 		{
-			input: "	",
+			input:  "	",
 			expect: true,
 		},
 		{

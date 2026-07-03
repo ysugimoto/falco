@@ -28,7 +28,7 @@ var scopeMap = map[string]string{
 	"PIPE":    "PipeScope",
 }
 
-const packagePath = "github.com/ysugimoto/falco/interpreter/function/"
+const packagePath = "github.com/ysugimoto/falco/v2/interpreter/function/"
 
 type Interpreter struct {
 	builtinInput     string

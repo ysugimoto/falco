@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 var T = token.Token{}

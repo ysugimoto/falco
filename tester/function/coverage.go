@@ -1,9 +1,9 @@
 package function
 
 import (
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/tester/shared"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/tester/shared"
 )
 
 const Coverage_Name = "coverage"

@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/ast/codec"
-	"github.com/ysugimoto/falco/plugin"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/ast/codec"
+	"github.com/ysugimoto/falco/v2/plugin"
 )
 
 const CustomCommandPrefix = "falco-"

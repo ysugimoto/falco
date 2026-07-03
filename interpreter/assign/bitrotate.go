@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func LeftRotate(left, right value.Value) error {

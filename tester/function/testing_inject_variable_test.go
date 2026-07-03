@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/interpreter/context"
-	ihttp "github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/interpreter/variable"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	ihttp "github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/variable"
 )
 
 func Test_inject_variable(t *testing.T) {

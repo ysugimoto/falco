@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/value"
-	"github.com/ysugimoto/falco/lexer"
-	"github.com/ysugimoto/falco/parser"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 func (c *Console) repl(input string) {

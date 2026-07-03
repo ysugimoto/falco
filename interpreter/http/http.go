@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
 )
 
 // Re-expose http.TimeFormat to this package

@@ -3,7 +3,7 @@ package codec
 import (
 	"testing"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 type statementTest struct {

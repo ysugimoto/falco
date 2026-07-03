@@ -3,8 +3,8 @@ package dap
 import (
 	"sync"
 
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter"
 )
 
 type Debugger struct {

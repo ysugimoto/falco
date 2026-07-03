@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	icontext "github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/http"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	icontext "github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const testBackendResponseBody = "falco_test_response"
