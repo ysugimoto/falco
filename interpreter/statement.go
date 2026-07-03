@@ -5,16 +5,16 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/assign"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/function"
-	fe "github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/limitations"
-	"github.com/ysugimoto/falco/interpreter/operator"
-	"github.com/ysugimoto/falco/interpreter/process"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/assign"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/function"
+	fe "github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/limitations"
+	"github.com/ysugimoto/falco/v2/interpreter/operator"
+	"github.com/ysugimoto/falco/v2/interpreter/process"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // _nopSeekCloser is like io.NopCloser, but for wrapping io.ReadSeeker.

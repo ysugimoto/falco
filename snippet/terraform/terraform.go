@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	fastlyTerraformProviderName      = "registry.terraform.io/fastly/fastly"
-	fastlyVCLServiceType             = "fastly_service_vcl"
-	fastlyVCLServiceTypeV1           = "fastly_service_v1"
-	fastlyServiceAclEntriesType      = "fastly_service_acl_entries"
-	fastlyServiceDictionaryItemsType = "fastly_service_dictionary_items"
+	fastlyTerraformProviderName            = "registry.terraform.io/fastly/fastly"
+	fastlyVCLServiceType                   = "fastly_service_vcl"
+	fastlyVCLServiceTypeV1                 = "fastly_service_v1"
+	fastlyServiceAclEntriesType            = "fastly_service_acl_entries"
+	fastlyServiceDictionaryItemsType       = "fastly_service_dictionary_items"
+	fastlyServiceDynamicSnippetContentType = "fastly_service_dynamic_snippet_content"
 )
 
 type TerraformPlannedResource struct {
@@ -66,6 +67,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 	services := make(map[string]*FastlyService)
 	var aclEntries []*fastlyAclEntryValues
 	var dictionaryItems []*fastlyDictionaryItems
+	var dynamicSnippetContents []*fastlyDynamicSnippetContent
 
 	// Find services in module resources
 	if len(mod.Resources) > 0 {
@@ -86,6 +88,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 					Dictionaries:     s.Dictionary,
 					Directors:        s.Director,
 					Snippets:         s.Snippets,
+					DynamicSnippets:  s.DynamicSnippets,
 					Conditions:       s.Conditions,
 					Headers:          s.Headers,
 					ResponseObjects:  s.ResponseObjects,
@@ -107,6 +110,13 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 				}
 				d.Index = v.Index
 				dictionaryItems = append(dictionaryItems, d)
+
+			case isFastlyServiceDynamicSnippetContent(v):
+				var d *fastlyDynamicSnippetContent
+				if err := json.Unmarshal(v.Values, &d); err != nil {
+					return nil, errors.Wrap(err, "Failed to unmarshal fastly_service_dynamic_snippet_content values")
+				}
+				dynamicSnippetContents = append(dynamicSnippetContents, d)
 			}
 		}
 	}
@@ -114,9 +124,10 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 	// Check child_modules existence and return found services if not found
 	if len(mod.ChildModules) == 0 {
 		return &FastlyResources{
-			Services:        services,
-			AclEntries:      aclEntries,
-			DictionaryItems: dictionaryItems,
+			Services:               services,
+			AclEntries:             aclEntries,
+			DictionaryItems:        dictionaryItems,
+			DynamicSnippetContents: dynamicSnippetContents,
 		}, nil
 	}
 	// If module has child_modules, find Fastly service recursively
@@ -132,12 +143,14 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule) (*FastlyResources
 
 		aclEntries = append(aclEntries, childResource.AclEntries...)
 		dictionaryItems = append(dictionaryItems, childResource.DictionaryItems...)
+		dynamicSnippetContents = append(dynamicSnippetContents, childResource.DynamicSnippetContents...)
 	}
 
 	return &FastlyResources{
-		Services:        services,
-		AclEntries:      aclEntries,
-		DictionaryItems: dictionaryItems,
+		Services:               services,
+		AclEntries:             aclEntries,
+		DictionaryItems:        dictionaryItems,
+		DynamicSnippetContents: dynamicSnippetContents,
 	}, nil
 }
 
@@ -151,6 +164,10 @@ func isFastlyServiceAclEntryResource(r *TerraformPlannedResource) bool {
 }
 func isFastlyServiceDictionaryItem(r *TerraformPlannedResource) bool {
 	return r.ProviderName == fastlyTerraformProviderName && r.Type == fastlyServiceDictionaryItemsType
+}
+
+func isFastlyServiceDynamicSnippetContent(r *TerraformPlannedResource) bool {
+	return r.ProviderName == fastlyTerraformProviderName && r.Type == fastlyServiceDynamicSnippetContentType
 }
 
 func factoryLoggingEndpoints(values *fastlyServiceValues) []string {
@@ -273,6 +290,25 @@ func collectServices(r *FastlyResources) []*FastlyService {
 					Key:   keys[i],
 					Value: item.Items[keys[i]],
 				})
+			}
+		}
+	}
+
+	for _, dsc := range r.DynamicSnippetContents {
+		svc, ok := r.Services[dsc.ServiceID]
+		if !ok {
+			continue
+		}
+		// snippet_id may be empty (known after apply) for snippets created in
+		// the same plan. Skip empty IDs to avoid joining content onto the wrong
+		// snippet via an empty-string match.
+		if dsc.SnippetID == "" {
+			continue
+		}
+		for _, ds := range svc.DynamicSnippets {
+			if ds.SnippetID == dsc.SnippetID {
+				ds.Content = dsc.Content
+				break
 			}
 		}
 	}

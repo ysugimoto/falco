@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/linter/types"
-	"github.com/ysugimoto/falco/resolver"
-	"github.com/ysugimoto/falco/snippet"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/linter/types"
+	"github.com/ysugimoto/falco/v2/resolver"
+	"github.com/ysugimoto/falco/v2/snippet"
 )
 
 var fastlyReservedSubroutines = map[string]bool{

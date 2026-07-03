@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 func TestLexer(t *testing.T) {

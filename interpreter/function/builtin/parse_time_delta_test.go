@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 // Fastly built-in function testing implementation of parse_time_delta
@@ -27,6 +27,25 @@ func Test_Parse_time_delta(t *testing.T) {
 		{input: &value.String{Value: "1M"}, expect: &value.Integer{Value: 60}},
 		{input: &value.String{Value: "10s"}, expect: &value.Integer{Value: 10}},
 		{input: &value.String{Value: "10S"}, expect: &value.Integer{Value: 10}},
+		// Only the first number and unit are read; the rest of the string is ignored
+		{input: &value.String{Value: "1d2h"}, expect: &value.Integer{Value: 86400}},
+		{input: &value.String{Value: "5m30s"}, expect: &value.Integer{Value: 300}},
+		// A missing or unrecognized unit means seconds
+		{input: &value.String{Value: "30"}, expect: &value.Integer{Value: 30}},
+		{input: &value.String{Value: "2x"}, expect: &value.Integer{Value: 2}},
+		{input: &value.String{Value: "5 d"}, expect: &value.Integer{Value: 5}},
+		// strtoll semantics: leading whitespace and an explicit sign are accepted
+		{input: &value.String{Value: " 10s"}, expect: &value.Integer{Value: 10}},
+		{input: &value.String{Value: "+2h"}, expect: &value.Integer{Value: 7200}},
+		// Unparseable, negative, or overflowing input yields -1
+		{input: &value.String{Value: ""}, expect: &value.Integer{Value: -1}},
+		{input: &value.String{Value: "abc"}, expect: &value.Integer{Value: -1}},
+		{input: &value.String{Value: "d"}, expect: &value.Integer{Value: -1}},
+		{input: &value.String{Value: "-5d"}, expect: &value.Integer{Value: -1}},
+		{input: &value.String{Value: "99999999999999999999"}, expect: &value.Integer{Value: -1}},
+		{input: &value.String{Value: "9223372036854775807"}, expect: &value.Integer{Value: 9223372036854775807}},
+		{input: &value.String{Value: "106751991167300d"}, expect: &value.Integer{Value: 106751991167300 * 86400}},
+		{input: &value.String{Value: "106751991167301d"}, expect: &value.Integer{Value: -1}},
 	}
 
 	for i, tt := range tests {

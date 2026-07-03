@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"github.com/pierrec/xxHash/xxHash32"
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Digest_hash_xxh32_from_base64_Name = "digest.hash_xxh32_from_base64"

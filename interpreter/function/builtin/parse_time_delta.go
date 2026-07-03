@@ -3,11 +3,12 @@
 package builtin
 
 import (
+	"math"
 	"strconv"
 
-	"github.com/ysugimoto/falco/interpreter/context"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Parse_time_delta_Name = "parse_time_delta"
@@ -36,44 +37,43 @@ func Parse_time_delta(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	specifier := value.Unwrap[*value.String](args[0])
-	var delta int64
-	var stack []byte
+	spec := value.Unwrap[*value.String](args[0]).Value
 
-	// Golang's time.ParseDuration does not recognize "d" and "D", date duration so we need to parse manually
-	for _, s := range []byte(specifier.Value) {
-		switch s {
-		case 0x64, 0x44: // "d" or "D"
-			v, err := strconv.ParseInt(string(stack), 10, 64)
-			if err != nil {
-				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse dates as int: %s", string(stack))
-			}
-			delta += v * 24 * 60 * 60
-		case 0x68, 0x48: // "h" or "H"
-			v, err := strconv.ParseInt(string(stack), 10, 64)
-			if err != nil {
-				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse hours as int: %s", string(stack))
-			}
-			delta += v * 60 * 60
-		case 0x6D, 0x4D: // "m" or "M"
-			v, err := strconv.ParseInt(string(stack), 10, 64)
-			if err != nil {
-				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse minutes as int: %s", string(stack))
-			}
-			delta += v * 60
-		case 0x73, 0x53: // "s" or "S"
-			v, err := strconv.ParseInt(string(stack), 10, 64)
-			if err != nil {
-				return value.Null, errors.New(Parse_time_delta_Name, "Failed to parse seconds as int: %s", string(stack))
-			}
-			delta += v
-		default:
-			if s < 0x30 || s > 0x39 {
-				return value.Null, errors.New(Parse_time_delta_Name, "Invalid character found: %s", string([]byte{s}))
-			}
-			stack = append(stack, s)
+	var i int
+	for i < len(spec) {
+		if c := spec[i]; c != ' ' && c != '\t' && c != '\n' && c != '\v' && c != '\f' && c != '\r' {
+			break
 		}
+		i++
+	}
+	start := i
+	if i < len(spec) && (spec[i] == '+' || spec[i] == '-') {
+		i++
+	}
+	if i == len(spec) || spec[i] < '0' || spec[i] > '9' {
+		return &value.Integer{Value: -1}, nil
+	}
+	for i < len(spec) && spec[i] >= '0' && spec[i] <= '9' {
+		i++
+	}
+	v, err := strconv.ParseInt(spec[start:i], 10, 64)
+	if err != nil || v < 0 {
+		return &value.Integer{Value: -1}, nil
 	}
 
-	return &value.Integer{Value: delta}, nil
+	var unit int64 = 1
+	if i < len(spec) {
+		switch spec[i] {
+		case 'd', 'D':
+			unit = 24 * 3600
+		case 'h', 'H':
+			unit = 3600
+		case 'm', 'M':
+			unit = 60
+		}
+	}
+	if v > math.MaxInt64/unit {
+		return &value.Integer{Value: -1}, nil
+	}
+	return &value.Integer{Value: v * unit}, nil
 }

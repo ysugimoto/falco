@@ -2,7 +2,7 @@ package codec
 
 import (
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func (c *Decoder) decodeAddStatement() (*ast.AddStatement, error) {

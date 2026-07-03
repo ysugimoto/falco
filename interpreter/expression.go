@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/interpreter/exception"
-	"github.com/ysugimoto/falco/interpreter/function"
-	"github.com/ysugimoto/falco/interpreter/operator"
-	"github.com/ysugimoto/falco/interpreter/value"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/interpreter/exception"
+	"github.com/ysugimoto/falco/v2/interpreter/function"
+	"github.com/ysugimoto/falco/v2/interpreter/operator"
+	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 func (i *Interpreter) IdentValue(val string, opt *ExpressionOption) (value.Value, error) {

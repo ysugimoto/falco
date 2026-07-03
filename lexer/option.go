@@ -3,7 +3,7 @@ package lexer
 import (
 	"maps"
 
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type OptionFunc func(o *Option)

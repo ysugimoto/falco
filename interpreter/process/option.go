@@ -1,8 +1,8 @@
 package process
 
 import (
-	"github.com/ysugimoto/falco/ast"
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 type Option func(f *Flow)

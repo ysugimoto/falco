@@ -3,7 +3,7 @@ package ast
 import (
 	"bytes"
 
-	"github.com/ysugimoto/falco/token"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 // VCL is a root of program

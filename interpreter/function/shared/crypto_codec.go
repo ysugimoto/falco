@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 
 	"github.com/pion/dtls/v2/pkg/crypto/ccm"
-	"github.com/ysugimoto/falco/interpreter/function/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 )
 
 var BlockSizeMap = map[string]int{

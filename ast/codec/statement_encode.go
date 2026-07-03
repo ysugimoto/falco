@@ -3,7 +3,7 @@ package codec
 import (
 	"bytes"
 
-	"github.com/ysugimoto/falco/ast"
+	"github.com/ysugimoto/falco/v2/ast"
 )
 
 func (c *Encoder) encodeAddStatement(stmt *ast.AddStatement) *Frame {
