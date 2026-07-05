@@ -53,7 +53,7 @@ func fetchFastlyDocument(ctx context.Context, url string, m *sync.Map) error {
 			}
 			name := a.FirstChild.Data
 			if name == ignoreFunctionIf ||
-				strings.Contains(name, ignoreHTTPHeaderRelatedSignaure) ||
+				strings.Contains(name, ".http."+ignoreHTTPHeaderRelatedSignaure) ||
 				strings.Contains(name, ignoreRegexCapturedNumber) {
 
 				continue
