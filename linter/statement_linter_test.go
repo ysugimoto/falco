@@ -868,6 +868,52 @@ sub foo {
 	}
 }
 
+func TestRegexGroupedVariablesCrossSubroutine(t *testing.T) {
+	// #297 bug pattern: a subroutine reads re.group.N before any match in its own
+	// scope, relying on a leaked value from a caller. Should WARN.
+	t.Run("read before match warns (leak pattern)", func(t *testing.T) {
+		input := `
+sub foo {
+  set req.http.foo1 = re.group.1;
+  if (req.http.test ~ "([^.]+)") {}
+  set req.http.foo2 = re.group.1;
+}
+
+sub bar {
+  set req.http.bar1 = re.group.1;
+  if (req.http.test ~ "(.*)") {}
+  set req.http.bar2 = re.group.1;
+  call foo;
+  set req.http.bar3 = re.group.1;
+}`
+		assertErrorWithSeverity(t, input, WARNING)
+	})
+
+	// Callee has its own match before the read: no warning.
+	t.Run("callee with own match does not warn", func(t *testing.T) {
+		input := `
+sub foo {
+  if (req.http.test ~ "([^.]+)") {}
+  set req.http.foo1 = re.group.1;
+}
+sub bar {
+  call foo;
+}`
+		assertNoError(t, input)
+	})
+
+	// Match precedes the read in the same subroutine: no warning (subroutine-global
+	// scope semantics — a match anywhere in the sub makes re.group.N available).
+	t.Run("match before read in same subroutine does not warn", func(t *testing.T) {
+		input := `
+sub foo {
+  if (req.http.test ~ "(.*)") {}
+  set req.http.foo1 = re.group.1;
+}`
+		assertNoError(t, input)
+	})
+}
+
 func TestGroupedExpressionInStatement(t *testing.T) {
 	tests := []string{
 		`
