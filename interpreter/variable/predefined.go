@@ -54,6 +54,7 @@ const (
 	BEREQ_URL_PATH                                    = "bereq.url.path"
 	BEREQ_URL_QS                                      = "bereq.url.qs"
 	BERESP_BACKEND_ALTERNATE_IPS                      = "beresp.backend.alternate_ips"
+	BERESP_BACKEND_HOST                               = "beresp.backend.host"
 	BERESP_BACKEND_IP                                 = "beresp.backend.ip"
 	BERESP_BACKEND_NAME                               = "beresp.backend.name"
 	BERESP_BACKEND_PORT                               = "beresp.backend.port"
