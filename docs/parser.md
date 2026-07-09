@@ -252,3 +252,35 @@ unset <comment> <identifier> <comment>; <comment>
 ```
 
 About BNF of VCL, see https://gist.github.com/benediktkr/52d33ca982e29916a8aa
+
+## Numeric Literals
+
+`falco` recognizes the following numeric literal forms.
+
+### Integers
+
+- Decimal: `100`, `0` and a leading zero is decimal, not octal (e.g. `0755` == 755).
+- Hexadecimal: a `0x`/`0X` prefix followed by hex digits (`0x5a5a`, `0Xff`, `0x7FFFFFFFFFFFFFFF`).
+
+An integer literal's magnitude must fit a signed 64-bit value (`INT_MAX` ==
+`0x7FFFFFFFFFFFFFFF`). The single exception is `2^63` (`0x8000000000000000` /
+`9223372036854775808`), which is accepted only as the operand of a unary minus
+to express `INT_MIN` (`-0x8000000000000000`). A bare positive `2^63`, a uint64
+"mask" such as `0xFFFFFFFFFFFFFFFF`, and any larger magnitude are rejected as a
+signed integer overflow, matching Fastly.
+
+### Floats
+
+- Decimal with a fractional part: `10.0`, `1.5`.
+- Decimal with a lowercase `e` exponent: `1e3`, `1.5e3`, `1e-3`, `1e+3`.
+- Hexadecimal floats with a lowercase `p` binary exponent: `0x1.8p3`, `0xA.Bp3`.
+  The `p` exponent may be omitted (`0x1.8`), in which case it defaults to `p0`.
+
+Exponent markers are lowercase only (`1E3` and `0x1.8P3` are rejected by Fastly,
+so `falco` rejects them too). The source representation of a literal is preserved
+through linting, formatting and serialization (e.g. `0x5a5a` is emitted as
+`0x5a5a`, not `23130`).
+
+Numeric literals that carry a hexadecimal prefix or an exponent cannot be
+combined with an [RTIME](https://developer.fastly.com/reference/vcl/types/rtime/)
+unit suffix; only plain decimal literals form an RTIME (e.g. `100ms`, `1.5s`).
