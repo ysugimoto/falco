@@ -129,6 +129,55 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("read beresp.backend.name/ip in fetch, deliver, error, log", func(t *testing.T) {
+		for _, sub := range []struct{ name, macro string }{
+			{"vcl_fetch", "FETCH"},
+			{"vcl_deliver", "DELIVER"},
+			{"vcl_error", "ERROR"},
+			{"vcl_log", "LOG"},
+		} {
+			input := `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set req.http.X-Backend-Name = beresp.backend.name;
+	set req.http.X-Backend-IP = beresp.backend.ip;
+	set req.http.X-Log = "name=" + beresp.backend.name;
+}`
+			assertNoError(t, input)
+		}
+	})
+
+	t.Run("beresp.backend.name not accessible in recv", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	set req.http.X-Backend-Name = beresp.backend.name;
+}`
+
+		assertError(t, input)
+	})
+
+	t.Run("beresp.backend.name/ip not accessible in pass or miss", func(t *testing.T) {
+		for _, sub := range []struct{ name, macro string }{
+			{"vcl_pass", "PASS"},
+			{"vcl_miss", "MISS"},
+		} {
+			input := `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set bereq.http.X-Backend-Name = beresp.backend.name;
+}`
+			assertError(t, input)
+
+			input = `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set bereq.http.X-Backend-IP = beresp.backend.ip;
+}`
+			assertError(t, input)
+		}
+	})
+
 	t.Run("invalid variable name", func(t *testing.T) {
 		input := `
 sub foo {
