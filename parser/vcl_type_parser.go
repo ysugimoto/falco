@@ -139,6 +139,8 @@ func (p *Parser) ParseRTime() (*ast.RTime, error) {
 		value = strings.TrimSuffix(literal, "h")
 	case strings.HasSuffix(literal, "d"):
 		value = strings.TrimSuffix(literal, "d")
+	case strings.HasSuffix(literal, "w"):
+		value = strings.TrimSuffix(literal, "w")
 	case strings.HasSuffix(literal, "y"):
 		value = strings.TrimSuffix(literal, "y")
 	default:

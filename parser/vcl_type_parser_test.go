@@ -324,3 +324,51 @@ func TestParseRTime(t *testing.T) {
 		t.Errorf("ast mismatch, diff=%s", diff)
 	}
 }
+
+func TestParseRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly, including week ("w").
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	inputs := []string{"100ms", "5s", "5m", "6h", "3d", "8w", "1y", "5.3d"}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			r, err := p.ParseRTime()
+			if err != nil {
+				t.Errorf("unexpected rtime parse error for %q: %s", input, err)
+				return
+			}
+			if r.Value != input {
+				t.Errorf("expected value %q, got %q", input, r.Value)
+			}
+		})
+	}
+}
+
+func TestParseRTimeWhitespaceSeparated(t *testing.T) {
+	// Fastly permits whitespace between the value and unit; the lexer
+	// normalizes `60 s` (and tab-separated forms) to the adjacent literal,
+	// so the parser should produce an ast.RTime with the normalized Value.
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{input: "60 s", expect: "60s"},
+		{input: "100 ms", expect: "100ms"},
+		{input: "8 w", expect: "8w"},
+		{input: "5.3 d", expect: "5.3d"},
+		{input: "60\ts", expect: "60s"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := New(lexer.NewFromString(tt.input))
+			r, err := p.ParseRTime()
+			if err != nil {
+				t.Errorf("unexpected rtime parse error for %q: %s", tt.input, err)
+				return
+			}
+			if r.Value != tt.expect {
+				t.Errorf("expected value %q, got %q", tt.expect, r.Value)
+			}
+		})
+	}
+}
