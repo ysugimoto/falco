@@ -84,6 +84,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		if v, err := i.getBackendProperty(backend.Value.Properties, "ssl"); err != nil {
 			return nil, errors.WithStack(err)
 		} else if v != nil {
+			if v.Type() != value.BooleanType {
+				return nil, errors.WithStack(errors.New("backend property 'ssl' must be boolean"))
+			}
 			if value.Unwrap[*value.Boolean](v).Value {
 				scheme = HTTPS_SCHEME
 			}
@@ -98,6 +101,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		if v, err := i.getBackendProperty(backend.Value.Properties, "host"); err != nil {
 			return nil, errors.WithStack(err)
 		} else if v != nil {
+			if v.Type() != value.StringType {
+				return nil, errors.WithStack(errors.New("backend property 'host' must be string"))
+			}
 			host = value.Unwrap[*value.String](v).Value
 		} else {
 			return nil, exception.Runtime(nil, "Failed to find host for backend %s", backend)
