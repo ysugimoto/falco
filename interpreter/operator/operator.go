@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/v2/interpreter/assign"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
 	pcre "go.elara.ws/pcre"
@@ -69,6 +70,22 @@ func Equal(left, right value.Value) (value.Value, error) {
 				fmt.Errorf("invalid type comparison %s and %s", left.Type(), right.Type()),
 			)
 		}
+	case value.IpType:
+		lv := value.Unwrap[*value.IP](left)
+		if lv.IsNotSet {
+			// unset IP never equals to another IP
+			return &value.Boolean{Value: false}, nil
+		}
+		rv := value.IP{}
+		err := assign.Assign(&rv, right) // performs all necessary type coercions
+		if err != nil {
+			return value.Null, err
+		}
+		if rv.IsNotSet {
+			// unset IP never equals to another IP
+			return &value.Boolean{Value: false}, nil
+		}
+		return &value.Boolean{Value: lv.Value.Equal(rv.Value)}, nil
 	}
 	if left.Type() != right.Type() {
 		return value.Null, errors.WithStack(

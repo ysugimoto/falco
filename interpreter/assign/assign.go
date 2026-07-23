@@ -239,11 +239,14 @@ func Assign(left, right value.Value) error {
 		switch right.Type() {
 		case value.StringType: // IP = STRING
 			rv := value.Unwrap[*value.String](right)
-			if ip := net.ParseIP(rv.Value); ip == nil {
-				return errors.WithStack(fmt.Errorf("invalid IP format, got %s", rv.Value))
-			} else {
+			if ip := net.ParseIP(rv.Value); ip != nil {
 				lv.Value = ip
 				lv.IsNotSet = false
+			} else if rv.IsLiteral() {
+				return errors.WithStack(fmt.Errorf("invalid IP format, got %s", rv.Value))
+			} else {
+				lv.Value = nil
+				lv.IsNotSet = true
 			}
 		case value.IpType: // IP = IP
 			rv := value.Unwrap[*value.IP](right)
