@@ -114,35 +114,35 @@ func Assign(left, right value.Value) error {
 			lv.IsNotSet = rv.IsNotSet
 		case value.IntegerType: // STRING = INTEGER
 			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("INTEGER literal could not assign to STRING"))
+				return errors.WithStack(fmt.Errorf("expected string constant, variable, or call"))
 			}
 			rv := value.Unwrap[*value.Integer](right)
 			lv.Value = rv.String()
 			lv.IsNotSet = false
 		case value.FloatType: // STRING = FLOAT
 			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("FLOAT literal could not assign to STRING"))
+				return errors.WithStack(fmt.Errorf("expected string constant, variable, or call"))
 			}
 			rv := value.Unwrap[*value.Float](right)
 			lv.Value = rv.String()
 			lv.IsNotSet = false
 		case value.RTimeType: // STRING = RTIME
 			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("RTIME literal could not assign to STRING"))
+				return errors.WithStack(fmt.Errorf("expected string constant, variable, or call"))
 			}
 			rv := value.Unwrap[*value.RTime](right)
 			lv.Value = rv.String()
 			lv.IsNotSet = false
 		case value.TimeType: // STRING = TIME
 			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("TIME literal could not assign to STRING"))
+				return errors.WithStack(fmt.Errorf("expected string constant, variable, or call"))
 			}
 			rv := value.Unwrap[*value.Time](right)
 			lv.Value = rv.Value.Format(http.TimeFormat)
 			lv.IsNotSet = false
 		case value.BackendType: // STRING = BACKEND
 			if right.IsLiteral() {
-				return errors.WithStack(fmt.Errorf("BACKEND identifier could not assign to STRING"))
+				return errors.WithStack(fmt.Errorf("expected string constant, variable, or call"))
 			}
 			rv := value.Unwrap[*value.Backend](right)
 			lv.Value = rv.String()
@@ -157,10 +157,10 @@ func Assign(left, right value.Value) error {
 			lv.IsNotSet = rv.IsNotSet
 		case value.RegexType: // STRING = REGEX
 			rv := value.Unwrap[*value.Regex](right)
-			lv.Value = rv.Value
+			lv.Value = rv.String()
 			lv.IsNotSet = false
 		default:
-			return errors.WithStack(fmt.Errorf("invalid assignment for STRING type, got %s", right.Type()))
+			return errors.WithStack(fmt.Errorf("string representation of %s is not implemented", right.Type()))
 		}
 	case value.RTimeType:
 		lv := value.Unwrap[*value.RTime](left)
