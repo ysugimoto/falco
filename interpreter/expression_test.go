@@ -163,6 +163,22 @@ func TestPrefixExpression(t *testing.T) {
 				},
 			},
 			{
+				name: "minus rtime week",
+				expression: &ast.PrefixExpression{
+					Operator: "-",
+					Right: &ast.RTime{
+						Value: "1w",
+					},
+					Meta: &ast.Meta{
+						Token: token.Token{Type: token.MINUS},
+					},
+				},
+				expect: &value.RTime{
+					Value:   -7 * 24 * time.Hour,
+					Literal: true,
+				},
+			},
+			{
 				name: "minus error",
 				expression: &ast.PrefixExpression{
 					Operator: "-",
@@ -452,6 +468,18 @@ func TestProcessStringConcat(t *testing.T) {
 			}`,
 			assertions: map[string]value.Value{
 				"req.http.Foo": &value.String{Value: "foo300.000"},
+			},
+		},
+		{
+			name: "RTIME week unit",
+			vcl: `sub vcl_recv {
+				declare local var.R RTIME;
+				set var.R = 8w;
+				set req.http.Foo = "foo" + var.R;
+			}`,
+			assertions: map[string]value.Value{
+				// 8 weeks = 8 * 7 * 86400 = 4838400 seconds
+				"req.http.Foo": &value.String{Value: "foo4838400.000"},
 			},
 		},
 		{

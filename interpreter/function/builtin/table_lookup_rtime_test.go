@@ -31,6 +31,15 @@ func Test_Table_lookup_rtime(t *testing.T) {
 						},
 					},
 				},
+				{
+					Key: &ast.String{Value: "week"},
+					Value: &ast.RTime{
+						Value: "8w",
+						Meta: &ast.Meta{
+							Token: token.Token{Offset: 0},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -43,6 +52,7 @@ func Test_Table_lookup_rtime(t *testing.T) {
 	}{
 		{input: "doesnotexist", key: "foo", isError: true},
 		{input: "example", key: "foo", expect: &value.RTime{Value: 10 * time.Second}},
+		{input: "example", key: "week", expect: &value.RTime{Value: 8 * 7 * 24 * time.Hour}},
 		{input: "example", key: "other", expect: &value.RTime{Value: time.Second}},
 	}
 
