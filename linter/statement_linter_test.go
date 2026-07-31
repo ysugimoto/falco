@@ -139,6 +139,16 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("dotted header sharing a prefix with an earlier header", func(t *testing.T) {
+		input := `
+sub foo {
+	set req.http.foo = "foo";
+	set req.http.foo.bar = "bar";
+}`
+
+		assertNoError(t, input)
+	})
+
 	t.Run("invalid variable name", func(t *testing.T) {
 		input := `
 sub foo {
