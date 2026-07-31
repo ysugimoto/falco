@@ -768,6 +768,19 @@ sub vcl_recv {
 	})
 }
 
+func TestReturnUpgradeStatement(t *testing.T) {
+	t.Run("upgrade is valid in vcl_recv", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	if (req.http.Upgrade) {
+		return (upgrade);
+	}
+}`
+		assertNoError(t, input)
+	})
+}
+
 func TestGotoBackwardJump(t *testing.T) {
 	t.Run("backward jmp is forbidden", func(t *testing.T) {
 		input := `
