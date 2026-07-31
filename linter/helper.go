@@ -543,6 +543,44 @@ func expectType(cur types.Type, expects ...types.Type) bool {
 	return slices.Contains(expects, cur)
 }
 
+// isStringCoercibleComparison reports whether an equality comparison (==/!=)
+// between left and right is valid via Fastly's implicit STRING coercion.
+//
+// Fastly coerces the right operand to STRING when the left operand is STRING,
+// so a STRING may be compared against a string constant, a boolean constant, a
+// variable, or a function call of any STRING-coercible type. The Fastly
+// compiler rejects numeric (INTEGER/FLOAT) literals in this position ("Expected
+// string constant, variable, or call"), including numeric literals wrapped in a
+// prefix (e.g. -10) or grouping (e.g. (10)). The coercion is one-directional: a
+// non-STRING left operand is not coerced and must match the right operand
+// exactly.
+func isStringCoercibleComparison(left, right types.Type, rightExpr ast.Expression) bool {
+	if left != types.StringType {
+		return false
+	}
+	coercible, ok := implicitCoersionTable[types.StringType]
+	if !ok || !slices.Contains(coercible, right) {
+		return false
+	}
+	// Numeric literals are rejected by the Fastly compiler in this position,
+	// even when wrapped in grouping or a prefix operator.
+	return !isNumericLiteralExpression(rightExpr)
+}
+
+// isNumericLiteralExpression reports whether expr is an INTEGER or FLOAT literal,
+// unwrapping grouping parentheses and prefix operators (e.g. (10), -10, -(10)).
+func isNumericLiteralExpression(expr ast.Expression) bool {
+	switch e := expr.(type) {
+	case *ast.Integer, *ast.Float:
+		return true
+	case *ast.GroupedExpression:
+		return isNumericLiteralExpression(e.Right)
+	case *ast.PrefixExpression:
+		return isNumericLiteralExpression(e.Right)
+	}
+	return false
+}
+
 func expectState(cur string, expects ...string) bool {
 	return slices.Contains(expects, cur)
 }

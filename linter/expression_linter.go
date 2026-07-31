@@ -259,7 +259,12 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 			right = types.BackendType
 		}
 		// Equal operator could compare any types but both left and right type must be the same.
-		if left != right {
+		// However, Fastly implicitly coerces the right operand to STRING when the left operand
+		// is STRING, so a STRING may be compared against any STRING-coercible type as long as the
+		// right operand is a string/boolean constant, a variable, or a function call. Numeric
+		// (INTEGER or FLOAT) literals are rejected by the Fastly compiler in this position.
+		// Fiddle verifying this behavior: https://fiddle.fastly.dev/fiddle/ce624d82
+		if left != right && !isStringCoercibleComparison(left, right, exp.Right) {
 			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
 		}
 		return types.BoolType
