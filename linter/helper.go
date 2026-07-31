@@ -223,6 +223,7 @@ var BackendPropertyTypes = map[string]types.Type{
 	"ssl_sni_hostname":         types.StringType,
 	"between_bytes_timeout":    types.RTimeType,
 	"connect_timeout":          types.RTimeType,
+	"fetch_timeout":            types.RTimeType,
 	"first_byte_timeout":       types.RTimeType,
 	"keepalive_time":           types.RTimeType,
 	"max_connections":          types.IntegerType,

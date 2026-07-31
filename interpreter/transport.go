@@ -167,6 +167,16 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 		timeout = value.Unwrap[*value.RTime](fbt).Value
 	}
 
+	// The backend "fetch_timeout" property bounds the entire response fetch,
+	// so prefer it over the first_byte_timeout-derived default when present.
+	ft, err := i.getBackendProperty(backend.Value.Properties, "fetch_timeout")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if ft != nil {
+		timeout = value.Unwrap[*value.RTime](ft).Value
+	}
+
 	// Use bereq.fetch_timeout variable value if specified
 	if i.ctx.FetchTimeout != nil && i.ctx.FetchTimeout.Value > 0 {
 		timeout = i.ctx.FetchTimeout.Value
