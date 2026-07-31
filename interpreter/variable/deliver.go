@@ -140,12 +140,12 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		return &value.IP{Value: net.IPv4(127, 0, 0, 1)}, nil
 	case REQ_BACKEND_IS_CLUSTER:
 		return &value.Boolean{Value: false}, nil
+	case BERESP_BACKEND_IP:
+		return getBackendIP(v.ctx.BackendResponse), nil
+	case BERESP_BACKEND_NAME:
+		return getBackendName(v.ctx.Backend), nil
 	case REQ_BACKEND_NAME:
-		var name string
-		if v.ctx.Backend != nil {
-			name = v.ctx.Backend.Value.Name.Value
-		}
-		return &value.String{Value: name}, nil
+		return getBackendName(v.ctx.Backend), nil
 	case REQ_BACKEND_PORT:
 		return getBackendPort(v.ctx.Backend)
 	case REQ_BODY_BYTES_READ:

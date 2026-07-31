@@ -2,12 +2,14 @@ package variable
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
+	"github.com/ysugimoto/falco/v2/interpreter/http"
 	"github.com/ysugimoto/falco/v2/interpreter/limitations"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
@@ -35,6 +37,33 @@ func getBackendPort(backend *value.Backend) (value.Value, error) {
 		}
 	}
 	return &value.Integer{Value: 0}, nil
+}
+
+// getBackendName returns the selected backend's name (beresp.backend.name,
+// req.backend.name), or an empty string when no backend is selected.
+func getBackendName(backend *value.Backend) value.Value {
+	if backend == nil || backend.Value == nil || backend.Value.Name == nil {
+		return &value.String{Value: ""}
+	}
+	return &value.String{Value: backend.Value.Name.Value}
+}
+
+// getBackendIP returns the IP of the backend that produced the response
+// (beresp.backend.ip), captured from the actual connection in
+// http.SendRequest. Returns a notset IP when no connection was made (cache HIT).
+func getBackendIP(resp *http.Response) value.Value {
+	if resp == nil || resp.RemoteAddr == "" {
+		return &value.IP{IsNotSet: true}
+	}
+	host := resp.RemoteAddr
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return &value.IP{IsNotSet: true}
+	}
+	return &value.IP{Value: ip}
 }
 
 func GetFastlyInfoVariable(ctx *context.Context, name string) (value.Value, error) {
