@@ -15,7 +15,7 @@ import (
 
 const (
 	fastlyDocColumnWrapperClassPrefix = "columns-list-module--columnList2"
-	ignoreHTTPHeaderRelatedSignaure   = "{NAME}"
+	ignoreHTTPHeaderRelatedSignature  = "{NAME}"
 	ignoreRegexCapturedNumber         = "{N}"
 	ignoreFunctionIf                  = "if"
 )
@@ -53,7 +53,7 @@ func fetchFastlyDocument(ctx context.Context, url string, m *sync.Map) error {
 			}
 			name := a.FirstChild.Data
 			if name == ignoreFunctionIf ||
-				strings.Contains(name, ignoreHTTPHeaderRelatedSignaure) ||
+				strings.Contains(name, ".http."+ignoreHTTPHeaderRelatedSignature) ||
 				strings.Contains(name, ignoreRegexCapturedNumber) {
 
 				continue
