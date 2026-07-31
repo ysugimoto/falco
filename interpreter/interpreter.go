@@ -840,6 +840,8 @@ func (i *Interpreter) updateCache() {
 				Response:  resp,
 				Expires:   now.Add(i.ctx.BackendResponseTTL.Value),
 				EntryTime: now,
+				IsHIPAA:   i.ctx.BackendResponseHipaa.Value,
+				IsPCI:     i.ctx.BackendResponsePCI.Value,
 			})
 		}
 	}

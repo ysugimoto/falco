@@ -2931,6 +2931,16 @@ func predefinedVariables() Variables {
 						},
 					},
 				},
+				"is_hipaa": {
+					Items: map[string]*Object{},
+					Value: &Accessor{
+						Get:       types.BoolType,
+						Set:       types.NeverType,
+						Unset:     false,
+						Scopes:    HIT | DELIVER | ERROR | LOG,
+						Reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-hipaa/",
+					},
+				},
 				"is_pci": {
 					Items: map[string]*Object{},
 					Value: &Accessor{

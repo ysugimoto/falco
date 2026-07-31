@@ -19,6 +19,8 @@ type CacheItem struct {
 	EntryTime time.Time
 	Hits      int
 	LastUsed  time.Duration
+	IsHIPAA   bool
+	IsPCI     bool
 
 	// private
 	requestedTime time.Time
