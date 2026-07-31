@@ -47,6 +47,7 @@ backend foo {
   .connect_timeout = 1s;
   .dynamic = true;
   .port = "443";
+  .fetch_timeout = 120s;
   .first_byte_timeout = 20s;
   .max_connections = 500;
   .between_bytes_timeout = 20s;
@@ -82,6 +83,14 @@ backend foo-bar {
 		input := `
 backend foo {
   .host = 1s;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("invalid fetch_timeout type", func(t *testing.T) {
+		input := `
+backend foo {
+  .fetch_timeout = "120";
 }`
 		assertError(t, input)
 	})
