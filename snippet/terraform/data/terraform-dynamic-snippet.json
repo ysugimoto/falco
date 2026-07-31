@@ -1,0 +1,47 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "type": "fastly_service_vcl",
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "values": {
+            "id": "testServiceId",
+            "name": "dynamicSnippetTest",
+            "backend": [
+              {
+                "address": "example.com",
+                "name": "example_backend"
+              }
+            ],
+            "dynamicsnippet": [
+              {
+                "name": "My Dynamic Snippet",
+                "type": "recv",
+                "priority": 110,
+                "snippet_id": "abc123"
+              }
+            ],
+            "vcl": [
+              {
+                "content": "sub vcl_recv {\n  #FASTLY recv\n}\n",
+                "main": true,
+                "name": "main.vcl"
+              }
+            ]
+          }
+        },
+        {
+          "type": "fastly_service_dynamic_snippet_content",
+          "provider_name": "registry.terraform.io/fastly/fastly",
+          "values": {
+            "service_id": "testServiceId",
+            "snippet_id": "abc123",
+            "content": "set req.http.X-Dynamic = \"1\";",
+            "manage_snippets": false
+          }
+        }
+      ]
+    }
+  }
+}
