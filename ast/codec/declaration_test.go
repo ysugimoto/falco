@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/lexer"
 	"github.com/ysugimoto/falco/v2/parser"
@@ -34,7 +35,10 @@ func assertStatement[T ast.Statement](t *testing.T, input string, expect T) {
 		t.Errorf("Unexpected decoding error: %s", err)
 		return
 	}
-	if diff := cmp.Diff(actual, expect); diff != "" {
+	// The decoder reconstructs only values, not full Meta. Integer/Float nodes
+	// additionally restore the preserved source literal into a minimal Meta, so
+	// ignore Meta here and assert literal preservation separately.
+	if diff := cmp.Diff(actual, expect, cmpopts.IgnoreTypes(&ast.Meta{})); diff != "" {
 		t.Errorf("Decode result mismatch, diff=%s", diff)
 	}
 }
