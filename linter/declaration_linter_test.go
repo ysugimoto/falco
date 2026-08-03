@@ -14,6 +14,32 @@ acl example {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with localhost entry", func(t *testing.T) {
+		input := `
+acl example {
+  "localhost";
+  "192.0.2.0"/24;
+  ! "192.0.2.1"/32;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with negated localhost entry", func(t *testing.T) {
+		input := `
+acl example {
+  ! "localhost";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("reject non-localhost hostname", func(t *testing.T) {
+		input := `
+acl example {
+  "not-a-real-host.invalid";
+}`
+		assertError(t, input)
+	})
+
 	t.Run("invalid acl name", func(t *testing.T) {
 		input := `
 acl invalid-acl-name {
