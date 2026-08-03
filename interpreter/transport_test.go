@@ -30,7 +30,7 @@ func newBackend(name string, props ...*ast.BackendProperty) *value.Backend {
 	}
 }
 
-// TestCreateBackendRequestInvalidPropertyType verifies that createBackendRequest
+// TestCreateBackendRequestWithInvalidPropertyType verifies that createBackendRequest
 // returns an error (rather than panicking with a nil-pointer dereference) when
 // a backend declaration assigns a value of an unexpected type to one of the
 // properties consumed by createBackendRequest.
@@ -75,6 +75,48 @@ func TestCreateBackendRequestWithInvalidPropertyType(t *testing.T) {
 			ip.ctx = context.New()
 
 			_, err := ip.createBackendRequest(ip.ctx, tt.backend)
+			if err == nil {
+				t.Fatalf("Expected error for backend property %q with invalid type, got nil", tt.property)
+			}
+			if !strings.Contains(err.Error(), tt.property) {
+				t.Errorf("Expected error to mention property %q, got: %s", tt.property, err.Error())
+			}
+		})
+	}
+}
+
+// TestSendBackendRequestWithInvalidTimeoutType verifies that sendBackendRequest
+// returns an error (rather than panicking with a nil-pointer dereference) when
+// a timeout property is assigned a value of a non-RTIME type. The type guards
+// run before any network request is issued, so no backend is contacted.
+func TestSendBackendRequestWithInvalidTimeoutType(t *testing.T) {
+	tests := []struct {
+		name     string
+		backend  *value.Backend
+		property string
+	}{
+		{
+			name: "first_byte_timeout must be RTIME",
+			backend: newBackend("invalid_first_byte_timeout_type",
+				backendProperty("first_byte_timeout", &ast.String{Value: "5s"}),
+			),
+			property: "first_byte_timeout",
+		},
+		{
+			name: "fetch_timeout must be RTIME",
+			backend: newBackend("invalid_fetch_timeout_type",
+				backendProperty("fetch_timeout", &ast.Integer{Value: 5}),
+			),
+			property: "fetch_timeout",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ip := New()
+			ip.ctx = context.New()
+
+			_, err := ip.sendBackendRequest(tt.backend)
 			if err == nil {
 				t.Fatalf("Expected error for backend property %q with invalid type, got nil", tt.property)
 			}
