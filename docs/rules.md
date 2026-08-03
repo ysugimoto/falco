@@ -913,6 +913,23 @@ if (req.http.Host) {
 }
 ```
 
+## regex/uncaptured-variable
+
+A `re.group.N` variable is read without a preceding regex match (`~` or `!~`) in the current subroutine scope.
+
+`re.group.N` is subroutine-global in Fastly and its value can leak across `call` boundaries. Reading it before any match in the current subroutine means the value depends on a regex match performed by a caller (or is unset), which is a common source of subtle bugs. Falco reports this as a WARNING.
+
+```vcl
+sub foo {
+  // WARNING: re.group.1 read before any regex match in foo
+  set req.http.x = re.group.1;
+  if (req.http.test ~ "([^.]+)") {}
+  set req.http.y = re.group.1; // OK: preceded by a match
+}
+```
+
+To silence this warning for a specific line, use `# falco-ignore-next-line regex/uncaptured-variable`.
+
 ## disallow-empty-return
 
 A `return` statement in state-machine subroutine like `vcl_recv` must have the next state.

@@ -429,11 +429,11 @@ func UncapturedRegexVariable(name string, m *ast.Meta) *LintError {
 		Severity: WARNING,
 		Token:    m.Token,
 		Message: fmt.Sprintf(
-			`Regex captured variable "%s" is uncaptured or reset on previous regular expression matching`,
+			`Regex captured variable "%s" is read without a preceding regex match in the current subroutine; its value may be unset or leaked from a caller scope`,
 			name,
 		),
 	}
-	return err.Match(DEPRECATED)
+	return err.Match(UNCAPTURED_REGEX_VARIABLE)
 }
 
 func CapturedRegexVariableOverridden(name string, m *ast.Meta) *LintError {
