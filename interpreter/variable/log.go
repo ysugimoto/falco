@@ -154,6 +154,8 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		return &value.String{Value: name}, nil
 	case REQ_BACKEND_PORT:
 		return getBackendPort(v.ctx.Backend)
+	case BERESP_BACKEND_HOST:
+		return getBackendHost(v.ctx.Backend)
 	case REQ_BODY_BYTES_READ:
 		var buf bytes.Buffer
 		n, err := buf.ReadFrom(req.Body)

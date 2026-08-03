@@ -47,6 +47,7 @@ backend foo {
   .connect_timeout = 1s;
   .dynamic = true;
   .port = "443";
+  .fetch_timeout = 120s;
   .first_byte_timeout = 20s;
   .max_connections = 500;
   .between_bytes_timeout = 20s;
@@ -82,6 +83,14 @@ backend foo-bar {
 		input := `
 backend foo {
   .host = 1s;
+}`
+		assertError(t, input)
+	})
+
+	t.Run("invalid fetch_timeout type", func(t *testing.T) {
+		input := `
+backend foo {
+  .fetch_timeout = "120";
 }`
 		assertError(t, input)
 	})
@@ -139,6 +148,23 @@ backend foo {
     .request = "GET / HTTP/1.1";
 	.threshold = 5;
 	.initial = 1;
+  }
+}`
+		assertError(t, input)
+	})
+
+	t.Run("Probe health check still applies with hexadecimal initial/threshold", func(t *testing.T) {
+		// Regression: the check reads the evaluated integer value, not String()
+		// (which now returns the source literal "0x5" that base-10 parsing would
+		// reject, silently skipping the check). 0x5 (5) > 0x1 (1) => unhealthy.
+		input := `
+backend foo {
+  .host = "example.com";
+
+  .probe = {
+    .request = "GET / HTTP/1.1";
+	.threshold = 0x5;
+	.initial = 0x1;
   }
 }`
 		assertError(t, input)

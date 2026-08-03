@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/ysugimoto/falco/v2/ast"
@@ -223,6 +222,7 @@ var BackendPropertyTypes = map[string]types.Type{
 	"ssl_sni_hostname":         types.StringType,
 	"between_bytes_timeout":    types.RTimeType,
 	"connect_timeout":          types.RTimeType,
+	"fetch_timeout":            types.RTimeType,
 	"first_byte_timeout":       types.RTimeType,
 	"keepalive_time":           types.RTimeType,
 	"max_connections":          types.IntegerType,
@@ -749,7 +749,6 @@ func isValidBackendShareKey(shareKey string) bool {
 func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) error {
 	var threshold int
 	var initial int
-	var err error
 
 	// The code below works also if either/both initial and threshold are not present:
 	// * if both dont appear then both have values 0 and 0 in which case you get no warning
@@ -757,21 +756,21 @@ func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) erro
 	// * if threshold exists but no initial then we generate an error correctly because threshold > 0 (initial)
 	for _, v := range prober.Values {
 		if strings.EqualFold(v.Key.Value, "initial") {
-			// Optimistically cast this to int, if we can do it because the value is a literal
-			// we can apply the check
-			initial, err = strconv.Atoi(v.Value.String())
-			if err != nil {
+			// Read the evaluated value, not String() (which now returns the source
+			// literal, e.g. hex "0x5", that base-10 parsing would reject).
+			iv, ok := v.Value.(*ast.Integer)
+			if !ok {
 				return nil
 			}
+			initial = int(iv.Value)
 		}
 
 		if strings.EqualFold(v.Key.Value, "threshold") {
-			// Optimistically cast this to int, if we can do it because the value is a literal
-			// we can apply the check
-			threshold, err = strconv.Atoi(v.Value.String())
-			if err != nil {
+			iv, ok := v.Value.(*ast.Integer)
+			if !ok {
 				return nil
 			}
+			threshold = int(iv.Value)
 		}
 	}
 
