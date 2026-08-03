@@ -113,6 +113,8 @@ func (v *ErrorScopeVariables) Get(s context.Scope, name string) (value.Value, er
 		return &value.String{Value: name}, nil
 	case REQ_BACKEND_PORT:
 		return getBackendPort(v.ctx.Backend)
+	case BERESP_BACKEND_HOST:
+		return getBackendHost(v.ctx.Backend)
 
 	case REQ_ESI:
 		return v.ctx.EnableSSI, nil

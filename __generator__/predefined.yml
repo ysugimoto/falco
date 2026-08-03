@@ -363,6 +363,11 @@ bereq.url.qs:
   on: [PASS, MISS, FETCH, PIPE]
   get: STRING
 
+beresp.backend.host:
+  reference: "https://www.fastly.com/documentation/reference/vcl/variables/backend-response/beresp-backend-host/"
+  on: [FETCH, DELIVER, ERROR, LOG]
+  get: STRING
+
 beresp.backend.name:
   reference: "https://developer.fastly.com/reference/vcl/variables/backend-response/beresp-backend-name/"
   on: [FETCH]

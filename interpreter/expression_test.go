@@ -261,6 +261,72 @@ func TestProcessExpression(t *testing.T) {
 		isError    bool
 	}{
 		{
+			name: "Hexadecimal integer literal",
+			vcl: `sub vcl_recv {
+				declare local var.i INTEGER;
+				set var.i = 0x5a5a;
+				set req.http.Foo = var.i;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "23130"},
+			},
+		},
+		{
+			name: "Negative hexadecimal min-int literal",
+			vcl: `sub vcl_recv {
+				declare local var.i INTEGER;
+				set var.i = -0x8000000000000000;
+				set req.http.Foo = var.i;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "-9223372036854775808"},
+			},
+		},
+		{
+			name: "Max int hexadecimal literal",
+			vcl: `sub vcl_recv {
+				declare local var.i INTEGER;
+				set var.i = 0x7FFFFFFFFFFFFFFF;
+				set req.http.Foo = var.i;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "9223372036854775807"},
+			},
+		},
+		{
+			name: "Exponent float literal",
+			vcl: `sub vcl_recv {
+				declare local var.f FLOAT;
+				set var.f = 1e3;
+				set req.http.Foo = var.f;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "1000.000"},
+			},
+		},
+		{
+			name: "Negative fractional exponent float literal",
+			vcl: `sub vcl_recv {
+				declare local var.f FLOAT;
+				set var.f = -1.2e-3;
+				set req.http.Foo = var.f;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "-0.001"},
+			},
+		},
+		{
+			name: "Hexadecimal float literal",
+			vcl: `sub vcl_recv {
+				declare local var.f FLOAT;
+				set var.f = 0xA.Bp3;
+				set req.http.Foo = var.f;
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.Foo": &value.String{Value: "85.500"},
+			},
+		},
+		{
 			name: "If expression (consequence)",
 			vcl:  `sub vcl_recv { set req.http.Foo = if(req.http.Bar, "yes", "no"); }`,
 			assertions: map[string]value.Value{
