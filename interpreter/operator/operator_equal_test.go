@@ -2,6 +2,7 @@ package operator
 
 import (
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -108,27 +109,42 @@ func TestEqualOperator(t *testing.T) {
 
 	t.Run("left is STRING", func(t *testing.T) {
 		now := time.Now()
+		nowStr := now.Format(http.TimeFormat)
 		tests := []struct {
 			left    value.Value
 			right   value.Value
 			expect  bool
 			isError bool
 		}{
-			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
+			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10}, expect: false},
+			{left: &value.String{Value: "10"}, right: &value.Integer{Value: 10}, expect: true},
+			{left: &value.String{Value: "10"}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
+			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0}, expect: false},
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0}, expect: true},
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0001}, expect: true},
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example"}, expect: true},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example", Literal: true}, expect: true},
-			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: false, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
+			{left: &value.String{IsNotSet: true}, right: &value.String{IsNotSet: true}, expect: false},
+			{left: &value.String{IsNotSet: true}, right: &value.IP{IsNotSet: true}, expect: false},
+			{left: &value.String{Value: "123.123.123.123"}, right: &value.IP{Value: net.ParseIP("123.123.123.123")}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: false},
+			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: false},
+			{left: &value.String{Value: "some_backend"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "some_backend"}}}, expect: true},
+			{left: &value.String{Value: "(none)"}, right: &value.Backend{}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, expect: false},
+			{left: &value.String{Value: "100.000"}, right: &value.RTime{Value: 100 * time.Second}, expect: true},
+			{left: &value.String{Value: "100.000"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			{left: &value.String{Value: nowStr}, right: &value.Time{Value: now}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, expect: false},
+			{left: &value.String{Value: "foo"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: false},
+			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, expect: false},
+			{left: &value.String{Value: "1"}, right: &value.Boolean{Value: true}, expect: true},
+			{left: &value.String{Value: "1"}, right: &value.Boolean{Value: true, Literal: true}, expect: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			{left: &value.String{Value: "$unsatisfiable"}, right: &value.Regex{Unsatisfiable: true}, expect: true},
 		}
 
 		for i, tt := range tests {

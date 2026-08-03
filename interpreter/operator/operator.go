@@ -45,15 +45,18 @@ func Equal(left, right value.Value) (value.Value, error) {
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
 	case value.StringType:
-		if right.Type() != value.StringType {
-			return value.Null, errors.WithStack(
-				fmt.Errorf("invalid type comparison %s and %s", left.Type(), right.Type()),
-			)
-		}
 		lv := value.Unwrap[*value.String](left)
-		rv := value.Unwrap[*value.String](right)
-		// IsNotSet string does not match all equal expression
-		if lv.IsNotSet || rv.IsNotSet {
+		if lv.IsNotSet {
+			// unset string never equals to another string
+			return &value.Boolean{Value: false}, nil
+		}
+		rv := value.String{}
+		err := assign.Assign(&rv, right)
+		if err != nil {
+			return value.Null, err
+		}
+		if rv.IsNotSet {
+			// unset string never equals to another string
 			return &value.Boolean{Value: false}, nil
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
