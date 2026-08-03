@@ -147,6 +147,8 @@ func (v *FetchScopeVariables) Get(s context.Scope, name string) (value.Value, er
 	// FIXME should be able to get from actual backend request
 	case BERESP_BACKEND_IP:
 		return &value.String{Value: ""}, nil
+	case BERESP_BACKEND_HOST:
+		return getBackendHost(v.ctx.Backend)
 	case BERESP_BACKEND_NAME:
 		return &value.String{Value: v.ctx.Backend.Value.Name.Value}, nil
 	case BERESP_BACKEND_PORT:

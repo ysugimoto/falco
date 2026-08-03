@@ -52,8 +52,13 @@ func (i *Integer) ID() uint64     { return i.Meta.ID }
 func (i *Integer) Expression()    {}
 func (i *Integer) GetMeta() *Meta { return i.Meta }
 func (i *Integer) String() string {
+	// Preserve the source literal; fall back to the value for synthesized nodes.
+	lit := i.Token.Literal
+	if lit == "" {
+		lit = fmt.Sprintf("%d", i.Value)
+	}
 	return strings.TrimSpace(
-		fmt.Sprintf("%s%d%s", i.LeadingComment(inline), i.Value, i.TrailingComment(inline)),
+		fmt.Sprintf("%s%s%s", i.LeadingComment(inline), lit, i.TrailingComment(inline)),
 	)
 }
 
@@ -90,8 +95,13 @@ func (f *Float) ID() uint64     { return f.Meta.ID }
 func (f *Float) Expression()    {}
 func (f *Float) GetMeta() *Meta { return f.Meta }
 func (f *Float) String() string {
+	// Preserve the source literal; fall back to the value for synthesized nodes.
+	lit := f.Token.Literal
+	if lit == "" {
+		lit = fmt.Sprintf("%f", f.Value)
+	}
 	return strings.TrimSpace(
-		fmt.Sprintf(`%s%f%s`, f.LeadingComment(inline), f.Value, f.TrailingComment(inline)),
+		fmt.Sprintf(`%s%s%s`, f.LeadingComment(inline), lit, f.TrailingComment(inline)),
 	)
 }
 
