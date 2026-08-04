@@ -124,8 +124,8 @@ const (
 	SortDesc SortMode = "desc"
 )
 
-// Like as url.QueryEscape but escapes ' ' character
-// with '%20' rather then '+', which makes it consistent
+// Like as url.QueryEscape but escapes space character
+// with '%20' rather than '+', which makes it consistent
 // with Fastly behavior.
 func queryEscape(s string) string {
 	escaped := url.QueryEscape(s)
