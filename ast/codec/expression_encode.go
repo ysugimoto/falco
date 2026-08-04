@@ -166,6 +166,11 @@ func (c *Encoder) encodeInteger(expr *ast.Integer) *Frame {
 	bin := make([]byte, 8)
 	binary.BigEndian.PutUint64(bin, uint64(expr.Value))
 
+	// Append the source literal so it survives a round-trip (none if synthesized).
+	if expr.Meta != nil {
+		bin = append(bin, stringToBytes(expr.Token.Literal)...)
+	}
+
 	return &Frame{
 		frameType: INTEGER_VALUE,
 		buffer:    bin,
@@ -175,6 +180,11 @@ func (c *Encoder) encodeInteger(expr *ast.Integer) *Frame {
 func (c *Encoder) encodeFloat(expr *ast.Float) *Frame {
 	bin := make([]byte, 8)
 	binary.BigEndian.PutUint64(bin, math.Float64bits(expr.Value))
+
+	// Append the source literal so it survives a round-trip (none if synthesized).
+	if expr.Meta != nil {
+		bin = append(bin, stringToBytes(expr.Token.Literal)...)
+	}
 
 	return &Frame{
 		frameType: FLOAT_VALUE,

@@ -280,19 +280,19 @@ func TestProcessAssignment(t *testing.T) {
 
 	t.Run("left is IP", func(t *testing.T) {
 		now := time.Now()
-		v := net.ParseIP("127.0.0.1")
-		vv := net.ParseIP("127.0.0.2")
+		v := value.IP{Value: net.ParseIP("127.0.0.1")}
+		vv := value.IP{Value: net.ParseIP("127.0.0.2")}
 		tests := []struct {
-			left    net.IP
+			left    value.IP
 			right   value.Value
-			expect  net.IP
+			expect  value.IP
 			isError bool
 		}{
 			{left: v, right: &value.Integer{Value: 100}, isError: true},
 			{left: v, right: &value.Integer{Value: 100, Literal: true}, isError: true},
 			{left: v, right: &value.Float{Value: 50.0}, isError: true},
 			{left: v, right: &value.Float{Value: 50.0, Literal: true}, isError: true},
-			{left: v, right: &value.String{Value: "example"}, isError: true},
+			{left: v, right: &value.String{Value: "example"}, expect: value.IP{IsNotSet: true}},
 			{left: v, right: &value.String{Value: "example", Literal: true}, isError: true},
 			{left: v, right: &value.RTime{Value: 100 * time.Second}, isError: true},
 			{left: v, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
@@ -301,11 +301,11 @@ func TestProcessAssignment(t *testing.T) {
 			{left: v, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
 			{left: v, right: &value.Boolean{Value: true}, isError: true},
 			{left: v, right: &value.Boolean{Value: true, Literal: true}, isError: true},
-			{left: v, right: &value.IP{Value: vv}, expect: vv},
+			{left: v, right: &vv, expect: vv},
 		}
 
 		for i, tt := range tests {
-			left := &value.IP{Value: tt.left}
+			left := &tt.left
 			err := Assign(left, tt.right)
 			if tt.isError {
 				if err == nil {
@@ -313,8 +313,8 @@ func TestProcessAssignment(t *testing.T) {
 				}
 				continue
 			}
-			if left.Value.String() != tt.expect.String() {
-				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect, left.Value)
+			if left.String() != tt.expect.String() {
+				t.Errorf("Index %d: expect value %s, got %s", i, tt.expect.String(), left.String())
 			}
 		}
 	})
