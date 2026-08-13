@@ -42,6 +42,88 @@ sub foo {
 }`
 		assertNoError(t, input)
 	})
+
+	t.Run("STRING is comparable with INTEGER variable (implicit coercion)", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.vcl-version == req.vcl.version) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("STRING is comparable with BOOL variable (implicit coercion)", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.S STRING;
+	declare local var.B BOOL;
+	if (var.S == var.B) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("STRING is comparable with BOOL literal (implicit coercion)", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == true) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("STRING cannot compare with INTEGER literal", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == 10) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	t.Run("STRING cannot compare with FLOAT literal", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == 10.0) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	t.Run("STRING cannot compare with negative INTEGER literal", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == -10) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	t.Run("STRING cannot compare with parenthesized INTEGER literal", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == (10)) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	t.Run("INTEGER variable cannot compare with STRING variable", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.vcl.version == req.http.Host) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
 }
 
 func TestLintNotEqualOperator(t *testing.T) {
@@ -72,6 +154,16 @@ sub foo {
 	}
 }`
 		assertError(t, input)
+	})
+
+	t.Run("STRING is comparable with INTEGER variable (implicit coercion)", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.vcl-version != req.vcl.version) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
 	})
 }
 
