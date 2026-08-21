@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"slices"
+	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/linter/context"
@@ -123,6 +124,44 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 			})
 		}
 	}
+	if calledFn.name == "utf8.translate" {
+		l.lintTranslationSets(calledFn, fn.Reference)
+	}
 
 	return fn.Return
+}
+
+// Fastly builds the translation table of utf8.translate when it compiles the
+// VCL, so both character sets must be string literals.
+func (l *Linter) lintTranslationSets(calledFn functionMeta, reference string) {
+	raise := func(arg ast.Expression, format string, args ...any) {
+		err := &LintError{
+			Severity: ERROR,
+			Token:    arg.GetMeta().Token,
+			Message:  fmt.Sprintf(format, args...),
+		}
+		l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(reference))
+	}
+
+	var counts [2]int
+	for i, name := range []string{"set1", "set2"} {
+		arg := calledFn.arguments[i+1]
+		str, ok := arg.(*ast.String)
+		if !ok {
+			raise(arg, "The %s argument of utf8.translate must be a string literal.", name)
+			return
+		}
+		if str.Value == "" {
+			raise(arg, "Characters required in %s", name)
+			return
+		}
+		counts[i] = utf8.RuneCountInString(str.Value)
+	}
+
+	if counts[1] > counts[0] {
+		raise(
+			calledFn.arguments[2],
+			"Excess characters in set2: Expected %d or fewer, got %d", counts[0], counts[1],
+		)
+	}
 }
