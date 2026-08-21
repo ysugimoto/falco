@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"math"
 	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/v2/interpreter/context"
@@ -30,7 +31,7 @@ func Utf8_substr_Validate(args []value.Value) error {
 // Arguments may be:
 // - STRING, INTEGER, INTEGER
 // - STRING, INTEGER
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-substr/
 func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Utf8_substr_Validate(args); err != nil {
@@ -38,46 +39,34 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 	}
 
 	v := value.Unwrap[*value.String](args[0])
-	if !utf8.Valid([]byte(v.Value)) {
+	if !utf8.ValidString(v.Value) {
 		return &value.String{IsNotSet: true}, nil
 	}
+
 	input := []rune(v.Value)
-	offset := int(value.Unwrap[*value.Integer](args[1]).Value)
-	var length *int
-	if len(args) > 2 {
-		v := int(value.Unwrap[*value.Integer](args[2]).Value)
-		length = &v
-	}
+	count := int64(len(input))
 
-	var start, end int
+	offset := value.Unwrap[*value.Integer](args[1]).Value
 	if offset < 0 {
-		start = len(input) + offset
-		if start < 0 {
-			return &value.String{}, nil
-		}
-	} else {
-		start = offset
+		offset += count
 	}
-	if length == nil {
-		end = len(input)
-	} else if *length < 0 {
-		end = len(input) + *length
-	} else {
-		end = start + *length
-		// Handle integer overflow
-		if end < 0 {
-			return &value.String{}, nil
-		}
-	}
-	if end > len(input) {
-		end = len(input)
+	if offset < 0 || offset > count {
+		return &value.String{IsNotSet: true}, nil
 	}
 
-	if start > len(input) {
-		return &value.String{}, nil
+	rest := count - offset
+	length := rest
+	if len(args) > 2 {
+		length = value.Unwrap[*value.Integer](args[2]).Value
+		if length < 0 {
+			length = max(length+rest, 0)
+		}
 	}
-	if end <= start {
-		return &value.String{}, nil
+
+	// Fastly gives up when offset + length overflows.
+	if rest > 0 && length > math.MaxInt64-offset {
+		return &value.String{IsNotSet: true}, nil
 	}
-	return &value.String{Value: string(input[start:end])}, nil
+
+	return &value.String{Value: string(input[offset : offset+min(length, rest)])}, nil
 }
