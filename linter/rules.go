@@ -64,6 +64,7 @@ const (
 	FUNCTION_ARGUMENT_TYPE               = "function/argument-type"
 	INCLUDE_STATEMENT_MODULE_NOT_FOUND   = "include/module-not-found"
 	INCLUDE_STATEMENT_MODULE_LOAD_FAILED = "include/module-load-failed"
+	INCLUDE_STATEMENT_MODULE_RECURSION   = "include/module-recursion"
 	REGEX_MATCHED_VALUE_MAY_OVERRIDE     = "regex/matched-value-override"
 	UNUSED_DECLARATION                   = "unused/declaration"
 	UNUSED_VARIABLE                      = "unused/variable"

@@ -11,6 +11,7 @@ import (
 	"github.com/ysugimoto/falco/v2/linter/context"
 	"github.com/ysugimoto/falco/v2/linter/types"
 	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/resolver"
 	"github.com/ysugimoto/falco/v2/snippet"
 	"github.com/ysugimoto/falco/v2/token"
 )
@@ -21,6 +22,7 @@ type Linter struct {
 	lexers     map[string]*lexer.Lexer
 	ignore     *ignore
 	conf       *config.LinterConfig
+	includes   resolver.IncludeStack
 }
 
 func New(c *config.LinterConfig, opts ...optionFunc) *Linter {
@@ -460,6 +462,22 @@ func (l *Linter) resolveFileInclusion(
 		l.Error(e.Match(INCLUDE_STATEMENT_MODULE_LOAD_FAILED))
 		return statements
 	}
+
+	// A module that includes itself, directly or through the modules it includes,
+	// would be resolved until the process runs out of memory.
+	if !l.includes.Push(module.Name) {
+		e := &LintError{
+			Severity: ERROR,
+			Token:    include.GetMeta().Token,
+			Message: fmt.Sprintf(
+				"Module %s is included recursively: %s -> %s",
+				include.Module.Value, l.includes.Path(), module.Name,
+			),
+		}
+		l.Error(e.Match(INCLUDE_STATEMENT_MODULE_RECURSION))
+		return statements
+	}
+	defer l.includes.Pop()
 
 	if isRoot {
 		statements = l.loadVCL(module.Name, module.Data)
