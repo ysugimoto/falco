@@ -56,6 +56,7 @@ backend foo {
   .ssl_sni_hostname = "httpbin.org";
   .ssl_cert_hostname = "httpbin.org";
   .ssl_check_cert = always;
+  .ssl_ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384";
   .min_tls_version = "1.2";
   .max_tls_version = "1.2";
   .prefer_ipv6 = true;
@@ -91,6 +92,14 @@ backend foo {
 		input := `
 backend foo {
   .fetch_timeout = "120";
+}`
+		assertError(t, input)
+	})
+
+	t.Run("invalid ssl_ciphers type", func(t *testing.T) {
+		input := `
+backend foo {
+  .ssl_ciphers = 1;
 }`
 		assertError(t, input)
 	})
