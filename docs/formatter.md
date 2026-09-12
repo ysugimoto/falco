@@ -549,6 +549,10 @@ sub vcl_recv {
 }
 ```
 
+Two characters open an inline comment, so two mark the line comment it becomes:
+`## Some leading comment` under `sharp`, which is also what restyling a `//` comment
+gives.
+
 Two kinds of inline comment are left as they are. One is a comment that code follows
 on the same line, because a line comment there would swallow the code. The other is a
 comment whose text spans lines, because rewriting it means rewriting every line inside

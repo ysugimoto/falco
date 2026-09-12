@@ -217,10 +217,12 @@ sub test {
 			name: "Inline comment on its own line becomes a sharp comment",
 			input: `sub test {
   /* Above the statement */
+  // A slash comment restyled the same way
   set req.http.Foo = "bar";
 }`,
 			expect: `sub test {
-  # Above the statement
+  ## Above the statement
+  ## A slash comment restyled the same way
   set req.http.Foo = "bar";
 }
 `,

@@ -70,7 +70,10 @@ func inlineCommentToLine(comment string, char rune) (string, bool) {
 		return comment, false
 	}
 	text := strings.TrimSpace(comment[2 : len(comment)-2])
-	mark := "#"
+	// Two characters open an inline comment, so two mark the line comment it becomes.
+	// That is what restyling a "//" comment does, and a converted comment that came
+	// out as one "#" would be the odd one out in a file of "##".
+	mark := "##"
 	if char == '/' {
 		mark = "//"
 	}
