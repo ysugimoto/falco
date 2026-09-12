@@ -151,12 +151,19 @@ func (f *Formatter) formatComment(comments ast.Comments, sep string, level int) 
 		if comments[i].PreviousEmptyLines > 0 {
 			buf.WriteString("\n")
 		}
+		isMacro := strings.HasPrefix(comments[i].String(), "#FASTLY")
 		// #FASTLY macros are not indented
-		if !strings.HasPrefix(comments[i].String(), "#FASTLY") {
+		if !isMacro {
 			buf.WriteString(f.indent(level))
 		}
-		switch f.conf.CommentStyle {
-		case config.CommentStyleSharp, config.CommentStyleSlash:
+		switch {
+		// A #FASTLY macro is a placeholder Fastly replaces with its own generated
+		// code, and the sharp form is the only one Fastly documents, so its comment
+		// character is not a style to restyle. Rewriting it risks a service that no
+		// longer compiles for a change nobody asked for.
+		case isMacro:
+			buf.WriteString(comments[i].String())
+		case f.conf.CommentStyle == config.CommentStyleSharp, f.conf.CommentStyle == config.CommentStyleSlash:
 			r := '#' // default as sharp style comment
 			if f.conf.CommentStyle == config.CommentStyleSlash {
 				r = '/'
