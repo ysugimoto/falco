@@ -561,7 +561,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 
 	formatted := formatter.New(r.config.Format).Format(vcl)
 	var w io.Writer
-	if r.config.Format.ErrorOnUnformatted {
+	if r.config.Format.Check {
 		formattedBuf := new(strings.Builder)
 		_, err := io.Copy(formattedBuf, formatted)
 		if err != nil {
@@ -573,7 +573,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 		}
 		formatted = strings.NewReader(formattedString)
 	}
-	if r.config.Format.Overwrite {
+	if r.config.Format.Check {
 		writeln(cyan, "Formatted %s.", main.Name)
 		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
 		if err != nil {
