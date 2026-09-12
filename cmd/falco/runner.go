@@ -563,15 +563,15 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 	var w io.Writer
 	if r.config.Format.ErrorOnUnformatted {
 		formattedBuf := new(strings.Builder)
-		_, err := io.Copy(formatted_buf, formatted)
+		_, err := io.Copy(formattedBuf, formatted)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		formattedString := formattedBuf.String()
-		if main.Data != formatted_string {
+		if main.Data != formattedString {
 			return errors.WithStack(fmt.Errorf("%s requires formatting", main.Name))
 		}
-		formatted = strings.NewReader(formatted_string)
+		formatted = strings.NewReader(formattedString)
 	}
 	if r.config.Format.Overwrite {
 		writeln(cyan, "Formatted %s.", main.Name)
