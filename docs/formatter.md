@@ -18,9 +18,9 @@ Usage:
     falco fmt [flags] ...files
 
 Flags:
-    -h, --help  : Show this help
-    --check     : Return a non zero exit code if formatting is required
-    -w, --write : Overwrite format result
+    -h, --help         : Show this help
+    --check            : Return a non zero exit code if formatting is required
+    -w, --write        : Overwrite format result
 
 files argument accepts glob file patterns
 
