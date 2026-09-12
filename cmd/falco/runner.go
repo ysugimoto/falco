@@ -573,7 +573,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 		}
 		formatted = strings.NewReader(formattedString)
 	}
-	if r.config.Format.Check {
+	if r.config.Format.Overwrite {
 		writeln(cyan, "Formatted %s.", main.Name)
 		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
 		if err != nil {
