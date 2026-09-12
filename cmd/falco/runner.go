@@ -562,7 +562,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 	formatted := formatter.New(r.config.Format).Format(vcl)
 	var w io.Writer
 	if r.config.Format.ErrorOnUnformatted {
-		formatted_buf := new(strings.Builder)
+		formattedBuf := new(strings.Builder)
 		_, err := io.Copy(formatted_buf, formatted)
 		if err != nil {
 			return errors.WithStack(err)
