@@ -567,7 +567,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		formatted_string := formatted_buf.String()
+		formattedString := formattedBuf.String()
 		if main.Data != formatted_string {
 			return errors.WithStack(fmt.Errorf("%s requires formatting", main.Name))
 		}
