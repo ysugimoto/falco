@@ -530,6 +530,17 @@ sub vcl_recv {
 }
 ```
 
+A line comment's mark is two characters, and a sharp comment can be written with one,
+so a comment written with a single `#` gets the second character: `// comment` under
+`slash`, where one `/` would not be a comment at all, and `## comment` under `sharp`,
+where a lone `#` would be the only comment in the file not marked like the rest. A
+longer run is decoration and keeps the length it was written with, `###` staying three
+characters under either style.
+
+A comment beginning `#FASTLY` is left as it is. Fastly reads those macros to decide
+where to inject its generated VCL, the sharp form is the only one documented for them,
+and Fastly allows no space between the `#` and the word.
+
 ---
 
 ## Should Use Unset
