@@ -714,3 +714,98 @@ func TestComplicatedExpressions(t *testing.T) {
 		})
 	}
 }
+
+func TestDeclarationBlankLineIsNotDuplicated(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{
+			name: "acl",
+			input: `acl a {
+
+  // leading
+  "192.0.2.0"/24;
+}`,
+			expect: `acl a {
+
+  // leading
+  "192.0.2.0"/24;
+}
+`,
+		},
+		{
+			name: "acl, blank line between the comment and the entry",
+			input: `acl a {
+
+  // leading
+
+  "192.0.2.0"/24;
+}`,
+			expect: `acl a {
+
+  // leading
+
+  "192.0.2.0"/24;
+}
+`,
+		},
+		{
+			name: "backend",
+			input: `backend b {
+
+  // leading
+
+  .host = "example.com";
+}`,
+			expect: `backend b {
+
+  // leading
+
+  .host = "example.com";
+}
+`,
+		},
+		{
+			name: "director",
+			input: `director d random {
+
+  // leading
+
+  .quorum = 50%;
+}`,
+			expect: `director d random {
+
+  // leading
+
+  .quorum = 50%;
+}
+`,
+		},
+		{
+			name: "table",
+			input: `table t {
+
+  // leading
+
+  "key": "value",
+}`,
+			expect: `table t {
+
+  // leading
+
+  "key": "value",
+}
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Formatting the formatted result must not change it again
+			formatted := assert(t, tt.input, tt.expect, nil)
+			assert(t, formatted, tt.expect, nil)
+		})
+	}
+}
