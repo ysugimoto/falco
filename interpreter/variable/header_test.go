@@ -38,6 +38,54 @@ func TestGetRequestHeaderValue(t *testing.T) {
 	}
 
 }
+
+func TestGetRequestHeaderValueEmptyHeaderFields(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(*http.Request)
+		target string
+		expect *value.String
+	}{
+		{
+			name: "unset field in assigned empty header",
+			setup: func(req *http.Request) {
+				setRequestHeaderValue(req, "Input", &value.String{Value: ""})
+			},
+			target: "Input:field-key",
+			expect: &value.String{IsNotSet: true},
+		},
+		{
+			name: "assigned empty header",
+			setup: func(req *http.Request) {
+				setRequestHeaderValue(req, "Input", &value.String{Value: ""})
+			},
+			target: "Input",
+			expect: &value.String{Value: ""},
+		},
+		{
+			name: "empty field in assigned header",
+			setup: func(req *http.Request) {
+				setRequestHeaderValue(req, "Input", &value.String{Value: ""})
+				setRequestHeaderValue(req, "Input:field-key", &value.String{Value: ""})
+			},
+			target: "Input:field-key",
+			expect: &value.String{Value: ""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := http.WrapRequest(
+				httptest.NewRequest(ghttp.MethodGet, "http://localhost", nil),
+			)
+			tt.setup(req)
+			if diff := cmp.Diff(tt.expect, getRequestHeaderValue(req, tt.target)); diff != "" {
+				t.Errorf("Return value unmatch, diff=%s", diff)
+			}
+		})
+	}
+}
+
 func TestGetReponseHeaderValue(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -62,6 +110,51 @@ func TestGetReponseHeaderValue(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGetResponseHeaderValueEmptyHeaderFields(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(*http.Response)
+		target string
+		expect *value.String
+	}{
+		{
+			name: "unset field in assigned empty header",
+			setup: func(resp *http.Response) {
+				setResponseHeaderValue(resp, "Input", &value.String{Value: ""})
+			},
+			target: "Input:field-key",
+			expect: &value.String{IsNotSet: true},
+		},
+		{
+			name: "assigned empty header",
+			setup: func(resp *http.Response) {
+				setResponseHeaderValue(resp, "Input", &value.String{Value: ""})
+			},
+			target: "Input",
+			expect: &value.String{Value: ""},
+		},
+		{
+			name: "empty field in assigned header",
+			setup: func(resp *http.Response) {
+				setResponseHeaderValue(resp, "Input", &value.String{Value: ""})
+				setResponseHeaderValue(resp, "Input:field-key", &value.String{Value: ""})
+			},
+			target: "Input:field-key",
+			expect: &value.String{Value: ""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}})
+			tt.setup(resp)
+			if diff := cmp.Diff(tt.expect, getResponseHeaderValue(resp, tt.target)); diff != "" {
+				t.Errorf("Return value unmatch, diff=%s", diff)
+			}
+		})
+	}
 }
 func TestSetRequestHeaderValue(t *testing.T) {
 	tests := []struct {
