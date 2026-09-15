@@ -58,11 +58,11 @@ func getRequestHeaderValue(r *http.Request, name string) *value.String {
 	var key string
 	name, key, _ = strings.Cut(name, ":")
 	v := r.Header.Get(name)
-	if v == "" {
-		return &value.String{IsNotSet: !r.IsAssigned(name)}
-	}
 
 	if key == "" {
+		if v == "" {
+			return &value.String{IsNotSet: !r.IsAssigned(name)}
+		}
 		return &value.String{Value: v}
 	}
 
@@ -83,11 +83,11 @@ func getResponseHeaderValue(r *http.Response, name string) *value.String {
 	var key string
 	name, key, _ = strings.Cut(name, ":")
 	v := r.Header.Get(name)
-	if v == "" {
-		return &value.String{IsNotSet: !r.IsAssigned(name)}
-	}
 
 	if key == "" {
+		if v == "" {
+			return &value.String{IsNotSet: !r.IsAssigned(name)}
+		}
 		return &value.String{Value: v}
 	}
 

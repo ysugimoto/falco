@@ -411,7 +411,7 @@ func TestTester(t *testing.T) {
 			name:   "header subfield dealing test",
 			main:   "../../examples/testing/subfield-header-dealing/default.vcl",
 			filter: "*default.test.vcl",
-			passes: 10,
+			passes: 24,
 		},
 		{
 			name:   "synthetic vs obj.response",
@@ -448,6 +448,12 @@ func TestTester(t *testing.T) {
 			main:   "../../examples/testing/request_byte_reads/request_byte_reads.vcl",
 			filter: "*request_byte_reads.test.vcl",
 			passes: 2,
+		},
+		{
+			name:   "string coercion in equality operators",
+			main:   "../../examples/testing/string_coercion/default.vcl",
+			filter: "*string_coercion/default.test.vcl",
+			passes: 21,
 		},
 	}
 
