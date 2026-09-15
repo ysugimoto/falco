@@ -258,8 +258,27 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		if right == types.ReqBackendType {
 			right = types.BackendType
 		}
-		// Equal operator could compare any types but both left and right type must be the same.
-		if left != right {
+		// Equal operator compares the same types, and additionally coerces the
+		// right operand when the left operand is STRING or IP.
+		// Fiddle demonstrating the accepted coercions and their values:
+		// https://fiddle.fastly.dev/fiddle/6c2ac451
+		switch {
+		case left == right:
+			// Identical types are always comparable.
+		case left == types.StringType && isStringCoercible(right):
+			// Fastly coerces the right operand to its string representation,
+			// but rejects a constant of another type with "Expected string
+			// constant, variable, or call" -- variables and function calls are
+			// accepted. Note that BOOL is not restricted this way, "req.http.X
+			// == true" is valid.
+			// see: https://fiddle.fastly.dev/fiddle/77b892e1
+			if right != types.BoolType && isConstantOperand(exp.Right) {
+				l.Error(InvalidTypeConstant(exp.GetMeta(), right, left).Match(OPERATOR_CONDITIONAL))
+			}
+		case left == types.IPType && right == types.StringType:
+			// Fastly parses the right operand as an IP address, constants included.
+			// see: https://fiddle.fastly.dev/fiddle/838b27db
+		default:
 			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
 		}
 		return types.BoolType

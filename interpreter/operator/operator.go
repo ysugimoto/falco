@@ -12,10 +12,33 @@ import (
 	pcre "go.elara.ws/pcre"
 )
 
+// comparisonOperand adapts a right hand operand for the assign based type
+// coercion that Equal performs.
+//
+// assign.Assign rejects a literal BACKEND because "set req.http.X = origin;"
+// is invalid VCL, but a backend identifier is a valid comparison operand and
+// Fastly compares it by name. Backends declared in VCL are stored as literal
+// values whereas req.backend is not, so without this adaptation the same
+// comparison would succeed or fail depending on how the backend was obtained.
+func comparisonOperand(right value.Value) value.Value {
+	if b, ok := right.(*value.Backend); ok && b.Literal {
+		return &value.Backend{Value: b.Value, Director: b.Director, Healthy: b.Healthy}
+	}
+	return right
+}
+
 func Equal(left, right value.Value) (value.Value, error) {
 	if left.IsLiteral() {
 		return value.Null, errors.WithStack(
 			fmt.Errorf("could not use literal for equal operator of left hand"),
+		)
+	}
+	// REGEX is only an operand of the ~ and !~ operators, Fastly rejects it
+	// for the equality operators.
+	// see: https://fiddle.fastly.dev/fiddle/c5e955d4
+	if left.Type() == value.RegexType || right.Type() == value.RegexType {
+		return value.Null, errors.WithStack(
+			fmt.Errorf("invalid type comparison %s and %s", left.Type(), right.Type()),
 		)
 	}
 
@@ -45,13 +68,17 @@ func Equal(left, right value.Value) (value.Value, error) {
 		}
 		return &value.Boolean{Value: lv.Value == rv.Value}, nil
 	case value.StringType:
-		if right.Type() != value.StringType {
-			return value.Null, errors.WithStack(
-				fmt.Errorf("invalid type comparison %s and %s", left.Type(), right.Type()),
-			)
-		}
 		lv := value.Unwrap[*value.String](left)
-		rv := value.Unwrap[*value.String](right)
+		rv := value.String{}
+		// Coerce the right operand through the assignment implementation, which
+		// matches the string conversions Fastly performs.
+		// see: https://fiddle.fastly.dev/fiddle/6c2ac451
+		//
+		// Coerce before short circuiting on IsNotSet so that an invalid operand
+		// is reported whether or not the left string happens to be set.
+		if err := assign.Assign(&rv, comparisonOperand(right)); err != nil {
+			return value.Null, err
+		}
 		// IsNotSet string does not match all equal expression
 		if lv.IsNotSet || rv.IsNotSet {
 			return &value.Boolean{Value: false}, nil
@@ -72,16 +99,12 @@ func Equal(left, right value.Value) (value.Value, error) {
 		}
 	case value.IpType:
 		lv := value.Unwrap[*value.IP](left)
-		if lv.IsNotSet {
-			// unset IP never equals to another IP
-			return &value.Boolean{Value: false}, nil
-		}
 		rv := value.IP{}
-		err := assign.Assign(&rv, right) // performs all necessary type coercions
-		if err != nil {
+		// Coerce before short circuiting on IsNotSet, see the STRING case above
+		if err := assign.Assign(&rv, right); err != nil { // performs all necessary type coercions
 			return value.Null, err
 		}
-		if rv.IsNotSet {
+		if lv.IsNotSet || rv.IsNotSet {
 			// unset IP never equals to another IP
 			return &value.Boolean{Value: false}, nil
 		}

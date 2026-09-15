@@ -2,6 +2,7 @@ package operator
 
 import (
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -108,27 +109,64 @@ func TestEqualOperator(t *testing.T) {
 
 	t.Run("left is STRING", func(t *testing.T) {
 		now := time.Now()
+		// Fastly evaluates TIME in GMT, value.NewTime keeps that invariant so
+		// the expectation does not depend on the host timezone
+		nowValue := value.NewTime(now)
+		nowStr := now.UTC().Format(http.TimeFormat)
 		tests := []struct {
 			left    value.Value
 			right   value.Value
 			expect  bool
 			isError bool
 		}{
-			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
+			// STRING == STRING
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example"}, expect: true},
 			{left: &value.String{Value: "example"}, right: &value.String{Value: "example", Literal: true}, expect: true},
-			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Time{Value: now}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: false, Literal: true}, isError: true},
-			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, isError: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100}, isError: true},
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
+			// STRING == INTEGER
+			{left: &value.String{Value: "10"}, right: &value.Integer{Value: 10}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Integer{Value: 10}, expect: false},
+			{left: &value.String{Value: "10"}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
+			// STRING == FLOAT, Fastly renders 3 decimal places
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0}, expect: true},
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0001}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Float{Value: 10.0}, expect: false},
+			{left: &value.String{Value: "10.000"}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
+			// STRING == RTIME
+			{left: &value.String{Value: "100.000"}, right: &value.RTime{Value: 100 * time.Second}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.RTime{Value: 100 * time.Second}, expect: false},
+			{left: &value.String{Value: "100.000"}, right: &value.RTime{Value: 100 * time.Second, Literal: true}, isError: true},
+			// STRING == TIME
+			{left: &value.String{Value: nowStr}, right: nowValue, expect: true},
+			{left: &value.String{Value: "example"}, right: nowValue, expect: false},
+			{left: &value.String{Value: "[out of bounds]"}, right: &value.Time{OutOfBounds: true}, expect: true},
+			// STRING == BACKEND, compared by name. Backends declared in VCL are
+			// stored as literal values but are still valid comparison operands
+			{left: &value.String{Value: "foo"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: true},
+			{left: &value.String{Value: "foo"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}, Literal: true}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: false},
+			{left: &value.String{Value: "(none)"}, right: &value.Backend{}, expect: true},
+			// STRING == BOOL, unlike the other types Fastly accepts a literal
+			// see: https://fiddle.fastly.dev/fiddle/9eb5f06b
+			{left: &value.String{Value: "1"}, right: &value.Boolean{Value: true}, expect: true},
+			{left: &value.String{Value: "0"}, right: &value.Boolean{Value: false}, expect: true},
+			{left: &value.String{Value: "1"}, right: &value.Boolean{Value: true, Literal: true}, expect: true},
+			{left: &value.String{Value: "0"}, right: &value.Boolean{Value: false, Literal: true}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.Boolean{Value: true}, expect: false},
+			// STRING == IP
+			{left: &value.String{Value: "123.123.123.123"}, right: &value.IP{Value: net.ParseIP("123.123.123.123")}, expect: true},
+			{left: &value.String{Value: "example"}, right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: false},
+			// REGEX is only an operand of the ~ and !~ operators
+			{left: &value.String{Value: "$unsatisfiable"}, right: value.UnsatisfiableRegex, isError: true},
+			{left: &value.String{Value: "pattern"}, right: &value.Regex{Value: "pattern"}, isError: true},
+			// An unset string never matches, and an invalid right operand is
+			// still reported when the left string is unset
+			{left: &value.String{IsNotSet: true}, right: &value.String{IsNotSet: true}, expect: false},
+			{left: &value.String{IsNotSet: true}, right: &value.String{Value: "example", Literal: true}, expect: false},
+			{left: &value.String{IsNotSet: true}, right: &value.IP{IsNotSet: true}, expect: false},
+			{left: &value.String{IsNotSet: true}, right: &value.Integer{Value: 10, Literal: true}, isError: true},
+			{left: &value.String{IsNotSet: true}, right: &value.Acl{}, isError: true},
 		}
 
 		for i, tt := range tests {
@@ -360,6 +398,9 @@ func TestEqualOperator(t *testing.T) {
 			{left: &value.IP{Value: v}, right: &value.Float{Value: 10.0, Literal: true}, isError: true},
 			{left: &value.IP{IsNotSet: true}, right: &value.IP{IsNotSet: true}, expect: false},
 			{left: &value.IP{Value: v}, right: &value.IP{IsNotSet: true}, expect: false},
+			// an invalid right operand is reported even when the left IP is unset
+			{left: &value.IP{IsNotSet: true}, right: &value.String{Value: "example", Literal: true}, isError: true},
+			{left: &value.IP{Value: v}, right: value.UnsatisfiableRegex, isError: true},
 			{left: &value.IP{Value: v}, right: &value.String{Value: "127.0.0.1", Literal: true}, expect: true},
 			{left: &value.IP{Value: v}, right: &value.String{Value: "127.0.0.2", Literal: true}, expect: false},
 			{left: &value.IP{Value: v}, right: &value.String{Value: "example"}, expect: false},
