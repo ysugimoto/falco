@@ -944,6 +944,63 @@ func TestFormatIfStatement(t *testing.T) {
 			},
 		},
 		{
+			name: "chunked condition keeps long string contents",
+			input: `sub vcl_recv {
+	if (req.http.Header1 == "1" && req.http.Header2 == {"first
+      second
+"}) {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    req.http.Header1 == "1" &&
+    req.http.Header2 == {"first
+      second
+"}
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            40,
+			},
+		},
+		{
+			name: "compound condition keeps long string contents",
+			input: `sub vcl_recv {
+	if (req.http.Header1 == {"first
+      second
+"} && req.http.Header2 == "2") {
+		set req.http.OK = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (
+    req.http.Header1 == {"first
+      second
+"} &&
+    req.http.Header2 == "2"
+  ) {
+    set req.http.OK = "1";
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth:             2,
+				IndentStyle:             "space",
+				TrailingCommentWidth:    2,
+				LineWidth:               200,
+				BreakCompoundConditions: true,
+			},
+		},
+		{
 			name: "compound condition forced line breaks",
 			input: `sub vcl_recv {
 	if ((beresp.status == 500 || beresp.status == 503) && req.restarts < 1 && (req.request == "GET" || req.request == "HEAD")) {
