@@ -113,15 +113,9 @@ func (v *DeliverScopeVariables) Get(s context.Scope, name string) (value.Value, 
 		}
 		return &value.Integer{Value: 0}, nil
 	case OBJ_IS_HIPAA:
-		if v.ctx.CacheHitItem != nil {
-			return &value.Boolean{Value: v.ctx.CacheHitItem.IsHIPAA}, nil
-		}
-		return &value.Boolean{Value: false}, nil
+		return &value.Boolean{Value: false}, nil // fixed value
 	case OBJ_IS_PCI:
-		if v.ctx.CacheHitItem != nil {
-			return &value.Boolean{Value: v.ctx.CacheHitItem.IsPCI}, nil
-		}
-		return &value.Boolean{Value: false}, nil
+		return &value.Boolean{Value: false}, nil // fixed value
 	case OBJ_LASTUSE:
 		if v.ctx.CacheHitItem != nil {
 			return &value.RTime{Value: v.ctx.CacheHitItem.LastUsed}, nil
