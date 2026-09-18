@@ -177,17 +177,30 @@ type fastlyAclEntryValues struct {
 		Negated bool   `json:"negated"`
 		Subnet  string `json:"subnet"`
 	} `json:"entry"`
+	targetService *FastlyService
+}
+
+// configurationServiceExpression extracts the service_id reference from a
+// Terraform configuration expression block. Used for ACL entries, dictionary
+// items, and dynamic snippet content resources.
+type configurationServiceExpression struct {
+	ServiceID struct {
+		References []string `json:"references"`
+	} `json:"service_id"`
 }
 
 type fastlyDictionaryItems struct {
-	ServiceId string `json:"service_id"`
-	Index     string
-	Items     map[string]string `json:"items"`
+	ServiceId     string `json:"service_id"`
+	Index         string
+	Items         map[string]string `json:"items"`
+	targetService *FastlyService
 }
 
 type fastlyDynamicSnippetContent struct {
 	ServiceID      string `json:"service_id"`
 	SnippetID      string `json:"snippet_id"`
 	Content        string `json:"content"`
-	ManageSnippets bool   `json:"manage_snippets"` // reserved; not currently used by the linter.
+	Index          string
+	ManageSnippets bool `json:"manage_snippets"` // reserved; not currently used by the linter.
+	targetService  *FastlyService
 }

@@ -317,6 +317,106 @@ func TestTerraformFetcherIncludesDynamicSnippets(t *testing.T) {
 	}
 }
 
+// TestFullPlanConfigurationBasedMatching verifies that ACL entries, dictionary
+// items, and dynamic snippet content are correctly joined to their service
+// using the configuration section's expression references, even when
+// service_id and snippet_id are "known after apply" (empty in planned_values).
+func TestFullPlanConfigurationBasedMatching(t *testing.T) {
+	fileName := "./data/terraform-full-plan.json"
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s", err, fileName)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error %s unmarshalling %s", err, fileName)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	svc := services[0]
+	if svc.Name != "snippet_test" {
+		t.Errorf("Expected service name %q, got %q", "snippet_test", svc.Name)
+	}
+
+	// ACL: "My ACL" should have its entry joined, "My ACL2" should have no entries
+	if len(svc.Acls) != 2 {
+		t.Fatalf("Expected 2 ACLs, got %d", len(svc.Acls))
+	}
+	var myAcl, myAcl2 *Acl
+	for _, a := range svc.Acls {
+		switch a.Name {
+		case "My ACL":
+			myAcl = a
+		case "My ACL2":
+			myAcl2 = a
+		}
+	}
+	if myAcl == nil {
+		t.Fatal("ACL 'My ACL' not found")
+	}
+	if len(myAcl.Entries) != 1 {
+		t.Fatalf("Expected 1 entry in 'My ACL', got %d", len(myAcl.Entries))
+	}
+	if diff := cmp.Diff(&AclEntry{Comment: "ACL Entry 1", Ip: "127.0.0.1", Negated: false, Subnet: "24"}, myAcl.Entries[0]); diff != "" {
+		t.Errorf("ACL entry mismatch, diff=%s", diff)
+	}
+	if myAcl2 == nil {
+		t.Fatal("ACL 'My ACL2' not found")
+	}
+	if len(myAcl2.Entries) != 0 {
+		t.Errorf("Expected 0 entries in 'My ACL2', got %d", len(myAcl2.Entries))
+	}
+
+	// Dictionary: "My Dictionary" should have items, "My Dictionary2" should not
+	if len(svc.Dictionaries) != 2 {
+		t.Fatalf("Expected 2 dictionaries, got %d", len(svc.Dictionaries))
+	}
+	var myDict, myDict2 *Dictionary
+	for _, d := range svc.Dictionaries {
+		switch d.Name {
+		case "My Dictionary":
+			myDict = d
+		case "My Dictionary2":
+			myDict2 = d
+		}
+	}
+	if myDict == nil {
+		t.Fatal("Dictionary 'My Dictionary' not found")
+	}
+	expectedItems := []*DictionaryItem{
+		{Key: "key1", Value: "value1"},
+		{Key: "key2", Value: "value2"},
+	}
+	if diff := cmp.Diff(expectedItems, myDict.Items); diff != "" {
+		t.Errorf("Dictionary items mismatch, diff=%s", diff)
+	}
+	if myDict2 == nil {
+		t.Fatal("Dictionary 'My Dictionary2' not found")
+	}
+	if len(myDict2.Items) != 0 {
+		t.Errorf("Expected 0 items in 'My Dictionary2', got %d", len(myDict2.Items))
+	}
+
+	// Dynamic snippet: content should be joined
+	if len(svc.DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(svc.DynamicSnippets))
+	}
+	ds := svc.DynamicSnippets[0]
+	if ds.Name != "My Dynamic Snippet" {
+		t.Errorf("Expected dynamic snippet name %q, got %q", "My Dynamic Snippet", ds.Name)
+	}
+	if ds.Type != "recv" {
+		t.Errorf("Expected dynamic snippet type %q, got %q", "recv", ds.Type)
+	}
+	expectedContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+	if ds.Content != expectedContent {
+		t.Errorf("Expected dynamic snippet content %q, got %q", expectedContent, ds.Content)
+	}
+}
+
 func TestDynamicSnippetEmptySnippetIDNotJoined(t *testing.T) {
 	// When snippet_id is "known after apply", it appears as an empty string in
 	// the plan JSON for both the inline block and the content resource. The
