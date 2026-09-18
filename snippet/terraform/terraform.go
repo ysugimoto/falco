@@ -87,8 +87,8 @@ func unmarshalTerraformPlannedInput(buf []byte) ([]*FastlyService, error) {
 }
 
 func stripTerraformForEachIndex(address string) string {
-	if i := strings.Index(address, "["); i != -1 {
-		return address[:i]
+	if before, _, ok := strings.Cut(address, "["); ok {
+		return before
 	}
 	return address
 }
