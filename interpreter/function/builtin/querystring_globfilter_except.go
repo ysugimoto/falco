@@ -39,12 +39,12 @@ func Querystring_globfilter_except(ctx *context.Context, args ...value.Value) (v
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_globfilter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
-		)
+	// An empty pattern leaves the URL unchanged.
+	if name.Value == "" {
+		return &value.String{Value: v.Value}, nil
 	}
+
+	query := shared.ParseQuery(v.Value)
 
 	pattern, err := glob.Compile(name.Value)
 	if err != nil {
