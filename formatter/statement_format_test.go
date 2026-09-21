@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/ysugimoto/falco/v2/config"
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/parser"
 )
 
 func TestFormatImportStatement(t *testing.T) {
@@ -1115,6 +1117,121 @@ func TestFormatIfStatement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}
+
+// A condition is written from a flat list of chunks, so a group has to be read up to
+// the parenthesis that closes it and a prefix operator has to take the whole group
+// that follows it. Reading either one chunk at a time leaves the outer closing
+// parentheses with nothing to print them, and the output is VCL that falco cannot
+// parse back. Every case here is checked twice for that reason: against the text it
+// should produce, and against the parser.
+func TestFormatGroupedCondition(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "negated group",
+			input: `sub vcl_recv {
+	if (!(req.http.X-Foo ~ "^[0-9]+$")) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (!(req.http.X-Foo ~ "^[0-9]+$")) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+		{
+			name: "negated function call",
+			input: `sub vcl_recv {
+	if (!(std.strlen(req.http.X-Foo) > 0)) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (!(std.strlen(req.http.X-Foo) > 0)) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+		{
+			name: "nested groups",
+			input: `sub vcl_recv {
+	if (((req.http.X-Foo))) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (((req.http.X-Foo))) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+		{
+			name: "negated nested group",
+			input: `sub vcl_recv {
+	if (!((req.http.X-Foo))) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (!((req.http.X-Foo))) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+		{
+			name: "negated negated group",
+			input: `sub vcl_recv {
+	if (!(!(req.http.X-Foo))) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (!(!(req.http.X-Foo))) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+		{
+			name: "negated group with a comment inside",
+			input: `sub vcl_recv {
+	if (!(req.http.X-Foo /* comment */ ~ "^/a")) {
+		set req.http.X-Bar = "1";
+	}
+}
+`,
+			expect: `sub vcl_recv {
+  if (!(req.http.X-Foo /* comment */ ~ "^/a")) {
+    set req.http.X-Bar = "1";
+  }
+}
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out := assert(t, tt.input, tt.expect, tt.conf)
+			if _, err := parser.New(lexer.NewFromString(out)).ParseVCL(); err != nil {
+				t.Errorf("falco cannot parse the VCL it formatted: %s", err)
+			}
 		})
 	}
 }
