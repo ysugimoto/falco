@@ -19,8 +19,13 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Conte
 	for _, cidr := range decl.CIDRs {
 		c := cidr.IP.Value
 
-		// If mask is nil, validate as IP address
+		// If mask is nil, validate as IP address.
+		// Fastly accepts the literal string "localhost" as the one permitted
+		// hostname in an ACL entry; all other hostnames are rejected.
 		if cidr.Mask == nil {
+			if c == "localhost" {
+				continue
+			}
 			if v := net.ParseIP(c); v == nil {
 				l.Error(InvalidValue(cidr.GetMeta(), "IP", c).Match(ACL_SYNTAX))
 			}
