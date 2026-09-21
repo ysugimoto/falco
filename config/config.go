@@ -99,7 +99,8 @@ type ConsoleConfig struct {
 // Format configuration
 type FormatConfig struct {
 	// CLI options
-	Overwrite bool `cli:"w,write" default:"false"`
+	Overwrite          bool `cli:"w,write" default:"false"`
+	ErrorOnUnformatted bool `cli:"x,error-on-unformatted" default:"false"`
 
 	// Formatter options
 	IndentWidth                int    `yaml:"indent_width" default:"2"`
