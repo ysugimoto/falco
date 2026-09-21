@@ -12,7 +12,7 @@ import (
 // Fastly built-in function testing implementation of utf8.is_valid
 // Arguments may be:
 // - STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-is-valid/
 func Test_Utf8_is_valid(t *testing.T) {
 	tests := []struct {
 		input  string

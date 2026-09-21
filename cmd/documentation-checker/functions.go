@@ -26,6 +26,7 @@ var fastlyFunctionCategoryPageUrls = []string{
 	"/reference/vcl/functions/strings/",
 	"/reference/vcl/functions/tls-and-http/",
 	"/reference/vcl/functions/table/",
+	"/reference/vcl/functions/unicode/",
 	"/reference/vcl/functions/uuid/",
 }
 

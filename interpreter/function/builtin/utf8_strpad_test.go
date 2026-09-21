@@ -13,7 +13,7 @@ import (
 // Fastly built-in function testing implementation of utf8.strpad
 // Arguments may be:
 // - STRING, INTEGER, STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-strpad/
 func Test_Utf8_strpad(t *testing.T) {
 	tests := []struct {
 		input      string

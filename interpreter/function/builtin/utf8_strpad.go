@@ -30,7 +30,7 @@ func Utf8_strpad_Validate(args []value.Value) error {
 // Fastly built-in function implementation of utf8.strpad
 // Arguments may be:
 // - STRING, INTEGER, STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-strpad/
 func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Utf8_strpad_Validate(args); err != nil {
@@ -45,15 +45,14 @@ func Utf8_strpad(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return &value.String{Value: s}, nil
 	}
 
+	// Fastly cannot negate the smallest INTEGER.
 	if count == math.MinInt64 {
+		ctx.FastlyError = &value.String{Value: "EDOM"}
 		return &value.String{Value: ""}, nil
 	}
 
-	if !utf8.ValidString(pad) {
-		return &value.String{IsNotSet: true}, nil
-	}
-
-	if !utf8.ValidString(s) {
+	if !utf8.ValidString(pad) || !utf8.ValidString(s) {
+		ctx.FastlyError = &value.String{Value: "EUTF8"}
 		return &value.String{IsNotSet: true}, nil
 	}
 

@@ -2113,7 +2113,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/unicode/utf8-codepoint-count/",
 					},
 				},
 				"is_valid": &FunctionSpec{
@@ -2124,7 +2124,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/unicode/utf8-is-valid/",
 					},
 				},
 				"strpad": &FunctionSpec{
@@ -2135,7 +2135,7 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType, types.IntegerType, types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-strpad/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/unicode/utf8-strpad/",
 					},
 				},
 				"substr": &FunctionSpec{
@@ -2147,7 +2147,18 @@ func builtinFunctions() Functions {
 							[]types.Type{types.StringType, types.IntegerType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
-						Reference: "https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/",
+						Reference: "https://developer.fastly.com/reference/vcl/functions/unicode/utf8-substr/",
+					},
+				},
+				"translate": &FunctionSpec{
+					Items: map[string]*FunctionSpec{},
+					Value: &BuiltinFunction{
+						Return: types.StringType,
+						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.StringType, types.StringType},
+						},
+						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,
+						Reference: "https://developer.fastly.com/reference/vcl/functions/unicode/utf8-translate/",
 					},
 				},
 			},

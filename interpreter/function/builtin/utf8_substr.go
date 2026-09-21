@@ -3,6 +3,7 @@
 package builtin
 
 import (
+	"math"
 	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/v2/interpreter/context"
@@ -26,11 +27,52 @@ func Utf8_substr_Validate(args []value.Value) error {
 	return nil
 }
 
+// Puts the offset and the length of a substring inside the bounds of a string
+// of count units. The last return value is false when the request falls
+// outside the string.
+func substrBounds(count, offset, length int64, untilEnd bool) (int64, int64, bool) {
+	if offset < 0 {
+		offset += count
+		if offset < 0 {
+			return 0, 0, false
+		}
+	}
+
+	if untilEnd {
+		length = count - offset
+	}
+	if length < 0 {
+		length += count - offset
+	}
+	if length < 0 {
+		length = 0
+	}
+
+	switch {
+	case offset < count:
+		if offset > math.MaxInt64-length {
+			return 0, 0, false
+		}
+		if offset+length > count {
+			length = count - offset
+		}
+	case offset > count:
+		return 0, 0, false
+	default:
+		if count > 0 {
+			offset = count - 1
+		}
+		length = 0
+	}
+
+	return offset, length, true
+}
+
 // Fastly built-in function implementation of utf8.substr
 // Arguments may be:
 // - STRING, INTEGER, INTEGER
 // - STRING, INTEGER
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-substr/
 func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Utf8_substr_Validate(args); err != nil {
@@ -38,46 +80,23 @@ func Utf8_substr(ctx *context.Context, args ...value.Value) (value.Value, error)
 	}
 
 	v := value.Unwrap[*value.String](args[0])
-	if !utf8.Valid([]byte(v.Value)) {
+	if !utf8.ValidString(v.Value) {
 		return &value.String{IsNotSet: true}, nil
 	}
+
 	input := []rune(v.Value)
-	offset := int(value.Unwrap[*value.Integer](args[1]).Value)
-	var length *int
-	if len(args) > 2 {
-		v := int(value.Unwrap[*value.Integer](args[2]).Value)
-		length = &v
+	offset := value.Unwrap[*value.Integer](args[1]).Value
+
+	var length int64
+	untilEnd := len(args) < 3
+	if !untilEnd {
+		length = value.Unwrap[*value.Integer](args[2]).Value
 	}
 
-	var start, end int
-	if offset < 0 {
-		start = len(input) + offset
-		if start < 0 {
-			return &value.String{}, nil
-		}
-	} else {
-		start = offset
-	}
-	if length == nil {
-		end = len(input)
-	} else if *length < 0 {
-		end = len(input) + *length
-	} else {
-		end = start + *length
-		// Handle integer overflow
-		if end < 0 {
-			return &value.String{}, nil
-		}
-	}
-	if end > len(input) {
-		end = len(input)
+	offset, length, ok := substrBounds(int64(len(input)), offset, length, untilEnd)
+	if !ok {
+		return &value.String{IsNotSet: true}, nil
 	}
 
-	if start > len(input) {
-		return &value.String{}, nil
-	}
-	if end <= start {
-		return &value.String{}, nil
-	}
-	return &value.String{Value: string(input[start:end])}, nil
+	return &value.String{Value: string(input[offset : offset+length])}, nil
 }
