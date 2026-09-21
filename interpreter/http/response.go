@@ -9,12 +9,15 @@ import (
 type Response struct {
 	*http.Response
 	headerKeyStore
+	// RemoteAddr is the backend connection's address (source for
+	// beresp.backend.ip); empty when no connection was made.
+	RemoteAddr string
 }
 
 func WrapResponse(r *http.Response) *Response {
 	return &Response{
-		r,
-		headerKeyStore{},
+		Response:       r,
+		headerKeyStore: headerKeyStore{},
 	}
 }
 
@@ -41,5 +44,6 @@ func (r *Response) Clone() *Response {
 			TLS:              r.TLS,
 		},
 		headerKeyStore: headerKeyStore{},
+		RemoteAddr:     r.RemoteAddr,
 	}
 }

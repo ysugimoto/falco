@@ -3,7 +3,6 @@ package interpreter
 import (
 	"net"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/v2/ast"
@@ -85,28 +84,9 @@ func (i *Interpreter) processExpression(exp ast.Expression, opt *ExpressionOptio
 	case *ast.Float:
 		return &value.Float{Value: t.Value, Literal: true}, nil
 	case *ast.RTime:
-		var val time.Duration
-		var err error
-		switch {
-		case strings.HasSuffix(t.Value, "d"):
-			num := strings.TrimSuffix(t.Value, "d")
-			val, err = time.ParseDuration(num + "h")
-			if err != nil {
-				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
-			}
-			val *= 24
-		case strings.HasSuffix(t.Value, "y"):
-			num := strings.TrimSuffix(t.Value, "y")
-			val, err = time.ParseDuration(num + "h")
-			if err != nil {
-				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
-			}
-			val *= 24 * 365
-		default:
-			val, err = time.ParseDuration(t.Value)
-			if err != nil {
-				return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
-			}
+		val, err := value.ParseRTimeLiteral(t.Value)
+		if err != nil {
+			return nil, exception.Runtime(&exp.GetMeta().Token, "Failed to parse duration: %s", err)
 		}
 		return &value.RTime{Value: val, Literal: true}, nil
 
