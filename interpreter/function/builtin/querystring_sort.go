@@ -171,6 +171,7 @@ func qsSortTokens(tokens []qsToken) []qsToken {
 // qsEmit joins tokens after removing only leading empty entries.
 func qsEmit(prefix string, tokens []qsToken) string {
 	p := 0
+	// The final token is intentionally retained even when empty.
 	for ; p < len(tokens)-1; p++ {
 		if tokens[p].s != "" {
 			break
