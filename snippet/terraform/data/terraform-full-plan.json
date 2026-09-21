@@ -1,0 +1,860 @@
+{
+    "format_version": "1.2",
+    "terraform_version": "1.14.3",
+    "planned_values": {
+        "root_module": {
+            "resources": [
+                {
+                    "address": "fastly_service_acl_entries.entries[\"My ACL\"]",
+                    "mode": "managed",
+                    "type": "fastly_service_acl_entries",
+                    "name": "entries",
+                    "index": "My ACL",
+                    "provider_name": "registry.terraform.io/fastly/fastly",
+                    "schema_version": 0,
+                    "values": {
+                        "entry": [
+                            {
+                                "comment": "ACL Entry 1",
+                                "ip": "127.0.0.1",
+                                "negated": false,
+                                "subnet": "24"
+                            }
+                        ],
+                        "manage_entries": false
+                    },
+                    "sensitive_values": {
+                        "entry": [
+                            {}
+                        ]
+                    }
+                },
+                {
+                    "address": "fastly_service_dictionary_items.items[\"My Dictionary\"]",
+                    "mode": "managed",
+                    "type": "fastly_service_dictionary_items",
+                    "name": "items",
+                    "index": "My Dictionary",
+                    "provider_name": "registry.terraform.io/fastly/fastly",
+                    "schema_version": 0,
+                    "values": {
+                        "items": {
+                            "key1": "value1",
+                            "key2": "value2"
+                        },
+                        "manage_items": false
+                    },
+                    "sensitive_values": {
+                        "items": {}
+                    }
+                },
+                {
+                    "address": "fastly_service_dynamic_snippet_content.my_dyn_content[\"My Dynamic Snippet\"]",
+                    "mode": "managed",
+                    "type": "fastly_service_dynamic_snippet_content",
+                    "name": "my_dyn_content",
+                    "index": "My Dynamic Snippet",
+                    "provider_name": "registry.terraform.io/fastly/fastly",
+                    "schema_version": 0,
+                    "values": {
+                        "content": "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+                        "manage_snippets": false
+                    },
+                    "sensitive_values": {}
+                },
+                {
+                    "address": "fastly_service_vcl.myservice",
+                    "mode": "managed",
+                    "type": "fastly_service_vcl",
+                    "name": "myservice",
+                    "provider_name": "registry.terraform.io/fastly/fastly",
+                    "schema_version": 1,
+                    "values": {
+                        "acl": [
+                            {
+                                "force_destroy": false,
+                                "name": "My ACL"
+                            },
+                            {
+                                "force_destroy": false,
+                                "name": "My ACL2"
+                            }
+                        ],
+                        "activate": true,
+                        "backend": [
+                            {
+                                "address": "http-me.fastly.dev",
+                                "auto_loadbalance": false,
+                                "between_bytes_timeout": 10000,
+                                "connect_timeout": 1000,
+                                "error_threshold": 0,
+                                "first_byte_timeout": 15000,
+                                "healthcheck": "",
+                                "max_conn": 200,
+                                "max_lifetime": 0,
+                                "max_tls_version": "",
+                                "max_use": 0,
+                                "min_tls_version": "",
+                                "name": "Glitch Test Site",
+                                "override_host": "",
+                                "port": 80,
+                                "prefer_ipv6": false,
+                                "request_condition": "",
+                                "share_key": "",
+                                "shield": "",
+                                "ssl_ca_cert": "",
+                                "ssl_cert_hostname": "",
+                                "ssl_check_cert": true,
+                                "ssl_ciphers": "",
+                                "ssl_client_cert": "",
+                                "ssl_client_key": "",
+                                "ssl_sni_hostname": "",
+                                "use_ssl": false,
+                                "weight": 100
+                            }
+                        ],
+                        "cache_setting": [],
+                        "comment": "Managed by Terraform",
+                        "condition": [],
+                        "default_host": "http-me.fastly.dev",
+                        "default_ttl": 3600,
+                        "dictionary": [
+                            {
+                                "force_destroy": false,
+                                "name": "My Dictionary",
+                                "write_only": false
+                            },
+                            {
+                                "force_destroy": false,
+                                "name": "My Dictionary2",
+                                "write_only": false
+                            }
+                        ],
+                        "director": [],
+                        "domain": [
+                            {
+                                "comment": "snippet test",
+                                "name": "snippet.fastlytestdomain.com"
+                            }
+                        ],
+                        "dynamicsnippet": [
+                            {
+                                "content": "",
+                                "name": "My Dynamic Snippet",
+                                "priority": 110,
+                                "type": "recv"
+                            }
+                        ],
+                        "force_destroy": true,
+                        "gzip": [],
+                        "header": [],
+                        "healthcheck": [],
+                        "http3": false,
+                        "image_optimizer_default_settings": [],
+                        "logging_bigquery": [],
+                        "logging_blobstorage": [],
+                        "logging_cloudfiles": [],
+                        "logging_datadog": [],
+                        "logging_digitalocean": [],
+                        "logging_elasticsearch": [],
+                        "logging_ftp": [],
+                        "logging_gcs": [],
+                        "logging_googlepubsub": [],
+                        "logging_grafanacloudlogs": [],
+                        "logging_heroku": [],
+                        "logging_honeycomb": [],
+                        "logging_https": [],
+                        "logging_kafka": [],
+                        "logging_kinesis": [],
+                        "logging_logentries": [],
+                        "logging_loggly": [],
+                        "logging_logshuttle": [],
+                        "logging_newrelic": [],
+                        "logging_newrelicotlp": [],
+                        "logging_openstack": [],
+                        "logging_papertrail": [],
+                        "logging_s3": [],
+                        "logging_scalyr": [],
+                        "logging_sftp": [],
+                        "logging_splunk": [],
+                        "logging_sumologic": [],
+                        "logging_syslog": [],
+                        "name": "snippet_test",
+                        "product_enablement": [],
+                        "rate_limiter": [],
+                        "request_setting": [],
+                        "response_object": [],
+                        "reuse": null,
+                        "snippet": [],
+                        "stage": false,
+                        "stale_if_error": false,
+                        "stale_if_error_ttl": 43200,
+                        "vcl": [],
+                        "version_comment": null
+                    },
+                    "sensitive_values": {
+                        "acl": [
+                            {},
+                            {}
+                        ],
+                        "backend": true,
+                        "cache_setting": [],
+                        "condition": [],
+                        "dictionary": [
+                            {},
+                            {}
+                        ],
+                        "director": [],
+                        "domain": [
+                            {}
+                        ],
+                        "dynamicsnippet": [
+                            {}
+                        ],
+                        "gzip": [],
+                        "header": [],
+                        "healthcheck": [],
+                        "image_optimizer_default_settings": [],
+                        "logging_bigquery": [],
+                        "logging_blobstorage": [],
+                        "logging_cloudfiles": [],
+                        "logging_datadog": [],
+                        "logging_digitalocean": [],
+                        "logging_elasticsearch": [],
+                        "logging_ftp": [],
+                        "logging_gcs": [],
+                        "logging_googlepubsub": [],
+                        "logging_grafanacloudlogs": [],
+                        "logging_heroku": [],
+                        "logging_honeycomb": [],
+                        "logging_https": [],
+                        "logging_kafka": [],
+                        "logging_kinesis": [],
+                        "logging_logentries": [],
+                        "logging_loggly": [],
+                        "logging_logshuttle": [],
+                        "logging_newrelic": [],
+                        "logging_newrelicotlp": [],
+                        "logging_openstack": [],
+                        "logging_papertrail": [],
+                        "logging_s3": [],
+                        "logging_scalyr": [],
+                        "logging_sftp": [],
+                        "logging_splunk": [],
+                        "logging_sumologic": [],
+                        "logging_syslog": [],
+                        "product_enablement": [],
+                        "rate_limiter": [],
+                        "request_setting": [],
+                        "response_object": [],
+                        "snippet": [],
+                        "vcl": []
+                    }
+                }
+            ]
+        }
+    },
+    "resource_changes": [
+        {
+            "address": "fastly_service_acl_entries.entries[\"My ACL\"]",
+            "mode": "managed",
+            "type": "fastly_service_acl_entries",
+            "name": "entries",
+            "index": "My ACL",
+            "provider_name": "registry.terraform.io/fastly/fastly",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "entry": [
+                        {
+                            "comment": "ACL Entry 1",
+                            "ip": "127.0.0.1",
+                            "negated": false,
+                            "subnet": "24"
+                        }
+                    ],
+                    "manage_entries": false
+                },
+                "after_unknown": {
+                    "acl_id": true,
+                    "entry": [
+                        {
+                            "id": true
+                        }
+                    ],
+                    "id": true,
+                    "service_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "entry": [
+                        {}
+                    ]
+                }
+            }
+        },
+        {
+            "address": "fastly_service_dictionary_items.items[\"My Dictionary\"]",
+            "mode": "managed",
+            "type": "fastly_service_dictionary_items",
+            "name": "items",
+            "index": "My Dictionary",
+            "provider_name": "registry.terraform.io/fastly/fastly",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "items": {
+                        "key1": "value1",
+                        "key2": "value2"
+                    },
+                    "manage_items": false
+                },
+                "after_unknown": {
+                    "dictionary_id": true,
+                    "id": true,
+                    "items": {},
+                    "service_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "items": {}
+                }
+            }
+        },
+        {
+            "address": "fastly_service_dynamic_snippet_content.my_dyn_content[\"My Dynamic Snippet\"]",
+            "mode": "managed",
+            "type": "fastly_service_dynamic_snippet_content",
+            "name": "my_dyn_content",
+            "index": "My Dynamic Snippet",
+            "provider_name": "registry.terraform.io/fastly/fastly",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "content": "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+                    "manage_snippets": false
+                },
+                "after_unknown": {
+                    "id": true,
+                    "service_id": true,
+                    "snippet_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "fastly_service_vcl.myservice",
+            "mode": "managed",
+            "type": "fastly_service_vcl",
+            "name": "myservice",
+            "provider_name": "registry.terraform.io/fastly/fastly",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "acl": [
+                        {
+                            "force_destroy": false,
+                            "name": "My ACL"
+                        },
+                        {
+                            "force_destroy": false,
+                            "name": "My ACL2"
+                        }
+                    ],
+                    "activate": true,
+                    "backend": [
+                        {
+                            "address": "http-me.fastly.dev",
+                            "auto_loadbalance": false,
+                            "between_bytes_timeout": 10000,
+                            "connect_timeout": 1000,
+                            "error_threshold": 0,
+                            "first_byte_timeout": 15000,
+                            "healthcheck": "",
+                            "max_conn": 200,
+                            "max_lifetime": 0,
+                            "max_tls_version": "",
+                            "max_use": 0,
+                            "min_tls_version": "",
+                            "name": "Glitch Test Site",
+                            "override_host": "",
+                            "port": 80,
+                            "prefer_ipv6": false,
+                            "request_condition": "",
+                            "share_key": "",
+                            "shield": "",
+                            "ssl_ca_cert": "",
+                            "ssl_cert_hostname": "",
+                            "ssl_check_cert": true,
+                            "ssl_ciphers": "",
+                            "ssl_client_cert": "",
+                            "ssl_client_key": "",
+                            "ssl_sni_hostname": "",
+                            "use_ssl": false,
+                            "weight": 100
+                        }
+                    ],
+                    "cache_setting": [],
+                    "comment": "Managed by Terraform",
+                    "condition": [],
+                    "default_host": "http-me.fastly.dev",
+                    "default_ttl": 3600,
+                    "dictionary": [
+                        {
+                            "force_destroy": false,
+                            "name": "My Dictionary",
+                            "write_only": false
+                        },
+                        {
+                            "force_destroy": false,
+                            "name": "My Dictionary2",
+                            "write_only": false
+                        }
+                    ],
+                    "director": [],
+                    "domain": [
+                        {
+                            "comment": "snippet test",
+                            "name": "snippet.fastlytestdomain.com"
+                        }
+                    ],
+                    "dynamicsnippet": [
+                        {
+                            "content": "",
+                            "name": "My Dynamic Snippet",
+                            "priority": 110,
+                            "type": "recv"
+                        }
+                    ],
+                    "force_destroy": true,
+                    "gzip": [],
+                    "header": [],
+                    "healthcheck": [],
+                    "http3": false,
+                    "image_optimizer_default_settings": [],
+                    "logging_bigquery": [],
+                    "logging_blobstorage": [],
+                    "logging_cloudfiles": [],
+                    "logging_datadog": [],
+                    "logging_digitalocean": [],
+                    "logging_elasticsearch": [],
+                    "logging_ftp": [],
+                    "logging_gcs": [],
+                    "logging_googlepubsub": [],
+                    "logging_grafanacloudlogs": [],
+                    "logging_heroku": [],
+                    "logging_honeycomb": [],
+                    "logging_https": [],
+                    "logging_kafka": [],
+                    "logging_kinesis": [],
+                    "logging_logentries": [],
+                    "logging_loggly": [],
+                    "logging_logshuttle": [],
+                    "logging_newrelic": [],
+                    "logging_newrelicotlp": [],
+                    "logging_openstack": [],
+                    "logging_papertrail": [],
+                    "logging_s3": [],
+                    "logging_scalyr": [],
+                    "logging_sftp": [],
+                    "logging_splunk": [],
+                    "logging_sumologic": [],
+                    "logging_syslog": [],
+                    "name": "snippet_test",
+                    "product_enablement": [],
+                    "rate_limiter": [],
+                    "request_setting": [],
+                    "response_object": [],
+                    "reuse": null,
+                    "snippet": [],
+                    "stage": false,
+                    "stale_if_error": false,
+                    "stale_if_error_ttl": 43200,
+                    "vcl": [],
+                    "version_comment": null
+                },
+                "after_unknown": {
+                    "acl": [
+                        {
+                            "acl_id": true
+                        },
+                        {
+                            "acl_id": true
+                        }
+                    ],
+                    "active_version": true,
+                    "backend": [
+                        {
+                            "keepalive_time": true
+                        }
+                    ],
+                    "cache_setting": [],
+                    "cloned_version": true,
+                    "condition": [],
+                    "dictionary": [
+                        {
+                            "dictionary_id": true
+                        },
+                        {
+                            "dictionary_id": true
+                        }
+                    ],
+                    "director": [],
+                    "domain": [
+                        {}
+                    ],
+                    "dynamicsnippet": [
+                        {
+                            "snippet_id": true
+                        }
+                    ],
+                    "force_refresh": true,
+                    "gzip": [],
+                    "header": [],
+                    "healthcheck": [],
+                    "id": true,
+                    "image_optimizer_default_settings": [],
+                    "imported": true,
+                    "logging_bigquery": [],
+                    "logging_blobstorage": [],
+                    "logging_cloudfiles": [],
+                    "logging_datadog": [],
+                    "logging_digitalocean": [],
+                    "logging_elasticsearch": [],
+                    "logging_ftp": [],
+                    "logging_gcs": [],
+                    "logging_googlepubsub": [],
+                    "logging_grafanacloudlogs": [],
+                    "logging_heroku": [],
+                    "logging_honeycomb": [],
+                    "logging_https": [],
+                    "logging_kafka": [],
+                    "logging_kinesis": [],
+                    "logging_logentries": [],
+                    "logging_loggly": [],
+                    "logging_logshuttle": [],
+                    "logging_newrelic": [],
+                    "logging_newrelicotlp": [],
+                    "logging_openstack": [],
+                    "logging_papertrail": [],
+                    "logging_s3": [],
+                    "logging_scalyr": [],
+                    "logging_sftp": [],
+                    "logging_splunk": [],
+                    "logging_sumologic": [],
+                    "logging_syslog": [],
+                    "product_enablement": [],
+                    "rate_limiter": [],
+                    "request_setting": [],
+                    "response_object": [],
+                    "snippet": [],
+                    "staged_version": true,
+                    "vcl": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "acl": [
+                        {},
+                        {}
+                    ],
+                    "backend": true,
+                    "cache_setting": [],
+                    "condition": [],
+                    "dictionary": [
+                        {},
+                        {}
+                    ],
+                    "director": [],
+                    "domain": [
+                        {}
+                    ],
+                    "dynamicsnippet": [
+                        {}
+                    ],
+                    "gzip": [],
+                    "header": [],
+                    "healthcheck": [],
+                    "image_optimizer_default_settings": [],
+                    "logging_bigquery": [],
+                    "logging_blobstorage": [],
+                    "logging_cloudfiles": [],
+                    "logging_datadog": [],
+                    "logging_digitalocean": [],
+                    "logging_elasticsearch": [],
+                    "logging_ftp": [],
+                    "logging_gcs": [],
+                    "logging_googlepubsub": [],
+                    "logging_grafanacloudlogs": [],
+                    "logging_heroku": [],
+                    "logging_honeycomb": [],
+                    "logging_https": [],
+                    "logging_kafka": [],
+                    "logging_kinesis": [],
+                    "logging_logentries": [],
+                    "logging_loggly": [],
+                    "logging_logshuttle": [],
+                    "logging_newrelic": [],
+                    "logging_newrelicotlp": [],
+                    "logging_openstack": [],
+                    "logging_papertrail": [],
+                    "logging_s3": [],
+                    "logging_scalyr": [],
+                    "logging_sftp": [],
+                    "logging_splunk": [],
+                    "logging_sumologic": [],
+                    "logging_syslog": [],
+                    "product_enablement": [],
+                    "rate_limiter": [],
+                    "request_setting": [],
+                    "response_object": [],
+                    "snippet": [],
+                    "vcl": []
+                }
+            }
+        }
+    ],
+    "configuration": {
+        "provider_config": {
+            "fastly": {
+                "name": "fastly",
+                "full_name": "registry.terraform.io/fastly/fastly",
+                "version_constraint": "~> 9.0"
+            }
+        },
+        "root_module": {
+            "resources": [
+                {
+                    "address": "fastly_service_acl_entries.entries",
+                    "mode": "managed",
+                    "type": "fastly_service_acl_entries",
+                    "name": "entries",
+                    "provider_config_key": "fastly",
+                    "expressions": {
+                        "acl_id": {
+                            "references": [
+                                "each.value.acl_id",
+                                "each.value"
+                            ]
+                        },
+                        "entry": [
+                            {
+                                "comment": {
+                                    "constant_value": "ACL Entry 1"
+                                },
+                                "ip": {
+                                    "constant_value": "127.0.0.1"
+                                },
+                                "negated": {
+                                    "constant_value": false
+                                },
+                                "subnet": {
+                                    "constant_value": "24"
+                                }
+                            }
+                        ],
+                        "service_id": {
+                            "references": [
+                                "fastly_service_vcl.myservice.id",
+                                "fastly_service_vcl.myservice"
+                            ]
+                        }
+                    },
+                    "schema_version": 0,
+                    "for_each_expression": {
+                        "references": [
+                            "fastly_service_vcl.myservice.acl",
+                            "fastly_service_vcl.myservice"
+                        ]
+                    }
+                },
+                {
+                    "address": "fastly_service_dictionary_items.items",
+                    "mode": "managed",
+                    "type": "fastly_service_dictionary_items",
+                    "name": "items",
+                    "provider_config_key": "fastly",
+                    "expressions": {
+                        "dictionary_id": {
+                            "references": [
+                                "each.value.dictionary_id",
+                                "each.value"
+                            ]
+                        },
+                        "items": {
+                            "constant_value": {
+                                "key1": "value1",
+                                "key2": "value2"
+                            }
+                        },
+                        "service_id": {
+                            "references": [
+                                "fastly_service_vcl.myservice.id",
+                                "fastly_service_vcl.myservice"
+                            ]
+                        }
+                    },
+                    "schema_version": 0,
+                    "for_each_expression": {
+                        "references": [
+                            "fastly_service_vcl.myservice.dictionary",
+                            "fastly_service_vcl.myservice"
+                        ]
+                    }
+                },
+                {
+                    "address": "fastly_service_dynamic_snippet_content.my_dyn_content",
+                    "mode": "managed",
+                    "type": "fastly_service_dynamic_snippet_content",
+                    "name": "my_dyn_content",
+                    "provider_config_key": "fastly",
+                    "expressions": {
+                        "content": {
+                            "constant_value": "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+                        },
+                        "service_id": {
+                            "references": [
+                                "fastly_service_vcl.myservice.id",
+                                "fastly_service_vcl.myservice"
+                            ]
+                        },
+                        "snippet_id": {
+                            "references": [
+                                "each.value.snippet_id",
+                                "each.value"
+                            ]
+                        }
+                    },
+                    "schema_version": 0,
+                    "for_each_expression": {
+                        "references": [
+                            "fastly_service_vcl.myservice.dynamicsnippet",
+                            "fastly_service_vcl.myservice"
+                        ]
+                    }
+                },
+                {
+                    "address": "fastly_service_vcl.myservice",
+                    "mode": "managed",
+                    "type": "fastly_service_vcl",
+                    "name": "myservice",
+                    "provider_config_key": "fastly",
+                    "expressions": {
+                        "acl": [
+                            {
+                                "name": {
+                                    "constant_value": "My ACL"
+                                }
+                            },
+                            {
+                                "name": {
+                                    "constant_value": "My ACL2"
+                                }
+                            }
+                        ],
+                        "backend": [
+                            {
+                                "address": {
+                                    "constant_value": "http-me.fastly.dev"
+                                },
+                                "name": {
+                                    "constant_value": "Glitch Test Site"
+                                },
+                                "port": {
+                                    "constant_value": 80
+                                }
+                            }
+                        ],
+                        "default_host": {
+                            "constant_value": "http-me.fastly.dev"
+                        },
+                        "dictionary": [
+                            {
+                                "name": {
+                                    "constant_value": "My Dictionary"
+                                }
+                            },
+                            {
+                                "name": {
+                                    "constant_value": "My Dictionary2"
+                                }
+                            }
+                        ],
+                        "domain": [
+                            {
+                                "comment": {
+                                    "constant_value": "snippet test"
+                                },
+                                "name": {
+                                    "constant_value": "snippet.fastlytestdomain.com"
+                                }
+                            }
+                        ],
+                        "dynamicsnippet": [
+                            {
+                                "name": {
+                                    "constant_value": "My Dynamic Snippet"
+                                },
+                                "priority": {
+                                    "constant_value": 110
+                                },
+                                "type": {
+                                    "constant_value": "recv"
+                                }
+                            }
+                        ],
+                        "force_destroy": {
+                            "constant_value": true
+                        },
+                        "name": {
+                            "constant_value": "snippet_test"
+                        }
+                    },
+                    "schema_version": 1
+                }
+            ]
+        }
+    },
+    "relevant_attributes": [
+        {
+            "resource": "fastly_service_vcl.myservice",
+            "attribute": [
+                "acl"
+            ]
+        },
+        {
+            "resource": "fastly_service_vcl.myservice",
+            "attribute": [
+                "dictionary"
+            ]
+        },
+        {
+            "resource": "fastly_service_vcl.myservice",
+            "attribute": [
+                "dynamicsnippet"
+            ]
+        },
+        {
+            "resource": "fastly_service_vcl.myservice",
+            "attribute": [
+                "id"
+            ]
+        }
+    ],
+    "timestamp": "2026-09-18T14:38:43Z",
+    "applyable": true,
+    "complete": true,
+    "errored": false
+}
