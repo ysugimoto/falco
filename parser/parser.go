@@ -244,6 +244,11 @@ func (p *Parser) ParseVCLOrSnippet() (*ast.VCL, error) {
 		Statements: statements,
 		IsSnippet:  true,
 	}
+	// Current token is EOF, so its leading comments are the comments that follow
+	// the last statement.
+	if len(p.curToken.Leading) > 0 {
+		vcl.Trailing = p.curToken.Leading
+	}
 	return vcl, nil
 }
 
@@ -257,6 +262,12 @@ func (p *Parser) ParseVCL() (*ast.VCL, error) {
 		} else if stmt != nil {
 			vcl.Statements = append(vcl.Statements, stmt)
 		}
+	}
+
+	// The loop ends on EOF, so its leading comments are the comments that follow
+	// the last declaration.
+	if len(p.curToken.Leading) > 0 {
+		vcl.Trailing = p.curToken.Leading
 	}
 
 	return vcl, nil
@@ -373,6 +384,10 @@ func (p *Parser) ParseSnippetVCL() ([]ast.Statement, error) {
 		p.NextToken() // point to statement
 	}
 
-	p.NextToken() // point to EOF
+	// Parsing the last statement already leaves the current token on EOF, and
+	// advancing past it would drop the comments it carries.
+	if !p.CurTokenIs(token.EOF) {
+		p.NextToken() // point to EOF
+	}
 	return statements, nil
 }

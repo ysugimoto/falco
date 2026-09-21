@@ -1366,3 +1366,42 @@ func TestIsDeclarationToken(t *testing.T) {
 		})
 	}
 }
+
+// Comments at the end of a file have no statement to lead, so they are kept on the
+// root node. Fastly snippets commonly end with one.
+func TestParseTrailingComments(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name: "after the last declaration",
+			input: `sub vcl_recv {
+  set req.http.Foo = "bar";
+}
+
+// END`,
+		},
+		{
+			name: `after the last statement of a snippet`,
+			input: `set req.http.Foo = "bar";
+
+// END`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vcl, err := New(lexer.NewFromString(tt.input)).ParseVCLOrSnippet()
+			if err != nil {
+				t.Fatalf("Unexpected parser error: %s", err)
+			}
+			if len(vcl.Trailing) != 1 {
+				t.Fatalf("Trailing has %d comment(s), want 1", len(vcl.Trailing))
+			}
+			if v := vcl.Trailing[0].String(); v != "// END" {
+				t.Errorf("Trailing comment is %q, want %q", v, "// END")
+			}
+		})
+	}
+}
