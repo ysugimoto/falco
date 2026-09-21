@@ -543,6 +543,33 @@ func expectType(cur types.Type, expects ...types.Type) bool {
 	return slices.Contains(expects, cur)
 }
 
+// isConstantOperand reports whether the expression is a numeric constant,
+// including a signed one like -10 which the parser represents as a prefix
+// expression.
+func isConstantOperand(exp ast.Expression) bool {
+	if p, ok := exp.(*ast.PrefixExpression); ok && (p.Operator == "-" || p.Operator == "+") {
+		return isConstantOperand(p.Right)
+	}
+	return isConstantExpression(exp)
+}
+
+// isStringCoercible reports whether Fastly converts the type to its string
+// representation when it is the right operand of an equality comparison
+// against a STRING. REGEX is deliberately absent, Fastly accepts it only for
+// the ~ and !~ operators.
+// see: https://fiddle.fastly.dev/fiddle/6c2ac451
+func isStringCoercible(right types.Type) bool {
+	return expectType(right,
+		types.IntegerType,
+		types.FloatType,
+		types.RTimeType,
+		types.TimeType,
+		types.BackendType,
+		types.BoolType,
+		types.IPType,
+	)
+}
+
 func expectState(cur string, expects ...string) bool {
 	return slices.Contains(expects, cur)
 }

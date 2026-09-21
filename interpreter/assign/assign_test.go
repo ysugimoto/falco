@@ -101,13 +101,18 @@ func TestProcessAssignment(t *testing.T) {
 			{left: "left", right: &value.Float{Value: 50.0, Literal: true}, expect: "", isError: true},
 			{left: "left", right: &value.RTime{Value: 100 * time.Second}, expect: "100.000"},
 			{left: "left", right: &value.RTime{Value: 100 * time.Second, Literal: true}, expect: "", isError: true},
-			{left: "left", right: &value.Time{Value: now}, expect: now.Format(http.TimeFormat)},
+			{left: "left", right: value.NewTime(now), expect: now.UTC().Format(http.TimeFormat)},
+			{left: "left", right: &value.Time{OutOfBounds: true}, expect: "[out of bounds]"},
 			{left: "left", right: &value.String{Value: "example"}, expect: "example"},
 			{left: "left", right: &value.String{Value: "example", Literal: true}, expect: "example"},
 			{left: "left", right: &value.Backend{Value: &ast.BackendDeclaration{Name: &ast.Ident{Value: "foo"}}}, expect: "foo"},
 			{left: "left", right: &value.Boolean{Value: true}, expect: "1"},
 			{left: "left", right: &value.Boolean{Value: false, Literal: true}, expect: "0"},
 			{left: "left", right: &value.IP{Value: net.ParseIP("127.0.0.1")}, expect: "127.0.0.1"},
+			// Fastly rejects assigning a REGEX to a STRING, this documents what
+			// falco currently does.
+			// see: https://fiddle.fastly.dev/fiddle/edd65580
+			{left: "left", right: value.UnsatisfiableRegex, expect: "$unsatisfiable"},
 		}
 
 		for i, tt := range tests {
