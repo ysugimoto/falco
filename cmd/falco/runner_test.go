@@ -848,3 +848,103 @@ sub vcl_error {
 		})
 	}
 }
+
+func formatConfig() *config.Config {
+	return &config.Config{
+		Linter: &config.LinterConfig{},
+		Format: &config.FormatConfig{
+			Overwrite:                  true,
+			IndentWidth:                2,
+			IndentStyle:                "space",
+			LineWidth:                  120,
+			TrailingCommentWidth:       1,
+			ExplicitStringConcat:       true,
+			ReturnStatementParenthesis: true,
+			BreakCompoundConditions:    true,
+			CommentStyle:               "none",
+		},
+	}
+}
+
+func formatFile(t *testing.T, path string) error {
+	t.Helper()
+
+	resolvers, err := resolver.NewFileResolvers(path, nil)
+	if err != nil {
+		t.Fatalf("resolve %s: %s", path, err)
+	}
+	return NewRunner(formatConfig(), nil).Format(resolvers[0])
+}
+
+func TestFormatOverwrite(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "main.vcl")
+	const src = "sub vcl_recv {\n#FASTLY recv\nset req.http.X-Foo = \"bar\";\n}\n"
+	if err := os.WriteFile(path, []byte(src), 0o640); err != nil {
+		t.Fatalf("write: %s", err)
+	}
+
+	if err := formatFile(t, path); err != nil {
+		t.Fatalf("format: %s", err)
+	}
+
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read back: %s", err)
+	}
+	if !bytes.Contains(got, []byte("\n  set req.http.X-Foo = \"bar\";\n")) {
+		t.Errorf("file was not formatted: %q", got)
+	}
+
+	// The temporary file is created with 0600, so without an explicit chmod the
+	// rename would change the file's permissions.
+	stat, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat: %s", err)
+	}
+	if perm := stat.Mode().Perm(); perm != 0o640 {
+		t.Errorf("mode = %o, want 640", perm)
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("readdir: %s", err)
+	}
+	if len(entries) != 1 {
+		t.Errorf("%d file(s) in the directory, want only the formatted one: %v", len(entries), entries)
+	}
+}
+
+// A file of bare statements, which is what a Fastly custom snippet looks like,
+// makes formatter.Format return a nil io.Reader and the io.Copy in Format panic.
+// That is a separate bug. The point here is that the file on disk survives it:
+// truncating the original before the formatted output exists left a 0-byte file.
+func TestFormatOverwriteKeepsTheFileWhenFormattingFails(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "snippet.vcl")
+	const src = "set req.http.X-Foo = \"bar\";\n"
+	if err := os.WriteFile(path, []byte(src), 0o644); err != nil {
+		t.Fatalf("write: %s", err)
+	}
+
+	func() {
+		defer func() { _ = recover() }()
+		_ = formatFile(t, path)
+	}()
+
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read back: %s", err)
+	}
+	if !bytes.Contains(got, []byte("X-Foo")) {
+		t.Errorf("the file lost its contents: %q", got)
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("readdir: %s", err)
+	}
+	if len(entries) != 1 {
+		t.Errorf("%d file(s) in the directory, want no temporary left behind: %v", len(entries), entries)
+	}
+}
