@@ -514,7 +514,6 @@ sub vcl_recv {
 **default: none**
 
 Define the comment style. `sharp` value will use `#` character, or `slash` value will use `/` character.
-Note that the inline style comment `/* ... */` does not replace.
 
 ```vcl
 // Some leading comment
@@ -527,6 +526,44 @@ Formatted (comment_style: sharp):
 ```vcl
 ## Some leading comment
 sub vcl_recv {
+}
+```
+
+An inline style comment `/* ... */` is a comment style too, so it is rewritten as a
+line comment where that is safe, which is when the comment is written on one line and
+a line feed follows it.
+
+```vcl
+sub vcl_recv {
+  /* Some leading comment */
+  set req.http.Foo = "bar";
+}
+```
+
+Formatted (comment_style: slash):
+
+```vcl
+sub vcl_recv {
+  // Some leading comment
+  set req.http.Foo = "bar";
+}
+```
+
+Two characters open an inline comment, so two mark the line comment it becomes:
+`## Some leading comment` under `sharp`, which is also what restyling a `//` comment
+gives.
+
+Two kinds of inline comment are left as they are. One is a comment that code follows
+on the same line, because a line comment there would swallow the code. The other is a
+comment whose text spans lines, because rewriting it means rewriting every line inside
+it.
+
+```vcl
+sub vcl_recv {
+  /*
+   * Some leading comment
+   */
+  set req.http.Foo = /* which host */ "bar";
 }
 ```
 
