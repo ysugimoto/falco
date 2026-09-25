@@ -198,7 +198,8 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.Integer{Value: 0}, nil
 	case RESP_COMPLETED:
-		return &value.Boolean{Value: true}, nil
+		// No response is delivered to the client on WebSocket upgrade
+		return &value.Boolean{Value: v.ctx.State != "UPGRADE"}, nil
 	case RESP_HEADER_BYTES_WRITTEN:
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
@@ -241,6 +242,10 @@ func (v *LogScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 			Value: fmt.Sprint(v.ctx.RequestEndTime.UnixMicro()),
 		}, nil
 	case TIME_TO_FIRST_BYTE:
+		// No response is delivered to the client on WebSocket upgrade
+		if v.ctx.State == "UPGRADE" {
+			return &value.RTime{Value: 0}, nil
+		}
 		// TODO: this logic is only calculate response - request time.
 		// It means that is not correct RTIME value because TFB is the first byte from response.
 		return &value.RTime{
