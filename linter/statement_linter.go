@@ -565,7 +565,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 	switch ctx.Mode() {
 	case context.RECV:
 		// https://developer.fastly.com/reference/vcl/subroutines/recv/
-		expects = append(expects, "lookup", "pass", "error", "restart")
+		expects = append(expects, "lookup", "pass", "error", "restart", "upgrade")
 	case context.HASH:
 		// https://developer.fastly.com/reference/vcl/subroutines/hash/
 		expects = append(expects, "hash")

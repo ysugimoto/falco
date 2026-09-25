@@ -455,6 +455,12 @@ func TestTester(t *testing.T) {
 			filter: "*string_coercion/default.test.vcl",
 			passes: 21,
 		},
+		{
+			name:   "return upgrade in vcl_recv",
+			main:   "../../examples/testing/websocket_upgrade/default.vcl",
+			filter: "*websocket_upgrade/default.test.vcl",
+			passes: 3,
+		},
 	}
 
 	for _, tt := range tests {
