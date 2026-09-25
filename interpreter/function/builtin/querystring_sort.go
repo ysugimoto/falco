@@ -3,19 +3,40 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
-	"github.com/ysugimoto/falco/v2/interpreter/function/shared"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
 const Querystring_sort_Name = "querystring.sort"
 
-var Querystring_sort_ArgumentTypes = []value.Type{value.StringType}
+// Fastly returns the URL untouched once its query string holds this many
+// parameters, so neither the sort nor only_unique_keys is applied. Empty
+// parameters count toward the limit.
+const Querystring_sort_ParameterLimit = 32
+
+// qsToken preserves whether a query parameter ended the original input.
+type qsToken struct {
+	s       string
+	isFinal bool
+}
+
+func qsScan(query string) []qsToken {
+	parts := strings.Split(query, "&")
+	tokens := make([]qsToken, len(parts))
+	for i, p := range parts {
+		tokens[i] = qsToken{s: p, isFinal: i == len(parts)-1}
+	}
+	return tokens
+}
+
+var Querystring_sort_ArgumentTypes = []value.Type{value.StringType, value.BooleanType}
 
 func Querystring_sort_Validate(args []value.Value) error {
-	if len(args) != 1 {
-		return errors.ArgumentNotEnough(Querystring_sort_Name, 1, args)
+	if len(args) < 1 || len(args) > 2 {
+		return errors.ArgumentNotInRange(Querystring_sort_Name, 1, 2, args)
 	}
 	for i := range args {
 		if args[i].Type() != Querystring_sort_ArgumentTypes[i] {
@@ -27,6 +48,7 @@ func Querystring_sort_Validate(args []value.Value) error {
 
 // Fastly built-in function implementation of querystring.sort
 // Arguments may be:
+// - STRING, BOOL
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/
 func Querystring_sort(ctx *context.Context, args ...value.Value) (value.Value, error) {
@@ -35,14 +57,129 @@ func Querystring_sort(ctx *context.Context, args ...value.Value) (value.Value, e
 		return value.Null, err
 	}
 
-	u := value.Unwrap[*value.String](args[0])
-	query, err := shared.ParseQuery(u.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_sort_Name, "Failed to parse urquery: %s, error: %s", u.Value, err.Error(),
-		)
+	input := value.Unwrap[*value.String](args[0]).Value
+	uniqueKeys := len(args) > 1 && value.Unwrap[*value.Boolean](args[1]).Value
+
+	return &value.String{Value: querystringSort(input, uniqueKeys)}, nil
+}
+
+func querystringSort(input string, uniqueKeys bool) string {
+	prefix, query, found := strings.Cut(input, "?")
+	if !found {
+		return input
 	}
 
-	query.Sort(shared.SortAsc)
-	return &value.String{Value: query.String()}, nil
+	tokens := qsScan(query)
+
+	// The parameter limit includes empty tokens and bypasses deduplication.
+	if len(tokens) >= Querystring_sort_ParameterLimit {
+		return input
+	}
+	// Single-token query strings are returned byte-for-byte.
+	if len(tokens) == 1 {
+		return input
+	}
+
+	if uniqueKeys {
+		tokens = qsUnique(tokens)
+	}
+
+	return qsEmit(prefix, qsSortTokens(tokens))
+}
+
+// qsUnique keeps the first token for each distinct name.
+func qsUnique(tokens []qsToken) []qsToken {
+	unique := make([]qsToken, 0, len(tokens))
+	for _, tok := range tokens {
+		duplicate := false
+		for _, kept := range unique {
+			if qsSameName(tok, kept) {
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate {
+			unique = append(unique, tok)
+		}
+	}
+	return unique
+}
+
+// qsEnds reports whether c terminates a token.
+func qsEnds(c byte) bool { return c == '&' || c == 0x00 }
+
+// qsTerminatorsEqual treats separators and end-of-input markers equivalently.
+func qsTerminatorsEqual(a, b byte) bool {
+	return a == b || (a == 0x00 && b == '&') || (a == '&' && b == 0x00)
+}
+
+// qsByteAt returns a token byte or its original terminator.
+func qsByteAt(t qsToken, i int) byte {
+	if i < len(t.s) {
+		return t.s[i]
+	}
+	if t.isFinal {
+		return 0x00
+	}
+	return '&'
+}
+
+// qsCompare applies signed byte ordering with the original terminator context.
+func qsCompare(a, b qsToken) int {
+	for i := 0; ; i++ {
+		ca, cb := qsByteAt(a, i), qsByteAt(b, i)
+		if !qsTerminatorsEqual(ca, cb) {
+			return int(int8(ca)) - int(int8(cb))
+		}
+		if qsEnds(ca) {
+			return 0
+		}
+	}
+}
+
+// qsSameName distinguishes valued and valueless forms of the same name.
+func qsSameName(a, b qsToken) bool {
+	for i := 0; ; i++ {
+		ca, cb := qsByteAt(a, i), qsByteAt(b, i)
+		aStop, bStop := qsEnds(ca) || ca == '=', qsEnds(cb) || cb == '='
+		if aStop || bStop {
+			return (qsEnds(ca) && qsEnds(cb)) || (ca == '=' && cb == '=')
+		}
+		if ca != cb {
+			return false
+		}
+	}
+}
+
+// qsSortTokens performs a stable insertion sort.
+func qsSortTokens(tokens []qsToken) []qsToken {
+	sorted := make([]qsToken, 0, len(tokens))
+	for _, tok := range tokens {
+		p := 0
+		for ; p < len(sorted); p++ {
+			if qsCompare(tok, sorted[p]) < 0 {
+				break
+			}
+		}
+		sorted = append(sorted, qsToken{})
+		copy(sorted[p+1:], sorted[p:])
+		sorted[p] = tok
+	}
+	return sorted
+}
+
+// qsEmit joins tokens after removing only leading empty entries.
+func qsEmit(prefix string, tokens []qsToken) string {
+	p := 0
+	// The final token is intentionally retained even when empty.
+	for ; p < len(tokens)-1; p++ {
+		if tokens[p].s != "" {
+			break
+		}
+	}
+	parts := make([]string, 0, len(tokens)-p)
+	for _, tok := range tokens[p:] {
+		parts = append(parts, tok.s)
+	}
+	return prefix + "?" + strings.Join(parts, "&")
 }
