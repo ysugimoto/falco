@@ -225,12 +225,14 @@ func findConfigFile() (string, error) {
 			}
 		}
 
-		cwd = filepath.Dir(cwd)
-		if cwd == "/" {
-			// find up to root directory, stop it
-			// @FIXME: on windows?
+		// Ascend to the parent and stop when we can no longer ascend. filepath.Dir
+		// is idempotent at a filesystem root and, under WASI, at "." too; breaking
+		// only on "/" would loop forever there.
+		parent := filepath.Dir(cwd)
+		if parent == cwd {
 			break
 		}
+		cwd = parent
 	}
 
 	// not found

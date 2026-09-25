@@ -112,3 +112,26 @@ func TestConfigFromEnv(t *testing.T) {
 		t.Errorf("Unmatched FastlyApiKey field, expect=%s, got=%s", "example_api_key", c.FastlyApiKey)
 	}
 }
+
+// TestFindConfigFileAscendsToRoot verifies the platform-agnostic ascent
+// termination (parent == cwd): from a temp dir with no config above it,
+// findConfigFile must ascend to the root, stop, and return ("", nil) — not hang.
+func TestFindConfigFileAscendsToRoot(t *testing.T) {
+	dir := t.TempDir()
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(orig) })
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Chdir: %v", err)
+	}
+
+	got, err := findConfigFile()
+	if err != nil {
+		t.Fatalf("findConfigFile error: %v", err)
+	}
+	if got != "" {
+		t.Fatalf("expected no config file found, got %q", got)
+	}
+}
