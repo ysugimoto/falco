@@ -84,6 +84,54 @@ func TestFormatCommentCharacter(t *testing.T) {
 			char:   '/',
 			expect: "//# foo bar baz",
 		},
+		{
+			name:   "single sharp-style comment to slash-style",
+			input:  "# foo bar baz",
+			char:   '/',
+			expect: "// foo bar baz",
+		},
+		{
+			name:   "single sharp-style comment with no space to slash-style",
+			input:  "#foo bar baz",
+			char:   '/',
+			expect: "//foo bar baz",
+		},
+		{
+			name:   "sharp character alone to slash-style",
+			input:  "#",
+			char:   '/',
+			expect: "//",
+		},
+		{
+			name:   "three sharps to slash-style",
+			input:  "### foo bar baz",
+			char:   '/',
+			expect: "/// foo bar baz",
+		},
+		{
+			name:   "single sharp-style comment to sharp-style",
+			input:  "# foo bar baz",
+			char:   '#',
+			expect: "## foo bar baz",
+		},
+		{
+			name:   "single sharp-style comment with no space to sharp-style",
+			input:  "#foo bar baz",
+			char:   '#',
+			expect: "##foo bar baz",
+		},
+		{
+			name:   "sharp character alone to sharp-style",
+			input:  "#",
+			char:   '#',
+			expect: "##",
+		},
+		{
+			name:   "three sharps to sharp-style",
+			input:  "### foo bar baz",
+			char:   '#',
+			expect: "### foo bar baz",
+		},
 	}
 
 	for _, tt := range tests {
