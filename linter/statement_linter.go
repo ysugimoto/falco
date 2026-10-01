@@ -258,6 +258,14 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 }
 
 func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
+	if hasStringConcatInCondition(cond) {
+		l.Error((&LintError{
+			Severity: ERROR,
+			Token:    cond.GetMeta().Token,
+			Message:  "string concatenation is not allowed in condition expression",
+		}).Match(OPERATOR_CONDITIONAL))
+	}
+
 	// Note: if condtion expression accepts STRING or BOOL (evaluate as truthy/falsy), but forbid to use literal.
 	//
 	// For example:
