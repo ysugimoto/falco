@@ -85,6 +85,15 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			if !ok {
 				l.Error(UndefinedBackendProperty(v.Key.GetMeta(), v.Key.Value).Match(BACKEND_SYNTAX))
 			}
+			if v.Key.Value == "request" {
+				if exp, ok := v.Value.(*ast.InfixExpression); ok && exp.Explicit {
+					l.Error((&LintError{
+						Severity: ERROR,
+						Token:    v.Value.GetMeta().Token,
+						Message:  `Probe request must use adjacent string literals instead of the "+" operator`,
+					}).Match(BACKEND_SYNTAX))
+				}
+			}
 			vt := l.lint(v.Value, ctx)
 			if kt != vt {
 				l.Error(InvalidType(v.Value.GetMeta(), v.Key.Value, kt, vt).Match(BACKEND_SYNTAX))
