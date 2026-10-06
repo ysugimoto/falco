@@ -166,17 +166,13 @@ func (c *ChunkBuffer) ChunkedString(level, offset int) string {
 				continue
 			}
 			buf.WriteString(c.chunkString(state, chunk.buffer))
-		// prefix operator
-		case Prefix:
-			if next := c.nextChunk(); next != nil {
-				buf.WriteString(c.chunkString(state, chunk.buffer+next.buffer))
-			}
-		// group operator
-		case Group:
-			// If group operator, inside expressions should be printed on the same line
-			if next := c.nextChunk(); next != nil {
-				buf.WriteString(c.chunkGroupOperator(state, next))
-			}
+		// prefix and group operator
+		case Prefix, Group:
+			// Both take an operand, and the operand may be a group, which may hold
+			// another one. Read the whole thing and print it as a single chunk: the
+			// operand of a prefix operator cannot be separated from it, and inside a
+			// group expressions should be printed on the same line.
+			buf.WriteString(c.chunkString(state, c.readOperand(state, chunk)))
 		// infix operator
 		case Infix:
 			buf.WriteString(c.chunkString(state, chunk.buffer))
@@ -271,25 +267,50 @@ func (c *ChunkBuffer) chunkLineComment(state *ChunkState, chunk *Chunk) string {
 	return buf.String()
 }
 
-// chunkGroupOperator() returns chunk group expression string
-func (c *ChunkBuffer) chunkGroupOperator(state *ChunkState, chunk *Chunk) string {
-	expr := chunk.buffer
+// readOperand() returns the string of the operand that starts at the given chunk,
+// consuming the chunks it is made of. An opening parenthesis takes everything up to
+// the one that closes it, and a prefix operator takes the operand that follows it.
+func (c *ChunkBuffer) readOperand(state *ChunkState, chunk *Chunk) string {
+	switch {
+	case chunk.Type == Group && chunk.buffer == "(":
+		return c.readGroup(state)
+	case chunk.Type == Prefix:
+		if next := c.nextChunk(); next != nil {
+			return chunk.buffer + c.readOperand(state, next)
+		}
+	}
+	return chunk.buffer
+}
+
+// readGroup() returns the string of a group whose opening parenthesis has already
+// been consumed, parentheses included. It reads operands rather than chunks, so a
+// nested group is read whole and the parenthesis this stops at is the matching one.
+// Scanning flat stops at the first one instead, which leaves the outer closing
+// parentheses behind as chunks that nothing prints, and VCL that falco cannot parse
+// back is the result.
+func (c *ChunkBuffer) readGroup(state *ChunkState) string {
+	var expr string
 
 	for {
 		next := c.nextChunk()
 		if next == nil {
-			return c.chunkString(state, "("+expr+")")
+			return "(" + expr
 		}
 
 		switch {
+		case next.Type == Group && next.buffer == ")":
+			return "(" + expr + ")"
 		case next.isLineComment():
 			expr += next.buffer
 			expr += c.nextLine(state)
 			state.reset()
-		case next.buffer == ")":
-			return c.chunkString(state, "("+expr+")")
 		default:
-			expr += " " + next.buffer
+			operand := c.readOperand(state, next)
+			if expr == "" {
+				expr = operand
+			} else {
+				expr += " " + operand
+			}
 		}
 	}
 }
