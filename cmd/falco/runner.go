@@ -6,6 +6,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -560,20 +561,45 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 	}
 
 	formatted := formatter.New(r.config.Format).Format(vcl)
-	var w io.Writer
-	if r.config.Format.Overwrite {
-		writeln(cyan, "Formatted %s.", main.Name)
-		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
-		if err != nil {
-			return errors.WithStack(err)
+	if !r.config.Format.Overwrite {
+		if _, err := io.Copy(os.Stdout, formatted); err != nil {
+			return err
 		}
-		defer fp.Close()
-		w = fp
-	} else {
-		w = os.Stdout
+		return nil
 	}
-	if _, err := io.Copy(w, formatted); err != nil {
-		return err
+
+	// Format into a temporary file in the same directory, then rename it over the
+	// original. Truncating the original first loses it if anything fails in between.
+	tmp, err := os.CreateTemp(filepath.Dir(main.Name), "."+filepath.Base(main.Name)+".falco-")
+	if err != nil {
+		return errors.WithStack(err)
 	}
+	tmpName := tmp.Name()
+	// Also runs on a panic unwind, so a failure leaves no temporary file behind.
+	defer func() {
+		tmp.Close()
+		os.Remove(tmpName)
+	}()
+
+	if _, err := io.Copy(tmp, formatted); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := tmp.Close(); err != nil {
+		return errors.WithStack(err)
+	}
+	// os.CreateTemp uses 0600, so carry over the original permissions.
+	stat, err := os.Stat(main.Name)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := os.Chmod(tmpName, stat.Mode().Perm()); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := os.Rename(tmpName, main.Name); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// After the rename, so a failed run no longer reports the file as formatted.
+	writeln(cyan, "Formatted %s.", main.Name)
 	return nil
 }
