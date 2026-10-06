@@ -847,6 +847,41 @@ sub vcl_recv {
 	})
 }
 
+func TestReturnUpgradeStatement(t *testing.T) {
+	t.Run("upgrade is valid in vcl_recv", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	if (req.http.Upgrade) {
+		return (upgrade);
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("upgrade is invalid outside vcl_recv", func(t *testing.T) {
+		methodWithMacros := map[string]string{
+			"vcl_hash":    "#FASTLY HASH",
+			"vcl_hit":     "#FASTLY HIT",
+			"vcl_miss":    "#FASTLY MISS",
+			"vcl_pass":    "#FASTLY PASS",
+			"vcl_fetch":   "#FASTLY FETCH",
+			"vcl_error":   "#FASTLY ERROR",
+			"vcl_deliver": "#FASTLY DELIVER",
+			"vcl_log":     "#FASTLY LOG",
+		}
+		for method, macro := range methodWithMacros {
+			input := fmt.Sprintf(
+				`
+sub %s {
+	%s
+	return (upgrade);
+}`, method, macro)
+			assertError(t, input)
+		}
+	})
+}
+
 func TestGotoBackwardJump(t *testing.T) {
 	t.Run("backward jmp is forbidden", func(t *testing.T) {
 		input := `

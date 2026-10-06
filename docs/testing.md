@@ -1238,6 +1238,16 @@ sub test_vcl {
 }
 ```
 
+Note that `req.http.Upgrade` is a protected header and cannot be set in testing VCL. To test a `return(upgrade)` branch, trigger it with another header:
+
+```vcl
+sub test_vcl {
+    set req.http.X-Upgrade = "websocket";
+    testing.call_subroutine("vcl_recv");
+    assert.state(upgrade);
+}
+```
+
 ----
 
 ### assert.not_state(ID state [, STRING message])

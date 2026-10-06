@@ -165,6 +165,30 @@ backend foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("accepts adjacent string literals in probe request", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "origin.example.com";
+
+  .probe = {
+    .request = "HEAD / HTTP/1.1" "Host: origin.example.com" "Connection: close";
+  }
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("rejects plus operators in probe request", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "origin.example.com";
+
+  .probe = {
+    .request = "HEAD / HTTP/1.1" + "Host: origin.example.com" + "Connection: close";
+  }
+}`
+		assertError(t, input)
+	})
+
 	t.Run("Probe is configured in such a way that the backend will start as unhealthy", func(t *testing.T) {
 		input := `
 backend foo {
