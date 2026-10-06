@@ -2,6 +2,9 @@ package linter
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -641,6 +644,135 @@ sub vcl_recv {
    if (req.http.Is-Some-Truthy) {
 		include "deps01";
    }
+}
+		`
+	assertNoError(t, input, context.WithResolver(mock))
+}
+
+func assertIncludeRecursion(t *testing.T, input string, r resolver.Resolver) *LintError {
+	t.Helper()
+
+	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Fatalf("unexpected parser error: %s", err)
+	}
+
+	l := New(testConfig)
+	l.lint(vcl, context.New(context.WithResolver(r)))
+	if l.FatalError != nil {
+		t.Fatalf("Fatal error: %s", l.FatalError.Error)
+	}
+	if len(l.Errors) != 1 {
+		t.Fatalf("Expects one lint error but got %d: %s", len(l.Errors), l.Errors)
+	}
+	if l.Errors[0].Rule != INCLUDE_STATEMENT_MODULE_RECURSION {
+		t.Errorf("Rule expects %s but got %s", INCLUDE_STATEMENT_MODULE_RECURSION, l.Errors[0].Rule)
+	}
+	return l.Errors[0]
+}
+
+func TestResolveRecursiveIncludeStatement(t *testing.T) {
+	main := `
+include "deps01";
+
+sub vcl_recv {
+	#FASTLY RECV
+	set req.http.Foo = "bar";
+}
+		`
+
+	t.Run("module includes itself", func(t *testing.T) {
+		mock := &mockResolver{
+			dependency: map[string]string{
+				"deps01": `include "deps01";`,
+			},
+		}
+		assertIncludeRecursion(t, main, mock)
+	})
+
+	t.Run("modules include each other", func(t *testing.T) {
+		mock := &mockResolver{
+			dependency: map[string]string{
+				"deps01": `include "deps02";`,
+				"deps02": `include "deps01";`,
+			},
+		}
+		assertIncludeRecursion(t, main, mock)
+	})
+
+	t.Run("module includes itself inside a block statement", func(t *testing.T) {
+		mock := &mockResolver{
+			dependency: map[string]string{
+				"deps01": `include "deps01";`,
+			},
+		}
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	if (req.http.Is-Some-Truthy) {
+		include "deps01";
+	}
+}
+		`
+		assertIncludeRecursion(t, input, mock)
+	})
+
+	t.Run("module includes itself through a symlink", func(t *testing.T) {
+		// link.vcl and real.vcl are the same module under two names, so the loop
+		// closes on the second name.
+		dir := t.TempDir()
+		target := filepath.Join(dir, "real.vcl")
+		if err := os.WriteFile(target, []byte(`include "real";`), 0600); err != nil {
+			t.Fatalf("failed to write module: %s", err)
+		}
+		if err := os.Symlink(target, filepath.Join(dir, "link.vcl")); err != nil {
+			t.Skipf("symlinks are not available: %s", err)
+		}
+
+		input := `
+include "link";
+
+sub vcl_recv {
+	#FASTLY RECV
+	set req.http.Foo = "bar";
+}
+		`
+		mainFile := filepath.Join(dir, "main.vcl")
+		if err := os.WriteFile(mainFile, []byte(input), 0600); err != nil {
+			t.Fatalf("failed to write main module: %s", err)
+		}
+		resolvers, err := resolver.NewFileResolvers(mainFile, nil)
+		if err != nil {
+			t.Fatalf("failed to create resolver: %s", err)
+		}
+
+		e := assertIncludeRecursion(t, input, resolvers[0])
+		for _, name := range []string{"link.vcl", "real.vcl"} {
+			if !strings.Contains(e.Message, name) {
+				t.Errorf("Message expects to name %s but got %s", name, e.Message)
+			}
+		}
+	})
+}
+
+func TestIncludeSameModuleInTwoSubroutines(t *testing.T) {
+	// The same module included twice is not a loop, and both inclusions stand.
+	mock := &mockResolver{
+		dependency: map[string]string{
+			"deps01": `
+set req.http.Foo = "bar";
+			`,
+		},
+	}
+	input := `
+sub func {
+	include "deps01";
+}
+
+sub vcl_recv {
+	#FASTLY RECV
+	call func;
+	include "deps01";
 }
 		`
 	assertNoError(t, input, context.WithResolver(mock))

@@ -21,6 +21,7 @@ import (
 	"github.com/ysugimoto/falco/v2/interpreter/variable"
 	"github.com/ysugimoto/falco/v2/lexer"
 	"github.com/ysugimoto/falco/v2/parser"
+	"github.com/ysugimoto/falco/v2/resolver"
 )
 
 type Interpreter struct {
@@ -36,6 +37,7 @@ type Interpreter struct {
 	rateCounters  map[string]*value.Ratecounter
 	penaltyBoxes  map[string]*value.Penaltybox
 	callStack     []*ast.SubroutineDeclaration
+	includes      resolver.IncludeStack
 	Debugger      Debugger
 	IdentResolver func(v string) value.Value
 
