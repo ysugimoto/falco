@@ -41,3 +41,17 @@ func Test_Querystring_regfilter_except(t *testing.T) {
 		}
 	}
 }
+
+func Test_Querystring_regfilter_except_emptyPattern(t *testing.T) {
+	ret, err := Querystring_regfilter_except(
+		&context.Context{},
+		&value.String{Value: "/q?a=1&b=2"},
+		&value.String{Value: ""},
+	)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	if got := value.Unwrap[*value.String](ret).Value; got != "/q?a=1&b=2" {
+		t.Errorf("expected the url unchanged, got %q", got)
+	}
+}

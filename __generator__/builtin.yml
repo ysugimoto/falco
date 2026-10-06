@@ -776,6 +776,7 @@ querystring.sort:
   reference: "https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/"
   on: [RECV, HASH, HIT, MISS, PASS, FETCH, ERROR, DELIVER, LOG]
   arguments:
+    - [STRING, BOOL]
     - [STRING]
   return: STRING
 

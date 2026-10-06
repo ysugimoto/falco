@@ -6,284 +6,219 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestQueryStringsParse(t *testing.T) {
+func TestParseQuery(t *testing.T) {
 	tests := []struct {
+		name   string
 		input  string
 		expect *QueryStrings
 	}{
 		{
-			input: "/?foo=",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{""},
-					},
-				},
-			},
+			name:   "no query string",
+			input:  "/foo",
+			expect: &QueryStrings{Prefix: "/foo"},
 		},
 		{
-			input: "/?foo",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: nil,
-					},
-				},
-			},
+			name:  "a bare question mark yields one empty parameter",
+			input: "/foo?",
+			expect: &QueryStrings{Prefix: "/foo", Params: []Param{
+				{Name: ""},
+			}},
 		},
 		{
-			input: "/?a=1&b=2&c=3&d=4&b=5",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "a",
-						Value: []string{"1"},
-					},
-					{
-						Key:   "b",
-						Value: []string{"2", "5"},
-					},
-					{
-						Key:   "c",
-						Value: []string{"3"},
-					},
-					{
-						Key:   "d",
-						Value: []string{"4"},
-					},
-				},
-			},
+			name:  "distinguishes empty value from no value",
+			input: "/?a=&b",
+			expect: &QueryStrings{Prefix: "/", Params: []Param{
+				{Name: "a", Value: "", HasValue: true},
+				{Name: "b"},
+			}},
+		},
+		{
+			name:  "keeps duplicates in place",
+			input: "/?b=1&a=2&b=3",
+			expect: &QueryStrings{Prefix: "/", Params: []Param{
+				{Name: "b", Value: "1", HasValue: true},
+				{Name: "a", Value: "2", HasValue: true},
+				{Name: "b", Value: "3", HasValue: true},
+			}},
+		},
+		{
+			name:  "never decodes",
+			input: "/?a%20b=x%20y&c=p/q",
+			expect: &QueryStrings{Prefix: "/", Params: []Param{
+				{Name: "a%20b", Value: "x%20y", HasValue: true},
+				{Name: "c", Value: "p/q", HasValue: true},
+			}},
+		},
+		{
+			name:  "keeps a valueless duplicate distinct from a valued one",
+			input: "/?b&b=1",
+			expect: &QueryStrings{Prefix: "/", Params: []Param{
+				{Name: "b"},
+				{Name: "b", Value: "1", HasValue: true},
+			}},
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if diff := cmp.Diff(tt.expect, ParseQuery(tt.input)); diff != "" {
+				t.Errorf("unmatch: %s", diff)
+			}
+		})
+	}
+}
 
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		if diff := cmp.Diff(tt.expect, q); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
+func TestQueryStringsString(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{name: "round trips encoding", input: "/?a=%41&b=x%20y", expect: "/?a=%41&b=x%20y"},
+		{name: "round trips duplicate order", input: "/?b=1&a=2&b=3", expect: "/?b=1&a=2&b=3"},
+		{name: "round trips a valueless parameter", input: "/?a&b=1", expect: "/?a&b=1"},
+		{name: "round trips a bare question mark", input: "/foo?", expect: "/foo?"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseQuery(tt.input).String(); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
 	}
 }
 
 func TestQueryStringsAdd(t *testing.T) {
 	tests := []struct {
-		input  string
-		name   string
-		value  string
-		expect *QueryStrings
+		name       string
+		input      string
+		key, value string
+		expect     string
 	}{
-		{
-			input: "/?foo",
-			name:  "foo",
-			value: "bar",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{"bar"},
-					},
-				},
-			},
-		},
-		{
-			input: "/?foo=bar",
-			name:  "foo",
-			value: "baz",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{"bar", "baz"},
-					},
-				},
-			},
-		},
+		{name: "escapes a space as %20", input: "/q?x=1", key: "y", value: "a b", expect: "/q?x=1&y=a%20b"},
+		{name: "escapes the name too", input: "/q?x=1", key: "a b", value: "v", expect: "/q?x=1&a%20b=v"},
+		{name: "escapes a slash", input: "/q?x=1", key: "y", value: "a/b", expect: "/q?x=1&y=a%2Fb"},
+		{name: "double encodes a percent", input: "/q?x=1", key: "y", value: "%41", expect: "/q?x=1&y=%2541"},
+		{name: "is a no-op for an empty value", input: "/q?x=1", key: "y", value: "", expect: "/q?x=1"},
+		{name: "is a no-op for an empty name", input: "/q?x=1", key: "", value: "v", expect: "/q?x=1"},
+		{name: "never deduplicates", input: "/q?x=1", key: "x", value: "2", expect: "/q?x=1&x=2"},
+		{name: "appends after a bare question mark", input: "/q?", key: "y", value: "v", expect: "/q?&y=v"},
 	}
-
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		q.Add(tt.name, tt.value)
-		if diff := cmp.Diff(tt.expect, q); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
-	}
-}
-
-func TestQueryStringsGet(t *testing.T) {
-	tests := []struct {
-		input  string
-		name   string
-		expect *string
-	}{
-		{
-			input:  "/?foo",
-			name:   "foo",
-			expect: nil,
-		},
-		{
-			input: "/?foo=bar",
-			name:  "foo",
-			expect: func() *string {
-				s := "bar"
-				return &s
-			}(),
-		},
-	}
-
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		v := q.Get(tt.name)
-		if diff := cmp.Diff(tt.expect, v); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q := ParseQuery(tt.input)
+			q.Add(tt.key, tt.value)
+			if got := q.String(); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
 	}
 }
 
 func TestQueryStringsSet(t *testing.T) {
 	tests := []struct {
-		input  string
-		name   string
-		value  string
-		expect *QueryStrings
+		name       string
+		input      string
+		key, value string
+		expect     string
 	}{
-		{
-			input: "/?foo",
-			name:  "foo",
-			value: "bar",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{"bar"},
-					},
-				},
-			},
-		},
-		{
-			input: "/?foo=bar",
-			name:  "foo",
-			value: "baz",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{"baz"},
-					},
-				},
-			},
-		},
+		{name: "replaces in place and drops later duplicates", input: "/q?a=1&b=2&a=3", key: "a", value: "9", expect: "/q?a=9&b=2"},
+		{name: "appends when absent", input: "/q?b=2", key: "a", value: "9", expect: "/q?b=2&a=9"},
+		{name: "escapes a space as %20", input: "/q?x=1", key: "x", value: "a b", expect: "/q?x=a%20b"},
+		{name: "escapes the name too", input: "/q?x=1", key: "a b", value: "v", expect: "/q?x=1&a%20b=v"},
+		{name: "is a no-op for an empty value", input: "/q?x=1", key: "x", value: "", expect: "/q?x=1"},
 	}
-
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		q.Set(tt.name, tt.value)
-		if diff := cmp.Diff(tt.expect, q); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q := ParseQuery(tt.input)
+			q.Set(tt.key, tt.value)
+			if got := q.String(); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
 	}
 }
 
 func TestQueryStringsClean(t *testing.T) {
 	tests := []struct {
+		name   string
 		input  string
-		expect *QueryStrings
+		expect string
 	}{
-		{
-			input: "/?foo=bar&&=value-only",
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "foo",
-						Value: []string{"bar"},
-					},
-				},
-			},
-		},
+		{name: "removes empty-named parameters", input: "/q?a=1&&b=2&=v", expect: "/q?a=1&b=2"},
+		{name: "keeps valueless parameters", input: "/q?a&b=1", expect: "/q?a&b=1"},
+		{name: "keeps duplicates in place", input: "/q?b=1&a=2&b=3", expect: "/q?b=1&a=2&b=3"},
+		{name: "preserves encoding", input: "/q?a=%41&b=x%20y&c=p/q", expect: "/q?a=%41&b=x%20y&c=p/q"},
+		{name: "a bare question mark yields no query string", input: "/foo?", expect: "/foo"},
 	}
-
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		q.Clean()
-		if diff := cmp.Diff(tt.expect, q); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q := ParseQuery(tt.input)
+			q.Clean()
+			if got := q.String(); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
 	}
 }
 
-func TestQueryStringsSort(t *testing.T) {
+func TestQueryStringsFilter(t *testing.T) {
 	tests := []struct {
+		name   string
 		input  string
-		mode   SortMode
-		expect *QueryStrings
+		keep   func(string) bool
+		expect string
 	}{
 		{
-			input: "/?a=b&c=d",
-			mode:  SortDesc,
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "c",
-						Value: []string{"d"},
-					},
-					{
-						Key:   "a",
-						Value: []string{"b"},
-					},
-				},
-			},
+			name:   "keeps duplicates in place",
+			input:  "/q?b=1&a=2&b=3",
+			keep:   func(n string) bool { return n != "a" },
+			expect: "/q?b=1&b=3",
 		},
 		{
-			input: "/?c=d&a=b",
-			mode:  SortAsc,
-			expect: &QueryStrings{
-				Prefix: "/",
-				Items: []*QueryString{
-					{
-						Key:   "a",
-						Value: []string{"b"},
-					},
-					{
-						Key:   "c",
-						Value: []string{"d"},
-					},
-				},
-			},
+			name:   "preserves encoding",
+			input:  "/q?a=%41&b=2",
+			keep:   func(n string) bool { return n != "b" },
+			expect: "/q?a=%41",
+		},
+		{
+			name:   "matches the raw encoded name",
+			input:  "/q?a%20b=1&c=2",
+			keep:   func(n string) bool { return n == "a%20b" },
+			expect: "/q?a%20b=1",
+		},
+		{
+			name:   "drops empty-named parameters regardless of the predicate",
+			input:  "/q?=v&a=1",
+			keep:   func(n string) bool { return true },
+			expect: "/q?a=1",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q := ParseQuery(tt.input)
+			q.Filter(tt.keep)
+			if got := q.String(); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
+	}
+}
 
-	for i, tt := range tests {
-		q, err := ParseQuery(tt.input)
-		if err != nil {
-			t.Errorf("[%d] Unexpected parse query error: %s", i, err.Error())
-		}
-		q.Sort(tt.mode)
-		if diff := cmp.Diff(tt.expect, q); diff != "" {
-			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
-		}
+func TestEscape(t *testing.T) {
+	tests := []struct {
+		name     string
+		in, want string
+	}{
+		{name: "space becomes %20 not plus", in: "a b", want: "a%20b"},
+		{name: "slash is escaped", in: "a/b", want: "a%2Fb"},
+		{name: "percent is escaped", in: "%41", want: "%2541"},
+		{name: "unreserved characters pass through", in: "aZ0-._~", want: "aZ0-._~"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Escape(tt.in); got != tt.want {
+				t.Errorf("expected %q, got %q", tt.want, got)
+			}
+		})
 	}
 }

@@ -3,6 +3,8 @@
 package builtin
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,32 +12,363 @@ import (
 	"github.com/ysugimoto/falco/v2/interpreter/value"
 )
 
+// descendingParams builds "/q?pNN=1&...&p01=1" so that sorting is observable.
+func descendingParams(n int) string {
+	params := make([]string, n)
+	for i := range params {
+		params[i] = fmt.Sprintf("p%02d=1", n-i)
+	}
+	return "/q?" + strings.Join(params, "&")
+}
+
+func ascendingParams(n int) string {
+	params := make([]string, n)
+	for i := range params {
+		params[i] = fmt.Sprintf("p%02d=1", i+1)
+	}
+	return "/q?" + strings.Join(params, "&")
+}
+
+// repeatedKeys builds 33 tokens: three keys repeated eleven times each.
+func repeatedKeys() string {
+	var tokens []string
+	for i := range 11 {
+		tokens = append(tokens,
+			fmt.Sprintf("c=%02d", i*3+1),
+			fmt.Sprintf("b=%02d", i*3+2),
+			fmt.Sprintf("a=%02d", i*3+3),
+		)
+	}
+	return "/q?" + strings.Join(tokens, "&")
+}
+
+func Test_qsScan(t *testing.T) {
+	tests := []struct {
+		name   string
+		query  string
+		expect []qsToken
+	}{
+		{
+			name:   "single token is final",
+			query:  "a=1",
+			expect: []qsToken{{s: "a=1", isFinal: true}},
+		},
+		{
+			name:  "only the last token is final",
+			query: "b=1&a=2",
+			expect: []qsToken{
+				{s: "b=1"}, {s: "a=2", isFinal: true},
+			},
+		},
+		{
+			name:  "empty tokens are preserved",
+			query: "a=1&&b=2",
+			expect: []qsToken{
+				{s: "a=1"}, {s: ""}, {s: "b=2", isFinal: true},
+			},
+		},
+		{
+			name:   "empty query yields one empty final token",
+			query:  "",
+			expect: []qsToken{{s: "", isFinal: true}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if diff := cmp.Diff(tt.expect, qsScan(tt.query), cmp.AllowUnexported(qsToken{})); diff != "" {
+				t.Errorf("unmatch: %s", diff)
+			}
+		})
+	}
+}
+
 // Fastly built-in function testing implementation of querystring.sort
 // Arguments may be:
+// - STRING, BOOL
 // - STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/query-string/querystring-sort/
 func Test_Querystring_sort(t *testing.T) {
 	tests := []struct {
-		input  *value.String
+		name   string
+		args   []value.Value
 		expect *value.String
 	}{
-		{input: &value.String{Value: "foo?b=1&a=2"}, expect: &value.String{Value: "foo?a=2&b=1"}},
+		{
+			name:   "sorts parameters by name",
+			args:   []value.Value{&value.String{Value: "foo?b=1&a=2"}},
+			expect: &value.String{Value: "foo?a=2&b=1"},
+		},
+		{
+			name: "only_unique_keys=false behaves like the single argument form",
+			args: []value.Value{
+				&value.String{Value: "foo?b=1&a=2"},
+				&value.Boolean{Value: false},
+			},
+			expect: &value.String{Value: "foo?a=2&b=1"},
+		},
+		{
+			name: "only_unique_keys drops repeated keys",
+			args: []value.Value{
+				&value.String{Value: "/test?a=7&a=2&a=1&b=5&b=3"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/test?a=7&b=5"},
+		},
+		{
+			name: "only_unique_keys keeps the first occurrence in input order",
+			args: []value.Value{
+				&value.String{Value: "/foo?a=2&a=1"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/foo?a=2"},
+		},
+		{
+			name: "only_unique_keys dedupes before sorting",
+			args: []value.Value{
+				&value.String{Value: "/foo?b=1&a=2&b=3"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/foo?a=2&b=1"},
+		},
+		{
+			name: "only_unique_keys collapses repeated valueless parameters",
+			args: []value.Value{
+				&value.String{Value: "/foo?b&b&a=2"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/foo?a=2&b"},
+		},
+		{
+			name: "only_unique_keys dedupes the empty key",
+			args: []value.Value{
+				&value.String{Value: "/foo?=1&=2&a=3"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/foo?=1&a=3"},
+		},
+		{
+			name: "only_unique_keys is case sensitive",
+			args: []value.Value{
+				&value.String{Value: "/foo?A=1&a=2"},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: "/foo?A=1&a=2"},
+		},
+		{
+			name:   "sorts up to 31 parameters",
+			args:   []value.Value{&value.String{Value: descendingParams(31)}},
+			expect: &value.String{Value: ascendingParams(31)},
+		},
+		{
+			name:   "leaves 32 or more parameters untouched",
+			args:   []value.Value{&value.String{Value: descendingParams(32)}},
+			expect: &value.String{Value: descendingParams(32)},
+		},
+		{
+			name:   "counts empty tokens toward the parameter limit",
+			args:   []value.Value{&value.String{Value: descendingParams(30) + "&&"}},
+			expect: &value.String{Value: descendingParams(30) + "&&"},
+		},
+		{
+			name: "does not apply only_unique_keys over the parameter limit",
+			args: []value.Value{
+				&value.String{Value: repeatedKeys()},
+				&value.Boolean{Value: true},
+			},
+			expect: &value.String{Value: repeatedKeys()},
+		},
+		{
+			name:   "preserves percent-encoding in values",
+			args:   []value.Value{&value.String{Value: "/foo?b=%41&a=1"}},
+			expect: &value.String{Value: "/foo?a=1&b=%41"},
+		},
+		{
+			name:   "preserves percent-encoding in names",
+			args:   []value.Value{&value.String{Value: "/foo?a%20b=1&z=2"}},
+			expect: &value.String{Value: "/foo?a%20b=1&z=2"},
+		},
+		{
+			name:   "does not escape a slash",
+			args:   []value.Value{&value.String{Value: "/foo?b=a/b&a=1"}},
+			expect: &value.String{Value: "/foo?a=1&b=a/b"},
+		},
+		{
+			name:   "leaves a fragment alone",
+			args:   []value.Value{&value.String{Value: "/foo?b=2&a=1#frag"}},
+			expect: &value.String{Value: "/foo?a=1#frag&b=2"},
+		},
+		{
+			name:   "orders by whole token not by name",
+			args:   []value.Value{&value.String{Value: "/foo?b=2&b=1&a=0"}},
+			expect: &value.String{Value: "/foo?a=0&b=1&b=2"},
+		},
+		{
+			name:   "compares values bytewise",
+			args:   []value.Value{&value.String{Value: "/foo?b=9&b=10&a=0"}},
+			expect: &value.String{Value: "/foo?a=0&b=10&b=9"},
+		},
+		{
+			name:   "sorts a high byte before ascii",
+			args:   []value.Value{&value.String{Value: "/q?b=1&\xc3\xa9=2"}},
+			expect: &value.String{Value: "/q?\xc3\xa9=2&b=1"},
+		},
+		{
+			name:   "drops a leading empty token",
+			args:   []value.Value{&value.String{Value: "/foo?a=1&&b=2"}},
+			expect: &value.String{Value: "/foo?a=1&b=2"},
+		},
+		{
+			name:   "keeps an empty token that is not leading",
+			args:   []value.Value{&value.String{Value: "/q?!a=1&&b=2"}},
+			expect: &value.String{Value: "/q?!a=1&&b=2"},
+		},
+		{
+			name:   "leaves a query string with no separator alone",
+			args:   []value.Value{&value.String{Value: "/foo?"}},
+			expect: &value.String{Value: "/foo?"},
+		},
+		{
+			name:   "returns a url with no query string unchanged",
+			args:   []value.Value{&value.String{Value: "/foo"}},
+			expect: &value.String{Value: "/foo"},
+		},
 	}
 
-	for i, tt := range tests {
-		ret, err := Querystring_sort(
-			&context.Context{},
-			tt.input,
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.StringType {
-			t.Errorf("[%d] Unexpected return type, expect=STRING, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.String](ret)
-		if diff := cmp.Diff(v, tt.expect); diff != "" {
-			t.Errorf("[%d] Return value unmatch, diff: %s", i, diff)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ret, err := Querystring_sort(&context.Context{}, tt.args...)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if ret.Type() != value.StringType {
+				t.Errorf("Unexpected return type, expect=STRING, got=%s", ret.Type())
+			}
+			v := value.Unwrap[*value.String](ret)
+			if diff := cmp.Diff(v, tt.expect); diff != "" {
+				t.Errorf("Return value unmatch, diff: %s", diff)
+			}
+		})
+	}
+}
+
+func Test_qsCompare(t *testing.T) {
+	tests := []struct {
+		name string
+		a, b qsToken
+		want string // "lt", "gt", or "eq"
+	}{
+		{name: "plain ascii", a: qsToken{s: "a=1"}, b: qsToken{s: "b=1"}, want: "lt"},
+		{name: "uppercase before lowercase", a: qsToken{s: "B=1"}, b: qsToken{s: "a=1"}, want: "lt"},
+		{name: "compares whole token not name", a: qsToken{s: "b=1"}, b: qsToken{s: "b=2"}, want: "lt"},
+		{name: "bytewise not numeric", a: qsToken{s: "b=10"}, b: qsToken{s: "b=9"}, want: "lt"},
+		{
+			name: "high byte sorts before ascii",
+			a:    qsToken{s: "\xc3\xa9=2"}, b: qsToken{s: "b=1"}, want: "lt",
+		},
+		{
+			name: "prefix token that is input-final sorts before",
+			a:    qsToken{s: "a", isFinal: true}, b: qsToken{s: "a!b=1"}, want: "lt",
+		},
+		{
+			name: "prefix token that is not input-final sorts after",
+			a:    qsToken{s: "a"}, b: qsToken{s: "a!b=1"}, want: "gt",
+		},
+		{
+			name: "terminators are equivalent",
+			a:    qsToken{s: "a"}, b: qsToken{s: "a", isFinal: true}, want: "eq",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := qsCompare(tt.a, tt.b)
+			switch tt.want {
+			case "lt":
+				if got >= 0 {
+					t.Errorf("expected < 0, got %d", got)
+				}
+			case "gt":
+				if got <= 0 {
+					t.Errorf("expected > 0, got %d", got)
+				}
+			case "eq":
+				if got != 0 {
+					t.Errorf("expected 0, got %d", got)
+				}
+			}
+		})
+	}
+}
+
+func Test_qsSameName(t *testing.T) {
+	tests := []struct {
+		name string
+		a, b qsToken
+		want bool
+	}{
+		{name: "same name different values", a: qsToken{s: "a=1"}, b: qsToken{s: "a=2"}, want: true},
+		{name: "empty value still matches", a: qsToken{s: "a="}, b: qsToken{s: "a=1"}, want: true},
+		{name: "two valueless copies match", a: qsToken{s: "a"}, b: qsToken{s: "a", isFinal: true}, want: true},
+		{name: "valueless does not match valued", a: qsToken{s: "a"}, b: qsToken{s: "a=1"}, want: false},
+		{name: "different names", a: qsToken{s: "ab=1"}, b: qsToken{s: "a=1"}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := qsSameName(tt.a, tt.b); got != tt.want {
+				t.Errorf("expected %v, got %v", tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_qsSortTokens_isStable(t *testing.T) {
+	in := []qsToken{{s: "a=2"}, {s: "a=1"}, {s: "a=1", isFinal: true}}
+	got := qsSortTokens(in)
+	want := []qsToken{{s: "a=1"}, {s: "a=1", isFinal: true}, {s: "a=2"}}
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(qsToken{})); diff != "" {
+		t.Errorf("unmatch: %s", diff)
+	}
+}
+
+// Prefix ordering retains original terminators, so repeated sorting may oscillate.
+func Test_Querystring_sort_isNotIdempotent(t *testing.T) {
+	const first = "/q?a!b=1&a"
+	const second = "/q?a&a!b=1"
+
+	if got := querystringSort(first, false); got != second {
+		t.Errorf("first pass: expected %q, got %q", second, got)
+	}
+	if got := querystringSort(second, false); got != first {
+		t.Errorf("second pass: expected %q, got %q", first, got)
+	}
+}
+
+func Test_qsEmit(t *testing.T) {
+	tests := []struct {
+		name   string
+		tokens []qsToken
+		expect string
+	}{
+		{
+			name:   "drops a leading run of empty tokens",
+			tokens: []qsToken{{s: ""}, {s: "a=1"}, {s: "b=2", isFinal: true}},
+			expect: "/q?a=1&b=2",
+		},
+		{
+			name:   "keeps an empty token that is not leading",
+			tokens: []qsToken{{s: "!a=1"}, {s: ""}, {s: "b=2", isFinal: true}},
+			expect: "/q?!a=1&&b=2",
+		},
+		{
+			name:   "always keeps the last token even when empty",
+			tokens: []qsToken{{s: ""}, {s: ""}, {s: "", isFinal: true}},
+			expect: "/q?",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := qsEmit("/q", tt.tokens); got != tt.expect {
+				t.Errorf("expected %q, got %q", tt.expect, got)
+			}
+		})
 	}
 }

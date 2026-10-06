@@ -39,12 +39,7 @@ func Querystring_globfilter(ctx *context.Context, args ...value.Value) (value.Va
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_globfilter_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
-		)
-	}
+	query := shared.ParseQuery(v.Value)
 
 	pattern, err := glob.Compile(name.Value)
 	if err != nil {

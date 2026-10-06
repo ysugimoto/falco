@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"net/http/httptrace"
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/exception"
@@ -46,11 +47,24 @@ func SendRequest(req *Request) (*Response, error) {
 		}
 	}
 
-	resp, err := client.Do(req.Request)
+	// Capture the backend connection's remote address for beresp.backend.ip.
+	var remoteAddr string
+	trace := &httptrace.ClientTrace{
+		GotConn: func(info httptrace.GotConnInfo) {
+			if info.Conn != nil {
+				remoteAddr = info.Conn.RemoteAddr().String()
+			}
+		},
+	}
+	r := req.Request.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+
+	resp, err := client.Do(r)
 	if err != nil {
 		return nil, exception.Runtime(nil, "Failed to retrieve backend response: %s", err)
 	}
-	return WrapResponse(resp), nil
+	wrapped := WrapResponse(resp)
+	wrapped.RemoteAddr = remoteAddr
+	return wrapped, nil
 }
 
 // Fastly VCL explicitly distinguish empty value of HTTP header as empty or notset,

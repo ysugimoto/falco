@@ -3,9 +3,6 @@
 package builtin
 
 import (
-	"strings"
-	"time"
-
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
@@ -66,19 +63,7 @@ func Table_lookup_rtime(ctx *context.Context, args ...value.Value) (value.Value,
 			)
 		}
 
-		var val time.Duration
-		switch {
-		case strings.HasSuffix(v.Value, "d"):
-			num := strings.TrimSuffix(v.Value, "d")
-			val, _ = time.ParseDuration(num + "h")
-			val *= 24
-		case strings.HasSuffix(v.Value, "y"):
-			num := strings.TrimSuffix(v.Value, "y")
-			val, _ = time.ParseDuration(num + "h")
-			val *= 24 * 365
-		default:
-			val, _ = time.ParseDuration(v.Value)
-		}
+		val, _ := value.ParseRTimeLiteral(v.Value)
 		return &value.RTime{Value: val}, nil
 	}
 	return defaultValue.Copy(), nil
