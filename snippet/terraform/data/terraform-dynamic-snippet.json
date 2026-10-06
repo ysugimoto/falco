@@ -3,6 +3,7 @@
     "root_module": {
       "resources": [
         {
+          "address": "fastly_service_vcl.myservice",
           "type": "fastly_service_vcl",
           "provider_name": "registry.terraform.io/fastly/fastly",
           "values": {
@@ -32,13 +33,37 @@
           }
         },
         {
+          "address": "fastly_service_dynamic_snippet_content.my_dyn_content[\"My Dynamic Snippet\"]",
           "type": "fastly_service_dynamic_snippet_content",
+          "index": "My Dynamic Snippet",
           "provider_name": "registry.terraform.io/fastly/fastly",
           "values": {
             "service_id": "testServiceId",
             "snippet_id": "abc123",
             "content": "set req.http.X-Dynamic = \"1\";",
             "manage_snippets": false
+          }
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "fastly_service_vcl.myservice",
+          "type": "fastly_service_vcl",
+          "name": "myservice",
+          "expressions": {}
+        },
+        {
+          "address": "fastly_service_dynamic_snippet_content.my_dyn_content",
+          "type": "fastly_service_dynamic_snippet_content",
+          "name": "my_dyn_content",
+          "expressions": {
+            "service_id": {
+              "references": ["fastly_service_vcl.myservice"]
+            }
           }
         }
       ]
