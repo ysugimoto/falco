@@ -45,6 +45,10 @@ func (f *Formatter) chunkBuffer() *ChunkBuffer {
 // It means parser should have all information about input VCL (comment, empty lines, etc...)
 // And of course input VCL must have a valid syntax.
 func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
+	if vcl.IsSnippet {
+		return f.formatSnippet(vcl)
+	}
+
 	decls := Declarations{}
 
 	for _, stmt := range vcl.Statements {
@@ -116,8 +120,42 @@ func (f *Formatter) Format(vcl *ast.VCL) io.Reader {
 		buf.WriteString(decl.Buffer)
 	}
 	buf.WriteString("\n")
+	// Comments after the last declaration belong to no declaration, so they are
+	// written here or they would be dropped.
+	buf.WriteString(f.formatComment(vcl.Trailing, "\n", 0))
 
 	return bytes.NewReader(buf.Bytes())
+}
+
+// Format a snippet: statements at the top level with no declaration around them,
+// which is how a Fastly custom snippet is written. The parser recognizes that shape
+// and marks it as ast.VCL.IsSnippet, see (*Parser).ParseVCLOrSnippet.
+//
+// This is formatBlockStatement without the braces. Statements are grouped by the
+// empty lines between them, exactly as they are inside a subroutine, and the indent
+// level comes from the parser, which nests a snippet's statements from zero.
+func (f *Formatter) formatSnippet(vcl *ast.VCL) io.Reader {
+	group := &GroupedLines{}
+	lines := Lines{}
+
+	for _, stmt := range vcl.Statements {
+		if stmt.GetMeta().PreviousEmptyLines > 0 && len(lines) > 0 {
+			group.Lines = append(group.Lines, lines)
+			lines = Lines{}
+		}
+		lines = append(lines, f.formatStatement(stmt))
+	}
+
+	if len(lines) > 0 {
+		group.Lines = append(group.Lines, lines)
+	}
+	if f.conf.AlignTrailingComment {
+		group.Align()
+	}
+
+	return strings.NewReader(
+		trimMultipleLineFeeds(group.String() + f.formatComment(vcl.Trailing, "\n", 0)),
+	)
 }
 
 // Calculate and crate ident strings from config (shorthand, without passing config)
