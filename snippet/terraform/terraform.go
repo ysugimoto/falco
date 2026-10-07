@@ -19,11 +19,28 @@ const (
 	fastlyServiceDynamicSnippetContentType = "fastly_service_dynamic_snippet_content"
 )
 
+// resourceIndex is a resource instance key: a string for for_each, a number for count.
+type resourceIndex string
+
+func (i *resourceIndex) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		*i = resourceIndex(s)
+		return nil
+	}
+	var n json.Number
+	if err := json.Unmarshal(b, &n); err != nil {
+		return err
+	}
+	*i = resourceIndex(n.String())
+	return nil
+}
+
 type TerraformPlannedResource struct {
 	ProviderName string          `json:"provider_name"`
 	Type         string          `json:"type"`
 	Values       json.RawMessage `json:"values"`
-	Index        string          `json:"index"`
+	Index        resourceIndex   `json:"index"`
 	Address      string          `json:"address"`
 }
 
@@ -149,7 +166,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule, config map[string
 				if err := json.Unmarshal(v.Values, &a); err != nil {
 					return nil, errors.Wrap(err, "Failed to unmarshal fastly_service_acl_entries values")
 				}
-				a.Index = v.Index
+				a.Index = string(v.Index)
 				if c, ok := config[stripTerraformForEachIndex(v.Address)]; ok {
 					var ac *configurationServiceExpression
 					if err := json.Unmarshal(c.Expressions, &ac); err != nil {
@@ -175,7 +192,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule, config map[string
 				if err := json.Unmarshal(v.Values, &d); err != nil {
 					return nil, errors.Wrap(err, "Failed to unmarshal fastly_service_dictionary_items values")
 				}
-				d.Index = v.Index
+				d.Index = string(v.Index)
 				if c, ok := config[stripTerraformForEachIndex(v.Address)]; ok {
 					var dc *configurationServiceExpression
 					if err := json.Unmarshal(c.Expressions, &dc); err != nil {
@@ -201,7 +218,7 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule, config map[string
 				if err := json.Unmarshal(v.Values, &d); err != nil {
 					return nil, errors.Wrap(err, "Failed to unmarshal fastly_service_dynamic_snippet_content values")
 				}
-				d.Index = v.Index
+				d.Index = string(v.Index)
 				if c, ok := config[stripTerraformForEachIndex(v.Address)]; ok {
 					var dc *configurationServiceExpression
 					if err := json.Unmarshal(c.Expressions, &dc); err != nil {
