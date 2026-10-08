@@ -38,6 +38,18 @@ issue-*
 
 # WebAssembly build output
 wasm/falco.wasm
+wasm/falco-component.wasm
+# wasm-component build intermediates (left behind if the pipeline fails)
+wasm/falco-core.wasm
+wasm/falco-embedded.wasm
+wasm/wasi_snapshot_preview1.reactor*.wasm
 wasm/node_modules/
 wasm/package-lock.json
 wasm/wasm_exec.js
+
+# Go workspace overlay: a local-only convenience for pointing replace directives
+# (e.g. go-pcre) at a working tree. It contains developer-machine-specific paths
+# and must not be committed -- the toolchain auto-detects a repo-root go.work and
+# would force every contributor's build through it. See docs/wasm-component.md.
+go.work
+go.work.sum

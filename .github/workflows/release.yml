@@ -35,6 +35,16 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Build platform binaries
         run: VERSION=${{ steps.version.outputs.version }} make all
+      - name: Set up wasm toolchain
+        uses: ./.github/actions/setup-wasm-toolchain
+      - name: Build and test wasm component
+        run: |
+          make wasm-component
+          make test-wasm
+      - name: Package wasm component
+        run: |
+          cp wasm/falco-component.wasm dist/falco-component.wasm
+          cd dist && tar cfz falco-component-wasm.tar.gz falco-component.wasm
       - name: Create Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         if: startsWith(github.ref, 'refs/tags/')
@@ -48,5 +58,7 @@ jobs:
             dist/falco-linux-arm64.tar.gz
             dist/falco-darwin-amd64.tar.gz
             dist/falco-darwin-arm64.tar.gz
+            dist/falco-component.wasm
+            dist/falco-component-wasm.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

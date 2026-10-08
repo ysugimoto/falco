@@ -68,7 +68,7 @@ func tokenize(_ js.Value, args []js.Value) any {
 			Literal:  tok.Literal,
 			Line:     tok.Line,
 			Position: tok.Position,
-			Category: tokenCategory(tok.Type),
+			Category: token.Category(tok.Type),
 		})
 	}
 
@@ -190,67 +190,6 @@ func toJS(v any) any {
 		return js.Global().Get("JSON").Call("parse", `{"error":"JSON marshal failed"}`)
 	}
 	return js.Global().Get("JSON").Call("parse", string(data))
-}
-
-// tokenCategory maps token types to semantic categories for syntax highlighting.
-func tokenCategory(tt token.TokenType) string {
-	switch tt {
-	// Keywords
-	case token.ACL, token.BACKEND, token.DIRECTOR, token.TABLE, token.SUBROUTINE,
-		token.ADD, token.CALL, token.DECLARE, token.ERROR, token.ESI,
-		token.INCLUDE, token.IMPORT, token.LOG, token.REMOVE, token.RESTART,
-		token.RETURN, token.SET, token.SYNTHETIC, token.SYNTHETIC_BASE64, token.UNSET,
-		token.IF, token.ELSE, token.ELSEIF, token.ELSIF,
-		token.PENALTYBOX, token.RATECOUNTER, token.GOTO,
-		token.SWITCH, token.CASE, token.DEFAULT, token.BREAK, token.FALLTHROUGH,
-		token.PRAGMA:
-		return "keyword"
-
-	// Strings
-	case token.STRING, token.OPEN_LONG_STRING, token.CLOSE_LONG_STRING:
-		return "string"
-
-	// Numbers
-	case token.INT, token.FLOAT, token.RTIME:
-		return "number"
-
-	// Booleans
-	case token.TRUE, token.FALSE:
-		return "boolean"
-
-	// Identifiers
-	case token.IDENT:
-		return "variable"
-
-	// Operators
-	case token.EQUAL, token.NOT_EQUAL, token.REGEX_MATCH, token.NOT_REGEX_MATCH,
-		token.GREATER_THAN, token.LESS_THAN, token.GREATER_THAN_EQUAL, token.LESS_THAN_EQUAL,
-		token.AND, token.OR, token.NOT,
-		token.ASSIGN, token.ADDITION, token.SUBTRACTION, token.MULTIPLICATION,
-		token.DIVISION, token.REMAINDER,
-		token.BITWISE_OR, token.BITWISE_AND, token.BITWISE_XOR,
-		token.LEFT_SHIFT, token.RIGHT_SHIFT, token.LEFT_ROTATE, token.RIGHT_ROTATE,
-		token.LOGICAL_AND, token.LOGICAL_OR,
-		token.PLUS, token.MINUS, token.SLASH, token.PERCENT:
-		return "operator"
-
-	// Comments
-	case token.COMMENT:
-		return "comment"
-
-	// Punctuation
-	case token.LEFT_BRACE, token.RIGHT_BRACE, token.LEFT_PAREN, token.RIGHT_PAREN,
-		token.LEFT_BRACKET, token.RIGHT_BRACKET, token.COMMA, token.SEMICOLON,
-		token.DOT, token.COLON:
-		return "punctuation"
-
-	// Control
-	case token.FASTLY_CONTROL:
-		return "control"
-
-	default:
-		return "text"
-	}
 }
 
 // parseScope converts a scope string to the context scope constant.
