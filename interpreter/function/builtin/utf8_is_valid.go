@@ -29,7 +29,7 @@ func Utf8_is_valid_Validate(args []value.Value) error {
 // Fastly built-in function implementation of utf8.is_valid
 // Arguments may be:
 // - STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-is-valid/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-is-valid/
 func Utf8_is_valid(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Utf8_is_valid_Validate(args); err != nil {

@@ -15,7 +15,7 @@ import (
 // Arguments may be:
 // - STRING, INTEGER, INTEGER
 // - STRING, INTEGER
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-substr/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-substr/
 func Test_Utf8_substr(t *testing.T) {
 	tests := []struct {
 		input      string
@@ -29,7 +29,7 @@ func Test_Utf8_substr(t *testing.T) {
 		{input: "abあdefg", offset: 0, length: 2, expect: "ab"},
 		{input: "abあdefg", offset: 5, length: 3, expect: "fg"},
 		{input: "abあdefg", offset: 5, length: 0, expect: ""},
-		{input: "abあ", offset: 4, length: 2, expect: ""},
+		{input: "abあ", offset: 4, length: 2, expectNull: true},
 		{input: "abあ", offset: 3, length: 2, expect: ""},
 		{input: "abあdefg", offset: -3, expect: "efg", noLength: true},
 		{input: "abあdefg", offset: -3, length: 2, expect: "ef"},
@@ -38,18 +38,18 @@ func Test_Utf8_substr(t *testing.T) {
 		{input: "abあdefg", offset: -4, length: 0, expect: ""},
 		{input: "\xe3", offset: 0, length: 1, expectNull: true},
 		// Check extremes of length / offset values
-		{input: "abあdefg", offset: 2, length: math.MaxInt64 - 1, expect: ""},
-		{input: "abあdefg", offset: 1, length: math.MaxInt64, expect: ""},
+		{input: "abあdefg", offset: 2, length: math.MaxInt64 - 1, expectNull: true},
+		{input: "abあdefg", offset: 1, length: math.MaxInt64, expectNull: true},
 		{input: "abあdefg", offset: 5, length: -math.MaxInt64, expect: ""},
 		{input: "abあdefg", offset: 2, length: -math.MaxInt64 + 1, expect: ""},
-		{input: "abあdefg", offset: math.MaxInt64, length: 1, expect: ""},
-		{input: "abあdefg", offset: -math.MaxInt64, length: 1, expect: ""},
-		{input: "abあdefg", offset: math.MaxInt64, noLength: true, expect: ""},
-		{input: "abあdefg", offset: -math.MaxInt64, noLength: true, expect: ""},
-		{input: "abあdefg", offset: math.MaxInt64, length: math.MaxInt64, expect: ""},
-		{input: "abあdefg", offset: -math.MaxInt64, length: -math.MaxInt64, expect: ""},
-		{input: "abあdefg", offset: math.MaxInt64, length: -math.MaxInt64, expect: ""},
-		{input: "abあdefg", offset: -math.MaxInt64, length: math.MaxInt64, expect: ""},
+		{input: "abあdefg", offset: math.MaxInt64, length: 1, expectNull: true},
+		{input: "abあdefg", offset: -math.MaxInt64, length: 1, expectNull: true},
+		{input: "abあdefg", offset: math.MaxInt64, noLength: true, expectNull: true},
+		{input: "abあdefg", offset: -math.MaxInt64, noLength: true, expectNull: true},
+		{input: "abあdefg", offset: math.MaxInt64, length: math.MaxInt64, expectNull: true},
+		{input: "abあdefg", offset: -math.MaxInt64, length: -math.MaxInt64, expectNull: true},
+		{input: "abあdefg", offset: math.MaxInt64, length: -math.MaxInt64, expectNull: true},
+		{input: "abあdefg", offset: -math.MaxInt64, length: math.MaxInt64, expectNull: true},
 	}
 
 	for i, tt := range tests {

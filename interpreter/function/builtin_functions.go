@@ -2560,6 +2560,21 @@ var builtinFunctions = map[string]*Function{
 			return false
 		},
 	},
+	"utf8.translate": {
+		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
+		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {
+			var err error
+			args, err = stringifyVariableArguments("utf8.translate", args, map[int]struct{}{0: {}, 1: {}, 2: {}})
+			if err != nil {
+				return value.Null, errors.WithStack(err)
+			}
+			return builtin.Utf8_translate(ctx, args...)
+		},
+		CanStatementCall: false,
+		IsIdentArgument: func(i int) bool {
+			return false
+		},
+	},
 	"uuid.dns": {
 		Scope: context.RecvScope | context.HashScope | context.HitScope | context.MissScope | context.PassScope | context.FetchScope | context.ErrorScope | context.DeliverScope | context.LogScope,
 		Call: func(ctx *context.Context, args ...value.Value) (value.Value, error) {

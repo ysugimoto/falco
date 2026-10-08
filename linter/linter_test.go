@@ -2,6 +2,7 @@ package linter
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -86,6 +87,23 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts
 	if le.Severity != severity {
 		t.Errorf("Severity expects %s but got %s with: %s", severity, le.Severity, le)
 	}
+}
+
+func assertErrorMessage(t *testing.T, input, expect string, opts ...context.Option) {
+	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Errorf("unexpected parser error: %s", err)
+		t.FailNow()
+	}
+
+	l := New(testConfig)
+	l.lint(vcl, context.New(opts...))
+	for i := range l.Errors {
+		if strings.Contains(l.Errors[i].Error(), expect) {
+			return
+		}
+	}
+	t.Errorf("Expected a lint error containing %q, got: %s", expect, l.Errors)
 }
 
 func TestLintStuff(t *testing.T) {
