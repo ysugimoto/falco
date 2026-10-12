@@ -100,6 +100,7 @@ type ConsoleConfig struct {
 type FormatConfig struct {
 	// CLI options
 	Overwrite bool `cli:"w,write" default:"false"`
+	Check     bool `cli:"check" default:"false"`
 
 	// Formatter options
 	IndentWidth                int    `yaml:"indent_width" default:"2"`

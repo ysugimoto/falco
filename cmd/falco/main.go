@@ -548,6 +548,10 @@ func runTest(runner *Runner, rslv resolver.Resolver) error {
 }
 
 func runFormat(runner *Runner, rslv resolver.Resolver) error {
+	if runner.config.Format.Check && runner.config.Format.Overwrite {
+		writeln(red, "fmt cannot be used with both --check and --write at the same time")
+		return ErrExit
+	}
 	if err := runner.Format(rslv); err != nil {
 		if err != ErrParser {
 			writeln(red, err.Error())

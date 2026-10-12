@@ -561,6 +561,18 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 
 	formatted := formatter.New(r.config.Format).Format(vcl)
 	var w io.Writer
+	if r.config.Format.Check {
+		formattedBuf := new(strings.Builder)
+		_, err := io.Copy(formattedBuf, formatted)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		formattedString := formattedBuf.String()
+		if main.Data != formattedString {
+			return errors.WithStack(fmt.Errorf("%s requires formatting", main.Name))
+		}
+		formatted = strings.NewReader(formattedString)
+	}
 	if r.config.Format.Overwrite {
 		writeln(cyan, "Formatted %s.", main.Name)
 		fp, err := os.OpenFile(main.Name, os.O_TRUNC|os.O_WRONLY, 0o644)
