@@ -421,23 +421,9 @@ func (c *Context) Get(name string) (types.Type, error) {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
-		if v, ok := obj.Items[key]; !ok {
-			// Special case, VCL allows to Set/Get/Unset for {NAME} of any key name.
-			// If program would set to this property, we enables to assign with its types (may string type).
-			if v, ok := obj.Items["%any%"]; ok {
-				key = strings.ToLower(key)
-				obj.Items[key] = &Object{
-					Items: map[string]*Object{},
-					Value: v.Value,
-				}
-				obj = obj.Items[key]
-			} else {
-				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
-			}
-		} else {
-			obj = v
-		}
+	obj, ok = resolveVariablePath(obj, remains, true)
+	if !ok {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	// Check object existence
@@ -482,24 +468,9 @@ func (c *Context) Set(name string) (types.Type, error) {
 		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
-		if v, ok := obj.Items[key]; !ok {
-			// Special case, VCL allows to Set/Get/Unset for {NAME} of any key name.
-			// If program set to this property, we enables to assign with its types (may string type).
-			// And, almost name indicates HTTP header so case insensitive.
-			if v, ok := obj.Items["%any%"]; ok {
-				key = strings.ToLower(key)
-				obj.Items[key] = &Object{
-					Items: map[string]*Object{},
-					Value: v.Value,
-				}
-				obj = obj.Items[key]
-			} else {
-				return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
-			}
-		} else {
-			obj = v
-		}
+	obj, ok = resolveVariablePath(obj, remains, true)
+	if !ok {
+		return types.NullType, fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	// Check object existence
@@ -587,19 +558,9 @@ func (c *Context) Unset(name string) error {
 		return fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
-	for _, key := range remains {
-		if v, ok := obj.Items[key]; !ok {
-			if v, ok := obj.Items["%any%"]; ok {
-				obj = &Object{
-					Items: map[string]*Object{},
-					Value: v.Value,
-				}
-			} else {
-				return fmt.Errorf(`undefined variable "%s"`, name)
-			}
-		} else {
-			obj = v
-		}
+	obj, ok = resolveVariablePath(obj, remains, false)
+	if !ok {
+		return fmt.Errorf(`undefined variable "%s"`, name)
 	}
 
 	// Check object existence
@@ -654,6 +615,57 @@ func (c *Context) GetFunction(name string) (*BuiltinFunction, error) {
 	}
 
 	return obj.Value, nil
+}
+
+// resolveVariablePath walks the dotted path in remains from obj and returns the
+// object it resolves to. A "%any%" item is a wildcard matching any name. When it
+// has no sub-items it is an HTTP header container: header names are a flat
+// namespace that may contain dots, so the whole remaining path is joined into
+// one name. Otherwise (backend/director) each segment is matched in turn.
+// persist writes resolved objects back into obj so later lookups in the same
+// context find them; Unset passes false so it never mutates the context.
+func resolveVariablePath(obj *Object, remains []string, persist bool) (*Object, bool) {
+	for i := range len(remains) {
+		// A wildcard with no sub-items is an HTTP header container: join the
+		// rest of the path into one flat name. Doing this before matching a
+		// child stops an earlier header (req.http.foo) from shadowing a longer
+		// one (req.http.foo.bar).
+		if anySlot, ok := obj.Items["%any%"]; ok && len(anySlot.Items) == 0 {
+			key := strings.ToLower(strings.Join(remains[i:], "."))
+			resolved, ok := obj.Items[key]
+			if !ok {
+				resolved = &Object{
+					Items: map[string]*Object{},
+					Value: anySlot.Value,
+				}
+				if persist {
+					obj.Items[key] = resolved
+				}
+			}
+			return resolved, true
+		}
+
+		key := remains[i]
+		if v, ok := obj.Items[key]; ok {
+			obj = v
+			continue
+		}
+
+		// Wildcard match for a named object (backend/director): one segment.
+		anySlot, ok := obj.Items["%any%"]
+		if !ok {
+			return nil, false
+		}
+		resolved := &Object{
+			Items: map[string]*Object{},
+			Value: anySlot.Value,
+		}
+		if persist {
+			obj.Items[strings.ToLower(key)] = resolved
+		}
+		obj = resolved
+	}
+	return obj, true
 }
 
 func splitName(name string) (string, []string) {

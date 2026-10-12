@@ -78,6 +78,57 @@ func (l *Lexer) peekChar() rune {
 	return rune(b[0])
 }
 
+// peekSpacedRtimeUnit reports the RTIME unit in a whitespace-separated literal
+// like `60 s`, returning the unit and how many trailing chars to consume. It
+// matches only when the whitespace-separated word is exactly a valid unit.
+func (l *Lexer) peekSpacedRtimeUnit() (string, int, bool) {
+	isIdentByte := func(b byte) bool {
+		return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' ||
+			b >= '0' && b <= '9' || b == '_' || b == '.' || b == '-'
+	}
+
+	n := 0
+	// Skip leading spaces/tabs.
+	for {
+		b, err := l.r.Peek(n + 1)
+		if err != nil {
+			return "", 0, false
+		}
+		if b[n] == ' ' || b[n] == '\t' {
+			n++
+			continue
+		}
+		break
+	}
+
+	// Capture the following identifier-like word.
+	start := n
+	for {
+		b, err := l.r.Peek(n + 1)
+		if err != nil {
+			break
+		}
+		if !isIdentByte(b[n]) {
+			break
+		}
+		n++
+	}
+	if n == start {
+		return "", 0, false
+	}
+
+	b, err := l.r.Peek(n)
+	if err != nil {
+		return "", 0, false
+	}
+	switch word := string(b[start:n]); word {
+	case "ms", "s", "m", "h", "d", "w", "y":
+		return word, n, true
+	default:
+		return "", 0, false
+	}
+}
+
 func (l *Lexer) peekUntil(cond func(b byte) bool) (string, error) {
 	var peekBytes int
 	for {
@@ -415,27 +466,38 @@ func (l *Lexer) NextToken() token.Token {
 				return t
 			}
 		case isDigit(l.char):
-			num := l.readNumber()
-			// VCL has special type of "RTIME", it indicates relative-time.
-			// To parse it, we look up unit string after digit Literal
-			// and if "ms", "m", "s", "d", "y" character is found, it deals with RTIME token.
+			num, isFloat, rtimeEligible := l.readNumber()
+			// VCL has a special "RTIME" type (relative time) formed by a unit suffix
+			// ("ms", "s", "m", "h", "d", "w", "y"). Only plain decimal literals are
+			// eligible; hex and exponent literals are not (e.g. "0x1fs", "1e3s").
 			// https://developer.fastly.com/reference/vcl/types/rtime/
-			switch l.char {
-			case 'm':
+			switch {
+			case rtimeEligible && l.char == 'm':
 				if l.peekChar() == 's' { // "ms"
 					l.readChar()
 					t = newToken(token.RTIME, l.char, line, index)
 					t.Literal = num + "ms" // millisecond
 				} else {
 					t = newToken(token.RTIME, l.char, line, index)
-					t.Literal = num + "m" // month
+					t.Literal = num + "m" // minute
 				}
-			case 's', 'h', 'd', 'y': // second, hour, day, year
+			// second, hour, day, week, year
+			case rtimeEligible && (l.char == 's' || l.char == 'h' || l.char == 'd' || l.char == 'w' || l.char == 'y'):
 				t = newToken(token.RTIME, l.char, line, index)
 				t.Literal = num + string(l.char)
+			case rtimeEligible && (l.char == ' ' || l.char == '\t'):
+				// Fastly allows whitespace before the unit, e.g. `60 s` == `60s`.
+				if unit, consume, ok := l.peekSpacedRtimeUnit(); ok {
+					t = newToken(token.RTIME, l.char, line, index)
+					t.Literal = num + unit
+					for range consume {
+						l.readChar()
+					}
+					break
+				}
+				fallthrough
 			default:
-				// If literal contains ".", token should be FLOAT
-				if strings.Count(num, ".") == 1 {
+				if isFloat {
 					t = newToken(token.FLOAT, l.char, line, index)
 				} else {
 					t = newToken(token.INT, l.char, line, index)
@@ -472,8 +534,17 @@ func isLetter(r rune) bool {
 }
 
 func isDigit(r rune) bool {
-	// Digit allows "." character to parse literal is INTEGER of FLOAT.
+	// Includes '.' only so isLongStringDelimiter (which excludes '.') works;
+	// readNumber uses isDecimalDigit/isHexDigit for INT vs FLOAT classification.
 	return (r >= '0' && r <= '9') || r == '.'
+}
+
+func isDecimalDigit(r rune) bool {
+	return r >= '0' && r <= '9'
+}
+
+func isHexDigit(r rune) bool {
+	return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 }
 
 func isLongStringDelimiter(r rune) bool {

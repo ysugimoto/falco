@@ -227,6 +227,35 @@ func TestParseInteger(t *testing.T) {
 	}
 }
 
+func TestParseHexInteger(t *testing.T) {
+	tests := []struct {
+		input string
+		value int64
+	}{
+		{input: "0x5a5a", value: 23130},
+		{input: "0Xff", value: 255},
+		{input: "0x7FFFFFFFFFFFFFFF", value: 9223372036854775807},
+		// A bare leading zero is decimal in Fastly, not octal.
+		{input: "0755", value: 755},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := New(lexer.NewFromString(tt.input))
+			i, err := p.ParseInteger()
+			if err != nil {
+				t.Fatalf("Unexpected integer parse error: %s", err)
+			}
+			if i.Value != tt.value {
+				t.Errorf("value mismatch: got %d, want %d", i.Value, tt.value)
+			}
+			if i.Token.Literal != tt.input {
+				t.Errorf("literal not preserved: got %q, want %q", i.Token.Literal, tt.input)
+			}
+		})
+	}
+}
+
 func TestParseFloat(t *testing.T) {
 	input := `10.0`
 
@@ -258,6 +287,118 @@ func TestParseFloat(t *testing.T) {
 
 	if diff := cmp.Diff(f, expect, ignoreId); diff != "" {
 		t.Errorf("ast mismatch, diff=%s", diff)
+	}
+}
+
+func TestParseExponentFloat(t *testing.T) {
+	tests := []struct {
+		input string
+		value float64
+	}{
+		{input: "1e3", value: 1000},
+		{input: "1e-3", value: 0.001},
+		{input: "1e+3", value: 1000},
+		{input: "1.5e3", value: 1500},
+		// Hex floats (C99 mantissa x 2^exp); 'p' is the binary exponent marker.
+		{input: "0x1.8p3", value: 12},
+		{input: "0xA.Bp3", value: 85.5},
+		{input: "0x1p3", value: 8},
+		// Hex float without a 'p' exponent (Fastly accepts; parser appends p0).
+		{input: "0x1.8", value: 1.5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := New(lexer.NewFromString(tt.input))
+			f, err := p.ParseFloat()
+			if err != nil {
+				t.Fatalf("Unexpected float parse error: %s", err)
+			}
+			if f.Value != tt.value {
+				t.Errorf("value mismatch: got %v, want %v", f.Value, tt.value)
+			}
+			if f.Token.Literal != tt.input {
+				t.Errorf("literal not preserved: got %q, want %q", f.Token.Literal, tt.input)
+			}
+		})
+	}
+}
+
+// TestParseIntMinViaNegation verifies that 2^63 (INT_MIN's magnitude) is
+// accepted only as the operand of a unary minus, yielding INT_MIN. Verified
+// against the real Fastly compiler: bare 2^63 is a "Positive signed integer
+// overflow", but -2^63 is valid.
+func TestParseIntMinViaNegation(t *testing.T) {
+	inputs := []string{
+		"-9223372036854775808",
+		"-0x8000000000000000",
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			expr, err := p.ParseExpression(LOWEST)
+			if err != nil {
+				t.Fatalf("Unexpected parse error: %s", err)
+			}
+			prefix, ok := expr.(*ast.PrefixExpression)
+			if !ok {
+				t.Fatalf("expected *ast.PrefixExpression, got %T", expr)
+			}
+			integer, ok := prefix.Right.(*ast.Integer)
+			if !ok {
+				t.Fatalf("expected *ast.Integer operand, got %T", prefix.Right)
+			}
+			// The literal is stored as INT_MIN; negating it again wraps back to
+			// INT_MIN, so the assignment evaluates to INT_MIN.
+			if integer.Value != -9223372036854775808 {
+				t.Errorf("value mismatch: got %d, want %d", integer.Value, int64(-9223372036854775808))
+			}
+		})
+	}
+}
+
+// TestParseInvalidInteger verifies that out-of-range integer literals and
+// malformed hex literals are rejected. A literal magnitude must fit signed
+// int64; bare 2^63, uint64 "masks" (0xFFFFFFFFFFFFFFFF) and decimal overflow
+// all error rather than silently wrapping. Verified against the real Fastly
+// compiler, which rejects each as a signed integer overflow.
+func TestParseInvalidInteger(t *testing.T) {
+	inputs := []string{
+		"9223372036854775808",  // decimal 2^63 bare (only valid when negated)
+		"0x8000000000000000",   // hex 2^63 bare (only valid when negated)
+		"0x8000000000000001",   // hex 2^63+1
+		"0xFFFFFFFFFFFFFFFF",   // hex uint64 mask
+		"18446744073709551615", // decimal 2^64-1
+		"0x10000000000000000",  // hex 2^64 (beyond uint64)
+		"0x",                   // bare hex prefix, no digits
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			if _, err := p.ParseInteger(); err == nil {
+				t.Errorf("expected parse error for %q, got none", input)
+			}
+		})
+	}
+}
+
+// TestParseInvalidFloat verifies that malformed float literals are rejected.
+func TestParseInvalidFloat(t *testing.T) {
+	inputs := []string{
+		"1e",     // exponent marker, no digits
+		"0x1.8p", // hex float, 'p' marker but no exponent digits
+		"0x.",    // hex float, no mantissa digits
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			if _, err := p.ParseFloat(); err == nil {
+				t.Errorf("expected parse error for %q, got none", input)
+			}
+		})
 	}
 }
 
@@ -322,5 +463,53 @@ func TestParseRTime(t *testing.T) {
 
 	if diff := cmp.Diff(r, expect, ignoreId); diff != "" {
 		t.Errorf("ast mismatch, diff=%s", diff)
+	}
+}
+
+func TestParseRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly, including week ("w").
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	inputs := []string{"100ms", "5s", "5m", "6h", "3d", "8w", "1y", "5.3d"}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := New(lexer.NewFromString(input))
+			r, err := p.ParseRTime()
+			if err != nil {
+				t.Errorf("unexpected rtime parse error for %q: %s", input, err)
+				return
+			}
+			if r.Value != input {
+				t.Errorf("expected value %q, got %q", input, r.Value)
+			}
+		})
+	}
+}
+
+func TestParseRTimeWhitespaceSeparated(t *testing.T) {
+	// Fastly permits whitespace between the value and unit; the lexer
+	// normalizes `60 s` (and tab-separated forms) to the adjacent literal,
+	// so the parser should produce an ast.RTime with the normalized Value.
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{input: "60 s", expect: "60s"},
+		{input: "100 ms", expect: "100ms"},
+		{input: "8 w", expect: "8w"},
+		{input: "5.3 d", expect: "5.3d"},
+		{input: "60\ts", expect: "60s"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := New(lexer.NewFromString(tt.input))
+			r, err := p.ParseRTime()
+			if err != nil {
+				t.Errorf("unexpected rtime parse error for %q: %s", tt.input, err)
+				return
+			}
+			if r.Value != tt.expect {
+				t.Errorf("expected value %q, got %q", tt.expect, r.Value)
+			}
+		})
 	}
 }

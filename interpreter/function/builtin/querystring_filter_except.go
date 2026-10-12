@@ -40,12 +40,12 @@ func Querystring_filter_except(ctx *context.Context, args ...value.Value) (value
 	v := value.Unwrap[*value.String](args[0])
 	names := value.Unwrap[*value.String](args[1])
 
-	query, err := shared.ParseQuery(v.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_filter_except_Name, "Failed to parse query: %s, error: %s", v.Value, err.Error(),
-		)
+	// An empty allowlist leaves the URL unchanged.
+	if names.Value == "" {
+		return &value.String{Value: v.Value}, nil
 	}
+
+	query := shared.ParseQuery(v.Value)
 	filterMap := make(map[string]struct{})
 	for f := range bytes.SplitSeq([]byte(names.Value), Querystring_filtersep_Sign) {
 		filterMap[string(f)] = struct{}{}

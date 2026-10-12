@@ -42,6 +42,100 @@ sub foo {
 }`
 		assertNoError(t, input)
 	})
+
+	// Fastly coerces the right operand to STRING for these comparisons.
+	// see: https://fiddle.fastly.dev/fiddle/6c2ac451
+	t.Run("STRING is comparable with a coercible variable", func(t *testing.T) {
+		for _, vclType := range []string{"INTEGER", "FLOAT", "RTIME", "TIME", "BOOL", "IP"} {
+			t.Run(vclType, func(t *testing.T) {
+				input := `
+sub foo {
+	declare local var.V ` + vclType + `;
+	if (req.http.Host == var.V) {
+		restart;
+	}
+}`
+				assertNoError(t, input)
+			})
+		}
+	})
+
+	t.Run("STRING is comparable with BACKEND", func(t *testing.T) {
+		input := `
+backend foo {}
+sub foo {
+	if (req.http.Host == foo) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("STRING is comparable with a coercible function call", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == std.atoi("10")) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	// Fastly rejects a constant of another type, but accepts a BOOL literal.
+	// see: https://fiddle.fastly.dev/fiddle/77b892e1
+	t.Run("STRING is not comparable with a constant of another type", func(t *testing.T) {
+		for _, constant := range []string{"10", "-10", "10.0", "100s"} {
+			t.Run(constant, func(t *testing.T) {
+				input := `
+sub foo {
+	if (req.http.Host == ` + constant + `) {
+		restart;
+	}
+}`
+				assertError(t, input)
+			})
+		}
+	})
+
+	t.Run("STRING is comparable with a BOOL literal", func(t *testing.T) {
+		input := `
+sub foo {
+	if (req.http.Host == true) {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	// REGEX is only an operand of the ~ and !~ operators.
+	// see: https://fiddle.fastly.dev/fiddle/c5e955d4
+	t.Run("STRING is not comparable with REGEX", func(t *testing.T) {
+		input := `
+table t REGEX {
+	"k": "^foo$",
+}
+sub foo {
+	if (req.http.Host == table.lookup_regex(t, "k")) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	// Fastly parses the right operand as an IP address, constants included.
+	// see: https://fiddle.fastly.dev/fiddle/838b27db
+	t.Run("IP is comparable with STRING", func(t *testing.T) {
+		input := `
+sub foo {
+	if (client.ip == req.http.Host) {
+		restart;
+	}
+	if (client.ip == "127.0.0.1") {
+		restart;
+	}
+}`
+		assertNoError(t, input)
+	})
 }
 
 func TestLintNotEqualOperator(t *testing.T) {

@@ -204,6 +204,20 @@ func InvalidTypeComparison(m *ast.Meta, left, right types.Type) *LintError {
 	}
 }
 
+// InvalidTypeConstant reports a constant of a type that is only accepted as a
+// variable or function call, matching the message the Fastly compiler emits.
+// see: https://fiddle.fastly.dev/fiddle/77b892e1
+func InvalidTypeConstant(m *ast.Meta, actual, expect types.Type) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			"Expected %s constant, variable, or call, got %s constant",
+			expect.String(), actual.String(),
+		),
+	}
+}
+
 func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	return &LintError{
 		Severity: INFO,

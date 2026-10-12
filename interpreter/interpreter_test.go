@@ -354,3 +354,84 @@ func TestCustomStatusTextPreserved(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessRecvUpgrade(t *testing.T) {
+	vcl := `
+sub vcl_recv {
+  return (upgrade);
+}
+
+sub vcl_hash {
+  set req.hash += req.url;
+  return (hash);
+}
+
+sub vcl_miss {
+  return (fetch);
+}
+
+sub vcl_deliver {
+  return (deliver);
+}
+
+sub vcl_log {
+  log "state=" fastly_info.state
+    " status=" resp.status
+    " response=[" resp.response "]"
+    " proto=[" resp.proto "]"
+    " completed=" if(resp.completed, "1", "0")
+    " ttfb=" time.to_first_byte;
+}
+`
+	ip := New(context.WithResolver(resolver.NewStaticResolver("main", vcl)))
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	ip.ServeHTTP(rec, req)
+
+	if ip.process.Error != nil {
+		t.Fatalf("Did not expect error but got %s", ip.process.Error)
+	}
+	if rec.Result().StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", rec.Result().StatusCode)
+	}
+	// The connection is handed over to the WebSocket tunnel, so only vcl_log
+	// runs after vcl_recv, at the time the request is accepted.
+	// https://www.fastly.com/documentation/guides/concepts/real-time-messaging/websockets-tunnel/
+	var processed []string
+	for _, f := range ip.process.Flows {
+		if f.Subroutine != "" {
+			processed = append(processed, f.Subroutine)
+		}
+	}
+	if diff := cmp.Diff([]string{"vcl_recv", "vcl_log"}, processed); diff != "" {
+		t.Errorf("Processed subroutines mismatch, diff: %s", diff)
+	}
+	// Nothing fills resp on the upgrade path, so vcl_log sees an empty response
+	expected := "state=UPGRADE status=0 response=[] proto=[] completed=0 ttfb=0.000"
+	if len(ip.process.Logs) != 1 {
+		t.Fatalf("Expected a single vcl_log line, got %d", len(ip.process.Logs))
+	}
+	if diff := cmp.Diff(expected, ip.process.Logs[0].Message); diff != "" {
+		t.Errorf("vcl_log line mismatch, diff: %s", diff)
+	}
+}
+
+func TestProcessRecvUpgradeActualResponse(t *testing.T) {
+	vcl := `
+sub vcl_recv {
+  return (upgrade);
+}
+`
+	ip := New(
+		context.WithResolver(resolver.NewStaticResolver("main", vcl)),
+		context.WithActualResponse(true),
+	)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	ip.ServeHTTP(rec, req)
+
+	// The simulator cannot tunnel WebSockets, so it responds 501
+	if rec.Result().StatusCode != http.StatusNotImplemented {
+		t.Errorf("Expected status 501, got %d", rec.Result().StatusCode)
+	}
+}

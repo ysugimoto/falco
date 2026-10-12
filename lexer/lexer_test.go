@@ -741,6 +741,326 @@ func TestCustomToken(t *testing.T) {
 	}
 }
 
+func TestHexIntegerLiterals(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		expects []token.Token
+	}{
+		{
+			name:  "lowercase hex",
+			input: "0x5a5a",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x5a5a", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+		{
+			name:  "uppercase hex digits",
+			input: "0x7FFFFFFFFFFFFFFF",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x7FFFFFFFFFFFFFFF", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 19},
+			},
+		},
+		{
+			name:  "uppercase X prefix",
+			input: "0Xff",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0Xff", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "negative hex",
+			input: "-0x8000000000000000",
+			expects: []token.Token{
+				{Type: token.MINUS, Literal: "-", Line: 1, Position: 1},
+				{Type: token.INT, Literal: "0x8000000000000000", Line: 1, Position: 2},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 20},
+			},
+		},
+		{
+			name:  "hex followed by semicolon",
+			input: "0x1f;",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x1f", Line: 1, Position: 1},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expects {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+					t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+				}
+			}
+		})
+	}
+}
+
+func TestFloatLiterals(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		expects []token.Token
+	}{
+		{
+			name:  "decimal exponent",
+			input: "1e3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "negative exponent",
+			input: "1e-3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e-3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "positive exponent",
+			input: "1e+3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e+3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "fractional with exponent",
+			input: "1.5e3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1.5e3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "negative fractional with negative exponent",
+			input: "-1.2e-3",
+			expects: []token.Token{
+				{Type: token.MINUS, Literal: "-", Line: 1, Position: 1},
+				{Type: token.FLOAT, Literal: "1.2e-3", Line: 1, Position: 2},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 8},
+			},
+		},
+		{
+			name:  "hex float with p exponent",
+			input: "0x1.8p3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "0x1.8p3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 8},
+			},
+		},
+		{
+			name:  "hex float without p exponent",
+			input: "0x1.8",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "0x1.8", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "hex float without fractional part",
+			input: "0x1p3",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "0x1p3", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "uppercase E is not an exponent",
+			input: "1E3",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "1", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "E3", Line: 1, Position: 2},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "exponent followed by semicolon",
+			input: "1e3;",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e3", Line: 1, Position: 1},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expects {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+					t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+				}
+			}
+		})
+	}
+}
+
+// TestNumberRTimeInteraction verifies that only plain decimal literals combine
+// with an RTIME unit, in either the adjacent (`60s`) or whitespace-separated
+// (`60 s`) form. Hexadecimal and exponent literals must NOT fold into an RTIME
+// token in either form; the unit letter is lexed as a separate IDENT so the
+// parser rejects the construct rather than misattributing it to RTIME.
+func TestNumberRTimeInteraction(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		expects []token.Token
+	}{
+		{
+			name:  "plain decimal RTIME still works",
+			input: "100ms",
+			expects: []token.Token{
+				{Type: token.RTIME, Literal: "100ms", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "decimal float RTIME still works",
+			input: "1.5s",
+			expects: []token.Token{
+				{Type: token.RTIME, Literal: "1.5s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "exponent literal does not become RTIME",
+			input: "1e3s",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e3", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "hex literal does not become RTIME",
+			input: "0x1fs",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x1f", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "hex literal with d unit does not become RTIME",
+			input: "0x1ds",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x1d", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "hex literal with spaced unit does not become RTIME",
+			input: "0x1f s",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x1f", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 6},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+		{
+			name:  "exponent literal with spaced unit does not become RTIME",
+			input: "1e3 s",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e3", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expects {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+					t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+				}
+			}
+		})
+	}
+}
+
+// TestMalformedNumberLiterals documents the lexer's deliberately permissive
+// contract: malformed numeric literals are still tokenized (and rejected later
+// by the parser) rather than failing at lex time. These lock the lex-accepts /
+// parse-rejects boundary so it cannot silently regress.
+func TestMalformedNumberLiterals(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		expects []token.Token
+	}{
+		{
+			name:  "bare hex prefix",
+			input: "0x",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+			},
+		},
+		{
+			name:  "hex prefix with non-hex letter",
+			input: "0xG",
+			expects: []token.Token{
+				{Type: token.INT, Literal: "0x", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "G", Line: 1, Position: 3},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "decimal exponent with no digits",
+			input: "1e",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+			},
+		},
+		{
+			name:  "decimal exponent with sign but no digits",
+			input: "1e-",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "1e-", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "hex float with no exponent digits",
+			input: "0x1.8p",
+			expects: []token.Token{
+				{Type: token.FLOAT, Literal: "0x1.8p", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expects {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset")); diff != "" {
+					t.Errorf(`Tests[%d] failed, diff= %s`, i, diff)
+				}
+			}
+		})
+	}
+}
+
 func TestFastlyControlSyntaxes(t *testing.T) {
 	t.Run("pragma syntax", func(t *testing.T) {
 		input := "pragma optional_param geoip_opt_in true;"
@@ -793,4 +1113,194 @@ func TestFastlyControlSyntaxes(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestRtimeLiteral(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect []token.Token
+	}{
+		{
+			name:  "adjacent second",
+			input: "60s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "spaced second",
+			input: "60 s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "spaced millisecond",
+			input: "100 ms",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "100ms", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+		{
+			name:  "spaced day terminated by semicolon",
+			input: "2 d;",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "2d", Line: 1, Position: 1},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "multiple spaces",
+			input: "30  m",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "30m", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			name:  "set statement with spaced rtime",
+			input: "set beresp.ttl = 60 s;",
+			expect: []token.Token{
+				{Type: token.SET, Literal: "set", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "beresp.ttl", Line: 1, Position: 5},
+				{Type: token.ASSIGN, Literal: "=", Line: 1, Position: 16},
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 18},
+				{Type: token.SEMICOLON, Literal: ";", Line: 1, Position: 22},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 23},
+			},
+		},
+		{
+			name:  "adjacent week",
+			input: "5w",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5w", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 3},
+			},
+		},
+		{
+			name:  "spaced week",
+			input: "5 w",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5w", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 4},
+			},
+		},
+		{
+			name:  "number followed by non-unit identifier is not rtime",
+			input: "60 string",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "string", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 10},
+			},
+		},
+		{
+			name:  "number followed by unit-prefixed identifier is not rtime",
+			input: "60 second",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "second", Line: 1, Position: 4},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 10},
+			},
+		},
+		{
+			name:  "tab separator",
+			input: "60\ts",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "60s", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 5},
+			},
+		},
+		{
+			name:  "spaced float",
+			input: "5.3 d",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "5.3d", Line: 1, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 6},
+			},
+		},
+		{
+			// Newline is intentionally NOT a unit separator (only space/tab),
+			// so `60\ns` is an INT followed by an identifier, not an RTIME.
+			name:  "newline is not a unit separator",
+			input: "60\ns",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.LF, Literal: "\n", Line: 1, Position: 3},
+				{Type: token.IDENT, Literal: "s", Line: 2, Position: 1},
+				{Type: token.EOF, Literal: "", Line: 2, Position: 2},
+			},
+		},
+		{
+			// Only the first whitespace-separated word is considered as a unit,
+			// so `100 m s` is RTIME `100m` plus a separate identifier `s`
+			// (it is NOT collapsed into `100ms`).
+			name:  "ambiguous minute then s is not millisecond",
+			input: "100 m s",
+			expect: []token.Token{
+				{Type: token.RTIME, Literal: "100m", Line: 1, Position: 1},
+				{Type: token.IDENT, Literal: "s", Line: 1, Position: 7},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 8},
+			},
+		},
+		{
+			// The '-' in the unit-word charset must not swallow a following
+			// negative literal: `60 -5d` is INT, MINUS, RTIME `5d`.
+			name:  "space then negative rtime keeps minus separate",
+			input: "60 -5d",
+			expect: []token.Token{
+				{Type: token.INT, Literal: "60", Line: 1, Position: 1},
+				{Type: token.MINUS, Literal: "-", Line: 1, Position: 4},
+				{Type: token.RTIME, Literal: "5d", Line: 1, Position: 5},
+				{Type: token.EOF, Literal: "", Line: 1, Position: 7},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			for i, want := range tt.expect {
+				tok := l.NextToken()
+				if diff := cmp.Diff(want, tok, cmpopts.IgnoreFields(token.Token{}, "Offset", "File")); diff != "" {
+					t.Errorf("Tests[%d] failed, diff= %s", i, diff)
+				}
+			}
+		})
+	}
+}
+
+func TestRTimeUnits(t *testing.T) {
+	// All RTIME unit suffixes accepted by Fastly.
+	// https://www.fastly.com/documentation/reference/vcl/types/rtime/
+	tests := []struct {
+		input   string
+		literal string
+	}{
+		{input: "100ms", literal: "100ms"},
+		{input: "5s", literal: "5s"},
+		{input: "5m", literal: "5m"},
+		{input: "6h", literal: "6h"},
+		{input: "3d", literal: "3d"},
+		{input: "8w", literal: "8w"},
+		{input: "1y", literal: "1y"},
+		{input: "5.3d", literal: "5.3d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := NewFromString(tt.input)
+			tok := l.NextToken()
+			if tok.Type != token.RTIME {
+				t.Errorf("expected RTIME token, got %s (%q)", tok.Type, tok.Literal)
+			}
+			if tok.Literal != tt.literal {
+				t.Errorf("expected literal %q, got %q", tt.literal, tok.Literal)
+			}
+		})
+	}
 }

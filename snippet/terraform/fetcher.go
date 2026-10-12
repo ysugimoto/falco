@@ -215,12 +215,25 @@ func (f *TerraformFetcher) Directors() ([]*snippet.Director, error) {
 func (f *TerraformFetcher) Snippets() ([]*snippet.VCLSnippet, error) {
 	var v []*snippet.VCLSnippet
 	for _, s := range f.filterService() {
+		// Existing inline snippets
 		for _, vcl := range s.Snippets {
 			v = append(v, &snippet.VCLSnippet{
 				Name:     vcl.Name,
 				Type:     vcl.Type,
 				Content:  vcl.Content,
 				Priority: vcl.Priority,
+			})
+		}
+		// Dynamic snippets with resolved content
+		for _, ds := range s.DynamicSnippets {
+			if ds.Content == "" {
+				continue
+			}
+			v = append(v, &snippet.VCLSnippet{
+				Name:     ds.Name,
+				Type:     ds.Type,
+				Content:  ds.Content,
+				Priority: ds.Priority,
 			})
 		}
 	}

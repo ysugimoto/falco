@@ -48,16 +48,75 @@ func (l *Lexer) readBracketString(delimiter string) string {
 	return string(rs)
 }
 
-func (l *Lexer) readNumber() string {
+// readNumber lexes a decimal or hexadecimal numeric literal, reporting whether
+// it is a FLOAT and whether it may take an RTIME unit suffix (decimals only).
+// Exponent markers are lowercase 'e' (decimal) and 'p' (hex).
+func (l *Lexer) readNumber() (literal string, isFloat, rtimeEligible bool) {
 	buf := pool.Get().(*bytes.Buffer) // nolint:errcheck
 	defer pool.Put(buf)
 	buf.Reset()
 
-	for isDigit(l.char) {
+	// Hexadecimal literal; never RTIME-eligible.
+	if l.char == '0' && (l.peekChar() == 'x' || l.peekChar() == 'X') {
+		buf.WriteRune(l.char) // '0'
+		l.readChar()
+		buf.WriteRune(l.char) // 'x' or 'X'
+		l.readChar()
+		for isHexDigit(l.char) {
+			buf.WriteRune(l.char)
+			l.readChar()
+		}
+		if l.char == '.' {
+			isFloat = true
+			buf.WriteRune(l.char)
+			l.readChar()
+			for isHexDigit(l.char) {
+				buf.WriteRune(l.char)
+				l.readChar()
+			}
+		}
+		if l.char == 'p' {
+			isFloat = true
+			l.readExponent(buf)
+		}
+		return buf.String(), isFloat, false
+	}
+
+	// Decimal literal; RTIME-eligible unless it has an exponent.
+	rtimeEligible = true
+	for isDecimalDigit(l.char) {
 		buf.WriteRune(l.char)
 		l.readChar()
 	}
-	return buf.String()
+	if l.char == '.' {
+		isFloat = true
+		buf.WriteRune(l.char)
+		l.readChar()
+		for isDecimalDigit(l.char) {
+			buf.WriteRune(l.char)
+			l.readChar()
+		}
+	}
+	if l.char == 'e' {
+		isFloat = true
+		rtimeEligible = false
+		l.readExponent(buf)
+	}
+	return buf.String(), isFloat, rtimeEligible
+}
+
+// readExponent consumes the exponent marker, an optional sign, and the digits.
+func (l *Lexer) readExponent(buf *bytes.Buffer) {
+	buf.WriteRune(l.char) // 'e' or 'p'
+	l.readChar()
+	if l.char == '+' || l.char == '-' {
+		buf.WriteRune(l.char)
+		l.readChar()
+	}
+	for isDecimalDigit(l.char) {
+		buf.WriteRune(l.char)
+		l.readChar()
+	}
 }
 
 func (l *Lexer) readEOL() string {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/ysugimoto/falco/v2/ast"
@@ -223,6 +222,7 @@ var BackendPropertyTypes = map[string]types.Type{
 	"ssl_sni_hostname":         types.StringType,
 	"between_bytes_timeout":    types.RTimeType,
 	"connect_timeout":          types.RTimeType,
+	"fetch_timeout":            types.RTimeType,
 	"first_byte_timeout":       types.RTimeType,
 	"keepalive_time":           types.RTimeType,
 	"max_connections":          types.IntegerType,
@@ -376,7 +376,7 @@ func isValidVariableNameWithWildcard(name string) bool {
 	return true
 }
 
-// In VCL, could not specify literal in if condition expression.
+// In VCL, could not specify a literal as the first if condition expression.
 //
 // if (!req.http.Cookie) { ... } // -> valid, inverse actual identity variable (implicit type conversion will occur)
 // if (!false) { ... }           // -> valid, inverse boolean
@@ -396,6 +396,27 @@ func isValidConditionExpression(cond ast.Expression) error {
 		}
 	}
 	return nil
+}
+
+func hasStringConcatInCondition(cond ast.Expression) bool {
+	switch t := cond.(type) {
+	case *ast.InfixExpression:
+		if t.Operator == "+" {
+			return true
+		}
+		return hasStringConcatInCondition(t.Left) || hasStringConcatInCondition(t.Right)
+	case *ast.PrefixExpression:
+		return hasStringConcatInCondition(t.Right)
+	case *ast.GroupedExpression:
+		return hasStringConcatInCondition(t.Right)
+	case *ast.PostfixExpression:
+		return hasStringConcatInCondition(t.Left)
+	case *ast.IfExpression:
+		// Concatenation is valid in the result arms of an if expression.
+		return hasStringConcatInCondition(t.Condition)
+	}
+	// Function-call arguments can contain string concatenation.
+	return false
 }
 
 // In VCL, bang operator could not use in set/add statement expression,
@@ -541,6 +562,33 @@ func isLiteralExpression(exp ast.Expression) bool {
 
 func expectType(cur types.Type, expects ...types.Type) bool {
 	return slices.Contains(expects, cur)
+}
+
+// isConstantOperand reports whether the expression is a numeric constant,
+// including a signed one like -10 which the parser represents as a prefix
+// expression.
+func isConstantOperand(exp ast.Expression) bool {
+	if p, ok := exp.(*ast.PrefixExpression); ok && (p.Operator == "-" || p.Operator == "+") {
+		return isConstantOperand(p.Right)
+	}
+	return isConstantExpression(exp)
+}
+
+// isStringCoercible reports whether Fastly converts the type to its string
+// representation when it is the right operand of an equality comparison
+// against a STRING. REGEX is deliberately absent, Fastly accepts it only for
+// the ~ and !~ operators.
+// see: https://fiddle.fastly.dev/fiddle/6c2ac451
+func isStringCoercible(right types.Type) bool {
+	return expectType(right,
+		types.IntegerType,
+		types.FloatType,
+		types.RTimeType,
+		types.TimeType,
+		types.BackendType,
+		types.BoolType,
+		types.IPType,
+	)
 }
 
 func expectState(cur string, expects ...string) bool {
@@ -749,7 +797,6 @@ func isValidBackendShareKey(shareKey string) bool {
 func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) error {
 	var threshold int
 	var initial int
-	var err error
 
 	// The code below works also if either/both initial and threshold are not present:
 	// * if both dont appear then both have values 0 and 0 in which case you get no warning
@@ -757,21 +804,21 @@ func isProbeMakingTheBackendStartAsUnhealthy(prober ast.BackendProbeObject) erro
 	// * if threshold exists but no initial then we generate an error correctly because threshold > 0 (initial)
 	for _, v := range prober.Values {
 		if strings.EqualFold(v.Key.Value, "initial") {
-			// Optimistically cast this to int, if we can do it because the value is a literal
-			// we can apply the check
-			initial, err = strconv.Atoi(v.Value.String())
-			if err != nil {
+			// Read the evaluated value, not String() (which now returns the source
+			// literal, e.g. hex "0x5", that base-10 parsing would reject).
+			iv, ok := v.Value.(*ast.Integer)
+			if !ok {
 				return nil
 			}
+			initial = int(iv.Value)
 		}
 
 		if strings.EqualFold(v.Key.Value, "threshold") {
-			// Optimistically cast this to int, if we can do it because the value is a literal
-			// we can apply the check
-			threshold, err = strconv.Atoi(v.Value.String())
-			if err != nil {
+			iv, ok := v.Value.(*ast.Integer)
+			if !ok {
 				return nil
 			}
+			threshold = int(iv.Value)
 		}
 	}
 

@@ -535,11 +535,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		if v.ctx.ClientIdentity == nil {
 			// default as client.ip
-			idx := strings.LastIndex(req.RemoteAddr, ":")
-			if idx == -1 {
+			host, _, err := net.SplitHostPort(req.RemoteAddr)
+			if err != nil {
 				return &value.String{Value: req.RemoteAddr}, nil
 			}
-			return &value.String{Value: req.RemoteAddr[:idx]}, nil
+			return &value.String{Value: host}, nil
 		}
 		return v.ctx.ClientIdentity, nil
 
@@ -547,11 +547,11 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		if v := lookupOverrideAsIP(v.ctx, name); v != nil {
 			return v, nil
 		}
-		idx := strings.LastIndex(req.RemoteAddr, ":")
-		if idx == -1 {
+		host, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err != nil {
 			return &value.IP{Value: net.ParseIP(req.RemoteAddr)}, nil
 		}
-		return &value.IP{Value: net.ParseIP(req.RemoteAddr[:idx])}, nil
+		return &value.IP{Value: net.ParseIP(host)}, nil
 
 	case CLIENT_OS_NAME:
 		if v := lookupOverride(v.ctx, name); v != nil {

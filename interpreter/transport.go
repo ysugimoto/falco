@@ -62,6 +62,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 	if v, err := i.getBackendProperty(backend.Value.Properties, "port"); err != nil {
 		return nil, errors.WithStack(err)
 	} else if v != nil {
+		if v.Type() != value.StringType {
+			return nil, exception.Runtime(nil, "backend %s property 'port' must be STRING, got %s", backend.Value.Name.Value, v.Type())
+		}
 		port = value.Unwrap[*value.String](v).Value
 	}
 
@@ -81,6 +84,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		if v, err := i.getBackendProperty(backend.Value.Properties, "ssl"); err != nil {
 			return nil, errors.WithStack(err)
 		} else if v != nil {
+			if v.Type() != value.BooleanType {
+				return nil, exception.Runtime(nil, "backend %s property 'ssl' must be BOOL, got %s", backend.Value.Name.Value, v.Type())
+			}
 			if value.Unwrap[*value.Boolean](v).Value {
 				scheme = HTTPS_SCHEME
 			}
@@ -95,6 +101,9 @@ func (i *Interpreter) createBackendRequest(ctx *icontext.Context, backend *value
 		if v, err := i.getBackendProperty(backend.Value.Properties, "host"); err != nil {
 			return nil, errors.WithStack(err)
 		} else if v != nil {
+			if v.Type() != value.StringType {
+				return nil, exception.Runtime(nil, "backend %s property 'host' must be STRING, got %s", backend.Value.Name.Value, v.Type())
+			}
 			host = value.Unwrap[*value.String](v).Value
 		} else {
 			return nil, exception.Runtime(nil, "Failed to find host for backend %s", backend)
@@ -164,7 +173,23 @@ func (i *Interpreter) sendBackendRequest(backend *value.Backend) (*http.Response
 
 	timeout := 15 * time.Second // 15 seconds as default
 	if fbt != nil {
+		if fbt.Type() != value.RTimeType {
+			return nil, exception.Runtime(nil, "backend %s property 'first_byte_timeout' must be RTIME, got %s", backend.Value.Name.Value, fbt.Type())
+		}
 		timeout = value.Unwrap[*value.RTime](fbt).Value
+	}
+
+	// The backend "fetch_timeout" property bounds the entire response fetch,
+	// so prefer it over the first_byte_timeout-derived default when present.
+	ft, err := i.getBackendProperty(backend.Value.Properties, "fetch_timeout")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if ft != nil {
+		if ft.Type() != value.RTimeType {
+			return nil, exception.Runtime(nil, "backend %s property 'fetch_timeout' must be RTIME, got %s", backend.Value.Name.Value, ft.Type())
+		}
+		timeout = value.Unwrap[*value.RTime](ft).Value
 	}
 
 	// Use bereq.fetch_timeout variable value if specified

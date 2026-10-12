@@ -70,10 +70,18 @@ func (f *Formatter) formatBoolean(expr *ast.Boolean) string {
 }
 
 func (f *Formatter) formatInteger(expr *ast.Integer) string {
+	// Preserve the source literal instead of normalizing.
+	if lit := expr.Token.Literal; lit != "" {
+		return lit
+	}
 	return fmt.Sprint(expr.Value)
 }
 
 func (f *Formatter) formatFloat(expr *ast.Float) string {
+	// Preserve the source literal instead of normalizing.
+	if lit := expr.Token.Literal; lit != "" {
+		return lit
+	}
 	return fmt.Sprint(expr.Value)
 }
 

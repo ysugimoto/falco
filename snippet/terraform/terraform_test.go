@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/ysugimoto/falco/v2/snippet"
 )
 
 func TestUnmarshallValidTfJson(t *testing.T) {
@@ -248,5 +249,275 @@ func TestUnmarshalWithRequestSetting(t *testing.T) {
 	}
 	if diff := cmp.Diff(rsExpects, services[0].RequestSettings); diff != "" {
 		t.Errorf("Unmarshalled request settings mismatch, diff=%s", diff)
+	}
+}
+
+func TestUnmarshalWithDynamicSnippetContent(t *testing.T) {
+	fileName := "./data/terraform-dynamic-snippet.json"
+	buf, err := os.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s", err, fileName)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error %s unmarshalling %s", err, fileName)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+
+	svc := services[0]
+	if len(svc.DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(svc.DynamicSnippets))
+	}
+
+	expected := &DynamicSnippet{
+		Name:      "My Dynamic Snippet",
+		Type:      "recv",
+		Content:   `set req.http.X-Dynamic = "1";`,
+		Priority:  110,
+		SnippetID: "abc123",
+	}
+	if diff := cmp.Diff(expected, svc.DynamicSnippets[0]); diff != "" {
+		t.Errorf("Unmarshalled dynamic snippet mismatch, diff=%s", diff)
+	}
+}
+
+func TestTerraformFetcherIncludesDynamicSnippets(t *testing.T) {
+	fileName := "./data/terraform-dynamic-snippet.json"
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Failed to read %s: %s", fileName, err)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal: %s", err)
+	}
+
+	fetcher := NewTerraformFetcher(services)
+	snippets, err := fetcher.Snippets()
+	if err != nil {
+		t.Fatalf("Snippets() returned error: %s", err)
+	}
+
+	expected := []*snippet.VCLSnippet{
+		{
+			Name:     "My Dynamic Snippet",
+			Type:     "recv",
+			Content:  `set req.http.X-Dynamic = "1";`,
+			Priority: 110,
+		},
+	}
+	if diff := cmp.Diff(expected, snippets); diff != "" {
+		t.Errorf("Fetcher Snippets() mismatch, diff=%s", diff)
+	}
+}
+
+// TestFullPlanConfigurationBasedMatching verifies that ACL entries, dictionary
+// items, and dynamic snippet content are correctly joined to their service
+// using the configuration section's expression references, even when
+// service_id and snippet_id are "known after apply" (empty in planned_values).
+func TestFullPlanConfigurationBasedMatching(t *testing.T) {
+	fileName := "./data/terraform-full-plan.json"
+	buf, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("Unexpected error %s reading file %s", err, fileName)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error %s unmarshalling %s", err, fileName)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	svc := services[0]
+	if svc.Name != "snippet_test" {
+		t.Errorf("Expected service name %q, got %q", "snippet_test", svc.Name)
+	}
+
+	// ACL: "My ACL" should have its entry joined, "My ACL2" should have no entries
+	if len(svc.Acls) != 2 {
+		t.Fatalf("Expected 2 ACLs, got %d", len(svc.Acls))
+	}
+	var myAcl, myAcl2 *Acl
+	for _, a := range svc.Acls {
+		switch a.Name {
+		case "My ACL":
+			myAcl = a
+		case "My ACL2":
+			myAcl2 = a
+		}
+	}
+	if myAcl == nil {
+		t.Fatal("ACL 'My ACL' not found")
+	}
+	if len(myAcl.Entries) != 1 {
+		t.Fatalf("Expected 1 entry in 'My ACL', got %d", len(myAcl.Entries))
+	}
+	if diff := cmp.Diff(&AclEntry{Comment: "ACL Entry 1", Ip: "127.0.0.1", Negated: false, Subnet: "24"}, myAcl.Entries[0]); diff != "" {
+		t.Errorf("ACL entry mismatch, diff=%s", diff)
+	}
+	if myAcl2 == nil {
+		t.Fatal("ACL 'My ACL2' not found")
+	}
+	if len(myAcl2.Entries) != 0 {
+		t.Errorf("Expected 0 entries in 'My ACL2', got %d", len(myAcl2.Entries))
+	}
+
+	// Dictionary: "My Dictionary" should have items, "My Dictionary2" should not
+	if len(svc.Dictionaries) != 2 {
+		t.Fatalf("Expected 2 dictionaries, got %d", len(svc.Dictionaries))
+	}
+	var myDict, myDict2 *Dictionary
+	for _, d := range svc.Dictionaries {
+		switch d.Name {
+		case "My Dictionary":
+			myDict = d
+		case "My Dictionary2":
+			myDict2 = d
+		}
+	}
+	if myDict == nil {
+		t.Fatal("Dictionary 'My Dictionary' not found")
+	}
+	expectedItems := []*DictionaryItem{
+		{Key: "key1", Value: "value1"},
+		{Key: "key2", Value: "value2"},
+	}
+	if diff := cmp.Diff(expectedItems, myDict.Items); diff != "" {
+		t.Errorf("Dictionary items mismatch, diff=%s", diff)
+	}
+	if myDict2 == nil {
+		t.Fatal("Dictionary 'My Dictionary2' not found")
+	}
+	if len(myDict2.Items) != 0 {
+		t.Errorf("Expected 0 items in 'My Dictionary2', got %d", len(myDict2.Items))
+	}
+
+	// Dynamic snippet: content should be joined
+	if len(svc.DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(svc.DynamicSnippets))
+	}
+	ds := svc.DynamicSnippets[0]
+	if ds.Name != "My Dynamic Snippet" {
+		t.Errorf("Expected dynamic snippet name %q, got %q", "My Dynamic Snippet", ds.Name)
+	}
+	if ds.Type != "recv" {
+		t.Errorf("Expected dynamic snippet type %q, got %q", "recv", ds.Type)
+	}
+	expectedContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+	if ds.Content != expectedContent {
+		t.Errorf("Expected dynamic snippet content %q, got %q", expectedContent, ds.Content)
+	}
+}
+
+func TestDynamicSnippetEmptySnippetIDNotJoined(t *testing.T) {
+	// When snippet_id is "known after apply", it appears as an empty string in
+	// the plan JSON for both the inline block and the content resource. The
+	// content must not be joined onto the snippet via an empty-string match.
+	jsonData := `{
+      "planned_values": {
+        "root_module": {
+          "resources": [
+            {
+              "type": "fastly_service_vcl",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {
+                "id": "svc1",
+                "name": "emptySnippetIDTest",
+                "dynamicsnippet": [
+                  {"name": "ds", "type": "recv", "priority": 10, "snippet_id": ""}
+                ],
+                "vcl": [
+                  {"content": "sub vcl_recv {\n  #FASTLY recv\n}\n", "main": true, "name": "main.vcl"}
+                ]
+              }
+            },
+            {
+              "type": "fastly_service_dynamic_snippet_content",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {"service_id": "svc1", "snippet_id": "", "content": "# should not be joined"}
+            }
+          ]
+        }
+      }
+    }`
+
+	services, err := unmarshalTerraformPlannedInput([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling: %s", err)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	if len(services[0].DynamicSnippets) != 1 {
+		t.Fatalf("Expected 1 dynamic snippet, got %d", len(services[0].DynamicSnippets))
+	}
+
+	expected := &DynamicSnippet{
+		Name:     "ds",
+		Type:     "recv",
+		Priority: 10,
+	}
+	if diff := cmp.Diff(expected, services[0].DynamicSnippets[0]); diff != "" {
+		t.Errorf("Dynamic snippet should not receive content via empty snippet_id, diff=%s", diff)
+	}
+}
+
+func TestDynamicSnippetContentUnknownServiceID(t *testing.T) {
+	// A fastly_service_dynamic_snippet_content resource may reference a
+	// service_id that is not present in the plan. This must be ignored
+	// gracefully without affecting existing services.
+	jsonData := `{
+      "planned_values": {
+        "root_module": {
+          "resources": [
+            {
+              "type": "fastly_service_vcl",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {
+                "id": "svc1",
+                "name": "unknownServiceTest",
+                "dynamicsnippet": [
+                  {"name": "ds", "type": "recv", "priority": 10, "snippet_id": "abc123"}
+                ],
+                "vcl": [
+                  {"content": "sub vcl_recv {\n  #FASTLY recv\n}\n", "main": true, "name": "main.vcl"}
+                ]
+              }
+            },
+            {
+              "type": "fastly_service_dynamic_snippet_content",
+              "provider_name": "registry.terraform.io/fastly/fastly",
+              "values": {"service_id": "does-not-exist", "snippet_id": "abc123", "content": "# orphaned"}
+            }
+          ]
+        }
+      }
+    }`
+
+	services, err := unmarshalTerraformPlannedInput([]byte(jsonData))
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling: %s", err)
+	}
+
+	if len(services) != 1 {
+		t.Fatalf("Expected 1 service, got %d", len(services))
+	}
+	expected := &DynamicSnippet{
+		Name:      "ds",
+		Type:      "recv",
+		Priority:  10,
+		SnippetID: "abc123",
+	}
+	if diff := cmp.Diff(expected, services[0].DynamicSnippets[0]); diff != "" {
+		t.Errorf("Dynamic snippet should not receive content for unknown service_id, diff=%s", diff)
 	}
 }

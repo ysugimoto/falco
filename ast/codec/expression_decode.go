@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/v2/ast"
+	"github.com/ysugimoto/falco/v2/token"
 )
 
 func (c *Decoder) decodeExpression(frame *Frame) (ast.Expression, error) {
@@ -232,10 +233,15 @@ func (c *Decoder) decodeInteger(frame *Frame) (*ast.Integer, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	v := binary.BigEndian.Uint64(buf)
-	return &ast.Integer{
+	v := binary.BigEndian.Uint64(buf[:8])
+	integer := &ast.Integer{
 		Value: int64(v),
-	}, nil
+	}
+	// Restore the preserved source literal, if any.
+	if lit := bytesToString(buf[8:]); lit != "" {
+		integer.Meta = ast.New(token.Token{Type: token.INT, Literal: lit}, 0)
+	}
+	return integer, nil
 }
 
 func (c *Decoder) decodeFloat(frame *Frame) (*ast.Float, error) {
@@ -247,10 +253,15 @@ func (c *Decoder) decodeFloat(frame *Frame) (*ast.Float, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	bits := binary.BigEndian.Uint64(buf)
-	return &ast.Float{
+	bits := binary.BigEndian.Uint64(buf[:8])
+	float := &ast.Float{
 		Value: math.Float64frombits(bits),
-	}, nil
+	}
+	// Restore the preserved source literal, if any.
+	if lit := bytesToString(buf[8:]); lit != "" {
+		float.Meta = ast.New(token.Token{Type: token.FLOAT, Literal: lit}, 0)
+	}
+	return float, nil
 }
 
 func (c *Decoder) decodeBoolean(frame *Frame) (*ast.Boolean, error) {

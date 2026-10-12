@@ -52,6 +52,29 @@ func TestContextSet(t *testing.T) {
 			t.Errorf("expected nil but got error: %s", err)
 		}
 	})
+
+	t.Run("Able to set header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if v, err := c.Set("req.http.one.two"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
+
+	t.Run("Able to set dotted header after setting its prefix header", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if _, err := c.Set("req.http.foo"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		}
+		if v, err := c.Set("req.http.foo.bar"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
 }
 
 func TestContextGet(t *testing.T) {
@@ -59,6 +82,29 @@ func TestContextGet(t *testing.T) {
 		c := New()
 		c.Scope(RECV)
 		if v, err := c.Get("req.http.Cookie:session"); err != nil {
+			t.Errorf("unexpected error %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
+
+	t.Run("Can get header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if v, err := c.Get("req.http.one.two"); err != nil {
+			t.Errorf("unexpected error %s", err)
+		} else if v != types.StringType {
+			t.Errorf("Value must be STRING but got %s", v)
+		}
+	})
+
+	t.Run("Can get dotted header after getting its prefix header", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if _, err := c.Get("req.http.foo"); err != nil {
+			t.Errorf("unexpected error %s", err)
+		}
+		if v, err := c.Get("req.http.foo.bar"); err != nil {
 			t.Errorf("unexpected error %s", err)
 		} else if v != types.StringType {
 			t.Errorf("Value must be STRING but got %s", v)
@@ -116,6 +162,25 @@ func TestContextUnset(t *testing.T) {
 	t.Run("Success or no effect", func(t *testing.T) {
 		c := New()
 		if err := c.Unset("req.http.Cookie:session"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		}
+	})
+
+	t.Run("Unset header name containing dots", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if err := c.Unset("req.http.one.two"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		}
+	})
+
+	t.Run("Unset dotted header after setting its prefix header", func(t *testing.T) {
+		c := New()
+		c.Scope(RECV)
+		if _, err := c.Set("req.http.foo"); err != nil {
+			t.Errorf("expected nil but got error: %s", err)
+		}
+		if err := c.Unset("req.http.foo.bar"); err != nil {
 			t.Errorf("expected nil but got error: %s", err)
 		}
 	})
