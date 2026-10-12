@@ -1,0 +1,46 @@
+name: Setup wasm toolchain
+description: >-
+  Install pinned wasm-tools and wasmtime (Linux x86_64) for building and testing
+  the WASI Component Model build (make wasm-component / make test-wasm).
+
+inputs:
+  wasm-tools-version:
+    description: wasm-tools release version (no leading v).
+    required: false
+    default: "1.252.0"
+  wasmtime-version:
+    description: >-
+      wasmtime release version (no leading v). Keep in sync with
+      WASI_ADAPTER_VERSION in the Makefile so the preview1 adapter and runtime
+      match.
+    required: false
+    default: "46.0.0"
+
+runs:
+  using: composite
+  steps:
+    - name: Install wasm-tools and wasmtime
+      shell: bash
+      env:
+        WASM_TOOLS_VERSION: ${{ inputs.wasm-tools-version }}
+        WASMTIME_VERSION: ${{ inputs.wasmtime-version }}
+      run: |
+        set -euo pipefail
+        bindir="$RUNNER_TEMP/wasm-bin"
+        mkdir -p "$bindir"
+
+        wt_dir="wasm-tools-${WASM_TOOLS_VERSION}-x86_64-linux"
+        wt_url="https://github.com/bytecodealliance/wasm-tools/releases/download/v${WASM_TOOLS_VERSION}/${wt_dir}.tar.gz"
+        echo "downloading $wt_url"
+        curl --fail -sSL "$wt_url" | tar -xz -C "$RUNNER_TEMP"
+        install -m 0755 "$RUNNER_TEMP/${wt_dir}/wasm-tools" "$bindir/wasm-tools"
+
+        rt_dir="wasmtime-v${WASMTIME_VERSION}-x86_64-linux"
+        rt_url="https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/${rt_dir}.tar.xz"
+        echo "downloading $rt_url"
+        curl --fail -sSL "$rt_url" | tar -xJ -C "$RUNNER_TEMP"
+        install -m 0755 "$RUNNER_TEMP/${rt_dir}/wasmtime" "$bindir/wasmtime"
+
+        echo "$bindir" >> "$GITHUB_PATH"
+        "$bindir/wasm-tools" --version
+        "$bindir/wasmtime" --version
