@@ -129,6 +129,55 @@ sub foo {
 		assertNoError(t, input)
 	})
 
+	t.Run("read beresp.backend.name/ip in fetch, deliver, error, log", func(t *testing.T) {
+		for _, sub := range []struct{ name, macro string }{
+			{"vcl_fetch", "FETCH"},
+			{"vcl_deliver", "DELIVER"},
+			{"vcl_error", "ERROR"},
+			{"vcl_log", "LOG"},
+		} {
+			input := `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set req.http.X-Backend-Name = beresp.backend.name;
+	set req.http.X-Backend-IP = beresp.backend.ip;
+	set req.http.X-Log = "name=" + beresp.backend.name;
+}`
+			assertNoError(t, input)
+		}
+	})
+
+	t.Run("beresp.backend.name not accessible in recv", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	set req.http.X-Backend-Name = beresp.backend.name;
+}`
+
+		assertError(t, input)
+	})
+
+	t.Run("beresp.backend.name/ip not accessible in pass or miss", func(t *testing.T) {
+		for _, sub := range []struct{ name, macro string }{
+			{"vcl_pass", "PASS"},
+			{"vcl_miss", "MISS"},
+		} {
+			input := `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set bereq.http.X-Backend-Name = beresp.backend.name;
+}`
+			assertError(t, input)
+
+			input = `
+sub ` + sub.name + ` {
+	#FASTLY ` + sub.macro + `
+	set bereq.http.X-Backend-IP = beresp.backend.ip;
+}`
+			assertError(t, input)
+		}
+	})
+
 	t.Run("header name containing dots", func(t *testing.T) {
 		input := `
 sub foo {
@@ -795,6 +844,41 @@ sub vcl_recv {
 	call foo;
 }`
 		assertNoError(t, input)
+	})
+}
+
+func TestReturnUpgradeStatement(t *testing.T) {
+	t.Run("upgrade is valid in vcl_recv", func(t *testing.T) {
+		input := `
+sub vcl_recv {
+	#FASTLY RECV
+	if (req.http.Upgrade) {
+		return (upgrade);
+	}
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("upgrade is invalid outside vcl_recv", func(t *testing.T) {
+		methodWithMacros := map[string]string{
+			"vcl_hash":    "#FASTLY HASH",
+			"vcl_hit":     "#FASTLY HIT",
+			"vcl_miss":    "#FASTLY MISS",
+			"vcl_pass":    "#FASTLY PASS",
+			"vcl_fetch":   "#FASTLY FETCH",
+			"vcl_error":   "#FASTLY ERROR",
+			"vcl_deliver": "#FASTLY DELIVER",
+			"vcl_log":     "#FASTLY LOG",
+		}
+		for method, macro := range methodWithMacros {
+			input := fmt.Sprintf(
+				`
+sub %s {
+	%s
+	return (upgrade);
+}`, method, macro)
+			assertError(t, input)
+		}
 	})
 }
 

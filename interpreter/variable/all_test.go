@@ -1,6 +1,7 @@
 package variable
 
 import (
+	"net"
 	ghttp "net/http"
 	"net/url"
 	"sync/atomic"
@@ -538,6 +539,64 @@ func TestGetFromRegex(t *testing.T) {
 			}
 			if diff := cmp.Diff(val, tt.expect); diff != "" {
 				t.Errorf("Return value unmatch, diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestClientIPFromRemoteAddr(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect net.IP
+	}{
+		{input: "192.0.2.1:12345", expect: net.ParseIP("192.0.2.1")},
+		{input: "[2001:db8::1]:12345", expect: net.ParseIP("2001:db8::1")},
+		{input: "192.0.2.1", expect: net.ParseIP("192.0.2.1")},
+		{input: "2001:db8::1", expect: net.ParseIP("2001:db8::1")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			vars := NewAllScopeVariables(&context.Context{
+				Request: http.WrapRequest(&ghttp.Request{
+					RemoteAddr: tt.input,
+				}),
+			})
+			result, err := vars.Get(context.RecvScope, CLIENT_IP)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			ip := value.Unwrap[*value.IP](result)
+			if !ip.Value.Equal(tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, ip.Value)
+			}
+		})
+	}
+}
+
+func TestClientIdentityFromRemoteAddr(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{input: "192.0.2.1:12345", expect: "192.0.2.1"},
+		{input: "[2001:db8::1]:12345", expect: "2001:db8::1"},
+		{input: "192.0.2.1", expect: "192.0.2.1"},
+		{input: "2001:db8::1", expect: "2001:db8::1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			vars := NewAllScopeVariables(&context.Context{
+				Request: http.WrapRequest(&ghttp.Request{
+					RemoteAddr: tt.input,
+				}),
+			})
+			result, err := vars.Get(context.RecvScope, CLIENT_IDENTITY)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			identity := value.Unwrap[*value.String](result)
+			if identity.Value != tt.expect {
+				t.Fatalf("expected %q, got %q", tt.expect, identity.Value)
 			}
 		})
 	}

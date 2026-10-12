@@ -218,6 +218,7 @@ Limitations are the following:
 - May not add some of Fastly specific request/response headers
 - WAF does not work
 - ESI will not work correctly
+- WebSocket and Fanout are not supported. `return(upgrade)` in `vcl_recv` runs only `vcl_log` and ends processing without proxying the connection. In `vcl_log`, `fastly_info.state` is `UPGRADE` and `resp` is empty, as on Fastly. With actual response enabled, the simulator responds with `501 Not Implemented`
 - Director choosing algorithm result may be different
 - All backends always treat healthy (but explicitly be unavailable from configuration)
 - Could not look at private edge dictionary item due to Fastly API not responding to its item

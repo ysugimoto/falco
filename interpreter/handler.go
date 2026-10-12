@@ -82,6 +82,11 @@ func (i *Interpreter) sendProcessResponse(w ghttp.ResponseWriter) {
 }
 
 func (i *Interpreter) sendResponse(w ghttp.ResponseWriter) {
+	// The simulator cannot tunnel WebSocket connections
+	if i.ctx.State == "UPGRADE" {
+		ghttp.Error(w, "WebSocket upgrade is not supported by the simulator", ghttp.StatusNotImplemented)
+		return
+	}
 	// If response is not created (e.g backend is not determined), send Bad Gateway response
 	if i.ctx.Response == nil {
 		w.WriteHeader(ghttp.StatusBadGateway)
