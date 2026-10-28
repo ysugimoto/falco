@@ -21,6 +21,7 @@ var needValueOptions = map[string]struct{}{
 	"-f":             {},
 	"--filter":       {},
 	"--generated":    {},
+	"--request":      {},
 }
 
 func parseCommands(args []string) Commands {
