@@ -185,10 +185,12 @@ func New(args []string) (*Config, error) {
 
 	// Load request configuration if provided
 	if c.Request != "" {
-		if rc, err := LoadRequestConfig(c.Request); err == nil {
-			c.Simulator.OverrideRequest = rc
-			c.Testing.OverrideRequest = rc
+		rc, err := LoadRequestConfig(c.Request)
+		if err != nil {
+			return nil, errors.WithStack(err)
 		}
+		c.Simulator.OverrideRequest = rc
+		c.Testing.OverrideRequest = rc
 	}
 
 	// Copy common fields
