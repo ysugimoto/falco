@@ -580,6 +580,17 @@ sub test_vcl {
 }
 ```
 
+To simulate restarts or same-service forwarding, inject integer values for
+`req.restarts` and `fastly.ff.visits_this_service`. For example:
+
+```vcl
+testing.inject_variable("req.restarts", 1);
+testing.inject_variable("fastly.ff.visits_this_service", 1);
+```
+
+These overrides change the values read by VCL; they do not execute a restart or
+forward a request. Without an override, Falco retains its normal counter behavior.
+
 ----
 
 ### testing.table_set(ID table, STRING key, STRING value)
@@ -1298,4 +1309,3 @@ sub test_vcl {
     assert.not_error();
 }
 ```
-

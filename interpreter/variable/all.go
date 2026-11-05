@@ -348,6 +348,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 	// Returns common value -- do not consider of clustering
 	// see: https://developer.fastly.com/reference/vcl/variables/miscellaneous/fastly-ff-visits-this-service/
 	case FASTLY_FF_VISITS_THIS_SERVICE:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		switch s {
 		case context.MissScope, context.HitScope, context.FetchScope:
 			return &value.Integer{Value: 1}, nil
@@ -393,6 +396,9 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.Integer{Value: headerBytes}, nil
 	case REQ_RESTARTS:
+		if v := lookupOverride(v.ctx, name); v != nil {
+			return v, nil
+		}
 		return &value.Integer{Value: int64(v.ctx.Restarts)}, nil
 
 	// Returns always 1 because VCL is generated locally
