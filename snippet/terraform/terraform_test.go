@@ -38,6 +38,21 @@ func TestUnmarshallValidTfJson(t *testing.T) {
 	}
 }
 
+func TestUnmarshalNumericResourceIndex(t *testing.T) {
+	buf, err := os.ReadFile("./data/terraform-numeric-index.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling plan with count and for_each indexes: %s", err)
+	}
+	if len(services) != 1 {
+		t.Errorf("Length of services should be %d, got %d", 1, len(services))
+	}
+}
+
 func TestUnmarshallInValidTfJson(t *testing.T) {
 	fileName := "./data/terraform-invalid.json"
 	buf, err := os.ReadFile(fileName)
