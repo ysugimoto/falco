@@ -39,7 +39,7 @@ func Fetch(fetcher Fetcher) (*Snippets, error) {
 
 	var eg errgroup.Group
 
-	fmt.Print("Fething snippets...")
+	fmt.Print("Fetching snippets...")
 	eg.Go(func() (err error) {
 		snippets.Dictionaries, err = fetchEdgeDictionary(fetcher)
 		return err
