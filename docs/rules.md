@@ -880,6 +880,21 @@ Include target module not found.
 
 Failed to load include target module.
 
+## include/module-recursion
+
+Include target module includes itself, directly or through the modules it includes.
+
+The loop is reported at the include statement that closes it and the module is not included again, so the rest of the file is still linted. A module reached under more than one name, a symlink and the file it points at for example, counts once.
+
+Problem:
+```vcl
+// main.vcl
+include "deps";
+
+// deps.vcl
+include "deps"; // deps.vcl is already being included
+```
+
 ## regex/matched-value-override
 
 Regex matched operator `re.group.N` value will be overridden.
