@@ -3,6 +3,7 @@ package formatter
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -89,6 +90,44 @@ return(pass);
 			},
 		},
 		{
+			name: "Sharp comment restyled as a slash comment",
+			input: `sub recv {
+# This is a sharp comment
+return(pass);
+}`,
+			expect: `sub recv {
+  // This is a sharp comment
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "slash",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
+			name: "#FASTLY macro keeps its sharp under slash style",
+			input: `sub vcl_recv {
+#FASTLY recv
+# This is a sharp comment
+return(pass);
+}`,
+			expect: `sub vcl_recv {
+#FASTLY recv
+  // This is a sharp comment
+  return(pass);
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:               "slash",
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				ReturnStatementParenthesis: true,
+			},
+		},
+		{
 			name: "Comment starting with #FASTLY",
 			input: `sub recv {
 #FASTLY recv
@@ -115,9 +154,9 @@ return(pass);
 return(pass);
 }`,
 			expect: `sub recv {
-  # Regular comment 1
+  ## Regular comment 1
 #FASTLY recv
-  # Regular comment 2
+  ## Regular comment 2
   return(pass);
 }
 `,
@@ -162,7 +201,7 @@ return(pass);
   set req.http.Foo = "bar";
 }`,
 			expect: `sub test {
-  # First comment
+  ## First comment
 
   set req.http.Foo = "bar";
 }
@@ -206,12 +245,17 @@ return(pass);
 func TestFormatBoilerplateFile(t *testing.T) {
 	// Test that formatting boilerplate.vcl doesn't change it, as
 	// it's already formatted in the official Fastly style.
+	//
+	// comment_style is left unset here on purpose. Fastly writes that file with a
+	// single "#", and a line comment's mark is two characters, so asking for either
+	// style rewrites those comments by design -- which is what
+	// TestFormatBoilerplateFileCommentStyle covers. Coercion off, the file is a
+	// fixed point.
 	c := &config.FormatConfig{
 		IndentWidth:                2,
 		IndentStyle:                "space",
 		TrailingCommentWidth:       1,
 		LineWidth:                  -1,
-		CommentStyle:               "sharp",
 		ReturnStatementParenthesis: true,
 	}
 
@@ -242,6 +286,82 @@ func TestFormatBoilerplateFile(t *testing.T) {
 
 	if diff := cmp.Diff(string(originalContent), string(formattedContent)); diff != "" {
 		t.Errorf("Formatting boilerplate.vcl changed the file (should be idempotent):\n%s", diff)
+	}
+}
+
+func TestFormatBoilerplateFileCommentStyle(t *testing.T) {
+	// Fastly's boilerplate holds both kinds of sharp -- ordinary comments and
+	// #FASTLY macros -- so it is the file to state the property on: after
+	// formatting, every comment carries the configured mark and every macro is
+	// exactly as it was written.
+	tests := []struct {
+		style string
+		mark  string
+	}{
+		{style: config.CommentStyleSharp, mark: "##"},
+		{style: config.CommentStyleSlash, mark: "//"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.style, func(t *testing.T) {
+			c := &config.FormatConfig{
+				IndentWidth:                2,
+				IndentStyle:                "space",
+				TrailingCommentWidth:       1,
+				LineWidth:                  -1,
+				CommentStyle:               tt.style,
+				ReturnStatementParenthesis: true,
+			}
+
+			raw, err := os.ReadFile("../examples/formatter/boilerplate.vcl")
+			if err != nil {
+				t.Fatalf("File open error: %s", err)
+			}
+
+			vcl, err := parser.New(lexer.NewFromString(string(raw))).ParseVCL()
+			if err != nil {
+				t.Fatalf("Unexpected parser error: %s", err)
+			}
+			formatted, err := ioutil.ReadAll(New(c).Format(vcl))
+			if err != nil {
+				t.Fatalf("Failed to read formatted output: %s", err)
+			}
+
+			comments := 0
+			macros := 0
+			for line := range strings.SplitSeq(string(formatted), "\n") {
+				trimmed := strings.TrimSpace(line)
+				switch {
+				case strings.HasPrefix(trimmed, "#FASTLY"):
+					macros++
+					if !strings.Contains(string(raw), trimmed) {
+						t.Errorf("macro was rewritten: %q", trimmed)
+					}
+				case strings.HasPrefix(trimmed, "#"), strings.HasPrefix(trimmed, "/"):
+					comments++
+					if !strings.HasPrefix(trimmed, tt.mark+" ") {
+						t.Errorf("comment does not carry the %q mark: %q", tt.mark, trimmed)
+					}
+				}
+			}
+			if comments == 0 || macros == 0 {
+				t.Fatalf("expected comments and macros, got %d and %d", comments, macros)
+			}
+
+			// The output has to be VCL the parser accepts, which a mark of one
+			// character is not, and formatting it again has to be a no-op.
+			again, err := parser.New(lexer.NewFromString(string(formatted))).ParseVCL()
+			if err != nil {
+				t.Fatalf("Formatted output does not parse: %s", err)
+			}
+			twice, err := ioutil.ReadAll(New(c).Format(again))
+			if err != nil {
+				t.Fatalf("Failed to read formatted output: %s", err)
+			}
+			if diff := cmp.Diff(string(formatted), string(twice)); diff != "" {
+				t.Errorf("Formatting is not idempotent:\n%s", diff)
+			}
+		})
 	}
 }
 
