@@ -57,6 +57,38 @@ incididunt ut labore et dolore magna aliqua`,
 			},
 			expect: `lorem ipsum dolor sit amet, consectetur adipiscing elit,`,
 		},
+		{
+			// A chunk can carry its own line feeds: a long string like {"..."} spans as
+			// many lines as it was written with. Its length is not a width on the line
+			// it started on, so charging the whole of it against the line width folds
+			// what comes after it for no reason.
+			name:      "multi-line chunk does not consume the line width",
+			maxLength: 40,
+			input: []string{
+				`{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+cc"}`,
+				"var.x",
+				"var.y",
+			},
+			expect: `{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+cc"} var.x var.y`,
+		},
+		{
+			// The column a multi-line chunk leaves behind is the width of the text
+			// after its last line feed, so what follows is folded against that.
+			name:      "multi-line chunk leaves the column at its last line",
+			maxLength: 40,
+			input: []string{
+				`{"aaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}`,
+				"var.x",
+			},
+			expect: `{"aaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+var.x`,
+		},
 	}
 
 	for _, tt := range tests {
