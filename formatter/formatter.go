@@ -161,7 +161,15 @@ func (f *Formatter) formatComment(comments ast.Comments, sep string, level int) 
 			if f.conf.CommentStyle == config.CommentStyleSlash {
 				r = '/'
 			}
-			buf.WriteString(formatCommentCharacter(comments[i].String(), r))
+			// A "/* ... */" is a comment style too, so comment_style restyles it as
+			// well, but only where the comment is followed by a line feed. Elsewhere
+			// code can follow a comment on the same line, and a line comment there
+			// would swallow it.
+			if line, ok := inlineCommentToLine(comments[i].String(), r); ok && strings.HasSuffix(sep, "\n") {
+				buf.WriteString(line)
+			} else {
+				buf.WriteString(formatCommentCharacter(comments[i].String(), r))
+			}
 		default:
 			buf.WriteString(comments[i].String())
 		}
