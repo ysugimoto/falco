@@ -249,38 +249,7 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 	// Opereator should be comparison operator.
 	switch exp.Operator {
 	case "==", "!=":
-		// Cast req.backend to standard backend type for comparisons
-		// Fiddle demonstrating these comparisons are valid:
-		// https://fiddle.fastly.dev/fiddle/06865e2d
-		if left == types.ReqBackendType {
-			left = types.BackendType
-		}
-		if right == types.ReqBackendType {
-			right = types.BackendType
-		}
-		// Equal operator compares the same types, and additionally coerces the
-		// right operand when the left operand is STRING or IP.
-		// Fiddle demonstrating the accepted coercions and their values:
-		// https://fiddle.fastly.dev/fiddle/6c2ac451
-		switch {
-		case left == right:
-			// Identical types are always comparable.
-		case left == types.StringType && isStringCoercible(right):
-			// Fastly coerces the right operand to its string representation,
-			// but rejects a constant of another type with "Expected string
-			// constant, variable, or call" -- variables and function calls are
-			// accepted. Note that BOOL is not restricted this way, "req.http.X
-			// == true" is valid.
-			// see: https://fiddle.fastly.dev/fiddle/77b892e1
-			if right != types.BoolType && isConstantOperand(exp.Right) {
-				l.Error(InvalidTypeConstant(exp.GetMeta(), right, left).Match(OPERATOR_CONDITIONAL))
-			}
-		case left == types.IPType && right == types.StringType:
-			// Fastly parses the right operand as an IP address, constants included.
-			// see: https://fiddle.fastly.dev/fiddle/838b27db
-		default:
-			l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
-		}
+		l.lintEqualityOperands(exp, left, right)
 		return types.BoolType
 	case ">", ">=", "<", "<=":
 		// Greater/Less than operator only could compare with INTEGER, FLOAT, or RTIME type
@@ -341,6 +310,50 @@ func (l *Linter) lintInfixExpression(exp *ast.InfixExpression, ctx *context.Cont
 		return types.BoolType
 	default:
 		return types.NeverType
+	}
+}
+
+// lintEqualityOperands checks that the operands of == or != are comparable.
+func (l *Linter) lintEqualityOperands(exp *ast.InfixExpression, left, right types.Type) {
+	// Cast req.backend to standard backend type for comparisons
+	// Fiddle demonstrating these comparisons are valid:
+	// https://fiddle.fastly.dev/fiddle/06865e2d
+	if left == types.ReqBackendType {
+		left = types.BackendType
+	}
+	if right == types.ReqBackendType {
+		right = types.BackendType
+	}
+	// A BOOL left operand also takes a grouped or !-negated BOOL expression,
+	// other types only a literal, variable, or call (see
+	// isPlainEqualityOperand for the - and + exceptions). The error is
+	// reported at the right operand, which is where Fastly reports it.
+	if left != types.BoolType && !isPlainEqualityOperand(left, exp.Right) {
+		l.Error(InvalidEqualityOperand(exp.Right.GetMeta(), exp.Operator, left).Match(OPERATOR_CONDITIONAL))
+		return
+	}
+	// Equal operator compares the same types, and additionally coerces the
+	// right operand when the left operand is STRING or IP.
+	// Fiddle demonstrating the accepted coercions and their values:
+	// https://fiddle.fastly.dev/fiddle/6c2ac451
+	switch {
+	case left == right:
+		// Identical types are always comparable.
+	case left == types.StringType && isStringCoercible(right):
+		// Fastly coerces the right operand to its string representation,
+		// but rejects a constant of another type with "Expected string
+		// constant, variable, or call" -- variables and function calls are
+		// accepted. Note that BOOL is not restricted this way, "req.http.X
+		// == true" is valid.
+		// see: https://fiddle.fastly.dev/fiddle/77b892e1
+		if right != types.BoolType && isConstantOperand(exp.Right) {
+			l.Error(InvalidTypeConstant(exp.GetMeta(), right, left).Match(OPERATOR_CONDITIONAL))
+		}
+	case left == types.IPType && right == types.StringType:
+		// Fastly parses the right operand as an IP address, constants included.
+		// see: https://fiddle.fastly.dev/fiddle/838b27db
+	default:
+		l.Error(InvalidTypeComparison(exp.GetMeta(), left, right).Match(OPERATOR_CONDITIONAL))
 	}
 }
 
