@@ -143,25 +143,42 @@ func (l *Linter) lintTranslationSets(calledFn functionMeta, reference string) {
 		l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(reference))
 	}
 
-	var counts [2]int
-	for i, name := range []string{"set1", "set2"} {
+	// Fastly reports only the first problem, in this order, so later checks
+	// must not run ahead of earlier ones.
+	names := [2]string{"set1", "set2"}
+	var sets [2]*ast.String
+	for i, name := range names {
 		arg := calledFn.arguments[i+1]
 		str, ok := arg.(*ast.String)
 		if !ok {
 			raise(arg, "The %s argument of utf8.translate must be a string literal.", name)
 			return
 		}
-		if str.Value == "" {
-			raise(arg, "Characters required in %s", name)
-			return
-		}
-		counts[i] = utf8.RuneCountInString(str.Value)
+		sets[i] = str
 	}
 
-	if counts[1] > counts[0] {
-		raise(
-			calledFn.arguments[2],
-			"Excess characters in set2: Expected %d or fewer, got %d", counts[0], counts[1],
-		)
+	for i, name := range names {
+		if sets[i].Value == "" {
+			raise(sets[i], "Characters required in %s", name)
+			return
+		}
+	}
+
+	n1 := utf8.RuneCountInString(sets[0].Value)
+	n2 := utf8.RuneCountInString(sets[1].Value)
+	if n2 > n1 {
+		raise(sets[1], "Excess characters in set2: Expected %d or fewer, got %d", n1, n2)
+		return
+	}
+
+	// A repeated character in set1 would have an ambiguous mapping; set2 may
+	// repeat characters freely.
+	seen := make(map[rune]struct{}, n1)
+	for _, r := range sets[0].Value {
+		if _, dup := seen[r]; dup {
+			raise(sets[0], "Duplicate character in set1: U+%04X", r)
+			return
+		}
+		seen[r] = struct{}{}
 	}
 }

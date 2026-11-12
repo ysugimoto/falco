@@ -194,6 +194,161 @@ sub foo {
 	})
 }
 
+// Each case links the fiddle showing how the Fastly compiler treats it.
+func TestLintUtf8Translate(t *testing.T) {
+	wrap := func(call string) string {
+		return fmt.Sprintf(`
+sub foo {
+	declare local var.S STRING;
+	set var.S = %s;
+}`, call)
+	}
+
+	passes := []struct {
+		name   string
+		call   string
+		fiddle string
+	}{
+		{
+			name:   "literal sets",
+			call:   `utf8.translate(req.http.Foo, "a", "b")`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/d148fab2",
+		},
+		{
+			name:   "long string sets",
+			call:   `utf8.translate("abc", {"ab"}, {"xy"})`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/9b8138e7",
+		},
+		{
+			name:   "duplicates in set2",
+			call:   `utf8.translate("abc", "ab", "xx")`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/be9bd4f2",
+		},
+		{
+			name:   "set1 duplicate hidden after NUL",
+			call:   `utf8.translate("abc", "a%00a", "x")`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/6d79ace2",
+		},
+		{
+			name:   "set2 excess hidden after NUL",
+			call:   `utf8.translate("abc", "ab", "x%00yz")`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/9d0fbb06",
+		},
+		{
+			name:   "no escape decoding in long strings",
+			call:   `utf8.translate("abc", {"a%61"}, {"wxyz"})`,
+			fiddle: "https://fiddle.fastly.dev/fiddle/741995e0",
+		},
+	}
+	for _, tt := range passes {
+		t.Run("pass with "+tt.name, func(t *testing.T) {
+			t.Log("Fastly behaviour:", tt.fiddle)
+			assertNoError(t, wrap(tt.call))
+		})
+	}
+
+	// Fastly reports one error per call, checking literal sets first, then
+	// empty sets, then excess characters in set2, then duplicates in set1.
+	errs := []struct {
+		name    string
+		call    string
+		message string
+		token   string
+		fiddle  string
+	}{
+		{
+			name:    "set1 is a variable",
+			call:    `utf8.translate("abc", req.http.Set, "x")`,
+			message: "The set1 argument of utf8.translate must be a string literal.",
+			token:   "req.http.Set",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/2cfbdd6b",
+		},
+		{
+			name:    "set2 is a variable",
+			call:    `utf8.translate("abc", "a", req.http.Set)`,
+			message: "The set2 argument of utf8.translate must be a string literal.",
+			token:   "req.http.Set",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/01d27a8a",
+		},
+		{
+			name:    "empty set1",
+			call:    `utf8.translate("abc", "", "x")`,
+			message: "Characters required in set1",
+			token:   "",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/392bf1f7",
+		},
+		{
+			name:    "empty set2",
+			call:    `utf8.translate("abc", "a", "")`,
+			message: "Characters required in set2",
+			token:   "",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/1ed328ca",
+		},
+		{
+			name:    "set2 longer than set1",
+			call:    `utf8.translate("abc", "ab", "xyz")`,
+			message: "Excess characters in set2: Expected 2 or fewer, got 3",
+			token:   "xyz",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/70aeafb2",
+		},
+		{
+			name:    "duplicate in set1",
+			call:    `utf8.translate("abc", "aba", "xyz")`,
+			message: "Duplicate character in set1: U+0061",
+			token:   "aba",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/811ca087",
+		},
+		{
+			name:    "duplicate in set1 after escape decoding",
+			call:    `utf8.translate("abc", "a%61", "xy")`,
+			message: "Duplicate character in set1: U+0061",
+			token:   "a%61",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/b49d2ec8",
+		},
+		{
+			name:    "duplicate astral code point in set1",
+			call:    `utf8.translate("abc", "🌸a🌸", "xyz")`,
+			message: "Duplicate character in set1: U+1F338",
+			token:   "🌸a🌸",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/aff35cda",
+		},
+		{
+			name:    "empty set1 reported after non-literal set2",
+			call:    `utf8.translate("abc", "", req.http.Set)`,
+			message: "The set2 argument of utf8.translate must be a string literal.",
+			token:   "req.http.Set",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/928bdc76",
+		},
+		{
+			name:    "duplicate reported after non-literal set2",
+			call:    `utf8.translate("abc", "aa", req.http.Set)`,
+			message: "The set2 argument of utf8.translate must be a string literal.",
+			token:   "req.http.Set",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/4b1b743a",
+		},
+		{
+			name:    "duplicate reported after empty set2",
+			call:    `utf8.translate("abc", "aa", "")`,
+			message: "Characters required in set2",
+			token:   "",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/9d41d89e",
+		},
+		{
+			name:    "duplicate reported after excess in set2",
+			call:    `utf8.translate("abc", "aa", "xyz")`,
+			message: "Excess characters in set2: Expected 2 or fewer, got 3",
+			token:   "xyz",
+			fiddle:  "https://fiddle.fastly.dev/fiddle/12d7f844",
+		},
+	}
+	for _, tt := range errs {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Log("Fastly behaviour:", tt.fiddle)
+			assertErrorMessage(t, wrap(tt.call), tt.message, tt.token)
+		})
+	}
+}
+
 func TestH2Push(t *testing.T) {
 	t.Run("pass: h2.push with one argument", func(t *testing.T) {
 		input := `
