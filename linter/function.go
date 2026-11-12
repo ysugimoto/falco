@@ -3,6 +3,8 @@ package linter
 import (
 	"fmt"
 	"slices"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/linter/context"
@@ -122,6 +124,43 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 				Message:  "Regex patterns must be string literals.",
 			})
 		}
+	}
+	if calledFn.name != "utf8.translate" {
+		return fn.Return
+	}
+
+	// Fastly builds the translation table when it compiles the VCL
+	arg := calledFn.arguments[1]
+	set1, ok1 := arg.(*ast.String)
+	set2, ok2 := calledFn.arguments[2].(*ast.String)
+
+	var message string
+	switch {
+	case !ok1 || !ok2:
+		message = "The character sets of utf8.translate must be string literals."
+	case set1.Value == "":
+		message = "Characters required in set1"
+	case set2.Value == "":
+		message = "Characters required in set2"
+	default:
+		n1, n2 := utf8.RuneCountInString(set1.Value), utf8.RuneCountInString(set2.Value)
+		repeated := slices.DeleteFunc([]rune(set1.Value), func(r rune) bool {
+			return strings.Count(set1.Value, string(r)) == 1
+		})
+		if n2 > n1 {
+			arg = calledFn.arguments[2]
+			message = fmt.Sprintf("Excess characters in set2: Expected %d or fewer, got %d", n1, n2)
+		} else if len(repeated) > 0 {
+			message = fmt.Sprintf("Duplicate character in set1: U+%04X", slices.Min(repeated))
+		}
+	}
+	if message != "" {
+		err := &LintError{
+			Severity: ERROR,
+			Token:    arg.GetMeta().Token,
+			Message:  message,
+		}
+		l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(fn.Reference))
 	}
 
 	return fn.Return
