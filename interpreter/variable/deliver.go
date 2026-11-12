@@ -362,7 +362,7 @@ func (v *DeliverScopeVariables) Add(s context.Scope, name string, val value.Valu
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Response.Header.Add(match[1], val.String())
+	addResponseHeaderValue(v.ctx.Response, match[1], val)
 	return nil
 }
 

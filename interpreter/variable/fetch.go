@@ -397,12 +397,12 @@ func (v *FetchScopeVariables) Add(s context.Scope, name string, val value.Value)
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.BackendRequest.Header.Add(match[1], val.String())
+		addRequestHeaderValue(v.ctx.BackendRequest, match[1], val)
 	} else if match := backendResponseHttpHeaderRegex.FindStringSubmatch(name); match != nil {
 		if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 			return errors.WithStack(err)
 		}
-		v.ctx.BackendResponse.Header.Add(match[1], val.String())
+		addResponseHeaderValue(v.ctx.BackendResponse, match[1], val)
 	} else {
 		return v.base.Add(s, name, val)
 	}
