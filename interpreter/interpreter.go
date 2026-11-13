@@ -352,6 +352,21 @@ func (i *Interpreter) ProcessRecv() error {
 		err = i.ProcessError()
 	case RESTART:
 		err = i.restart()
+	case UPGRADE:
+		// On Fastly the connection is handed over to the WebSockets tunnel and
+		// only vcl_log runs, at the time the request is accepted.
+		// The simulator cannot proxy WebSockets, so it runs vcl_log and stops.
+		// https://www.fastly.com/documentation/guides/concepts/real-time-messaging/websockets-tunnel/
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> UPGRADE (WebSocket upgrade is not simulated)", i.ctx.Scope))
+		i.ctx.State = "UPGRADE"
+		// Nothing fills resp on the upgrade path, so vcl_log sees an empty response
+		i.ctx.Response = http.WrapResponse(&ghttp.Response{
+			Header:  ghttp.Header{},
+			Body:    io.NopCloser(strings.NewReader("")),
+			Request: i.ctx.Request.Request,
+		})
+		i.Debugger.Message(fmt.Sprintf("Move state: %s -> LOG", i.ctx.Scope))
+		err = i.ProcessLog()
 	case LOOKUP, NONE:
 		i.Debugger.Message(fmt.Sprintf("Move state: %s -> HASH", i.ctx.Scope))
 		if err = i.ProcessHash(); err != nil {

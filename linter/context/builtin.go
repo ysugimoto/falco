@@ -1304,6 +1304,7 @@ func builtinFunctions() Functions {
 					Value: &BuiltinFunction{
 						Return: types.StringType,
 						Arguments: [][]types.Type{
+							[]types.Type{types.StringType, types.BoolType},
 							[]types.Type{types.StringType},
 						},
 						Scopes:    RECV | HASH | HIT | MISS | PASS | FETCH | ERROR | DELIVER | LOG,

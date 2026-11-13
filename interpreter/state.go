@@ -16,6 +16,7 @@ const (
 	DELIVER_STALE  State = "deliver_stale"
 	LOG            State = "log"
 	END            State = "end"
+	UPGRADE        State = "upgrade"
 	HIT_FOR_PASS   State = "hit_for_pass" // alias for pass
 	INTERNAL_ERROR State = "_internal_error_"
 	BARE_RETURN    State = "_bare_return_"
@@ -43,6 +44,8 @@ func (s State) String() string {
 		return "log"
 	case END:
 		return "end"
+	case UPGRADE:
+		return "upgrade"
 	case INTERNAL_ERROR:
 		return "_internal_error_"
 	case BARE_RETURN:
@@ -63,6 +66,7 @@ var stateMap = map[string]State{
 	"deliver_stale": DELIVER_STALE,
 	"log":           LOG,
 	"end":           END,
+	"upgrade":       UPGRADE,
 }
 
 func StateFromString(s string) State {

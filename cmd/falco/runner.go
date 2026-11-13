@@ -571,7 +571,7 @@ func (r *Runner) Format(rslv resolver.Resolver) error {
 		if main.Data != formattedString {
 			return errors.WithStack(fmt.Errorf("%s requires formatting", main.Name))
 		}
-		formatted = strings.NewReader(formattedString)
+		return nil
 	}
 	if r.config.Format.Overwrite {
 		writeln(cyan, "Formatted %s.", main.Name)

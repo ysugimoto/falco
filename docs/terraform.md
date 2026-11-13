@@ -78,18 +78,21 @@ alongside inline `dynamicsnippet` blocks within
 `fastly_service_vcl`. The inline block declares
 snippet metadata (`name`, `type`, `priority`,
 `snippet_id`), while the external resource provides
-the `content`, linked by `snippet_id` and
-`service_id`.
+the `content`.
+
+falco uses the `configuration` section of the Terraform
+plan JSON to resolve resource references. This means
+`service_id` and `snippet_id` do not need to be known
+at plan time — falco matches resources by their
+Terraform expression references and the `dynamicsnippet`
+block `name`, so snippets created in the same plan are
+linked correctly even before `terraform apply`.
 
 Dynamic snippets flow through the same pipeline as
 regular VCL snippets, so all `falco terraform`
 actions (`lint`, `test`, `simulate`, `stats`) evaluate
 them automatically.
 
-### Known limitation
-
-Content is linked to its snippet by `snippet_id`. For
-snippets created in the same plan, `snippet_id` is `(known
-after apply)`, so the link cannot be made and the snippet
-is skipped. It will be linted once a later plan assigns a
-concrete `snippet_id`.
+The same configuration-based matching applies to
+`fastly_service_acl_entries` and
+`fastly_service_dictionary_items` resources.

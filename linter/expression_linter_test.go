@@ -514,6 +514,87 @@ sub vcl_recv {
 	}
 }
 
+func assertConditionalOperatorError(t *testing.T, input string) {
+	t.Helper()
+
+	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Fatalf("unexpected parser error: %s", err)
+	}
+	l := New(testConfig)
+	l.lint(vcl, context.New())
+	for _, lintErr := range l.Errors {
+		if lintErr.Rule == OPERATOR_CONDITIONAL && lintErr.Severity == ERROR {
+			return
+		}
+	}
+	t.Errorf("expected %s error, got %v", OPERATOR_CONDITIONAL, l.Errors)
+}
+
+func TestStringConcatenationInConditions(t *testing.T) {
+	tests := []struct {
+		name      string
+		condition string
+		wantError bool
+	}{
+		{
+			name:      "reject explicit concatenation in comparison",
+			condition: `req.http.Origin == "https://" + req.http.Host`,
+			wantError: true,
+		},
+		{
+			name:      "reject concatenation in comparison left operand",
+			condition: `req.http.Host + "://" == req.http.Host`,
+			wantError: true,
+		},
+		{
+			name:      "reject implicit concatenation in comparison",
+			condition: `req.http.Host == "https://" req.http.Host`,
+			wantError: true,
+		},
+		{
+			name:      "allow concatenation in if expression value",
+			condition: `req.http.Host == if(req.http.Host, "https://" + req.http.Host, "fallback")`,
+		},
+		{
+			name:      "allow concatenation in function argument",
+			condition: `std.tolower("https://" + req.http.Host) == "https://example.com"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`sub foo {
+	if (%s) {
+		restart;
+	}
+}`, tt.condition)
+			if !tt.wantError {
+				assertNoError(t, input)
+				return
+			}
+
+			assertConditionalOperatorError(t, input)
+		})
+	}
+}
+
+func TestStringConcatenationInIfExpressionCondition(t *testing.T) {
+	input := `sub foo {
+	set req.http.Result = if(req.http.Host + "x", "foo", "bar");
+}`
+	assertConditionalOperatorError(t, input)
+}
+
+func TestStringConcatenationInNestedIfExpressionCondition(t *testing.T) {
+	input := `sub foo {
+	if (std.tolower(if(req.http.Host + "x", "foo", "bar")) == "foo") {
+		restart;
+	}
+}`
+	assertConditionalOperatorError(t, input)
+}
+
 func TestStringConcatenationIssue360(t *testing.T) {
 	// https://github.com/ysugimoto/falco/issues/360
 	tests := []struct {

@@ -3,6 +3,7 @@
     "root_module": {
       "resources": [
         {
+          "address": "fastly_service_acl_entries.test_acl",
           "type": "fastly_service_acl_entries",
           "index": "test_acl",
           "provider_name": "registry.terraform.io/fastly/fastly",
@@ -25,6 +26,7 @@
           }
         },
         {
+          "address": "fastly_service_dictionary_items.example",
           "type": "fastly_service_dictionary_items",
           "index": "example",
           "provider_name": "registry.terraform.io/fastly/fastly",
@@ -37,6 +39,7 @@
           }
         },
         {
+          "address": "fastly_service_vcl.myservice",
           "type": "fastly_service_vcl",
           "provider_name": "registry.terraform.io/fastly/fastly",
           "values": {
@@ -129,6 +132,38 @@
               }
             ]
           }
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "fastly_service_acl_entries.test_acl",
+          "type": "fastly_service_acl_entries",
+          "name": "test_acl",
+          "expressions": {
+            "service_id": {
+              "references": ["fastly_service_vcl.myservice"]
+            }
+          }
+        },
+        {
+          "address": "fastly_service_dictionary_items.example",
+          "type": "fastly_service_dictionary_items",
+          "name": "example",
+          "expressions": {
+            "service_id": {
+              "references": ["fastly_service_vcl.myservice"]
+            }
+          }
+        },
+        {
+          "address": "fastly_service_vcl.myservice",
+          "type": "fastly_service_vcl",
+          "name": "myservice",
+          "expressions": {}
         }
       ]
     }

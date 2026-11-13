@@ -39,12 +39,7 @@ func Querystring_add(ctx *context.Context, args ...value.Value) (value.Value, er
 	name := value.Unwrap[*value.String](args[1])
 	val := value.Unwrap[*value.String](args[2])
 
-	query, err := shared.ParseQuery(u.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_add_Name, "Failed to parse querystring: %s, error: %s", u.Value, err.Error(),
-		)
-	}
+	query := shared.ParseQuery(u.Value)
 
 	query.Add(name.Value, val.Value)
 	return &value.String{Value: query.String()}, nil

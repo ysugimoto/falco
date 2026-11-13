@@ -19,8 +19,13 @@ func (l *Linter) lintAclDeclaration(decl *ast.AclDeclaration, ctx *context.Conte
 	for _, cidr := range decl.CIDRs {
 		c := cidr.IP.Value
 
-		// If mask is nil, validate as IP address
+		// If mask is nil, validate as IP address.
+		// Fastly accepts the literal string "localhost" as the one permitted
+		// hostname in an ACL entry; all other hostnames are rejected.
 		if cidr.Mask == nil {
+			if c == "localhost" {
+				continue
+			}
 			if v := net.ParseIP(c); v == nil {
 				l.Error(InvalidValue(cidr.GetMeta(), "IP", c).Match(ACL_SYNTAX))
 			}
@@ -79,6 +84,15 @@ func (l *Linter) lintBackendProperty(prop *ast.BackendProperty, ctx *context.Con
 			kt, ok := BackendProbePropertyTypes[v.Key.Value]
 			if !ok {
 				l.Error(UndefinedBackendProperty(v.Key.GetMeta(), v.Key.Value).Match(BACKEND_SYNTAX))
+			}
+			if v.Key.Value == "request" {
+				if exp, ok := v.Value.(*ast.InfixExpression); ok && exp.Explicit {
+					l.Error((&LintError{
+						Severity: ERROR,
+						Token:    v.Value.GetMeta().Token,
+						Message:  `Probe request must use adjacent string literals instead of the "+" operator`,
+					}).Match(BACKEND_SYNTAX))
+				}
 			}
 			vt := l.lint(v.Value, ctx)
 			if kt != vt {

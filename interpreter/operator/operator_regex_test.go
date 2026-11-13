@@ -151,7 +151,9 @@ func TestRegexOperator(t *testing.T) {
 			{left: &value.String{Value: "example", Literal: true}, right: &value.Integer{Value: 100, Literal: true}, isError: true},
 			{left: &value.String{Value: "127.0.0.1"}, right: &value.Acl{Value: acl}, expect: true},
 			{left: &value.String{Value: "192.168.0.1"}, right: &value.Acl{Value: acl}, expect: false},
-			{left: &value.String{Value: "INVALID IP"}, right: &value.Acl{Value: acl}, isError: true},
+			// Fastly treats a non-IP or empty string operand as a non-match, not an error.
+			{left: &value.String{Value: "INVALID IP"}, right: &value.Acl{Value: acl}, expect: false},
+			{left: &value.String{Value: ""}, right: &value.Acl{Value: acl}, expect: false},
 		}
 
 		for i, tt := range tests {
@@ -442,6 +444,85 @@ func TestRegexOperator(t *testing.T) {
 				t.Errorf("Index %d: expect value %t, got %t", i, tt.expect, b.Value)
 			}
 		}
+	})
+
+	// ACL matching semantics below are verified against real Fastly edge
+	// behavior via Fastly Fiddle (longest-prefix match wins; a negated entry
+	// excludes; "localhost" matches exactly 127.0.0.1 and ::1).
+	aclEntry := func(inverse bool, ip string, mask *int64) *ast.AclCidr {
+		entry := &ast.AclCidr{IP: &ast.IP{Value: ip}}
+		if inverse {
+			entry.Inverse = &ast.Boolean{Value: true}
+		}
+		if mask != nil {
+			entry.Mask = &ast.Integer{Value: *mask}
+		}
+		return entry
+	}
+	mask := func(n int64) *int64 { return &n }
+	runAclMatch := func(t *testing.T, entries []*ast.AclCidr, ip string, expect bool) {
+		t.Helper()
+		acl := &ast.AclDeclaration{Name: &ast.Ident{Value: "test"}, CIDRs: entries}
+		ctx := &context.Context{RegexMatchedValues: make(map[string]*value.String)}
+		v, err := Regex(ctx, &value.IP{Value: net.ParseIP(ip)}, &value.Acl{Value: acl})
+		if err != nil {
+			t.Fatalf("%s: unexpected error %s", ip, err)
+		}
+		if b := value.Unwrap[*value.Boolean](v); b.Value != expect {
+			t.Errorf("%s: expect %t, got %t", ip, expect, b.Value)
+		}
+	}
+
+	t.Run("localhost acl entry matches only 127.0.0.1 and ::1", func(t *testing.T) {
+		entries := []*ast.AclCidr{aclEntry(false, "localhost", nil)}
+		runAclMatch(t, entries, "127.0.0.1", true)
+		runAclMatch(t, entries, "::1", true)
+		// loopback range but not the exact loopback address
+		runAclMatch(t, entries, "127.0.0.2", false)
+		runAclMatch(t, entries, "127.1.2.3", false)
+		runAclMatch(t, entries, "192.0.2.1", false)
+	})
+
+	t.Run("negated localhost excludes loopback and matches nothing", func(t *testing.T) {
+		entries := []*ast.AclCidr{aclEntry(true, "localhost", nil)}
+		runAclMatch(t, entries, "127.0.0.1", false)
+		runAclMatch(t, entries, "::1", false)
+		runAclMatch(t, entries, "192.0.2.1", false)
+	})
+
+	t.Run("negated entry excludes, positive entry includes", func(t *testing.T) {
+		entries := []*ast.AclCidr{
+			aclEntry(true, "192.0.2.1", nil),
+			aclEntry(false, "192.0.2.0", mask(24)),
+		}
+		runAclMatch(t, entries, "192.0.2.1", false) // excluded
+		runAclMatch(t, entries, "192.0.2.2", true)  // included by /24
+		runAclMatch(t, entries, "10.0.0.1", false)  // no containing entry
+	})
+
+	t.Run("longest-prefix match wins regardless of order", func(t *testing.T) {
+		// Broad negated /24 with a specific positive /32 inside it: the /32
+		// is more specific, so the address matches in either source order.
+		runAclMatch(t, []*ast.AclCidr{
+			aclEntry(true, "192.0.2.0", mask(24)),
+			aclEntry(false, "192.0.2.1", nil),
+		}, "192.0.2.1", true)
+		runAclMatch(t, []*ast.AclCidr{
+			aclEntry(false, "192.0.2.1", nil),
+			aclEntry(true, "192.0.2.0", mask(24)),
+		}, "192.0.2.1", true)
+		// Specific negated /32 with a broad positive /24: the /32 exclusion
+		// wins in either order.
+		runAclMatch(t, []*ast.AclCidr{
+			aclEntry(false, "192.0.2.0", mask(24)),
+			aclEntry(true, "192.0.2.1", nil),
+		}, "192.0.2.1", false)
+	})
+
+	t.Run("bare IPv6 entry defaults to a /128 prefix", func(t *testing.T) {
+		entries := []*ast.AclCidr{aclEntry(false, "2001:db8::1", nil)}
+		runAclMatch(t, entries, "2001:db8::1", true)
+		runAclMatch(t, entries, "2001:db8::2", false)
 	})
 
 	t.Run("re.match.{N}", func(t *testing.T) {

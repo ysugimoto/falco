@@ -14,6 +14,32 @@ acl example {
 		assertNoError(t, input)
 	})
 
+	t.Run("pass with localhost entry", func(t *testing.T) {
+		input := `
+acl example {
+  "localhost";
+  "192.0.2.0"/24;
+  ! "192.0.2.1"/32;
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("pass with negated localhost entry", func(t *testing.T) {
+		input := `
+acl example {
+  ! "localhost";
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("reject non-localhost hostname", func(t *testing.T) {
+		input := `
+acl example {
+  "not-a-real-host.invalid";
+}`
+		assertError(t, input)
+	})
+
 	t.Run("invalid acl name", func(t *testing.T) {
 		input := `
 acl invalid-acl-name {
@@ -137,6 +163,30 @@ backend foo {
   }
 }`
 		assertNoError(t, input)
+	})
+
+	t.Run("accepts adjacent string literals in probe request", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "origin.example.com";
+
+  .probe = {
+    .request = "HEAD / HTTP/1.1" "Host: origin.example.com" "Connection: close";
+  }
+}`
+		assertNoError(t, input)
+	})
+
+	t.Run("rejects plus operators in probe request", func(t *testing.T) {
+		input := `
+backend foo {
+  .host = "origin.example.com";
+
+  .probe = {
+    .request = "HEAD / HTTP/1.1" + "Host: origin.example.com" + "Connection: close";
+  }
+}`
+		assertError(t, input)
 	})
 
 	t.Run("Probe is configured in such a way that the backend will start as unhealthy", func(t *testing.T) {
