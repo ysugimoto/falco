@@ -41,7 +41,7 @@ lint:
 	golangci-lint run
 
 modernize:
-	go run golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@latest -test ./...
+	go run golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@v0.49.0 -test ./...
 
 local: test lint modernize
 
