@@ -40,16 +40,30 @@ func Querystring_filter(ctx *context.Context, args ...value.Value) (value.Value,
 	v := value.Unwrap[*value.String](args[0])
 	names := value.Unwrap[*value.String](args[1])
 
-	query := shared.ParseQuery(v.Value)
-	filterMap := make(map[string]struct{})
-	for f := range bytes.SplitSeq([]byte(names.Value), Querystring_filtersep_Sign) {
-		filterMap[string(f)] = struct{}{}
+	filterMap := querystringFilterNames(names.Value)
+	// A list with no non-empty name leaves the URL untouched, empty parameters
+	// included. See https://fiddle.fastly.dev/fiddle/9c4a3190.
+	if len(filterMap) == 0 {
+		return &value.String{Value: v.Value}, nil
 	}
 
+	query := shared.ParseQuery(v.Value)
 	query.Filter(func(name string) bool {
 		_, ok := filterMap[name]
 		return !ok
 	})
 
 	return &value.String{Value: query.String()}, nil
+}
+
+// querystringFilterNames splits a querystring.filtersep()-separated list into a
+// set of names, ignoring empty entries.
+func querystringFilterNames(list string) map[string]struct{} {
+	names := make(map[string]struct{})
+	for f := range bytes.SplitSeq([]byte(list), Querystring_filtersep_Sign) {
+		if len(f) > 0 {
+			names[string(f)] = struct{}{}
+		}
+	}
+	return names
 }

@@ -3,7 +3,6 @@
 package builtin
 
 import (
-	"github.com/gobwas/glob"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/function/shared"
@@ -41,15 +40,14 @@ func Querystring_globfilter(ctx *context.Context, args ...value.Value) (value.Va
 
 	query := shared.ParseQuery(v.Value)
 
-	pattern, err := glob.Compile(name.Value)
-	if err != nil {
-		return value.Null, errors.New(
-			Querystring_globfilter_Name, "Invalid glob filter string: %s, error: %s", v.Value, err.Error(),
-		)
-	}
-
-	query.Filter(func(v string) bool {
-		return !pattern.Match(v)
+	// Fastly matches raw names with fnmatch(3) semantics, bytewise; an empty
+	// pattern matches only an empty name, which is dropped anyway. See
+	// https://fiddle.fastly.dev/fiddle/9c4a3190,
+	// https://fiddle.fastly.dev/fiddle/ad06064c and
+	// https://fiddle.fastly.dev/fiddle/8581426a.
+	pattern := shared.CompileFnmatch(name.Value)
+	query.Filter(func(key string) bool {
+		return !pattern.Match(key)
 	})
 	return &value.String{Value: query.String()}, nil
 }

@@ -47,8 +47,14 @@ func Querystring_regfilter(ctx *context.Context, args ...value.Value) (value.Val
 			Querystring_regfilter_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
 		)
 	}
+	// An empty regex matches every name on Fastly. go-pcre never reports an
+	// empty match, so answer that case here rather than asking the engine.
+	// Other patterns that can only match empty (such as "^" or "(?=k)") are
+	// still affected. See https://fiddle.fastly.dev/fiddle/945bb4f9 and
+	// https://fiddle.fastly.dev/fiddle/1cb2a444.
 	query.Filter(func(key string) bool {
-		return !re.MatchString(key)
+		matched := name.Value == "" || re.MatchString(key)
+		return !matched
 	})
 
 	return &value.String{Value: query.String()}, nil

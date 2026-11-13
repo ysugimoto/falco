@@ -39,8 +39,7 @@ func Querystring_add(ctx *context.Context, args ...value.Value) (value.Value, er
 	name := value.Unwrap[*value.String](args[1])
 	val := value.Unwrap[*value.String](args[2])
 
-	query := shared.ParseQuery(u.Value)
-
-	query.Add(name.Value, val.Value)
-	return &value.String{Value: query.String()}, nil
+	// Fastly appends to the URL as given, so the rest of the query is kept
+	// byte for byte. See https://fiddle.fastly.dev/fiddle/9c4a3190.
+	return &value.String{Value: shared.ParseQuery(u.Value).Add(name.Value, val.Value)}, nil
 }

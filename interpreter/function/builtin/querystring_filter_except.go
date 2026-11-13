@@ -3,8 +3,6 @@
 package builtin
 
 import (
-	"bytes"
-
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/function/shared"
@@ -40,16 +38,15 @@ func Querystring_filter_except(ctx *context.Context, args ...value.Value) (value
 	v := value.Unwrap[*value.String](args[0])
 	names := value.Unwrap[*value.String](args[1])
 
-	// An empty allowlist leaves the URL unchanged.
-	if names.Value == "" {
+	filterMap := querystringFilterNames(names.Value)
+	// A list with no non-empty name leaves the URL untouched, empty parameters
+	// included. See https://fiddle.fastly.dev/fiddle/9c4a3190 and
+	// https://fiddle.fastly.dev/fiddle/945bb4f9.
+	if len(filterMap) == 0 {
 		return &value.String{Value: v.Value}, nil
 	}
 
 	query := shared.ParseQuery(v.Value)
-	filterMap := make(map[string]struct{})
-	for f := range bytes.SplitSeq([]byte(names.Value), Querystring_filtersep_Sign) {
-		filterMap[string(f)] = struct{}{}
-	}
 
 	query.Filter(func(name string) bool {
 		_, ok := filterMap[name]
