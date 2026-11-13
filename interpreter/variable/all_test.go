@@ -434,6 +434,44 @@ func TestGetFromRegexRequestHeaderOverride(t *testing.T) {
 	})
 }
 
+func TestCounterVariableOverrides(t *testing.T) {
+	tests := []struct {
+		name     string
+		variable string
+		scope    context.Scope
+		override value.Value
+		expect   int64
+	}{
+		{"service visits recv default", FASTLY_FF_VISITS_THIS_SERVICE, context.RecvScope, nil, 0},
+		{"service visits miss default", FASTLY_FF_VISITS_THIS_SERVICE, context.MissScope, nil, 1},
+		{"service visits hit default", FASTLY_FF_VISITS_THIS_SERVICE, context.HitScope, nil, 1},
+		{"service visits fetch default", FASTLY_FF_VISITS_THIS_SERVICE, context.FetchScope, nil, 1},
+		{"service visits recv override", FASTLY_FF_VISITS_THIS_SERVICE, context.RecvScope, &value.Integer{Value: 2}, 2},
+		{"service visits deliver override", FASTLY_FF_VISITS_THIS_SERVICE, context.DeliverScope, &value.Integer{Value: 1}, 1},
+		{"service visits zero override", FASTLY_FF_VISITS_THIS_SERVICE, context.HitScope, &value.Integer{Value: 0}, 0},
+		{"restarts default", REQ_RESTARTS, context.RecvScope, nil, 2},
+		{"restarts override", REQ_RESTARTS, context.RecvScope, &value.Integer{Value: 3}, 3},
+		{"restarts zero override", REQ_RESTARTS, context.RecvScope, &value.Integer{Value: 0}, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vars := createScopeVars("http://localhost/")
+			vars.ctx.Restarts = 2
+			if tt.override != nil {
+				vars.ctx.OverrideVariables = map[string]value.Value{tt.variable: tt.override}
+			}
+
+			got, err := vars.Get(tt.scope, tt.variable)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if diff := cmp.Diff(&value.Integer{Value: tt.expect}, got); diff != "" {
+				t.Errorf("Return value unmatch, diff: %s", diff)
+			}
+		})
+	}
+}
+
 func TestGetFromRegex(t *testing.T) {
 	tests := []struct {
 		name    string
