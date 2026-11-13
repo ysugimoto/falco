@@ -5,10 +5,10 @@ package builtin
 import (
 	"strings"
 
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	pcre "go.elara.ws/pcre"
 )
 
 const Regsub_Name = "regsub"
@@ -34,18 +34,24 @@ func expandReplacement(input, replacement string, indices []int) string {
 	return result.String()
 }
 
-func replaceOneString(re *pcre.Regexp, input, replacement string) string {
-	indices := re.FindStringSubmatchIndex(input)
-	if indices == nil {
-		return input
+func replaceOneString(re *regex.Regexp, input, replacement string) (string, error) {
+	indices, err := re.FindStringSubmatchIndex(input)
+	if err != nil {
+		return input, err
 	}
-	return input[:indices[0]] + expandReplacement(input, replacement, indices) + input[indices[1]:]
+	if indices == nil {
+		return input, nil
+	}
+	return input[:indices[0]] + expandReplacement(input, replacement, indices) + input[indices[1]:], nil
 }
 
-func replaceAllString(re *pcre.Regexp, input, replacement string) string {
-	allIndices := re.FindAllStringSubmatchIndex(input, -1)
+func replaceAllString(re *regex.Regexp, input, replacement string) (string, error) {
+	allIndices, err := re.FindAllStringSubmatchIndex(input, -1)
+	if err != nil {
+		return input, err
+	}
 	if allIndices == nil {
-		return input
+		return input, nil
 	}
 	var result strings.Builder
 	lastEnd := 0
@@ -55,7 +61,7 @@ func replaceAllString(re *pcre.Regexp, input, replacement string) string {
 		lastEnd = indices[1]
 	}
 	result.WriteString(input[lastEnd:])
-	return result.String()
+	return result.String(), nil
 }
 
 func Regsub_Validate(args []value.Value) error {
@@ -86,7 +92,7 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	pattern := value.Unwrap[*value.String](args[1])
 	replacement := value.Unwrap[*value.String](args[2])
 
-	re, err := pcre.Compile(pattern.Value)
+	re, err := regex.Compile(pattern.Value)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 		return &value.String{Value: input.Value}, errors.New(
@@ -94,7 +100,17 @@ func Regsub(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
-	return &value.String{
-		Value: replaceOneString(re, input.Value, replacement.Value),
-	}, nil
+	// Fastly returns empty input unchanged even when the pattern matches it:
+	// https://fiddle.fastly.dev/fiddle/38b8cc11
+	if input.Value == "" {
+		return &value.String{Value: ""}, nil
+	}
+
+	out, err := replaceOneString(re, input.Value, replacement.Value)
+	if err != nil {
+		return &value.String{Value: input.Value}, errors.New(
+			Regsub_Name, "Failed to match regular expression %s: %s", pattern.Value, err.Error(),
+		)
+	}
+	return &value.String{Value: out}, nil
 }
