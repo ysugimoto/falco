@@ -489,17 +489,19 @@ func (v *LogScopeVariables) Set(s context.Scope, name, operator string, val valu
 }
 
 func (v *LogScopeVariables) Add(s context.Scope, name string, val value.Value) error {
-	// Add statement could be use only for HTTP header
 	match := responseHttpHeaderRegex.FindStringSubmatch(name)
-	if match != nil {
-		// Nothing values to be enable to add in PASS, pass to base
+	if match == nil {
+		match = requestHttpHeaderRegex.FindStringSubmatch(name)
+	}
+	if match == nil {
 		return v.base.Add(s, name, val)
 	}
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-
-	v.ctx.Response.Header.Add(match[1], val.String())
+	// Fastly compiles add on req.http/resp.http in vcl_log but silently
+	// ignores it, even though set works there.
+	// Verified at https://fiddle.fastly.dev/fiddle/6da33a75
 	return nil
 }
 
