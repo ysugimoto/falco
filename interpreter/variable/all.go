@@ -1029,7 +1029,7 @@ func (v *AllScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		return errors.WithStack(err)
 	}
 
-	v.ctx.Request.Header.Add(match[1], val.String())
+	addRequestHeaderValue(v.ctx.Request, match[1], val)
 	return nil
 }
 

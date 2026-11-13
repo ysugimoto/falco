@@ -1,6 +1,7 @@
 package variable
 
 import (
+	ghttp "net/http"
 	"net/textproto"
 	"strings"
 
@@ -42,6 +43,34 @@ func assignResponseHeaderValue(r *http.Response, name, operator string, val valu
 		func() *value.String { return getResponseHeaderValue(r, name) },
 		func(v value.Value) { setResponseHeaderValue(r, name, v) },
 	)
+}
+
+// Fastly drops leading spaces and tabs, but no other whitespace, when it
+// stores a header value as the first line of a header.
+// ref: https://fiddle.fastly.dev/fiddle/e939e879
+func trimLeadingHeaderWhitespace(v string) string {
+	return strings.TrimLeft(v, " \t")
+}
+
+// Leading whitespace is kept when the header already has a line, even an
+// empty one, because Fastly only strips it from the first line. The header is
+// marked as assigned so that an add of "" or "   " still reads as set.
+// ref: https://fiddle.fastly.dev/fiddle/5d8a1500
+func addHeaderValue(h ghttp.Header, assign func(string), name string, val value.Value) {
+	v := val.String()
+	if len(h.Values(name)) == 0 {
+		v = trimLeadingHeaderWhitespace(v)
+	}
+	h.Add(name, v)
+	assign(name)
+}
+
+func addRequestHeaderValue(r *http.Request, name string, val value.Value) {
+	addHeaderValue(r.Header, r.Assign, name, val)
+}
+
+func addResponseHeaderValue(r *http.Response, name string, val value.Value) {
+	addHeaderValue(r.Header, r.Assign, name, val)
 }
 
 func isNotSetValue(v value.Value) bool {
@@ -107,7 +136,7 @@ func setRequestHeaderValue(r *http.Request, name string, val value.Value) {
 
 		// Fastly truncates header values at newlines.
 		sVal, _, _ := strings.Cut(val.String(), "\n")
-		r.Header.Set(name, sVal)
+		r.Header.Set(name, trimLeadingHeaderWhitespace(sVal))
 		r.Assign(name)
 		return
 	}
@@ -135,7 +164,7 @@ func setResponseHeaderValue(r *http.Response, name string, val value.Value) {
 
 		// Fastly truncates header values at newlines.
 		sVal, _, _ := strings.Cut(val.String(), "\n")
-		r.Header.Set(name, sVal)
+		r.Header.Set(name, trimLeadingHeaderWhitespace(sVal))
 		r.Assign(name)
 		return
 	}

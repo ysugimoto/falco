@@ -203,7 +203,7 @@ func (v *PassScopeVariables) Add(s context.Scope, name string, val value.Value) 
 		return errors.WithStack(err)
 	}
 
-	v.ctx.BackendRequest.Header.Add(match[1], val.String())
+	addRequestHeaderValue(v.ctx.BackendRequest, match[1], val)
 	return nil
 }
 
