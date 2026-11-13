@@ -40,11 +40,13 @@ func Test_Regsuball(t *testing.T) {
 			literal:     true,
 		},
 		{
+			// The empty match at the end of the subject is replaced too:
+			// https://fiddle.fastly.dev/fiddle/38b8cc11
 			name:        "capture group with global",
 			input:       "foo;bar;baz",
 			pattern:     "([^;]*)(;.*)?$",
 			replacement: `\1bar`,
-			expect:      "foobar",
+			expect:      "foobarbar",
 			literal:     true,
 		},
 		{
@@ -125,6 +127,49 @@ func Test_Regsuball(t *testing.T) {
 			pattern:     `(foo)|(bar)|(baz)`,
 			replacement: `[\1][\2][\3]`,
 			expect:      "[foo][][] [][bar][] [][][baz]",
+			literal:     true,
+		},
+		// Empty input is returned unchanged even when the pattern matches it,
+		// while empty matches in non-empty input are replaced:
+		// https://fiddle.fastly.dev/fiddle/38b8cc11
+		{
+			name:        "empty input with ^$ is unchanged",
+			input:       "",
+			pattern:     `^$`,
+			replacement: "x",
+			expect:      "",
+			literal:     true,
+		},
+		{
+			name:        "empty input with a* is unchanged",
+			input:       "",
+			pattern:     `a*`,
+			replacement: "x",
+			expect:      "",
+			literal:     true,
+		},
+		{
+			name:        "empty matches around a non-matching char",
+			input:       "b",
+			pattern:     `a*`,
+			replacement: "x",
+			expect:      "xbx",
+			literal:     true,
+		},
+		{
+			name:        "empty match after a non-empty match",
+			input:       "abc",
+			pattern:     `b*`,
+			replacement: "-",
+			expect:      "-a--c-",
+			literal:     true,
+		},
+		{
+			name:        "empty pattern matches between every char",
+			input:       "ab",
+			pattern:     ``,
+			replacement: "-",
+			expect:      "-a-b-",
 			literal:     true,
 		},
 	}

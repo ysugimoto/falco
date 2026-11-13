@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	"go.elara.ws/pcre"
 )
 
 // Fastly has various assignment operators and required correspond types for each operator
@@ -264,7 +264,7 @@ func Assign(left, right value.Value) error {
 			if !rv.IsLiteral() {
 				return errors.WithStack(fmt.Errorf("string value must be a literal for REGEX assignment"))
 			}
-			_, err := pcre.Compile(rv.Value)
+			_, err := regex.Compile(rv.Value)
 			if err != nil {
 				return errors.WithStack(fmt.Errorf("failed to compile regular expression from string: %s, error: %s", rv.Value, err.Error()))
 			}

@@ -1,10 +1,11 @@
 module github.com/ysugimoto/falco/v2
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/fatih/color v1.12.0
+	github.com/franchb/go-pcre2 v0.49.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.6.0
 	github.com/kyokomi/emoji v2.2.4+incompatible
@@ -29,7 +30,6 @@ require (
 	github.com/pierrec/xxHash v0.1.5
 	github.com/pion/dtls/v2 v2.2.12
 	github.com/rivo/tview v0.0.0-20230814110005-ccc2c8119703
-	go.elara.ws/pcre v0.0.0-20230805032557-4ce849193f64
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -46,16 +46,10 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	modernc.org/libc v1.17.0 // indirect
-	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.2.0 // indirect
 )
-
-replace go.elara.ws/pcre => github.com/dip-proto/go-pcre v0.0.0-20260204122309-dcbff9cb6240
 
 // These versions were published under the module path
 // github.com/ysugimoto/falco without the required /v2 suffix and are

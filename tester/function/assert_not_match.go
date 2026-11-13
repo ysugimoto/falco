@@ -1,10 +1,10 @@
 package function
 
 import (
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	regexp "go.elara.ws/pcre"
 )
 
 const Assert_not_match_Name = "assert.not_match"
@@ -44,14 +44,21 @@ func Assert_not_match(ctx *context.Context, args ...value.Value) (value.Value, e
 	actual := value.Unwrap[*value.String](args[0])
 	expect := value.Unwrap[*value.String](args[1])
 
-	re, err := regexp.Compile(expect.Value)
+	re, err := regex.Compile(expect.Value)
 	if err != nil {
 		return nil, errors.NewTestingError(
 			"Invalid regexp string provided: %s",
 			expect.Value,
 		)
 	}
-	ret := &value.Boolean{Value: re.MatchString(actual.Value)}
+	matched, err := re.MatchString(actual.Value)
+	if err != nil {
+		return nil, errors.NewTestingError(
+			"Failed to match regexp %s: %s",
+			expect.Value, err.Error(),
+		)
+	}
+	ret := &value.Boolean{Value: matched}
 	if ret.Value {
 		if message != "" {
 			return ret, errors.NewAssertionError(actual, "%s", message)

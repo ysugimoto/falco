@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/assign"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	pcre "go.elara.ws/pcre"
 )
 
 // comparisonOperand adapts a right hand operand for the assign based type
@@ -745,14 +745,20 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 					fmt.Errorf("right String type must be a literal"),
 				)
 			}
-			re, err := pcre.Compile(rv.Value)
+			re, err := regex.Compile(rv.Value)
 			if err != nil {
 				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 				return value.Null, errors.WithStack(
 					fmt.Errorf("failed to compile regular expression from string %s", rv.Value),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
+			matches, err := re.FindStringSubmatch(lv.Value)
+			if err != nil {
+				return value.Null, errors.WithStack(
+					fmt.Errorf("failed to match regular expression %s: %w", rv.Value, err),
+				)
+			}
+			if len(matches) > 0 {
 				// Important: regex matched group variables are reset if matching is succeeded
 				// see: https://fiddle.fastly.dev/fiddle/3e5320ef
 				ctx.RegexMatchedValues = make(map[string]*value.String)
@@ -767,14 +773,20 @@ func Regex(ctx *context.Context, left, right value.Value) (value.Value, error) {
 			if rv.Unsatisfiable {
 				return &value.Boolean{Value: false}, nil
 			}
-			re, err := pcre.Compile(rv.Value)
+			re, err := regex.Compile(rv.Value)
 			if err != nil {
 				ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 				return value.Null, errors.WithStack(
 					fmt.Errorf("failed to compile regular expression from REGEX %s", rv.Value),
 				)
 			}
-			if matches := re.FindStringSubmatch(lv.Value); len(matches) > 0 {
+			matches, err := re.FindStringSubmatch(lv.Value)
+			if err != nil {
+				return value.Null, errors.WithStack(
+					fmt.Errorf("failed to match regular expression %s: %w", rv.Value, err),
+				)
+			}
+			if len(matches) > 0 {
 				ctx.RegexMatchedValues = make(map[string]*value.String)
 				for j, m := range matches {
 					ctx.RegexMatchedValues[fmt.Sprint(j)] = &value.String{Value: m}
