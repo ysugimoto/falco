@@ -1,0 +1,61 @@
+package falco:tools@0.1.0;
+
+/// The `falco` world exposes falco's lint / format / parse / tokenize
+/// front-ends as typed, repeatedly-callable component functions.
+///
+/// Functions are exported at the *world root* (not nested in an interface) so
+/// hosts that resolve only root-level exports can reach them — notably the
+/// wasmtime Ruby gem, which cannot descend into an exported interface. jco and
+/// the Python wasmtime embedding surface root exports too, so the shape works
+/// everywhere.
+///
+/// Every function is string-in / string-out. Structured results are returned as
+/// a JSON string inside `result<string, string>`: `ok(json)` for success,
+/// `err(msg)` for a human-readable failure. The JSON payloads mirror the shapes
+/// the native `falco` binary emits, so existing consumers parse them unchanged.
+///
+/// Parse failures differ per function: `lint` reports them in-band via the
+/// RunnerResult `ParseErrors` map (an `ok` payload, matching native
+/// `lint -json`); `format`, `parse`, and `tokenize` return them as `err(msg)`.
+///
+/// Reactor-style world: instantiate once, call the exports repeatedly.
+world falco {
+    /// Lint a single VCL source string.
+    ///
+    /// `options` is a JSON object (pass "" for defaults) with optional fields:
+    ///   { "scope": "recv|hash|hit|miss|pass|fetch|error|deliver|log|pipe",
+    ///     "rules": { "<rule-name>": "ERROR|WARNING|INFO|IGNORE" },
+    ///     "includes": { "<module-name>": "<source>" },
+    ///     "includePaths": [ "<prefix>", ... ] }
+    /// An unrecognized "scope" value is rejected with `err`.
+    ///
+    /// `include` statements resolve against "includes" (the component has no
+    /// filesystem). The ".vcl" suffix is optional and each "includePaths" entry
+    /// is tried as a prefix; transitive includes are discovered automatically.
+    /// Diagnostics are keyed by the real module name; top-level source uses the
+    /// synthetic key "input.vcl".
+    ///
+    /// On `ok`, the payload is a RunnerResult JSON object identical in shape to
+    /// native `lint -json`.
+    export lint: func(source: string, options: string) -> result<string, string>;
+
+    /// Format a single VCL source string.
+    ///
+    /// `config` is a JSON object (pass "" for defaults) of FormatConfig fields
+    /// (e.g. "indentWidth", "indentStyle" ("space"|"tab"), "lineWidth",
+    /// "commentStyle" ("none"|"slash"|"sharp"), ...). The "indentStyle" and
+    /// "commentStyle" enums are validated: an unrecognized value is rejected
+    /// with `err`.
+    ///
+    /// On `ok`, the payload is the formatted VCL source string (raw, not JSON).
+    export format: func(source: string, config: string) -> result<string, string>;
+
+    /// Parse a single VCL source string into an AST.
+    /// On `ok`, the payload is the AST serialized as JSON.
+    export parse: func(source: string) -> result<string, string>;
+
+    /// Tokenize a single VCL source string.
+    /// On `ok`, the payload is a JSON array of tokens
+    /// ({ type, literal, line, position, category }).
+    export tokenize: func(source: string) -> result<string, string>;
+}
