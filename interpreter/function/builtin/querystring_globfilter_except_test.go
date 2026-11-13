@@ -42,6 +42,8 @@ func Test_Querystring_globfilter_except(t *testing.T) {
 	}
 }
 
+// An empty glob matches only an empty name, and empty names are always
+// dropped, so nothing is kept. https://fiddle.fastly.dev/fiddle/945bb4f9
 func Test_Querystring_globfilter_except_emptyPattern(t *testing.T) {
 	ret, err := Querystring_globfilter_except(
 		&context.Context{},
@@ -51,7 +53,7 @@ func Test_Querystring_globfilter_except_emptyPattern(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	if got := value.Unwrap[*value.String](ret).Value; got != "/q?a=1&b=2" {
-		t.Errorf("expected the url unchanged, got %q", got)
+	if got := value.Unwrap[*value.String](ret).Value; got != "/q" {
+		t.Errorf("expected %q, got %q", "/q", got)
 	}
 }

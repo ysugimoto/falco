@@ -76,7 +76,15 @@ func TestQueryStringsString(t *testing.T) {
 		{name: "round trips encoding", input: "/?a=%41&b=x%20y", expect: "/?a=%41&b=x%20y"},
 		{name: "round trips duplicate order", input: "/?b=1&a=2&b=3", expect: "/?b=1&a=2&b=3"},
 		{name: "round trips a valueless parameter", input: "/?a&b=1", expect: "/?a&b=1"},
-		{name: "round trips a bare question mark", input: "/foo?", expect: "/foo?"},
+		// Fastly removes one trailing "?" or "&" from a rebuilt query, see
+		// https://fiddle.fastly.dev/fiddle/945bb4f9 and
+		// https://fiddle.fastly.dev/fiddle/e250b311.
+		{name: "drops a bare question mark", input: "/foo?", expect: "/foo"},
+		{name: "drops one trailing question mark", input: "/p?a=1??", expect: "/p?a=1?"},
+		{name: "drops one trailing ampersand", input: "/p?a=1&&&", expect: "/p?a=1&&"},
+		{name: "keeps a question mark before the end", input: "/p?a=1?&b=2", expect: "/p?a=1?&b=2"},
+		{name: "leaves a url without a question mark alone", input: "/p&", expect: "/p&"},
+		{name: "keeps a prefix ending in an ampersand", input: "/p&?", expect: "/p&"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -102,12 +110,13 @@ func TestQueryStringsAdd(t *testing.T) {
 		{name: "is a no-op for an empty name", input: "/q?x=1", key: "", value: "v", expect: "/q?x=1"},
 		{name: "never deduplicates", input: "/q?x=1", key: "x", value: "2", expect: "/q?x=1&x=2"},
 		{name: "appends after a bare question mark", input: "/q?", key: "y", value: "v", expect: "/q?&y=v"},
+		{name: "starts a query when there is none", input: "/q", key: "y", value: "v", expect: "/q?y=v"},
+		{name: "keeps the input byte for byte", input: "/q?a=1?&&", key: "y", value: "v", expect: "/q?a=1?&&&y=v"},
+		{name: "is a no-op for an empty name without a query", input: "/q&", key: "", value: "v", expect: "/q&"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			q := ParseQuery(tt.input)
-			q.Add(tt.key, tt.value)
-			if got := q.String(); got != tt.expect {
+			if got := ParseQuery(tt.input).Add(tt.key, tt.value); got != tt.expect {
 				t.Errorf("expected %q, got %q", tt.expect, got)
 			}
 		})
@@ -126,12 +135,15 @@ func TestQueryStringsSet(t *testing.T) {
 		{name: "escapes a space as %20", input: "/q?x=1", key: "x", value: "a b", expect: "/q?x=a%20b"},
 		{name: "escapes the name too", input: "/q?x=1", key: "a b", value: "v", expect: "/q?x=1&a%20b=v"},
 		{name: "is a no-op for an empty value", input: "/q?x=1", key: "x", value: "", expect: "/q?x=1"},
+		{name: "is a no-op for an empty name", input: "/q?x=1&", key: "", value: "v", expect: "/q?x=1&"},
+		{name: "matches the escaped name against raw names", input: "/q?k%20v=1&k v=2", key: "k v", value: "9", expect: "/q?k%20v=9&k v=2"},
+		{name: "replacing drops one trailing ampersand", input: "/q?a=1&b=2&", key: "a", value: "9", expect: "/q?a=9&b=2"},
+		{name: "replacing drops one trailing question mark", input: "/q?a=1&b=?", key: "a", value: "9", expect: "/q?a=9&b="},
+		{name: "appending keeps the input byte for byte", input: "/q?a=1&b=2&", key: "z", value: "9", expect: "/q?a=1&b=2&&z=9"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			q := ParseQuery(tt.input)
-			q.Set(tt.key, tt.value)
-			if got := q.String(); got != tt.expect {
+			if got := ParseQuery(tt.input).Set(tt.key, tt.value); got != tt.expect {
 				t.Errorf("expected %q, got %q", tt.expect, got)
 			}
 		})
@@ -149,6 +161,7 @@ func TestQueryStringsClean(t *testing.T) {
 		{name: "keeps duplicates in place", input: "/q?b=1&a=2&b=3", expect: "/q?b=1&a=2&b=3"},
 		{name: "preserves encoding", input: "/q?a=%41&b=x%20y&c=p/q", expect: "/q?a=%41&b=x%20y&c=p/q"},
 		{name: "a bare question mark yields no query string", input: "/foo?", expect: "/foo"},
+		{name: "keeps a parameter named question mark minus the final byte", input: "/q?a=1&?", expect: "/q?a=1&"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -3,7 +3,6 @@
 package builtin
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -42,8 +41,10 @@ func Test_Querystring_get(t *testing.T) {
 		{input: &value.String{Value: "/?+=unreachable"}, second: &value.String{Value: "%2B"}, expect: &value.String{IsNotSet: true}},
 		{input: &value.String{Value: "/?+=unreachable"}, second: &value.String{Value: " "}, expect: &value.String{IsNotSet: true}},
 		{input: &value.String{Value: "/?%20=space"}, second: &value.String{Value: "+"}, expect: &value.String{IsNotSet: true}},
-		// Space handling: an argument of " " or "%20" should match a key literally written as "%20" in the URL.
-		{input: &value.String{Value: "/?%20=v_space_key_arg_pct20"}, second: &value.String{Value: "%20"}, expect: &value.String{Value: "v_space_key_arg_pct20"}},
+		// The name is encoded, never decoded: " " finds "%20", but "%20" looks for
+		// "%2520". (A VCL literal "%20" is decoded to " " by the parser first.)
+		// https://fiddle.fastly.dev/fiddle/e599e40c
+		{input: &value.String{Value: "/?%20=v_space_key_arg_pct20"}, second: &value.String{Value: "%20"}, expect: &value.String{IsNotSet: true}},
 		{input: &value.String{Value: "/?%20=v_space_key_arg_space"}, second: &value.String{Value: " "}, expect: &value.String{Value: "v_space_key_arg_space"}},
 	}
 
@@ -62,47 +63,17 @@ func Test_Querystring_get(t *testing.T) {
 	}
 }
 
-func Test_Querystring_get_Errors(t *testing.T) {
-	tests := []struct {
-		name         string
-		input        *value.String
-		second       *value.String
-		expectSubstr string
-	}{
-		{
-			name:         "invalid hex in pct-encode (%eh)",
-			input:        &value.String{Value: "/?a=1"},
-			second:       &value.String{Value: "%eh"},
-			expectSubstr: "Argument 1 has invalid pct-encode sequence",
-		},
-		{
-			name:         "invalid UTF-8 after pct-decoding (%ff)",
-			input:        &value.String{Value: "/?a=1"},
-			second:       &value.String{Value: "%ff"},
-			expectSubstr: "Argument 1, after pct-decoding, is invalid utf-8",
-		},
-		{
-			name:         "incomplete percent (%)",
-			input:        &value.String{Value: "/?a=1"},
-			second:       &value.String{Value: "%"},
-			expectSubstr: "Argument 1 has invalid pct-encode sequence",
-		},
-		{
-			name:         "invalid hex (%zz)",
-			input:        &value.String{Value: "/?a=1"},
-			second:       &value.String{Value: "%zz"},
-			expectSubstr: "Argument 1 has invalid pct-encode sequence",
-		},
-	}
-
-	for i, tt := range tests {
-		ret, err := Querystring_get(&context.Context{}, tt.input, tt.second)
-		if err == nil {
-			t.Errorf("[%d:%s] Expected error but got nil and value=%#v", i, tt.name, ret)
+// Malformed escapes in the name are not errors on Fastly; the encoded name just
+// matches nothing. https://fiddle.fastly.dev/fiddle/e599e40c
+func Test_Querystring_get_MalformedName(t *testing.T) {
+	for _, name := range []string{"%eh", "%ff", "%", "%zz", "%G1", "%2"} {
+		ret, err := Querystring_get(&context.Context{}, &value.String{Value: "/?a=1&%eh=2&%ff=3&%zz=4"}, &value.String{Value: name})
+		if err != nil {
+			t.Errorf("%q: unexpected error: %s", name, err)
 			continue
 		}
-		if !strings.Contains(err.Error(), tt.expectSubstr) {
-			t.Errorf("[%d:%s] Error mismatch, got: %s", i, tt.name, err)
+		if v := value.Unwrap[*value.String](ret); !v.IsNotSet {
+			t.Errorf("%q: expected not set, got %q", name, v.Value)
 		}
 	}
 }

@@ -42,16 +42,19 @@ func Test_Querystring_regfilter_except(t *testing.T) {
 	}
 }
 
+// An empty regex matches every non-empty name, so everything is kept except
+// empty parameters, which are always dropped. https://fiddle.fastly.dev/fiddle/945bb4f9
 func Test_Querystring_regfilter_except_emptyPattern(t *testing.T) {
-	ret, err := Querystring_regfilter_except(
-		&context.Context{},
-		&value.String{Value: "/q?a=1&b=2"},
-		&value.String{Value: ""},
-	)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-	if got := value.Unwrap[*value.String](ret).Value; got != "/q?a=1&b=2" {
-		t.Errorf("expected the url unchanged, got %q", got)
+	for input, want := range map[string]string{
+		"/q?a=1&b=2":      "/q?a=1&b=2",
+		"/q?a=1&&=x&b=2&": "/q?a=1&b=2",
+	} {
+		ret, err := Querystring_regfilter_except(&context.Context{}, &value.String{Value: input}, &value.String{Value: ""})
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if got := value.Unwrap[*value.String](ret).Value; got != want {
+			t.Errorf("%q: expected %q, got %q", input, want, got)
+		}
 	}
 }
