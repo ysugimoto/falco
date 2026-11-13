@@ -185,7 +185,21 @@ func main() {
 		os.Exit(Fail)
 	}
 
+	if runResolvers(c, fetcher, action, resolvers) {
+		os.Exit(Fail)
+	}
+}
+
+// runResolvers runs the action against every resolver and reports whether any
+// of them failed.
+//
+// It keeps going after a failure. fmt gets one resolver per file and terraform
+// one per service, and these are independent of each other. Stopping at the
+// first failure would leave the rest unprocessed, with nothing to show that the
+// run was cut short.
+func runResolvers(c *config.Config, fetcher snippet.Fetcher, action string, resolvers []resolver.Resolver) bool {
 	var shouldExit bool
+
 	for _, v := range resolvers {
 		if name := v.Name(); name != "" {
 			writeln(white, `Lint service of "%s"`, name)
@@ -221,13 +235,10 @@ func main() {
 
 		if exitErr == ErrExit {
 			shouldExit = true
-			break
 		}
 	}
 
-	if shouldExit {
-		os.Exit(Fail)
-	}
+	return shouldExit
 }
 
 func runLint(runner *Runner, rslv resolver.Resolver) error {
