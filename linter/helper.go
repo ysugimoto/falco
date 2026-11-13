@@ -574,6 +574,30 @@ func isConstantOperand(exp ast.Expression) bool {
 	return isConstantExpression(exp)
 }
 
+// isPlainEqualityOperand reports whether Fastly accepts exp as the right
+// operand of == or != against a non-BOOL left operand. Parentheses and prefix
+// operators are rejected there whatever they wrap, so ("10") and
+// (req.vcl.version) fail just like (10). The exceptions are - on a numeric
+// literal, and + before a STRING comparison operand, which Fastly only warns
+// about.
+// see: https://fiddle.fastly.dev/fiddle/8f3da311
+// see: https://fiddle.fastly.dev/fiddle/ce9285b4
+func isPlainEqualityOperand(left types.Type, exp ast.Expression) bool {
+	switch e := exp.(type) {
+	case *ast.GroupedExpression:
+		return false
+	case *ast.PrefixExpression:
+		switch e.Operator {
+		case "-":
+			return isConstantExpression(e.Right)
+		case "+":
+			return left == types.StringType && isPlainEqualityOperand(left, e.Right)
+		}
+		return false
+	}
+	return true
+}
+
 // isStringCoercible reports whether Fastly converts the type to its string
 // representation when it is the right operand of an equality comparison
 // against a STRING. REGEX is deliberately absent, Fastly accepts it only for
