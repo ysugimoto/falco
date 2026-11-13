@@ -18,30 +18,101 @@ import (
 // - ID
 // - ID, STRING
 // Reference: https://developer.fastly.com/reference/vcl/functions/miscellaneous/std-collect/
+// Expected values were verified on the Fastly edge:
+// https://fiddle.fastly.dev/fiddle/ae47c1d2 and https://fiddle.fastly.dev/fiddle/30737f5a
 func Test_Std_collect(t *testing.T) {
-	tests := []struct {
-		input  string
-		expect int64
-	}{
-		{input: "req.headers", expect: 1},
+	newCtx := func() *context.Context {
+		req := httptest.NewRequest(ghttp.MethodGet, "https://example.com", nil)
+		bereq := httptest.NewRequest(ghttp.MethodGet, "https://example.com", nil)
+		return &context.Context{
+			Request:         http.WrapRequest(req),
+			BackendRequest:  http.WrapRequest(bereq),
+			BackendResponse: http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}}),
+			Object:          http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}}),
+			Response:        http.WrapResponse(&ghttp.Response{Header: ghttp.Header{}}),
+		}
+	}
+	headerOf := func(ctx *context.Context, obj string) ghttp.Header {
+		switch obj {
+		case "req":
+			return ctx.Request.Header
+		case "bereq":
+			return ctx.BackendRequest.Header
+		case "beresp":
+			return ctx.BackendResponse.Header
+		case "obj":
+			return ctx.Object.Header
+		default:
+			return ctx.Response.Header
+		}
 	}
 
-	for i, tt := range tests {
-		req := httptest.NewRequest(ghttp.MethodGet, "https://example.com", nil)
-		req.Header.Set("Foo", "bar")
-		ret, err := Std_count(
-			&context.Context{Request: http.WrapRequest(req)},
-			&value.Ident{Value: tt.input},
-		)
-		if err != nil {
-			t.Errorf("[%d] Unexpected error: %s", i, err)
-		}
-		if ret.Type() != value.IntegerType {
-			t.Errorf("[%d] Unexpected return type, expect=INTEGER, got=%s", i, ret.Type())
-		}
-		v := value.Unwrap[*value.Integer](ret)
-		if diff := cmp.Diff(tt.expect, v.Value); diff != "" {
-			t.Errorf("[%d] Return value unmatch, diff=%s", i, diff)
-		}
+	tests := []struct {
+		name   string
+		obj    string
+		values []string
+		sep    *value.String
+		expect []string
+	}{
+		{name: "req default separator", obj: "req", values: []string{"q1", "q2"}, expect: []string{"q1, q2"}},
+		{name: "bereq default separator", obj: "bereq", values: []string{"b1", "b2"}, expect: []string{"b1, b2"}},
+		{name: "beresp default separator", obj: "beresp", values: []string{"r1", "r2"}, expect: []string{"r1, r2"}},
+		{name: "obj default separator", obj: "obj", values: []string{"o1", "o2"}, expect: []string{"o1, o2"}},
+		{name: "resp default separator", obj: "resp", values: []string{"a1", "a2"}, expect: []string{"a1, a2"}},
+		{name: "resp three values", obj: "resp", values: []string{"a", "b", "c"}, expect: []string{"a, b, c"}},
+		{name: "custom separator", obj: "resp", values: []string{"b1", "b2"}, sep: &value.String{Value: "|"}, expect: []string{"b1| b2"}},
+		{name: "single value unchanged", obj: "resp", values: []string{"only"}, expect: []string{"only"}},
+		{name: "absent header stays absent", obj: "resp", values: nil, expect: nil},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := newCtx()
+			h := headerOf(ctx, tt.obj)
+			for _, v := range tt.values {
+				h.Add("Server-Timing", v)
+			}
+			args := []value.Value{&value.Ident{Value: tt.obj + ".http.Server-Timing"}}
+			if tt.sep != nil {
+				args = append(args, tt.sep)
+			}
+			ret, err := Std_collect(ctx, args...)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if ret != value.Null {
+				t.Errorf("Expected null return, got %v", ret)
+			}
+			if diff := cmp.Diff(tt.expect, h.Values("Server-Timing")); diff != "" {
+				t.Errorf("Header values unmatch, diff=%s", diff)
+			}
+		})
+	}
+
+	t.Run("header name is case-insensitive", func(t *testing.T) {
+		ctx := newCtx()
+		ctx.Response.Header.Add("Server-Timing", "a1")
+		ctx.Response.Header.Add("Server-Timing", "a2")
+		if _, err := Std_collect(ctx, &value.Ident{Value: "resp.http.server-timing"}); err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if diff := cmp.Diff([]string{"a1, a2"}, ctx.Response.Header.Values("Server-Timing")); diff != "" {
+			t.Errorf("Header values unmatch, diff=%s", diff)
+		}
+	})
+
+	t.Run("unavailable object is a no-op", func(t *testing.T) {
+		_, err := Std_collect(&context.Context{}, &value.Ident{Value: "beresp.http.X"})
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+	})
+
+	t.Run("non-header identifier is a no-op", func(t *testing.T) {
+		ctx := newCtx()
+		_, err := Std_collect(ctx, &value.Ident{Value: "req.url"})
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+	})
 }
