@@ -855,55 +855,10 @@ sub vcl_error {
 	}
 }
 
-const (
-	checkFormattedVCL   = "sub vcl_recv {\n  set req.http.X-Foo = \"1\";\n}\n"
-	checkUnformattedVCL = "sub vcl_recv {\n    set req.http.X-Foo = \"1\";\n}\n"
-)
-
-// captureStdout returns everything fn writes to os.Stdout, which is where fmt
-// sends formatted VCL when it is not overwriting files.
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer r.Close()
-	// Unblocks the reader goroutine if fn panics or calls t.FailNow.
-	defer w.Close()
-	saved := os.Stdout
-	os.Stdout = w
-	defer func() { os.Stdout = saved }()
-
-	done := make(chan string, 1)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- string(b)
-	}()
-	fn()
-	w.Close()
-	return <-done
-}
-
-// captureMessages redirects falco's own messages (writeln), which go to stderr.
-func captureMessages(t *testing.T) *bytes.Buffer {
-	t.Helper()
-
-	var buf bytes.Buffer
-	saved := output
-	output = &buf
-	t.Cleanup(func() { output = saved })
-	return &buf
-}
-
 func formatResolver(t *testing.T, content string, args ...string) (*config.Config, resolver.Resolver, string) {
 	t.Helper()
 
-	path := filepath.Join(t.TempDir(), "default.vcl")
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	path := writeVCL(t, t.TempDir(), "default.vcl", content)
 	c, err := config.New(append(append([]string{"fmt"}, args...), path))
 	if err != nil {
 		t.Fatal(err)
@@ -915,64 +870,36 @@ func formatResolver(t *testing.T, content string, args ...string) (*config.Confi
 	return c, rslv[0], path
 }
 
-func TestFormatCheck(t *testing.T) {
-	t.Run("formatted file passes without printing anything", func(t *testing.T) {
-		c, rslv, _ := formatResolver(t, checkFormattedVCL, "--check")
-		messages := captureMessages(t)
+// The passing case is covered end to end by TestFormatVisitsEveryFile.
+func TestFormatCheckFailsOnUnformattedFile(t *testing.T) {
+	c, rslv, path := formatResolver(t, unformattedVCL, "--check")
 
-		var err error
-		stdout := captureStdout(t, func() {
-			err = NewRunner(c, nil).Format(rslv)
-		})
-		if err != nil {
-			t.Errorf("expected no error, got %s", err)
-		}
-		if stdout != "" {
-			t.Errorf("expected nothing on stdout, got %q", stdout)
-		}
-		if messages.Len() != 0 {
-			t.Errorf("expected nothing on stderr, got %q", messages.String())
-		}
+	var err error
+	stdout := captureStdout(t, func() {
+		err = NewRunner(c, nil).Format(rslv)
 	})
-
-	t.Run("unformatted file fails and is left untouched", func(t *testing.T) {
-		c, rslv, path := formatResolver(t, checkUnformattedVCL, "--check")
-
-		var err error
-		stdout := captureStdout(t, func() {
-			err = NewRunner(c, nil).Format(rslv)
-		})
-		if err == nil || err.Error() != path+" requires formatting" {
-			t.Errorf("expected a requires formatting error, got %v", err)
-		}
-		if stdout != "" {
-			t.Errorf("expected nothing on stdout, got %q", stdout)
-		}
-		b, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if string(b) != checkUnformattedVCL {
-			t.Errorf("file was modified: %q", string(b))
-		}
-	})
+	if err == nil || err.Error() != path+" requires formatting" {
+		t.Errorf("expected a requires formatting error, got %v", err)
+	}
+	if stdout != "" {
+		t.Errorf("expected nothing on stdout, got %q", stdout)
+	}
+	if got := readFile(t, path); got != unformattedVCL {
+		t.Errorf("file was modified: %q", got)
+	}
 }
 
 func TestFormatRejectsCheckWithWrite(t *testing.T) {
-	buf := captureMessages(t)
+	buf := captureOutput(t)
 
-	c, rslv, path := formatResolver(t, checkUnformattedVCL, "--check", "-w")
+	c, rslv, path := formatResolver(t, unformattedVCL, "--check", "-w")
 	if err := runFormat(NewRunner(c, nil), rslv); err != ErrExit {
 		t.Errorf("expected ErrExit, got %v", err)
 	}
 	if !bytes.Contains(buf.Bytes(), []byte("both --check and --write")) {
 		t.Errorf("expected a flag conflict message, got %q", buf.String())
 	}
-	b, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(b) != checkUnformattedVCL {
-		t.Errorf("file was modified: %q", string(b))
+	if got := readFile(t, path); got != unformattedVCL {
+		t.Errorf("file was modified: %q", got)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,38 +41,51 @@ func readFile(t *testing.T, path string) string {
 	return string(b)
 }
 
-// captureOutput sends what falco writes to the terminal to a buffer instead.
+// captureOutput sends what falco writes to the terminal to a buffer instead,
+// with colour turned off so the buffer holds plain text.
 func captureOutput(t *testing.T) *bytes.Buffer {
 	t.Helper()
 
 	var buf bytes.Buffer
-	saved := output
+	savedOutput, savedNoColor := output, color.NoColor
 	output = &buf
 	color.NoColor = true
-	t.Cleanup(func() { output = saved })
+	t.Cleanup(func() {
+		output = savedOutput
+		color.NoColor = savedNoColor
+	})
 	return &buf
 }
 
-// discardStdout keeps the formatted VCL of the files that pass out of the test log.
-func discardStdout(t *testing.T) {
+// captureStdout returns everything fn writes to os.Stdout, which is where fmt
+// sends formatted VCL when it is not overwriting files.
+func captureStdout(t *testing.T, fn func()) string {
 	t.Helper()
 
-	null, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	r, w, err := os.Pipe()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer r.Close()
+	// Unblocks the reader goroutine if fn panics or calls t.FailNow.
+	defer w.Close()
 	saved := os.Stdout
-	os.Stdout = null
-	t.Cleanup(func() {
-		os.Stdout = saved
-		null.Close()
-	})
+	os.Stdout = w
+	defer func() { os.Stdout = saved }()
+
+	done := make(chan string, 1)
+	go func() {
+		b, _ := io.ReadAll(r)
+		done <- string(b)
+	}()
+	fn()
+	w.Close()
+	return <-done
 }
 
-func formatFiles(t *testing.T, dir string, args ...string) bool {
+func formatFiles(t *testing.T, args ...string) bool {
 	t.Helper()
 
-	t.Chdir(dir)
 	c, err := config.New(append([]string{"fmt"}, args...))
 	if err != nil {
 		t.Fatal(err)
@@ -80,22 +94,28 @@ func formatFiles(t *testing.T, dir string, args ...string) bool {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// main() rejects an empty list before runResolvers, and with no files a
+	// passing run would prove nothing.
+	if len(resolvers) == 0 {
+		t.Fatal("no files resolved")
+	}
 	return runResolvers(c, nil, subcommandFormat, resolvers)
 }
 
-// The fmt command takes a list of files that have nothing to do with each other,
-// so a failure on one of them says nothing about the rest. Stopping there leaves
-// them unformatted with -w and unreported with --check.
+// See runResolvers for why a failing file must not stop the run.
 func TestFormatVisitsEveryFile(t *testing.T) {
 	t.Run("-w formats the files after one that does not parse", func(t *testing.T) {
 		captureOutput(t)
 		dir := t.TempDir()
-		writeVCL(t, dir, "a-invalid.vcl", invalidVCL)
+		a := writeVCL(t, dir, "a-invalid.vcl", invalidVCL)
 		b := writeVCL(t, dir, "b.vcl", unformattedVCL)
 		c := writeVCL(t, dir, "c.vcl", unformattedVCL)
 
-		if !formatFiles(t, dir, "-w", "a-invalid.vcl", "b.vcl", "c.vcl") {
+		if !formatFiles(t, "-w", a, b, c) {
 			t.Error("the run should fail, one of the files does not parse")
+		}
+		if diff := cmp.Diff(invalidVCL, readFile(t, a)); diff != "" {
+			t.Errorf("%s should be left alone, diff=%s", filepath.Base(a), diff)
 		}
 		for _, path := range []string{b, c} {
 			if diff := cmp.Diff(formattedVCL, readFile(t, path)); diff != "" {
@@ -107,32 +127,40 @@ func TestFormatVisitsEveryFile(t *testing.T) {
 	t.Run("--check reports every file that needs formatting", func(t *testing.T) {
 		buf := captureOutput(t)
 		dir := t.TempDir()
-		writeVCL(t, dir, "a.vcl", unformattedVCL)
-		writeVCL(t, dir, "b.vcl", unformattedVCL)
-		writeVCL(t, dir, "c.vcl", unformattedVCL)
+		paths := []string{
+			writeVCL(t, dir, "a.vcl", unformattedVCL),
+			writeVCL(t, dir, "b.vcl", unformattedVCL),
+			writeVCL(t, dir, "c.vcl", unformattedVCL),
+		}
 
-		if !formatFiles(t, dir, "--check", "a.vcl", "b.vcl", "c.vcl") {
+		if !formatFiles(t, append([]string{"--check"}, paths...)...) {
 			t.Error("the run should fail, every file needs formatting")
 		}
-		for _, name := range []string{"a.vcl", "b.vcl", "c.vcl"} {
-			if !strings.Contains(buf.String(), name+" requires formatting") {
-				t.Errorf("%s was not reported, output=%s", name, buf.String())
+		for _, path := range paths {
+			if !strings.Contains(buf.String(), path+" requires formatting") {
+				t.Errorf("%s was not reported, output=%s", filepath.Base(path), buf.String())
 			}
 		}
 	})
 
 	t.Run("--check says nothing and succeeds when every file is formatted", func(t *testing.T) {
 		buf := captureOutput(t)
-		discardStdout(t)
 		dir := t.TempDir()
-		writeVCL(t, dir, "a.vcl", formattedVCL)
-		writeVCL(t, dir, "b.vcl", formattedVCL)
+		a := writeVCL(t, dir, "a.vcl", formattedVCL)
+		b := writeVCL(t, dir, "b.vcl", formattedVCL)
 
-		if formatFiles(t, dir, "--check", "a.vcl", "b.vcl") {
+		var failed bool
+		stdout := captureStdout(t, func() {
+			failed = formatFiles(t, "--check", a, b)
+		})
+		if failed {
 			t.Error("the run should succeed, every file is formatted")
 		}
 		if diff := cmp.Diff("", buf.String()); diff != "" {
 			t.Errorf("nothing should be reported, diff=%s", diff)
+		}
+		if diff := cmp.Diff("", stdout); diff != "" {
+			t.Errorf("nothing should be printed, diff=%s", diff)
 		}
 	})
 }

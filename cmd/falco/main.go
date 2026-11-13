@@ -190,13 +190,13 @@ func main() {
 	}
 }
 
-// runResolvers runs the action against every resolver and reports whether any of
-// them failed.
+// runResolvers runs the action against every resolver and reports whether any
+// of them failed.
 //
-// Every resolver is run. The fmt command takes a list of files that have nothing
-// to do with each other, so giving up on the first failure leaves the rest of
-// them unexamined: unformatted with -w, unreported with --check, and the only sign of
-// it is that the run stopped early.
+// It keeps going after a failure. fmt gets one resolver per file and terraform
+// one per service, and these are independent of each other. Stopping at the
+// first failure would leave the rest unprocessed, with nothing to show that the
+// run was cut short.
 func runResolvers(c *config.Config, fetcher snippet.Fetcher, action string, resolvers []resolver.Resolver) bool {
 	var shouldExit bool
 
