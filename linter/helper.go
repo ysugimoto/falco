@@ -376,7 +376,7 @@ func isValidVariableNameWithWildcard(name string) bool {
 	return true
 }
 
-// In VCL, could not specify literal in if condition expression.
+// In VCL, could not specify a literal as the first if condition expression.
 //
 // if (!req.http.Cookie) { ... } // -> valid, inverse actual identity variable (implicit type conversion will occur)
 // if (!false) { ... }           // -> valid, inverse boolean
@@ -396,6 +396,27 @@ func isValidConditionExpression(cond ast.Expression) error {
 		}
 	}
 	return nil
+}
+
+func hasStringConcatInCondition(cond ast.Expression) bool {
+	switch t := cond.(type) {
+	case *ast.InfixExpression:
+		if t.Operator == "+" {
+			return true
+		}
+		return hasStringConcatInCondition(t.Left) || hasStringConcatInCondition(t.Right)
+	case *ast.PrefixExpression:
+		return hasStringConcatInCondition(t.Right)
+	case *ast.GroupedExpression:
+		return hasStringConcatInCondition(t.Right)
+	case *ast.PostfixExpression:
+		return hasStringConcatInCondition(t.Left)
+	case *ast.IfExpression:
+		// Concatenation is valid in the result arms of an if expression.
+		return hasStringConcatInCondition(t.Condition)
+	}
+	// Function-call arguments can contain string concatenation.
+	return false
 }
 
 // In VCL, bang operator could not use in set/add statement expression,

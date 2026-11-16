@@ -1,6 +1,7 @@
 package variable
 
 import (
+	"net"
 	ghttp "net/http"
 	"net/url"
 	"sync/atomic"
@@ -433,6 +434,44 @@ func TestGetFromRegexRequestHeaderOverride(t *testing.T) {
 	})
 }
 
+func TestCounterVariableOverrides(t *testing.T) {
+	tests := []struct {
+		name     string
+		variable string
+		scope    context.Scope
+		override value.Value
+		expect   int64
+	}{
+		{"service visits recv default", FASTLY_FF_VISITS_THIS_SERVICE, context.RecvScope, nil, 0},
+		{"service visits miss default", FASTLY_FF_VISITS_THIS_SERVICE, context.MissScope, nil, 1},
+		{"service visits hit default", FASTLY_FF_VISITS_THIS_SERVICE, context.HitScope, nil, 1},
+		{"service visits fetch default", FASTLY_FF_VISITS_THIS_SERVICE, context.FetchScope, nil, 1},
+		{"service visits recv override", FASTLY_FF_VISITS_THIS_SERVICE, context.RecvScope, &value.Integer{Value: 2}, 2},
+		{"service visits deliver override", FASTLY_FF_VISITS_THIS_SERVICE, context.DeliverScope, &value.Integer{Value: 1}, 1},
+		{"service visits zero override", FASTLY_FF_VISITS_THIS_SERVICE, context.HitScope, &value.Integer{Value: 0}, 0},
+		{"restarts default", REQ_RESTARTS, context.RecvScope, nil, 2},
+		{"restarts override", REQ_RESTARTS, context.RecvScope, &value.Integer{Value: 3}, 3},
+		{"restarts zero override", REQ_RESTARTS, context.RecvScope, &value.Integer{Value: 0}, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vars := createScopeVars("http://localhost/")
+			vars.ctx.Restarts = 2
+			if tt.override != nil {
+				vars.ctx.OverrideVariables = map[string]value.Value{tt.variable: tt.override}
+			}
+
+			got, err := vars.Get(tt.scope, tt.variable)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+			if diff := cmp.Diff(&value.Integer{Value: tt.expect}, got); diff != "" {
+				t.Errorf("Return value unmatch, diff: %s", diff)
+			}
+		})
+	}
+}
+
 func TestGetFromRegex(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -538,6 +577,64 @@ func TestGetFromRegex(t *testing.T) {
 			}
 			if diff := cmp.Diff(val, tt.expect); diff != "" {
 				t.Errorf("Return value unmatch, diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestClientIPFromRemoteAddr(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect net.IP
+	}{
+		{input: "192.0.2.1:12345", expect: net.ParseIP("192.0.2.1")},
+		{input: "[2001:db8::1]:12345", expect: net.ParseIP("2001:db8::1")},
+		{input: "192.0.2.1", expect: net.ParseIP("192.0.2.1")},
+		{input: "2001:db8::1", expect: net.ParseIP("2001:db8::1")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			vars := NewAllScopeVariables(&context.Context{
+				Request: http.WrapRequest(&ghttp.Request{
+					RemoteAddr: tt.input,
+				}),
+			})
+			result, err := vars.Get(context.RecvScope, CLIENT_IP)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			ip := value.Unwrap[*value.IP](result)
+			if !ip.Value.Equal(tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, ip.Value)
+			}
+		})
+	}
+}
+
+func TestClientIdentityFromRemoteAddr(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{input: "192.0.2.1:12345", expect: "192.0.2.1"},
+		{input: "[2001:db8::1]:12345", expect: "2001:db8::1"},
+		{input: "192.0.2.1", expect: "192.0.2.1"},
+		{input: "2001:db8::1", expect: "2001:db8::1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			vars := NewAllScopeVariables(&context.Context{
+				Request: http.WrapRequest(&ghttp.Request{
+					RemoteAddr: tt.input,
+				}),
+			})
+			result, err := vars.Get(context.RecvScope, CLIENT_IDENTITY)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			identity := value.Unwrap[*value.String](result)
+			if identity.Value != tt.expect {
+				t.Fatalf("expected %q, got %q", tt.expect, identity.Value)
 			}
 		})
 	}
