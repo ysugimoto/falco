@@ -32,11 +32,19 @@ func formatCommentCharacter(comment string, char rune) string {
 	// Sharp-style comment
 	switch bs[0] {
 	case '#':
-		for i := range bs {
-			if bs[i] != '#' {
-				break
-			}
-			bs[i] = char
+		n := 0
+		for n < len(bs) && bs[n] == '#' {
+			bs[n] = char
+			n++
+		}
+		// A line comment is marked with two characters and a sharp comment can be
+		// written with one, so replacing them one for one leaves a mark of one: "/",
+		// which is not a comment and does not parse, or a lone "#" in a file whose
+		// other comments are "##". A run of one gets the second character in both
+		// styles. A longer run is decoration and keeps the length it was written
+		// with, "###" becoming "///".
+		if n == 1 {
+			return string(char) + string(bs)
 		}
 	// Slash-style comment
 	case '/':
