@@ -231,7 +231,7 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		if v := lookupOverride(v.ctx, name); v != nil {
 			return v, nil
 		}
-		return &value.String{Value: ""}, nil
+		return v.ctx.FastlyError.Copy(), nil
 	case MATH_1_PI:
 		return &value.Float{Value: 1 / math.Pi}, nil
 	case MATH_2_PI:
