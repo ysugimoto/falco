@@ -455,6 +455,12 @@ func TestTester(t *testing.T) {
 			filter: "*string_coercion/default.test.vcl",
 			passes: 21,
 		},
+		{
+			name:   "return upgrade in vcl_recv",
+			main:   "../../examples/testing/websocket_upgrade/default.vcl",
+			filter: "*websocket_upgrade/default.test.vcl",
+			passes: 3,
+		},
 	}
 
 	for _, tt := range tests {
@@ -846,5 +852,54 @@ sub vcl_error {
 				t.Errorf("body = %q, want %q", got, want)
 			}
 		})
+	}
+}
+
+func formatResolver(t *testing.T, content string, args ...string) (*config.Config, resolver.Resolver, string) {
+	t.Helper()
+
+	path := writeVCL(t, t.TempDir(), "default.vcl", content)
+	c, err := config.New(append(append([]string{"fmt"}, args...), path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rslv, err := resolver.NewGlobResolver(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c, rslv[0], path
+}
+
+// The passing case is covered end to end by TestFormatVisitsEveryFile.
+func TestFormatCheckFailsOnUnformattedFile(t *testing.T) {
+	c, rslv, path := formatResolver(t, unformattedVCL, "--check")
+
+	var err error
+	stdout := captureStdout(t, func() {
+		err = NewRunner(c, nil).Format(rslv)
+	})
+	if err == nil || err.Error() != path+" requires formatting" {
+		t.Errorf("expected a requires formatting error, got %v", err)
+	}
+	if stdout != "" {
+		t.Errorf("expected nothing on stdout, got %q", stdout)
+	}
+	if got := readFile(t, path); got != unformattedVCL {
+		t.Errorf("file was modified: %q", got)
+	}
+}
+
+func TestFormatRejectsCheckWithWrite(t *testing.T) {
+	buf := captureOutput(t)
+
+	c, rslv, path := formatResolver(t, unformattedVCL, "--check", "-w")
+	if err := runFormat(NewRunner(c, nil), rslv); err != ErrExit {
+		t.Errorf("expected ErrExit, got %v", err)
+	}
+	if !bytes.Contains(buf.Bytes(), []byte("both --check and --write")) {
+		t.Errorf("expected a flag conflict message, got %q", buf.String())
+	}
+	if got := readFile(t, path); got != unformattedVCL {
+		t.Errorf("file was modified: %q", got)
 	}
 }

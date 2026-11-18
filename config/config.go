@@ -100,6 +100,7 @@ type ConsoleConfig struct {
 type FormatConfig struct {
 	// CLI options
 	Overwrite bool `cli:"w,write" default:"false"`
+	Check     bool `cli:"check" default:"false"`
 
 	// Formatter options
 	IndentWidth                int    `yaml:"indent_width" default:"2"`
@@ -185,10 +186,12 @@ func New(args []string) (*Config, error) {
 
 	// Load request configuration if provided
 	if c.Request != "" {
-		if rc, err := LoadRequestConfig(c.Request); err == nil {
-			c.Simulator.OverrideRequest = rc
-			c.Testing.OverrideRequest = rc
+		rc, err := LoadRequestConfig(c.Request)
+		if err != nil {
+			return nil, errors.WithStack(err)
 		}
+		c.Simulator.OverrideRequest = rc
+		c.Testing.OverrideRequest = rc
 	}
 
 	// Copy common fields

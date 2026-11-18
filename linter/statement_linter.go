@@ -258,6 +258,14 @@ func (l *Linter) lintIfStatement(stmt *ast.IfStatement, ctx *context.Context) ty
 }
 
 func (l *Linter) lintIfCondition(cond ast.Expression, ctx *context.Context) {
+	if hasStringConcatInCondition(cond) {
+		l.Error((&LintError{
+			Severity: ERROR,
+			Token:    cond.GetMeta().Token,
+			Message:  "string concatenation is not allowed in condition expression",
+		}).Match(OPERATOR_CONDITIONAL))
+	}
+
 	// Note: if condtion expression accepts STRING or BOOL (evaluate as truthy/falsy), but forbid to use literal.
 	//
 	// For example:
@@ -565,7 +573,7 @@ func (l *Linter) lintReturnStatement(stmt *ast.ReturnStatement, ctx *context.Con
 	switch ctx.Mode() {
 	case context.RECV:
 		// https://developer.fastly.com/reference/vcl/subroutines/recv/
-		expects = append(expects, "lookup", "pass", "error", "restart")
+		expects = append(expects, "lookup", "pass", "error", "restart", "upgrade")
 	case context.HASH:
 		// https://developer.fastly.com/reference/vcl/subroutines/hash/
 		expects = append(expects, "hash")

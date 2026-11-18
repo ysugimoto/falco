@@ -2,161 +2,114 @@ package shared
 
 import (
 	"net/url"
-	"sort"
 	"strings"
 )
 
-type QueryString struct {
-	Key   string
-	Value []string // nil indicates not set in VCL
+// Param stores one raw query string parameter.
+type Param struct {
+	Name     string
+	Value    string
+	HasValue bool // distinguishes "a=" from "a"
 }
 
-// We implement original querytring struct in order to maname URL queries keeping its order.
-// url.Values are useful in Golang but Encode() result does not care its order because it is managed in map
-// and always sort by query name. On VCL, we need to keep query raw-order as present, this struct solved them.
+// QueryStrings preserves parameter encoding, order, and duplicates.
 type QueryStrings struct {
-	Prefix string // protocol, host, port, path
-	Items  []*QueryString
+	Prefix string
+	Params []Param
 }
 
-func ParseQuery(qs string) (*QueryStrings, error) {
-	// Find querystring sign
-	idx := strings.Index(qs, "?")
-	if idx == -1 {
-		return &QueryStrings{Prefix: qs}, nil
+func ParseQuery(qs string) *QueryStrings {
+	prefix, query, found := strings.Cut(qs, "?")
+	if !found {
+		return &QueryStrings{Prefix: qs}
 	}
-
-	ret := &QueryStrings{
-		Prefix: qs[0:idx],
+	ret := &QueryStrings{Prefix: prefix}
+	for token := range strings.SplitSeq(query, "&") {
+		if name, val, found := strings.Cut(token, "="); found {
+			ret.Params = append(ret.Params, Param{Name: name, Value: val, HasValue: true})
+		} else {
+			ret.Params = append(ret.Params, Param{Name: name})
+		}
 	}
-	qs = qs[idx+1:]
-	for q := range strings.SplitSeq(qs, "&") {
-		sp := strings.SplitN(q, "=", 2)
-		if len(sp) == 0 {
-			continue
-		}
-		key, err := url.QueryUnescape(sp[0])
-		if err != nil {
-			return nil, err
-		}
-		if len(sp) == 1 {
-			// e.g ?foo -- equal sign is not preset
-			ret.Items = append(ret.Items, &QueryString{Key: key, Value: nil})
-			continue
-		}
-		val, err := url.QueryUnescape(sp[1])
-		if err != nil {
-			return nil, err
-		}
-		ret.Add(key, val)
-	}
-	return ret, nil
+	return ret
 }
 
-func (q *QueryStrings) Set(name, val string) {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
-			continue
-		}
-		q.Items[i].Value = []string{val}
-		return
-	}
-
-	// set new
-	q.Items = append(q.Items, &QueryString{Key: name, Value: []string{val}})
-}
-
+// Add appends an escaped, non-empty name-value pair.
 func (q *QueryStrings) Add(name, val string) {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
-			continue
-		}
-		if q.Items[i].Value == nil {
-			q.Items[i].Value = []string{}
-		}
-		q.Items[i].Value = append(q.Items[i].Value, val)
+	if name == "" || val == "" {
 		return
 	}
-
-	// append new
-	q.Items = append(q.Items, &QueryString{Key: name, Value: []string{val}})
+	q.Params = append(q.Params, Param{Name: Escape(name), Value: Escape(val), HasValue: true})
 }
 
-func (q *QueryStrings) Get(name string) *string {
-	for i := range q.Items {
-		if q.Items[i].Key != name {
+// Set replaces or appends a non-empty pair while removing later duplicates.
+func (q *QueryStrings) Set(name, val string) {
+	if name == "" || val == "" {
+		return
+	}
+	escaped, replaced := Escape(name), false
+	kept := make([]Param, 0, len(q.Params))
+	for _, p := range q.Params {
+		if p.Name != escaped {
+			kept = append(kept, p)
 			continue
 		}
-		if q.Items[i].Value == nil {
-			return nil // nil returns not set string in VCL
+		if !replaced {
+			replaced = true
+			kept = append(kept, Param{Name: escaped, Value: Escape(val), HasValue: true})
 		}
-		return &q.Items[i].Value[0]
 	}
-	return nil
+	q.Params = kept
+	if !replaced {
+		q.Params = append(q.Params, Param{Name: escaped, Value: Escape(val), HasValue: true})
+	}
 }
 
+// Clean removes parameters with empty names.
 func (q *QueryStrings) Clean() {
-	var cleaned []*QueryString
-	for _, v := range q.Items {
-		if v.Key == "" {
+	var cleaned []Param
+	for _, v := range q.Params {
+		if v.Name == "" {
 			continue
 		}
 		cleaned = append(cleaned, v)
 	}
-	q.Items = cleaned
+	q.Params = cleaned
 }
 
-func (q *QueryStrings) Filter(filter func(name string) bool) {
-	var filtered []*QueryString
-	for _, v := range q.Items {
-		if !filter(v.Key) {
+// Filter keeps matching parameters with non-empty raw names.
+func (q *QueryStrings) Filter(keep func(name string) bool) {
+	var filtered []Param
+	for _, v := range q.Params {
+		if v.Name == "" || !keep(v.Name) {
 			continue
 		}
 		filtered = append(filtered, v)
 	}
-	q.Items = filtered
-}
-
-type SortMode string
-
-const (
-	SortAsc  SortMode = "asc"
-	SortDesc SortMode = "desc"
-)
-
-func (q *QueryStrings) Sort(mode SortMode) {
-	sort.Slice(q.Items, func(i, j int) bool {
-		v := q.Items[i].Key > q.Items[j].Key
-		if mode == SortAsc {
-			return !v
-		}
-		return v
-	})
+	q.Params = filtered
 }
 
 func (q *QueryStrings) String() string {
+	if len(q.Params) == 0 {
+		return q.Prefix
+	}
 	var buf strings.Builder
-	for i, v := range q.Items {
-		key := q.Items[i].Key
-		if v.Value == nil {
-			buf.WriteString(key)
-		} else {
-			for j := range v.Value {
-				buf.WriteString(key)
-				buf.WriteString("=")
-				buf.WriteString(url.QueryEscape(v.Value[j]))
-				if j != len(v.Value)-1 {
-					buf.WriteString("&")
-				}
-			}
-		}
-		if i != len(q.Items)-1 {
+	buf.WriteString(q.Prefix)
+	buf.WriteString("?")
+	for i, p := range q.Params {
+		if i > 0 {
 			buf.WriteString("&")
 		}
+		buf.WriteString(p.Name)
+		if p.HasValue {
+			buf.WriteString("=")
+			buf.WriteString(p.Value)
+		}
 	}
-	var sign string
-	if buf.Len() > 0 {
-		sign = "?"
-	}
-	return q.Prefix + sign + buf.String()
+	return buf.String()
+}
+
+// Escape encodes a query component with spaces represented as %20.
+func Escape(s string) string {
+	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }
