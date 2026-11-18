@@ -3,7 +3,6 @@ package variable
 import (
 	"strings"
 
-	"net/url"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -47,29 +46,22 @@ func (v *MissScopeVariables) Get(s context.Scope, name string) (value.Value, err
 	case BEREQ_REQUEST:
 		return v.Get(s, "bereq.method")
 	case BEREQ_URL:
-		u := bereq.URL.Path
-		if v := bereq.URL.RawQuery; v != "" {
-			u += "?" + v
-		}
-		if v := bereq.URL.RawFragment; v != "" {
-			u += "#" + v
-		}
-		return &value.String{Value: u}, nil
+		return &value.String{Value: formatRequestURL(bereq.URL)}, nil
 	case BEREQ_URL_BASENAME:
 		return &value.String{
-			Value: filepath.Base(bereq.URL.Path),
+			Value: getUrlBasename(getRawUrlPath(bereq.URL)),
 		}, nil
 	case BEREQ_URL_DIRNAME:
 		return &value.String{
-			Value: filepath.Dir(bereq.URL.Path),
+			Value: getUrlDirname(getRawUrlPath(bereq.URL)),
 		}, nil
 	case BEREQ_URL_EXT:
-		ext := filepath.Ext(bereq.URL.Path)
+		ext := filepath.Ext(getRawUrlPath(bereq.URL))
 		return &value.String{
 			Value: strings.TrimPrefix(ext, "."),
 		}, nil
 	case BEREQ_URL_PATH:
-		return &value.String{Value: bereq.URL.Path}, nil
+		return &value.String{Value: getRawUrlPath(bereq.URL)}, nil
 	case BEREQ_URL_QS:
 		return &value.String{Value: bereq.URL.RawQuery}, nil
 	case BEREQ_MAX_REUSE_IDLE_TIME:
@@ -164,18 +156,11 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 	case BEREQ_REQUEST:
 		return v.Set(s, "bereq.method", operator, val)
 	case BEREQ_URL:
-		u := bereq.URL.Path
-		if query := bereq.URL.RawQuery; query != "" {
-			u += "?" + query
-		}
-		if fragment := bereq.URL.RawFragment; fragment != "" {
-			u += "#" + fragment
-		}
-		left := &value.String{Value: u}
+		left := &value.String{Value: formatRequestURL(bereq.URL)}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := parseRequestURL(left.Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -183,7 +168,9 @@ func (v *MissScopeVariables) Set(s context.Scope, name, operator string, val val
 		bereq.URL.Path = parsed.Path
 		bereq.URL.RawPath = parsed.RawPath
 		bereq.URL.RawQuery = parsed.RawQuery
+		bereq.URL.Fragment = parsed.Fragment
 		bereq.URL.RawFragment = parsed.RawFragment
+		bereq.URL.ForceQuery = parsed.ForceQuery
 		return nil
 	case BEREQ_MAX_REUSE_IDLE_TIME:
 		if err := doAssign(v.ctx.BackendRequestMaxReuseIdleTime, operator, val); err != nil {

@@ -4,6 +4,7 @@ import (
 	"net"
 	ghttp "net/http"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -144,6 +145,137 @@ func TestReqUrl(t *testing.T) {
 		if diff := cmp.Diff(ext.Value, expect.ext); diff != "" {
 			t.Errorf("Return value unmatch, diff=%s", diff)
 		}
+	}
+}
+
+func TestSetReqUrlDirnameBasenameExt(t *testing.T) {
+	tests := []struct {
+		input, dirname, basename, ext string
+	}{
+		{input: "/", dirname: "/"},
+		{input: "/a", dirname: "/", basename: "a"},
+		{input: "/a/", dirname: "/a"},
+		{input: "/a/b", dirname: "/a", basename: "b"},
+		{input: "/a/b/", dirname: "/a/b"},
+		{input: "//", dirname: "/"},
+		{input: "//a", dirname: "/", basename: "a"},
+		{input: "//a/b", dirname: "//a", basename: "b"},
+		{input: "/a//b", dirname: "/a/", basename: "b"},
+		{input: "///a/b", dirname: "///a", basename: "b"},
+		{input: "/a/b.c.d", dirname: "/a", basename: "b.c.d", ext: "d"},
+		{input: "/a/.e", dirname: "/a", basename: ".e", ext: "e"},
+		{input: "/a.b/c", dirname: "/a.b", basename: "c"},
+		{input: "/a%2Fb/c", dirname: "/a%2Fb", basename: "c"},
+		{input: "/a/b?x=1/y", dirname: "/a", basename: "b"},
+		{input: "/a/../b", dirname: "/a/..", basename: "b"},
+		{input: "/a/./b", dirname: "/a/.", basename: "b"},
+		{input: "/a/b/..", dirname: "/a/b", basename: ".."},
+		{input: "a", dirname: "/", basename: "a"},
+		{input: "a/b", dirname: "a", basename: "b"},
+		{input: "*", dirname: "/", basename: "*"},
+		{input: "?x=1", dirname: "/"},
+	}
+	for i, test := range tests {
+		vars := createScopeVars("/")
+		if err := vars.Set(context.RecvScope, REQ_URL, "=", &value.String{Value: test.input}); err != nil {
+			t.Fatalf("[%d] Unexpected error: %s", i, err)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL_DIRNAME).Value, test.dirname); diff != "" {
+			t.Errorf("[%d] req.url.dirname unmatch, diff=%s", i, diff)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL_BASENAME).Value, test.basename); diff != "" {
+			t.Errorf("[%d] req.url.basename unmatch, diff=%s", i, diff)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL_EXT).Value, test.ext); diff != "" {
+			t.Errorf("[%d] req.url.ext unmatch, diff=%s", i, diff)
+		}
+	}
+}
+
+func TestSetReqUrl(t *testing.T) {
+	tests := []struct {
+		input, path, qs string
+	}{
+		{input: "//LOGIN", path: "//LOGIN"},
+		{input: "//a/b?x=1", path: "//a/b", qs: "x=1"},
+		{input: "/a#frag", path: "/a"},
+		{input: "/a?x=1#f", path: "/a", qs: "x=1"},
+		{input: "/a#f?x=1", path: "/a"},
+		{input: "/a?#f", path: "/a"},
+		{input: "/a%41b#f%41", path: "/a%41b"},
+		{input: "/a#f#g", path: "/a"},
+		{input: "/a#f%23g", path: "/a"},
+		{input: "/a#\u00e9", path: "/a"},
+	}
+	for i, test := range tests {
+		vars := createScopeVars("/")
+		if err := vars.Set(context.RecvScope, REQ_URL, "=", &value.String{Value: test.input}); err != nil {
+			t.Fatalf("[%d] Unexpected error: %s", i, err)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL).Value, test.input); diff != "" {
+			t.Errorf("[%d] req.url unmatch, diff=%s", i, diff)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL_PATH).Value, test.path); diff != "" {
+			t.Errorf("[%d] req.url.path unmatch, diff=%s", i, diff)
+		}
+		if diff := cmp.Diff(getValue(t, i, vars, REQ_URL_QS).Value, test.qs); diff != "" {
+			t.Errorf("[%d] req.url.qs unmatch, diff=%s", i, diff)
+		}
+	}
+}
+
+func TestSetBereqUrl(t *testing.T) {
+	tests := []struct {
+		input, path, qs, dirname, basename, ext string
+	}{
+		{input: "/a%41b", path: "/a%41b", dirname: "/", basename: "a%41b"},
+		{input: "//a/b", path: "//a/b", dirname: "//a", basename: "b"},
+		{input: "/a/b/", path: "/a/b/", dirname: "/a/b"},
+		{input: "/a?x=1#f", path: "/a", qs: "x=1", dirname: "/", basename: "a"},
+		{input: "/a#f?x=1", path: "/a", dirname: "/", basename: "a"},
+		{input: "/a?#f", path: "/a", dirname: "/", basename: "a"},
+		{input: "/a?", path: "/a", dirname: "/", basename: "a"},
+		{input: "/a#f#g", path: "/a", dirname: "/", basename: "a"},
+		{input: "/a/../b", path: "/a/../b", dirname: "/a/..", basename: "b"},
+	}
+	scopes := map[context.Scope]func(*context.Context) Variable{
+		context.MissScope:  func(c *context.Context) Variable { return NewMissScopeVariables(c) },
+		context.PassScope:  func(c *context.Context) Variable { return NewPassScopeVariables(c) },
+		context.FetchScope: func(c *context.Context) Variable { return NewFetchScopeVariables(c) },
+	}
+	for scope, newVars := range scopes {
+		for i, test := range tests {
+			ctx := createScopeVars("/").ctx
+			ctx.BackendRequest = http.WrapRequest(&ghttp.Request{URL: &url.URL{Path: "/"}, Header: ghttp.Header{}})
+			vars := newVars(ctx)
+			if err := vars.Set(scope, BEREQ_URL, "=", &value.String{Value: test.input}); err != nil {
+				t.Fatalf("[%s %d] Unexpected error: %s", scope, i, err)
+			}
+			for name, want := range map[string]string{
+				BEREQ_URL:          test.input,
+				BEREQ_URL_PATH:     test.path,
+				BEREQ_URL_QS:       test.qs,
+				BEREQ_URL_DIRNAME:  test.dirname,
+				BEREQ_URL_BASENAME: test.basename,
+				BEREQ_URL_EXT:      test.ext,
+			} {
+				got, err := vars.Get(scope, name)
+				if err != nil {
+					t.Fatalf("[%s %d] Unexpected error: %s", scope, i, err)
+				}
+				if diff := cmp.Diff(value.Unwrap[*value.String](got).Value, want); diff != "" {
+					t.Errorf("[%s %d] %s unmatch, diff=%s", scope, i, name, diff)
+				}
+			}
+		}
+	}
+}
+
+func TestSetReqUrlErrorNamesTheValue(t *testing.T) {
+	vars := createScopeVars("/")
+	err := vars.Set(context.RecvScope, REQ_URL, "=", &value.String{Value: "//%zz"})
+	if err == nil || !strings.Contains(err.Error(), `"//%zz"`) {
+		t.Errorf("Expected an error naming \"//%%zz\", got %v", err)
 	}
 }
 
