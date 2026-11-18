@@ -194,6 +194,102 @@ return(pass);
 				ReturnStatementParenthesis: true,
 			},
 		},
+		{
+			name: "Inline comment on its own line becomes a slash comment",
+			input: `/* Above the declaration */
+sub test {
+  /* Above the statement */
+  set req.http.Foo = "bar";
+}`,
+			expect: `// Above the declaration
+sub test {
+  // Above the statement
+  set req.http.Foo = "bar";
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle: "slash",
+				IndentWidth:  2,
+				IndentStyle:  "space",
+			},
+		},
+		{
+			name: "Inline comment on its own line becomes a sharp comment",
+			input: `sub test {
+  /* Above the statement */
+  set req.http.Foo = "bar";
+}`,
+			expect: `sub test {
+  # Above the statement
+  set req.http.Foo = "bar";
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle: "sharp",
+				IndentWidth:  2,
+				IndentStyle:  "space",
+			},
+		},
+		{
+			name: "Inline comment spanning lines is kept",
+			input: `sub test {
+  /*
+   * Above the statement
+   */
+  set req.http.Foo = "bar";
+}`,
+			expect: `sub test {
+  /*
+   * Above the statement
+   */
+  set req.http.Foo = "bar";
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle: "slash",
+				IndentWidth:  2,
+				IndentStyle:  "space",
+			},
+		},
+		{
+			name: "Inline comment with code on the same line is kept",
+			input: `sub test {
+  set req.http.Foo = /* infix */ "bar";
+  if (req.http.Foo) /* condition */ {
+    set req.http.Bar = "baz";  /* trailing */
+  }
+}`,
+			expect: `sub test {
+  set req.http.Foo = /* infix */ "bar";
+  if (req.http.Foo) /* condition */ {
+    set req.http.Bar = "baz";  /* trailing */
+  }
+}
+`,
+			conf: &config.FormatConfig{
+				CommentStyle:         "slash",
+				IndentWidth:          2,
+				IndentStyle:          "space",
+				TrailingCommentWidth: 2,
+				LineWidth:            120,
+			},
+		},
+		{
+			name: "Inline comment is kept when comment_style is not set",
+			input: `sub test {
+  /* Above the statement */
+  set req.http.Foo = "bar";
+}`,
+			expect: `sub test {
+  /* Above the statement */
+  set req.http.Foo = "bar";
+}
+`,
+			conf: &config.FormatConfig{
+				IndentWidth: 2,
+				IndentStyle: "space",
+			},
+		},
 	}
 
 	for _, tt := range tests {
