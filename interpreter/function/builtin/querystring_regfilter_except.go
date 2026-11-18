@@ -39,11 +39,6 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 	v := value.Unwrap[*value.String](args[0])
 	name := value.Unwrap[*value.String](args[1])
 
-	// An empty pattern leaves the URL unchanged.
-	if name.Value == "" {
-		return &value.String{Value: v.Value}, nil
-	}
-
 	query := shared.ParseQuery(v.Value)
 
 	re, err := regexp.Compile(name.Value)
@@ -52,8 +47,13 @@ func Querystring_regfilter_except(ctx *context.Context, args ...value.Value) (va
 			Querystring_regfilter_except_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
 		)
 	}
+	// An empty regex matches every name on Fastly. go-pcre never reports an
+	// empty match, so answer that case here rather than asking the engine.
+	// Other patterns that can only match empty (such as "^" or "(?=k)") are
+	// still affected. See https://fiddle.fastly.dev/fiddle/945bb4f9 and
+	// https://fiddle.fastly.dev/fiddle/1cb2a444.
 	query.Filter(func(key string) bool {
-		return re.MatchString(key)
+		return name.Value == "" || re.MatchString(key)
 	})
 
 	return &value.String{Value: query.String()}, nil

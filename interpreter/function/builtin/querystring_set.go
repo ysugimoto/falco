@@ -39,8 +39,7 @@ func Querystring_set(ctx *context.Context, args ...value.Value) (value.Value, er
 	name := value.Unwrap[*value.String](args[1])
 	val := value.Unwrap[*value.String](args[2])
 
-	query := shared.ParseQuery(u.Value)
-
-	query.Set(name.Value, val.Value)
-	return &value.String{Value: query.String()}, nil
+	// See https://fiddle.fastly.dev/fiddle/9c4a3190 and
+	// https://fiddle.fastly.dev/fiddle/945bb4f9.
+	return &value.String{Value: shared.ParseQuery(u.Value).Set(name.Value, val.Value)}, nil
 }
