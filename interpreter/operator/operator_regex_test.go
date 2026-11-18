@@ -575,11 +575,11 @@ func TestRegexOperator(t *testing.T) {
 			groups  map[string]*value.String
 		}{
 			{
-				name:    "^$ does not match empty string (PCRE behavior)",
+				name:    "^$ matches empty string",
 				input:   "",
 				pattern: "^$",
-				expect:  false, // PCRE doesn't match empty string with ^$ (unlike Go regexp)
-				groups:  map[string]*value.String{},
+				expect:  true,
+				groups:  map[string]*value.String{"0": {Value: ""}},
 			},
 			{
 				name:    "^abc matches prefix",
@@ -709,11 +709,11 @@ func TestRegexOperator(t *testing.T) {
 				},
 			},
 			{
-				name:    "empty string does not match ^(.*)$ (PCRE behavior)",
+				name:    "empty string matches ^(.*)$",
 				input:   "",
 				pattern: `^(.*)$`,
-				expect:  false, // PCRE doesn't match empty string (unlike Go regexp)
-				groups:  map[string]*value.String{},
+				expect:  true,
+				groups:  map[string]*value.String{"0": {Value: ""}, "1": {Value: ""}},
 			},
 		}
 
@@ -979,4 +979,14 @@ func TestRegexOperator(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestRegexOperatorNotSet(t *testing.T) {
+	ret, err := Regex(&context.Context{}, &value.String{IsNotSet: true}, &value.String{Value: "^$", Literal: true})
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	if value.Unwrap[*value.Boolean](ret).Value {
+		t.Errorf("NOT SET should not match ^$")
+	}
 }

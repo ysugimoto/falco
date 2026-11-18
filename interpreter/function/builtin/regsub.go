@@ -36,7 +36,7 @@ func expandReplacement(input, replacement string, indices []int) string {
 
 func replaceOneString(re *pcre.Regexp, input, replacement string) string {
 	indices := re.FindStringSubmatchIndex(input)
-	if indices == nil {
+	if indices == nil || input == "" {
 		return input
 	}
 	return input[:indices[0]] + expandReplacement(input, replacement, indices) + input[indices[1]:]
@@ -44,7 +44,7 @@ func replaceOneString(re *pcre.Regexp, input, replacement string) string {
 
 func replaceAllString(re *pcre.Regexp, input, replacement string) string {
 	allIndices := re.FindAllStringSubmatchIndex(input, -1)
-	if allIndices == nil {
+	if allIndices == nil || input == "" {
 		return input
 	}
 	var result strings.Builder

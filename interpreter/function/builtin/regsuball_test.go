@@ -23,6 +23,9 @@ func Test_Regsuball(t *testing.T) {
 		literal     bool
 		isError     bool
 	}{
+		{name: "empty match after a match", input: "aaa", pattern: "a*", replacement: "-", expect: "--", literal: true},
+		{name: "empty matches with a lazy quantifier", input: "aaa", pattern: "a*?", replacement: "-", expect: "-------", literal: true},
+		{name: "empty subject", input: "", pattern: "x*", replacement: "-", expect: "", literal: true},
 		{
 			name:        "normalize slashes",
 			input:       "//foo///bar//baz",
@@ -44,7 +47,7 @@ func Test_Regsuball(t *testing.T) {
 			input:       "foo;bar;baz",
 			pattern:     "([^;]*)(;.*)?$",
 			replacement: `\1bar`,
-			expect:      "foobar",
+			expect:      "foobarbar",
 			literal:     true,
 		},
 		{

@@ -51,6 +51,6 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	}
 
 	return &value.String{
-		Value: replaceAllString(re, input.Value, replacement.Value),
+		Value: replaceAllString(re.UsePCRE2GlobalMatching(), input.Value, replacement.Value),
 	}, nil
 }

@@ -23,6 +23,8 @@ func Test_Regsub(t *testing.T) {
 		literal     bool
 		isError     bool
 	}{
+		{name: "empty first match", input: "abc", pattern: "x*", replacement: "-", expect: "-abc", literal: true},
+		{name: "empty subject", input: "", pattern: "^$", replacement: "x", expect: "", literal: true},
 		{
 			name:        "remove www prefix",
 			input:       "www.example.com",
