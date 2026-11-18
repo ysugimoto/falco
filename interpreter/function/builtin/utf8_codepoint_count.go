@@ -29,7 +29,7 @@ func Utf8_codepoint_count_Validate(args []value.Value) error {
 // Fastly built-in function implementation of utf8.codepoint_count
 // Arguments may be:
 // - STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-codepoint-count/
 func Utf8_codepoint_count(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	// Argument validations
 	if err := Utf8_codepoint_count_Validate(args); err != nil {

@@ -3,6 +3,7 @@ package linter
 import (
 	"fmt"
 	"slices"
+	"unicode/utf8"
 
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/linter/context"
@@ -123,6 +124,61 @@ func (l *Linter) lintFunctionArguments(fn *context.BuiltinFunction, calledFn fun
 			})
 		}
 	}
+	if calledFn.name == "utf8.translate" {
+		l.lintTranslationSets(calledFn, fn.Reference)
+	}
 
 	return fn.Return
+}
+
+// Fastly builds the translation table of utf8.translate when it compiles the
+// VCL, so both character sets must be string literals.
+func (l *Linter) lintTranslationSets(calledFn functionMeta, reference string) {
+	raise := func(arg ast.Expression, format string, args ...any) {
+		err := &LintError{
+			Severity: ERROR,
+			Token:    arg.GetMeta().Token,
+			Message:  fmt.Sprintf(format, args...),
+		}
+		l.Error(err.Match(FUNCTION_ARGUMENTS).Ref(reference))
+	}
+
+	// Fastly reports only the first problem, in this order, so later checks
+	// must not run ahead of earlier ones.
+	names := [2]string{"set1", "set2"}
+	var sets [2]*ast.String
+	for i, name := range names {
+		arg := calledFn.arguments[i+1]
+		str, ok := arg.(*ast.String)
+		if !ok {
+			raise(arg, "The %s argument of utf8.translate must be a string literal.", name)
+			return
+		}
+		sets[i] = str
+	}
+
+	for i, name := range names {
+		if sets[i].Value == "" {
+			raise(sets[i], "Characters required in %s", name)
+			return
+		}
+	}
+
+	n1 := utf8.RuneCountInString(sets[0].Value)
+	n2 := utf8.RuneCountInString(sets[1].Value)
+	if n2 > n1 {
+		raise(sets[1], "Excess characters in set2: Expected %d or fewer, got %d", n1, n2)
+		return
+	}
+
+	// A repeated character in set1 would have an ambiguous mapping; set2 may
+	// repeat characters freely.
+	seen := make(map[rune]struct{}, n1)
+	for _, r := range sets[0].Value {
+		if _, dup := seen[r]; dup {
+			raise(sets[0], "Duplicate character in set1: U+%04X", r)
+			return
+		}
+		seen[r] = struct{}{}
+	}
 }
