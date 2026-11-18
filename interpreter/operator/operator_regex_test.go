@@ -575,11 +575,12 @@ func TestRegexOperator(t *testing.T) {
 			groups  map[string]*value.String
 		}{
 			{
-				name:    "^$ does not match empty string (PCRE behavior)",
+				// https://fiddle.fastly.dev/fiddle/38b8cc11
+				name:    "^$ matches empty string",
 				input:   "",
 				pattern: "^$",
-				expect:  false, // PCRE doesn't match empty string with ^$ (unlike Go regexp)
-				groups:  map[string]*value.String{},
+				expect:  true,
+				groups:  map[string]*value.String{"0": {Value: ""}},
 			},
 			{
 				name:    "^abc matches prefix",
@@ -709,11 +710,12 @@ func TestRegexOperator(t *testing.T) {
 				},
 			},
 			{
-				name:    "empty string does not match ^(.*)$ (PCRE behavior)",
+				// https://fiddle.fastly.dev/fiddle/38b8cc11
+				name:    "empty string matches ^(.*)$",
 				input:   "",
 				pattern: `^(.*)$`,
-				expect:  false, // PCRE doesn't match empty string (unlike Go regexp)
-				groups:  map[string]*value.String{},
+				expect:  true,
+				groups:  map[string]*value.String{"0": {Value: ""}, "1": {Value: ""}},
 			},
 		}
 

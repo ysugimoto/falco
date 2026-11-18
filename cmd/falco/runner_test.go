@@ -405,7 +405,7 @@ func TestTester(t *testing.T) {
 			name:   "regex grouped variables test",
 			main:   "../../examples/testing/regex/regex.vcl",
 			filter: "*regex.test.vcl",
-			passes: 72,
+			passes: 73,
 		},
 		{
 			name:   "header subfield dealing test",

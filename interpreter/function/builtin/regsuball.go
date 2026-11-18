@@ -3,10 +3,10 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	pcre "go.elara.ws/pcre"
 )
 
 const Regsuball_Name = "regsuball"
@@ -42,7 +42,7 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 	pattern := value.Unwrap[*value.String](args[1])
 	replacement := value.Unwrap[*value.String](args[2])
 
-	re, err := pcre.Compile(pattern.Value)
+	re, err := regex.Compile(pattern.Value)
 	if err != nil {
 		ctx.FastlyError = &value.String{Value: "EREGRECUR"}
 		return &value.String{Value: input.Value}, errors.New(
@@ -50,7 +50,17 @@ func Regsuball(ctx *context.Context, args ...value.Value) (value.Value, error) {
 		)
 	}
 
-	return &value.String{
-		Value: replaceAllString(re, input.Value, replacement.Value),
-	}, nil
+	// Fastly returns empty input unchanged even when the pattern matches it:
+	// https://fiddle.fastly.dev/fiddle/38b8cc11
+	if input.Value == "" {
+		return &value.String{Value: ""}, nil
+	}
+
+	out, err := replaceAllString(re, input.Value, replacement.Value)
+	if err != nil {
+		return &value.String{Value: input.Value}, errors.New(
+			Regsuball_Name, "Failed to match regular expression %s: %s", pattern.Value, err.Error(),
+		)
+	}
+	return &value.String{Value: out}, nil
 }

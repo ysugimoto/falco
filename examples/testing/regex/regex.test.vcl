@@ -37,9 +37,9 @@ sub test_regex_no_reset_recv {
 sub test_anchors_recv {
     declare local var.url STRING;
 
-    // PCRE behavior: ^$ does NOT match empty string (unlike Go regexp)
+    // https://fiddle.fastly.dev/fiddle/38b8cc11
     set var.url = "";
-    assert.false(var.url ~ "^$", "^$ should NOT match empty string in PCRE");
+    assert.true(var.url ~ "^$", "^$ should match empty string");
 
     // Test ^abc prefix match
     set var.url = "abc";
@@ -347,12 +347,11 @@ sub test_word_boundaries_recv {
 sub test_pcre_empty_string_recv {
     declare local var.input STRING;
 
-    // PCRE does NOT match empty strings with ^$
+    // https://fiddle.fastly.dev/fiddle/38b8cc11
     set var.input = "";
-    assert.false(var.input ~ "^$", "PCRE: empty string should NOT match ^$");
-
-    // PCRE does NOT match empty strings with ^(.*)$
-    assert.false(var.input ~ "^(.*)$", "PCRE: empty string should NOT match ^(.*)$");
+    assert.true(var.input ~ "^$", "PCRE: empty string should match ^$");
+    assert.true(var.input ~ "^(.*)$", "PCRE: empty string should match ^(.*)$");
+    assert.equal(re.group.1, "");
 
     // But non-empty strings work fine
     set var.input = "test";

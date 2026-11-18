@@ -59,6 +59,16 @@ func Test_Assert_not_match(t *testing.T) {
 			expect: nil,
 			err:    &errors.TestingError{},
 		},
+		// Compiles, but matching fails at the match limit. That must be an
+		// error, not a passing "did not match".
+		{
+			args: []value.Value{
+				&value.String{Value: "aaaaaaaaaaaaaaaaaaaa!"},
+				&value.String{Value: "(*LIMIT_MATCH=1)(a|aa)+$"},
+			},
+			expect: nil,
+			err:    &errors.TestingError{},
+		},
 	}
 
 	for i := range tests {

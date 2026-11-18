@@ -3,11 +3,11 @@
 package builtin
 
 import (
+	"github.com/ysugimoto/falco/v2/internal/regex"
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/function/shared"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
-	regexp "go.elara.ws/pcre"
 )
 
 const Querystring_regfilter_Name = "querystring.regfilter"
@@ -41,15 +41,25 @@ func Querystring_regfilter(ctx *context.Context, args ...value.Value) (value.Val
 
 	query := shared.ParseQuery(v.Value)
 
-	re, err := regexp.Compile(name.Value)
+	re, err := regex.Compile(name.Value)
 	if err != nil {
 		return value.Null, errors.New(
 			Querystring_regfilter_Name, "Invalid regexp pattern: %s, error: %s", name.Value, err.Error(),
 		)
 	}
+	var matchErr error
 	query.Filter(func(key string) bool {
-		return !re.MatchString(key)
+		matched, err := re.MatchString(key)
+		if err != nil && matchErr == nil {
+			matchErr = err
+		}
+		return !matched
 	})
+	if matchErr != nil {
+		return value.Null, errors.New(
+			Querystring_regfilter_Name, "Failed to match regexp pattern: %s, error: %s", name.Value, matchErr.Error(),
+		)
+	}
 
 	return &value.String{Value: query.String()}, nil
 }
