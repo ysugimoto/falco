@@ -39,6 +39,19 @@ func NewAllScopeVariables(ctx *context.Context) *AllScopeVariables {
 	}
 }
 
+// parseRequestURL keeps a leading "//" in the path, as Fastly does, where
+// url.Parse would read "//a/b" as host "a" and path "/b".
+func parseRequestURL(s string) (*url.URL, error) {
+	if !strings.HasPrefix(s, "//") {
+		return url.Parse(s)
+	}
+	u, err := url.Parse("http://falco.invalid" + s)
+	if uerr, ok := err.(*url.Error); ok {
+		uerr.URL = s
+	}
+	return u, err
+}
+
 // return unescaped path value from the specified URL
 // this function makes the best effort to get the raw path
 // even when standard EscapedPath() chooses escaped version
@@ -48,6 +61,37 @@ func getRawUrlPath(u *url.URL) string {
 		result = u.RawPath
 	}
 	return result
+}
+
+// formatRequestURL returns path, query and fragment as they appear in the request line
+func formatRequestURL(u *url.URL) string {
+	result := getRawUrlPath(u)
+	if u.RawQuery != "" {
+		result += "?" + u.RawQuery
+	} else if u.ForceQuery {
+		result += "?"
+	}
+	fragment := u.RawFragment
+	if fragment == "" {
+		fragment = u.EscapedFragment()
+	}
+	if fragment != "" {
+		result += "#" + fragment
+	}
+	return result
+}
+
+// getUrlDirname returns the path up to the last "/", or "/" when that is empty
+func getUrlDirname(p string) string {
+	if i := strings.LastIndex(p, "/"); i > 0 {
+		return p[:i]
+	}
+	return "/"
+}
+
+// getUrlBasename returns the text after the last "/"
+func getUrlBasename(p string) string {
+	return p[strings.LastIndex(p, "/")+1:]
 }
 
 // nolint: funlen,gocognit,gocyclo
@@ -683,23 +727,14 @@ func (v *AllScopeVariables) Get(s context.Scope, name string) (value.Value, erro
 		}
 		return &value.String{Value: u}, nil
 	case REQ_URL:
-		u := getRawUrlPath(req.URL)
-		if v := req.URL.RawQuery; v != "" {
-			u += "?" + v
-		} else if req.URL.ForceQuery {
-			u += "?"
-		}
-		if v := req.URL.RawFragment; v != "" {
-			u += "#" + v
-		}
-		return &value.String{Value: u}, nil
+		return &value.String{Value: formatRequestURL(req.URL)}, nil
 	case REQ_URL_BASENAME:
 		return &value.String{
-			Value: filepath.Base(getRawUrlPath(req.URL)),
+			Value: getUrlBasename(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_DIRNAME:
 		return &value.String{
-			Value: filepath.Dir(getRawUrlPath(req.URL)),
+			Value: getUrlDirname(getRawUrlPath(req.URL)),
 		}, nil
 	case REQ_URL_EXT:
 		ext := filepath.Ext(getRawUrlPath(req.URL))
@@ -968,20 +1003,11 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 	case REQ_REQUEST:
 		return v.Set(s, "req.method", operator, val)
 	case REQ_URL:
-		u := getRawUrlPath(v.ctx.Request.URL)
-		if query := v.ctx.Request.URL.RawQuery; query != "" {
-			u += "?" + query
-		} else if v.ctx.Request.URL.ForceQuery {
-			u += "?"
-		}
-		if fragment := v.ctx.Request.URL.RawFragment; fragment != "" {
-			u += "#" + fragment
-		}
-		left := &value.String{Value: u}
+		left := &value.String{Value: formatRequestURL(v.ctx.Request.URL)}
 		if err := doAssign(left, operator, val); err != nil {
 			return errors.WithStack(err)
 		}
-		parsed, err := url.Parse(left.Value)
+		parsed, err := parseRequestURL(left.Value)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -989,6 +1015,7 @@ func (v *AllScopeVariables) Set(s context.Scope, name, operator string, val valu
 		v.ctx.Request.URL.Path = parsed.Path
 		v.ctx.Request.URL.RawPath = parsed.RawPath
 		v.ctx.Request.URL.RawQuery = parsed.RawQuery
+		v.ctx.Request.URL.Fragment = parsed.Fragment
 		v.ctx.Request.URL.RawFragment = parsed.RawFragment
 		v.ctx.Request.URL.ForceQuery = parsed.ForceQuery
 		return nil
