@@ -1,6 +1,12 @@
 package linter
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/ysugimoto/falco/v2/lexer"
+	"github.com/ysugimoto/falco/v2/linter/context"
+	"github.com/ysugimoto/falco/v2/parser"
+)
 
 func TestLintEqualOperator(t *testing.T) {
 	t.Run("pass", func(t *testing.T) {
@@ -136,6 +142,133 @@ sub foo {
 }`
 		assertNoError(t, input)
 	})
+
+	// Fastly accepts neither parentheses nor a prefix operator on the right
+	// operand unless the left operand is BOOL, whatever the operand contains.
+	// see: https://fiddle.fastly.dev/fiddle/8f3da311
+	t.Run("right operand cannot be grouped or prefixed", func(t *testing.T) {
+		for _, cond := range []string{
+			`req.http.Host == (10)`,
+			`req.http.Host == (-10)`,
+			`req.http.Host == -(10)`,
+			`req.http.Host == ((10.5))`,
+			`req.http.Host == (10s)`,
+			`req.http.Host == ("10")`,
+			`req.http.Host == (req.vcl.version)`,
+			`req.http.Host == (true)`,
+			`req.http.Host == !true`,
+			`req.http.Host == -req.vcl.version`,
+			`req.vcl.version == (10)`,
+			`req.vcl.version == -(10)`,
+			`req.vcl.version == -req.vcl.version`,
+			`req.vcl.version == +10`,
+			`req.vcl.version == +req.vcl.version`,
+			`client.geo.latitude == (1.0)`,
+			`client.geo.latitude == +1.0`,
+			`req.max_stale_if_error == (1s)`,
+		} {
+			t.Run(cond, func(t *testing.T) {
+				input := `
+sub foo {
+	if (` + cond + `) {
+		restart;
+	}
+}`
+				assertError(t, input)
+			})
+		}
+	})
+
+	// client.ip is typed STRING, so a declared IP exercises the IP path.
+	// see: https://fiddle.fastly.dev/fiddle/8f3da311
+	t.Run("IP right operand cannot be grouped", func(t *testing.T) {
+		input := `
+sub foo {
+	declare local var.IP IP;
+	if (var.IP == ("127.0.0.1")) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	// see: https://fiddle.fastly.dev/fiddle/f832d6ac
+	t.Run("BACKEND right operand cannot be grouped", func(t *testing.T) {
+		input := `
+backend F_x {}
+sub foo {
+	if (req.backend == (F_x)) {
+		restart;
+	}
+}`
+		assertError(t, input)
+	})
+
+	// Fastly reports the error at the opening parenthesis or prefix operator,
+	// on the right operand's own line when the condition spans lines.
+	// The line and position checks keep the if's own ( from matching.
+	// see: https://fiddle.fastly.dev/fiddle/8f3da311
+	t.Run("grouped or prefixed right operand error points at the operand", func(t *testing.T) {
+		for _, tc := range []struct {
+			cond     string
+			literal  string
+			line     int
+			position int
+		}{
+			{cond: `req.http.Host == ("10")`, literal: "(", line: 2, position: 23},
+			{cond: `req.http.Host == -req.vcl.version`, literal: "-", line: 2, position: 23},
+			{cond: `req.http.Host == !true`, literal: "!", line: 2, position: 23},
+			{cond: "req.http.Host ==\n\t\t(\"10\")", literal: "(", line: 3, position: 3},
+		} {
+			t.Run(tc.cond, func(t *testing.T) {
+				input := "sub foo {\n\tif (" + tc.cond + ") {\n\t\trestart;\n\t}\n}"
+				vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+				if err != nil {
+					t.Fatalf("unexpected parser error: %s", err)
+				}
+				l := New(testConfig)
+				l.lint(vcl, context.New())
+				if l.FatalError != nil {
+					t.Fatalf("fatal error: %s", l.FatalError.Error)
+				}
+				if len(l.Errors) != 1 {
+					t.Fatalf("expected one lint error, got %v", l.Errors)
+				}
+				got := l.Errors[0]
+				if got.Rule != OPERATOR_CONDITIONAL {
+					t.Errorf("rule = %s, want %s", got.Rule, OPERATOR_CONDITIONAL)
+				}
+				if got.Token.Literal != tc.literal || got.Token.Line != tc.line || got.Token.Position != tc.position {
+					t.Errorf("error at %q line %d position %d, want %q line %d position %d",
+						got.Token.Literal, got.Token.Line, got.Token.Position,
+						tc.literal, tc.line, tc.position)
+				}
+			})
+		}
+	})
+
+	// see: https://fiddle.fastly.dev/fiddle/ce9285b4
+	t.Run("right operand can be a negative literal or a grouped or negated BOOL", func(t *testing.T) {
+		for _, cond := range []string{
+			`req.vcl.version == -10`,
+			`client.geo.latitude == -1.0`,
+			`req.max_stale_if_error == -1s`,
+			`fastly_info.is_h2 == (true)`,
+			`fastly_info.is_h2 == !req.is_ipv6`,
+			`fastly_info.is_h2 == (req.http.Host == "x")`,
+			`req.http.Host == +req.http.Cookie`,
+		} {
+			t.Run(cond, func(t *testing.T) {
+				input := `
+sub foo {
+	if (` + cond + `) {
+		restart;
+	}
+}`
+				assertNoError(t, input)
+			})
+		}
+	})
 }
 
 func TestLintNotEqualOperator(t *testing.T) {
@@ -166,6 +299,26 @@ sub foo {
 	}
 }`
 		assertError(t, input)
+	})
+
+	// see: https://fiddle.fastly.dev/fiddle/8f3da311
+	t.Run("right operand cannot be grouped or prefixed", func(t *testing.T) {
+		for _, cond := range []string{
+			`req.http.Host != (10)`,
+			`req.http.Host != ("10")`,
+			`req.http.Host != !true`,
+			`req.vcl.version != (10)`,
+		} {
+			t.Run(cond, func(t *testing.T) {
+				input := `
+sub foo {
+	if (` + cond + `) {
+		restart;
+	}
+}`
+				assertError(t, input)
+			})
+		}
 	})
 }
 

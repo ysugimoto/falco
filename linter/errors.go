@@ -218,6 +218,20 @@ func InvalidTypeConstant(m *ast.Meta, actual, expect types.Type) *LintError {
 	}
 }
 
+// InvalidEqualityOperand reports a grouped or prefixed right operand of an
+// equality operator, which Fastly only accepts when the left operand is BOOL.
+// see: https://fiddle.fastly.dev/fiddle/8f3da311
+func InvalidEqualityOperand(m *ast.Meta, operator string, left types.Type) *LintError {
+	return &LintError{
+		Severity: ERROR,
+		Token:    m.Token,
+		Message: fmt.Sprintf(
+			"Right operand of %s against %s cannot be parenthesized or take a prefix operator, except - on a numeric literal",
+			operator, left.String(),
+		),
+	}
+}
+
 func ImplicitTypeConversion(m *ast.Meta, from, to types.Type) *LintError {
 	return &LintError{
 		Severity: INFO,
