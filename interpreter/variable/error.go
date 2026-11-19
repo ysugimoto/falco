@@ -271,7 +271,7 @@ func (v *ErrorScopeVariables) Add(s context.Scope, name string, val value.Value)
 	if err := limitations.CheckProtectedHeader(match[1]); err != nil {
 		return errors.WithStack(err)
 	}
-	v.ctx.Object.Header.Add(match[1], val.String())
+	addResponseHeaderValue(v.ctx.Object, match[1], val)
 	return nil
 }
 

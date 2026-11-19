@@ -150,7 +150,7 @@ func (v *HitScopeVariables) Add(s context.Scope, name string, val value.Value) e
 		return errors.WithStack(err)
 	}
 
-	v.ctx.Object.Header.Add(match[1], val.String())
+	addResponseHeaderValue(v.ctx.Object, match[1], val)
 	return nil
 }
 
