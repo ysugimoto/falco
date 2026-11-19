@@ -368,7 +368,9 @@ func (i *Interpreter) ProcessAddStatement(stmt *ast.AddStatement) error {
 		return exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 	}
 	// `add` appends a fresh header line, so charge the value being added.
-	if isRequestHeaderIdent(stmt.Ident) {
+	// In vcl_log Fastly ignores `add`, and workspace.bytes_free does not move
+	// (https://fiddle.fastly.dev/fiddle/cca4d87d).
+	if isRequestHeaderIdent(stmt.Ident) && !i.ctx.Scope.Is(context.LogScope) {
 		if err := i.accountRequestWorkspace(stmt.Ident, right); err != nil {
 			return errors.WithStack(err)
 		}
