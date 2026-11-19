@@ -3,6 +3,9 @@
 package builtin
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/ysugimoto/falco/v2/interpreter/context"
 	"github.com/ysugimoto/falco/v2/interpreter/function/errors"
 	"github.com/ysugimoto/falco/v2/interpreter/value"
@@ -24,6 +27,39 @@ func Std_collect_Validate(args []value.Value) error {
 	return nil
 }
 
+// std_collect_header resolves a header identifier such as "resp.http.X" to the
+// underlying header map and header name. It returns a nil map when the
+// identifier is not an HTTP header or the object is unavailable in this scope.
+func std_collect_header(ctx *context.Context, ident string) (http.Header, string) {
+	obj, name, found := strings.Cut(ident, ".http.")
+	if !found {
+		return nil, ""
+	}
+	switch obj {
+	case "req":
+		if ctx.Request != nil {
+			return ctx.Request.Header, name
+		}
+	case "bereq":
+		if ctx.BackendRequest != nil {
+			return ctx.BackendRequest.Header, name
+		}
+	case "beresp":
+		if ctx.BackendResponse != nil {
+			return ctx.BackendResponse.Header, name
+		}
+	case "obj":
+		if ctx.Object != nil {
+			return ctx.Object.Header, name
+		}
+	case "resp":
+		if ctx.Response != nil {
+			return ctx.Response.Header, name
+		}
+	}
+	return nil, ""
+}
+
 // Fastly built-in function implementation of std.collect
 // Arguments may be:
 // - ID
@@ -35,31 +71,24 @@ func Std_collect(ctx *context.Context, args ...value.Value) (value.Value, error)
 		return value.Null, err
 	}
 
-	// TODO: std.collection has no effect because Golang's HTTP header is automatically collected
-	// ident := value.Unwrap[*value.Ident](args[0])
-	// sep := ","
-	// if len(args) > 1 {
-	// 	sep = value.Unwrap[*value.String](args[1]).Value
-	// }
-	//
-	// switch {
-	// case strings.HasPrefix(ident.Value, "req.http."):
-	// 	name := strings.TrimPrefix(ident.Value, "req.http.")
-	// 	value := ctx.Request.Header.Values(name)
-	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "bereq.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "bereq.http.")
-	// 	value := ctx.BackendRequest.Header.Values(name)
-	// 	ctx.BackendRequest.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "beresp.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "beresp.http.")
-	// 	value := ctx.BackendResponse.Header.Values(name)
-	// 	ctx.Request.Header.Set(name, strings.Join(value, sep))
-	// case strings.HasPrefix(ident.Value, "resp.http"):
-	// 	name := strings.TrimPrefix(ident.Value, "resp.http.")
-	// 	value := ctx.BackendResponse.Header.Values(name)
-	// 	ctx.BackendResponse.Header.Set(name, strings.Join(value, sep))
-	// }
+	ident := value.Unwrap[*value.Ident](args[0])
+	sep := ","
+	if len(args) > 1 {
+		sep = value.Unwrap[*value.String](args[1]).Value
+	}
+
+	header, name := std_collect_header(ctx, ident.Value)
+	if header == nil {
+		return value.Null, nil
+	}
+
+	values := header.Values(name)
+	if len(values) < 2 {
+		return value.Null, nil
+	}
+	// Fastly appends a space after the separator, e.g. "|" joins as "a| b".
+	// ref: https://fiddle.fastly.dev/fiddle/ae47c1d2
+	header.Set(name, strings.Join(values, sep+" "))
 
 	return value.Null, nil
 }
