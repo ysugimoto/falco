@@ -22,11 +22,21 @@ func (i *Interpreter) resolveIncludeStatement(statements []ast.Statement, isRoot
 				}
 				continue
 			}
-			included, err := i.includeFile(include, isRoot)
+			included, module, err := i.includeFile(include, isRoot)
 			if err != nil {
 				return nil, exception.Runtime(&stmt.GetMeta().Token, "%s", err.Error())
 			}
+			// A module that includes itself, directly or through the modules it
+			// includes, would be resolved until the process runs out of memory.
+			if !i.includes.Push(module) {
+				return nil, exception.Runtime(
+					&stmt.GetMeta().Token,
+					"VCL module '%s' is included recursively: %s -> %s",
+					include.Module.Value, i.includes.Path(), module,
+				)
+			}
 			recursive, err := i.resolveIncludeStatement(included, isRoot)
+			i.includes.Pop()
 			if err != nil {
 				return nil, err
 			}
@@ -56,16 +66,24 @@ func (i *Interpreter) includeSnippet(include *ast.IncludeStatement, isRoot bool)
 	return loadStatementVCL(include.Module.Value, snip.Data)
 }
 
-func (i *Interpreter) includeFile(include *ast.IncludeStatement, isRoot bool) ([]ast.Statement, error) {
+// includeFile loads the module an include statement names and returns its
+// statements alongside the name the resolver gave it.
+func (i *Interpreter) includeFile(include *ast.IncludeStatement, isRoot bool) ([]ast.Statement, string, error) {
 	module, err := i.ctx.Resolver.Resolve(include)
 	if err != nil {
-		return nil, fmt.Errorf("failed to include VCL module '%s'", include.Module.Value)
+		return nil, "", fmt.Errorf("failed to include VCL module '%s'", include.Module.Value)
 	}
 
+	var statements []ast.Statement
 	if isRoot {
-		return loadRootVCL(module.Name, module.Data)
+		statements, err = loadRootVCL(module.Name, module.Data)
+	} else {
+		statements, err = loadStatementVCL(module.Name, module.Data)
 	}
-	return loadStatementVCL(module.Name, module.Data)
+	if err != nil {
+		return nil, "", err
+	}
+	return statements, module.Name, nil
 }
 
 func loadRootVCL(name, content string) ([]ast.Statement, error) {
