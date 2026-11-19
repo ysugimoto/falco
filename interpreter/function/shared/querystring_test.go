@@ -222,3 +222,55 @@ func TestEscape(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryStringsAddEncoding(t *testing.T) {
+	unreservedChars := "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+	reservedChars := " !\"#$%&'()*+,/:;<=>?@[\\]^`{|}"
+	reservedEncoded := "%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3C%3D%3E%3F%40%5B%5C%5D%5E%60%7B%7C%7D"
+
+	tests := []struct {
+		prefix string
+		params []Param
+		expect string
+	}{
+		{
+			prefix: "/foo",
+			params: []Param{{Name: "a", Value: "b"}},
+			expect: "/foo?a=b",
+		},
+		{
+			prefix: "/foo",
+			params: []Param{{Name: "a", Value: "b"}, {Name: "a", Value: "c"}},
+			expect: "/foo?a=b&a=c",
+		},
+		{
+			prefix: "/",
+			params: []Param{{Name: unreservedChars, Value: "value"}},
+			expect: "/?" + unreservedChars + "=value",
+		},
+		{
+			prefix: "/",
+			params: []Param{{Name: reservedChars, Value: "value"}},
+			expect: "/?" + reservedEncoded + "=value",
+		},
+		{
+			prefix: "/",
+			params: []Param{{Name: "key", Value: unreservedChars}},
+			expect: "/?key=" + unreservedChars,
+		},
+		{
+			prefix: "/",
+			params: []Param{{Name: "key", Value: reservedChars}},
+			expect: "/?key=" + reservedEncoded,
+		},
+	}
+	for i, test := range tests {
+		query := &QueryStrings{Prefix: test.prefix}
+		for _, param := range test.params {
+			query.Add(param.Name, param.Value)
+		}
+		if diff := cmp.Diff(test.expect, query.String()); diff != "" {
+			t.Errorf("[%d] Result unmatch: diff=: %s", i, diff)
+		}
+	}
+}
