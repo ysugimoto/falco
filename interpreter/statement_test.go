@@ -564,6 +564,70 @@ func TestIfStatement(t *testing.T) {
 			},
 			isError: false,
 		},
+		{
+			// Regression for #641: backend.{NAME}.healthy for a backend that is
+			// not declared in the VCL (e.g. a Fastly generated shield backend)
+			// must be a BOOL in every position, so the sole condition and the
+			// right operand of && agree.
+			name: "undeclared backend healthy as sole condition",
+			vcl: `
+			sub vcl_recv {
+				if (backend.ssl_shield_miami_fl_us.healthy) {
+					header.set(req, "foo", "healthy");
+				} else {
+					header.set(req, "foo", "unhealthy");
+				}
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "healthy"},
+			},
+			isError: false,
+		},
+		{
+			name: "undeclared backend healthy as right operand of &&",
+			vcl: `
+			sub vcl_recv {
+				set req.url = "/foo";
+				if (req.url ~ "^/" && backend.ssl_shield_miami_fl_us.healthy) {
+					header.set(req, "foo", "healthy");
+				} else {
+					header.set(req, "foo", "unhealthy");
+				}
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "healthy"},
+			},
+			isError: false,
+		},
+		{
+			name: "undeclared backend healthy as right operand of ||",
+			vcl: `
+			sub vcl_recv {
+				set req.url = "/foo";
+				if (req.url ~ "^/nothing" || backend.ssl_shield_miami_fl_us.healthy) {
+					header.set(req, "foo", "healthy");
+				} else {
+					header.set(req, "foo", "unhealthy");
+				}
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "healthy"},
+			},
+			isError: false,
+		},
+		{
+			name: "undeclared backend healthy in set statement",
+			vcl: `
+			sub vcl_recv {
+				declare local var.H BOOL;
+				set var.H = backend.ssl_shield_miami_fl_us.healthy;
+				header.set(req, "foo", var.H);
+			}`,
+			assertions: map[string]value.Value{
+				"req.http.foo": &value.String{Value: "1"},
+			},
+			isError: false,
+		},
 	}
 
 	for _, tt := range tests {

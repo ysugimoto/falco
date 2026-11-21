@@ -490,9 +490,11 @@ func TestGetFromRegex(t *testing.T) {
 			isError: false,
 		},
 		{
+			// Undeclared backends (e.g. Fastly generated shield backends) are
+			// treated as healthy, see #641
 			input:   "backend.not_found.healthy",
-			expect:  value.Null,
-			isError: true,
+			expect:  &value.Boolean{Value: true},
+			isError: false,
 		},
 		{
 			input:   "backend.nostatus.healthy",
