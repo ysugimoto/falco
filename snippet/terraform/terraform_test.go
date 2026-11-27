@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -519,5 +520,21 @@ func TestDynamicSnippetContentUnknownServiceID(t *testing.T) {
 	}
 	if diff := cmp.Diff(expected, services[0].DynamicSnippets[0]); diff != "" {
 		t.Errorf("Dynamic snippet should not receive content for unknown service_id, diff=%s", diff)
+	}
+}
+
+func TestUnmarshalOpenTofuProvider(t *testing.T) {
+	buf, err := os.ReadFile("./data/terraform-valid.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	buf = bytes.ReplaceAll(buf, []byte("registry.terraform.io"), []byte("registry.opentofu.org"))
+
+	services, err := unmarshalTerraformPlannedInput(buf)
+	if err != nil {
+		t.Fatalf("Unexpected error unmarshalling OpenTofu plan: %s", err)
+	}
+	if len(services) != 1 {
+		t.Errorf("Length of services should be %d, got %d", 1, len(services))
 	}
 }

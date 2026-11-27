@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	fastlyTerraformProviderName            = "registry.terraform.io/fastly/fastly"
+	fastlyTerraformProviderSuffix          = "/fastly/fastly"
 	fastlyVCLServiceType                   = "fastly_service_vcl"
 	fastlyVCLServiceTypeV1                 = "fastly_service_v1"
 	fastlyServiceAclEntriesType            = "fastly_service_acl_entries"
@@ -258,20 +258,26 @@ func findFastlyServicesInTerraformModule(mod *TerraformModule, config map[string
 	}, nil
 }
 
+// isFastlyProvider matches the provider address on any registry host
+// (registry.terraform.io, registry.opentofu.org, mirrors).
+func isFastlyProvider(name string) bool {
+	return strings.HasSuffix(name, fastlyTerraformProviderSuffix)
+}
+
 func isFastlyVCLServiceResource(r *TerraformPlannedResource) bool {
-	return r.ProviderName == fastlyTerraformProviderName &&
+	return isFastlyProvider(r.ProviderName) &&
 		(r.Type == fastlyVCLServiceType || r.Type == fastlyVCLServiceTypeV1)
 }
 
 func isFastlyServiceAclEntryResource(r *TerraformPlannedResource) bool {
-	return r.ProviderName == fastlyTerraformProviderName && r.Type == fastlyServiceAclEntriesType
+	return isFastlyProvider(r.ProviderName) && r.Type == fastlyServiceAclEntriesType
 }
 func isFastlyServiceDictionaryItem(r *TerraformPlannedResource) bool {
-	return r.ProviderName == fastlyTerraformProviderName && r.Type == fastlyServiceDictionaryItemsType
+	return isFastlyProvider(r.ProviderName) && r.Type == fastlyServiceDictionaryItemsType
 }
 
 func isFastlyServiceDynamicSnippetContent(r *TerraformPlannedResource) bool {
-	return r.ProviderName == fastlyTerraformProviderName && r.Type == fastlyServiceDynamicSnippetContentType
+	return isFastlyProvider(r.ProviderName) && r.Type == fastlyServiceDynamicSnippetContentType
 }
 
 func factoryLoggingEndpoints(values *fastlyServiceValues) []string {
