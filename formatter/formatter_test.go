@@ -34,6 +34,39 @@ func assert(t *testing.T, input, expect string, conf *config.FormatConfig) strin
 	return string(v) // return formatted result for debugging
 }
 
+// Same as assert, for a snippet: statements with no declaration around them, which
+// the parser recognizes and reports as ast.VCL.IsSnippet.
+func assertSnippet(t *testing.T, input, expect string, conf *config.FormatConfig) string {
+	c := &config.FormatConfig{
+		IndentWidth:          2,
+		IndentStyle:          "space",
+		TrailingCommentWidth: 2,
+		LineWidth:            120,
+	}
+	if conf != nil {
+		c = conf
+	}
+	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCLOrSnippet()
+	if err != nil {
+		t.Errorf("Unexpected parser error: %s", err)
+		return ""
+	}
+	if !vcl.IsSnippet {
+		t.Errorf("Input was not parsed as a snippet")
+		return ""
+	}
+	ret := New(c).Format(vcl)
+	if ret == nil {
+		t.Errorf("Format returned nil for a snippet")
+		return ""
+	}
+	v, _ := ioutil.ReadAll(ret)
+	if diff := cmp.Diff(string(v), expect); diff != "" {
+		t.Errorf("Format result has diff: %s", diff)
+	}
+	return string(v) // return formatted result for debugging
+}
+
 func BenchmarkFormatter(b *testing.B) {
 	b.ResetTimer()
 
@@ -292,4 +325,84 @@ func TestFormatGeneratedFile(t *testing.T) {
 	if diff := cmp.Diff(string(expectedContent), string(formattedContent)); diff != "" {
 		t.Errorf("Formatting generated.vcl produced unexpected output:\n%s", diff)
 	}
+}
+
+// A Fastly custom snippet is a piece of VCL with no declaration around it. The
+// parser has recognized that shape since ParseVCLOrSnippet was added, but the
+// formatter did not, and returned a nil io.Reader for it.
+func TestFormatSnippet(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		expect string
+		conf   *config.FormatConfig
+	}{
+		{
+			name: "statements at the top level",
+			input: `set req.http.Foo    =  "bar";
+   set req.http.Bar = "baz";`,
+			expect: `set req.http.Foo = "bar";
+set req.http.Bar = "baz";
+`,
+		},
+		{
+			name: "nested statements are indented from zero",
+			input: `if (req.http.Foo == "bar") {
+set req.http.Bar = "baz";
+}`,
+			expect: `if (req.http.Foo == "bar") {
+  set req.http.Bar = "baz";
+}
+`,
+		},
+		{
+			name: "empty line between statements is kept",
+			input: `set req.http.Foo = "bar";
+
+set req.http.Bar = "baz";`,
+			expect: `set req.http.Foo = "bar";
+
+set req.http.Bar = "baz";
+`,
+		},
+		{
+			name: "comments are kept, including the one after the last statement",
+			input: `# START SNIPPET redirect.vcl
+
+set req.http.Foo = "bar";  // why
+
+# END SNIPPET redirect.vcl`,
+			expect: `# START SNIPPET redirect.vcl
+
+set req.http.Foo = "bar";  // why
+
+# END SNIPPET redirect.vcl
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertSnippet(t, tt.input, tt.expect, tt.conf)
+		})
+	}
+}
+
+// A comment at the end of a file has no statement to be the leading comment of, so
+// it was dropped. Snippets commonly end with one.
+func TestFormatKeepsCommentAfterTheLastDeclaration(t *testing.T) {
+	input := `sub vcl_recv {
+  set req.http.Foo = "bar";
+}
+
+# END SNIPPET redirect.vcl`
+
+	expect := `sub vcl_recv {
+  set req.http.Foo = "bar";
+}
+
+# END SNIPPET redirect.vcl
+`
+
+	assert(t, input, expect, nil)
 }
