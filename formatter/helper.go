@@ -55,6 +55,34 @@ func formatCommentCharacter(comment string, char rune) string {
 	return string(bs)
 }
 
+// Rewrite an inline comment as a line comment in the configured style.
+// Reports false, and the comment unchanged, for anything it will not touch: a
+// comment that is not "/* ... */", and one whose text spans lines, because
+// converting that one would have to rewrite every line inside it.
+func inlineCommentToLine(comment string, char rune) (string, bool) {
+	if !strings.HasPrefix(comment, "/*") || !strings.HasSuffix(comment, "*/") || len(comment) < 4 {
+		return comment, false
+	}
+	// Checked before trimming: a comment written with its text on the line between
+	// "/*" and "*/" has both of its line feeds at the ends, and trimming first
+	// would make it look like a comment written on one line.
+	if strings.ContainsAny(comment, "\r\n") {
+		return comment, false
+	}
+	text := strings.TrimSpace(comment[2 : len(comment)-2])
+	// Two characters open an inline comment, so two mark the line comment it becomes.
+	// That is what restyling a "//" comment does, and a converted comment that came
+	// out as one "#" would be the odd one out in a file of "##".
+	mark := "##"
+	if char == '/' {
+		mark = "//"
+	}
+	if text == "" {
+		return mark, true
+	}
+	return mark + " " + text, true
+}
+
 // Return comment is inline comment that has "/* ... */" syntax
 func isInlineComment(comments ast.Comments) bool {
 	if len(comments) == 0 {
