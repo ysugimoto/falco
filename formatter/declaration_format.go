@@ -15,7 +15,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 	lines := DeclarationPropertyLines{}
 
 	for _, cidr := range decl.CIDRs {
-		if cidr.GetMeta().PreviousEmptyLines > 0 {
+		if cidr.GetMeta().PreviousEmptyLines > 0 && len(lines) > 0 {
 			group.Lines = append(group.Lines, lines)
 			lines = DeclarationPropertyLines{}
 		}
@@ -37,10 +37,11 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 			buf.WriteString(" " + v)
 		}
 		lines = append(lines, &DeclarationPropertyLine{
-			Leading:      f.formatComment(cidr.Leading, "\n", 1),
-			Trailing:     f.trailing(cidr.Trailing),
-			Key:          buf.String(),
-			EndCharacter: ";",
+			Leading:            f.formatComment(cidr.Leading, "\n", 1),
+			Trailing:           f.trailing(cidr.Trailing),
+			Key:                buf.String(),
+			EndCharacter:       ";",
+			PrecedingBlankLine: cidr.GetMeta().PreviousEmptyLines > 0,
 		})
 		bufferPool.Put(buf)
 	}
@@ -68,7 +69,7 @@ func (f *Formatter) formatAclDeclaration(decl *ast.AclDeclaration) *Declaration 
 	return &Declaration{
 		Type:   Acl,
 		Name:   decl.Name.Value,
-		Buffer: buf.String(),
+		Buffer: trimMultipleLineFeeds(buf.String()),
 	}
 }
 
@@ -88,7 +89,7 @@ func (f *Formatter) formatBackendDeclaration(decl *ast.BackendDeclaration) *Decl
 	return &Declaration{
 		Type:   Backend,
 		Name:   decl.Name.Value,
-		Buffer: buf.String(),
+		Buffer: trimMultipleLineFeeds(buf.String()),
 	}
 }
 
@@ -98,7 +99,7 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 	lines := DeclarationPropertyLines{}
 
 	for _, prop := range props {
-		if prop.GetMeta().PreviousEmptyLines > 0 {
+		if prop.GetMeta().PreviousEmptyLines > 0 && len(lines) > 0 {
 			if f.conf.AlignDeclarationProperty {
 				lines.AlignKey()
 			}
@@ -110,10 +111,11 @@ func (f *Formatter) formatBackendProperties(props []*ast.BackendProperty, nestLe
 		}
 
 		line := &DeclarationPropertyLine{
-			Leading:  f.formatComment(prop.Leading, "\n", nestLevel),
-			Trailing: f.trailing(prop.Trailing),
-			Key:      f.indent(nestLevel) + "." + prop.Key.String(),
-			Operator: " = ",
+			Leading:            f.formatComment(prop.Leading, "\n", nestLevel),
+			Trailing:           f.trailing(prop.Trailing),
+			Key:                f.indent(nestLevel) + "." + prop.Key.String(),
+			Operator:           " = ",
+			PrecedingBlankLine: prop.GetMeta().PreviousEmptyLines > 0,
 		}
 		if po, ok := prop.Value.(*ast.BackendProbeObject); ok {
 			line.Value = "{\n"
@@ -153,7 +155,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 	lines := DeclarationPropertyLines{}
 
 	for _, prop := range decl.Properties {
-		if prop.GetMeta().PreviousEmptyLines > 0 {
+		if prop.GetMeta().PreviousEmptyLines > 0 && len(lines) > 0 {
 			if f.conf.AlignDeclarationProperty {
 				lines.AlignKey()
 			}
@@ -164,9 +166,10 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 			lines = DeclarationPropertyLines{}
 		}
 		line := &DeclarationPropertyLine{
-			Leading:  f.formatComment(prop.GetMeta().Leading, "\n", 1),
-			Trailing: f.trailing(prop.GetMeta().Trailing),
-			Key:      f.indent(1),
+			Leading:            f.formatComment(prop.GetMeta().Leading, "\n", 1),
+			Trailing:           f.trailing(prop.GetMeta().Trailing),
+			Key:                f.indent(1),
+			PrecedingBlankLine: prop.GetMeta().PreviousEmptyLines > 0,
 		}
 		switch t := prop.(type) {
 		case *ast.DirectorBackendObject:
@@ -226,7 +229,7 @@ func (f *Formatter) formatDirectorDeclaration(decl *ast.DirectorDeclaration) *De
 	return &Declaration{
 		Type:   Director,
 		Name:   decl.Name.Value,
-		Buffer: buf.String(),
+		Buffer: trimMultipleLineFeeds(buf.String()),
 	}
 }
 
@@ -250,7 +253,7 @@ func (f *Formatter) formatTableDeclaration(decl *ast.TableDeclaration) *Declarat
 	return &Declaration{
 		Type:   Table,
 		Name:   decl.Name.Value,
-		Buffer: buf.String(),
+		Buffer: trimMultipleLineFeeds(buf.String()),
 	}
 }
 
@@ -260,7 +263,7 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 	lines := DeclarationPropertyLines{}
 
 	for _, prop := range props {
-		if prop.PreviousEmptyLines > 0 {
+		if prop.PreviousEmptyLines > 0 && len(lines) > 0 {
 			if f.conf.AlignDeclarationProperty {
 				lines.AlignKey()
 			}
@@ -271,12 +274,13 @@ func (f *Formatter) formatTableProperties(props []*ast.TableProperty) string {
 			lines = DeclarationPropertyLines{}
 		}
 		line := &DeclarationPropertyLine{
-			Leading:      f.formatComment(prop.Leading, "\n", 1),
-			Trailing:     f.trailing(prop.Trailing),
-			Operator:     ": ",
-			Key:          f.indent(1) + prop.Key.String(),
-			Value:        prop.Value.String(),
-			EndCharacter: ",",
+			Leading:            f.formatComment(prop.Leading, "\n", 1),
+			Trailing:           f.trailing(prop.Trailing),
+			Operator:           ": ",
+			Key:                f.indent(1) + prop.Key.String(),
+			Value:              prop.Value.String(),
+			EndCharacter:       ",",
+			PrecedingBlankLine: prop.PreviousEmptyLines > 0,
 		}
 		lines = append(lines, line)
 	}

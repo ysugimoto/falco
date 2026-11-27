@@ -81,6 +81,11 @@ type DeclarationPropertyLine struct {
 	Offset       int
 	isObject     bool
 	EndCharacter string
+
+	// The property had a blank line in front of it in the input. It is written
+	// after the leading comments, so the blank line stays where the author put
+	// it, and it is not part of Key, so it does not count towards alignment.
+	PrecedingBlankLine bool
 }
 
 // Type alias for slice of DeclarationPropertyLine
@@ -150,6 +155,9 @@ func (l DeclarationPropertyLines) String() string {
 	buf.Reset()
 	for i := range l {
 		buf.WriteString(l[i].Leading)
+		if l[i].PrecedingBlankLine {
+			buf.WriteString("\n")
+		}
 		v := l[i].Key
 		if l[i].Value != "" {
 			v += l[i].Operator + l[i].Value
