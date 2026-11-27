@@ -203,6 +203,44 @@ return(pass);
 	}
 }
 
+func TestFormatMultiLineStringConcatenation(t *testing.T) {
+	// A long string spans the lines it was written with, so its length is not a
+	// width on the line it started on. Charging the whole of it against the line
+	// width folds the concatenation that follows, and in embedded HTML that puts
+	// a line break in the middle of a tag.
+	input := `sub vcl_error {
+  declare local var.url STRING;
+  declare local var.html STRING;
+  set var.url = "https://example.com";
+  set var.html = {"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Refresh" content="0; url="} var.url {""/>
+</head>
+</html>"};
+  synthetic var.html;
+}`
+	expect := `sub vcl_error {
+  declare local var.url STRING;
+  declare local var.html STRING;
+  set var.url = "https://example.com";
+  set var.html = {"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Refresh" content="0; url="} + var.url + {""/>
+</head>
+</html>"};
+  synthetic var.html;
+}
+`
+	assert(t, input, expect, &config.FormatConfig{
+		IndentWidth:          2,
+		IndentStyle:          "space",
+		LineWidth:            120,
+		ExplicitStringConcat: true,
+	})
+}
+
 func TestFormatBoilerplateFile(t *testing.T) {
 	// Test that formatting boilerplate.vcl doesn't change it, as
 	// it's already formatted in the official Fastly style.

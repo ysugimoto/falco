@@ -121,16 +121,21 @@ type ChunkState struct {
 	offset    int
 	head      int
 	count     int
+	// A chunk that carries its own line feeds leaves the column wherever its last
+	// line ended, which can be the head width by coincidence, so the column alone
+	// cannot say whether this line has anything on it yet.
+	written bool
 }
 
 // isHead() returns true is current state is the head of line
 func (s *ChunkState) isHead() bool {
-	return s.count == s.head
+	return !s.written
 }
 
 // Reset state
 func (s *ChunkState) reset() {
 	s.count = s.head
+	s.written = false
 }
 
 // Calculate line-chunked strings
@@ -305,13 +310,30 @@ func (c *ChunkBuffer) chunkString(state *ChunkState, expr string) string {
 		prefix = " "
 	}
 
-	if state.count+len(prefix+expr) > state.lineWidth {
+	// A chunk can span more than one physical line: a long string like {"..."}
+	// carries its own line feeds. Only the text before its first line feed shares
+	// the current line, so that is what has to fit inside the line width, and the
+	// column it leaves behind is the width of the text after its last line feed.
+	// Counting the whole chunk instead makes the state a total of the characters
+	// written rather than a column, and the chunk after it is then folded onto a
+	// new line to respect a limit the line never came near.
+	width := len(prefix + expr)
+	if i := strings.Index(expr, "\n"); i >= 0 {
+		width = len(prefix) + i
+	}
+
+	if state.count+width > state.lineWidth {
 		buf.WriteString(c.nextLine(state))
 		state.reset()
 		prefix = ""
 	}
 	buf.WriteString(prefix + expr)
-	state.count += len(prefix + expr)
+	if i := strings.LastIndex(expr, "\n"); i >= 0 {
+		state.count = len(expr[i+1:])
+	} else {
+		state.count += len(prefix + expr)
+	}
+	state.written = true
 
 	return buf.String()
 }
