@@ -121,7 +121,8 @@ func main() {
 	switch c.Commands.At(0) {
 	case subcommandTerraform:
 		isTerraform = true
-		fastlyServices, err := terraform.ParseStdin(os.Stdin)
+		var fastlyServices []*terraform.FastlyService
+		fastlyServices, err = terraform.ParseStdin(os.Stdin)
 		if err == nil {
 			resolvers = resolver.NewTerraformResolver(fastlyServices)
 			fetcher = terraform.NewTerraformFetcher(fastlyServices)
