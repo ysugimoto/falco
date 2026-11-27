@@ -13,7 +13,7 @@ import (
 // Fastly built-in function testing implementation of utf8.codepoint_count
 // Arguments may be:
 // - STRING
-// Reference: https://developer.fastly.com/reference/vcl/functions/strings/utf8-codepoint-count/
+// Reference: https://developer.fastly.com/reference/vcl/functions/unicode/utf8-codepoint-count/
 func Test_Utf8_codepoint_count(t *testing.T) {
 	tests := []struct {
 		input  string

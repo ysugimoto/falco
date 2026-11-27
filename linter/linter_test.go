@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/ysugimoto/falco/v2/ast"
 	"github.com/ysugimoto/falco/v2/config"
@@ -85,6 +86,29 @@ func assertErrorWithSeverity(t *testing.T, input string, severity Severity, opts
 	le := l.Errors[0]
 	if le.Severity != severity {
 		t.Errorf("Severity expects %s but got %s with: %s", severity, le.Severity, le)
+	}
+}
+
+// assertErrorMessage expects exactly one lint error, with the given message,
+// raised on a token with the given literal. Fastly also stops at the first
+// error, so a second one would be a parity bug.
+func assertErrorMessage(t *testing.T, input, message, tokenLiteral string, opts ...context.Option) {
+	t.Helper()
+	vcl, err := parser.New(lexer.NewFromString(input)).ParseVCL()
+	if err != nil {
+		t.Fatalf("unexpected parser error: %s", err)
+	}
+
+	l := New(testConfig)
+	l.lint(vcl, context.New(opts...))
+	if len(l.Errors) != 1 {
+		t.Fatalf("Expected exactly one lint error, got %d: %s", len(l.Errors), l.Errors)
+	}
+	if diff := cmp.Diff(message, l.Errors[0].Message); diff != "" {
+		t.Errorf("Lint message unmatch, diff=%s", diff)
+	}
+	if diff := cmp.Diff(tokenLiteral, l.Errors[0].Token.Literal); diff != "" {
+		t.Errorf("Lint error token unmatch, diff=%s", diff)
 	}
 }
 
